@@ -9,16 +9,15 @@ MCP Tool Interceptor
 Дата: 2026-01-17
 """
 
-import asyncio
 import json
 import logging
 import os
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +31,7 @@ def log_stderr(msg: str) -> None:
 
 class ToolCategory(Enum):
     """Категории инструментов для маршрутизации"""
+
     A = "a"  # 100% Z.AI - детерминированные операции
     B = "b"  # 70-90% Z.AI + валидация Claude
     C = "c"  # 0% Z.AI - только Claude
@@ -39,6 +39,7 @@ class ToolCategory(Enum):
 
 class RoutingDecision(Enum):
     """Решение о маршрутизации"""
+
     ZAI_ONLY = "zai_only"
     ZAI_WITH_VALIDATION = "zai_validation"
     CLAUDE_ONLY = "claude_only"
@@ -47,18 +48,19 @@ class RoutingDecision(Enum):
 @dataclass
 class InterceptResult:
     """Результат перехвата"""
+
     intercepted: bool
-    category: Optional[ToolCategory] = None
-    decision: Optional[RoutingDecision] = None
+    category: ToolCategory | None = None
+    decision: RoutingDecision | None = None
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     latency_ms: int = 0
     provider: str = "direct"
 
 
 # Классификация инструментов по категориям
 # На основе Z.AI-MCP-TOOLS-CLASSIFICATION.md v2.0
-TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
+TOOL_CLASSIFICATION: dict[str, dict[str, ToolCategory]] = {
     # /1c-development - 99% Category A
     "ast-grep-mcp": {
         "*": ToolCategory.A,  # Все инструменты детерминированные
@@ -70,7 +72,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "*": ToolCategory.A,
         "intelligent_search": ToolCategory.B,  # Нужна интерпретация
     },
-
     # /documentation - 85% Category A
     "1c-docs-rag": {
         "*": ToolCategory.A,
@@ -84,7 +85,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "generate_inline_docs": ToolCategory.B,
         "autoreview": ToolCategory.C,  # Экспертиза Claude
     },
-
     # /memory - 97% Category A
     "unified-memory": {
         "*": ToolCategory.A,
@@ -102,7 +102,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "*": ToolCategory.A,
         "merge_patterns": ToolCategory.B,
     },
-
     # /learning - 71% Category A
     "skill-learning": {
         "get_pending_patterns": ToolCategory.A,
@@ -113,7 +112,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "confirm_pattern": ToolCategory.C,
         "reject_pattern": ToolCategory.C,
     },
-
     # /file-operations - 100% Category A
     "ripgrep": {
         "*": ToolCategory.A,
@@ -121,7 +119,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
     "filesystem": {
         "*": ToolCategory.A,
     },
-
     # /reasoning - 8% Category A (в основном Category C)
     "sequential-thinking": {
         "*": ToolCategory.C,  # Core reasoning
@@ -130,7 +127,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "get_conversation_status": ToolCategory.A,
         "*": ToolCategory.C,  # Deep analysis
     },
-
     # /web - 92% Category A
     "brave": {
         "*": ToolCategory.A,
@@ -139,18 +135,15 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "*": ToolCategory.A,
         "evaluate": ToolCategory.B,
     },
-
     # /browser - 97% Category A
     "playwright": {
         "*": ToolCategory.A,
         "playwright_evaluate": ToolCategory.B,
     },
-
     # /code-analysis
     "serena": {
         "*": ToolCategory.A,  # LSP операции детерминированные
     },
-
     # /utils
     "github": {
         "search": ToolCategory.A,
@@ -160,19 +153,16 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "review": ToolCategory.C,
         "*": ToolCategory.A,
     },
-
     # IDE tools
     "ide": {
         "getDiagnostics": ToolCategory.A,
         "executeCode": ToolCategory.B,
     },
-
     # Task Master
     "task-master-ai": {
         "*": ToolCategory.A,
         "expand_task": ToolCategory.B,
     },
-
     # BSL Debugger - отладка 1С кода (Category A - детерминированные)
     "bsl-debugger": {
         "*": ToolCategory.A,  # Все операции отладки детерминированные
@@ -185,7 +175,6 @@ TOOL_CLASSIFICATION: Dict[str, Dict[str, ToolCategory]] = {
         "step_into": ToolCategory.A,
         "continue_execution": ToolCategory.A,
     },
-
     # MCP Reasoner - reasoning стратегии (Category C - только Claude)
     "mcp-reasoner": {
         "*": ToolCategory.C,  # MCTS/Beam Search - reasoning задачи
@@ -223,10 +212,10 @@ class ToolInterceptor:
 
     def __init__(
         self,
-        zai_client: Optional[Any] = None,
+        zai_client: Any | None = None,
         enable_metrics: bool = True,
         enable_caching: bool = True,
-        cache_ttl_seconds: int = 300
+        cache_ttl_seconds: int = 300,
     ):
         """
         Инициализация интерцептора.
@@ -244,7 +233,7 @@ class ToolInterceptor:
         self.cache_ttl = cache_ttl_seconds
 
         # Кэш для Category A инструментов
-        self._cache: Dict[str, Tuple[Any, float]] = {}
+        self._cache: dict[str, tuple[Any, float]] = {}
 
         # Метрики
         self.metrics = {
@@ -259,14 +248,16 @@ class ToolInterceptor:
         }
 
         # Путь к метрикам
-        self.metrics_path = Path(os.environ.get(
-            "LAZY_MCP_METRICS_PATH",
-            "D:/1C-Enterprise_Framework/cache/metrics/lazy-mcp-routing.json"
-        ))
+        self.metrics_path = Path(
+            os.environ.get(
+                "LAZY_MCP_METRICS_PATH",
+                "D:/1C-Enterprise_Framework/cache/metrics/lazy-mcp-routing.json",
+            )
+        )
 
         log_stderr("[tool-interceptor] Initialized")
 
-    async def _get_zai_client(self) -> Optional[Any]:
+    async def _get_zai_client(self) -> Any | None:
         """Lazy init Z.AI клиента"""
         if not self._zai_initialized:
             try:
@@ -275,6 +266,7 @@ class ToolInterceptor:
                 if zai_proxy_path.exists():
                     sys.path.insert(0, str(zai_proxy_path))
                     from zai_client import get_client
+
                     self._zai_client = get_client()
                     self._zai_initialized = True
                     log_stderr("[tool-interceptor] Z.AI client initialized")
@@ -319,10 +311,7 @@ class ToolInterceptor:
         return ToolCategory.A
 
     def get_routing_decision(
-        self,
-        category: ToolCategory,
-        tool_name: str,
-        args: Dict[str, Any]
+        self, category: ToolCategory, tool_name: str, args: dict[str, Any]
     ) -> RoutingDecision:
         """
         Определить решение о маршрутизации.
@@ -342,12 +331,12 @@ class ToolInterceptor:
         else:
             return RoutingDecision.CLAUDE_ONLY
 
-    def _get_cache_key(self, server_name: str, tool_name: str, args: Dict) -> str:
+    def _get_cache_key(self, server_name: str, tool_name: str, args: dict) -> str:
         """Сгенерировать ключ кэша"""
         args_str = json.dumps(args, sort_keys=True, ensure_ascii=False)
         return f"{server_name}:{tool_name}:{args_str}"
 
-    def _check_cache(self, cache_key: str) -> Optional[Any]:
+    def _check_cache(self, cache_key: str) -> Any | None:
         """Проверить кэш"""
         if not self.enable_caching:
             return None
@@ -371,8 +360,8 @@ class ToolInterceptor:
         self,
         server_name: str,
         tool_name: str,
-        args: Dict[str, Any],
-        execute_direct: Optional[callable] = None
+        args: dict[str, Any],
+        execute_direct: callable | None = None,
     ) -> InterceptResult:
         """
         Перехватить и маршрутизировать вызов инструмента.
@@ -411,7 +400,7 @@ class ToolInterceptor:
                         decision=decision,
                         result=cached,
                         latency_ms=latency,
-                        provider="cache"
+                        provider="cache",
                     )
 
             # 3. Маршрутизация
@@ -419,10 +408,7 @@ class ToolInterceptor:
                 # Category C - не перехватываем, Claude выполняет напрямую
                 self.metrics["claude_routed"] += 1
                 return InterceptResult(
-                    intercepted=False,
-                    category=category,
-                    decision=decision,
-                    provider="claude"
+                    intercepted=False, category=category, decision=decision, provider="claude"
                 )
 
             # 4. Попытка выполнить через Z.AI
@@ -440,14 +426,14 @@ class ToolInterceptor:
                         decision=decision,
                         result=result,
                         latency_ms=latency,
-                        provider="direct_fallback"
+                        provider="direct_fallback",
                     )
                 else:
                     return InterceptResult(
                         intercepted=False,
                         category=category,
                         decision=decision,
-                        error="Z.AI unavailable and no fallback provided"
+                        error="Z.AI unavailable and no fallback provided",
                     )
 
             # 5. Выполнение через Z.AI
@@ -476,7 +462,7 @@ class ToolInterceptor:
                         decision=decision,
                         result=zai_response,
                         latency_ms=latency,
-                        provider="zai"
+                        provider="zai",
                     )
                 else:
                     # Category B - нужна валидация Claude
@@ -488,14 +474,16 @@ class ToolInterceptor:
                         category=category,
                         decision=decision,
                         result={
-                            "zai_result": asdict(zai_response) if hasattr(zai_response, '__dataclass_fields__') else zai_response,
+                            "zai_result": asdict(zai_response)
+                            if hasattr(zai_response, "__dataclass_fields__")
+                            else zai_response,
                             "needs_validation": True,
                             "validation_prompt": self._build_validation_prompt(
                                 server_name, tool_name, args, zai_response
-                            )
+                            ),
                         },
                         latency_ms=latency,
-                        provider="zai_hybrid"
+                        provider="zai_hybrid",
                     )
 
             except Exception as e:
@@ -513,30 +501,19 @@ class ToolInterceptor:
                         result=result,
                         latency_ms=latency,
                         provider="direct_fallback",
-                        error=f"Z.AI failed: {e}"
+                        error=f"Z.AI failed: {e}",
                     )
 
                 return InterceptResult(
-                    intercepted=False,
-                    category=category,
-                    decision=decision,
-                    error=str(e)
+                    intercepted=False, category=category, decision=decision, error=str(e)
                 )
 
         except Exception as e:
             self.metrics["errors"] += 1
             log_stderr(f"[tool-interceptor] Error: {e}")
-            return InterceptResult(
-                intercepted=False,
-                error=str(e)
-            )
+            return InterceptResult(intercepted=False, error=str(e))
 
-    def _build_zai_prompt(
-        self,
-        server_name: str,
-        tool_name: str,
-        args: Dict[str, Any]
-    ) -> str:
+    def _build_zai_prompt(self, server_name: str, tool_name: str, args: dict[str, Any]) -> str:
         """Сформировать промпт для Z.AI"""
         return f"""Execute MCP tool and return result as JSON:
 
@@ -547,11 +524,7 @@ Arguments: {json.dumps(args, ensure_ascii=False, indent=2)}
 Return the tool execution result in JSON format."""
 
     def _build_validation_prompt(
-        self,
-        server_name: str,
-        tool_name: str,
-        args: Dict[str, Any],
-        zai_result: Any
+        self, server_name: str, tool_name: str, args: dict[str, Any], zai_result: Any
     ) -> str:
         """Сформировать промпт для валидации Claude"""
         return f"""Validate Z.AI result for MCP tool call:
@@ -572,20 +545,25 @@ Is this result correct and complete? If not, provide the corrected result."""
         try:
             self.metrics_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.metrics_path, 'w', encoding='utf-8') as f:
-                json.dump({
-                    "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                    "metrics": self.metrics,
-                    "classification_stats": {
-                        "category_a_servers": list(CATEGORY_A_SERVERS),
-                        "category_c_servers": list(CATEGORY_C_SERVERS),
-                    }
-                }, f, indent=2, ensure_ascii=False)
+            with open(self.metrics_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                        "metrics": self.metrics,
+                        "classification_stats": {
+                            "category_a_servers": list(CATEGORY_A_SERVERS),
+                            "category_c_servers": list(CATEGORY_C_SERVERS),
+                        },
+                    },
+                    f,
+                    indent=2,
+                    ensure_ascii=False,
+                )
 
         except Exception as e:
             log_stderr(f"[tool-interceptor] Failed to save metrics: {e}")
 
-    def get_classification_summary(self) -> Dict[str, Any]:
+    def get_classification_summary(self) -> dict[str, Any]:
         """Получить сводку по классификации"""
         total_a = len(CATEGORY_A_SERVERS)
         total_c = len(CATEGORY_C_SERVERS)
@@ -597,13 +575,13 @@ Is this result correct and complete? If not, provide the corrected result."""
             "summary": {
                 "always_zai": total_a,
                 "always_claude": total_c,
-                "detailed_routing": len(TOOL_CLASSIFICATION)
-            }
+                "detailed_routing": len(TOOL_CLASSIFICATION),
+            },
         }
 
 
 # Глобальный экземпляр интерцептора
-_interceptor: Optional[ToolInterceptor] = None
+_interceptor: ToolInterceptor | None = None
 
 
 def get_interceptor() -> ToolInterceptor:
@@ -615,10 +593,7 @@ def get_interceptor() -> ToolInterceptor:
 
 
 async def intercept_tool_call(
-    server_name: str,
-    tool_name: str,
-    args: Dict[str, Any],
-    execute_direct: Optional[callable] = None
+    server_name: str, tool_name: str, args: dict[str, Any], execute_direct: callable | None = None
 ) -> InterceptResult:
     """
     Удобная функция для перехвата вызова инструмента.

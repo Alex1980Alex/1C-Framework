@@ -280,4 +280,3 @@ categories:
         description: "Chrome DevTools Protocol - отладка в браузере"
         type: "npx"
         timeout: 60000
-

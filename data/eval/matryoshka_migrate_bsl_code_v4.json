@@ -1,0 +1,51 @@
+{
+  "source": "bsl_code_v4",
+  "stages": {
+    "evaluate": {
+      "4096": {
+        "dim": 4096,
+        "collection": "bsl_code_v4",
+        "n_items": 12,
+        "n_scored": 12,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.44361085505565084,
+        "p50_ms": 106.72429998521693,
+        "p95_ms": 111.69109999900684
+      },
+      "1024": {
+        "dim": 1024,
+        "collection": "bsl_code_v4_mrl_1024",
+        "n_items": 12,
+        "n_scored": 12,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.3869564059457505,
+        "p50_ms": 68.01149999955669,
+        "p95_ms": 96.77679999731481
+      },
+      "512": {
+        "dim": 512,
+        "collection": "bsl_code_v4_mrl_512",
+        "n_items": 12,
+        "n_scored": 12,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.30715460435113495,
+        "p50_ms": 69.93110000621527,
+        "p95_ms": 101.68210000847466
+      }
+    }
+  },
+  "verdicts": {
+    "1024": {
+      "delta_rel": -0.1277120441581464,
+      "verdict": "REJECT",
+      "ndcg": 0.3869564059457505,
+      "baseline": 0.44361085505565084
+    },
+    "512": {
+      "delta_rel": -0.3076034978616506,
+      "verdict": "REJECT",
+      "ndcg": 0.30715460435113495,
+      "baseline": 0.44361085505565084
+    }
+  }
+}

@@ -1,0 +1,3141 @@
+{
+  "version": "v2.4",
+  "created": "2026-05-09",
+  "updated": "2026-05-17",
+  "schema_version": 1,
+  "source": "v1.0 — manual seed (10 items, 2026-05-09). v1.1 — +30 templated queries from chapter docs (no LLM, schema-validation fixtures, expected_chunk_ids still empty pending v2.0 grounding pass). v2.2 — +20 BSL-domain queries for §4.1.7 re-bench (2026-05-17). v2.3 — +20 PDF-domain queries for §4.1.8 (2026-05-17). v2.4 — +60 items (20 bsl_code_v4 std, 20 wiki, 20 graph) for §4.1.9/10/11.",
+  "description": "Golden evaluation dataset for hybrid retrieval + RAG quality benchmarks. Each item has a query, expected ground-truth chunk_ids (in pdf_documents collection), expected answer keywords (loose check), and difficulty label.",
+  "fields": {
+    "id": "stable identifier (gv1-NNN)",
+    "query": "natural-language user query",
+    "expected_chunk_ids": "list of chunk IDs that should appear in top-K retrieval (gold standard)",
+    "expected_keywords": "list of strings — answer should mention at least one (loose semantic check)",
+    "expected_answer_summary": "short ideal answer for human review (not used for automated metric)",
+    "difficulty": "easy | medium | hard — easy = single-chunk lookup, medium = synthesis across 2-3 chunks, hard = multi-step or analytical",
+    "category": "factual | conceptual | procedural | analytical | comparative",
+    "domain": "rag-framework | 1c | embeddings | infra"
+  },
+  "items": [
+    {
+      "id": "gv1-001",
+      "query": "What embedding model does the framework use after Phase 8?",
+      "expected_chunk_ids": [
+        "73b3b292-55eb-52d5-baca-3aa45036022b",
+        "4afe2590-d2a8-5f05-8f22-ec1fc50bf430",
+        "3355ee9d-e94b-5536-8308-3d98787fdcb2"
+      ],
+      "expected_keywords": [
+        "Qwen3",
+        "Qwen3-Embedding-8B",
+        "4096",
+        "TEI"
+      ],
+      "expected_answer_summary": "Qwen3-Embedding-8B (4096d) served via TEI Docker. Replaces multilingual-e5-large.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-002",
+      "query": "How does Hybrid Search combine vector and BM25 results?",
+      "expected_chunk_ids": [
+        "33511f33-2a35-5998-a30f-3feffb55014d",
+        "6f40bf21-c0bd-5a6f-8bc1-0fb4cac4a452"
+      ],
+      "expected_keywords": [
+        "RRF",
+        "Reciprocal Rank Fusion",
+        "BM25",
+        "vector"
+      ],
+      "expected_answer_summary": "Hybrid Search uses Reciprocal Rank Fusion (RRF) to combine dense vector search with BM25 sparse retrieval, optionally adding graph-based search as a third leg.",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-003",
+      "query": "Steps to index a PDF document via the CLI",
+      "expected_chunk_ids": [
+        "4cd17f8a-56b7-5057-ac1e-7d796b32f4dc",
+        "2a386fa3-6a60-562e-8dd5-e3e28c6873c7",
+        "cee3fa88-0cb9-5e29-bf52-89228a662ab6"
+      ],
+      "expected_keywords": [
+        "index",
+        "PDF",
+        "loader",
+        "splitter",
+        "Qdrant"
+      ],
+      "expected_answer_summary": "Use python -m src.cli index <file.pdf> [--graph] [--raptor] etc. Pipeline: load → split → embed → upsert into Qdrant collection.",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-004",
+      "query": "Compare Self-RAG and Adaptive RAG agents",
+      "expected_chunk_ids": [
+        "a4d64413-149f-5510-a517-e80639bd4dfe",
+        "024ab852-92b2-52f2-90c1-85fbdd9c3db6"
+      ],
+      "expected_keywords": [
+        "Self-RAG",
+        "Adaptive",
+        "grading",
+        "decomposition"
+      ],
+      "expected_answer_summary": "Self-RAG performs grading + rewriting + hallucination check. Adaptive RAG classifies the query and routes to a strategy with optional decomposition into sub-queries.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-005",
+      "query": "What reranking strategies are available?",
+      "expected_chunk_ids": [
+        "625e7b79-daec-54d9-91d5-cd29340632aa",
+        "9f51ca45-79be-5f5f-84e1-55dbaf0f7a75",
+        "1a199d8d-5d3f-5b0c-8ff8-4eb0229ca4e1"
+      ],
+      "expected_keywords": [
+        "reranker",
+        "cross-encoder",
+        "FlashRank",
+        "LLM rerank"
+      ],
+      "expected_answer_summary": "Four rerankers: cross-encoder (default), FlashRank (fast), Cohere (cloud), LLM-based (slow but high quality).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-006",
+      "query": "How does the framework handle multi-tenancy isolation?",
+      "expected_chunk_ids": [
+        "bad1a889-354d-504e-ac35-8ac4306a456e",
+        "b227c18d-5b88-5a59-902e-a5706c298f36",
+        "99b6edc8-734a-5f16-9923-d1c00f156dd3"
+      ],
+      "expected_keywords": [
+        "tenant",
+        "isolation",
+        "collection",
+        "JWT",
+        "assert_tenant_access"
+      ],
+      "expected_answer_summary": "Per-tenant Qdrant collections, JWT-derived tenant_id, IDOR guard via assert_tenant_access on all routes accepting tenant_id from user input.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-007",
+      "query": "Что такое регистр накопления в 1С?",
+      "expected_chunk_ids": [
+        "d9b5b776-22df-5520-bed5-c7d69608f8f2"
+      ],
+      "expected_keywords": [
+        "регистр накопления",
+        "движение",
+        "оборот",
+        "остаток"
+      ],
+      "expected_answer_summary": "Регистр накопления — объект 1С для учёта оборотов и остатков. Поддерживает два вида: остатки и обороты.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "target_collection": "pdf_documents"
+    },
+    {
+      "id": "gv1-008",
+      "query": "Как реализован Late Chunking в bsl_code_v4_late коллекции?",
+      "expected_chunk_ids": [
+        "a151052b-4d60-587c-a742-72846df30177",
+        "51b99ced-544a-5e40-aedc-be0d70d5ba7c",
+        "f76f4c52-4c37-5f0b-a0ca-9ab606b8203b"
+      ],
+      "expected_keywords": [
+        "Late Chunking",
+        "Qwen3",
+        "context",
+        "long"
+      ],
+      "expected_answer_summary": "Late Chunking: эмбеддинг считается на полном документе, потом разбивается на chunks с сохранением long-range context. Использует Qwen3-Embedding-8B 4096d.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-009",
+      "query": "Какие коллекции Qdrant есть для retrieval после Phase 8?",
+      "expected_chunk_ids": [
+        "b43f7def-03bb-5b25-926e-ab9eee76ecf0",
+        "f3990de8-b8bd-52cb-bab5-3292b1059f4a"
+      ],
+      "expected_keywords": [
+        "Qdrant",
+        "collection",
+        "bsl_code_v4",
+        "framework_code_v1",
+        "pdf_documents"
+      ],
+      "expected_answer_summary": "10 коллекций × 4096d Qwen3: bsl_code_v4_late, bsl_code_v4, framework_code_v1, graph_embeddings, wiki_pages_v1, pdf_documents, skill_library, learned_patterns, experience_embeddings, conversation_memory.",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-010",
+      "query": "What is the difference between Self-RAG grading and DeepEval faithfulness?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "Self-RAG",
+        "grading",
+        "DeepEval",
+        "faithfulness"
+      ],
+      "expected_answer_summary": "Self-RAG grading is online (during inference) — agent self-checks retrieval relevance + answer hallucination. DeepEval faithfulness is offline (CI) — measures if answer is grounded in context, threshold-based.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-011",
+      "query": "Какой strategy выбрать для точного поиска по ключевому термину?",
+      "expected_chunk_ids": [
+        "443433d7-c964-53a2-86a1-8d7b0ab113b5",
+        "a7666282-26fa-5a3b-a755-f4f3cb07e0bb",
+        "2900a92d-10f8-5c32-b50b-43465c91242e"
+      ],
+      "expected_keywords": [
+        "bm25",
+        "FTS5",
+        "лемматизация",
+        "точное совпадение"
+      ],
+      "expected_answer_summary": "BM25 strategy — 5ms latency, FTS5 backend с русской лемматизацией. Идеально для exact term match.",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-012",
+      "query": "How does GraphRAG Local differ from GraphRAG Global?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "GraphRAG",
+        "local",
+        "global",
+        "community",
+        "map-reduce"
+      ],
+      "expected_answer_summary": "Local: search within a single community (1-3s). Global: map-reduce across all communities (5-15s) — broader thematic queries.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-013",
+      "query": "What is RRF k parameter in Hybrid Search?",
+      "expected_chunk_ids": [
+        "f84e181f-1d01-57be-ba58-0a0785d69a67"
+      ],
+      "expected_keywords": [
+        "RRF",
+        "rrf_k",
+        "60",
+        "ranking"
+      ],
+      "expected_answer_summary": "Reciprocal Rank Fusion smoothing parameter. Default rrf_k=60. Score = weight / (rrf_k + rank + 1).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-014",
+      "query": "Когда использовать MMR вместо обычного vector search?",
+      "expected_chunk_ids": [
+        "2f7d8def-29e8-537d-a214-50785b82b2bc",
+        "0a537f0c-e3b1-568e-8ae6-89bdc4d84f4d",
+        "6a5d23ef-b870-575e-b17a-e7828ce6fb23"
+      ],
+      "expected_keywords": [
+        "MMR",
+        "diversity",
+        "лямбда",
+        "разнообразие"
+      ],
+      "expected_answer_summary": "MMR — когда нужно diversity результатов (избежать повторов). Параметр diversity (λ) от 0.0 (relevance only) до 1.0 (max diversity).",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-015",
+      "query": "What environment variables configure Langfuse?",
+      "expected_chunk_ids": [
+        "2602308a-c362-5e10-9e18-8f99a220bea8",
+        "2e436a38-df2c-56f9-a4ae-4e55b23aa628"
+      ],
+      "expected_keywords": [
+        "OBSERVABILITY__LANGFUSE_ENABLED",
+        "PUBLIC_KEY",
+        "SECRET_KEY",
+        "HOST"
+      ],
+      "expected_answer_summary": "OBSERVABILITY__LANGFUSE_ENABLED, PUBLIC_KEY, SECRET_KEY, HOST через pydantic-settings nested delimiter. Legacy fallback на LANGFUSE_PUBLIC_KEY/SECRET_KEY.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-016",
+      "query": "Как восстановить feedback из JSONL backup?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "replay",
+        "backup",
+        "JSONL",
+        "scripts/replay_feedback_backup.py"
+      ],
+      "expected_answer_summary": "scripts/replay_feedback_backup.py --target-db data/feedback_restored.db. Опции: --since/--until для date range, --dedupe для idempotent replay.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-017",
+      "query": "What is the smoke gate threshold for retrieval quality?",
+      "expected_chunk_ids": [
+        "ea66f4ca-c87d-52cc-a40a-ff020250d88a",
+        "82118065-bdbe-5fee-88b9-6610ab325940"
+      ],
+      "expected_keywords": [
+        "NDCG",
+        "0.55",
+        "threshold",
+        "schema gate"
+      ],
+      "expected_answer_summary": "NDCG@10 ≥ 0.55 (placeholder, calibrated against E5 baseline 0.45). Activates when golden_v1 has ≥50 items with ground truth.",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-018",
+      "query": "Зачем нужен IDOR guard в multi-tenant API?",
+      "expected_chunk_ids": [
+        "df691bf7-142f-551f-af19-90c67340d856"
+      ],
+      "expected_keywords": [
+        "IDOR",
+        "tenant_id",
+        "JWT",
+        "403",
+        "assert_tenant_access"
+      ],
+      "expected_answer_summary": "IDOR guard блокирует non-admin доступ к чужим tenants через path/query/body tenant_id. assert_tenant_access сверяет path_tenant_id с JWT-derived current_tenant.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-019",
+      "query": "What does the Ralph Wiggum pattern do?",
+      "expected_chunk_ids": [
+        "c8bc542c-e5fe-5db4-99f6-07eb70bdb958"
+      ],
+      "expected_keywords": [
+        "Ralph Wiggum",
+        "feedback",
+        "retry",
+        "self-correcting"
+      ],
+      "expected_answer_summary": "Self-correcting LLM loop: 2-3 attempts where validation feedback (length, language, refusal) injects into next attempt. NOT transient retry — semantic correction.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-020",
+      "query": "Какие 4 декоратора предоставляет utils/retry.py?",
+      "expected_chunk_ids": [
+        "c76de82c-9cd3-59bf-9fb8-d2090e017630",
+        "dfc09ec1-fc7f-5f6b-ab48-585d11a21b6b",
+        "2989948f-a54d-524f-af39-0b6de215737b"
+      ],
+      "expected_keywords": [
+        "retry_llm_call",
+        "retry_embedding",
+        "retry_db_operation",
+        "retry_network"
+      ],
+      "expected_answer_summary": "@retry_llm_call (5 attempts/120s), @retry_embedding (5/90s + RuntimeError), @retry_db_operation (3/0.5s fixed), @retry_network (4/60s). Plus create_retry() factory.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-021",
+      "query": "How does Adaptive RAG decide between simple and complex routing?",
+      "expected_chunk_ids": [
+        "db4f9a19-3d0f-53da-aead-f680d424b8ab"
+      ],
+      "expected_keywords": [
+        "classifier",
+        "complexity",
+        "BM25 early termination",
+        "decompose"
+      ],
+      "expected_answer_summary": "Classifier предсказывает complexity (simple/moderate/complex). Simple → BM25 early termination ~125ms. Moderate → hybrid + reranker. Complex → decompose + multi-step.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-022",
+      "query": "Что такое план обмена в 1С и для чего используется?",
+      "expected_chunk_ids": [
+        "2c340871-4c6d-5823-a038-1cd87007efff"
+      ],
+      "expected_keywords": [
+        "план обмена",
+        "распределённая ИБ",
+        "регистрация изменений",
+        "узел"
+      ],
+      "expected_answer_summary": "План обмена — объект 1С для распределённой работы. Регистрирует изменения объектов для последующей передачи между узлами (master/slave или peer-to-peer).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "target_collection": "pdf_documents"
+    },
+    {
+      "id": "gv1-023",
+      "query": "Как работает обработчик ПриЗаписи в модуле объекта?",
+      "expected_chunk_ids": [
+        "0f140b3f-3524-56fd-8e4d-2de4b54407f4"
+      ],
+      "expected_keywords": [
+        "ПриЗаписи",
+        "событие",
+        "транзакция",
+        "Отказ"
+      ],
+      "expected_answer_summary": "Срабатывает при сохранении объекта в БД, внутри транзакции. Параметры — Отказ (cancel) и др. Используется для validation, derived field calculation.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "target_collection": "bsl_code_v4_late"
+    },
+    {
+      "id": "gv1-024",
+      "query": "Как индексировать BSL код через MCP-сервер?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "bsl-semantic-search",
+        "reindex_bsl",
+        "FTS5",
+        "Qdrant"
+      ],
+      "expected_answer_summary": "scripts/reindex_bsl.bat — full 3-фазная BSL индексация: FTS5 BM25 + Qdrant Qwen3 4096d + Call Graph. Через bsl-semantic-search MCP server.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "target_collection": "bsl_code_v4_late"
+    },
+    {
+      "id": "gv1-025",
+      "query": "What chunking strategies are available in the framework?",
+      "expected_chunk_ids": [
+        "f623a416-6bdd-5196-be58-2ebe2a3b2a68"
+      ],
+      "expected_keywords": [
+        "chunking",
+        "parent-child",
+        "RAPTOR",
+        "late chunking",
+        "proposition"
+      ],
+      "expected_answer_summary": "Recursive (default), Parent-Child (small/large pairs), RAPTOR (hierarchical clusters), Late Chunking (Qwen3 long context), Proposition (semantic atoms).",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-026",
+      "query": "Как настроить TEI Docker для embedding?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "TEI",
+        "Qwen3",
+        "MAX_CLIENT_BATCH_SIZE",
+        "Docker"
+      ],
+      "expected_answer_summary": "Docker pdf-rag-tei с Qwen/Qwen3-Embedding-8B. MAX_CLIENT_BATCH_SIZE=32 (default), 4096d output. EMBEDDING__PROVIDER=tei.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-027",
+      "query": "What is sparse vector for in BM25 + dense hybrid retrieval?",
+      "expected_chunk_ids": [
+        "ecbda47e-6c0d-5238-b887-7070d4810b6b"
+      ],
+      "expected_keywords": [
+        "sparse",
+        "BM25",
+        "named vectors",
+        "Qdrant"
+      ],
+      "expected_answer_summary": "Sparse vector представляет BM25 term-frequency weights в Qdrant. Named vectors layout: dense (4096d) + bm25 (sparse). Hybrid search через RRF fusion двух prefetch.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-028",
+      "query": "Как работает knowledge graph в фреймворке?",
+      "expected_chunk_ids": [
+        "7dec34ea-25fd-5598-a323-5209854ecc45",
+        "62075a7b-e312-591d-afb9-088ed861e136"
+      ],
+      "expected_keywords": [
+        "graph",
+        "entity",
+        "relation",
+        "Neo4j",
+        "community"
+      ],
+      "expected_answer_summary": "Entities извлекаются из chunks при индексации (--graph), хранятся в Neo4j или NetworkX. Relations + community detection (Leiden) для GraphRAG.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-029",
+      "query": "What does --raptor flag do during indexing?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "RAPTOR",
+        "tree",
+        "summarization",
+        "cluster"
+      ],
+      "expected_answer_summary": "Builds hierarchical summary tree: chunks → clusters → LLM summaries (recursive). Enables high-level queries via collapsed tree search или top-down traversal.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-030",
+      "query": "Какие callback'и поддерживает middleware для LLM?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "LangfuseCallbackHandler",
+        "BaseCallbackHandler",
+        "middleware",
+        "with_middleware"
+      ],
+      "expected_answer_summary": "with_middleware(llm, *handlers, enable_langfuse=True) принимает LangfuseCallbackHandler + любые BaseCallbackHandler. Поддерживает on_llm_start/end/error.",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-031",
+      "query": "How are skills routed and activated?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "skill-router",
+        "4 layers",
+        "keyword",
+        "fuzzy",
+        "TF-IDF",
+        "semantic"
+      ],
+      "expected_answer_summary": "4 слоя skill-router: keyword match, fuzzy match, TF-IDF similarity, semantic embedding. Bundles + affinities + scoring. Triggers через PreToolUse hooks.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-032",
+      "query": "What is contextual retrieval (Anthropic)?",
+      "expected_chunk_ids": [
+        "77852bb2-a100-5d7c-82d5-ab2cae477212"
+      ],
+      "expected_keywords": [
+        "contextual",
+        "Anthropic",
+        "context",
+        "embedding",
+        "67%"
+      ],
+      "expected_answer_summary": "Anthropic technique: prepend chunk-level context (~50-100 tokens describing chunk's place in document) before embedding. Reduces retrieval failures by ~67% per their paper.",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-033",
+      "query": "Как в фреймворке реализован semantic cache?",
+      "expected_chunk_ids": [
+        "f123b8e2-9adc-5147-98de-c2d82ae19b64",
+        "9fde242a-3b13-5237-b3f6-860bba5b3e32",
+        "e2b837b9-0f96-5de5-875b-0a2803db08ff"
+      ],
+      "expected_keywords": [
+        "semantic cache",
+        "cosine",
+        "0.95",
+        "TTL",
+        "invalidation"
+      ],
+      "expected_answer_summary": "Semantic cache хранит query embeddings, hit при cosine ≥ 0.95 threshold. TTL 3600s default, max_entries=5000. Кэш в data/cache/semantic_cache.db.",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-034",
+      "query": "What are the 5 phases of Learning Loop?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "SEARCH",
+        "FETCH",
+        "EXECUTE",
+        "VERIFY",
+        "CREATE"
+      ],
+      "expected_answer_summary": "SEARCH (existing skill?) → FETCH (knowledge from sources) → EXECUTE (subagent + attribution) → VERIFY (knowledge-compliance) → CREATE (new skill).",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-035",
+      "query": "Сравни v1 и v2 AutoResearch архитектуру",
+      "expected_chunk_ids": [
+        "15882431-9555-59ca-afc6-49458f49587c"
+      ],
+      "expected_keywords": [
+        "AutoResearch",
+        "v1",
+        "v2",
+        "три агента",
+        "Executor",
+        "Reviewer",
+        "Comparator"
+      ],
+      "expected_answer_summary": "v1: одиночный измерительный цикл measure→change→verify→keep/revert. v2: трёхагентная архитектура (Executor + Reviewer + Comparator) с blind A/B comparison и calibrated scoring.",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-036",
+      "query": "Как использовать lazy-mcp profile для экономии контекста?",
+      "expected_chunk_ids": [
+        "2c726764-cfc5-5a4d-a521-39addda9d179"
+      ],
+      "expected_keywords": [
+        "lazy-mcp",
+        "on-demand",
+        "11 категорий",
+        "27 серверов"
+      ],
+      "expected_answer_summary": "Lazy-MCP — proxy для on-demand загрузки 27 серверов в 11 категориях. Активация по mention pattern. Экономит контекст vs full профиль.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-037",
+      "query": "Как ВызватьИсключение работает в BSL?",
+      "expected_chunk_ids": [
+        "dfc970a6-4ff9-5d05-a452-7488dfc5bdbe"
+      ],
+      "expected_keywords": [
+        "ВызватьИсключение",
+        "исключение",
+        "Попытка",
+        "Исключение"
+      ],
+      "expected_answer_summary": "ВызватьИсключение(\"сообщение\") бросает исключение которое ловится ближайшим Попытка...Исключение блоком. Используется для signaling business errors.",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "target_collection": "bsl_code_v4_late"
+    },
+    {
+      "id": "gv1-038",
+      "query": "What is the auto-reindex on commit pipeline?",
+      "expected_chunk_ids": [
+        "0d9355ef-864a-551b-88ce-73437a69e5c1",
+        "e6305c65-acc1-5472-9c29-52fcaf26caf7"
+      ],
+      "expected_keywords": [
+        "git post-commit",
+        "auto-reindex",
+        "BSL",
+        "framework",
+        "scripts/git_hooks"
+      ],
+      "expected_answer_summary": "git post-commit hook (scripts/git_hooks) запускает re-индексацию изменённых BSL и framework файлов в Qdrant. 3-уровневое резервирование.",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "embeddings",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-039",
+      "query": "Почему run_id важен для cross-hook trace?",
+      "expected_chunk_ids": [],
+      "expected_keywords": [
+        "run_id",
+        "slash-command-tracker",
+        "correlation",
+        "UUID"
+      ],
+      "expected_answer_summary": "run_id — UUID slash-command run, генерится UPS-хуком. Все последующие хуки (включая MCP) подхватывают через .current-runs.json. db.get_run_trace(run_id) даёт full chain.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "infra",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-040",
+      "query": "What happens when faithfulness drops below DeepEval threshold?",
+      "expected_chunk_ids": [
+        "ce93f7f6-7c86-53a5-b025-7b34e9eb44e5",
+        "265c53a4-43bf-5565-867e-c1f744a9895c",
+        "7ae9a654-7d80-5ca9-9db4-c0410e222fb5"
+      ],
+      "expected_keywords": [
+        "DeepEval",
+        "faithfulness",
+        "0.7",
+        "CI fail",
+        "regression"
+      ],
+      "expected_answer_summary": "CI gate в test_deepeval.py падает с assertion error если faithfulness < 0.7. PR блокируется. Triggers RCA для retrieval/generation pipeline.",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-041",
+      "query": "How does Qdrant ID conversion handle string chunk_ids?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "UUID5",
+        "uuid5",
+        "_to_qdrant_id",
+        "namespace"
+      ],
+      "expected_answer_summary": "QdrantStore._to_qdrant_id uses deterministic uuid5 with a namespace to convert string chunk_ids to UUIDs; original_id preserved in payload.",
+      "expected_chunk_ids": [
+        "fe5757d0-a4d0-5690-930b-922288b36e94",
+        "0ef07994-aec1-5f42-aadc-82e93cf3dc3c",
+        "6599f91e-db9d-5d0a-93b6-e9607f6b70c4"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-042",
+      "query": "How is MMR diversity computed for search results?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "MMR",
+        "lambda",
+        "diversity",
+        "fetch_k"
+      ],
+      "expected_answer_summary": "MMR balances relevance vs diversity using lambda; fetches more candidates than k, iteratively selects with diversity penalty.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-043",
+      "query": "What does rebuild_sparse_vectors do in QdrantStore?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "rebuild_sparse_vectors",
+        "BM25",
+        "scroll",
+        "sparse"
+      ],
+      "expected_answer_summary": "Iterates all points via scroll API, regenerates BM25 sparse vectors from content; idempotent.",
+      "expected_chunk_ids": [
+        "107afbd2-d2ef-5b62-a0e4-aafdf8889dbd"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-044",
+      "query": "How is hybrid search RRF formula implemented?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "RRF",
+        "Reciprocal Rank Fusion",
+        "fuse"
+      ],
+      "expected_answer_summary": "RRF combines two ranked lists by summing 1/(k+rank) per item; default k=60; sorted by fused score.",
+      "expected_chunk_ids": [
+        "f84e181f-1d01-57be-ba58-0a0785d69a67"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-045",
+      "query": "How does smart loader choose between pymupdf and docling?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "smart",
+        "router",
+        "min_text_chars",
+        "docling",
+        "pymupdf"
+      ],
+      "expected_answer_summary": "SmartRouter samples PDF pages: text-sparse OR table-heavy -> docling (full pipeline), else fast loader (pymupdf).",
+      "expected_chunk_ids": [
+        "742ca2a2-1a0d-53b1-8386-6f7d2f0298fe",
+        "a900ded2-d73c-5349-9601-dd9245913ad9"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-046",
+      "query": "How does HybridLoader handle Vision OCR retries?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "vision_max_retries",
+        "attempt",
+        "OCR",
+        "fallback"
+      ],
+      "expected_answer_summary": "HybridLoader retries Claude Vision up to vision_max_retries on transient errors, then falls back to next loader tier.",
+      "expected_chunk_ids": [
+        "540b9d23-37d0-51ac-b389-0a0b69ece280"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-047",
+      "query": "How is incremental indexing implemented?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "incremental",
+        "mtime",
+        "sha1",
+        "skip"
+      ],
+      "expected_answer_summary": "IncrementalIndexer checks mtime + sha1 hash; skips unchanged; re-indexes only modified files.",
+      "expected_chunk_ids": [
+        "03d71735-2ba9-5a4d-94d4-7eaf502677c4",
+        "dd64e01d-b1e8-535d-ae6b-c6c74ec2683b",
+        "48c3fb24-159f-5142-b413-bb4885ff398b"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-048",
+      "query": "Where is the parent-child chunk relationship stored?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "ParentStore",
+        "child_id",
+        "parent_id",
+        "merge"
+      ],
+      "expected_answer_summary": "ParentStore (SQLite) maps child chunk IDs to parent chunks; child retrieved by vector search, parent expanded for context.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-049",
+      "query": "What setting controls the TEI client batch size?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "expected_keywords": [
+        "TEI_CLIENT_BATCH",
+        "batch_size",
+        "tei",
+        "sub-batch"
+      ],
+      "expected_answer_summary": "EMBEDDING__TEI_CLIENT_BATCH (default 32) caps per-request batch; client sub-batches automatically.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-050",
+      "query": "How is JWT secret loaded from environment?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "JWTHandler",
+        "AUTH__JWT_SECRET",
+        "jwt",
+        "HS256"
+      ],
+      "expected_answer_summary": "JWTHandler reads AUTH__JWT_SECRET via pydantic-settings; HS256 algorithm; validates secret length.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-051",
+      "query": "What is the default value of AGENT__RERANKER_TYPE?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "expected_keywords": [
+        "reranker_type",
+        "llm",
+        "AgentSettings",
+        "default"
+      ],
+      "expected_answer_summary": "AgentSettings.reranker_type defaults to llm; alternatives: cross_encoder, flashrank, colbert.",
+      "expected_chunk_ids": [
+        "9f51ca45-79be-5f5f-84e1-55dbaf0f7a75",
+        "625e7b79-daec-54d9-91d5-cd29340632aa"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-052",
+      "query": "How does Self-RAG grader decide if a chunk is relevant?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "grader",
+        "relevance",
+        "yes",
+        "no",
+        "ainvoke"
+      ],
+      "expected_answer_summary": "Self-RAG grader sends query+chunk to small LLM, parses yes/no/да/нет from response; retries with corrective feedback on invalid output.",
+      "expected_chunk_ids": [
+        "024ab852-92b2-52f2-90c1-85fbdd9c3db6",
+        "a4d64413-149f-5510-a517-e80639bd4dfe"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-053",
+      "query": "How does the plan-execute agent decompose queries?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "plan_execute",
+        "decompose",
+        "sub_questions",
+        "planner"
+      ],
+      "expected_answer_summary": "Plan-execute uses planner LLM to decompose complex query into ordered sub-questions, executes each, synthesizes final answer.",
+      "expected_chunk_ids": [
+        "7472e326-000e-5f39-8460-bc366f2dfe11"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-054",
+      "query": "Where is conversation history persisted in Conversational RAG?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "ConversationStore",
+        "SQLite",
+        "session_id",
+        "history"
+      ],
+      "expected_answer_summary": "ConversationStore persists messages to SQLite keyed by session_id; max_history limits window; supports query reformulation.",
+      "expected_chunk_ids": [
+        "2718ee11-e90e-538d-bb72-e2921734cba3",
+        "8a2a35c7-2437-5043-95a4-4e5e65018243"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-055",
+      "query": "How does GraphRAG community detection group entities?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "community",
+        "leiden",
+        "resolution",
+        "hierarchical"
+      ],
+      "expected_answer_summary": "GraphRAG runs Leiden on entity graph; resolution param controls community size; multi-level hierarchy for global search.",
+      "expected_chunk_ids": [
+        "113084d1-fbfa-53d6-b5e9-8581dd8e22fd",
+        "7ebd0ddb-5694-5872-9259-7d98ddeab794",
+        "68e62f5c-7b33-5415-bf5e-7ef2f9f0cab2"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-056",
+      "query": "How is rate limiting enforced on REST endpoints?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "rate_limit",
+        "RateLimit",
+        "requests_per_minute",
+        "burst"
+      ],
+      "expected_answer_summary": "Rate limiting middleware uses token bucket: REQUESTS_PER_MINUTE default 60 with burst capacity, keyed by tenant/IP.",
+      "expected_chunk_ids": [
+        "434e3a21-1ca4-5a9c-baa5-041a7872d0fa",
+        "2488a556-dee4-577a-9f3e-ce591ea88e91",
+        "11174109-60e4-5c55-b23a-0ef4bec5d457"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-057",
+      "query": "What MCP tools does the pdf-vector-graph server expose?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "infra",
+      "expected_keywords": [
+        "mcp",
+        "tools",
+        "search_documents",
+        "index_pdf",
+        "ask_question"
+      ],
+      "expected_answer_summary": "MCP server exposes 14 tools including index_pdf, search_documents, ask_question, plan_execute, web_search, visual_search, list_collections, get_stats, graph_query, research, analyze.",
+      "expected_chunk_ids": [
+        "98c8253b-b60f-59bd-a7d8-114dd5c4ecc5"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-058",
+      "query": "How is REST tenant isolation enforced via assert_tenant_access?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "assert_tenant_access",
+        "get_current_tenant",
+        "admin",
+        "tenant_id"
+      ],
+      "expected_answer_summary": "assert_tenant_access guard takes path tenant_id + current_tenant + role; raises 403 unless role=admin or tenants match.",
+      "expected_chunk_ids": [
+        "1a76b192-42be-5a52-98f8-68c80baf40c7",
+        "3808e0f1-9c09-5e17-8baf-993866371d2c",
+        "aab2c771-5a8f-5c96-a9e4-cdb5706ed86b"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-059",
+      "query": "How does LLM reranker score candidate chunks?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "LLMReranker",
+        "rerank",
+        "JSON",
+        "relevance",
+        "Claude"
+      ],
+      "expected_answer_summary": "LLMReranker sends query + numbered candidates to Claude, parses JSON array of index/score; sorts by score; truncates to top_k.",
+      "expected_chunk_ids": [
+        "13bb5b48-158d-5c9b-816a-be8b43c1fe92",
+        "d12adb71-4228-5833-83fd-c4996666b35f"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-060",
+      "query": "What is the FlashRank token budget parameter for?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "flashrank",
+        "token_budget",
+        "caps",
+        "truncate"
+      ],
+      "expected_answer_summary": "FLASHRANK_TOKEN_BUDGET caps total tokens sent to local FlashRank reranker; truncates chunks to stay under context limit.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-061",
+      "query": "How does Qwen3STEmbedder load the model on GPU with bf16?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "embeddings",
+      "expected_keywords": [
+        "Qwen3STEmbedder",
+        "SentenceTransformer",
+        "bfloat16",
+        "cuda"
+      ],
+      "expected_answer_summary": "Qwen3STEmbedder constructs SentenceTransformer with model name, model_kwargs torch_dtype=bfloat16 device=cuda; tokenizer_kwargs padding_side=left for last-token pooling.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-062",
+      "query": "Where is the TEI HTTP embedder client implemented?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "embeddings",
+      "expected_keywords": [
+        "Qwen3TEIEmbedder",
+        "httpx",
+        "embed",
+        "client_batch_size"
+      ],
+      "expected_answer_summary": "Qwen3TEIEmbedder uses httpx.AsyncClient to POST to TEI /embed endpoint; sub-batches to client_batch_size (default 32) to respect server max.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-063",
+      "query": "How does the BSL chunker apply sliding-window splitting?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "bsl_chunker",
+        "window",
+        "overlap",
+        "sliding"
+      ],
+      "expected_answer_summary": "BSL chunker splits XXL symbols via sliding window=1024 overlap=256 to stay under embedding max input length 4096 tokens.",
+      "expected_chunk_ids": [],
+      "target_collection": "bsl_code_v4_late"
+    },
+    {
+      "id": "gv1-064",
+      "query": "What does the Late Chunking pooling mode produce?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "embeddings",
+      "expected_keywords": [
+        "late_chunking",
+        "full-document",
+        "mean-pool",
+        "per-chunk"
+      ],
+      "expected_answer_summary": "Late Chunking runs full-document forward pass then mean-pools per-chunk token spans; preserves cross-chunk context lost in standard chunking.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-065",
+      "query": "How is the BM25 SQLite fallback FTS5 schema defined?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "fts5",
+        "CREATE VIRTUAL TABLE",
+        "tokenize",
+        "BM25Store"
+      ],
+      "expected_answer_summary": "BM25Store creates FTS5 virtual table with tokenize=unicode61 or custom; columns (chunk_id, content, metadata); searched via MATCH.",
+      "expected_chunk_ids": [
+        "6527b2e8-63d6-5a57-92ee-017c5daeb41b"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-066",
+      "query": "Where is the semantic cache similarity threshold checked?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "SemanticCache",
+        "threshold",
+        "0.95",
+        "embedding"
+      ],
+      "expected_answer_summary": "SemanticCache embeds query, searches own SQLite cache, returns hit if cosine similarity exceeds threshold (default 0.95).",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-067",
+      "query": "How is the LLM rotation service circuit breaker triggered?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "CircuitBreaker",
+        "failure_threshold",
+        "open",
+        "cooldown"
+      ],
+      "expected_answer_summary": "CircuitBreaker counts consecutive failures; opens after failure_threshold; rejects calls during cooldown; half-opens for probe.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-068",
+      "query": "How does the Qdrant payload filter convert Pydantic dict to Qdrant Filter?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "_to_qdrant_filter",
+        "Filter",
+        "FieldCondition",
+        "MatchValue"
+      ],
+      "expected_answer_summary": "_to_qdrant_filter converts dict {key:value} or list filters to Qdrant Filter with FieldCondition + MatchValue per field; supports nested AND/OR.",
+      "expected_chunk_ids": [
+        "37ba3415-7785-55d0-9056-b3b03ff97902"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-069",
+      "query": "Where is the embedding cache backed by SQLite?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "EmbeddingCache",
+        "SQLite",
+        "hash",
+        "ttl"
+      ],
+      "expected_answer_summary": "EmbeddingCache stores text_hash -> vector in SQLite with TTL; lookup before calling embedder; write-through on miss.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-070",
+      "query": "How does the auto-git-save hook detect modified files for commit?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "infra",
+      "expected_keywords": [
+        "auto-git-save",
+        "git",
+        "modified",
+        "staged"
+      ],
+      "expected_answer_summary": "auto-git-save hook reads git status, stages modified files, creates structured commit with hook signature.",
+      "expected_chunk_ids": [
+        "4c98199a-5efd-5950-b50f-0a393333a5ea",
+        "afaf28f8-9232-57f8-bc2c-be62d912ada9"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-071",
+      "query": "Where is the HybridSearchStrategy class defined?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "HybridSearchStrategy",
+        "class",
+        "hybrid_search.py"
+      ],
+      "expected_answer_summary": "HybridSearchStrategy class is defined in src/pdf_framework/search/strategies/hybrid_search.py.",
+      "expected_chunk_ids": [
+        "33511f33-2a35-5998-a30f-3feffb55014d"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-072",
+      "query": "Where is the Self-RAG agent graph constructed?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "SelfRAGAgent",
+        "build_graph",
+        "nodes",
+        "grader"
+      ],
+      "expected_answer_summary": "Self-RAG agent wires grader, retriever, rewriter, generator, hallucination_checker nodes in build_graph.",
+      "expected_chunk_ids": [],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-073",
+      "query": "How does the Adaptive RAG classifier route queries?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "rag-framework",
+      "expected_keywords": [
+        "Adaptive",
+        "classifier",
+        "route",
+        "complexity"
+      ],
+      "expected_answer_summary": "Adaptive RAG classifier LLM labels query as simple/moderate/complex/thematic; routes to appropriate strategy.",
+      "expected_chunk_ids": [
+        "d3670929-5cb0-580f-8087-60ceb952a2d6"
+      ],
+      "target_collection": "framework_code_v1"
+    },
+    {
+      "id": "gv1-074",
+      "query": "Что такое РегистрНакопления в 1С и как читать движения документа?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрНакопления",
+        "Движения",
+        "Регистратор",
+        "Записать"
+      ],
+      "expected_answer_summary": "РегистрНакопления хранит обороты/остатки; Документ.Движения.РегистрНакопления.<имя> читает/пишет движения.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "cdd8c138-3d33-5c28-86c4-01dc43327bb8",
+        "ed5ef153-cc2a-597c-8d13-c12b49f16551",
+        "d364e007-615c-5a29-8788-682bbd6d688d"
+      ]
+    },
+    {
+      "id": "gv1-075",
+      "query": "Как работать со СписокЗначений в BSL — добавление, поиск, итерация?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "СписокЗначений",
+        "Добавить",
+        "НайтиПоЗначению",
+        "Для Каждого"
+      ],
+      "expected_answer_summary": "СписокЗначений.Добавить(значение, представление); НайтиПоЗначению; обход через Для Каждого Элемент Из Список.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "dcf64fbe-619c-59ad-ab0c-35c7528621a2",
+        "7a60c0ac-d2a4-58d0-b149-36c63d6baeef",
+        "d0d5760e-34a9-5a1f-90b3-558174b0595c"
+      ]
+    },
+    {
+      "id": "gv1-076",
+      "query": "Когда использовать Структура vs Соответствие в BSL и в чём разница?",
+      "difficulty": "medium",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "Структура",
+        "Соответствие",
+        "Вставить",
+        "Ключ"
+      ],
+      "expected_answer_summary": "Структура — ключи строковые идентификаторы; Соответствие — ключи произвольные. Обе — Вставить/Получить.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-077",
+      "query": "В чём отличие Процедура от Функция в 1С при разработке общих модулей?",
+      "difficulty": "easy",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "Процедура",
+        "Функция",
+        "Возврат",
+        "Экспорт"
+      ],
+      "expected_answer_summary": "Процедура — без возврата; Функция — с Возврат. Обе могут быть Экспорт для серверного вызова.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-078",
+      "query": "Как объявить экспортную функцию модуля менеджера документа?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "МодульМенеджера",
+        "ManagerModule",
+        "Экспорт",
+        "Функция"
+      ],
+      "expected_answer_summary": "В модуле менеджера: Функция МойМетод(Параметр) Экспорт … КонецФункции — доступна через Документы.<имя>.МойМетод.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "b2db3ac1-9e1b-5097-ba5c-10050128eaf7"
+      ]
+    },
+    {
+      "id": "gv1-079",
+      "query": "Что такое ХранилищеЗначения и когда хранить структуру там вместо реквизита?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ХранилищеЗначения",
+        "Новый",
+        "Получить",
+        "DeflateCompression"
+      ],
+      "expected_answer_summary": "ХранилищеЗначения — сериализованное хранение произвольного объекта. Полезно для неструктурированных payload, картинок, кеша.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-080",
+      "query": "Как создать новый документ программно через менеджер документов?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Документы",
+        "СоздатьДокумент",
+        "Записать",
+        "ПолучитьОбъект"
+      ],
+      "expected_answer_summary": "Документы.<имя>.СоздатьДокумент(); установить реквизиты; .Записать(РежимЗаписиДокумента.Запись).",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "76194423-8cb8-570a-9075-16a2ffb55b3c"
+      ]
+    },
+    {
+      "id": "gv1-081",
+      "query": "Как записать справочник с проверкой реквизитов перед записью?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Справочники",
+        "ПередЗаписью",
+        "ПроверкаЗаполнения",
+        "Записать"
+      ],
+      "expected_answer_summary": "В ПередЗаписью или ОбработкаПроверкиЗаполнения; СпрОбъект.Записать() триггерит проверку.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "7c7e9012-55ef-53d5-b8ad-30fd058e5b94",
+        "51c89ee5-0d9f-55d9-b9e8-49e107a876a9",
+        "90c8ad5d-8bae-56da-ae4a-f5dcadbf6541"
+      ]
+    },
+    {
+      "id": "gv1-082",
+      "query": "Чем отличается ПолучитьСсылку от НайтиПоНаименованию для справочников?",
+      "difficulty": "medium",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьСсылку",
+        "НайтиПоНаименованию",
+        "УникальныйИдентификатор"
+      ],
+      "expected_answer_summary": "ПолучитьСсылку(UUID) — детерминированная ссылка по идентификатору; НайтиПоНаименованию — поиск по строке.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-083",
+      "query": "Как использовать общий модуль ОбщегоНазначения для серверного вызова с клиента?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбщегоНазначения",
+        "ОбщегоНазначенияВызовСервера",
+        "ВызовСервера",
+        "&НаСервере"
+      ],
+      "expected_answer_summary": "Общие модули с галкой 'Вызов сервера' доступны с клиента; функции должны быть Экспорт.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-084",
+      "query": "Как обработать БлокировкаДанных внутри транзакции для предотвращения deadlock?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "БлокировкаДанных",
+        "Заблокировать",
+        "НачатьТранзакцию",
+        "Исключение"
+      ],
+      "expected_answer_summary": "БлокировкаДанных().Добавить(пространство); .Заблокировать() — даёт явную семантику и предотвращает race.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "5f977fe9-3491-565f-82a5-58f01c7920cc",
+        "23a6ccc5-6065-59e7-99a8-565106c6805e"
+      ]
+    },
+    {
+      "id": "gv1-085",
+      "query": "Как реализуется ФоновоеЗадание.Выполнить и контроль завершения?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФоновоеЗадание",
+        "Выполнить",
+        "ОжидатьЗавершения",
+        "ПолучитьСостояние"
+      ],
+      "expected_answer_summary": "ФоновыеЗадания.Выполнить(имяМетода, параметры); потом ОжидатьЗавершения() или периодически проверять Состояние.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "4dc312b3-16f5-59d4-b3d3-44ea1cebe69b",
+        "d56db9e8-e0ee-58ba-9d73-4b4b9b44fe69",
+        "c02d539d-ba7a-5d68-9034-4626a9797118"
+      ]
+    },
+    {
+      "id": "gv1-086",
+      "query": "Как организован обмен данными через РегистрСведений в УТ?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "Набор",
+        "Записать",
+        "Отбор"
+      ],
+      "expected_answer_summary": "РегистрыСведений.<имя>.СоздатьНаборЗаписей(); Отбор; Прочитать/Записать; периодический — измерение Период.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "3aa87e68-e64d-5572-801b-369f26414431",
+        "dbf4ea80-6786-5880-ae45-269ba8c4e524",
+        "b21a7b64-0cef-5db0-b8a6-56c3498eb98a"
+      ]
+    },
+    {
+      "id": "gv1-087",
+      "query": "Как настраивается роль с правами доступа к объектам конфигурации?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Роль",
+        "Права",
+        "Чтение",
+        "Изменение",
+        "RLS"
+      ],
+      "expected_answer_summary": "Роль определяется в Дерево метаданных; права на объекты + RLS через шаблоны ограничения доступа.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-088",
+      "query": "Как работает подсистема УправлениеДоступом для разграничения видимости?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "УправлениеДоступом",
+        "ГруппыДоступа",
+        "ВидДоступа",
+        "Профиль"
+      ],
+      "expected_answer_summary": "БСП-подсистема: ГруппыДоступа → ВидыДоступа → значения; RLS использует регистры УправленияДоступом.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "21d4f395-d9bc-5df1-ba1b-4cfb43edfd7b",
+        "c340d09b-a243-5111-bb3a-4ebe87b18251",
+        "5a650e99-fe76-519a-8524-5bc1e4006cd3"
+      ]
+    },
+    {
+      "id": "gv1-089",
+      "query": "Как реализованы регламентные задания (РегламентноеЗадание) и их расписание?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегламентноеЗадание",
+        "Расписание",
+        "Метаданные",
+        "Выполнить"
+      ],
+      "expected_answer_summary": "Объект метаданных Регламентное задание; Расписание периодов; вызывает указанный метод общего модуля.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "af586572-ad66-54fd-bc16-f7f69aacfe8c",
+        "679155a4-e2b4-50b3-81d0-478d3bcdd016"
+      ]
+    },
+    {
+      "id": "gv1-090",
+      "query": "Как правильно использовать Попытка-Исключение для обработки ошибок?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Попытка",
+        "Исключение",
+        "ОписаниеОшибки",
+        "ВызватьИсключение"
+      ],
+      "expected_answer_summary": "Попытка … Исключение Сообщение(ОписаниеОшибки()); КонецПопытки; ВызватьИсключение для перевыброса.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-091",
+      "query": "Как записать ошибку в журнал регистрации через ЗаписьЖурналаРегистрации?",
+      "difficulty": "easy",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписьЖурналаРегистрации",
+        "УровеньЖурналаРегистрации",
+        "Ошибка",
+        "Метаданные"
+      ],
+      "expected_answer_summary": "ЗаписьЖурналаРегистрации(событие, УровеньЖурналаРегистрации.Ошибка, метаданные, данные, комментарий).",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "fd0fdbb2-c157-5284-a770-c0bbc3dd0886"
+      ]
+    },
+    {
+      "id": "gv1-092",
+      "query": "Как корректно обработать ОтменаТранзакции внутри вложенной транзакции?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "НачатьТранзакцию",
+        "ОтменитьТранзакцию",
+        "ЗафиксироватьТранзакцию",
+        "вложенн"
+      ],
+      "expected_answer_summary": "1С использует savepoint-семантику; внутренняя ОтменитьТранзакцию помечает внешнюю как отменённую — Попытка-Исключение обязательно.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "309f5767-068e-55f9-87d8-2fa004304fff",
+        "49f28781-0e1e-5789-85a1-48e052c95e05"
+      ]
+    },
+    {
+      "id": "gv1-093",
+      "query": "Как обрабатывается отмена пользователем (Прервано) в коде клиента?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Прервано",
+        "ОтменаПользователем",
+        "Cancel",
+        "Возврат"
+      ],
+      "expected_answer_summary": "Параметр Отказ в обработчиках клиента; ОповеститьОВыборе с Отказ; для длительных операций — флаг отмены.",
+      "target_collection": "bsl_code_v4_late",
+      "expected_chunk_ids": [
+        "6ea81cd1-aa79-567c-a87f-87d541c57acf",
+        "1195e7ac-9d28-5883-888b-40ecbcfda1f8",
+        "ffd8fa70-9c07-50e8-8df1-6f80d748fc43"
+      ]
+    },
+    {
+      "id": "gv1-094",
+      "query": "Что такое справочник в 1С Предприятие?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Справочник",
+        "элемент",
+        "наименование",
+        "код"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "a330e2ae-6870-5244-a149-2d1b97673613",
+        "8d637343-a079-5e05-826b-676313462199"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-095",
+      "query": "Какие виды документов бывают в 1С и как они проводятся?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Документ",
+        "проведение",
+        "регистратор",
+        "Дата"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "c9948fa8-2d10-5e1e-8c99-bce1888c4a00",
+        "b0f6055f-bbd0-50f9-8a15-dd2bc71ca911",
+        "c860829c-a940-53d7-bf54-eeb2900cf725"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-096",
+      "query": "Чем регистр сведений отличается от регистра накопления?",
+      "difficulty": "easy",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "РегистрНакопления",
+        "Период",
+        "Оборот"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "a43c0509-b174-51d9-b76c-ae8a91f6e4eb",
+        "2e983b18-615e-520f-990b-234ac5daeb98"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-097",
+      "query": "Для чего используются перечисления (Enumerations) в 1С?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Перечисление",
+        "значение",
+        "статус"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "3eedb24d-41cf-5020-9972-76742fdd25e9"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-098",
+      "query": "Что такое обработка (Data Processor) в 1С?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Обработка",
+        "форма",
+        "функция"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "9ffc51d5-6a67-545b-a2b6-6352c4ed3d3a",
+        "cfc9cbfb-3909-52a2-ae33-3d3bd2190014"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-099",
+      "query": "Что такое отчёт в 1С и как он строится?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Отчёт",
+        "СхемаКомпоновкиДанных",
+        "ВыводОтчета"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "02b4ddfe-09e6-540f-94d1-b90dec635f98"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-100",
+      "query": "Что такое общий модуль и для чего он нужен?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбщийМодуль",
+        "Экспорт",
+        "ВызовСервера"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "9be56cbb-62d8-575d-bf46-86ed4defd010",
+        "a2cd23e6-3e59-50c1-b14b-16ffb302b1e2",
+        "4be04d0b-6b11-56db-85ed-0fbf9b42e0cd"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-101",
+      "query": "Какие виды форм существуют в 1С 8.3?",
+      "difficulty": "easy",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Форма",
+        "УправляемаяФорма",
+        "ФормаЭлемента",
+        "ФормаСписка"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "30f77dfe-9949-5493-bd87-512d5343d71c"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-102",
+      "query": "Как работают периодические регистры сведений?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Периодический",
+        "Период",
+        "СрезПоследних",
+        "СрезПервых"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "6bd1d2ee-6c10-55b4-ae34-772d175aa807"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-103",
+      "query": "Что такое подчинённый справочник и какие у него ограничения?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Подчинённый",
+        "Владелец",
+        "иерархия"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "9d88a63a-2295-5a81-bb57-d94cbc713857",
+        "37c5d456-7505-5eab-a7cf-22eed1529426",
+        "d855e9e8-51d1-5a47-a602-5c793095a1a3"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-104",
+      "query": "Чем план счетов отличается от плана видов характеристик?",
+      "difficulty": "medium",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланСчетов",
+        "ПланВидовХарактеристик",
+        "Субконто"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "83ec3a80-2b77-53fc-8303-bcafbffe3e1d"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-105",
+      "query": "Как используются бизнес-процессы и задачи в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "БизнесПроцесс",
+        "Задача",
+        "ТочкаМаршрута",
+        "адресация"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-106",
+      "query": "Что такое регламентное задание и как настроить расписание?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегламентноеЗадание",
+        "Расписание",
+        "ОбщийМодуль"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "b21eeda9-f83d-5c0e-b8f6-85620a4a0d05",
+        "ff578e33-c2bb-51f3-b015-b4e3a91efea3"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-107",
+      "query": "Как работают команды на управляемой форме?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Команда",
+        "форма",
+        "обработчик"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "a1e3d121-23cc-5f94-8c4f-58c9c5b881a8",
+        "4c966142-8398-5778-a948-5805d5207fff",
+        "c7ae8d4a-3193-5a6e-8493-8fe1728f4176"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-108",
+      "query": "Какие свойства имеет реквизит документа?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Реквизит",
+        "ТипЗначения",
+        "Длина",
+        "Точность"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-109",
+      "query": "Что такое подписка на событие и когда её использовать?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПодпискаНаСобытие",
+        "Источник",
+        "Обработчик"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "0cedc997-54ca-5176-a05a-f16965819e9b"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-110",
+      "query": "В чём принципиальная разница между регистром бухгалтерии и регистром расчёта?",
+      "difficulty": "hard",
+      "category": "comparative",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрБухгалтерии",
+        "РегистрРасчёта",
+        "проводка",
+        "вытеснение"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-111",
+      "query": "Когда нужен план видов расчёта и как он связан с регистром расчёта?",
+      "difficulty": "hard",
+      "category": "analytical",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланВидовРасчёта",
+        "ВытесняющиеВидыРасчёта",
+        "БазовыеВидыРасчёта"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-112",
+      "query": "Какие табличные части могут быть у справочника и зачем?",
+      "difficulty": "hard",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ТабличнаяЧасть",
+        "Справочник",
+        "Реквизит"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "c4f2a026-35ee-5d98-bf88-910bbe3fd0f8",
+        "6bee11e6-a6bc-5ed6-9d69-710fe6ad1f01"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-113",
+      "query": "Как реализуется иерархия групп и элементов у справочника?",
+      "difficulty": "hard",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Иерархия",
+        "ЭтоГруппа",
+        "Родитель",
+        "ИерархияГруппИЭлементов"
+      ],
+      "target_collection": "pdf_documents",
+      "expected_chunk_ids": [
+        "53cd3bd4-d419-5c97-84fa-919824ce7f86",
+        "1bc5976f-c4f9-542c-98ae-deaeab35528b",
+        "9d88a63a-2295-5a81-bb57-d94cbc713857"
+      ],
+      "expected_answer_summary": ""
+    },
+    {
+      "id": "gv1-114",
+      "query": "Что такое РегистрНакопления в 1С и как читать движения документа?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрНакопления",
+        "Движения",
+        "Регистратор",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-115",
+      "query": "Как работать со СписокЗначений в BSL — добавление, поиск, итерация?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "СписокЗначений",
+        "Добавить",
+        "НайтиПоЗначению"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "c859146b-1f8b-5ae6-be83-be848257d9f9",
+        "20dc417a-ca96-50e2-8fc5-5ff35b1fa38a"
+      ]
+    },
+    {
+      "id": "gv1-116",
+      "query": "Когда использовать Структура vs Соответствие в BSL?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Структура",
+        "Соответствие",
+        "Вставить",
+        "Ключ"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-117",
+      "query": "Чем процедура отличается от функции в 1С?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Процедура",
+        "Функция",
+        "Возврат",
+        "Экспорт"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-118",
+      "query": "Как объявить экспортную функцию модуля менеджера?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "МодульМенеджера",
+        "Экспорт",
+        "Функция"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "71fd9c37-2a40-590b-9c40-912929e70edc"
+      ]
+    },
+    {
+      "id": "gv1-119",
+      "query": "Что такое ХранилищеЗначения в 1С?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ХранилищеЗначения",
+        "Новый",
+        "Получить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-120",
+      "query": "Как создать новый документ через менеджер документов?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Документы",
+        "СоздатьДокумент",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "ea092b10-05bb-5667-8b80-6c8bb9e395b3",
+        "9232f3a6-a087-5873-9bdb-4337f15b1e0b"
+      ]
+    },
+    {
+      "id": "gv1-121",
+      "query": "Как записать справочник с проверкой реквизитов?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Справочники",
+        "ПередЗаписью",
+        "ПроверкаЗаполнения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "a6207eac-cb27-5712-a880-31e76fe34a28"
+      ]
+    },
+    {
+      "id": "gv1-122",
+      "query": "Чем ПолучитьСсылку отличается от НайтиПоНаименованию?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьСсылку",
+        "НайтиПоНаименованию",
+        "УникальныйИдентификатор"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-123",
+      "query": "Как использовать ОбщегоНазначения для серверного вызова?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбщегоНазначения",
+        "ВызовСервера",
+        "&НаСервере"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-124",
+      "query": "Как обработать БлокировкаДанных в транзакции?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "БлокировкаДанных",
+        "Заблокировать",
+        "НачатьТранзакцию"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "1d366a8f-2b44-500d-b3c2-cfc9dbe487ea",
+        "6d5e96a3-020d-57a0-a483-1792112ffd2d",
+        "8ee88b07-1ade-504b-8b57-055434aaa344"
+      ]
+    },
+    {
+      "id": "gv1-125",
+      "query": "Как реализуется ФоновоеЗадание.Выполнить?",
+      "difficulty": "medium",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФоновоеЗадание",
+        "Выполнить",
+        "ОжидатьЗавершения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-126",
+      "query": "Как организован обмен данными через РегистрСведений?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "Набор",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "c8ff3433-2e4c-5e4a-aa5a-d8088d36839d",
+        "25329284-1c34-5760-b7e3-3a81bf6c1d66",
+        "44007ce9-01ff-5377-ab0e-997739de09d0"
+      ]
+    },
+    {
+      "id": "gv1-127",
+      "query": "Как настраивается роль с правами доступа?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Роль",
+        "Права",
+        "RLS"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "bc47f200-10b9-5d24-8733-f9cdbea1f863"
+      ]
+    },
+    {
+      "id": "gv1-128",
+      "query": "Как работает УправлениеДоступом БСП?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "УправлениеДоступом",
+        "ГруппыДоступа",
+        "ВидДоступа"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-129",
+      "query": "Как реализованы регламентные задания?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегламентноеЗадание",
+        "Расписание",
+        "Выполнить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "c334db9b-72b0-52e6-9057-0f40c7d6087b",
+        "4b8ed619-199e-558f-9e5b-297baac6a863",
+        "9f95d584-6494-57dd-8071-1e0352a93254"
+      ]
+    },
+    {
+      "id": "gv1-130",
+      "query": "Как правильно использовать Попытка-Исключение?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Попытка",
+        "Исключение",
+        "ОписаниеОшибки"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "d430ad04-4ec8-5d78-b6b5-c4d9c333c072",
+        "156b22af-7995-5ef5-98cf-d7acd9c0b64b",
+        "9e2fbf24-9374-5db9-a6e6-f6e3affb22c0"
+      ]
+    },
+    {
+      "id": "gv1-131",
+      "query": "Как записать ошибку в журнал регистрации?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписьЖурналаРегистрации",
+        "УровеньЖурналаРегистрации"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "30d282e3-5911-5011-89d9-e0825883ea1e",
+        "d67b8b0d-d0f1-5475-84d4-ae52d6152415",
+        "9e7d0da0-4fd4-533f-93f7-2625f6d43ca3"
+      ]
+    },
+    {
+      "id": "gv1-132",
+      "query": "Как обработать ОтменаТранзакции внутри вложенной транзакции?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "НачатьТранзакцию",
+        "ОтменитьТранзакцию",
+        "ЗафиксироватьТранзакцию"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "868e3332-8c7f-5c9e-801a-1e94214fdd20"
+      ]
+    },
+    {
+      "id": "gv1-133",
+      "query": "Как обрабатывается отмена пользователем (Прервано)?",
+      "difficulty": "hard",
+      "category": "factual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Прервано",
+        "ОтменаПользователем",
+        "Cancel"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "bsl_code_v4",
+      "expected_chunk_ids": [
+        "895255fb-8260-5fca-9821-bf7a83e00420"
+      ]
+    },
+    {
+      "id": "gv1-134",
+      "query": "Что такое предопределённые данные в плане обмена?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "предопределённые",
+        "ПланОбмена",
+        "ИмяПредопределенныхДанных"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "0039616b-12e1-52c3-ad8c-2aa89cc53db0",
+        "7138154b-6cab-501d-94cb-5ed4fb57813d"
+      ]
+    },
+    {
+      "id": "gv1-135",
+      "query": "Как работает стандартное окно выбора картинки?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "окно",
+        "выбор",
+        "картинка",
+        "стандартное"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "001ec86e-8c02-5356-a110-32095d4eb2b0",
+        "fa003263-c0a9-5834-a2e2-f072fd32b320"
+      ]
+    },
+    {
+      "id": "gv1-136",
+      "query": "Что такое набор вариантов отчёта?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "набор",
+        "варианты",
+        "отчёт",
+        "Включить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "ffb34c4e-8af7-5225-b1bf-234e5c486fca",
+        "ec3ba96f-301a-50e3-9c02-77eff772b188"
+      ]
+    },
+    {
+      "id": "gv1-137",
+      "query": "Как работает дерево связей?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "дерево",
+        "связей",
+        "иерархия"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-138",
+      "query": "Что такое журнал регистрации в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЖурналРегистрации",
+        "событие",
+        "запись"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "7c8f5153-f055-500e-a0ab-6face58e6407",
+        "793fb45d-8901-5fbd-8739-03624e16c226"
+      ]
+    },
+    {
+      "id": "gv1-139",
+      "query": "Что такое план обмена в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланОбмена",
+        "узел",
+        "регистрация изменений"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-140",
+      "query": "Как работает обработка проведения документа?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбработкаПроведения",
+        "движение",
+        "регистратор"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "83142600-c319-5049-8c7f-a3577b07a379",
+        "a5f097ff-b6d6-5486-9b6e-35d77d595eb3",
+        "2c2b9203-0372-5a97-8d4d-caeae2f0443e"
+      ]
+    },
+    {
+      "id": "gv1-141",
+      "query": "Что такое периодический регистр сведений?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "периодический",
+        "Период",
+        "СрезПоследних"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "c41f3084-83cd-5db4-9085-5cd8afcc801b"
+      ]
+    },
+    {
+      "id": "gv1-142",
+      "query": "Как реализуется сложная иерархия в справочнике?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Иерархия",
+        "ЭтоГруппа",
+        "Родитель"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "c544d04e-1fc1-5a99-af65-ccfd0633ec19"
+      ]
+    },
+    {
+      "id": "gv1-143",
+      "query": "Что такое подсистема в конфигурации 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Подсистема",
+        "Метаданные",
+        "интерфейс"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-144",
+      "query": "Как работает критерий отбора в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "КритерийОтбора",
+        "Отбор",
+        "состав"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "c040a0f0-8d7e-5a40-bf5e-e552d74c0ea3",
+        "64b73307-8fc5-5a5a-9798-b895ca72df75"
+      ]
+    },
+    {
+      "id": "gv1-145",
+      "query": "Что такое константа в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "Константа",
+        "значение",
+        "глобальная"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "bbfcfe0b-a26e-5977-8536-78ef69c8a48d",
+        "98049f62-afc6-5259-a3b1-c29d0d08997e"
+      ]
+    },
+    {
+      "id": "gv1-146",
+      "query": "Как работает определяемый тип?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОпределяемыйТип",
+        "ТипЗначения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "b24ea117-5c01-50b9-9fcc-f8732078c7af",
+        "39b61239-681d-5cdd-b36c-84cfdb07bbf1",
+        "64a5a016-d4ca-541c-806c-0c0b10e9c7c5"
+      ]
+    },
+    {
+      "id": "gv1-147",
+      "query": "Что такое HTTP сервис в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "HTTPСервис",
+        "URL",
+        "Метод"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "97759427-b871-56ad-9f4d-34ac866c5c29"
+      ]
+    },
+    {
+      "id": "gv1-148",
+      "query": "Как работает WEB сервис в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "WEBСервис",
+        "Операция",
+        "WSDL"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "02f8c853-3dc6-5b93-9f41-efec21f3f674",
+        "9b3ffcf6-a9de-5ad9-9f35-fe3aaba03ad7",
+        "60d880a9-bba8-5ac5-8be7-31bac0ca25b6"
+      ]
+    },
+    {
+      "id": "gv1-149",
+      "query": "Что такое внешний источник данных?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ВнешнийИсточникДанных",
+        "Соединение"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "92f40f02-d16c-5b1a-9c0d-6a81d38e1eb8",
+        "17c85e17-0090-590a-9e41-1927e1498698"
+      ]
+    },
+    {
+      "id": "gv1-150",
+      "query": "Как реализуется внешняя обработка в 1С?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ВнешняяОбработка",
+        "Подключить",
+        ".epf"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "5068e922-0ac2-5399-b050-465bb0eb229f",
+        "7200e137-8c36-578f-80ea-d45daeff06e7",
+        "0d5c8bfe-7d97-5f28-b341-117210708624"
+      ]
+    },
+    {
+      "id": "gv1-151",
+      "query": "Что такое функциональная опция?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФункциональнаяОпция",
+        "значение",
+        "видимость"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "7b495d1d-9ae7-51e9-a47d-034ff306fb7c",
+        "3b22e03f-2821-552d-89bb-00f3f8826871",
+        "d87640d1-df79-5103-8fd3-3a054b28f739"
+      ]
+    },
+    {
+      "id": "gv1-152",
+      "query": "Как работает критерий присутствия?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "критерий",
+        "присутствие"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-153",
+      "query": "Что такое менеджер расчёта?",
+      "difficulty": "medium",
+      "category": "conceptual",
+      "domain": "1c",
+      "expected_keywords": [
+        "МенеджерРасчета",
+        "Запись",
+        "движение"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "wiki_pages_v1",
+      "expected_chunk_ids": [
+        "d702e345-7778-5ae7-874a-75bf75c46564",
+        "1d76df5e-952c-5bec-86d1-9c7c5ee6375d"
+      ]
+    },
+    {
+      "id": "gv1-154",
+      "query": "Найди процедуру для проверки существования ссылки на объект",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПроверитьСуществованиеСсылки",
+        "Ссылка",
+        "Проверить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "2d77a490-2f71-55f7-9e34-5379991ab1e7",
+        "1e436882-1e41-55e4-93b4-ef2dc6d5512e"
+      ]
+    },
+    {
+      "id": "gv1-155",
+      "query": "Покажи функцию получения внешних модулей",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьВнешниеМодули",
+        "Внешние",
+        "Модули"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-156",
+      "query": "Найди код помещения данных обработчика в хранилище",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПоместитьДанные",
+        "Хранилище",
+        "Обработчик"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "0002a2cf-24c1-5207-a1cb-55260d058fd3"
+      ]
+    },
+    {
+      "id": "gv1-157",
+      "query": "Какие процедуры работают с регистром накопления?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрНакопления",
+        "Движение",
+        "Записать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "dae158dc-7975-5da7-98ba-3e8f7f3268ad",
+        "394c6152-f46c-54a2-84d5-b02c5d836386"
+      ]
+    },
+    {
+      "id": "gv1-158",
+      "query": "Найди функции обработки ошибок и исключений",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбработкаОшибки",
+        "Исключение",
+        "Попытка"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "f58c3cef-ac24-5575-b456-b7f63faeaddb",
+        "78ecb150-c1ae-5aa7-9c1f-9a352dbdda1d",
+        "ae4ff42d-12dc-5861-a7e9-fa3f316cd711"
+      ]
+    },
+    {
+      "id": "gv1-159",
+      "query": "Покажи методы работы с журналом регистрации",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписатьВЖурнал",
+        "ЖурналРегистрации",
+        "Событие"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "207587f5-b01c-5dc9-8dbb-134283b51c6f",
+        "497818cb-f2c1-5dbe-a2d0-c6732f153148",
+        "50d630b6-11bc-54d2-9d3c-81efcba7c58c"
+      ]
+    },
+    {
+      "id": "gv1-160",
+      "query": "Найди процедуры создания нового документа",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "СоздатьДокумент",
+        "Документ",
+        "Новый"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-161",
+      "query": "Какие функции возвращают ссылку по идентификатору?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПолучитьСсылку",
+        "Идентификатор",
+        "Возврат"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": []
+    },
+    {
+      "id": "gv1-162",
+      "query": "Найди код блокировки данных перед записью",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "БлокировкаДанных",
+        "Заблокировать",
+        "Установить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "6b693fd4-2f0e-5b1c-9dad-14b8fd955047",
+        "870a969d-4e4a-5631-9fa9-8dd09a2c25b6",
+        "9769e632-4e51-518f-8060-8363febfec87"
+      ]
+    },
+    {
+      "id": "gv1-163",
+      "query": "Покажи процедуры обработки проведения документа",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ОбработкаПроведения",
+        "Проведение",
+        "Движения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "b35bda71-d9ea-5478-b796-38a5048f7a25",
+        "5ae96f6d-a773-5ab4-921c-fc8829e3533f",
+        "22c8fa82-a048-5323-8dc4-b0b8f5aef98a"
+      ]
+    },
+    {
+      "id": "gv1-164",
+      "query": "Найди функции работы с фоновыми заданиями",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ФоновоеЗадание",
+        "Выполнить",
+        "ОжидатьЗавершения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "9d2ef9cf-23d3-5533-87cc-a1ded0302cea",
+        "9847e935-1d71-5e21-a195-687c35f61f3c",
+        "a1dd824b-36e8-59ca-aa77-83ef0c668ae4"
+      ]
+    },
+    {
+      "id": "gv1-165",
+      "query": "Какие методы работают с табличной частью?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ТабличнаяЧасть",
+        "Добавить",
+        "Очистить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "d72e9731-ac82-52dc-b563-a13aee68e3f9",
+        "1a149fd7-ff0e-57ef-8a69-c70a62f086c8",
+        "888a824d-28b6-5257-8a61-108b88d37099"
+      ]
+    },
+    {
+      "id": "gv1-166",
+      "query": "Найди процедуры обмена данными между узлами",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПланОбмена",
+        "Узел",
+        "ЗарегистрироватьИзменения"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "d07fb051-e081-5859-8737-1191c9346ee8",
+        "198173c6-13e4-5dcf-b652-5cf7e476f08c"
+      ]
+    },
+    {
+      "id": "gv1-167",
+      "query": "Покажи функции работы с XML",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ЗаписатьXML",
+        "ПрочитатьXML",
+        "XDTO"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "49373938-d0a7-5333-95a8-6841a1fa41a4",
+        "5e349d77-c3d2-5a27-8f70-dd5c1f259de4",
+        "949f3dc1-fb3a-5ccc-8b71-439a3430227f"
+      ]
+    },
+    {
+      "id": "gv1-168",
+      "query": "Найди код работы с HTTP запросами",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "HTTPЗапрос",
+        "HTTPСоединение",
+        "Отправить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "68c0658b-47d1-5198-8e81-81bfeb6bb337",
+        "b23dba27-e393-55c5-b5a5-448eb58dd253",
+        "871a42d2-9781-516c-b1e4-b6653bc5e5cf"
+      ]
+    },
+    {
+      "id": "gv1-169",
+      "query": "Какие процедуры начинают и завершают транзакции?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "НачатьТранзакцию",
+        "ЗафиксироватьТранзакцию",
+        "ОтменитьТранзакцию"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "89feeadd-3f42-5602-a879-9416865ed204",
+        "4fc49e76-3dac-504d-8c97-1f0044e884c2",
+        "ad8b43b1-b79d-580a-b297-7c2531f67a77"
+      ]
+    },
+    {
+      "id": "gv1-170",
+      "query": "Найди функции работы с регистром сведений",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "РегистрСведений",
+        "СоздатьНаборЗаписей",
+        "Прочитать"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "f15fdb91-47de-50dc-9b19-a080a5bdd835",
+        "b5a42c67-f60d-586f-8f1b-3178ec7ae667",
+        "df73870c-c997-5870-9cbb-ce40d8cf3d1f"
+      ]
+    },
+    {
+      "id": "gv1-171",
+      "query": "Покажи методы работы с пользовательскими настройками",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ХранилищеНастроек",
+        "Сохранить",
+        "Загрузить"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "8d57d3f0-3b86-5204-8e01-c431bcdcf4a7",
+        "c9d3e82c-3443-5cca-91db-32598bbb4bd7",
+        "ce04134e-5bea-576e-9b1b-c0f9a25c67ee"
+      ]
+    },
+    {
+      "id": "gv1-172",
+      "query": "Найди процедуры обработки формы при открытии",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "ПриОткрытии",
+        "Форма",
+        "Инициализация"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "a7a84ee7-2450-5f94-8ef0-4e5cfb3d37fb",
+        "df3ea477-577e-54d1-b152-83526f0f0481",
+        "1582d791-7e30-5e1d-a4aa-4f6f8f7dabfb"
+      ]
+    },
+    {
+      "id": "gv1-173",
+      "query": "Какие функции работают с метаданными конфигурации?",
+      "difficulty": "medium",
+      "category": "procedural",
+      "domain": "1c",
+      "expected_keywords": [
+        "Метаданные",
+        "Объект",
+        "ПолучитьОбщийМодуль"
+      ],
+      "expected_answer_summary": "",
+      "target_collection": "graph_embeddings",
+      "expected_chunk_ids": [
+        "28846f1d-5b4b-5cca-a6de-e7e48c8606c5",
+        "2421d4cd-81c2-58bf-b784-8132783eb793",
+        "21183569-6244-5a9f-9c6f-df8a5a9f68ca"
+      ]
+    }
+  ],
+  "stats": {
+    "count": 40,
+    "by_difficulty": {
+      "easy": 9,
+      "medium": 17,
+      "hard": 14
+    },
+    "by_domain": {
+      "rag-framework": 17,
+      "embeddings": 7,
+      "infra": 11,
+      "1c": 5
+    },
+    "by_category": {
+      "factual": 14,
+      "conceptual": 8,
+      "procedural": 9,
+      "analytical": 5,
+      "comparative": 4
+    }
+  },
+  "todo": "Expand to ≥50 (activates quality gate via items_with_chunks check) and ≥100 для full benchmark. Populate expected_chunk_ids by grounding queries against actual indexed pdf_documents corpus. v2.0 may use DSPy.Synthesize when `dspy` available."
+}

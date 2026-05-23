@@ -25,6 +25,22 @@ For custom retry logic::
 
     @my_retry
     async def custom_operation() -> None: ...
+
+NOT FOR Ralph Wiggum semantic correction loops (roadmap 260509 §3.7)
+---------------------------------------------------------------------
+Many `for attempt in range(...)` loops in this codebase are *Ralph Wiggum*
+self-correcting feedback loops, NOT transient retries. They:
+
+- inject feedback into the next attempt (LLM correction signal)
+- validate semantic content (length, language, refusal patterns,
+  hallucination detection)
+- run a fixed small number of attempts (typically 2) by design
+
+Examples that intentionally do NOT use this module: agents/rag/agent.py
+generate-step, nodes/grader.py, nodes/hallucination_checker.py,
+chains/qa/enrichment.py, loaders/providers/hybrid_loader.py vision OCR /
+Docling sections, processing/image_extractor.py vision API. These belong
+to domain logic, not to transient I/O failure handling — keep them as-is.
 """
 
 from __future__ import annotations

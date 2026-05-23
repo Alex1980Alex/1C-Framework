@@ -68,7 +68,7 @@ class ProviderConfig:
     api_key_env: str
     default_model: str
     models: list[str] = field(default_factory=list)
-    format: str = "openai"  # "openai" | "ollama" | "anthropic"
+    format: str = "openai"  # "openai" | "ollama" | "anthropic" | "claude-cli"
     requires_key: bool = True
     daily_limit: int | None = None
     rate_limit_rpm: int | None = None
@@ -145,78 +145,61 @@ class ProviderState:
 
 
 # Default provider configurations
+# Roadmap 260509 §2.2 closure (2026-05-16): cleanup of dead HTTP providers
+# (zai-glm5, zhipu, gemini, openrouter, mistral, ollama-cloud — all broken or
+# misconfigured per user audit) + addition of claude-cli-* providers that
+# tap the user's Claude Code CLI subscription quota (flat-rate, no per-token
+# billing). Latency 5-15s per subprocess spawn — acceptable for indexing
+# batch workloads, NOT for query-time hot-path (grader/hallucination/etc.).
+#
+# For hot-path that needs <2s latency, set ANTHROPIC_API_KEY and switch
+# primary_provider to "anthropic-sonnet" (add via custom providers= arg).
 DEFAULT_PROVIDERS: list[ProviderConfig] = [
     ProviderConfig(
-        name="zai-glm5",
-        base_url="https://api.z.ai/api/anthropic",
-        api_key_env="ZAI_API_KEY",
-        default_model="glm-5.1",
-        models=["glm-5.1", "glm-5", "glm-4.6", "glm-4.5-air"],
-        format="anthropic",
+        name="claude-cli-haiku",
+        base_url="",  # subprocess, no HTTP
+        api_key_env="",
+        default_model="haiku",
+        models=["haiku", "sonnet", "opus"],
+        format="claude-cli",
+        requires_key=False,
         priority=0,
-        rate_limit_rpm=30,
+        rate_limit_rpm=None,  # subscription quota, not RPM-capped
     ),
     ProviderConfig(
-        name="zhipu",
-        base_url="https://open.bigmodel.cn/api/paas/v4",
-        api_key_env="ZHIPU_API_KEY",
-        default_model="glm-4-flash",
-        models=["glm-4-flash", "glm-4-plus"],
+        name="claude-cli-sonnet",
+        base_url="",
+        api_key_env="",
+        default_model="sonnet",
+        models=["sonnet", "haiku", "opus"],
+        format="claude-cli",
+        requires_key=False,
         priority=1,
-        rate_limit_rpm=60,
-    ),
-    ProviderConfig(
-        name="gemini",
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai",
-        api_key_env="GEMINI_API_KEY",
-        default_model="gemini-2.5-flash",
-        models=["gemini-2.5-flash", "gemini-2.5-flash-lite"],
-        priority=2,
-        rate_limit_rpm=10,
-        daily_limit=250,
-    ),
-    ProviderConfig(
-        name="openrouter",
-        base_url="https://openrouter.ai/api/v1",
-        api_key_env="OPENROUTER_API_KEY",
-        default_model="google/gemma-3-27b-it:free",
-        models=[
-            "google/gemma-3-27b-it:free",
-            "meta-llama/llama-3.3-70b-instruct:free",
-            "mistralai/mistral-small-3.1-24b-instruct:free",
-        ],
-        priority=3,
-        rate_limit_rpm=20,
-        daily_limit=200,
-    ),
-    ProviderConfig(
-        name="mistral",
-        base_url="https://api.mistral.ai/v1",
-        api_key_env="MISTRAL_API_KEY",
-        default_model="mistral-small-latest",
-        models=["mistral-small-latest"],
-        priority=4,
-        rate_limit_rpm=60,
+        rate_limit_rpm=None,
     ),
     ProviderConfig(
         name="ollama-local",
         base_url="http://localhost:11434",
         api_key_env="",
-        default_model="qwen2.5:7b",
-        models=["qwen2.5:7b", "llama3.1:8b"],
+        default_model="qwen2.5-coder:7b",
+        models=["qwen2.5-coder:7b", "qwen2.5:7b", "llama3.1:8b"],
         format="ollama",
         requires_key=False,
-        priority=5,
+        priority=2,
     ),
+    # Paid-API escape hatch — silently skipped by `get_available_providers`
+    # when ANTHROPIC_API_KEY is unset (default for dev). Set the env var to
+    # enable fast hot-path routing without losing subscription quota for
+    # batch jobs.
     ProviderConfig(
-        name="ollama-cloud",
-        base_url="http://localhost:11434",
-        api_key_env="",
-        default_model="qwen2.5:7b",
-        models=["qwen2.5:7b"],
-        format="ollama",
-        requires_key=False,
-        priority=6,
+        name="anthropic-sonnet",
+        base_url="https://api.anthropic.com",
+        api_key_env="ANTHROPIC_API_KEY",
+        default_model="claude-sonnet-4-6",
+        models=["claude-sonnet-4-6", "claude-haiku-4-5", "claude-opus-4-7"],
+        format="anthropic",
+        priority=3,
+        rate_limit_rpm=50,
     ),
 ]
 
@@ -257,6 +240,14 @@ class LLMRotationService:
         if self._settings.rate_limiting_enabled:
             for cfg in configs:
                 self._rate_limiter.register(cfg.name, cfg.rate_limit_rpm)
+        # Adaptive concurrency controller for batch_complete (roadmap 260516 Phase 3)
+        # Multi-signal reduction (CB/429/5xx/slow_call), per-provider state,
+        # persistent across restarts. See adaptive_concurrency.py for full design.
+        from src.shared.llm_rotation.adaptive_concurrency import (
+            AdaptiveConcurrencyController,
+        )
+
+        self._adaptive_concurrency = AdaptiveConcurrencyController()
         # Load persisted state
         if self._settings.persist_adaptive:
             self._scorer.load(self._settings.adaptive_data_path)
@@ -480,6 +471,132 @@ class LLMRotationService:
             },
         }
 
+    async def _make_request_claude_cli(
+        self,
+        state: ProviderState,
+        prompt: str,
+        system_prompt: str | None = None,
+        model: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
+        """Make a request via Claude Agent SDK (roadmap 260516 Phase 1).
+
+        Uses official `claude-agent-sdk` Python package which manages subprocess
+        + agent loop internally, exposing typed messages. Subscription-based
+        OAuth auth, flat-rate cost. Latency ~5-15s per call.
+
+        Replaces raw asyncio.create_subprocess_exec approach (commit
+        606d9f06f) because CLI `--max-turns N` flag was empirically broken:
+        Claude Code CLI in `-p` mode is fundamentally agentic and triggers
+        tool-use turns even on trivial prompts → `error_max_turns` fires
+        before any response can be emitted. SDK's `ClaudeAgentOptions(
+        max_turns=1, permission_mode="bypassPermissions")` actually works.
+
+        `model` accepts haiku/sonnet/opus alias OR full model name. Aliases
+        are expanded to claude-haiku-4-5 / claude-sonnet-4-5 / claude-opus-4-7.
+        """
+        try:
+            from claude_agent_sdk import (
+                AssistantMessage,
+                ClaudeAgentOptions,
+                ResultMessage,
+                query,
+            )
+        except ImportError as e:
+            raise RuntimeError(
+                "claude-agent-sdk not installed. " 'pip install -e ".[llm-rotation]"'
+            ) from e
+
+        # Optional error types — older SDK versions may lack them.
+        try:
+            from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
+        except ImportError:
+            CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment,misc]
+
+        target_alias = (model or state.config.default_model).lower()
+        # Map short aliases to full model names; pass through if already full.
+        alias_map = {
+            "haiku": "claude-haiku-4-5",
+            "sonnet": "claude-sonnet-4-5",
+            "opus": "claude-opus-4-7",
+        }
+        full_model = alias_map.get(target_alias, target_alias)
+
+        # max_turns=3: Claude Code CLI in headless mode is agentic by default
+        # and may use 1-2 tool-use turns before responding. max_turns=1 fails
+        # empirically ~50% of the time. Higher cap absorbs agentic overhead.
+        options = ClaudeAgentOptions(
+            system_prompt=system_prompt or "",
+            max_turns=3,
+            permission_mode="bypassPermissions",
+            model=full_model,
+        )
+
+        effective_timeout: int = timeout or self._settings.timeout
+        text_parts: list[str] = []
+        result_content: str | None = None
+
+        async def _collect() -> None:
+            """Iterate SDK message stream, accumulate text into closures."""
+            nonlocal result_content
+            async for msg in query(prompt=prompt, options=options):
+                if isinstance(msg, AssistantMessage):
+                    for block in msg.content:
+                        if hasattr(block, "text"):
+                            text_parts.append(block.text)
+                elif isinstance(msg, ResultMessage):
+                    candidate = getattr(msg, "result", None)
+                    if candidate:
+                        result_content = str(candidate)
+
+        try:
+            await asyncio.wait_for(_collect(), timeout=effective_timeout)
+        except TimeoutError as e:
+            raise RuntimeError(f"claude-agent-sdk timed out after {effective_timeout}s") from e
+        except CLINotFoundError as e:
+            raise RuntimeError(f"claude CLI not found: {e}") from e
+        except ClaudeSDKError as e:
+            raise RuntimeError(f"claude-agent-sdk error: {e}") from e
+        except Exception as e:
+            # SDK surfaces CLI's error_max_turns as plain Exception. Use
+            # partial AssistantMessage text if any was collected.
+            partial = "".join(text_parts).strip()
+            if partial:
+                logger.warning(
+                    "[claude-cli] SDK exception after partial text (%d chars): %s",
+                    len(partial),
+                    e,
+                )
+                result_content = partial
+            else:
+                raise RuntimeError(f"claude-agent-sdk error: {e}") from e
+
+        text = (result_content or "").strip() or "".join(text_parts).strip()
+
+        if not text:
+            raise RuntimeError("claude-agent-sdk returned empty result")
+
+        # SDK gives no exact token count to caller. Estimate: 4 chars/token.
+        # Used by adaptive scorer; not load-bearing (subscription = flat-rate).
+        approx_prompt_tokens = max(1, (len(prompt) + len(system_prompt or "")) // 4)
+        approx_completion_tokens = max(1, len(text) // 4)
+
+        return {
+            "choices": [
+                {
+                    "message": {"content": text},
+                    "finish_reason": "stop",
+                }
+            ],
+            "model": full_model,
+            "usage": {
+                "prompt_tokens": approx_prompt_tokens,
+                "completion_tokens": approx_completion_tokens,
+            },
+        }
+
     async def _call_provider(
         self,
         state: ProviderState,
@@ -499,6 +616,10 @@ class LLMRotationService:
             )
         elif state.config.format == "ollama":
             data = await self._make_request_ollama(
+                state, prompt, system_prompt, model, temperature, max_tokens, timeout
+            )
+        elif state.config.format == "claude-cli":
+            data = await self._make_request_claude_cli(
                 state, prompt, system_prompt, model, temperature, max_tokens, timeout
             )
         else:
@@ -750,6 +871,130 @@ class LLMRotationService:
             error=f"All failed. Tried: {tried}",
         )
         raise RuntimeError(f"All providers failed after {total_attempts} attempts. Tried: {tried}")
+
+    def _record_error_with_signal(
+        self,
+        state: "ProviderState",
+        error_msg: str,
+        cooldown_seconds: int,
+        rate_limit_cooldown: int,
+    ) -> None:
+        """Wrap ProviderState.record_error + emit adaptive signal if CB just opened.
+
+        Phase 3 hardening (roadmap 260516): EventType Literal declared cb_opened
+        but it was never recorded. Now: detect CB transition CLOSED/HALF_OPEN -> OPEN
+        and emit signal to AdaptiveConcurrencyController for ÷2 reduction.
+        """
+        cb_was_open = state.circuit_breaker.state == CircuitState.OPEN
+        state.record_error(error_msg, cooldown_seconds, rate_limit_cooldown)
+        cb_now_open = state.circuit_breaker.state == CircuitState.OPEN
+        if cb_now_open and not cb_was_open:
+            self._adaptive_concurrency.record_event(state.config.name, "cb_opened")
+
+    async def batch_complete(
+        self,
+        prompts: list[str],
+        system_prompt: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        timeout: int | None = None,
+        preferred_provider: str | None = None,
+        return_exceptions: bool = True,
+        concurrency: int | None = None,
+    ) -> list[dict[str, Any] | BaseException]:
+        """Concurrent batch wrapper around `complete()` with adaptive throttling.
+
+        Roadmap 260516 Phase 3. Uses ``AdaptiveConcurrencyController`` to
+        adjust per-provider concurrency cap based on observed signals:
+        429 / 5xx / CB-opens / slow_call all trigger ÷2 reduction; gradual
+        +1 recovery after 30 min clean window. Floor=1, ceiling=10.
+
+        Args:
+            prompts: list of user prompts to send.
+            system_prompt: shared system prompt for all calls.
+            temperature, max_tokens, timeout, component, preferred_provider:
+                same semantics as ``complete()``; broadcast to every call.
+            return_exceptions: if True (default), failed calls are returned
+                as ``Exception`` instances in the result list (preserves
+                positional alignment with ``prompts``). If False, the first
+                exception aborts the whole batch.
+            concurrency: explicit override. If None, reads adaptive value
+                for ``preferred_provider`` (or primary if not specified).
+
+        Returns:
+            List aligned with ``prompts``: each entry is either the
+            ``complete()`` result dict or an ``Exception`` instance
+            (when ``return_exceptions=True``).
+        """
+        if not prompts:
+            return []
+
+        # Resolve concurrency cap. If caller didn't override, ask the adaptive
+        # controller for current value of the resolved target provider.
+        resolved_provider = preferred_provider or self._settings.primary_provider
+        effective_concurrency = (
+            concurrency
+            if concurrency is not None
+            else self._adaptive_concurrency.get_concurrency(resolved_provider)
+        )
+        effective_concurrency = max(1, effective_concurrency)
+
+        sem = asyncio.Semaphore(effective_concurrency)
+
+        logger.info(
+            "[BATCH] %d prompts, concurrency=%d, target=%s",
+            len(prompts),
+            effective_concurrency,
+            resolved_provider,
+        )
+
+        async def _one(p: str) -> dict[str, Any]:
+            async with sem:
+                t0 = time.monotonic()
+                try:
+                    result = await self.complete(
+                        prompt=p,
+                        system_prompt=system_prompt,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        timeout=timeout,
+                        preferred_provider=preferred_provider,
+                    )
+                    elapsed = time.monotonic() - t0
+                    # Record latency signal for adaptive throttling.
+                    # Provider name from result (may differ from preferred
+                    # if rotation fell back).
+                    actual = result.get("provider", resolved_provider)
+                    self._adaptive_concurrency.record_latency(actual, elapsed)
+                    return result
+                except Exception as e:
+                    # Classify error → adaptive signal.
+                    err_str = str(e).lower()
+                    if "429" in err_str or "rate limit" in err_str:
+                        self._adaptive_concurrency.record_event(resolved_provider, "http_429")
+                    elif "529" in err_str or "5xx" in err_str or "500" in err_str:
+                        self._adaptive_concurrency.record_event(resolved_provider, "http_5xx")
+                    # CB-open signal handled at error-recording site in
+                    # ProviderState.record_error; not double-counted here.
+                    raise
+
+        results = await asyncio.gather(
+            *(_one(p) for p in prompts),
+            return_exceptions=return_exceptions,
+        )
+
+        # Diagnostics: log per-provider success rate after batch.
+        n_ok = sum(1 for r in results if not isinstance(r, BaseException))
+        n_fail = len(results) - n_ok
+        logger.info(
+            "[BATCH] done: %d/%d ok (%.0f%%), %d failed, concurrency now=%d",
+            n_ok,
+            len(prompts),
+            (n_ok / len(prompts)) * 100 if prompts else 0,
+            n_fail,
+            self._adaptive_concurrency.get_concurrency(resolved_provider),
+        )
+        return results  # type: ignore[return-value]
 
     def get_stats(self) -> dict[str, Any]:
         """Return statistics for all providers."""

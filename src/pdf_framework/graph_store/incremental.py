@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 import networkx as nx
 
+from src.memory.infrastructure.event_bus import EventBus
 from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.graph_store.community import CommunityDetector
 from src.pdf_framework.graph_store.summarizer import CommunitySummarizer
@@ -44,6 +45,7 @@ class IncrementalGraphUpdater:
         community_detector: CommunityDetector | None = None,
         community_summarizer: CommunitySummarizer | None = None,
         settings: GraphRAGSettings | None = None,
+        event_bus: EventBus | None = None,
     ):
         """
         Initialize incremental updater.
@@ -53,11 +55,13 @@ class IncrementalGraphUpdater:
             community_detector: For community detection
             community_summarizer: For regenerating summaries
             settings: GraphRAG configuration
+            event_bus: Optional EventBus for publishing graph change events
         """
         self._graph_store = graph_store
         self._detector = community_detector or CommunityDetector(settings)
         self._summarizer = community_summarizer or CommunitySummarizer(settings=settings)
         self._settings = settings or GraphRAGSettings()
+        self._event_bus = event_bus
 
     async def update(
         self,
@@ -118,7 +122,47 @@ class IncrementalGraphUpdater:
             f"{len(result.affected_communities)} communities affected"
         )
 
+        await self._publish_update_events(result)
+
         return result
+
+    async def _publish_update_events(self, result: UpdateResult) -> None:
+        """Publish graph change events to EventBus if configured."""
+        if self._event_bus is None:
+            return
+
+        for entity in result.new_entities:
+            await self._event_bus.publish(
+                "graph.entity_created",
+                {
+                    "entity_id": entity.id,
+                    "entity_name": entity.name,
+                    "entity_type": entity.entity_type,
+                },
+                source="IncrementalGraphUpdater",
+            )
+
+        for entity in result.merged_entities:
+            await self._event_bus.publish(
+                "graph.entity_updated",
+                {
+                    "entity_id": entity.id,
+                    "entity_name": entity.name,
+                    "entity_type": entity.entity_type,
+                },
+                source="IncrementalGraphUpdater",
+            )
+
+        for relation in result.new_relations:
+            await self._event_bus.publish(
+                "graph.relation_added",
+                {
+                    "source_id": relation.source_entity_id,
+                    "target_id": relation.target_entity_id,
+                    "affected_entity_ids": [relation.source_entity_id, relation.target_entity_id],
+                },
+                source="IncrementalGraphUpdater",
+            )
 
     async def _merge_entity(self, new_entity: Entity) -> Entity | None:
         """
@@ -288,6 +332,7 @@ class IncrementalGraphUpdater:
 def get_incremental_updater(
     graph_store,
     settings: GraphRAGSettings | None = None,
+    event_bus: EventBus | None = None,
 ) -> IncrementalGraphUpdater:
     """Factory: create an IncrementalGraphUpdater for the given graph store."""
-    return IncrementalGraphUpdater(graph_store=graph_store, settings=settings)
+    return IncrementalGraphUpdater(graph_store=graph_store, settings=settings, event_bus=event_bus)

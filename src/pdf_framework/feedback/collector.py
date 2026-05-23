@@ -56,16 +56,29 @@ class FeedbackCollector:
         self,
         db_path: str | Path | None = None,
         settings: Settings | None = None,
+        backup_dir: str | Path | None = None,
+        backup_enabled: bool = True,
     ):
         """Initialize the feedback collector.
 
         Args:
             db_path: Path to SQLite database
             settings: Application settings
+            backup_dir: Path to JSONL backup directory (default: data_dir/feedback/backups)
+            backup_enabled: Toggle dual-write JSONL backup (roadmap 260509 §3.5)
         """
         self._settings = settings or get_settings()
         self._db_path = Path(db_path or self._settings.data_dir / "feedback.db")
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        self._backup_enabled = backup_enabled
+        self._backup_dir = Path(backup_dir or self._settings.data_dir / "feedback" / "backups")
+        if self._backup_enabled:
+            try:
+                self._backup_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                logger.warning(f"[FEEDBACK] Backup dir unavailable, dual-write disabled: {e}")
+                self._backup_enabled = False
 
         self._init_db()
 
@@ -135,11 +148,51 @@ class FeedbackCollector:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            row_id = cursor.lastrowid
         finally:
             conn.close()
 
-        logger.info(f"[FEEDBACK] Added {entry.feedback} feedback")
+        # Roadmap 260509 §3.5: dual-write JSONL backup (fail-soft).
+        # Append happens AFTER SQLite commit so backup never references a
+        # row that wasn't durably written. Failures here log a warning but
+        # never propagate — SQLite is still the primary store.
+        self._write_jsonl_backup(entry, row_id)
+        logger.info(f"[FEEDBACK] Added {entry.feedback} feedback (id={row_id})")
+        return row_id
+
+    def _write_jsonl_backup(self, entry: FeedbackEntry, row_id: int | None) -> None:
+        """Append a feedback entry to the daily JSONL backup file.
+
+        Format (one JSON object per line):
+            {"id": 42, "written_at": "2026-05-09T10:30:00+00:00", "entry": {...}}
+
+        Path: {backup_dir}/backup_YYYY-MM-DD.jsonl  (UTC date, daily rotation)
+
+        Fail-soft: any IO/encoding error is logged and swallowed — SQLite
+        path is the primary, backup is best-effort durability.
+
+        Concurrency assumption: single-writer process. POSIX `O_APPEND` makes
+        small appends atomic on Linux (entries < PIPE_BUF / 4 KB); on Windows
+        and for entries ≥ 4 KB interleaved lines from concurrent writers are
+        possible. Replay tolerates this via JSONDecodeError → skip warning,
+        but corrupt entries are lost. Run a single FeedbackCollector instance
+        per process for strict guarantees.
+        """
+        if not self._backup_enabled:
+            return
+        try:
+            now = datetime.now(UTC)
+            target = self._backup_dir / f"backup_{now.strftime('%Y-%m-%d')}.jsonl"
+            record = {
+                "id": row_id,
+                "written_at": now.isoformat(),
+                "entry": entry.model_dump(),
+            }
+            line = json.dumps(record, ensure_ascii=False)
+            with target.open("a", encoding="utf-8") as f:
+                f.write(line + "\n")
+        except Exception as e:
+            logger.warning(f"[FEEDBACK] JSONL backup write failed (non-fatal): {e}")
 
     def get_feedback(
         self,

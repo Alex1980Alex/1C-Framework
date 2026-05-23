@@ -25,7 +25,9 @@ description: "Известные баги хуков Claude Code и обходн
 
 **Обновление 2026-03-29 (hookSpecificOutput):** PostToolUse feedback **РАБОТАЕТ** через `hookSpecificOutput` wrapper. Обычный `additionalContext` не работает (#18427, closed "not planned"), но если обернуть: `{"hookSpecificOutput": {"hookEventName":"PostToolUse","additionalContext":"..."}}` — текст попадает в контекст Claude как system-reminder "PostToolUse:Tool hook additional context". Подтверждено canary-тестом. Источник: binary analysis issue #24788.
 
-**Вывод:** На Windows v2.1.87+ можно использовать все типы событий + PostToolUse feedback через hookSpecificOutput. WSL2/Termux — не проверены.
+**Обновление 2026-04-26 (regression на Windows):** Telemetry `data/hook-invocations.jsonl` показала, что в реальной сессии PostToolUse фактически **не срабатывает** на Windows-сборке Claude Code v2.x: за день 1607 PreToolUse + 357 Stop + только **1 PostToolUse** (и тот синтетический probe). Canary в этой сессии не проверялся, но факт делегирования событий по telemetry однозначен. Issue #6305 формально closed, фактическое поведение — регрессия (или новая инкарнация). Workaround на этот случай в проекте — Stop-event fallback closer (см. [code-verify-reminder.py](C:/1С-Framework/.claude/hooks/code-verify-reminder.py) v2.4.0, коммит `98d5ea22`): хук читает `transcript_path` JSONL на каждом Stop и закрывает task по rfind-сравнению PASS/FAIL маркеров.
+
+**Вывод:** На Windows v2.1.87+ нельзя полагаться на PostToolUse в реальной сессии. Используй паттерн Stop-fallback: основная логика на PostToolUse (canonical), резервная — на Stop с парсингом `transcript_path`. WSL2/Termux — не проверены.
 
 ---
 

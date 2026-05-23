@@ -1,4 +1,15 @@
 version: 2
+
+# Global backend tuning. Optional; safe defaults if missing.
+# `ast_grep.use_call_graph_prefilter` enables Option A: scope-aware pre-filter
+# that drops ast-grep matches in modules with no in-graph relationship to the
+# defining module. Disabled at runtime via env BSL_REFACTOR_NO_PREFILTER=1.
+global:
+  ast_grep:
+    use_call_graph_prefilter: true
+    call_graph_db: cache/bsl_call_graph.db
+    graph_stale_threshold_days: 7
+
 routes:
   module_export_proc:
     primary: multilspy
@@ -16,29 +27,71 @@ routes:
     primary: multilspy
     fallback: ast-grep
     manual_fallback: false
-    confidence: 0.85
-    reason: "module-scope LSP rename"
+    confidence: 0.95
+    reason: "module-scope — calibrated pilot-B 4/4 success"
   module_local_func:
     primary: multilspy
     fallback: ast-grep
     manual_fallback: false
-    confidence: 0.85
-    reason: "module-scope LSP rename"
+    confidence: 0.95
+    reason: "module-scope — calibrated pilot-B 4/4 success"
   local_variable:
     primary: multilspy
     fallback: null
     manual_fallback: false
-    confidence: 0.70
-    reason: "local scope, single file"
+    confidence: 0.95
+    reason: "local scope, single file — calibrated pilot-B 4/4 success"
   form_handler:
     primary: ast-grep
     fallback: multilspy
     manual_fallback: true
-    confidence: 0.60
-    reason: "form handlers may have XML-side refs"
+    confidence: 0.95
+    reason: "form handlers — calibrated pilot-B 4/4 success"
   unknown:
     primary: ast-grep
     fallback: null
     manual_fallback: true
     confidence: 0.30
     reason: "pattern-based fallback"
+
+# Denylist: names too common for text-based ast-grep (over-match risk).
+# When old_name matches, ast-grep is skipped from the routing chain
+# (primary or fallback) and the orchestrator returns manual_required.
+# Multilspy (LSP scope-aware) is unaffected — local_variable / module_local_*
+# routes that use multilspy as primary still work for these names.
+# Source: full-1g benchmark + over-match probe 2026-04-19 — `Параметры`
+# appears in 1679 .bsl files, `РезультатЗапроса` in 223, etc.
+denylist:
+  # Russian — ubiquitous BSL identifiers
+  - Параметры
+  - Параметр
+  - Результат
+  - Результаты
+  - Запрос
+  - Ссылка
+  - Объект
+  - Значение
+  - Значения
+  - Имя
+  - Текст
+  - Строка
+  - Элемент
+  - Элементы
+  - Форма
+  - ЭтотОбъект
+  - ТекущийОбъект
+  - НовыйОбъект
+  # English aliases
+  - Parameters
+  - Parameter
+  - Result
+  - Query
+  - Ref
+  - Reference
+  - Object
+  - Value
+  - Name
+  - Text
+  - String
+  - Item
+  - Form

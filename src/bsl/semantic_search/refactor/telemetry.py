@@ -15,7 +15,7 @@ from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +34,8 @@ class RenameTelemetryEvent:
     classifier_confidence: float
     matrix_confidence: float
     token_matched: bool | None
+    prefilter_used: bool = False
+    prefilter_dropped: int = 0
     version: int = SCHEMA_VERSION
 
     def to_dict(self) -> dict:
@@ -53,6 +55,8 @@ class RenameTelemetryEvent:
             "classifier_confidence": self.classifier_confidence,
             "matrix_confidence": self.matrix_confidence,
             "token_matched": self.token_matched,
+            "prefilter_used": self.prefilter_used,
+            "prefilter_dropped": self.prefilter_dropped,
         }
 
 

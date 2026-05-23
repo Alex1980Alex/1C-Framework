@@ -1,0 +1,18 @@
+[
+  {
+    "arm": "e5",
+    "collection": "bsl_code_v3",
+    "n_queries": 50,
+    "recall@10": 0.45,
+    "ndcg@10": 0.2908284985025516,
+    "mrr": 0.2921587301587301
+  },
+  {
+    "arm": "qwen3-late",
+    "collection": "bsl_code_v4_late",
+    "n_queries": 50,
+    "recall@10": 0.5666666666666668,
+    "ndcg@10": 0.41415403639516185,
+    "mrr": 0.44652380952380943
+  }
+]

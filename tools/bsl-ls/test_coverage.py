@@ -14,17 +14,17 @@ BASE = Path(r"D:\1С-Framework")
 FILES = [
     {
         "name": "гкс_АсинхронныеСервисы (CommonModule Server)",
-        "path": BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonModules/гкс_АсинхронныеСервисы/Ext/Module.bsl",
+        "path": BASE / "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonModules/гкс_АсинхронныеСервисы/Ext/Module.bsl",
         "type": "CommonModule (server)",
     },
     {
         "name": "гкс_ИнтеграцияMFM (CommonModule Integration)",
-        "path": BASE / "src/projects/configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonModules/гкс_ИнтеграцияMFM/Ext/Module.bsl",
+        "path": BASE / "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonModules/гкс_ИнтеграцияMFM/Ext/Module.bsl",
         "type": "CommonModule (integration)",
     },
     {
-        "name": "MCPToolkit Form (Form Module)",
-        "path": BASE / "tools/1c-mcp-toolkit/toolkit/1c-mcp-toolkit-main/1c/MCPToolkit/MCPToolkit/Forms/Форма/Ext/Form/Module.bsl",
+        "name": "ФормаНастроекОтчета (Form Module)",
+        "path": BASE / "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/src/CommonForms/ФормаНастроекОтчета/Ext/Form/Module.bsl",
         "type": "Form Module (managed)",
     },
 ]

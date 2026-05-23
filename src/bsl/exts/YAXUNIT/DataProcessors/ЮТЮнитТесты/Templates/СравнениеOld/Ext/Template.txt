@@ -797,81 +797,81 @@
             word-wrap: normal;
             border: none;
         }
-        
+
         h3 {
             margin: 10px;
         }
-        
+
         .text {
             width: 50%;
         }
-        
+
         .wrapper {
             width: 98%;
         }
-        
+
         .left {
             float: left;
             width: 49%;
         }
-        
+
         .right {
             float: right;
             width: 49%;
         }
-        
+
         .scroll {
             overflow-x: scroll;
             overflow-y: auto;
             height: 98%;
         }
-        
+
         .inserted {
             background-color: #9E9;
             min-width: 100%;
             display: inline-block;
         }
-        
+
         .deleted {
             background-color: #E99;
             min-width: 100%;
             display: inline-block;
         }
-        
+
         .modified {
             background-color: #FD8;
             min-width: 100%;
             display: inline-block;
         }
-        
+
         .modified-light {
             background-color: #fcffb6;
             /*min-width: 100%;*/
             /*display: inline-block;*/
         }
-        
+
         .padding {
             background-color: lightgray;
             min-width: 100%;
             display: inline-block;
         }
-        
+
         .header {
             position: fixed;
             background: white;
             width: 50%;
             text-align: center;
         }
-        
+
         .spacer {
             width: 100%;
             height: 50px;
         }
-        
+
         textarea {
             display: none;
         }
-        
+
         html,
         body {
             margin: 0;

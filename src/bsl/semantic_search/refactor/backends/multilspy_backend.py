@@ -24,10 +24,10 @@ class MultilspyBackend:
     _CONFIDENCE = {
         "module_export_proc": 0.95,
         "module_export_func": 0.95,
-        "module_local_proc": 0.85,
-        "module_local_func": 0.85,
-        "local_variable": 0.70,
-        "form_handler": 0.60,
+        "module_local_proc": 0.95,
+        "module_local_func": 0.95,
+        "local_variable": 0.95,
+        "form_handler": 0.95,
     }
 
     def __init__(self, client_factory: LspClientFactory) -> None:
@@ -48,9 +48,10 @@ class MultilspyBackend:
         except Exception as exc:
             raise BackendError(f"lsp client factory failed: {exc!r}", code="client_init") from exc
 
+        lsp_line = line - 1 if line > 0 else line
         params = {
             "textDocument": {"uri": uri},
-            "position": {"line": line, "character": character},
+            "position": {"line": lsp_line, "character": character},
             "newName": new_name,
         }
 

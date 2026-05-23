@@ -6,15 +6,14 @@ Generates context.md report from project structure.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from agents.initializer.models import (
-    ObjectType,
-    ProjectStructure,
-    ModuleInfo,
-    RelevantFile,
     ContextReport,
     InitializerConfig,
+    ModuleInfo,
+    ObjectType,
+    ProjectStructure,
+    RelevantFile,
 )
 
 
@@ -30,7 +29,7 @@ class ContextGenerator:
     - Dependency graph (Mermaid)
     """
 
-    def __init__(self, config: Optional[InitializerConfig] = None) -> None:
+    def __init__(self, config: InitializerConfig | None = None) -> None:
         """Initialize generator with config."""
         self.config = config or InitializerConfig()
 
@@ -96,10 +95,12 @@ class ContextGenerator:
         lines.append("")
 
         # Relevant files for task
-        lines.extend(self._generate_relevant_files_section(
-            task_description=task_description,
-            relevant_files=relevant_files,
-        ))
+        lines.extend(
+            self._generate_relevant_files_section(
+                task_description=task_description,
+                relevant_files=relevant_files,
+            )
+        )
         lines.append("")
 
         # Dependencies graph
@@ -196,7 +197,7 @@ class ContextGenerator:
         lines = [
             "## Релевантные файлы для задачи",
             "",
-            f"> Задача: \"{task_description}\"",
+            f'> Задача: "{task_description}"',
             "",
         ]
 
@@ -260,7 +261,7 @@ class ContextGenerator:
             if high_files:
                 lines.append("    A[Задача] --> B[Релевантные файлы]")
                 for i, rf in enumerate(high_files[:5]):  # Limit to 5
-                    node_id = chr(ord('C') + i)
+                    node_id = chr(ord("C") + i)
                     name = rf.file_info.name[:20]  # Truncate long names
                     lines.append(f"    B --> {node_id}[{name}]")
 
@@ -321,12 +322,13 @@ class ContextGenerator:
 
 # Convenience functions
 
+
 def generate_context(
     project_id: str,
     structure: ProjectStructure,
     task_description: str,
     relevant_files: list[RelevantFile],
-    config: Optional[InitializerConfig] = None,
+    config: InitializerConfig | None = None,
 ) -> ContextReport:
     """Generate context report."""
     generator = ContextGenerator(config)

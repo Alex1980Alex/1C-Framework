@@ -2,18 +2,21 @@
 """
 Hook: memory-first-hook (P5.2 Federated Recall)
 Event: UserPromptSubmit
-Purpose: Auto-inject relevant memory context from 3 layers (SQLite + Qdrant + .md)
+Purpose: Auto-inject relevant memory context from 4 layers (SQLite + Qdrant + .md + wiki)
          into Claude's system message before processing user prompt.
 Timeout: 2s (total budget 1.5s for searches)
 
-3-layer federated search with RRF merge:
-  - Layer 1: SQLite important_messages (weight 0.35, 200ms)
-  - Layer 2: Qdrant SEMANTIC search (weight 0.40, 800ms, 3 collections)
-    - skill_library (75 skills), experience_embeddings (61 exp), conversation_memory (372 msgs)
-    - Embedding: Ollama nomic-embed-text (768d)
-    - Fallback: token overlap on learned_patterns if Ollama unavailable
+4-layer federated search with RRF merge:
+  - Layer 1: SQLite important_messages (weight 0.30, 200ms)
+  - Layer 2: Qdrant SEMANTIC search (weight 0.35, 1500ms, 3 collections)
+    - skill_library, experience_embeddings, conversation_memory
+    - Embedding: TEI Qwen3-Embedding-8B (4096d) — Phase 9.1 alignment with retrieval
+      stack. Was Ollama nomic 768d before 2026-04-30 (dim mismatch with 1024d
+      collections — never worked correctly).
+    - Fallback: token overlap on learned_patterns if TEI unavailable
     - Disable: MEMORY_HOOK_NO_SEMANTIC=1
-  - Layer 3: .md memory files (weight 0.25, 500ms)
+  - Layer 3: .md memory files (weight 0.15, 500ms)
+  - Layer 4: Wiki drafts search (weight 0.20, 200ms, docs/wiki/drafts/)
 
 Exit codes:
   0 = always allow (advisory, non-blocking)
@@ -56,21 +59,22 @@ COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
 MAX_RESULTS = 5
 
-LAYER_WEIGHTS = {"sqlite": 0.35, "qdrant": 0.40, "md": 0.25}
-SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md"}
+LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
+SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
 
-# Qdrant semantic search collections (768d nomic-embed-text)
+# Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
 SEMANTIC_COLLECTIONS = [
     ("skill_library", "skill"),
     ("experience_embeddings", "experience"),
     ("conversation_memory", "conversation"),
 ]
 
-# Timeout budgets (seconds)
+# Timeout budgets (seconds). TEI cold ~600ms, warm ~80ms (vs Ollama ~2s cold).
 SQLITE_TIMEOUT = 0.200
-QDRANT_TIMEOUT = 3.500  # Ollama embed ~2s + Qdrant queries ~0.5s
+QDRANT_TIMEOUT = 2.000  # TEI embed (warm) + Qdrant queries
 MD_TIMEOUT = 0.500
-TOTAL_BUDGET = 4.0  # Hook timeout 5s, budget 4s
+WIKI_TIMEOUT = 0.200
+TOTAL_BUDGET = 3.0  # Hook timeout 5s, budget 3s (TEI faster than Ollama)
 
 # Russian suffix stemming (29 suffixes, ordered by length desc)
 _RU_SUFFIXES_3 = [
@@ -284,9 +288,9 @@ def _extract_category(payload: dict, collection_type: str) -> str:
 
 
 def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
-    """Semantic search across 3 Qdrant collections via Ollama embeddings.
+    """Semantic search across 3 Qdrant collections via TEI Qwen3 embeddings.
 
-    Falls back to token overlap on learned_patterns if Ollama is unavailable.
+    Falls back to token overlap on learned_patterns if TEI is unavailable.
     """
     if os.environ.get("MEMORY_HOOK_NO_SEMANTIC") == "1":
         return []
@@ -298,9 +302,9 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
 
     # Try semantic search first
     try:
-        from shared.semantic_search import embed_query_ollama, search_qdrant_semantic
+        from shared.semantic_search import embed_query_tei, search_qdrant_semantic
 
-        embedding = embed_query_ollama(query_text, timeout=2.5)
+        embedding = embed_query_tei(query_text, timeout=1.5)
         if embedding:
             results = []
             for collection, ctype in SEMANTIC_COLLECTIONS:
@@ -493,6 +497,37 @@ def format_federated_context(merged: list) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Langfuse observation (roadmap §5c.4) — never blocks hook
+# ---------------------------------------------------------------------------
+def _emit_langfuse_span(
+    status: str,
+    *,
+    prompt_len: int = 0,
+    layer_counts: dict | None = None,
+    merged_count: int = 0,
+    duration_ms: float = 0.0,
+) -> None:
+    """Эмитит Langfuse observation. Никогда не raise — graceful skip on failure."""
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from src.pdf_framework.observability.langfuse_setup import emit_observation
+
+        emit_observation(
+            name=HOOK_NAME,
+            input={"prompt_len": prompt_len},
+            output={
+                "status": status,
+                "layers": layer_counts or {},
+                "merged": merged_count,
+                "duration_ms": round(duration_ms, 1),
+            },
+            metadata={"hook": HOOK_NAME, "event": "UserPromptSubmit"},
+        )
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
 # Hook class
 # ---------------------------------------------------------------------------
 class MemoryFirstHook(BaseHook):
@@ -500,16 +535,21 @@ class MemoryFirstHook(BaseHook):
 
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt
+        prompt_len = len(prompt or "")
         if should_skip(prompt):
+            _emit_langfuse_span("skipped-trivial", prompt_len=prompt_len)
             return None
         if check_cooldown():
+            _emit_langfuse_span("skipped-cooldown", prompt_len=prompt_len)
             return None
 
         query_tokens = set(tokenize(prompt))
         if not query_tokens:
+            _emit_langfuse_span("skipped-no-tokens", prompt_len=prompt_len)
             return None
 
-        deadline = time.monotonic() + TOTAL_BUDGET
+        t0 = time.monotonic()
+        deadline = t0 + TOTAL_BUDGET
 
         sqlite_results = (
             search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
@@ -520,17 +560,45 @@ class MemoryFirstHook(BaseHook):
             else []
         )
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
+        wiki_results = search_wiki(query_tokens, limit=10) if time.monotonic() < deadline else []
+
+        layer_counts = {
+            "sqlite": len(sqlite_results),
+            "qdrant": len(qdrant_results),
+            "md": len(md_results),
+            "wiki": len(wiki_results),
+        }
 
         merged = rrf_merge(
-            {"sqlite": sqlite_results, "qdrant": qdrant_results, "md": md_results},
+            {
+                "sqlite": sqlite_results,
+                "qdrant": qdrant_results,
+                "md": md_results,
+                "wiki": wiki_results,
+            },
             LAYER_WEIGHTS,
         )[:MAX_RESULTS]
 
+        duration_ms = (time.monotonic() - t0) * 1000
+
         if not merged:
+            _emit_langfuse_span(
+                "no-results",
+                prompt_len=prompt_len,
+                layer_counts=layer_counts,
+                duration_ms=duration_ms,
+            )
             return None
 
         msg = format_federated_context(merged)
         update_cooldown()
+        _emit_langfuse_span(
+            "injected",
+            prompt_len=prompt_len,
+            layer_counts=layer_counts,
+            merged_count=len(merged),
+            duration_ms=duration_ms,
+        )
         # Output via stdout (100% injection rate vs 55% for systemMessage).
         # For UserPromptSubmit hooks, stdout is added as context Claude sees,
         # while `systemMessage` is a user-facing warning that Claude never reads.

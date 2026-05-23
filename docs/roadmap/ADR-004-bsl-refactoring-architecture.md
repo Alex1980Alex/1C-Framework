@@ -165,6 +165,50 @@ offset на кириллице (отдельная задача для R1).
   - R2.5: routing matrix с приоритетом: (a) multilspy если workspace валиден → (b) ast-grep.
 - **R3-R5**: SCIP + Orchestrator + Benchmark — без изменений.
 
+## Addendum: Call-graph pre-filter for ast-grep (Option A, 2026-04-19)
+
+**Problem.** `AstGrepBackend` is text-pattern based. On the strict full-1g benchmark it scored 15% (3/20) because identical-name occurrences in unrelated modules (`Параметры` in 1 679 files, `РезультатЗапроса` in 223, etc.) get rewritten alongside the intended target. Denylist v4.6 mitigates the most common 30 names but does not help locally-unique-but-text-frequent identifiers.
+
+**Decision.** Add a scope filter that uses the existing BSL call graph (`cache/bsl_call_graph.db`, `src/bsl/call_graph/store.py::CallGraphStore`) to compute *expected* edit sites — defining module + transitive callers — and drop ast-grep matches falling outside that set. Implemented as `CallGraphPreFilter` (`backends/call_graph_prefilter.py`), wired through a factory (`backends/factory.py`) so `AstGrepBackend` itself stays stateless about call-graph concerns.
+
+**Semantics of `allowed_files(old_name, module_hint)`:**
+
+- `None` → symbol unknown to graph → **no filtering** (safe fallback)
+- `set()` → symbol known but 0 callers and no defining module → backend produces empty edit
+- `{paths…}` → restrict matches to this set
+
+**Configuration.** New `global.ast_grep` block in `routing_matrix.yaml`:
+
+```yaml
+global:
+  ast_grep:
+    use_call_graph_prefilter: true        # default ON
+    call_graph_db: cache/bsl_call_graph.db
+    graph_stale_threshold_days: 7
+```
+
+Kill switches:
+
+1. `use_call_graph_prefilter: false` in YAML → orchestrator passes `prefilter=None`
+2. `BSL_REFACTOR_NO_PREFILTER=1` env → factory bypasses prefilter for one process
+3. Missing `cache/bsl_call_graph.db` → factory logs warning, falls back to no-prefilter (prevents CI breakage when DB not committed)
+
+**Telemetry.** `RenameTelemetryEvent` schema bumped 1→2 with `prefilter_used: bool` and `prefilter_dropped: int`. `VerifyResult.prefilter_dropped` mirrors the value for downstream aggregation.
+
+**Result.** Strict success: 15% (off) → 20% (on), +5 п.п., entirely from CAT-5. Acceptance gate ≥35% not met. CAT-2/3/4 unchanged because their failure mode is "missing target", not "over-match noise" — pre-filter cannot create matches it does not see. Detailed analysis in [option-a-recon.md](option-a-recon.md). Component is safe to ship (default-off via env, no breaking changes); further calibration tracked there.
+
+**Files.**
+
+- `src/bsl/semantic_search/refactor/backends/call_graph_prefilter.py` — filter logic
+- `src/bsl/semantic_search/refactor/backends/factory.py` — wiring (`build_ast_grep_backend`)
+- `src/bsl/semantic_search/refactor/backends/ast_grep_backend.py` — drop-counter integration (`last_prefilter_used`, `last_prefilter_dropped`)
+- `src/bsl/semantic_search/refactor/orchestrator.py` — telemetry + result propagation
+- `src/bsl/semantic_search/refactor/verification.py` — `VerifyResult.prefilter_dropped`
+- `src/bsl/semantic_search/refactor/telemetry.py` — schema v2
+- `src/bsl/semantic_search/refactor/classifier.py` — `RoutingMatrix.ast_grep_global()` accessor
+- `src/bsl/semantic_search/refactor/routing_matrix.yaml` — `global.ast_grep` block
+- `tests/bsl/refactor/test_call_graph_prefilter.py`, `test_factory.py`, `test_ast_grep_backend.py`, `test_routing_matrix_yaml.py`, `test_telemetry.py` — coverage
+
 ## References
 - `tools/bsl-ls/multilspy_recon.py` + `multilspy-logs/` — R0.1 артефакт
 - `tools/bsl-ls/tree-sitter-coverage.md` — R0.2 results (RMQ + ФормаДокумента)

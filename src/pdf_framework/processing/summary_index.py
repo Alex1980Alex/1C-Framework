@@ -6,6 +6,7 @@ Author: Claude Code
 Version: 1.4.0 - Phase 13.4: Document Summary Index
 """
 
+import hashlib
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
@@ -45,6 +46,7 @@ class DocumentSummaryIndex:
         summarization_model: str = "claude-haiku-4-5-20251001",
         api_key: str = "",
         base_url: str = "",
+        embedding_engine: Any = None,
     ):
         """
         Initialize document summary index.
@@ -55,12 +57,15 @@ class DocumentSummaryIndex:
             summarization_model: LLM for summarization
             api_key: Anthropic API key
             base_url: Custom API endpoint (for Z.AI or other proxies)
+            embedding_engine: Embedding engine with embed_text(text) -> list[float].
+                If None, falls back to a deterministic hash-based placeholder.
         """
         self._collection_name = collection_name
         self._persist_dir = Path(persist_dir)
         self._summarization_model = summarization_model
         self._api_key = api_key
         self._base_url = base_url
+        self._embedding_engine = embedding_engine
 
         # Lazy initialization
         self._vector_store = None
@@ -276,16 +281,24 @@ Summary:"""
             return f"Summary not available for {document_id}"
 
     async def _embed_text(self, text: str) -> list[float]:
-        """Generate embedding for text."""
-        # TODO: Use actual embedding engine from components
-        import hashlib
+        """Generate embedding for text using injected engine or hash fallback."""
+        if self._embedding_engine is not None:
+            try:
+                return await self._embedding_engine.embed_text(text)
+            except Exception as e:
+                logger.warning(
+                    "[SUMMARY_IDX] Embedding engine failed, falling back to hash-based: %s", e
+                )
 
-        # Repeat hash to reach target dimensions (384)
+        else:
+            logger.error(
+                "[SUMMARY_IDX] No embedding engine available; search results will be meaningless"
+            )
+        # Deterministic hash-based fallback (384d) — only used when no engine is injected or fails
         target_dim = 384
         hash_val = hashlib.sha256(text.encode()).hexdigest()
         hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
-        embedding = [float(int(h, 16)) / 15.0 for h in hex_chars]
-        return embedding
+        return [float(int(h, 16)) / 15.0 for h in hex_chars]
 
 
 # Global document summary index instance

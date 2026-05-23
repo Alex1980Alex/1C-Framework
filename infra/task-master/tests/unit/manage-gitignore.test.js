@@ -179,7 +179,7 @@ logs
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/
 `
 				);
 				expect(mockLog).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ logs
 
 # Task files
 tasks.json
-tasks/ 
+tasks/
 `
 				);
 				expect(mockLog).toHaveBeenCalledWith(
@@ -330,7 +330,7 @@ existing.txt
 logs
 *.log
 
-# Dependencies  
+# Dependencies
 node_modules/
 
 # Task files
@@ -434,7 +434,7 @@ tasks/ `;
 				const writtenContent = writeFileSyncSpy.mock.calls[0][1];
 				expect(writtenContent).toBe(`# Task files
 # tasks.json
-# tasks/ 
+# tasks/
 `);
 			});
 		});

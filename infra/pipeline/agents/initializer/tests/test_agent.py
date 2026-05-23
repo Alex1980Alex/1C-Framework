@@ -1,26 +1,24 @@
 """Tests for InitializerAgent."""
 
-import pytest
 import tempfile
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from ..agent import (
-    InitializerResult,
-    InitializerAgent,
-    create_initializer,
-    run_initializer,
-    initialize_project,
-    get_project_context,
-)
+import pytest
 from models import (
+    ContextReport,
     InitializerConfig,
     InitializerInput,
     InitializerOutput,
-    ProjectStructure,
-    ProjectType,
-    ContextReport,
+)
+
+from ..agent import (
+    InitializerAgent,
+    InitializerResult,
+    create_initializer,
+    get_project_context,
+    initialize_project,
+    run_initializer,
 )
 
 

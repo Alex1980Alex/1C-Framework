@@ -18,37 +18,37 @@ export interface AggregationResult {
    * Total number of directories processed
    */
   totalDirectories: number;
-  
+
   /**
    * Number of directories successfully processed
    */
   successfulGenerations: number;
-  
+
   /**
    * Number of directories that failed processing
    */
   failedGenerations: number;
-  
+
   /**
    * Number of directories with fallback files
    */
   fallbackFiles: number;
-  
+
   /**
    * Number of directories that were updated
    */
   updatedGenerations: number;
-  
+
   /**
    * Number of directories that were skipped (existing files when updateExisting is false)
    */
   skippedGenerations: number;
-  
+
   /**
    * Errors encountered during the process
    */
   errors: Array<{ directory: string, error: string }>;
-  
+
   /**
    * Number of retries performed
    */
@@ -69,7 +69,7 @@ export class ToolAggregator {
   private tool: BaseTool<any>;
   private outputDir: string | undefined;
   private config = getConfig();
-  
+
   // Auto-retry configuration
   private maxRetries: number = 2;
   private retryDelayMs: number = 5000;
@@ -91,7 +91,7 @@ export class ToolAggregator {
     this.analyzer = new FileAnalyzer();
     this.tool = tool;
     this.outputDir = outputDir;
-    
+
     // Read retry config from environment
     if (process.env.MAX_RETRIES) {
       this.maxRetries = parseInt(process.env.MAX_RETRIES, 10);
@@ -122,7 +122,7 @@ export class ToolAggregator {
     const dir = path.dirname(outputPath);
     await fs.promises.mkdir(dir, { recursive: true });
   }
-  
+
   /**
    * Runs the full aggregation process with auto-retry for failed directories
    * @param progressCallback Optional callback for progress updates
@@ -153,12 +153,12 @@ export class ToolAggregator {
         console.error('Sequential processing mode');
         await this.runSequential(result, progressCallback);
       }
-      
+
       // Auto-retry failed directories
       if (result.errors.length > 0 && this.maxRetries > 0) {
         await this.retryFailedDirectories(result, progressCallback);
       }
-      
+
       return result;
     } catch (error: any) {
       console.error('Error during aggregation:', error);
@@ -179,26 +179,26 @@ export class ToolAggregator {
   ): Promise<void> {
     for (let retry = 1; retry <= this.maxRetries; retry++) {
       const failedDirs = result.errors.map(e => e.directory);
-      
+
       if (failedDirs.length === 0) {
         console.error('✅ All directories processed successfully!');
         break;
       }
-      
+
       console.error(`\n🔄 Retry ${retry}/${this.maxRetries}: Retrying ${failedDirs.length} failed directories...`);
       console.error(`   Waiting ${this.retryDelayMs}ms before retry...`);
       await sleep(this.retryDelayMs);
-      
+
       // Clear errors for this retry round
       const previousErrors = [...result.errors];
       result.errors = [];
       result.failedGenerations = 0;
-      
+
       // Process failed directories one by one
       for (let i = 0; i < failedDirs.length; i++) {
         const dir = failedDirs[i];
         console.error(`   Retrying [${i + 1}/${failedDirs.length}]: ${path.basename(dir)}`);
-        
+
         await this.processDirectory(
           dir,
           result,
@@ -206,15 +206,15 @@ export class ToolAggregator {
           i + 1,
           failedDirs.length
         );
-        
+
         // Small delay between retries to avoid rate limits
         if (i < failedDirs.length - 1) {
           await sleep(this.config.parallelProcessing.requestDelayMs || 2000);
         }
       }
-      
+
       result.retriesPerformed = retry;
-      
+
       // Check if all retries succeeded
       if (result.errors.length === 0) {
         console.error(`✅ All ${failedDirs.length} directories succeeded on retry ${retry}!`);
@@ -223,7 +223,7 @@ export class ToolAggregator {
         console.error(`⚠️ Retry ${retry}: ${result.errors.length} directories still failing`);
       }
     }
-    
+
     if (result.errors.length > 0) {
       console.error(`\n❌ After ${this.maxRetries} retries, ${result.errors.length} directories still failed:`);
       for (const err of result.errors) {
@@ -439,7 +439,7 @@ export class ToolAggregator {
       result.updatedGenerations++;
     }
   }
-  
+
   /**
    * Generates content for a directory and updates the aggregation result
    * @param directoryPath Path to the directory
@@ -467,7 +467,7 @@ export class ToolAggregator {
         childContent,
         outputDir
       );
-      
+
       if (genResult.success) {
         console.error(`Successfully ${genResult.isUpdate ? 'updated' : 'generated'} content for ${directoryPath}`);
         aggregationResult.successfulGenerations++;
@@ -479,7 +479,7 @@ export class ToolAggregator {
           error: genResult.error || 'Unknown error'
         });
       }
-      
+
       return genResult;
     } catch (error: any) {
       console.error(`Error generating content for ${directoryPath}:`, error);

@@ -1,25 +1,22 @@
 """Tests for Unified Memory Client."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from datetime import datetime
-
-from .unified_memory_client import (
-    UnifiedMemoryClient,
-    MemoryConfig,
-    SearchResult,
-    SaveResult,
-    MemoryCache,
-    SearchMode,
-)
 from models import (
+    ErrorRecord,
+    ErrorSeverity,
     MemoryType,
     Pattern,
     PatternType,
-    ErrorRecord,
-    ErrorSeverity,
     Recommendation,
     RecommendationType,
+)
+
+from .unified_memory_client import (
+    MemoryCache,
+    MemoryConfig,
+    SearchMode,
+    SearchResult,
+    UnifiedMemoryClient,
 )
 
 
@@ -154,6 +151,7 @@ class TestUnifiedMemoryClient:
     @pytest.fixture
     def mock_mcp_caller(self):
         """Create mock MCP caller."""
+
         async def caller(tool_name, params):
             if "save_memory" in tool_name:
                 return {

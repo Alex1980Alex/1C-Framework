@@ -1,23 +1,21 @@
 """Tests for CodebaseScanner."""
 
-import pytest
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
 import tempfile
-import os
+from pathlib import Path
+
+import pytest
+from models import (
+    FileType,
+    InitializerConfig,
+    ObjectType,
+    ProjectType,
+)
 
 from ..codebase_scanner import (
     CodebaseScanner,
-    scan_directory,
     detect_project_type,
     get_file_stats,
-)
-from models import (
-    ProjectType,
-    ObjectType,
-    FileType,
-    InitializerConfig,
+    scan_directory,
 )
 
 
@@ -132,7 +130,7 @@ class TestFileScanning:
             # Create BSL file
             bsl_path = Path(tmpdir, "Module.bsl")
             bsl_path.write_text(
-                "Процедура Тест()\n    Сообщить(\"Тест\");\nКонецПроцедуры",
+                'Процедура Тест()\n    Сообщить("Тест");\nКонецПроцедуры',
                 encoding="utf-8-sig",
             )
 
@@ -221,10 +219,7 @@ class TestPatternDetection:
             structure = scanner.scan(tmpdir)
 
             # Should detect "гкс_" prefix
-            prefix_patterns = [
-                p for p in structure.patterns
-                if "Naming Prefix" in p.name
-            ]
+            prefix_patterns = [p for p in structure.patterns if "Naming Prefix" in p.name]
             assert len(prefix_patterns) == 1
 
 

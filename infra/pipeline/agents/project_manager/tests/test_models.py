@@ -1,17 +1,16 @@
 """Tests for PROJECT-MANAGER models."""
 
-import pytest
 from datetime import datetime
 
 from agents.project_manager.models import (
-    ProjectStatus,
-    TaskStatus,
-    TaskPriority,
     DependencyType,
-    Task,
-    TaskDependency,
     Project,
     ProjectManagerConfig,
+    ProjectStatus,
+    Task,
+    TaskDependency,
+    TaskPriority,
+    TaskStatus,
 )
 
 

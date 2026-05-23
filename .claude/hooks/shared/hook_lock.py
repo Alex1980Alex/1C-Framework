@@ -14,8 +14,10 @@ Usage:
 import json
 import os
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
+from typing import Any
 
 from shared.core_paths import get_cache_dir
 
@@ -27,7 +29,7 @@ LOCK_FILE = CACHE_DIR / "hooks-lock.json"
 STALE_THRESHOLD = 30
 
 
-def _read_lock() -> dict:
+def _read_lock() -> dict[str, Any]:
     """Read current lock state."""
     if not LOCK_FILE.exists():
         return {}
@@ -38,7 +40,7 @@ def _read_lock() -> dict:
         return {}
 
 
-def _write_lock(data: dict) -> None:
+def _write_lock(data: dict[str, Any]) -> None:
     """Write lock state."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     try:
@@ -48,7 +50,7 @@ def _write_lock(data: dict) -> None:
         pass
 
 
-def _is_stale(lock_data: dict) -> bool:
+def _is_stale(lock_data: dict[str, Any]) -> bool:
     """Check if lock is stale (older than threshold)."""
     acquired_at = lock_data.get("acquired_at", "")
     if not acquired_at:
@@ -98,7 +100,7 @@ def release_lock(hook_name: str) -> bool:
 
 
 @contextmanager
-def hook_lock(hook_name: str, timeout: float = 10.0):
+def hook_lock(hook_name: str, timeout: float = 10.0) -> Iterator[bool]:
     """Context manager for hook synchronization.
 
     Usage:

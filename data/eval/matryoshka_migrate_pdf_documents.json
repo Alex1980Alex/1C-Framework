@@ -1,0 +1,51 @@
+{
+  "source": "pdf_documents",
+  "stages": {
+    "evaluate": {
+      "4096": {
+        "dim": 4096,
+        "collection": "pdf_documents",
+        "n_items": 18,
+        "n_scored": 18,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.40423420075754896,
+        "p50_ms": 107.85160001250915,
+        "p95_ms": 110.21340001025237
+      },
+      "1024": {
+        "dim": 1024,
+        "collection": "pdf_documents_mrl_1024",
+        "n_items": 18,
+        "n_scored": 18,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.5120108767062638,
+        "p50_ms": 99.10369999124669,
+        "p95_ms": 110.96829999587499
+      },
+      "512": {
+        "dim": 512,
+        "collection": "pdf_documents_mrl_512",
+        "n_items": 18,
+        "n_scored": 18,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.4591305452727974,
+        "p50_ms": 92.29349999804981,
+        "p95_ms": 109.80589999235235
+      }
+    }
+  },
+  "verdicts": {
+    "1024": {
+      "delta_rel": 0.26661938981594724,
+      "verdict": "MIGRATE",
+      "ndcg": 0.5120108767062638,
+      "baseline": 0.40423420075754896
+    },
+    "512": {
+      "delta_rel": 0.13580331503957552,
+      "verdict": "MIGRATE",
+      "ndcg": 0.4591305452727974,
+      "baseline": 0.40423420075754896
+    }
+  }
+}

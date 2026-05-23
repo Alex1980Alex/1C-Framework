@@ -1,0 +1,129 @@
+{
+  "manifest_date": "2026-04-26T16:23:45.310955",
+  "collections": [
+    {
+      "name": "graph_embeddings",
+      "points_count": 6694,
+      "vectors_config": {
+        "size": 1024,
+        "distance": "Cosine"
+      },
+      "snapshot": "graph_embeddings-4165940475519587-2026-04-26-13-23-30.snapshot",
+      "snapshot_size_mb": 63.17
+    },
+    {
+      "name": "bsl_code_v3",
+      "points_count": 22588,
+      "vectors_config": {
+        "size": 1024,
+        "distance": "Cosine"
+      },
+      "snapshot": "bsl_code_v3-4165940475519587-2026-04-26-13-23-30.snapshot",
+      "snapshot_size_mb": 158.26
+    },
+    {
+      "name": "visual_grounding",
+      "points_count": 5,
+      "vectors_config": {
+        "size": 768,
+        "distance": "Cosine"
+      },
+      "snapshot": "visual_grounding-4165940475519587-2026-04-26-13-23-30.snapshot",
+      "snapshot_size_mb": 0.08
+    },
+    {
+      "name": "experience_embeddings",
+      "points_count": 61,
+      "vectors_config": {
+        "size": 768,
+        "distance": "Cosine"
+      },
+      "snapshot": "experience_embeddings-4165940475519587-2026-04-26-13-23-30.snapshot",
+      "snapshot_size_mb": 0.51
+    },
+    {
+      "name": "bsl_code_v4",
+      "points_count": 22604,
+      "vectors_config": {
+        "content": {
+          "size": 1024,
+          "distance": "Cosine"
+        },
+        "module_path": {
+          "size": 1024,
+          "distance": "Cosine"
+        }
+      },
+      "snapshot": "bsl_code_v4-4165940475519587-2026-04-26-13-23-30.snapshot",
+      "snapshot_size_mb": 236.58
+    },
+    {
+      "name": "conversation_memory",
+      "points_count": 372,
+      "vectors_config": {
+        "size": 768,
+        "distance": "Cosine"
+      },
+      "snapshot": "conversation_memory-4165940475519587-2026-04-26-13-23-31.snapshot",
+      "snapshot_size_mb": 3.11
+    },
+    {
+      "name": "wiki_pages_v1",
+      "points_count": 3073,
+      "vectors_config": {
+        "size": 1024,
+        "distance": "Cosine"
+      },
+      "snapshot": "wiki_pages_v1-4165940475519587-2026-04-26-13-23-31.snapshot",
+      "snapshot_size_mb": 29.35
+    },
+    {
+      "name": "learned_patterns",
+      "points_count": 44,
+      "vectors_config": {
+        "size": 1024,
+        "distance": "Cosine"
+      },
+      "snapshot": "learned_patterns-4165940475519587-2026-04-26-13-23-31.snapshot",
+      "snapshot_size_mb": 0.49
+    },
+    {
+      "name": "pdf_documents",
+      "points_count": 1012,
+      "vectors_config": {
+        "dense": {
+          "size": 1024,
+          "distance": "Cosine"
+        }
+      },
+      "snapshot": "pdf_documents-4165940475519587-2026-04-26-13-23-31.snapshot",
+      "snapshot_size_mb": 17.65
+    },
+    {
+      "name": "skill_library",
+      "points_count": 75,
+      "vectors_config": {
+        "size": 768,
+        "distance": "Cosine"
+      },
+      "snapshot": "skill_library-4165940475519587-2026-04-26-13-23-31.snapshot",
+      "snapshot_size_mb": 1.12
+    },
+    {
+      "name": "bsl_metadata",
+      "points_count": 1000,
+      "vectors_config": {
+        "friendly_name": {
+          "size": 768,
+          "distance": "Cosine"
+        },
+        "object_name": {
+          "size": 768,
+          "distance": "Cosine"
+        }
+      },
+      "snapshot": "bsl_metadata-4165940475519587-2026-04-26-13-23-31.snapshot",
+      "snapshot_size_mb": 13.81
+    }
+  ]
+}

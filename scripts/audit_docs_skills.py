@@ -383,7 +383,145 @@ CATEGORY_MAPPING: dict[str, dict[str, Any]] = {
         ],
         "skills": ["agent-orchestration"],
     },
+    # Phase B2 extension (2026-05-15, roadmap 260515): 4 new categories
+    "memory_subsystem": {
+        "docs": [
+            "27_UNIFIED_MEMORY/27.1_Обзор.md",
+            "27_UNIFIED_MEMORY/27.2_Оркестратор.md",
+            "27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md",
+            "32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md",
+        ],
+        "skills": ["memory-unified", "wiki-pipeline"],
+    },
+    "bsl_tool": {
+        "docs": [
+            "16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md",
+            "17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md",
+            "28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md",
+        ],
+        "skills": ["bsl-development", "1c-mcp-crud"],
+    },
+    "hook": {
+        "docs": [
+            "09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md",
+            "13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md",
+        ],
+        "skills": ["hooks-skills-mcp-triad", "create-hook"],
+    },
+    "wiki_component": {
+        "docs": [
+            "32_WIKI_KNOWLEDGE_LAYER/32.2_Архитектура.md",
+            "32_WIKI_KNOWLEDGE_LAYER/32.4_Forward_Sync.md",
+            "32_WIKI_KNOWLEDGE_LAYER/32.5_Reverse_Sync.md",
+        ],
+        "skills": ["wiki-pipeline"],
+    },
 }
+
+
+def extract_memory_subsystems() -> list[Feature]:
+    """Extract memory subsystem components from src/memory/*/."""
+    features = []
+    memory_dir = PROJECT_ROOT / "src" / "memory"
+    if not memory_dir.exists():
+        return features
+    subdirs = ["orchestrator", "ai_memory", "vector_memory", "librarian", "infrastructure"]
+    for sub in subdirs:
+        sub_path = memory_dir / sub
+        if not sub_path.exists():
+            continue
+        for py_file in sorted(sub_path.glob("*.py")):
+            if py_file.name == "__init__.py":
+                continue
+            text = py_file.read_text(encoding="utf-8", errors="replace")
+            for m in re.finditer(r"^class\s+(\w+)", text, re.MULTILINE):
+                cls = m.group(1)
+                if cls.startswith("_") or cls.endswith("Config") or cls.endswith("Error"):
+                    continue
+                features.append(
+                    Feature(
+                        name=cls,
+                        category="memory_subsystem",
+                        source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                        details=f"subsystem={sub}",
+                    )
+                )
+    return features
+
+
+def extract_bsl_tools() -> list[Feature]:
+    """Extract BSL tool components from src/bsl/*/."""
+    features = []
+    bsl_dir = PROJECT_ROOT / "src" / "bsl"
+    if not bsl_dir.exists():
+        return features
+    for sub_path in sorted(bsl_dir.iterdir()):
+        if not sub_path.is_dir() or sub_path.name.startswith("_"):
+            continue
+        for py_file in sorted(sub_path.glob("*.py")):
+            if py_file.name == "__init__.py":
+                continue
+            text = py_file.read_text(encoding="utf-8", errors="replace")
+            for m in re.finditer(r"^class\s+(\w+)", text, re.MULTILINE):
+                cls = m.group(1)
+                if cls.startswith("_") or cls.endswith("Error"):
+                    continue
+                features.append(
+                    Feature(
+                        name=cls,
+                        category="bsl_tool",
+                        source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                        details=f"subsystem={sub_path.name}",
+                    )
+                )
+    return features
+
+
+def extract_hooks() -> list[Feature]:
+    """Extract Claude Code hooks from .claude/hooks/*.py."""
+    features = []
+    hooks_dir = PROJECT_ROOT / ".claude" / "hooks"
+    if not hooks_dir.exists():
+        return features
+    for py_file in sorted(hooks_dir.glob("*.py")):
+        if py_file.name.startswith("_"):
+            continue
+        features.append(
+            Feature(
+                name=py_file.stem,
+                category="hook",
+                source_file=str(py_file.relative_to(PROJECT_ROOT)),
+                details="hook script",
+            )
+        )
+    return features
+
+
+def extract_wiki_components() -> list[Feature]:
+    """Extract wiki pipeline components (5 service classes)."""
+    features = []
+    target = PROJECT_ROOT / "src" / "pdf_framework" / "indexing" / "wiki_exporter.py"
+    if not target.exists():
+        return features
+    text = target.read_text(encoding="utf-8", errors="replace")
+    wiki_classes = [
+        "WikiExporter",
+        "ForwardSyncService",
+        "IncrementalWikiSync",
+        "ReverseSyncService",
+        "WikiSearchIndexer",
+    ]
+    for cls in wiki_classes:
+        if re.search(rf"^class\s+{cls}\b", text, re.MULTILINE):
+            features.append(
+                Feature(
+                    name=cls,
+                    category="wiki_component",
+                    source_file=str(target.relative_to(PROJECT_ROOT)),
+                    details="wiki pipeline service",
+                )
+            )
+    return features
 
 
 def _load_doc_text(relative_path: str) -> str:
@@ -462,6 +600,11 @@ def run_audit() -> AuditReport:
         ("CLI Commands", extract_cli_commands),
         ("Agents", extract_agent_types),
         ("Config Variables", extract_config_vars),
+        # Phase B2 extension (2026-05-15)
+        ("Memory Subsystems", extract_memory_subsystems),
+        ("BSL Tools", extract_bsl_tools),
+        ("Hooks", extract_hooks),
+        ("Wiki Components", extract_wiki_components),
     ]
 
     for label, extractor_fn in extractors:

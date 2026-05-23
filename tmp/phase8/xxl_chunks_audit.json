@@ -1,0 +1,312 @@
+[
+  {
+    "file_idx": 749,
+    "global_chunk_idx": 12613,
+    "content_len": 97084,
+    "lines": 1159,
+    "name": "Словарь_en_ru",
+    "chunk_type": "symbol",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\ОбменДаннымиТрансляцияФорматаПовтИсп\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 749,
+    "global_chunk_idx": 12612,
+    "content_len": 97007,
+    "lines": 1144,
+    "name": "Словарь_ru_en",
+    "chunk_type": "symbol",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\ОбменДаннымиТрансляцияФорматаПовтИсп\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 908,
+    "global_chunk_idx": 16897,
+    "content_len": 70448,
+    "lines": 0,
+    "name": "УправлениеДоступомСлужебный",
+    "chunk_type": "module_summary",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\УправлениеДоступомСлужебный\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 1979,
+    "global_chunk_idx": 34607,
+    "content_len": 37514,
+    "lines": 867,
+    "name": "ПраваПользователей",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\Reports\\АнализПравДоступа\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 746,
+    "global_chunk_idx": 12029,
+    "content_len": 37336,
+    "lines": 0,
+    "name": "ОбменДаннымиСервер",
+    "chunk_type": "module_summary",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\ОбменДаннымиСервер\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 1443,
+    "global_chunk_idx": 29427,
+    "content_len": 35642,
+    "lines": 898,
+    "name": "ДанныеСопоставленияОбъектов",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\СопоставлениеОбъектовИнформационныхБаз\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 1288,
+    "global_chunk_idx": 25805,
+    "content_len": 34528,
+    "lines": 0,
+    "name": "ObjectModule",
+    "chunk_type": "module_summary",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\КонвертацияОбъектовИнформационныхБаз\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 963,
+    "global_chunk_idx": 19703,
+    "content_len": 33349,
+    "lines": 0,
+    "name": "ЭлектроннаяПодписьСлужебныйКлиент",
+    "chunk_type": "module_summary",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\ЭлектроннаяПодписьСлужебныйКлиент\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 855,
+    "global_chunk_idx": 15569,
+    "content_len": 32847,
+    "lines": 0,
+    "name": "РаботаСФайламиСлужебныйКлиент",
+    "chunk_type": "module_summary",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\РаботаСФайламиСлужебныйКлиент\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 533,
+    "global_chunk_idx": 6761,
+    "content_len": 27765,
+    "lines": 604,
+    "name": "УстановитьУсловноеОформление",
+    "chunk_type": "symbol",
+    "module_type": "Unknown",
+    "rel_path": "src\\CommonForms\\ФормаНастроекОтчета\\Ext\\Form\\Module.bsl"
+  },
+  {
+    "file_idx": 1288,
+    "global_chunk_idx": 25809,
+    "content_len": 27153,
+    "lines": 803,
+    "name": "ВыгрузитьПоПравилу",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\КонвертацияОбъектовИнформационныхБаз\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 546,
+    "global_chunk_idx": 7534,
+    "content_len": 26900,
+    "lines": 491,
+    "name": "ТекстЗапросаПроверкиАдресов",
+    "chunk_type": "symbol",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\АдресныйКлассификаторСлужебный\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 553,
+    "global_chunk_idx": 7909,
+    "content_len": 25878,
+    "lines": 498,
+    "name": "ТекстЗапросаДоступныхВариантовОтчетов",
+    "chunk_type": "symbol",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\ВариантыОтчетов\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 1179,
+    "global_chunk_idx": 22706,
+    "content_len": 24926,
+    "lines": 0,
+    "name": "Module",
+    "chunk_type": "module_summary",
+    "module_type": "FormModule",
+    "rel_path": "src\\DataProcessors\\ЗаявлениеНаВыпускНовогоКвалифицированногоСертификата\\Forms\\Форма\\Ext\\Form\\Module.bsl"
+  },
+  {
+    "file_idx": 250,
+    "global_chunk_idx": 2185,
+    "content_len": 24865,
+    "lines": 536,
+    "name": "ПолучитьРеквизитыОбъектаДО",
+    "chunk_type": "symbol",
+    "module_type": "ManagerModule",
+    "rel_path": "src\\Catalogs\\ПравилаИнтеграцииС1СДокументооборотом\\Ext\\ManagerModule.bsl"
+  },
+  {
+    "file_idx": 1468,
+    "global_chunk_idx": 29955,
+    "content_len": 24589,
+    "lines": 0,
+    "name": "ObjectModule",
+    "chunk_type": "module_summary",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\УниверсальныйОбменДаннымиXML\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 1288,
+    "global_chunk_idx": 26012,
+    "content_len": 24403,
+    "lines": 773,
+    "name": "ПрочитатьОбъект",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\КонвертацияОбъектовИнформационныхБаз\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 760,
+    "global_chunk_idx": 12867,
+    "content_len": 23478,
+    "lines": 0,
+    "name": "ОбновлениеИнформационнойБазыСлужебный",
+    "chunk_type": "module_summary",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\ОбновлениеИнформационнойБазыСлужебный\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 250,
+    "global_chunk_idx": 2194,
+    "content_len": 23459,
+    "lines": 582,
+    "name": "ЗаполнитьСтруктуруРеквизитовОбъектаДОПоПравилу",
+    "chunk_type": "symbol",
+    "module_type": "ManagerModule",
+    "rel_path": "src\\Catalogs\\ПравилаИнтеграцииС1СДокументооборотом\\Ext\\ManagerModule.bsl"
+  },
+  {
+    "file_idx": 1310,
+    "global_chunk_idx": 26518,
+    "content_len": 23125,
+    "lines": 551,
+    "name": "ТекстЗапросаОбновленияДанныхОКонфликтах",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\ОписаниеОбработчиковОбновления\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 2014,
+    "global_chunk_idx": 34816,
+    "content_len": 22966,
+    "lines": 566,
+    "name": "ВыбратьСведенияОПравахДоступа",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\Reports\\ПраваДоступа\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 1218,
+    "global_chunk_idx": 23806,
+    "content_len": 22824,
+    "lines": 0,
+    "name": "Module",
+    "chunk_type": "module_summary",
+    "module_type": "FormModule",
+    "rel_path": "src\\DataProcessors\\ИнтеграцияС1СДокументооборот\\Forms\\ВнутреннийДокумент\\Ext\\Form\\Module.bsl"
+  },
+  {
+    "file_idx": 1975,
+    "global_chunk_idx": 34546,
+    "content_len": 22805,
+    "lines": 451,
+    "name": "ДанныеИзЖурналаРегистрации",
+    "chunk_type": "symbol",
+    "module_type": "ManagerModule",
+    "rel_path": "src\\Reports\\АнализЖурналаРегистрации\\Ext\\ManagerModule.bsl"
+  },
+  {
+    "file_idx": 1468,
+    "global_chunk_idx": 30143,
+    "content_len": 22362,
+    "lines": 764,
+    "name": "ПрочитатьОбъект",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\DataProcessors\\УниверсальныйОбменДаннымиXML\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 2016,
+    "global_chunk_idx": 34881,
+    "content_len": 21589,
+    "lines": 378,
+    "name": "ДеревоМетаданных",
+    "chunk_type": "symbol",
+    "module_type": "ObjectModule",
+    "rel_path": "src\\Reports\\ПраваРолей\\Ext\\ObjectModule.bsl"
+  },
+  {
+    "file_idx": 533,
+    "global_chunk_idx": 6488,
+    "content_len": 20928,
+    "lines": 0,
+    "name": "Module",
+    "chunk_type": "module_summary",
+    "module_type": "Unknown",
+    "rel_path": "src\\CommonForms\\ФормаНастроекОтчета\\Ext\\Form\\Module.bsl"
+  },
+  {
+    "file_idx": 250,
+    "global_chunk_idx": 2191,
+    "content_len": 20836,
+    "lines": 525,
+    "name": "ЗаполнитьОбъектПоОбъектуXDTO",
+    "chunk_type": "symbol",
+    "module_type": "ManagerModule",
+    "rel_path": "src\\Catalogs\\ПравилаИнтеграцииС1СДокументооборотом\\Ext\\ManagerModule.bsl"
+  },
+  {
+    "file_idx": 853,
+    "global_chunk_idx": 15223,
+    "content_len": 20646,
+    "lines": 0,
+    "name": "РаботаСФайламиСлужебный",
+    "chunk_type": "module_summary",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\РаботаСФайламиСлужебный\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 250,
+    "global_chunk_idx": 2193,
+    "content_len": 20592,
+    "lines": 524,
+    "name": "ЗаполнитьФормуОбъектаДОПоПравилу",
+    "chunk_type": "symbol",
+    "module_type": "ManagerModule",
+    "rel_path": "src\\Catalogs\\ПравилаИнтеграцииС1СДокументооборотом\\Ext\\ManagerModule.bsl"
+  },
+  {
+    "file_idx": 937,
+    "global_chunk_idx": 18937,
+    "content_len": 20450,
+    "lines": 429,
+    "name": "ЗаполнитьДополнительныеРеквизитыВФорме",
+    "chunk_type": "symbol",
+    "module_type": "CommonModule",
+    "rel_path": "src\\CommonModules\\УправлениеСвойствами\\Ext\\Module.bsl"
+  },
+  {
+    "file_idx": 528,
+    "global_chunk_idx": 6430,
+    "content_len": 20254,
+    "lines": 391,
+    "name": "СформироватьСоответствия",
+    "chunk_type": "symbol",
+    "module_type": "Unknown",
+    "rel_path": "src\\CommonForms\\СравнениеТабличныхДокументов\\Ext\\Form\\Module.bsl"
+  }
+]

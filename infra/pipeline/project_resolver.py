@@ -8,14 +8,12 @@ Example usage:
     resolver = ProjectResolver()
     info = resolver.resolve("251222_GKSTCPLK-1996")
     # or
-    info = resolver.resolve("D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996")
+    info = resolver.resolve("D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996")
 """
 
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import List, Optional
-import os
 import re
+from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -74,6 +72,7 @@ class ProjectInfo:
 
 class ProjectResolverError(Exception):
     """Raised when project cannot be resolved."""
+
     pass
 
 
@@ -82,18 +81,10 @@ class ProjectResolver:
 
     Accepts either:
     - Project name (folder name): "251222_GKSTCPLK-1996"
-    - Full path: "D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996"
+    - Full path: "D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996"
 
     Searches in known project directories if only name is provided.
     """
-
-    # Default search directories (relative to framework root)
-    DEFAULT_SEARCH_PATHS = [
-        "src/projects/configuration",
-        "src/projects/extensions",
-        "src/projects/dataprocessors",
-        "src/projects/reports",
-    ]
 
     # Pattern to extract project ID from folder name
     # Examples: 251222_GKSTCPLK-1996 -> GKSTCPLK-1996
@@ -102,8 +93,8 @@ class ProjectResolver:
 
     def __init__(
         self,
-        framework_root: Optional[Path] = None,
-        additional_search_paths: Optional[List[str]] = None,
+        framework_root: Path | None = None,
+        additional_search_paths: list[str] | None = None,
     ):
         """Initialize resolver.
 
@@ -113,6 +104,7 @@ class ProjectResolver:
             additional_search_paths: Extra paths to search for projects.
         """
         self.framework_root = framework_root or self._detect_framework_root()
+        self._known_projects: list[Path] = []  # populated by _build_search_paths
         self.search_paths = self._build_search_paths(additional_search_paths or [])
 
     def _detect_framework_root(self) -> Path:
@@ -133,26 +125,41 @@ class ProjectResolver:
         # Fallback to current directory
         return Path.cwd()
 
-    def _build_search_paths(self, additional: List[str]) -> List[Path]:
-        """Build list of absolute search paths."""
-        paths = []
+    def _build_search_paths(self, additional: list[str]) -> list[Path]:
+        """Discover BSL projects via .bsl-language-server.json markers.
 
-        # Add default paths
-        for rel_path in self.DEFAULT_SEARCH_PATHS:
-            full_path = self.framework_root / rel_path
-            if full_path.exists():
-                paths.append(full_path)
+        Populates `self._known_projects` with all discovered project roots
+        and returns their unique parent directories as search paths
+        (used by _find_by_name partial-match fallback).
+        """
+        # Lazy-import to avoid forcing the dependency at module load.
+        try:
+            import sys
+
+            if str(self.framework_root) not in sys.path:
+                sys.path.insert(0, str(self.framework_root))
+            from src.bsl.project_discovery import find_bsl_projects
+
+            self._known_projects = find_bsl_projects(self.framework_root)
+        except ImportError:
+            self._known_projects = []
+
+        seen: set[Path] = set()
+        paths: list[Path] = []
+        for proj in self._known_projects:
+            parent = proj.parent
+            if parent not in seen:
+                seen.add(parent)
+                paths.append(parent)
 
         # Add additional paths
         for path_str in additional:
             path = Path(path_str)
-            if path.is_absolute():
-                if path.exists():
-                    paths.append(path)
-            else:
-                full_path = self.framework_root / path_str
-                if full_path.exists():
-                    paths.append(full_path)
+            if not path.is_absolute():
+                path = self.framework_root / path_str
+            if path.exists() and path not in seen:
+                seen.add(path)
+                paths.append(path)
 
         return paths
 
@@ -203,20 +210,19 @@ class ProjectResolver:
 
         return "unknown"
 
-    def _find_by_name(self, name: str) -> Optional[Path]:
-        """Find project by name in search paths."""
-        for search_path in self.search_paths:
-            candidate = search_path / name
-            if candidate.exists() and candidate.is_dir():
-                return candidate
+    def _find_by_name(self, name: str) -> Path | None:
+        """Find project by name among discovered BSL projects.
 
-        # Try partial match (name might be partial)
-        for search_path in self.search_paths:
-            if search_path.exists():
-                for item in search_path.iterdir():
-                    if item.is_dir() and name.lower() in item.name.lower():
-                        return item
-
+        Matches against `_known_projects` (populated from .bsl-language-server.json
+        markers). Tries exact basename match first, then partial substring.
+        """
+        name_lower = name.lower()
+        for proj in self._known_projects:
+            if proj.name.lower() == name_lower:
+                return proj
+        for proj in self._known_projects:
+            if name_lower in proj.name.lower():
+                return proj
         return None
 
     def resolve(self, project: str) -> ProjectInfo:
@@ -227,7 +233,7 @@ class ProjectResolver:
                     Examples:
                     - "251222_GKSTCPLK-1996"
                     - "GKSTCPLK-1996"
-                    - "D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996"
+                    - "D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996"
 
         Returns:
             ProjectInfo with resolved paths and metadata.
@@ -282,14 +288,14 @@ class ProjectResolver:
             project_type=project_type,
         )
 
-    def resolve_or_none(self, project: str) -> Optional[ProjectInfo]:
+    def resolve_or_none(self, project: str) -> ProjectInfo | None:
         """Resolve project, returning None if not found."""
         try:
             return self.resolve(project)
         except ProjectResolverError:
             return None
 
-    def list_projects(self, project_type: Optional[str] = None) -> List[ProjectInfo]:
+    def list_projects(self, project_type: str | None = None) -> list[ProjectInfo]:
         """List all available projects.
 
         Args:
@@ -319,7 +325,7 @@ class ProjectResolver:
 
 
 # Global resolver instance for convenience
-_default_resolver: Optional[ProjectResolver] = None
+_default_resolver: ProjectResolver | None = None
 
 
 def get_resolver() -> ProjectResolver:
@@ -343,6 +349,6 @@ def resolve_project(project: str) -> ProjectInfo:
         >>> from shared.pipeline.project_resolver import resolve_project
         >>> info = resolve_project("251222_GKSTCPLK-1996")
         >>> print(info.path)
-        D:/1C-Enterprise_Framework/src/projects/configuration/251222_GKSTCPLK-1996
+        D:/1C-Enterprise_Framework/configuration/251222_GKSTCPLK-1996
     """
     return get_resolver().resolve(project)

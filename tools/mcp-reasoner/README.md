@@ -51,7 +51,7 @@ So why add Polciy Simulation Layer now?
 
 ## Installation
 ```
-git clone https://github.com/frgmt0/mcp-reasoner.git 
+git clone https://github.com/frgmt0/mcp-reasoner.git
 
 OR clone the original:
 

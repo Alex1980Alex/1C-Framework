@@ -1,14 +1,13 @@
 """Tests for TaskScheduler."""
 
-import pytest
 from datetime import datetime, timedelta
 
-from agents.project_manager.models import Project, Task, TaskStatus, TaskPriority
-from agents.project_manager.dependency_tracker import DependencyTracker
+import pytest
+from agents.project_manager.models import Project, Task, TaskPriority, TaskStatus
 from agents.project_manager.scheduler import (
-    SchedulingStrategy,
-    ScheduledTask,
     Schedule,
+    ScheduledTask,
+    SchedulingStrategy,
     TaskScheduler,
 )
 

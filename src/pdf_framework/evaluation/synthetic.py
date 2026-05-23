@@ -6,10 +6,12 @@ Creates golden datasets for evaluation.
 Based on RAGAS synthetic data generation.
 
 Author: Claude Code
-Version: 1.0.0 - Phase 21: RAGAS Evaluation
+Version: 1.1.0 - Phase 21: RAGAS Evaluation + §6.3.3 human JSONL loader
 """
 
+import json
 import logging
+from pathlib import Path
 from typing import Any
 
 from anthropic import Anthropic
@@ -256,14 +258,18 @@ class GoldenDatasetGenerator:
         include_synthetic: bool = True,
         synthetic_ratio: float = 0.5,
         max_total: int = 100,
+        human_questions_file: str | Path | None = None,
     ) -> SyntheticDataset:
         """Create a golden dataset with synthetic and human questions.
 
         Args:
             chunks: Document chunks
             include_synthetic: Include synthetic questions
-            synthetic_ratio: Ratio of synthetic to human questions
+            synthetic_ratio: Ratio of synthetic to total (0.0–1.0)
             max_total: Maximum total questions
+            human_questions_file: Path to JSONL file with human-curated questions.
+                Each line: {"question": "...", "answer": "...", "context": "..."}
+                "answer" and "context" are optional.
 
         Returns:
             SyntheticDataset
@@ -280,21 +286,96 @@ class GoldenDatasetGenerator:
             )
             questions.extend(synthetic_dataset.questions)
 
-        # TODO: Load human questions from file
+        # Load human questions from JSONL file
+        if human_questions_file is not None:
+            human_budget = max_total - len(questions)
+            if human_budget > 0:
+                human_questions = self._load_human_questions(
+                    human_questions_file, limit=human_budget
+                )
+                questions.extend(human_questions)
+                logger.info(
+                    "[SYNTHETIC] Loaded %d human questions from %s",
+                    len(human_questions),
+                    human_questions_file,
+                )
 
         # Create final dataset
         source = chunks[0].metadata.get("source", "unknown") if chunks else "unknown"
+        synthetic_count_final = sum(1 for q in questions if q.context_chunk_id)
+        human_count_final = len(questions) - synthetic_count_final
 
         return SyntheticDataset(
             name=f"golden_{source.replace('/', '_')}",
             source_document=source,
             questions=questions[:max_total],
             metadata={
-                "synthetic_count": len([q for q in questions if q.answer]),
-                "human_count": len([q for q in questions if not q.answer]),
-                "total_questions": len(questions),
+                "synthetic_count": synthetic_count_final,
+                "human_count": human_count_final,
+                "total_questions": min(len(questions), max_total),
+                "human_questions_file": str(human_questions_file) if human_questions_file else None,
             },
         )
+
+    def _load_human_questions(
+        self,
+        path: str | Path,
+        limit: int = 1000,
+    ) -> list[SyntheticQuestion]:
+        """Load human-curated questions from a JSONL file.
+
+        Each line must be a JSON object with at minimum a "question" key.
+        Optional keys: "answer", "context", "question_type", "difficulty".
+
+        Args:
+            path: Path to the JSONL file
+            limit: Maximum number of questions to load
+
+        Returns:
+            List of SyntheticQuestion objects
+        """
+        path = Path(path)
+        if not path.exists():
+            logger.warning("[SYNTHETIC] Human questions file not found: %s", path)
+            return []
+
+        questions: list[SyntheticQuestion] = []
+        try:
+            with open(path, encoding="utf-8") as f:
+                for line_no, line in enumerate(f, 1):
+                    if len(questions) >= limit:
+                        break
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        record = json.loads(line)
+                    except json.JSONDecodeError as e:
+                        logger.warning(
+                            "[SYNTHETIC] Skipping malformed JSONL line %d in %s: %s",
+                            line_no,
+                            path,
+                            e,
+                        )
+                        continue
+
+                    question_text = record.get("question", "").strip()
+                    if not question_text:
+                        continue
+
+                    questions.append(
+                        SyntheticQuestion(
+                            question=question_text,
+                            answer=record.get("answer", ""),
+                            context_chunk_id=record.get("context", ""),
+                            question_type=record.get("question_type", "human"),
+                            difficulty=record.get("difficulty", "medium"),
+                        )
+                    )
+        except OSError as e:
+            logger.error("[SYNTHETIC] Failed to read human questions file %s: %s", path, e)
+
+        return questions
 
 
 def generate_synthetic_questions(

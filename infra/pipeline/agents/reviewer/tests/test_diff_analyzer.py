@@ -2,23 +2,19 @@
 Tests for REVIEWER DiffAnalyzer.
 """
 
-import pytest
-
 from agents.reviewer.diff_analyzer import (
-    DiffStats,
     AnalysisResult,
     DiffAnalyzer,
-    parse_diff,
+    DiffStats,
     analyze_changes,
     get_diff_stats,
+    parse_diff,
 )
 from agents.reviewer.models import (
     FileChange,
-    DiffHunk,
-    IssueSeverity,
     IssueCategory,
+    IssueSeverity,
 )
-
 
 # Sample diffs for testing
 SIMPLE_DIFF = """diff --git a/src/Module.bsl b/src/Module.bsl
@@ -138,12 +134,7 @@ class TestDiffStats:
 
     def test_creation(self):
         """Test stats creation."""
-        stats = DiffStats(
-            total_files=5,
-            bsl_files=3,
-            additions=100,
-            deletions=50
-        )
+        stats = DiffStats(total_files=5, bsl_files=3, additions=100, deletions=50)
         assert stats.total_files == 5
         assert stats.bsl_files == 3
 
@@ -154,12 +145,7 @@ class TestDiffStats:
 
     def test_to_dict(self):
         """Test serialization."""
-        stats = DiffStats(
-            total_files=3,
-            bsl_files=2,
-            additions=10,
-            deletions=5
-        )
+        stats = DiffStats(total_files=3, bsl_files=2, additions=10, deletions=5)
         d = stats.to_dict()
         assert d["total_files"] == 3
         assert d["bsl_files"] == 2
@@ -178,10 +164,7 @@ class TestAnalysisResult:
     def test_to_dict(self):
         """Test serialization."""
         result = AnalysisResult()
-        result.files.append(FileChange(
-            file_path="test.bsl",
-            change_type="modified"
-        ))
+        result.files.append(FileChange(file_path="test.bsl", change_type="modified"))
         d = result.to_dict()
         assert d["files_count"] == 1
         assert d["issues_count"] == 0
@@ -272,10 +255,7 @@ class TestDiffAnalyzer:
         analyzer = DiffAnalyzer()
         result = analyzer.analyze(SECURITY_ISSUE_DIFF)
 
-        security_issues = [
-            i for i in result.issues
-            if i.category == IssueCategory.SECURITY
-        ]
+        security_issues = [i for i in result.issues if i.category == IssueCategory.SECURITY]
         assert len(security_issues) >= 1
         assert any(i.severity == IssueSeverity.CRITICAL for i in security_issues)
 
@@ -284,10 +264,7 @@ class TestDiffAnalyzer:
         analyzer = DiffAnalyzer()
         result = analyzer.analyze(PERFORMANCE_ISSUE_DIFF)
 
-        performance_issues = [
-            i for i in result.issues
-            if i.category == IssueCategory.PERFORMANCE
-        ]
+        performance_issues = [i for i in result.issues if i.category == IssueCategory.PERFORMANCE]
         # Should detect SELECT *
         assert any("*" in str(i.title) for i in performance_issues)
 
@@ -296,10 +273,7 @@ class TestDiffAnalyzer:
         analyzer = DiffAnalyzer()
         result = analyzer.analyze(STYLE_ISSUE_DIFF)
 
-        style_issues = [
-            i for i in result.issues
-            if i.category == IssueCategory.STYLE
-        ]
+        style_issues = [i for i in result.issues if i.category == IssueCategory.STYLE]
         # Should detect short variable name and empty exception handler
         assert len(style_issues) >= 1
 
@@ -389,7 +363,7 @@ index 1234567..abcdefg 100644
         assert len(result.files) == 1
         assert result.files[0].is_bsl is False
         # Issues list might be empty since it's not BSL
-        bsl_issues = [i for i in result.issues if i.file_path and i.file_path.endswith('.bsl')]
+        bsl_issues = [i for i in result.issues if i.file_path and i.file_path.endswith(".bsl")]
         assert len(bsl_issues) == 0
 
     def test_malformed_hunk_header(self):
@@ -463,4 +437,3 @@ index 1234567..abcdefg 100644
         assert len(files[0].hunks) == 2
         assert files[0].hunks[0].old_start == 1
         assert files[0].hunks[1].old_start == 10
-

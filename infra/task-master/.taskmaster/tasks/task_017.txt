@@ -46,5 +46,3 @@ Test logging at different verbosity levels. Verify that logs contain appropriate
 ### Dependencies: 17.2
 ### Description: Create a log file management system that handles rotation based on file size or time intervals. Implement compression of rotated logs, automatic cleanup of old logs, and configurable retention policies. Ensure that log rotation happens without disrupting the application and that no log messages are lost during rotation.
 ### Details:
-
-

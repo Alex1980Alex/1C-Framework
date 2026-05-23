@@ -7,16 +7,18 @@
 
 Матрица определяет, какой backend (A = multilspy через BSL Language Server, B = ast-grep через tree-sitter-bsl) обрабатывает rename-операцию для каждого типа символа BSL. Confidence-значения идентичны `MultilspyBackend._CONFIDENCE` и валидируются тестом `test_confidence_values_match_multilspy_backend`.
 
+**Calibration (2026-04-18):** pilot-B benchmark (19/20 = 95% success, CAT1-4 100%, CAT5 75%) показал что ast-grep значительно точнее чем предполагалось изначально. Все confidence для CAT1-4 увеличены с 0.40-0.85 до 0.95.
+
 ## Матрица
 
 | SymbolKind | Primary | Fallback | Confidence | Обоснование |
 |------------|---------|----------|-----------:|-------------|
 | `module_export_proc` | **multilspy** | ast-grep | 0.95 | Экспортная процедура вызывается кросс-модульно; LSP + preload всех `.bsl` даёт детерминированный список ссылок. Fallback на ast-grep когда workspace без XML-дескрипторов. |
 | `module_export_func` | **multilspy** | ast-grep | 0.95 | То же, что и export proc — cross-file references через LSP. |
-| `module_local_proc` | **multilspy** | ast-grep | 0.85 | Не экспорт, но в пределах модуля BSL LS всё ещё знает scope. Confidence ниже из-за редких эвристических ошибок. |
-| `module_local_func` | **multilspy** | ast-grep | 0.85 | То же, что и local proc. |
-| `local_variable` | **multilspy** | — | 0.70 | Локальная переменная = один файл, один scope. LSP корректен, но ast-grep pattern-match нестабилен для переменных (совпадает с одноимёнными в других scope). Fallback отсутствует. |
-| `form_handler` | **ast-grep** | multilspy | 0.60 | Обработчики форм часто ссылаются на XML-side `Events/*.xml`, которые BSL LS не покрывает. ast-grep pattern-матчинг со знанием XML-схемы работает надёжнее. Fallback на multilspy, если ast-grep не нашёл targets. |
+| `module_local_proc` | **multilspy** | ast-grep | 0.95 | Не экспорт, в пределах модуля. pilot-B 4/4 success. |
+| `module_local_func` | **multilspy** | ast-grep | 0.95 | То же, что и local proc. pilot-B 4/4 success. |
+| `local_variable` | **multilspy** | — | 0.95 | Локальная переменная = один файл, один scope. pilot-B 4/4 success. |
+| `form_handler` | **ast-grep** | multilspy | 0.95 | Обработчики форм. pilot-B 4/4 success. |
 | `unknown` | **ast-grep** | — | 0.30 | Pattern-based fallback для случаев, когда классификатор не смог определить kind. Низкая уверенность — пользователь должен подтверждать edit. |
 
 ## Алгоритм выбора
@@ -58,7 +60,30 @@
 - **Form XML routing**: когда ast-grep не находит XML-side refs на handler, нужно ли эскалировать в multilspy или падать с «не удалось найти»? Сейчас — fallback на multilspy.
 - **Confidence калибровка**: значения из `MultilspyBackend._CONFIDENCE` — эмпирические, не измеренные. R4.2 (Confidence calibration) измерит реальный success rate на benchmark-датасете.
 
+## Global tuning — ast-grep call-graph pre-filter (Option A, 2026-04-19)
+
+`routing_matrix.yaml` теперь поддерживает блок `global.ast_grep` с тремя ключами:
+
+```yaml
+global:
+  ast_grep:
+    use_call_graph_prefilter: true        # default ON
+    call_graph_db: cache/bsl_call_graph.db
+    graph_stale_threshold_days: 7         # warn-only, не блокирует
+```
+
+**Эффект:** `AstGrepBackend` (и primary, и fallback) перед построением `WorkspaceEdit` спрашивает у `CallGraphPreFilter`, в каких модулях ожидаются правки (defining module + transitive callers через `CallGraphStore.callers_of`). Файлы вне этого множества отбрасываются. Если символ неизвестен графу → возвращается `None` и фильтр выключается на этот вызов (graceful fallback).
+
+**Rollback:** `use_call_graph_prefilter: false` в YAML, либо env `BSL_REFACTOR_NO_PREFILTER=1` для одного запуска.
+
+**Telemetry:** `RenameTelemetryEvent` (schema v2) добавляет `prefilter_used` и `prefilter_dropped`. `VerifyResult.prefilter_dropped` — то же значение для consumer-side агрегации.
+
+**Wiring:** через `src/bsl/semantic_search/refactor/backends/factory.py::build_ast_grep_backend()`. Используется `scripts/run_benchmark.py` и должен использоваться любым новым call-site (не конструировать `AstGrepBackend(...)` напрямую с прибитым прохождением prefilter).
+
+**Замеры (full-1, 20 strict tasks):** prefilter ON 4/20 (20%) vs OFF 3/20 (15%), +5 п.п. Acceptance gate ≥35% не достигнут — дальнейший анализ см. [option-a-recon.md](option-a-recon.md).
+
 ## История изменений
 
+- **v2.1 (2026-04-19):** добавлен блок `global.ast_grep` (Option A — call-graph pre-filter). Schema bump telemetry v1→v2.
 - **v2 (2026-04-17, R1.6 DoD):** публикация начальной матрицы. 7 SymbolKind, confidence 0.30–0.95. Классификатор — heuristic.
 - **v1 (до R1.6):** неформальная конвенция в комментариях `MultilspyBackend._CONFIDENCE`, без документа и без классификатора.

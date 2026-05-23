@@ -13,20 +13,12 @@ Pipeline CLI Main - главный модуль CLI.
 import argparse
 import sys
 from pathlib import Path
-from typing import List, Optional
 
-from .config import CLIConfig, ConfigManager, OutputFormat, VerbosityLevel
-from .output import OutputFormatter
 from .commands import (
-    COMMANDS,
     get_command,
-    CommandResult,
-    RunCommand,
-    StatusCommand,
-    ListCommand,
-    ConfigCommand,
-    LogsCommand,
 )
+from .config import CLIConfig, OutputFormat, VerbosityLevel
+from .output import OutputFormatter
 
 
 class PipelineCLI:
@@ -34,7 +26,7 @@ class PipelineCLI:
 
     VERSION = "1.0.0"
 
-    def __init__(self, config: Optional[CLIConfig] = None) -> None:
+    def __init__(self, config: CLIConfig | None = None) -> None:
         self.config = config or CLIConfig()
         self.formatter = OutputFormatter(
             format=self.config.output_format,
@@ -67,158 +59,80 @@ class PipelineCLI:
   pipeline logs --lines 100
 
 Документация: https://github.com/1c-enterprise-framework/pipeline
-            """
+            """,
         )
 
         # Глобальные опции
-        parser.add_argument(
-            "-v", "--version",
-            action="version",
-            version=f"%(prog)s {self.VERSION}"
-        )
-        parser.add_argument(
-            "-q", "--quiet",
-            action="store_true",
-            help="Минимальный вывод"
-        )
-        parser.add_argument(
-            "--verbose",
-            action="store_true",
-            help="Подробный вывод"
-        )
-        parser.add_argument(
-            "--debug",
-            action="store_true",
-            help="Отладочный вывод"
-        )
+        parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {self.VERSION}")
+        parser.add_argument("-q", "--quiet", action="store_true", help="Минимальный вывод")
+        parser.add_argument("--verbose", action="store_true", help="Подробный вывод")
+        parser.add_argument("--debug", action="store_true", help="Отладочный вывод")
         parser.add_argument(
             "--format",
             choices=["text", "json", "markdown", "table"],
             default="text",
-            help="Формат вывода (default: text)"
+            help="Формат вывода (default: text)",
         )
-        parser.add_argument(
-            "--no-color",
-            action="store_true",
-            help="Отключить цветной вывод"
-        )
-        parser.add_argument(
-            "--config",
-            type=Path,
-            help="Путь к файлу конфигурации"
-        )
+        parser.add_argument("--no-color", action="store_true", help="Отключить цветной вывод")
+        parser.add_argument("--config", type=Path, help="Путь к файлу конфигурации")
 
         # Подкоманды
         subparsers = parser.add_subparsers(
-            dest="command",
-            title="Команды",
-            description="Доступные команды"
+            dest="command", title="Команды", description="Доступные команды"
         )
 
         # === run ===
-        run_parser = subparsers.add_parser(
-            "run",
-            aliases=["r", "start"],
-            help="Запуск pipeline"
+        run_parser = subparsers.add_parser("run", aliases=["r", "start"], help="Запуск pipeline")
+        run_parser.add_argument("-p", "--project", help="Имя проекта")
+        run_parser.add_argument("-t", "--task", help="Описание задачи")
+        run_parser.add_argument("--phases", nargs="+", help="Фазы для выполнения")
+        run_parser.add_argument(
+            "--dry-run", action="store_true", help="Показать план без выполнения"
         )
         run_parser.add_argument(
-            "-p", "--project",
-            help="Имя проекта"
-        )
-        run_parser.add_argument(
-            "-t", "--task",
-            help="Описание задачи"
-        )
-        run_parser.add_argument(
-            "--phases",
-            nargs="+",
-            help="Фазы для выполнения"
-        )
-        run_parser.add_argument(
-            "--dry-run",
-            action="store_true",
-            help="Показать план без выполнения"
-        )
-        run_parser.add_argument(
-            "--no-checkpoint",
-            action="store_true",
-            help="Отключить checkpoint'ы"
+            "--no-checkpoint", action="store_true", help="Отключить checkpoint'ы"
         )
 
         # === status ===
         status_parser = subparsers.add_parser(
-            "status",
-            aliases=["s", "st"],
-            help="Статус выполнения"
+            "status", aliases=["s", "st"], help="Статус выполнения"
         )
-        status_parser.add_argument(
-            "-p", "--project",
-            help="Фильтр по проекту"
-        )
-        status_parser.add_argument(
-            "--run-id",
-            help="ID конкретного запуска"
-        )
-        status_parser.add_argument(
-            "-w", "--watch",
-            action="store_true",
-            help="Режим отслеживания"
-        )
+        status_parser.add_argument("-p", "--project", help="Фильтр по проекту")
+        status_parser.add_argument("--run-id", help="ID конкретного запуска")
+        status_parser.add_argument("-w", "--watch", action="store_true", help="Режим отслеживания")
 
         # === list ===
         list_parser = subparsers.add_parser(
-            "list",
-            aliases=["ls", "l"],
-            help="Списки проектов/запусков"
+            "list", aliases=["ls", "l"], help="Списки проектов/запусков"
         )
         list_parser.add_argument(
             "type",
             nargs="?",
             choices=["projects", "runs", "artifacts"],
             default="projects",
-            help="Тип списка (default: projects)"
+            help="Тип списка (default: projects)",
         )
-        list_parser.add_argument(
-            "-p", "--project",
-            help="Фильтр по проекту"
-        )
+        list_parser.add_argument("-p", "--project", help="Фильтр по проекту")
 
         # === config ===
         config_parser = subparsers.add_parser(
-            "config",
-            aliases=["cfg", "c"],
-            help="Управление конфигурацией"
+            "config", aliases=["cfg", "c"], help="Управление конфигурацией"
         )
-        config_subparsers = config_parser.add_subparsers(
-            dest="action",
-            title="Действия"
-        )
+        config_subparsers = config_parser.add_subparsers(dest="action", title="Действия")
 
         # config show
-        config_subparsers.add_parser(
-            "show",
-            help="Показать конфигурацию"
-        )
+        config_subparsers.add_parser("show", help="Показать конфигурацию")
 
         # config set
-        config_set = config_subparsers.add_parser(
-            "set",
-            help="Установить значение"
-        )
+        config_set = config_subparsers.add_parser("set", help="Установить значение")
         config_set.add_argument("key", help="Ключ конфигурации")
         config_set.add_argument("value", help="Значение")
 
         # config init
-        config_subparsers.add_parser(
-            "init",
-            help="Инициализировать конфигурацию"
-        )
+        config_subparsers.add_parser("init", help="Инициализировать конфигурацию")
 
         # config add-project
-        add_project = config_subparsers.add_parser(
-            "add-project",
-            help="Добавить проект"
-        )
+        add_project = config_subparsers.add_parser("add-project", help="Добавить проект")
         add_project.add_argument("--name", required=True, help="Имя проекта")
         add_project.add_argument("--path", required=True, help="Путь к проекту")
         add_project.add_argument(
@@ -226,47 +140,30 @@ class PipelineCLI:
             dest="config_type",
             choices=["configuration", "extension", "data_processor"],
             default="configuration",
-            help="Тип конфигурации"
+            help="Тип конфигурации",
         )
 
         # config remove-project
-        remove_project = config_subparsers.add_parser(
-            "remove-project",
-            help="Удалить проект"
-        )
+        remove_project = config_subparsers.add_parser("remove-project", help="Удалить проект")
         remove_project.add_argument("name", help="Имя проекта")
 
         # === logs ===
-        logs_parser = subparsers.add_parser(
-            "logs",
-            aliases=["log"],
-            help="Просмотр логов"
-        )
+        logs_parser = subparsers.add_parser("logs", aliases=["log"], help="Просмотр логов")
+        logs_parser.add_argument("--run-id", help="ID запуска")
         logs_parser.add_argument(
-            "--run-id",
-            help="ID запуска"
+            "-n", "--lines", type=int, default=50, help="Количество строк (default: 50)"
         )
-        logs_parser.add_argument(
-            "-n", "--lines",
-            type=int,
-            default=50,
-            help="Количество строк (default: 50)"
-        )
-        logs_parser.add_argument(
-            "-f", "--follow",
-            action="store_true",
-            help="Режим отслеживания"
-        )
+        logs_parser.add_argument("-f", "--follow", action="store_true", help="Режим отслеживания")
         logs_parser.add_argument(
             "--level",
             choices=["all", "debug", "info", "warning", "error"],
             default="all",
-            help="Фильтр по уровню"
+            help="Фильтр по уровню",
         )
 
         return parser
 
-    def run(self, args: Optional[List[str]] = None) -> int:
+    def run(self, args: list[str] | None = None) -> int:
         """Запуск CLI."""
         parser = self.create_parser()
         parsed = parser.parse_args(args)
@@ -311,6 +208,7 @@ class PipelineCLI:
             self.formatter.error(f"Ошибка выполнения команды: {e}")
             if self.config.verbosity == VerbosityLevel.DEBUG:
                 import traceback
+
                 traceback.print_exc()
             return 1
 
@@ -344,7 +242,7 @@ class PipelineCLI:
             self.config = CLIConfig.from_file(args.config)
 
 
-def main(args: Optional[List[str]] = None) -> int:
+def main(args: list[str] | None = None) -> int:
     """Точка входа."""
     cli = PipelineCLI()
     return cli.run(args)

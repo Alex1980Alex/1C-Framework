@@ -55,6 +55,8 @@ from ..vector_memory.services.forgetgate_service import (
     ForgetGateService,
     ForgetStrategy,
 )
+from .adapters.graph_adapter import GraphSearchAdapter
+from .adapters.wiki_adapter import WikiSearchAdapter
 from .link_registry import LinkRegistry, LinkType
 from .memory_router import (
     MemoryRouter,
@@ -1400,6 +1402,37 @@ class MemoryOrchestrator:
                         f.write(json.dumps(pattern, ensure_ascii=False) + "\n")
 
                 await asyncio.to_thread(_append)
+
+            elif target == "wiki":
+                from .memcube import ContentType as CType
+                from .memcube import MemoryCube
+
+                slug = (metadata or {}).get("slug")
+                if not slug:
+                    slug = content[:40].lower().replace(" ", "-")
+                    slug = "".join(c if c.isalnum() or c == "-" else "" for c in slug)
+                    slug = slug or entity_id[:16]
+
+                cube = MemoryCube(
+                    cube_id=entity_id,
+                    content=content,
+                    content_type=CType.WIKI,
+                    source=SourceServer.OBSIDIAN_VAULT,
+                    memory_type=MemoryType.WIKI,
+                    confidence=(metadata or {}).get("confidence", 0.7),
+                    importance=(metadata or {}).get("importance", 0.5),
+                    tags=(metadata or {}).get("tags", []),
+                )
+                wiki_md = cube.to_wiki_page()
+
+                drafts_dir = _PROJECT_ROOT / "docs" / "wiki" / "drafts"
+                draft_path = drafts_dir / f"{slug}.md"
+
+                def _write_draft():
+                    drafts_dir.mkdir(parents=True, exist_ok=True)
+                    draft_path.write_text(wiki_md, encoding="utf-8")
+
+                await asyncio.to_thread(_write_draft)
 
             else:
                 logger.warning(f"Unknown target: {target}")

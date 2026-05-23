@@ -35,6 +35,9 @@ class LangfuseCallbackHandler(BaseCallbackHandler):
         enabled: bool = True,
         user_id: str | None = None,
         session_id: str | None = None,
+        public_key: str | None = None,
+        secret_key: str | None = None,
+        host: str | None = None,
     ):
         """
         Initialize Langfuse callback handler.
@@ -43,31 +46,68 @@ class LangfuseCallbackHandler(BaseCallbackHandler):
             enabled: Whether callback is active
             user_id: User ID for attribution
             session_id: Session ID for grouping traces
+            public_key: Langfuse public key (default: from settings)
+            secret_key: Langfuse secret key (default: from settings)
+            host: Langfuse host URL (default: from settings)
+
+        Resolution order for credentials:
+          1. explicit constructor args (DI for tests)
+          2. get_settings().observability.langfuse_*  (pydantic-settings, .env)
+          3. os.environ.LANGFUSE_*  (legacy fallback)
+          4. None → callback disabled с warning
         """
         super().__init__()
         self._enabled = enabled
         self._user_id = user_id
         self._session_id = session_id
         self._langfuse_client = None
+        self._explicit_creds = (public_key, secret_key, host)
 
         if self._enabled:
             self._initialize_client()
 
+    def _resolve_credentials(self) -> tuple[str, str, str]:
+        """Resolve (public_key, secret_key, host) via DI → settings → env fallback."""
+        explicit_pub, explicit_sec, explicit_host = self._explicit_creds
+        public_key = explicit_pub or ""
+        secret_key = explicit_sec or ""
+        host = explicit_host or ""
+
+        if not (public_key and secret_key):
+            try:
+                from src.pdf_framework.config import get_settings
+
+                obs = get_settings().observability
+                public_key = public_key or obs.langfuse_public_key
+                secret_key = secret_key or obs.langfuse_secret_key
+                host = host or obs.langfuse_host
+            except Exception as e:
+                logger.debug(f"[LANGFUSE] Settings resolution skipped: {e}")
+
+        if not (public_key and secret_key):
+            import os
+
+            public_key = public_key or os.environ.get("LANGFUSE_PUBLIC_KEY", "")
+            secret_key = secret_key or os.environ.get("LANGFUSE_SECRET_KEY", "")
+            host = host or os.environ.get("LANGFUSE_HOST", "")
+
+        if not host:
+            host = "https://cloud.langfuse.com"
+
+        return public_key, secret_key, host
+
     def _initialize_client(self) -> None:
         """Initialize Langfuse client."""
         try:
-            import os
-
             from langfuse import Langfuse
 
-            public_key = os.environ.get("LANGFUSE_PUBLIC_KEY", "")
-            secret_key = os.environ.get("LANGFUSE_SECRET_KEY", "")
+            public_key, secret_key, host = self._resolve_credentials()
 
             if public_key and secret_key:
                 self._langfuse_client = Langfuse(
                     public_key=public_key,
                     secret_key=secret_key,
-                    host=os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+                    host=host,
                 )
                 logger.debug("[LANGFUSE] Callback handler initialized")
             else:

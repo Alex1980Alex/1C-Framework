@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Essential Commands (use these exact commands):**
 - `uv run poe format` - Format code (BLACK + RUFF) - ONLY allowed formatting command
-- `uv run poe type-check` - Run mypy type checking - ONLY allowed type checking command  
+- `uv run poe type-check` - Run mypy type checking - ONLY allowed type checking command
 - `uv run poe test` - Run tests with default markers (excludes java/rust by default)
 - `uv run poe test -m "python or go"` - Run specific language tests
 - `uv run poe lint` - Check code style without fixing
@@ -33,7 +33,7 @@ Serena is a dual-layer coding agent toolkit:
 - Coordinates language servers, memory persistence, and MCP server interface
 - Manages tool registry and context/mode configurations
 
-**2. SolidLanguageServer (`src/solidlsp/ls.py`)**  
+**2. SolidLanguageServer (`src/solidlsp/ls.py`)**
 - Unified wrapper around Language Server Protocol (LSP) implementations
 - Provides language-agnostic interface for symbol operations
 - Handles caching, error recovery, and multiple language server lifecycle
@@ -69,7 +69,7 @@ Each supported language has:
 
 ### Adding New Languages
 1. Create language server class in `src/solidlsp/language_servers/`
-2. Add to Language enum in `src/solidlsp/ls_config.py` 
+2. Add to Language enum in `src/solidlsp/ls_config.py`
 3. Update factory method in `src/solidlsp/ls.py`
 4. Create test repository in `test/resources/repos/<language>/`
 5. Write test suite in `test/solidlsp/<language>/`

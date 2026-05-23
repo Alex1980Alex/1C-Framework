@@ -2,26 +2,21 @@
 Tests for REVIEWER StyleChecker.
 """
 
-import pytest
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-
-from agents.reviewer.style_checker import (
-    StyleRule,
-    StyleCheckResult,
-    StyleChecker,
-    create_strict_checker,
-    create_minimal_checker,
-    check_style,
-    check_file_style,
-)
 from agents.reviewer.models import (
-    StyleViolation,
-    ReviewIssue,
-    IssueSeverity,
     IssueCategory,
+    IssueSeverity,
+    ReviewIssue,
+    StyleViolation,
 )
-
+from agents.reviewer.style_checker import (
+    StyleChecker,
+    StyleCheckResult,
+    StyleRule,
+    check_file_style,
+    check_style,
+    create_minimal_checker,
+    create_strict_checker,
+)
 
 # Sample BSL code for testing
 CLEAN_CODE = """
@@ -137,7 +132,7 @@ class TestStyleRule:
             id="TEST001",
             name="Test Rule",
             description="Test description",
-            pattern=r'\bТест\b',
+            pattern=r"\bТест\b",
         )
         assert rule.id == "TEST001"
         assert rule.name == "Test Rule"
@@ -150,7 +145,7 @@ class TestStyleRule:
             id="TEST",
             name="Test",
             description="Test",
-            pattern=r'\bПерем\b',
+            pattern=r"\bПерем\b",
         )
         assert rule.compiled_pattern is not None
 
@@ -160,7 +155,7 @@ class TestStyleRule:
             id="TEST",
             name="Test",
             description="Test",
-            pattern=r'[invalid',  # Invalid regex
+            pattern=r"[invalid",  # Invalid regex
         )
         assert rule.compiled_pattern is None
 
@@ -170,7 +165,7 @@ class TestStyleRule:
             id="TEST",
             name="Test",
             description="Test",
-            pattern=r'test',
+            pattern=r"test",
             severity=IssueSeverity.CRITICAL,
         )
         assert rule.severity == IssueSeverity.CRITICAL
@@ -189,13 +184,15 @@ class TestStyleCheckResult:
     def test_with_violations(self):
         """Test result with violations."""
         result = StyleCheckResult()
-        result.violations.append(StyleViolation(
-            rule_id="N001",
-            rule_name="Test",
-            file_path="test.bsl",
-            line_number=1,
-            message="Test",
-        ))
+        result.violations.append(
+            StyleViolation(
+                rule_id="N001",
+                rule_name="Test",
+                file_path="test.bsl",
+                line_number=1,
+                message="Test",
+            )
+        )
         assert result.passed is False
 
     def test_to_dict(self):
@@ -228,7 +225,7 @@ class TestStyleChecker:
                 id="CUSTOM001",
                 name="Custom Rule",
                 description="Custom",
-                pattern=r'\bCustomPattern\b',
+                pattern=r"\bCustomPattern\b",
             )
         ]
         checker = StyleChecker(rules=custom_rules)
@@ -357,12 +354,14 @@ class TestStyleChecker:
         checker = StyleChecker()
         initial_count = len(checker.rules)
 
-        checker.add_rule(StyleRule(
-            id="NEW001",
-            name="New Rule",
-            description="New",
-            pattern=r'\bNewPattern\b',
-        ))
+        checker.add_rule(
+            StyleRule(
+                id="NEW001",
+                name="New Rule",
+                description="New",
+                pattern=r"\bNewPattern\b",
+            )
+        )
 
         assert len(checker.rules) == initial_count + 1
         assert any(r.id == "NEW001" for r in checker.rules)
@@ -434,7 +433,7 @@ class TestStyleCheckerFile:
         """Test checking a file."""
         # Create temporary file
         file_path = tmp_path / "test.bsl"
-        file_path.write_text(CLEAN_CODE, encoding='utf-8')
+        file_path.write_text(CLEAN_CODE, encoding="utf-8")
 
         checker = StyleChecker()
         result = checker.check_file(str(file_path))
@@ -486,7 +485,7 @@ class TestConvenienceFunctions:
     def test_check_file_style(self, tmp_path):
         """Test check_file_style function."""
         file_path = tmp_path / "test.bsl"
-        file_path.write_text(CLEAN_CODE, encoding='utf-8')
+        file_path.write_text(CLEAN_CODE, encoding="utf-8")
 
         result = check_file_style(str(file_path))
         assert isinstance(result, StyleCheckResult)
@@ -597,15 +596,14 @@ EndFunction
     def test_code_in_string_not_matched(self):
         """Test that code in strings is not matched as violations."""
         # SQL keywords in string literals should not trigger some rules
-        code = '''
+        code = """
 Функция ПолучитьТекстЗапроса()
     Возврат "ВЫБРАТЬ Наименование ИЗ Справочник.Товары";
 КонецФункции
-'''
+"""
         checker = StyleChecker()
         result = checker.check(code, "test.bsl")
 
         # Should not have SELECT * violation since query selects specific field
         select_all = [v for v in result.violations if v.rule_id == "P001"]
         assert len(select_all) == 0
-

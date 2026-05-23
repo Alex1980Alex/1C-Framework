@@ -1,20 +1,20 @@
 """Tests for retry_handler module."""
 
-import pytest
 import asyncio
-import time
+
+import pytest
 
 from .retry_handler import (
     BackoffStrategy,
-    RetryConfig,
-    RetryResult,
-    RetryHandler,
-    with_retry,
-    CircuitState,
-    CircuitBreakerConfig,
     CircuitBreaker,
+    CircuitBreakerConfig,
     CircuitOpenError,
+    CircuitState,
+    RetryConfig,
+    RetryHandler,
+    RetryResult,
     with_circuit_breaker,
+    with_retry,
 )
 
 
@@ -160,6 +160,7 @@ class TestRetryHandler:
     @pytest.mark.asyncio
     async def test_success_on_first_try(self, handler):
         """Test success on first attempt."""
+
         async def success_func():
             return "success"
 
@@ -189,6 +190,7 @@ class TestRetryHandler:
     @pytest.mark.asyncio
     async def test_max_retries_exceeded(self, handler):
         """Test failure after max retries."""
+
         async def always_fail():
             raise ValueError("Always fails")
 
@@ -201,6 +203,7 @@ class TestRetryHandler:
     @pytest.mark.asyncio
     async def test_non_retryable_exception(self, handler):
         """Test non-retryable exception raises immediately."""
+
         async def keyboard_interrupt():
             raise KeyboardInterrupt()
 
@@ -211,6 +214,7 @@ class TestRetryHandler:
 
     def test_sync_execution(self, handler):
         """Test synchronous execution."""
+
         def sync_func():
             return "sync result"
 
@@ -248,6 +252,7 @@ class TestWithRetryDecorator:
     @pytest.mark.asyncio
     async def test_async_decorator_success(self):
         """Test decorator with async function success."""
+
         @with_retry(max_retries=3, initial_delay=0.01)
         async def async_func():
             return "async result"
@@ -273,6 +278,7 @@ class TestWithRetryDecorator:
 
     def test_sync_decorator(self):
         """Test decorator with sync function."""
+
         @with_retry(max_retries=2, initial_delay=0.01)
         def sync_func():
             return "sync"
@@ -303,6 +309,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_success_keeps_closed(self, circuit):
         """Test successful calls keep circuit closed."""
+
         async def success():
             return "ok"
 
@@ -315,6 +322,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_failures_open_circuit(self, circuit):
         """Test failures open the circuit."""
+
         async def fail():
             raise ValueError("Fail")
 
@@ -328,6 +336,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_open_circuit_rejects(self, circuit):
         """Test open circuit rejects calls."""
+
         async def fail():
             raise ValueError("Fail")
 
@@ -346,6 +355,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_half_open_after_timeout(self, circuit):
         """Test circuit goes to HALF_OPEN after timeout."""
+
         async def fail():
             raise ValueError("Fail")
 

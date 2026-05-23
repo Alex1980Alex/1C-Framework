@@ -118,6 +118,23 @@ class NetworkXGraphStore(BaseGraphStore):
                 break
         return results
 
+    async def get_relations(self, entity_id: str) -> list[Relation]:
+        """Return outgoing relations from entity_id (empty list if entity absent)."""
+        if entity_id not in self._graph:
+            return []
+        return [
+            Relation(
+                id=data.get("id", ""),
+                source_entity_id=entity_id,
+                target_entity_id=target,
+                relation_type=data.get("relation_type", ""),
+                properties=data.get("properties", {}),
+                confidence=data.get("confidence", 1.0),
+                source_chunk_id=data.get("source_chunk_id", ""),
+            )
+            for _, target, data in self._graph.out_edges(entity_id, data=True)
+        ]
+
     async def get_neighbors(
         self,
         entity_id: str,

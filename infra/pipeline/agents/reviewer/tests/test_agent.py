@@ -2,29 +2,24 @@
 Tests for REVIEWER Agent (main orchestrator).
 """
 
-import pytest
 from pathlib import Path
-from datetime import datetime
 
 from agents.reviewer.agent import (
+    ReviewerAgent,
     ReviewerConfig,
     ReviewInput,
     ReviewOutput,
-    ReviewerAgent,
+    create_lenient_reviewer,
     create_reviewer,
     create_strict_reviewer,
-    create_lenient_reviewer,
-    run_review,
     quick_review,
+    run_review,
 )
 from agents.reviewer.models import (
-    ReviewReport,
-    ReviewIssue,
     IssueSeverity,
-    IssueCategory,
+    ReviewReport,
     ReviewVerdict,
 )
-
 
 # Sample content for testing
 SAMPLE_BSL_GOOD = """
@@ -106,7 +101,7 @@ class TestReviewerConfig:
             max_critical_for_approval=1,
             max_warnings_for_approval=10,
             check_style=False,
-            min_quality_score=5.0
+            min_quality_score=5.0,
         )
 
         assert config.max_critical_for_approval == 1
@@ -130,10 +125,7 @@ class TestReviewInput:
 
     def test_minimal_input(self):
         """Test minimal input creation."""
-        inp = ReviewInput(
-            project_id="PROJECT",
-            task_id="TASK-123"
-        )
+        inp = ReviewInput(project_id="PROJECT", task_id="TASK-123")
 
         assert inp.project_id == "PROJECT"
         assert inp.task_id == "TASK-123"
@@ -150,7 +142,7 @@ class TestReviewInput:
             result_path="/path/to/result.md",
             diff_text=SAMPLE_DIFF,
             bsl_files={"module.bsl": SAMPLE_BSL_GOOD},
-            bsl_paths=["/path/to/files"]
+            bsl_paths=["/path/to/files"],
         )
 
         assert inp.spec_path == "/path/to/spec.md"
@@ -161,13 +153,9 @@ class TestReviewInput:
         """Test loading artifacts from paths."""
         # Create a test BSL file
         bsl_file = tmp_path / "test.bsl"
-        bsl_file.write_text(SAMPLE_BSL_GOOD, encoding='utf-8')
+        bsl_file.write_text(SAMPLE_BSL_GOOD, encoding="utf-8")
 
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_paths=[str(bsl_file)]
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_paths=[str(bsl_file)])
 
         inp.load_artifacts()
 
@@ -181,11 +169,7 @@ class TestReviewOutput:
     def test_creation(self):
         """Test output creation."""
         report = ReviewReport(project_id="P", task_id="T")
-        output = ReviewOutput(
-            report=report,
-            review_path="/path/to/review.md",
-            success=True
-        )
+        output = ReviewOutput(report=report, review_path="/path/to/review.md", success=True)
 
         assert output.success is True
         assert output.review_path == "/path/to/review.md"
@@ -226,10 +210,7 @@ class TestReviewOutput:
         report.quality_score = 8.5
 
         output = ReviewOutput(
-            report=report,
-            review_path="/path/review.md",
-            success=True,
-            execution_time_ms=150
+            report=report, review_path="/path/review.md", success=True, execution_time_ms=150
         )
 
         d = output.to_dict()
@@ -287,11 +268,7 @@ class TestReviewerAgent:
     def test_run_with_bsl_files(self):
         """Test running with BSL files."""
         agent = ReviewerAgent()
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"module.bsl": SAMPLE_BSL_GOOD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"module.bsl": SAMPLE_BSL_GOOD})
 
         output = agent.run(inp)
 
@@ -301,11 +278,7 @@ class TestReviewerAgent:
     def test_run_with_diff(self):
         """Test running with diff text."""
         agent = ReviewerAgent()
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            diff_text=SAMPLE_DIFF
-        )
+        inp = ReviewInput(project_id="P", task_id="T", diff_text=SAMPLE_DIFF)
 
         output = agent.run(inp)
 
@@ -316,9 +289,7 @@ class TestReviewerAgent:
         """Test running with design content."""
         agent = ReviewerAgent()
         inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"МодульОбработки.bsl": SAMPLE_BSL_GOOD}
+            project_id="P", task_id="T", bsl_files={"МодульОбработки.bsl": SAMPLE_BSL_GOOD}
         )
         # Manually set design via artifact loading simulation
 
@@ -330,9 +301,7 @@ class TestReviewerAgent:
         """Test that run saves review.md."""
         agent = ReviewerAgent(artifact_store_path=str(tmp_path))
         inp = ReviewInput(
-            project_id="PROJECT",
-            task_id="TASK-123",
-            bsl_files={"module.bsl": SAMPLE_BSL_GOOD}
+            project_id="PROJECT", task_id="TASK-123", bsl_files={"module.bsl": SAMPLE_BSL_GOOD}
         )
 
         output = agent.run(inp)
@@ -353,11 +322,7 @@ class TestReviewerAgent:
     def test_run_with_bad_code(self):
         """Test running with problematic code."""
         agent = ReviewerAgent()
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"bad.bsl": SAMPLE_BSL_BAD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"bad.bsl": SAMPLE_BSL_BAD})
 
         output = agent.run(inp)
 
@@ -368,11 +333,7 @@ class TestReviewerAgent:
     def test_validate_input_valid(self):
         """Test input validation - valid."""
         agent = ReviewerAgent()
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": "code"}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": "code"})
 
         errors = agent.validate_input(inp)
 
@@ -381,11 +342,7 @@ class TestReviewerAgent:
     def test_validate_input_missing_project(self):
         """Test input validation - missing project_id."""
         agent = ReviewerAgent()
-        inp = ReviewInput(
-            project_id="",
-            task_id="T",
-            bsl_files={"test.bsl": "code"}
-        )
+        inp = ReviewInput(project_id="", task_id="T", bsl_files={"test.bsl": "code"})
 
         errors = agent.validate_input(inp)
 
@@ -395,10 +352,7 @@ class TestReviewerAgent:
     def test_validate_input_no_code(self):
         """Test input validation - no code to review."""
         agent = ReviewerAgent()
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T"
-        )
+        inp = ReviewInput(project_id="P", task_id="T")
 
         errors = agent.validate_input(inp)
 
@@ -425,16 +379,13 @@ class TestConfigApplication:
         agent = ReviewerAgent(config=config)
 
         # Create input with code that generates many issues
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_BAD * 5}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_BAD * 5})
 
         output = agent.run(inp)
 
         # Count issues per category
         from collections import Counter
+
         categories = Counter(i.category for i in output.report.issues)
         # Each category should have at most max_issues_per_category
         for count in categories.values():
@@ -445,17 +396,12 @@ class TestConfigApplication:
         config = ReviewerConfig(include_recommendations=False)
         agent = ReviewerAgent(config=config)
 
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_GOOD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_GOOD})
 
         output = agent.run(inp)
 
         # Should not have recommendations
-        recs = [i for i in output.report.issues
-                if i.severity == IssueSeverity.RECOMMENDATION]
+        recs = [i for i in output.report.issues if i.severity == IssueSeverity.RECOMMENDATION]
         assert len(recs) == 0
 
     def test_exclude_code_snippets(self):
@@ -463,11 +409,7 @@ class TestConfigApplication:
         config = ReviewerConfig(include_code_snippets=False)
         agent = ReviewerAgent(config=config)
 
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_BAD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_BAD})
 
         output = agent.run(inp)
 
@@ -481,31 +423,20 @@ class TestConfigApplication:
         agent = ReviewerAgent(config=config)
 
         # Code with multiple warnings
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_BAD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_BAD})
 
         output = agent.run(inp)
 
         # If more than 1 warning, should request changes
         if len(output.report.warnings) > 1:
-            assert output.report.verdict in [
-                ReviewVerdict.CHANGES_REQUESTED,
-                ReviewVerdict.BLOCKED
-            ]
+            assert output.report.verdict in [ReviewVerdict.CHANGES_REQUESTED, ReviewVerdict.BLOCKED]
 
     def test_quality_score_threshold(self):
         """Test quality score threshold."""
         config = ReviewerConfig(min_quality_score=9.0)
         agent = ReviewerAgent(config=config)
 
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_BAD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_BAD})
 
         output = agent.run(inp)
 
@@ -553,9 +484,7 @@ class TestConvenienceFunctions:
     def test_run_review(self):
         """Test run_review function."""
         output = run_review(
-            project_id="PROJECT",
-            task_id="TASK-123",
-            bsl_files={"module.bsl": SAMPLE_BSL_GOOD}
+            project_id="PROJECT", task_id="TASK-123", bsl_files={"module.bsl": SAMPLE_BSL_GOOD}
         )
 
         assert isinstance(output, ReviewOutput)
@@ -564,11 +493,7 @@ class TestConvenienceFunctions:
 
     def test_run_review_with_diff(self):
         """Test run_review with diff."""
-        output = run_review(
-            project_id="P",
-            task_id="T",
-            diff_text=SAMPLE_DIFF
-        )
+        output = run_review(project_id="P", task_id="T", diff_text=SAMPLE_DIFF)
 
         assert output.success is True
 
@@ -598,11 +523,7 @@ class TestErrorHandling:
         agent = ReviewerAgent()
 
         # Create an input that might cause issues
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            spec_path="/nonexistent/path/spec.md"
-        )
+        inp = ReviewInput(project_id="P", task_id="T", spec_path="/nonexistent/path/spec.md")
 
         # Should not raise, should return output with success=True or False
         output = agent.run(inp)
@@ -620,7 +541,7 @@ class TestErrorHandling:
             task_id="T",
             spec_path="/nonexistent/spec.md",
             design_path="/nonexistent/design.md",
-            bsl_files={"test.bsl": SAMPLE_BSL_GOOD}
+            bsl_files={"test.bsl": SAMPLE_BSL_GOOD},
         )
 
         output = agent.run(inp)
@@ -645,7 +566,7 @@ class TestIntegration:
             bsl_files={
                 "good.bsl": SAMPLE_BSL_GOOD,
                 "bad.bsl": SAMPLE_BSL_BAD,
-            }
+            },
         )
 
         # Run review
@@ -664,7 +585,7 @@ class TestIntegration:
         assert Path(output.review_path).exists()
 
         # Verify content
-        content = Path(output.review_path).read_text(encoding='utf-8')
+        content = Path(output.review_path).read_text(encoding="utf-8")
         assert "PROJECT-X" in content or "TASK-456" in content
 
     def test_strict_vs_lenient(self):
@@ -672,11 +593,7 @@ class TestIntegration:
         strict = create_strict_reviewer()
         lenient = create_lenient_reviewer()
 
-        inp = ReviewInput(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_BAD}
-        )
+        inp = ReviewInput(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_BAD})
 
         strict_output = strict.run(inp)
         lenient_output = lenient.run(inp)
@@ -689,6 +606,8 @@ class TestIntegration:
         # (depends on actual issues, but principle holds)
         if len(strict_output.report.warnings) > 0:
             # Strict should be harder to pass
-            assert strict_output.report.verdict != ReviewVerdict.APPROVED or \
-                   lenient_output.report.verdict in [ReviewVerdict.APPROVED, ReviewVerdict.CHANGES_REQUESTED]
-
+            assert (
+                strict_output.report.verdict != ReviewVerdict.APPROVED
+                or lenient_output.report.verdict
+                in [ReviewVerdict.APPROVED, ReviewVerdict.CHANGES_REQUESTED]
+            )

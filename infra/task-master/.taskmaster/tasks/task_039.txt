@@ -125,4 +125,3 @@ Testing approach:
 - Verify all links to license files work correctly
 - Ensure the explanation is comprehensive but concise enough for users to understand quickly
 - Check that the documentation correctly addresses the most common use cases and questions
-

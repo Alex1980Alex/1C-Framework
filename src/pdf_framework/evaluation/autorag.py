@@ -30,7 +30,7 @@ class RAGConfig(BaseModel):
     strategy: str  # "vector", "hybrid", "graphrag_local", "graphrag_global"
     reranker_enabled: bool
     k: int  # Number of chunks to retrieve
-    embedding_model: str = "intfloat/multilingual-e5-large"
+    embedding_model: str = "Qwen/Qwen3-Embedding-8B"  # Phase 8 default
     description: str = ""
 
 

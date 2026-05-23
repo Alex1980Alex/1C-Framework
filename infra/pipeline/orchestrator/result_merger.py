@@ -14,22 +14,23 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Callable
+from typing import Any
 
 from .models import (
-    TaskNode,
-    TaskGraph,
-    ParallelGroup,
-    MergeStrategy,
     Conflict,
-    ConflictType,
     ConflictResolution,
+    ConflictType,
+    MergeStrategy,
+    ParallelGroup,
+    TaskGraph,
+    TaskNode,
 )
-from .parallel_executor import TaskResult, ExecutionReport
+from .parallel_executor import ExecutionReport, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,10 @@ logger = logging.getLogger(__name__)
 # Merge Result Types
 # =============================================================================
 
+
 class MergeStatus(Enum):
     """Status of merge operation."""
+
     SUCCESS = "success"
     PARTIAL = "partial"  # Some results failed to merge
     FAILED = "failed"
@@ -55,7 +58,7 @@ class ArtifactMerge:
     strategy: MergeStrategy
     success: bool
     merged_content: Any = None
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 @dataclass
@@ -69,7 +72,7 @@ class MergeResult:
     conflicts: list[Conflict] = field(default_factory=list)
     failed_task_ids: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
-    merged_at: Optional[datetime] = None
+    merged_at: datetime | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -139,6 +142,7 @@ class MergedOutput:
 # Merge Strategies Implementation
 # =============================================================================
 
+
 class MergeStrategyHandler:
     """Handles different merge strategies."""
 
@@ -173,7 +177,7 @@ class MergeStrategyHandler:
         return values
 
     @staticmethod
-    def merge_override(values: list[Any], priority_order: Optional[list[str]] = None) -> Any:
+    def merge_override(values: list[Any], priority_order: list[str] | None = None) -> Any:
         """
         Take the highest priority value.
 
@@ -225,6 +229,7 @@ class MergeStrategyHandler:
 # Result Merger
 # =============================================================================
 
+
 class ResultMerger:
     """
     Merges results from parallel task execution.
@@ -239,7 +244,7 @@ class ResultMerger:
     def __init__(
         self,
         default_strategy: MergeStrategy = MergeStrategy.COMBINE,
-        conflict_handler: Optional[Callable[[Conflict], ConflictResolution]] = None,
+        conflict_handler: Callable[[Conflict], ConflictResolution] | None = None,
         fail_on_conflict: bool = False,
     ):
         """
@@ -303,22 +308,26 @@ class ResultMerger:
         try:
             merged = handler(output_values)
             merge_result.merged_artifacts["output"] = merged
-            merge_result.artifact_merges.append(ArtifactMerge(
-                artifact_name="output",
-                source_task_ids=list(successful_outputs.keys()),
-                strategy=strategy,
-                success=True,
-                merged_content=merged,
-            ))
+            merge_result.artifact_merges.append(
+                ArtifactMerge(
+                    artifact_name="output",
+                    source_task_ids=list(successful_outputs.keys()),
+                    strategy=strategy,
+                    success=True,
+                    merged_content=merged,
+                )
+            )
         except Exception as e:
             logger.exception(f"Failed to merge outputs: {e}")
-            merge_result.artifact_merges.append(ArtifactMerge(
-                artifact_name="output",
-                source_task_ids=list(successful_outputs.keys()),
-                strategy=strategy,
-                success=False,
-                error_message=str(e),
-            ))
+            merge_result.artifact_merges.append(
+                ArtifactMerge(
+                    artifact_name="output",
+                    source_task_ids=list(successful_outputs.keys()),
+                    strategy=strategy,
+                    success=False,
+                    error_message=str(e),
+                )
+            )
 
         # Detect conflicts
         conflicts = self._detect_conflicts(successful_outputs, group.tasks)
@@ -328,9 +337,7 @@ class ResultMerger:
         for conflict in conflicts:
             resolution = self._resolve_conflict(conflict)
             if resolution == ConflictResolution.UNRESOLVED:
-                merge_result.warnings.append(
-                    f"Unresolved conflict: {conflict.description}"
-                )
+                merge_result.warnings.append(f"Unresolved conflict: {conflict.description}")
 
         # Determine final status
         if merge_result.failed_task_ids and merge_result.conflicts:
@@ -404,20 +411,15 @@ class ResultMerger:
             "total_groups": len(parallel_groups),
             "total_merges": len(merged_output.merge_results),
             "successful_merges": sum(
-                1 for mr in merged_output.merge_results
-                if mr.status == MergeStatus.SUCCESS
+                1 for mr in merged_output.merge_results if mr.status == MergeStatus.SUCCESS
             ),
             "partial_merges": sum(
-                1 for mr in merged_output.merge_results
-                if mr.status == MergeStatus.PARTIAL
+                1 for mr in merged_output.merge_results if mr.status == MergeStatus.PARTIAL
             ),
             "failed_merges": sum(
-                1 for mr in merged_output.merge_results
-                if mr.status == MergeStatus.FAILED
+                1 for mr in merged_output.merge_results if mr.status == MergeStatus.FAILED
             ),
-            "total_conflicts": sum(
-                len(mr.conflicts) for mr in merged_output.merge_results
-            ),
+            "total_conflicts": sum(len(mr.conflicts) for mr in merged_output.merge_results),
             "unresolved_conflicts": len(merged_output.unresolved_conflicts),
             "execution_time_ms": report.total_execution_time_ms,
         }
@@ -443,14 +445,16 @@ class ResultMerger:
         # Check for write-write conflicts
         for resource, task_ids in task_writes.items():
             if len(task_ids) > 1:
-                conflicts.append(Conflict(
-                    id=f"conflict-{resource}",
-                    conflict_type=ConflictType.WRITE_WRITE,
-                    resource=resource,
-                    task_ids=task_ids,
-                    description=f"Multiple tasks wrote to {resource}: {', '.join(task_ids)}",
-                    resolution=ConflictResolution.UNRESOLVED,
-                ))
+                conflicts.append(
+                    Conflict(
+                        id=f"conflict-{resource}",
+                        conflict_type=ConflictType.WRITE_WRITE,
+                        resource=resource,
+                        task_ids=task_ids,
+                        description=f"Multiple tasks wrote to {resource}: {', '.join(task_ids)}",
+                        resolution=ConflictResolution.UNRESOLVED,
+                    )
+                )
 
         return conflicts
 
@@ -470,6 +474,7 @@ class ResultMerger:
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def merge_results(
     report: ExecutionReport,
@@ -504,7 +509,7 @@ def save_merged_output(
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(merged_output.to_dict(), f, indent=2, ensure_ascii=False)
 
     logger.info(f"Saved merged output to {output_path}")
@@ -520,5 +525,5 @@ def load_merged_output(input_path: Path) -> dict:
     Returns:
         Dict representation of MergedOutput
     """
-    with open(input_path, 'r', encoding='utf-8') as f:
+    with open(input_path, encoding="utf-8") as f:
         return json.load(f)

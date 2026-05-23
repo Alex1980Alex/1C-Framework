@@ -541,9 +541,9 @@ src/*.o
         gitignore = test_dir / ".gitignore"
         gitignore.write_text(
             """# Only comments and empty lines
-    
+
 # More comments
-    
+
     """
         )
 

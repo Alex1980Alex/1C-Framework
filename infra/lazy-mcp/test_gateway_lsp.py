@@ -1,9 +1,10 @@
 """Test Docker MCP Gateway with LSP-style Content-Length header"""
-import subprocess
+
 import json
-import time
+import subprocess
 import sys
 import threading
+import time
 
 print("Testing Docker MCP Gateway with LSP protocol...")
 print("=" * 60)
@@ -13,11 +14,7 @@ cmd = ["docker", "mcp", "gateway", "run", "--transport", "stdio", "--enable-all-
 print(f"Command: {' '.join(cmd)}")
 
 process = subprocess.Popen(
-    cmd,
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    bufsize=0
+    cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0
 )
 
 print(f"Process started, PID: {process.pid}")
@@ -28,8 +25,8 @@ time.sleep(10)
 
 # Проверяем что процесс жив
 if process.poll() is not None:
-    stderr = process.stderr.read().decode('utf-8', errors='ignore')
-    print(f"ERROR: Process died!")
+    stderr = process.stderr.read().decode("utf-8", errors="ignore")
+    print("ERROR: Process died!")
     print(f"stderr: {stderr}")
     sys.exit(1)
 
@@ -43,8 +40,8 @@ init_request = {
     "params": {
         "protocolVersion": "2024-11-05",
         "capabilities": {},
-        "clientInfo": {"name": "test", "version": "1.0"}
-    }
+        "clientInfo": {"name": "test", "version": "1.0"},
+    },
 }
 
 content = json.dumps(init_request)
@@ -54,11 +51,13 @@ content = json.dumps(init_request)
 print("\n--- Test 1: With Content-Length header ---")
 message_with_header = f"Content-Length: {len(content)}\r\n\r\n{content}"
 print(f"Sending: {message_with_header[:100]}...")
-process.stdin.write(message_with_header.encode('utf-8'))
+process.stdin.write(message_with_header.encode("utf-8"))
 process.stdin.flush()
 
 # Читаем ответ
 response = None
+
+
 def read_response():
     global response
     try:
@@ -75,20 +74,21 @@ def read_response():
                 break
 
         # Парсим Content-Length если есть
-        header_str = header.decode('utf-8', errors='ignore')
+        header_str = header.decode("utf-8", errors="ignore")
         if "Content-Length:" in header_str:
-            for line in header_str.split('\r\n'):
+            for line in header_str.split("\r\n"):
                 if line.startswith("Content-Length:"):
                     length = int(line.split(":")[1].strip())
                     content_bytes = process.stdout.read(length)
-                    response = content_bytes.decode('utf-8', errors='ignore')
+                    response = content_bytes.decode("utf-8", errors="ignore")
                     return
 
         # Или просто читаем строку (JSON-RPC без header)
         line = header + process.stdout.readline()
-        response = line.decode('utf-8', errors='ignore').strip()
+        response = line.decode("utf-8", errors="ignore").strip()
     except Exception as e:
         response = f"ERROR: {e}"
+
 
 thread = threading.Thread(target=read_response)
 thread.start()

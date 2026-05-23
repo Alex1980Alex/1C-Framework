@@ -32,7 +32,7 @@ The MCP Provider creates a modern AI SDK-compliant custom provider that integrat
 MCP Client Connect → MCP Server → registerRemoteProvider()
                                         ↓
                            MCPRemoteProvider (existing)
-                           MCPProvider 
+                           MCPProvider
                                         ↓
                                Provider Registry
                                         ↓
@@ -55,7 +55,7 @@ registerRemoteProvider(session) {
     // Register unified MCP provider
     const mcpProvider = new MCPProvider();
     mcpProvider.setSession(session);
-    
+
     const providerRegistry = ProviderRegistry.getInstance();
     providerRegistry.registerProvider('mcp', mcpProvider);
   }
@@ -124,17 +124,17 @@ The `MCPLanguageModel` class implements the AI SDK's `doGenerateObject` method:
 async doGenerateObject({ schema, objectName, prompt, ...options }) {
   // Convert schema to instructions
   const instructions = convertSchemaToInstructions(schema, objectName);
-  
+
   // Enhance prompt with structured output requirements
   const enhancedPrompt = enhancePromptForObjectGeneration(prompt, instructions);
-  
+
   // Generate response via MCP sampling
   const response = await this.doGenerate({ prompt: enhancedPrompt, ...options });
-  
+
   // Extract and validate JSON
   const extractedJson = extractJsonFromResponse(response.text);
   const validatedObject = schema.parse(extractedJson);
-  
+
   return {
     object: validatedObject,
     usage: response.usage,
@@ -152,11 +152,11 @@ class MCPLanguageModel {
   get defaultObjectGenerationMode() {
     return 'tool';
   }
-  
+
   get supportsStructuredOutputs() {
     return true;
   }
-  
+
   // ... doGenerateObject implementation
 }
 ```
@@ -228,12 +228,12 @@ node test-object-generation.js
 
 ### Supported Features
 
-✅ **Schema Conversion**: Zod schemas → Natural language instructions  
-✅ **JSON Extraction**: Multiple strategies for robust parsing  
-✅ **Validation**: Complete schema validation with error reporting  
-✅ **Error Recovery**: Fallback mechanisms for failed extractions  
-✅ **Type Safety**: Full TypeScript support with inferred types  
-✅ **AI SDK Compliance**: Complete LanguageModelV1 interface implementation  
+✅ **Schema Conversion**: Zod schemas → Natural language instructions
+✅ **JSON Extraction**: Multiple strategies for robust parsing
+✅ **Validation**: Complete schema validation with error reporting
+✅ **Error Recovery**: Fallback mechanisms for failed extractions
+✅ **Type Safety**: Full TypeScript support with inferred types
+✅ **AI SDK Compliance**: Complete LanguageModelV1 interface implementation
 
 ## Usage
 
@@ -272,7 +272,7 @@ const provider = registry.getProvider('mcp');
 if (provider && provider.hasValidSession()) {
   const client = provider.getClient({ temperature: 0.7 });
   const model = client({ modelId: 'claude-3-5-sonnet-20241022' });
-  
+
   const result = await model.doGenerate({
     prompt: [
       { role: 'user', content: 'Hello!' }

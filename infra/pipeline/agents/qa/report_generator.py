@@ -4,21 +4,17 @@ Report Generator for QA Agent.
 Generates qa_report.md artifact with test results.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
-from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from agents.qa.models import (
-    TestCase,
+    Defect,
+    QAReport,
+    Severity,
     TestResult,
     TestStatus,
     TestSuite,
-    Defect,
-    Severity,
-    QAReport,
 )
-from agents.qa.test_runner import RunSummary
 
 
 class ReportGenerator:
@@ -45,16 +41,16 @@ class ReportGenerator:
 
     def __init__(self) -> None:
         """Initialize generator."""
-        self._recommendations: List[str] = []
+        self._recommendations: list[str] = []
 
     def generate(
         self,
         project_id: str,
         task_id: str,
         test_suite: TestSuite,
-        results: List[TestResult],
-        defects: List[Defect],
-        coverage: Optional[Dict[str, Any]] = None,
+        results: list[TestResult],
+        defects: list[Defect],
+        coverage: dict[str, Any] | None = None,
     ) -> QAReport:
         """
         Generate QA report.
@@ -95,7 +91,7 @@ class ReportGenerator:
         task_id: str,
         test_suite: TestSuite,
         runner,  # TestRunner - avoid circular import
-        requirements: Optional[List[str]] = None,
+        requirements: list[str] | None = None,
     ) -> QAReport:
         """
         Generate report directly from TestRunner.
@@ -123,10 +119,10 @@ class ReportGenerator:
 
     def _generate_recommendations(
         self,
-        results: List[TestResult],
-        defects: List[Defect],
-        coverage: Optional[Dict[str, Any]],
-    ) -> List[str]:
+        results: list[TestResult],
+        defects: list[Defect],
+        coverage: dict[str, Any] | None,
+    ) -> list[str]:
         """Generate recommendations based on test results."""
         recommendations = []
 
@@ -167,8 +163,7 @@ class ReportGenerator:
 
         # Negative tests recommendation
         negative_failed = [
-            r for r in results
-            if r.status == TestStatus.FAILED and "negative" in r.test_case.tags
+            r for r in results if r.status == TestStatus.FAILED and "negative" in r.test_case.tags
         ]
         if negative_failed:
             recommendations.append(
@@ -178,16 +173,14 @@ class ReportGenerator:
 
         # If all good
         if not recommendations:
-            recommendations.append(
-                "✅ Все тесты пройдены успешно. Код готов к релизу."
-            )
+            recommendations.append("✅ Все тесты пройдены успешно. Код готов к релизу.")
 
         return recommendations
 
     def _determine_verdict(
         self,
-        results: List[TestResult],
-        defects: List[Defect],
+        results: list[TestResult],
+        defects: list[Defect],
     ) -> str:
         """Determine overall verdict."""
         # Check for critical defects
@@ -226,7 +219,7 @@ class ReportGenerator:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         content = report.to_markdown()
-        path.write_text(content, encoding='utf-8')
+        path.write_text(content, encoding="utf-8")
 
         return str(path)
 
@@ -247,10 +240,10 @@ class ExtendedReportGenerator(ReportGenerator):
         project_id: str,
         task_id: str,
         test_suite: TestSuite,
-        results: List[TestResult],
-        defects: List[Defect],
-        coverage: Optional[Dict[str, Any]] = None,
-        bsl_analysis: Optional[Dict[str, Any]] = None,
+        results: list[TestResult],
+        defects: list[Defect],
+        coverage: dict[str, Any] | None = None,
+        bsl_analysis: dict[str, Any] | None = None,
     ) -> str:
         """
         Generate extended markdown report.
@@ -289,7 +282,7 @@ class ExtendedReportGenerator(ReportGenerator):
 
         return "\n".join(lines)
 
-    def _generate_bsl_section(self, analysis: Dict[str, Any]) -> List[str]:
+    def _generate_bsl_section(self, analysis: dict[str, Any]) -> list[str]:
         """Generate BSL-specific analysis section."""
         lines = [
             "",
@@ -315,7 +308,7 @@ class ExtendedReportGenerator(ReportGenerator):
         lines.append("")
         return lines
 
-    def _generate_performance_section(self, results: List[TestResult]) -> List[str]:
+    def _generate_performance_section(self, results: list[TestResult]) -> list[str]:
         """Generate performance metrics section."""
         lines = [
             "",
@@ -357,9 +350,9 @@ def generate_report(
     project_id: str,
     task_id: str,
     test_suite: TestSuite,
-    results: List[TestResult],
-    defects: List[Defect],
-    coverage: Optional[Dict[str, Any]] = None,
+    results: list[TestResult],
+    defects: list[Defect],
+    coverage: dict[str, Any] | None = None,
 ) -> QAReport:
     """
     Convenience function to generate report.

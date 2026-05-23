@@ -2,21 +2,36 @@
 """
 Code Verify Reminder — mandatory task after code changes.
 
-Event: PostToolUse
-Matcher: Write|Edit (create task) + Skill (signal start) + Task (complete on PASS)
+Events: PreToolUse + PostToolUse + Stop (dispatched by detected_event / tool_name)
+Matcher:
+  PreToolUse  Write|Edit       — workaround #6305: creates task pre-write
+  PostToolUse Write|Edit       — canonical path: creates task post-write (dedup)
+  PostToolUse Skill            — acknowledges that verification has started
+  PostToolUse Task             — closes task when subagent returns [CODE-VERIFY-PASS]
+                                  (UNRELIABLE on Windows — see History 2026-04-26b)
+  Stop                         — fallback closer: scans transcript for PASS marker
 Timeout: 3s
 
 MANDATORY: creates task in hook-todos.json → task-enforcer blocks stop.
-Task completes ONLY when subagent returns [CODE-VERIFY-PASS] marker.
+Task completes when subagent returns [CODE-VERIFY-PASS] marker, detected via
+PostToolUse:Task (when it fires) OR Stop:transcript-scan (always-on fallback).
 
 Cycle:
-  Edit .py → add_task() → task-enforcer blocks stop → Claude runs code-verify
-  → Skill(code-verify) fires → systemMessage "верификация запущена" (task stays pending)
-  → Task(субагент) returns [CODE-VERIFY-PASS] → complete_task_by_hook() → stop allowed
-  → Task(субагент) returns [CODE-VERIFY-FAIL] → task stays pending → fix and retry
+  Edit .py → add_task() → task-enforcer blocks stop → user runs code-verify
+  → code-verify activated → systemMessage "верификация запущена" (task stays pending)
+  → subagent returns [CODE-VERIFY-PASS] → close on PostToolUse OR on next Stop
+  → subagent returns [CODE-VERIFY-FAIL] → task stays pending → fix and retry
+
+History:
+  2026-03-20   Regression in 910a3a1f (auto-save) removed PostToolUse registrations.
+  2026-04-26   Restored 3 PostToolUse registrations + dual-registration pattern.
+  2026-04-26b  Telemetry: PostToolUse fired 1/day (probe only) on this Windows build
+               despite #6305 fix. Added Stop-event fallback that reads transcript_path
+               JSONL and scans recent tool_response for PASS marker — closure no longer
+               depends on platform-specific PostToolUse delivery.
 
 Author: Claude Code
-Version: 2.2.0
+Version: 2.4.0
 Created: 2026-02-25
 """
 
@@ -64,6 +79,10 @@ class CodeVerifyReminder(BaseHook):
     VERIFY_SKILLS = {"code-verify", "learning-loop"}
 
     def execute(self, inp: HookInput) -> HookOutput | None:
+        # --- Stop event: fallback closer (PostToolUse:Task is unreliable on Windows) ---
+        if inp.detected_event == "Stop":
+            return self._handle_stop(inp)
+
         tool_name = inp.tool_name
 
         # --- PostToolUse Skill: signal verification started (task stays pending) ---
@@ -76,6 +95,54 @@ class CodeVerifyReminder(BaseHook):
 
         # --- PostToolUse Write|Edit: create mandatory task ---
         return self._handle_code_change(inp)
+
+    def _handle_stop(self, inp: HookInput) -> HookOutput | None:
+        """Stop fallback: scan transcript for [CODE-VERIFY-PASS], close task.
+
+        Triggered on every Stop event. Reads transcript JSONL (path from
+        `transcript_path` or `transcript`), scans tool_use_result entries for
+        the PASS marker, and closes the pending task if found. Idempotent —
+        complete_task_by_hook is a no-op when there's nothing to close.
+        """
+        if complete_task_by_hook is None:
+            return None
+
+        # Resolve transcript path: stdin field is `transcript_path` (modern)
+        # or `transcript` (legacy alias parsed by HookInput).
+        path_str = inp.raw.get("transcript_path") or inp.transcript or ""
+        if not path_str:
+            return None
+
+        try:
+            from pathlib import Path
+
+            tp = Path(path_str)
+            if not tp.is_file():
+                return None
+            content = tp.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            return None
+
+        # Compare last positions: closure requires PASS to be NEWER than any FAIL.
+        # Avoids false closure in mixed sessions (e.g. PASS for file A, then FAIL
+        # for file B — substring `in` would still close B's task).
+        last_pass = content.rfind(self.PASS_MARKER)
+        last_fail = content.rfind(self.FAIL_MARKER)
+        if last_pass < 0 or last_pass < last_fail:
+            return None
+
+        try:
+            completed = complete_task_by_hook(HOOK_ID)
+            count = completed.get("completed_count", 0) if isinstance(completed, dict) else 0
+            if count > 0:
+                return HookOutput().system_message(
+                    f"[CODE-VERIFY] Stop fallback: PASS marker found in transcript. "
+                    f"Closed {count} pending task(s)."
+                )
+        except Exception:
+            pass
+
+        return None
 
     def _handle_skill(self, inp: HookInput) -> HookOutput | None:
         """Signal that verification has started (task stays pending)."""

@@ -356,7 +356,7 @@ export const TaskMasterKanban: React.FC = () => {
 											/>
 											<div
 												className={`
-													flex flex-col gap-2 
+													flex flex-col gap-2
 													overflow-y-auto overflow-x-hidden
 													p-2
 													scrollbar-thin scrollbar-track-transparent

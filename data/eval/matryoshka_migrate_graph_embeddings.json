@@ -1,0 +1,51 @@
+{
+  "source": "graph_embeddings",
+  "stages": {
+    "evaluate": {
+      "4096": {
+        "dim": 4096,
+        "collection": "graph_embeddings",
+        "n_items": 17,
+        "n_scored": 17,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.5948361576126002,
+        "p50_ms": 109.72659999970347,
+        "p95_ms": 136.05860000825487
+      },
+      "1024": {
+        "dim": 1024,
+        "collection": "graph_embeddings_mrl_1024",
+        "n_items": 17,
+        "n_scored": 17,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.4736375826115983,
+        "p50_ms": 108.35249998490326,
+        "p95_ms": 110.38880000705831
+      },
+      "512": {
+        "dim": 512,
+        "collection": "graph_embeddings_mrl_512",
+        "n_items": 17,
+        "n_scored": 17,
+        "success_ratio": 1.0,
+        "mean_ndcg": 0.30497901853548276,
+        "p50_ms": 107.54779999842867,
+        "p95_ms": 123.13540000468493
+      }
+    }
+  },
+  "verdicts": {
+    "1024": {
+      "delta_rel": -0.20375119005448072,
+      "verdict": "REJECT",
+      "ndcg": 0.4736375826115983,
+      "baseline": 0.5948361576126002
+    },
+    "512": {
+      "delta_rel": -0.4872890381117234,
+      "verdict": "REJECT",
+      "ndcg": 0.30497901853548276,
+      "baseline": 0.5948361576126002
+    }
+  }
+}

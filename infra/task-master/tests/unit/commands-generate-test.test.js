@@ -53,10 +53,10 @@ describe('Generate Test Command Integration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Create fresh commander instance
     program = new Command();
-    
+
     // Spy on console and process methods
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
@@ -186,7 +186,7 @@ describe('Generate Test Command Integration', () => {
               console.log(`   Path: ${result.outputPath}`);
               console.log(`   Task: ${result.task.title}`);
               console.log(`   Lines: ${result.linesGenerated}`);
-              
+
               if (options.research) {
                 console.log(`   Model: Research AI (enhanced analysis)`);
               }
@@ -265,7 +265,7 @@ describe('Generate Test Command Integration', () => {
     it('should pass research option correctly', async () => {
       await program.parseAsync(['node', 'test', 'generate-test', '--id', '1', '--research']);
 
-      expect(generateTestForTask).toHaveBeenCalledWith('1', 
+      expect(generateTestForTask).toHaveBeenCalledWith('1',
         expect.objectContaining({
           research: true
         })
@@ -274,8 +274,8 @@ describe('Generate Test Command Integration', () => {
 
     it('should pass custom output directory', async () => {
       await program.parseAsync([
-        'node', 'test', 'generate-test', 
-        '--id', '1', 
+        'node', 'test', 'generate-test',
+        '--id', '1',
         '--output-dir', './custom-tests'
       ]);
 
@@ -303,7 +303,7 @@ describe('Generate Test Command Integration', () => {
 
       await program.parseAsync(['node', 'test', 'generate-test', '--ids', '1,2,3']);
 
-      expect(generateTestsForTasks).toHaveBeenCalledWith(['1', '2', '3'], 
+      expect(generateTestsForTasks).toHaveBeenCalledWith(['1', '2', '3'],
         expect.objectContaining({
           continueOnError: true
         })
@@ -345,7 +345,7 @@ describe('Generate Test Command Integration', () => {
     it('should parse comma-separated IDs correctly', async () => {
       await program.parseAsync(['node', 'test', 'generate-test', '--ids', '1, 2 , 3']);
 
-      expect(generateTestsForTasks).toHaveBeenCalledWith(['1', '2', '3'], 
+      expect(generateTestsForTasks).toHaveBeenCalledWith(['1', '2', '3'],
         expect.any(Object)
       );
     });
@@ -420,8 +420,8 @@ describe('Generate Test Command Integration', () => {
 
     it('should handle custom file prefix', async () => {
       await program.parseAsync([
-        'node', 'test', 'generate-test', 
-        '--id', '1', 
+        'node', 'test', 'generate-test',
+        '--id', '1',
         '--file-prefix', 'unit_test_'
       ]);
 

@@ -249,7 +249,7 @@ AGENT__MAX_RETRIES=2
 ```yaml
 # docker/docker-compose.yml — Qdrant
 qdrant:
-  image: qdrant/qdrant:v1.12.0
+  image: qdrant/qdrant:v1.17.1
   environment:
     # Ограничить RAM для индексов
     - QDRANT__STORAGE__WAL_CAPACITY_MB=64

@@ -28888,8 +28888,8 @@
 2026-03-31 18:12:47.165 [main] DEBUG i.n.u.i.l.InternalLoggerFactory - Using SLF4J as the default logging framework
 2026-03-31 18:12:47.168 [main] DEBUG i.n.util.internal.PlatformDependent0 - Java version: 17
 2026-03-31 18:12:47.169 [main] DEBUG i.n.util.internal.PlatformDependent0 - -Dio.netty.noUnsafe: false
-2026-03-31 18:12:47.169 [main] DEBUG i.n.util.internal.PlatformDependent0 - Thread.isVirtual() is not available: 
-2026-03-31 18:12:47.169 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.lang.BaseVirtualThread is not available: 
+2026-03-31 18:12:47.169 [main] DEBUG i.n.util.internal.PlatformDependent0 - Thread.isVirtual() is not available:
+2026-03-31 18:12:47.169 [main] DEBUG i.n.util.internal.PlatformDependent0 - java.lang.BaseVirtualThread is not available:
 2026-03-31 18:12:47.172 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe.theUnsafe: available
 2026-03-31 18:12:47.173 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe base methods: all available
 2026-03-31 18:12:47.174 [main] DEBUG i.n.util.internal.PlatformDependent0 - sun.misc.Unsafe.storeFence: available
@@ -28915,7 +28915,7 @@
 18:12:57.991 DEBUG - Running with Spring Boot v3.5.3, Spring v6.2.8
 18:12:57.992 INFO  - The following 2 profiles are active: "mcp", "testdb"
 18:12:59.288 WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'designerBuildAction' defined in URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/application/actions/build/DesignerBuildAction.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'platformDsl' defined in URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/infrastructure/platform/dsl/PlatformDsl.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'platformUtilities' defined in URL [jar:nested:/D:/1С-Framework/tools/mcp-jars/mcp-yaxunit-runner-0.5.1.jar/!BOOT-INF/classes/!/io/github/alkoleft/mcp/infrastructure/platform/dsl/common/PlatformUtilities.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'app-io.github.alkoleft.mcp.configuration.properties.ApplicationProperties': Could not bind properties to 'ApplicationProperties' : prefix=app, ignoreInvalidFields=false, ignoreUnknownFields=true
-18:12:59.336 ERROR - 
+18:12:59.336 ERROR -
 
 ***************************
 APPLICATION FAILED TO START
@@ -28937,4 +28937,3 @@ Update your application's configuration. The following values are valid:
     MAIN
     TESTS
     YAXUNIT
-

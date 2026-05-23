@@ -1,19 +1,17 @@
 """Tests for structured logging module."""
 
-import pytest
+import json
+import tempfile
 from datetime import datetime
 from pathlib import Path
-import tempfile
-import json
 
 from .logger import (
-    LogLevel,
+    FileHandler,
     LogContext,
     LogEntry,
-    PipelineLogger,
-    ConsoleHandler,
-    FileHandler,
+    LogLevel,
     MemoryHandler,
+    PipelineLogger,
     configure_logging,
     get_logger,
     get_memory_handler,

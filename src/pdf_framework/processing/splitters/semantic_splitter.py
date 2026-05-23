@@ -47,6 +47,9 @@ class SemanticTextSplitter:
         semantic_threshold: float = 0.75,
         min_chunk_size: int = 200,
         max_chunk_size: int = 1500,
+        # Lightweight chunk-boundary detector — NOT retrieval. Production retrieval
+        # uses Qwen3-Embedding-8B 4096d (TEI), but here MiniLM 384d local is intentional:
+        # 8B model in-process for per-sentence-pair similarity is impractical (Phase 8 §2.1.7 Option B).
         embedding_model: str = "all-MiniLM-L6-v2",
     ):
         self._chunk_size = chunk_size

@@ -8,13 +8,20 @@ from pydantic_settings import BaseSettings
 
 
 class LLMRotationSettings(BaseSettings):
-    """Settings for LLM Rotation Service."""
+    """Settings for LLM Rotation Service.
 
-    primary_provider: str = "zai-glm5"
+    Default 3-tier rotation (post-cleanup 2026-05-16, roadmap 260509 §2.2):
+      0. claude-cli-haiku  — subscription quota, fastest CLI model
+      1. claude-cli-sonnet — subscription quota, higher quality
+      2. ollama-local      — local Ollama (qwen2.5-coder:7b), $0 fallback
+    """
+
+    primary_provider: str = "claude-cli-haiku"
     max_retries: int = 3
-    timeout: int = 60
-    timeout_generation: int = 90
-    timeout_heavy: int = 180
+    # CLI subprocess startup adds ~5s overhead; bump default timeout vs old HTTP defaults
+    timeout: int = 90
+    timeout_generation: int = 120
+    timeout_heavy: int = 240
     cooldown_seconds: int = 300
     rate_limit_cooldown: int = 60
 
@@ -61,10 +68,6 @@ class LLMRotationSettings(BaseSettings):
     # Ollama
     ollama_url: str = "http://localhost:11434"
     ollama_cloud_url: str = "http://localhost:11434"
-
-    # Z.AI
-    zai_api_key: str = ""
-    zai_base_url: str = "https://api.z.ai/api/anthropic"
 
     model_config = {
         "env_prefix": "LLM_ROTATION_",

@@ -14,7 +14,7 @@ export class BeamSearchStrategy extends BaseStrategy {
 
   public async processThought(request: ReasoningRequest): Promise<ReasoningResponse> {
     const nodeId = uuidv4();
-    const parentNode = request.parentId ? 
+    const parentNode = request.parentId ?
       await this.getNode(request.parentId) : undefined;
 
     const node: ThoughtNode = {
@@ -41,7 +41,7 @@ export class BeamSearchStrategy extends BaseStrategy {
     let currentBeam = this.beams.get(node.depth) || [];
     currentBeam.push(node);
     currentBeam.sort((a, b) => b.score - a.score);
-    
+
     // Prune beam to maintain beam width
     if (currentBeam.length > this.beamWidth) {
       currentBeam = currentBeam.slice(0, this.beamWidth);
@@ -88,12 +88,12 @@ export class BeamSearchStrategy extends BaseStrategy {
     // Find the deepest beam
     const maxDepth = Math.max(...Array.from(this.beams.keys()));
     const deepestBeam = this.beams.get(maxDepth) || [];
-    
+
     if (deepestBeam.length === 0) return [];
 
     // Get the best scoring node from deepest beam
     const bestNode = deepestBeam.reduce((a, b) => a.score > b.score ? a : b);
-    
+
     // Reconstruct path
     const path = await this.stateManager.getPath(bestNode.id);
     return path;

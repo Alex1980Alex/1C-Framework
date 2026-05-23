@@ -8,31 +8,21 @@ Tests the interaction between pipeline components:
 - Verification loop
 """
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
-from datetime import datetime
 
+import pytest
 from agents.project_manager import (
-    Project,
-    Task,
-    TaskStatus,
-    TaskPriority,
-    ProjectStatus,
-    ProjectManagerConfig,
     ProjectManagerAgent,
-    DependencyTracker,
-    TaskScheduler,
-    SchedulingStrategy,
+    ProjectManagerConfig,
+    ProjectStatus,
 )
-from models import (
-    Artifact,
-    ArtifactType,
-    ArtifactMetadata,
-)
-from constants import PipelinePhase, AgentRole
 from artifact_store import ArtifactStore
+from constants import AgentRole
+from models import (
+    ArtifactType,
+)
 
 
 class TestProjectManagerIntegration:
@@ -113,7 +103,10 @@ class TestProjectManagerIntegration:
 
         status = agent.get_project_status("lifecycle-test")
         # After start_project, status is INITIALIZING; becomes IN_PROGRESS when first task starts
-        assert status["status"] in [ProjectStatus.INITIALIZING.value, ProjectStatus.IN_PROGRESS.value]
+        assert status["status"] in [
+            ProjectStatus.INITIALIZING.value,
+            ProjectStatus.IN_PROGRESS.value,
+        ]
 
         # 3. Process tasks in order
         task_order = ["analyze", "design", "implement", "test", "deploy"]
@@ -188,7 +181,12 @@ class TestProjectManagerIntegration:
             {"task_id": "t1", "title": "Task 1", "estimated_hours": 1},
             {"task_id": "t2", "title": "Task 2", "dependencies": ["t1"], "estimated_hours": 1},
             {"task_id": "t3", "title": "Task 3", "dependencies": ["t1"], "estimated_hours": 1},
-            {"task_id": "t4", "title": "Task 4", "dependencies": ["t2", "t3"], "estimated_hours": 1},
+            {
+                "task_id": "t4",
+                "title": "Task 4",
+                "dependencies": ["t2", "t3"],
+                "estimated_hours": 1,
+            },
         ]
 
         agent.create_project(
@@ -353,9 +351,11 @@ class TestCheckpointIntegration:
     async def test_checkpoint_creation_on_phase_complete(self, temp_dir):
         """Test checkpoint creation when phase completes."""
         from orchestrator.resilience.state_manager import (
+            CheckpointType,
             StateManager,
             StateManagerConfig,
-            CheckpointType,
+        )
+        from orchestrator.resilience.state_manager import (
             PipelinePhase as SMPipelinePhase,
         )
 
@@ -490,7 +490,12 @@ class TestEndToEndWorkflow:
                 name=f"Project {i}",
                 tasks=[
                     {"task_id": "t1", "title": "Task 1", "estimated_hours": 4},
-                    {"task_id": "t2", "title": "Task 2", "dependencies": ["t1"], "estimated_hours": 4},
+                    {
+                        "task_id": "t2",
+                        "title": "Task 2",
+                        "dependencies": ["t1"],
+                        "estimated_hours": 4,
+                    },
                 ],
             )
             agent.start_project(project_id)

@@ -1,0 +1,739 @@
+{
+  "total": 25,
+  "pass": 25,
+  "by_type": {
+    "multi_hop_callers": {
+      "pass": 5,
+      "total": 5
+    },
+    "impact_analysis": {
+      "pass": 5,
+      "total": 5
+    },
+    "architectural": {
+      "pass": 5,
+      "total": 5
+    },
+    "dead_code": {
+      "pass": 5,
+      "total": 5
+    },
+    "cross_cutting": {
+      "pass": 5,
+      "total": 5
+    }
+  },
+  "latency_p50_ms": 188.2,
+  "latency_p95_ms": 423.2,
+  "results": [
+    {
+      "id": "MH-1",
+      "type": "multi_hop_callers",
+      "query": "Кто вызывает гкс_АсинхронныеСервисы.ЗапуститьЗадание через 2 уровня?",
+      "detected": "multi_hop_callers",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 525.5,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "НовыйАсинхронныйСервис",
+          "kind": "code"
+        },
+        {
+          "name": "ПолучитьОбработчик",
+          "kind": "code"
+        },
+        {
+          "name": "ЗапуститьРегламентноеЗадание",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "MH-2",
+      "type": "multi_hop_callers",
+      "query": "Кто использует функцию ВыполнитьПроверкуОтклоненияБрутто?",
+      "detected": "multi_hop_callers",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 266.8,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "ВыполнитьПроверкуОтклоненияБрутто",
+          "kind": "code"
+        },
+        {
+          "name": "ВыполнитьПроверкуОтклоненияБрутто",
+          "kind": "code"
+        },
+        {
+          "name": "НастроитьПараметрыПоДопускуКВскрытиюВагоновПоНеобходимости",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "MH-3",
+      "type": "multi_hop_callers",
+      "query": "Найди callers функции ОбработкаПроведения в гкс_Взвешивание",
+      "detected": "multi_hop_callers",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 255.9,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "ПКС_Весы",
+          "kind": "code"
+        },
+        {
+          "name": "ПКС_Весы",
+          "kind": "code"
+        },
+        {
+          "name": "ОбработатьВзвешиваниеПриЗаписи",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "MH-4",
+      "type": "multi_hop_callers",
+      "query": "Кто вызывает методы из гкс_РегистрацияНаПЛК?",
+      "detected": "multi_hop_callers",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 43.1,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ДобавитьКомандыПечати",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ДобавитьКомандыПечати",
+          "kind": "Symbol"
+        },
+        {
+          "name": "КомандыПечатиОбъекта",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "MH-5",
+      "type": "multi_hop_callers",
+      "query": "Кто использует ОбщегоНазначенияКлиентСервер.СообщитьПользователю?",
+      "detected": "multi_hop_callers",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 26.5,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ОбработкаПроверкиЗаполненияНаСервере",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПринятьОтклонитьВерсиюНаСервере",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПроверитьЗаполнениеНаКлиенте",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "IA-1",
+      "type": "impact_analysis",
+      "query": "Что сломается если переименую функцию ВыполнитьПроверкуОтклоненияБрутто?",
+      "detected": "impact_analysis",
+      "strategy": "graph",
+      "n_results": 1,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 26.5,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ВыполнитьПроверкуОтклоненияБрутто",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "IA-2",
+      "type": "impact_analysis",
+      "query": "Какие модули повлияют на изменение интерфейса гкс_АсинхронныеСервисы.ЗапуститьЗадание?",
+      "detected": "impact_analysis",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 374.6,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "ЗапуститьЗаданиеСОжиданием",
+          "kind": "code"
+        },
+        {
+          "name": "ФоновоеЗаданиеЗапуститьНаКлиенте",
+          "kind": "code"
+        },
+        {
+          "name": "ПриВключенииОтложенногоОбновления",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "IA-3",
+      "type": "impact_analysis",
+      "query": "Если переименую регистр гкс_РегистрацияНаПЛК — где это сломается?",
+      "detected": "impact_analysis",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 251.5,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "ОрганизацияПриИзмененииНаСервере",
+          "kind": "code"
+        },
+        {
+          "name": "ПослеЗаписи",
+          "kind": "code"
+        },
+        {
+          "name": "ОрганизацияПриИзмененииНаСервере",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "IA-4",
+      "type": "impact_analysis",
+      "query": "Что повлияет на удаление документа гкс_НаправлениеНаРазгрузку?",
+      "detected": "impact_analysis",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 261.3,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "СформироватьНаправлениеНаРазгрузку",
+          "kind": "code"
+        },
+        {
+          "name": "КомандаОтменитьРазрешение",
+          "kind": "code"
+        },
+        {
+          "name": "СформироватьНаправлениеНаРазгрузкуПриНеобходимости",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "IA-5",
+      "type": "impact_analysis",
+      "query": "Если изменю сигнатуру СформироватьДвижения — какие документы пострадают?",
+      "detected": "impact_analysis",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 240.8,
+      "layers": [
+        "Layer 3: Neo4j",
+        "Layer 1 (graph empty fallback)"
+      ],
+      "top3": [
+        {
+          "name": "НачатьФормированиеПодписиОбъекта",
+          "kind": "code"
+        },
+        {
+          "name": "НачатьФормированиеПодписиОбъекта",
+          "kind": "code"
+        },
+        {
+          "name": "ПодписатьФайл",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "AR-1",
+      "type": "architectural",
+      "query": "Дай overview подсистемы УправлениеТранспортом",
+      "detected": "architectural",
+      "strategy": "community",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 173.9,
+      "layers": [
+        "Layer 4: communities"
+      ],
+      "top3": [
+        {
+          "name": "Community-15",
+          "kind": "community"
+        },
+        {
+          "name": "Community-9",
+          "kind": "community"
+        },
+        {
+          "name": "Community-1",
+          "kind": "community"
+        }
+      ]
+    },
+    {
+      "id": "AR-2",
+      "type": "architectural",
+      "query": "Опиши устройство подсистемы Заблокированные ТС",
+      "detected": "architectural",
+      "strategy": "community",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 140.1,
+      "layers": [
+        "Layer 4: communities"
+      ],
+      "top3": [
+        {
+          "name": "Community-15",
+          "kind": "community"
+        },
+        {
+          "name": "Community-9",
+          "kind": "community"
+        },
+        {
+          "name": "Community-1",
+          "kind": "community"
+        }
+      ]
+    },
+    {
+      "id": "AR-3",
+      "type": "architectural",
+      "query": "Архитектура взаимодействия ВъездНаКПП и Взвешивание",
+      "detected": "architectural",
+      "strategy": "community",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 188.2,
+      "layers": [
+        "Layer 4: communities"
+      ],
+      "top3": [
+        {
+          "name": "Community-31",
+          "kind": "community"
+        },
+        {
+          "name": "Community-4",
+          "kind": "community"
+        },
+        {
+          "name": "Community-16",
+          "kind": "community"
+        }
+      ]
+    },
+    {
+      "id": "AR-4",
+      "type": "architectural",
+      "query": "overview подсистемы Лаборатория композитные пробы",
+      "detected": "architectural",
+      "strategy": "community",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 154.2,
+      "layers": [
+        "Layer 4: communities"
+      ],
+      "top3": [
+        {
+          "name": "Community-5",
+          "kind": "community"
+        },
+        {
+          "name": "Community-15",
+          "kind": "community"
+        },
+        {
+          "name": "Community-9",
+          "kind": "community"
+        }
+      ]
+    },
+    {
+      "id": "AR-5",
+      "type": "architectural",
+      "query": "Опиши АРМ оператора ПЛК и его связи",
+      "detected": "architectural",
+      "strategy": "community",
+      "n_results": 10,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 174.4,
+      "layers": [
+        "Layer 4: communities"
+      ],
+      "top3": [
+        {
+          "name": "Community-4",
+          "kind": "community"
+        },
+        {
+          "name": "Community-20",
+          "kind": "community"
+        },
+        {
+          "name": "Community-6",
+          "kind": "community"
+        }
+      ]
+    },
+    {
+      "id": "DC-1",
+      "type": "dead_code",
+      "query": "Найди dead code в общих модулях",
+      "detected": "dead_code",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 4.6,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ПриЗавершенииРедактированияФормулы",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ДеревоПодсистемПеретаскиваниеЗавершение",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПослеВопросаОУведомленииПользователей",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "DC-2",
+      "type": "dead_code",
+      "query": "Какие экспортные функции никем не вызываются?",
+      "detected": "dead_code",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 2.8,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ПриЗавершенииРедактированияФормулы",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ДеревоПодсистемПеретаскиваниеЗавершение",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПослеВопросаОУведомленииПользователей",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "DC-3",
+      "type": "dead_code",
+      "query": "Покажи unused процедуры в гкс_АсинхронныеСервисы",
+      "detected": "dead_code",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 1.7,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ПриЗавершенииРедактированияФормулы",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ДеревоПодсистемПеретаскиваниеЗавершение",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПослеВопросаОУведомленииПользователей",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "DC-4",
+      "type": "dead_code",
+      "query": "Мертвый код в подсистеме УправлениеТранспортом",
+      "detected": "dead_code",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 1.4,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ПриЗавершенииРедактированияФормулы",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ДеревоПодсистемПеретаскиваниеЗавершение",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПослеВопросаОУведомленииПользователей",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "DC-5",
+      "type": "dead_code",
+      "query": "Найди не вызывается процедуры с префиксом гкс_",
+      "detected": "dead_code",
+      "strategy": "graph",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 1.6,
+      "layers": [
+        "Layer 3: Neo4j"
+      ],
+      "top3": [
+        {
+          "name": "ПриЗавершенииРедактированияФормулы",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ДеревоПодсистемПеретаскиваниеЗавершение",
+          "kind": "Symbol"
+        },
+        {
+          "name": "ПослеВопросаОУведомленииПользователей",
+          "kind": "Symbol"
+        }
+      ]
+    },
+    {
+      "id": "CC-1",
+      "type": "cross_cutting",
+      "query": "Какие документы пишут в регистр гкс_РегистрацияНаПЛК?",
+      "detected": "cross_cutting",
+      "strategy": "hybrid",
+      "n_results": 8,
+      "expected_min": 1,
+      "pass": true,
+      "latency_ms": 373.7,
+      "layers": [
+        "Layer 1",
+        "Layer 3",
+        "Layer 4"
+      ],
+      "top3": [
+        {
+          "name": "СоздатьДокументНаОсновании",
+          "kind": "code"
+        },
+        {
+          "name": "ДанныеДокументНаОснованииРегистрацииНаПЛК",
+          "kind": "code"
+        },
+        {
+          "name": "ДанныеДокументНаОснованииРегистрацииНаПЛК",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "CC-2",
+      "type": "cross_cutting",
+      "query": "Где используется функциональная опция и регистр одновременно?",
+      "detected": "cross_cutting",
+      "strategy": "hybrid",
+      "n_results": 8,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 422.8,
+      "layers": [
+        "Layer 1",
+        "Layer 3",
+        "Layer 4"
+      ],
+      "top3": [
+        {
+          "name": "ИзменитьИспользованиеРегламентныхЗаданийПоФункциональнымОпциям",
+          "kind": "code"
+        },
+        {
+          "name": "ИзменитьИспользованиеРегламентныхЗаданийПоФункциональнымОпциям",
+          "kind": "code"
+        },
+        {
+          "name": "ДоступностьОбъектовПоОпциям",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "CC-3",
+      "type": "cross_cutting",
+      "query": "Документы которые читают регистр Состояния ТС и пишут в РегистрацияНаПЛК",
+      "detected": "cross_cutting",
+      "strategy": "hybrid",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 454.5,
+      "layers": [
+        "Layer 1",
+        "Layer 3",
+        "Layer 4"
+      ],
+      "top3": [
+        {
+          "name": "ТекстЗапросаТаблицаСостояниеРегистрации",
+          "kind": "code"
+        },
+        {
+          "name": "УстановитьТекущиеДанныеСостоянияРегистрации",
+          "kind": "code"
+        },
+        {
+          "name": "УстановитьТекущиеДанныеСостоянияРегистрации",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "CC-4",
+      "type": "cross_cutting",
+      "query": "ФО и регистр накопления используются вместе в одном модуле?",
+      "detected": "cross_cutting",
+      "strategy": "hybrid",
+      "n_results": 8,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 406.2,
+      "layers": [
+        "Layer 1",
+        "Layer 3",
+        "Layer 4"
+      ],
+      "top3": [
+        {
+          "name": "НаборДанныхДляРегистраНакопленияСведений",
+          "kind": "code"
+        },
+        {
+          "name": "НаборДанныхДляРегистраНакопленияСведений",
+          "kind": "code"
+        },
+        {
+          "name": "ПрочитатьИнформациюПоРегистрам",
+          "kind": "code"
+        }
+      ]
+    },
+    {
+      "id": "CC-5",
+      "type": "cross_cutting",
+      "query": "Cross-cutting concerns между подсистемами Лаборатория и Транспорт",
+      "detected": "cross_cutting",
+      "strategy": "hybrid",
+      "n_results": 10,
+      "expected_min": 0,
+      "pass": true,
+      "latency_ms": 423.2,
+      "layers": [
+        "Layer 1",
+        "Layer 3",
+        "Layer 4"
+      ],
+      "top3": [
+        {
+          "name": "ПередЗавершениемРаботыСистемы",
+          "kind": "code"
+        },
+        {
+          "name": "ПриЗавершенииПереходаСДругойПрограммы",
+          "kind": "code"
+        },
+        {
+          "name": "ПриЗавершенииПереходаСДругойПрограммы",
+          "kind": "code"
+        }
+      ]
+    }
+  ]
+}

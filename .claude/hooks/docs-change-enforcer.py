@@ -35,7 +35,9 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Core path resolution for shared modules
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,6 +49,15 @@ sys.path.insert(0, _HOOK_DIR)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 COOLDOWN_FILE = PROJECT_ROOT / "data" / "docs-enforcer-last-block.txt"
 COOLDOWN_MINUTES = 30  # After blocking once, allow stop for this duration
+
+# Session-bounded git window (2026-05-15 fix). Reads hook-invocations.jsonl tail
+# to find earliest entry for current session_id, then uses that timestamp as
+# git log --since= boundary instead of fixed 6h calendar window. Eliminates
+# false-positives where auto-save commits from prior sessions get attributed
+# to the current session.
+INVOCATIONS_LOG = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
+SESSION_LOG_TAIL_BYTES = 2_000_000  # 2 MB — covers ~10K recent invocations
+SESSION_FALLBACK_WINDOW = "6 hours ago"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # DOMAIN MAPPING: code prefix → (docs subdirectory, skill name)
@@ -130,12 +141,27 @@ SKIP_PATTERNS = [
     "code-skill-patterns.json",
     # CI/CD workflows (documented in CLAUDE.md Skill Router Eval)
     ".github/",
+    # Pre-commit / Codecov / Eval data — config + dataset, не product code
+    # (codecov.yml + .pre-commit-config.yaml documented in 09.4 Мониторинг,
+    # data/eval/golden_v1.json — versioned dataset с CHANGELOG.md рядом).
+    ".pre-commit-config.yaml",
+    ".kblintrc.yml",
+    ".markdownlint.jsonc",
+    ".markdownlint.yaml",
+    ".markdownlint-cli2.yaml",
+    "codecov.yml",
+    "data/eval/",
+    # mypy ratchet baseline (auto-generated snapshot, roadmap 260514 Phase 0).
+    # Re-synced opportunistically via `mypy src/ ... | python -m mypy_baseline sync`.
+    # Not product code, no docs to maintain.
+    "mypy-baseline.txt",
     # MCP configs, tooling, docker, infra (infrastructure, not product code)
     ".mcp/",
     ".mcp.json",
     "tools/",
     "docker/",
     "infra/",
+    "external/",
     "pyproject.toml",
     # OpenSpec SDD artifacts (specs/proposals/designs/tasks — self-documenting via openspec-* skills)
     "openspec/",
@@ -151,19 +177,33 @@ SKIP_PATTERNS = [
     ".gitattributes",
     # Empty module markers (no logic to document)
     "__init__.py",
+    # 1C platform artifacts (1cv8.exe CREATEINFOBASE writes a status log to repo root;
+    # contains DB connection string with credentials — should also be in .gitignore.
+    # Listed here so docs-change-enforcer doesn't block on it as UNMAPPED.)
+    "createinfobase",
     # 1C project task folders (separate repos, not framework code)
-    "src/projects/",
+    "configuration/",
+    # EDT project at repo root — same category as configuration/<task>/.
+    # Identified by .bsl-language-server.json marker (see src/bsl/project_discovery.py).
+    "ИБTransportManagementDevelop/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
+    # Shared utilities (generic modules like mcp_oauth — not PDF framework core)
+    "src/shared/",
     # Claude Code commands (slash commands, not product code)
     ".claude/commands/",
     # Temporary helper scripts (prefixed with underscore, auto-deleted)
     "_write_test",
     "_gen_test",
     "_gen_eval",
+    # Throwaway diagnostics / scratch (gitignored working dir)
+    "tmp/",
     # VA BDD test artifacts (features, run state — test infra, not product code)
     "features/",
     ".run-state.json",
+    # Obsidian vault artifacts (Hermes Phase 1 — vault config/canvases, not product code)
+    ".obsidian/",
+    ".canvas",
 ]
 
 
@@ -211,15 +251,75 @@ def _is_skill_file(filepath: str) -> bool:
     return ".claude/skills/" in filepath.replace("\\", "/").lower()
 
 
-def get_session_files() -> set:
+def _get_session_start(session_id: str) -> datetime | None:
+    """Find earliest invocation_logger entry for this session_id.
+
+    Scans the tail of data/hook-invocations.jsonl (bounded by
+    SESSION_LOG_TAIL_BYTES) for the smallest `ts` where `session ==
+    session_id`. That timestamp is the practical start of the current
+    Claude Code session (UserPromptSubmit / SessionStart hooks log
+    very early in the session lifecycle).
+
+    Returns:
+        datetime of earliest match, or None if session_id empty,
+        log missing, or no match (caller falls back to 6h window).
+    """
+    if not session_id or not INVOCATIONS_LOG.exists():
+        return None
+
+    try:
+        with open(INVOCATIONS_LOG, "rb") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            f.seek(max(0, size - SESSION_LOG_TAIL_BYTES))
+            blob = f.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None
+
+    earliest: datetime | None = None
+    for line in blob.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except (ValueError, json.JSONDecodeError):
+            continue  # Corrupt line — skip, don't fail whole scan.
+        if obj.get("session") != session_id:
+            continue
+        ts_str = obj.get("ts", "")
+        if not ts_str:
+            continue
+        try:
+            # invocation_logger writes naive ISO; tolerate both naive and
+            # tz-aware (latter may appear if format ever changes).
+            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if earliest is None or ts < earliest:
+            earliest = ts
+
+    return earliest
+
+
+def get_session_files(session_id: str = "") -> set[str]:
     """Get all files changed in this session (uncommitted + recent commits).
 
-    Uses 6-hour window to approximate session duration.
-    Combines working tree changes with recently committed files.
+    Combines working tree changes (always current-session) with commits
+    bounded by either:
+      - Session-derived start time (from hook-invocations.jsonl) if
+        session_id provided and log entry found. Eliminates false-positives
+        from auto-save commits made in PRIOR sessions within the past 6h.
+      - Fallback fixed 6-hour calendar window otherwise (backwards-compat
+        for hook invocations without session_id payload).
+
+    Args:
+        session_id: Claude Code session ID from stdin payload. Empty
+            string triggers the 6h fallback path.
     """
     files = set()
 
-    # 1. Uncommitted changes (working tree + staged)
+    # 1. Uncommitted changes (working tree + staged) — always current session
     try:
         r = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
@@ -239,7 +339,28 @@ def get_session_files() -> set:
     except Exception:
         pass
 
-    # 2. Recently committed files (last 6 hours ≈ session window)
+    # 2. Recently committed files — session-bounded if possible
+    session_start = _get_session_start(session_id)
+    if session_start is not None:
+        since_arg = f"--since={session_start.isoformat()}"
+    else:
+        since_arg = f"--since={SESSION_FALLBACK_WINDOW}"
+
+    # Commits whose subject matches one of these patterns are skipped:
+    # they represent automated formatter / per-file auto-save runs that
+    # by definition do NOT carry semantic API changes worth documenting.
+    # Without this filter, a one-time rollup of 12k auto-format files
+    # (commit b5ff6e9d3, 2026-05-22) keeps re-triggering the enforcer for
+    # the entire `--since` window.
+    excluded_subject_patterns = (
+        "^chore: auto-save",
+        "^chore: rollup auto-format",
+        "^chore: rollup auto-formatter",
+    )
+    grep_args: list[str] = ["--invert-grep"]
+    for pat in excluded_subject_patterns:
+        grep_args.extend(["--grep", pat])
+
     try:
         r = subprocess.run(
             ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
@@ -267,7 +388,7 @@ def get_session_files() -> set:
     return files
 
 
-def find_stale_infra(session_files: set) -> list:
+def find_stale_infra(session_files: set[str]) -> list[dict[str, Any]]:
     """Check if infrastructure changes (hooks/skills/settings) need CLAUDE.md update.
 
     Infrastructure = .claude/hooks/*.py, .claude/settings.json,
@@ -302,7 +423,7 @@ def find_stale_infra(session_files: set) -> list:
     return []
 
 
-def find_unmapped_changes(session_files: set) -> list:
+def find_unmapped_changes(session_files: set[str]) -> list[dict[str, Any]]:
     """Catch-all: files that passed skip check but don't match CODE_TO_DOMAIN or infra.
 
     These are files the system can't auto-route (e.g., tests/, scripts/,
@@ -332,7 +453,7 @@ def find_unmapped_changes(session_files: set) -> list:
     return []
 
 
-def find_stale_domains(session_files: set) -> list:
+def find_stale_domains(session_files: set[str]) -> list[dict[str, Any]]:
     """Find code domains where docs weren't updated in the same session.
 
     Logic:
@@ -347,7 +468,9 @@ def find_stale_domains(session_files: set) -> list:
     skill_files = {f for f in session_files if _is_skill_file(f)}
 
     # Track stale domains (deduped by doc_subdir)
-    stale = {}  # doc_subdir → {"subdir": str, "skill": str, "files": [str]}
+    stale: dict[
+        str, dict[str, Any]
+    ] = {}  # doc_subdir → {"subdir": str, "skill": str, "files": [str]}
 
     for fp in session_files:
         if _should_skip(fp):
@@ -372,7 +495,7 @@ def find_stale_domains(session_files: set) -> list:
                     s.replace("\\", "/").lower().startswith(skill_prefix) for s in skill_files
                 )
 
-                if not has_doc_update and not has_skill_update:
+                if not has_doc_update and not has_skill_update and doc_subdir is not None:
                     if doc_subdir not in stale:
                         stale[doc_subdir] = {
                             "subdir": doc_subdir,
@@ -386,7 +509,97 @@ def find_stale_domains(session_files: set) -> list:
     return list(stale.values())
 
 
-def main():
+def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | None:
+    """Suggest a documentation chapter via wiki_pages_v1 Qdrant similarity.
+
+    Phase C2 closure (2026-05-15, roadmap 260515): additive — used ONLY for
+    ad-hoc CLI lookup of unmapped files. NOT wired into the Stop critical path
+    to avoid adding qdrant dependency + 200-500ms latency to every session end.
+
+    Usage (CLI):
+        python .claude/hooks/docs-change-enforcer.py --semantic-suggest <path>
+
+    Graceful degradation: any error → None (TEI unreachable, Qdrant down,
+    file unreadable, etc.). Best-effort.
+
+    Args:
+        file_path: Relative path to source file (e.g. "src/foo/bar.py").
+        timeout_s: Hard ceiling for combined TEI + Qdrant calls.
+
+    Returns:
+        Suggested chapter directory name (e.g. "32_WIKI_KNOWLEDGE_LAYER"),
+        or None if not confident / not available.
+    """
+    import re
+    from pathlib import Path
+
+    try:
+        import httpx
+        from qdrant_client import QdrantClient
+    except ImportError:
+        return None
+
+    full_path = Path(file_path)
+    if not full_path.exists():
+        full_path = Path.cwd() / file_path
+        if not full_path.exists():
+            return None
+    try:
+        snippet = full_path.read_text(encoding="utf-8", errors="replace")[:1500]
+    except OSError:
+        return None
+    if not snippet.strip():
+        return None
+
+    try:
+        with httpx.Client(timeout=timeout_s / 2) as http:
+            resp = http.post(
+                "http://localhost:8080/embed",
+                json={"inputs": snippet, "truncate": True},
+            )
+            resp.raise_for_status()
+            emb = resp.json()[0]
+    except Exception:
+        return None
+
+    try:
+        from qdrant_client.models import FieldCondition, Filter, MatchText
+
+        client = QdrantClient(url="http://localhost:6333", timeout=timeout_s / 2)
+        # Use framework_code_v1 with filter to scope to docs chapters only.
+        # Wiki_pages_v1 indexes Cyrillic entity slugs (no chapter info in payload);
+        # framework_code_v1 has `relative_path` containing
+        # "docs/framework documentation/NN_CHAPTER/..." which we can mine.
+        hits = client.query_points(
+            collection_name="framework_code_v1",
+            query=emb,
+            limit=5,
+            with_payload=True,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="relative_path",
+                        match=MatchText(text="framework documentation"),
+                    )
+                ]
+            ),
+        )
+    except Exception:
+        return None
+
+    # Extract chapter dir from top hit's relative_path payload
+    chapter_re = re.compile(r"(\d{2,3}_[А-ЯA-Za-z][\w_]+)")
+    for h in hits.points:
+        fp = (h.payload or {}).get("relative_path", "")
+        if not isinstance(fp, str):
+            continue
+        m = chapter_re.search(fp.replace("\\", "/"))
+        if m:
+            return m.group(1)
+    return None
+
+
+def main() -> None:
     """Check for stale documentation. Block stop if found."""
     # Invocation timer
     try:
@@ -397,9 +610,17 @@ def main():
         timer = None
 
     try:
-        # Read stdin (required by Claude Code hook protocol)
+        # Read stdin (required by Claude Code hook protocol) and extract
+        # session_id for session-bounded git window. Empty/missing → fallback
+        # to legacy 6h calendar window (backwards-compat).
+        session_id = ""
         try:
-            sys.stdin.buffer.read()
+            raw = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+            if raw.strip():
+                payload = json.loads(raw)
+                sid = payload.get("session_id", "")
+                if isinstance(sid, str):
+                    session_id = sid
         except Exception:
             pass
 
@@ -417,7 +638,7 @@ def main():
             except Exception:
                 pass
 
-        session_files = get_session_files()
+        session_files = get_session_files(session_id=session_id)
         if not session_files:
             if timer:
                 timer.log(outcome="allow")
@@ -426,6 +647,19 @@ def main():
         stale = find_stale_domains(session_files)
         stale += find_stale_infra(session_files)
         stale += find_unmapped_changes(session_files)
+
+        # Wiki drafts reminder: if new drafts exist, add a note
+        wiki_drafts_dir = PROJECT_ROOT / "docs" / "wiki" / "drafts"
+        wiki_drafts = list(wiki_drafts_dir.glob("*.md")) if wiki_drafts_dir.is_dir() else []
+        if wiki_drafts:
+            draft_names = ", ".join(d.stem for d in wiki_drafts[:5])
+            if len(wiki_drafts) > 5:
+                draft_names += f" (+{len(wiki_drafts) - 5})"
+            # Append as info message (not blocking, just a reminder)
+            print(
+                f"[WIKI-DRAFTS] {len(wiki_drafts)} draft(s) pending review: {draft_names}",
+                file=sys.stderr,
+            )
 
         # If docs were updated since last block, reset cooldown so hook can guard again
         if not stale and COOLDOWN_FILE.exists():
@@ -497,5 +731,20 @@ def main():
         sys.exit(0)
 
 
+def _cli_semantic_suggest() -> int:
+    """CLI entry point for --semantic-suggest <path>."""
+    if len(sys.argv) < 3:
+        print("Usage: docs-change-enforcer.py --semantic-suggest <file_path>", file=sys.stderr)
+        return 2
+    suggestion = semantic_fallback_suggest(sys.argv[2])
+    if suggestion:
+        print(suggestion)
+        return 0
+    print("(no confident match)", file=sys.stderr)
+    return 1
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--semantic-suggest":
+        sys.exit(_cli_semantic_suggest())
     main()

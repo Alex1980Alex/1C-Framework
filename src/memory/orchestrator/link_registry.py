@@ -28,6 +28,10 @@ class LinkType(str, Enum):
     EXTENDS = "extends"
     DERIVES_FROM = "derives_from"
     SESSION_CONTEXT = "session_context"
+    PROMOTED_TO = "promoted_to"
+    SUPERSEDED_BY = "superseded_by"
+    MIRRORS = "mirrors"
+    GRAPH_NODE = "graph_node"
 
     @property
     def description(self) -> str:
@@ -39,6 +43,10 @@ class LinkType(str, Enum):
             LinkType.EXTENDS: "Source entity extends or augments target",
             LinkType.DERIVES_FROM: "Source entity derives its content from target",
             LinkType.SESSION_CONTEXT: "Entities are linked through a shared session context",
+            LinkType.PROMOTED_TO: "Source entity has been promoted to wiki page (target)",
+            LinkType.SUPERSEDED_BY: "Source entity is superseded by a newer version (target)",
+            LinkType.MIRRORS: "Source entity mirrors content from target",
+            LinkType.GRAPH_NODE: "Source entity corresponds to a graph node (target)",
         }
         return descriptions.get(self, "")
 
@@ -218,7 +226,8 @@ class LinkRegistry:
                     CHECK (strength >= 0.0 AND strength <= 1.0),
                     CHECK (link_type IN (
                         'based_on', 'supports', 'contradicts',
-                        'extends', 'derives_from', 'session_context'
+                        'extends', 'derives_from', 'session_context',
+                        'promoted_to', 'superseded_by', 'mirrors', 'graph_node'
                     ))
                 )
             """)

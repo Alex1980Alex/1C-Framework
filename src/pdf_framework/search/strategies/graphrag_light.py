@@ -12,6 +12,7 @@ Two-level retrieval:
 
 import logging
 import time
+from pathlib import Path
 from typing import Any
 
 from src.pdf_framework.config import LightRAGSettings
@@ -37,12 +38,14 @@ class LightRAGStrategy:
         graph_store: Any,
         entity_embeddings: Any,
         settings: LightRAGSettings | None = None,
+        wiki_entities_dir: Path | None = None,
     ):
         self._embedding_engine = embedding_engine
         self._vector_store = vector_store
         self._graph_store = graph_store
         self._entity_embeddings = entity_embeddings
         self._settings = settings or LightRAGSettings()
+        self._wiki_dir = wiki_entities_dir or Path("docs/wiki/entities")
 
     async def search(
         self,
@@ -112,6 +115,19 @@ class LightRAGStrategy:
                 f"Entity: {hit.get('name', '?')} ({hit.get('entity_type', '?')}) "
                 f"[score={hit_score:.3f}]"
             )
+
+        # Enrich entity hits with wiki page paths (Phase 4)
+        wiki_paths: dict[str, str] = {}
+        if self._wiki_dir.exists():
+            for hit in entity_hits:
+                name = hit.get("name", "")
+                if name:
+                    import re
+                    fname = re.sub(r"[^\w\s-]", "", name.lower())
+                    fname = re.sub(r"[\s_]+", "-", fname)[:80].rstrip("-")
+                    wp = self._wiki_dir / f"{fname}.md"
+                    if wp.exists():
+                        wiki_paths[hit.get("graph_id", name)] = str(wp)
 
         for hit in relation_hits:
             src_chunk = hit.get("source_chunk_id", "")
@@ -200,6 +216,7 @@ class LightRAGStrategy:
                 "relation_hits": len(relation_hits),
                 "chunk_ids_found": len(chunk_scores),
                 "entity_names": list(entity_names)[:10],
+                "wiki_page_paths": wiki_paths,
             },
         )
 

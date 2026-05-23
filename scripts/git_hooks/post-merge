@@ -1,0 +1,22 @@
+#!/bin/sh
+# post-merge: 1) git-lfs delegate, 2) framework_search reindex of merged files.
+
+# --- 1. Git-LFS pass-through ---
+if command -v git-lfs >/dev/null 2>&1; then
+    git lfs post-merge "$@"
+fi
+
+# --- 2. Framework-search reindex (ORIG_HEAD..HEAD diff) ---
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [ -z "$REPO_ROOT" ]; then
+    exit 0
+fi
+
+PYTHON="$REPO_ROOT/.venv/Scripts/python.exe"
+HELPER="$REPO_ROOT/scripts/git_post_commit_reindex.py"
+
+if [ -x "$PYTHON" ] && [ -f "$HELPER" ]; then
+    "$PYTHON" "$HELPER" --since-ref ORIG_HEAD >/dev/null 2>&1 || true
+fi
+
+exit 0

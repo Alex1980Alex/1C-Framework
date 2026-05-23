@@ -169,15 +169,15 @@ const { v4: uuidv4 } = require('uuid');
 
 function getOrCreateUserId() {
   const configPath = path.join(os.homedir(), '.taskmasterconfig');
-  
+
   try {
     // Try to read existing config
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    
+
     if (config.userId) {
       return config.userId;
     }
-    
+
     // No user ID found, generate and save
     config.userId = uuidv4();
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -186,13 +186,13 @@ function getOrCreateUserId() {
     // Handle case where config doesn't exist or is invalid
     const userId = uuidv4();
     const newConfig = { userId };
-    
+
     try {
       fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
     } catch (writeError) {
       console.error('Failed to save user ID to config:', writeError.message);
     }
-    
+
     return userId;
   }
 }
@@ -222,7 +222,7 @@ function getOrCreateUserId() {
 2. In `ai-services-unified.js`, after constructing the telemetryData object:
    ```javascript
    const telemetryClient = require('../utils/telemetry-client');
-   
+
    // After telemetryData is constructed
    if (telemetryClient.isUserConsentGiven()) {
      // Non-blocking telemetry submission
@@ -492,7 +492,7 @@ async function callAiService(params) {
       commandName: 'analyze-complexity',
       outputType: 'mcp'
     });
-    
+
     // Construct telemetry object
     const telemetryData = {
       commandName: 'analyze-complexity',
@@ -507,7 +507,7 @@ async function callAiService(params) {
         // Add other relevant non-sensitive metadata
       }
     };
-    
+
     return { mainResult: result.data, telemetryData };
   } catch (error) {
     // Error telemetry
@@ -522,7 +522,7 @@ async function callAiService(params) {
         errorMessage: sanitizeErrorMessage(error.message)
       }
     };
-    
+
     // Re-throw the original error after capturing telemetry
     throw error;
   }
@@ -591,4 +591,3 @@ Create a new module (e.g., `scripts/utils/telemetry-client.js`) that encapsulate
    - Call after telemetryData object is constructed
    - Only send if user consent is confirmed
    - Use non-blocking approach to avoid performance impact
-

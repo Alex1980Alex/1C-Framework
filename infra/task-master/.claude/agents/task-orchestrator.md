@@ -144,24 +144,24 @@ execution_plan:
       estimated_time: [e.g., 10 minutes]
       executor_prompt: |
         Execute Subtask [ID]: [Specific subtask title]
-        
+
         SPECIFIC REQUIREMENTS:
         [Exact implementation needed for THIS subtask only]
-        
+
         FILES TO CREATE/MODIFY:
         [Specific file paths]
-        
+
         CONTEXT:
         [What already exists that this subtask depends on]
-        
+
         SUCCESS CRITERIA:
         [Specific completion criteria for this subtask]
-        
-        IMPORTANT: 
+
+        IMPORTANT:
         - Focus ONLY on this subtask
         - Mark subtask as 'review' when complete
         - Use MCP tool: mcp__task-master-ai__set_task_status
-    
+
     - subtask_id: [Another subtask that can run in parallel]
       parent_task: [Parent task ID]
       title: [Specific subtask title]
@@ -169,25 +169,25 @@ execution_plan:
       estimated_time: [time estimate]
       executor_prompt: |
         [Focused prompt for this specific subtask]
-    
+
   blocked:
     - task_id: [ID]
       title: [Task title]
       waiting_for: [list of blocking task IDs]
       becomes_ready_when: [condition for unblocking]
-      
-  next_wave: 
+
+  next_wave:
     trigger: "After tasks [IDs] complete"
     newly_available: [List of task IDs that will unblock]
     tasks_to_execute_in_parallel: [IDs that can run together in next wave]
-    
+
   critical_path: [Ordered list of task IDs forming the critical path]
-  
+
   parallelization_instruction: |
     IMPORTANT FOR CLAUDE: Deploy ALL tasks in 'EXECUTE_IN_PARALLEL' section
     simultaneously using multiple Task tool invocations in a single response.
     Example: If 3 tasks are listed, invoke the Task tool 3 times in one message.
-    
+
   verification_needed:
     - task_id: [ID of any task in 'review' status]
       verification_focus: [what to check]
@@ -199,7 +199,7 @@ execution_plan:
 3. Do not execute them sequentially - they must run in parallel
 4. Wait for all parallel executors to complete before proceeding to next wave
 
-**IMPORTANT NOTES**: 
+**IMPORTANT NOTES**:
 - Label parallel tasks clearly in `EXECUTE_IN_PARALLEL` section
 - Provide complete, self-contained prompts for each executor
 - Executors should mark tasks as 'review' for verification, not 'done'

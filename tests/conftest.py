@@ -266,3 +266,43 @@ def benchmark_data():
         "queries": [f"Query {i}" for i in range(100)],
         "embeddings": [[random.random() for _ in range(1024)] for _ in range(1000)],
     }
+
+
+# T.6 (260430_AUDIT_TESTS_COVERAGE.md) — auto-mark phase tests by path so
+# `pytest -m phase8` works without per-test decorators. Markers themselves
+# are registered in pyproject.toml [tool.pytest.ini_options] markers.
+_PHASE_PATH_MARKERS = {
+    "test_phase4_": "phase4",
+    "test_phase14": "phase14",
+    "test_phase15": "phase15",
+    "test_phase16": "phase16",
+    "test_phase17": "phase17",
+    "test_phase18": "phase18",
+    "test_phase19": "phase19",
+    "test_phase20": "phase20",
+    "test_phase21": "phase21",
+    "test_phase22": "phase22",
+    "test_phase23": "phase23",
+    "test_qwen3_": "phase8",
+    "test_late_chunking": "phase8",
+    "test_reindex_qwen3_oom": "phase8",
+    "test_bsl_chunker_split": "phase8",
+    "test_framework_search": "phase9",
+    "test_memory_first_hook": "phase9",
+    "test_post_commit_reindex": "phase9",
+}
+_DIR_MARKERS = {
+    "test_framework_search": "framework_search",
+    "bsl": "bsl",
+}
+
+
+def pytest_collection_modifyitems(config, items):
+    for item in items:
+        path = str(item.fspath).replace("\\", "/").lower()
+        for fragment, marker in _PHASE_PATH_MARKERS.items():
+            if fragment.lower() in path:
+                item.add_marker(marker)
+        for fragment, marker in _DIR_MARKERS.items():
+            if f"/{fragment.lower()}/" in path:
+                item.add_marker(marker)

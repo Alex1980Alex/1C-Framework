@@ -40,8 +40,26 @@ def test_can_handle_extensions() -> None:
 def test_confidence_known_and_unknown() -> None:
     backend = MultilspyBackend(lambda: _FakeClient())
     assert backend.confidence_for("module_export_proc") == 0.95
-    assert backend.confidence_for("local_variable") == 0.70
+    assert backend.confidence_for("local_variable") == 0.95  # calibrated pilot-B
     assert backend.confidence_for("nonexistent_kind") == 0.0
+
+
+def test_plan_rename_converts_line_from_1_based_to_0_based_for_lsp() -> None:
+    """Backend interface is 1-based (EDT-MCP / Serena convention); LSP is 0-based."""
+    client = _FakeClient(response={"changes": {}})
+    backend = MultilspyBackend(lambda: client)
+    backend.plan_rename(uri="file:///a.bsl", line=303, character=1, new_name="X")
+    assert client.received_params is not None
+    assert client.received_params["position"] == {"line": 302, "character": 1}
+
+
+def test_plan_rename_handles_line_zero_without_underflow() -> None:
+    """line=0 must not become -1."""
+    client = _FakeClient(response={"changes": {}})
+    backend = MultilspyBackend(lambda: client)
+    backend.plan_rename(uri="file:///a.bsl", line=0, character=5, new_name="X")
+    assert client.received_params is not None
+    assert client.received_params["position"] == {"line": 0, "character": 5}
 
 
 def test_plan_rename_parses_document_changes() -> None:

@@ -4,19 +4,20 @@ CLI Commands - команды для Pipeline CLI.
 Реализация основных команд: run, status, list, config, logs.
 """
 
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-import json
+from typing import Any
 
 from .config import CLIConfig, ConfigManager, ProjectConfig
-from .output import OutputFormatter, TableColumn, Symbol
+from .output import OutputFormatter, TableColumn
 
 
 class CommandError(Exception):
     """Ошибка выполнения команды."""
+
     pass
 
 
@@ -45,18 +46,18 @@ class BaseCommand(ABC):
 
     name: str = ""
     description: str = ""
-    aliases: List[str] = []
+    aliases: list[str] = []
 
     def __init__(self, config: CLIConfig, formatter: OutputFormatter) -> None:
         self.config = config
         self.formatter = formatter
 
     @abstractmethod
-    def execute(self, args: Dict[str, Any]) -> CommandResult:
+    def execute(self, args: dict[str, Any]) -> CommandResult:
         """Выполнение команды."""
         pass
 
-    def validate_args(self, args: Dict[str, Any]) -> Optional[str]:
+    def validate_args(self, args: dict[str, Any]) -> str | None:
         """Валидация аргументов. Возвращает сообщение об ошибке или None."""
         return None
 
@@ -68,7 +69,7 @@ class RunCommand(BaseCommand):
     description = "Запуск pipeline для проекта"
     aliases = ["r", "start"]
 
-    def execute(self, args: Dict[str, Any]) -> CommandResult:
+    def execute(self, args: dict[str, Any]) -> CommandResult:
         """Запуск pipeline."""
         project = args.get("project") or self.config.default_project
         task = args.get("task", "")
@@ -76,7 +77,9 @@ class RunCommand(BaseCommand):
         dry_run = args.get("dry_run", False)
 
         if not project:
-            return CommandResult.error("Не указан проект. Используйте --project или установите default_project")
+            return CommandResult.error(
+                "Не указан проект. Используйте --project или установите default_project"
+            )
 
         # В dry_run режиме пропускаем проверку существования проекта
         if dry_run:
@@ -86,19 +89,19 @@ class RunCommand(BaseCommand):
             self.formatter.info(f"Задача: {task or '(не указана)'}")
             self.formatter.info(f"Фазы: {', '.join(phases)}")
             self.formatter.warning("Режим dry-run: pipeline не будет запущен")
-            return CommandResult.ok("Dry run completed", data={
-                "project": project,
-                "task": task,
-                "phases": phases,
-                "dry_run": True
-            })
+            return CommandResult.ok(
+                "Dry run completed",
+                data={"project": project, "task": task, "phases": phases, "dry_run": True},
+            )
 
         # Проверка существования проекта (только для реального запуска)
         manager = ConfigManager(self.config.project_root)
         project_config = manager.get_project(project)
 
         if not project_config:
-            return CommandResult.error(f"Проект '{project}' не найден. Используйте 'pipeline list' для списка проектов")
+            return CommandResult.error(
+                f"Проект '{project}' не найден. Используйте 'pipeline list' для списка проектов"
+            )
 
         self.formatter.header(f"Pipeline Run: {project}")
         self.formatter.print()
@@ -126,15 +129,10 @@ class RunCommand(BaseCommand):
 
         return CommandResult.ok(
             f"Pipeline запущен для проекта '{project}'",
-            data={
-                "project": project,
-                "task": task,
-                "phases": phases,
-                "status": "running"
-            }
+            data={"project": project, "task": task, "phases": phases, "status": "running"},
         )
 
-    def validate_args(self, args: Dict[str, Any]) -> Optional[str]:
+    def validate_args(self, args: dict[str, Any]) -> str | None:
         """Валидация аргументов."""
         if not args.get("project") and not self.config.default_project:
             return "Требуется указать проект (--project) или установить default_project"
@@ -148,7 +146,7 @@ class StatusCommand(BaseCommand):
     description = "Статус текущего выполнения pipeline"
     aliases = ["s", "st"]
 
-    def execute(self, args: Dict[str, Any]) -> CommandResult:
+    def execute(self, args: dict[str, Any]) -> CommandResult:
         """Получение статуса."""
         project = args.get("project")
         run_id = args.get("run_id")
@@ -166,7 +164,7 @@ class StatusCommand(BaseCommand):
             self.formatter.info("Нет активных запусков pipeline")
             return CommandResult.ok("No active runs")
 
-        with open(state_file, "r", encoding="utf-8") as f:
+        with open(state_file, encoding="utf-8") as f:
             state = json.load(f)
 
         # Вывод статуса
@@ -203,7 +201,7 @@ class ListCommand(BaseCommand):
     description = "Список проектов и запусков"
     aliases = ["ls", "l"]
 
-    def execute(self, args: Dict[str, Any]) -> CommandResult:
+    def execute(self, args: dict[str, Any]) -> CommandResult:
         """Список проектов."""
         list_type = args.get("type", "projects")  # projects, runs, artifacts
 
@@ -265,15 +263,17 @@ class ListCommand(BaseCommand):
 
         runs = []
         for run_file in sorted(runs_dir.glob("*.json"), reverse=True)[:20]:
-            with open(run_file, "r", encoding="utf-8") as f:
+            with open(run_file, encoding="utf-8") as f:
                 run_data = json.load(f)
-                runs.append({
-                    "id": run_file.stem,
-                    "project": run_data.get("project", "N/A"),
-                    "status": run_data.get("status", "N/A"),
-                    "started": run_data.get("started_at", "N/A"),
-                    "duration": run_data.get("duration", "N/A"),
-                })
+                runs.append(
+                    {
+                        "id": run_file.stem,
+                        "project": run_data.get("project", "N/A"),
+                        "status": run_data.get("status", "N/A"),
+                        "started": run_data.get("started_at", "N/A"),
+                        "duration": run_data.get("duration", "N/A"),
+                    }
+                )
 
         if not runs:
             self.formatter.info("Нет истории запусков")
@@ -291,7 +291,7 @@ class ListCommand(BaseCommand):
 
         return CommandResult.ok(data=runs)
 
-    def _list_artifacts(self, project: Optional[str]) -> CommandResult:
+    def _list_artifacts(self, project: str | None) -> CommandResult:
         """Список артефактов."""
         artifacts_dir = self.config.get_absolute_path(self.config.artifacts_dir)
 
@@ -305,12 +305,14 @@ class ListCommand(BaseCommand):
         artifacts = []
         for artifact_file in artifacts_dir.rglob("*.md"):
             stat = artifact_file.stat()
-            artifacts.append({
-                "name": artifact_file.name,
-                "type": artifact_file.parent.name,
-                "size": f"{stat.st_size / 1024:.1f} KB",
-                "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M"),
-            })
+            artifacts.append(
+                {
+                    "name": artifact_file.name,
+                    "type": artifact_file.parent.name,
+                    "size": f"{stat.st_size / 1024:.1f} KB",
+                    "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M"),
+                }
+            )
 
         if not artifacts:
             self.formatter.info("Нет артефактов")
@@ -335,7 +337,7 @@ class ConfigCommand(BaseCommand):
     description = "Управление конфигурацией"
     aliases = ["cfg", "c"]
 
-    def execute(self, args: Dict[str, Any]) -> CommandResult:
+    def execute(self, args: dict[str, Any]) -> CommandResult:
         """Управление конфигурацией."""
         action = args.get("action", "show")
 
@@ -363,7 +365,7 @@ class ConfigCommand(BaseCommand):
 
         return CommandResult.ok(data=config_data)
 
-    def _set_config(self, key: Optional[str], value: Optional[str]) -> CommandResult:
+    def _set_config(self, key: str | None, value: str | None) -> CommandResult:
         """Установка значения конфигурации."""
         if not key:
             return CommandResult.error("Не указан ключ конфигурации")
@@ -372,8 +374,13 @@ class ConfigCommand(BaseCommand):
 
         # Проверка валидности ключа
         valid_keys = [
-            "default_project", "max_parallel_tasks", "timeout_seconds",
-            "auto_commit", "output_format", "verbosity", "color_enabled"
+            "default_project",
+            "max_parallel_tasks",
+            "timeout_seconds",
+            "auto_commit",
+            "output_format",
+            "verbosity",
+            "color_enabled",
         ]
 
         if key not in valid_keys:
@@ -395,7 +402,7 @@ class ConfigCommand(BaseCommand):
 
         return CommandResult.ok(f"Config updated: {key} = {value}")
 
-    def _add_project(self, args: Dict[str, Any]) -> CommandResult:
+    def _add_project(self, args: dict[str, Any]) -> CommandResult:
         """Добавление проекта."""
         name = args.get("name")
         path = args.get("path")
@@ -425,7 +432,7 @@ class ConfigCommand(BaseCommand):
 
         return CommandResult.ok(f"Project '{name}' added", data=project.to_dict())
 
-    def _remove_project(self, name: Optional[str]) -> CommandResult:
+    def _remove_project(self, name: str | None) -> CommandResult:
         """Удаление проекта."""
         if not name:
             return CommandResult.error("Не указано имя проекта")
@@ -463,7 +470,7 @@ class LogsCommand(BaseCommand):
     description = "Просмотр логов pipeline"
     aliases = ["log"]
 
-    def execute(self, args: Dict[str, Any]) -> CommandResult:
+    def execute(self, args: dict[str, Any]) -> CommandResult:
         """Просмотр логов."""
         run_id = args.get("run_id")
         follow = args.get("follow", False)
@@ -492,15 +499,12 @@ class LogsCommand(BaseCommand):
         self.formatter.print()
 
         # Чтение логов
-        with open(log_file, "r", encoding="utf-8") as f:
+        with open(log_file, encoding="utf-8") as f:
             all_lines = f.readlines()
 
         # Фильтрация по уровню
         if level != "all":
-            all_lines = [
-                line for line in all_lines
-                if level.upper() in line
-            ]
+            all_lines = [line for line in all_lines if level.upper() in line]
 
         # Последние N строк
         display_lines = all_lines[-lines:]
@@ -522,7 +526,7 @@ class LogsCommand(BaseCommand):
 
 
 # Реестр команд
-COMMANDS: Dict[str, type] = {
+COMMANDS: dict[str, type] = {
     "run": RunCommand,
     "status": StatusCommand,
     "list": ListCommand,
@@ -531,7 +535,7 @@ COMMANDS: Dict[str, type] = {
 }
 
 
-def get_command(name: str) -> Optional[type]:
+def get_command(name: str) -> type | None:
     """Получение класса команды по имени или алиасу."""
     # Прямое совпадение
     if name in COMMANDS:

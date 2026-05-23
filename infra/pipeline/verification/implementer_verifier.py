@@ -7,10 +7,11 @@ Verifies artifacts produced by IMPLEMENTER agent:
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from constants import AgentRole, ArtifactType, RequirementStatus, VerificationStatus
 from models import Artifact
+
 from .base_verifier import (
     BaseVerifier,
     CheckResult,
@@ -29,7 +30,7 @@ class ImplementerVerifier(BaseVerifier):
     def verify(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """
         Verify IMPLEMENTER artifact based on its type.
@@ -58,7 +59,7 @@ class ImplementerVerifier(BaseVerifier):
     def _verify_result(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify result.md artifact."""
         checks = []
@@ -94,15 +95,15 @@ class ImplementerVerifier(BaseVerifier):
             # Check each requirement from spec
             extracted_reqs = self.extract_requirements(spec_artifact.content)
             for req in extracted_reqs:
-                status = self._check_requirement_implementation(
-                    req, artifact.content
+                status = self._check_requirement_implementation(req, artifact.content)
+                requirements.append(
+                    RequirementCheck(
+                        requirement_id=req["id"],
+                        description=req["description"],
+                        status=status,
+                        notes=self._get_requirement_notes(status),
+                    )
                 )
-                requirements.append(RequirementCheck(
-                    requirement_id=req["id"],
-                    description=req["description"],
-                    status=status,
-                    notes=self._get_requirement_notes(status),
-                ))
 
         # 9. Check traceability to design if available
         if context and "design" in context:
@@ -113,13 +114,9 @@ class ImplementerVerifier(BaseVerifier):
         checks.append(self._check_error_handling(artifact.content))
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
-        failed_requirements = any(
-            r.status == RequirementStatus.FAILED for r in requirements
-        )
+        failed_requirements = any(r.status == RequirementStatus.FAILED for r in requirements)
 
         if failed_critical or failed_requirements:
             status = VerificationStatus.REVISION_NEEDED
@@ -146,7 +143,7 @@ class ImplementerVerifier(BaseVerifier):
     def _verify_qa_report(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify qa_report.md artifact."""
         checks = []
@@ -168,14 +165,10 @@ class ImplementerVerifier(BaseVerifier):
         checks.append(self._check_qa_verdict(artifact.content))
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
         status = (
-            VerificationStatus.REVISION_NEEDED
-            if failed_critical
-            else VerificationStatus.APPROVED
+            VerificationStatus.REVISION_NEEDED if failed_critical else VerificationStatus.APPROVED
         )
 
         return VerificationResult(
@@ -218,14 +211,18 @@ class ImplementerVerifier(BaseVerifier):
         """Check for created/modified files section."""
         # Look for file paths or file listings
         file_patterns = [
-            r"\.bsl", r"\.py", r"\.js", r"\.ts", r"\.md",
-            r"Создан", r"Изменён", r"Добавлен", r"Удалён",
+            r"\.bsl",
+            r"\.py",
+            r"\.js",
+            r"\.ts",
+            r"\.md",
+            r"Создан",
+            r"Изменён",
+            r"Добавлен",
+            r"Удалён",
         ]
 
-        has_files = any(
-            re.search(pattern, content, re.IGNORECASE)
-            for pattern in file_patterns
-        )
+        has_files = any(re.search(pattern, content, re.IGNORECASE) for pattern in file_patterns)
 
         if has_files:
             return CheckResult(
@@ -265,14 +262,17 @@ class ImplementerVerifier(BaseVerifier):
     def _check_testing_section(self, content: str) -> CheckResult:
         """Check for testing section."""
         testing_keywords = [
-            "тест", "проверк", "валидац", "test",
-            "✅", "❌", "пройден", "провален",
+            "тест",
+            "проверк",
+            "валидац",
+            "test",
+            "✅",
+            "❌",
+            "пройден",
+            "провален",
         ]
 
-        has_testing = any(
-            kw in content.lower()
-            for kw in testing_keywords
-        )
+        has_testing = any(kw in content.lower() for kw in testing_keywords)
 
         if has_testing:
             return CheckResult(
@@ -291,16 +291,14 @@ class ImplementerVerifier(BaseVerifier):
     def _check_bsl_code_quality(self, content: str) -> CheckResult:
         """Check BSL code quality indicators in result."""
         quality_indicators = [
-            "Попытка", "Исключение",  # Error handling
-            "Транзакци",              # Transaction management
-            "Запрос",                 # Query optimization
-            "Индекс",                 # Index usage
+            "Попытка",
+            "Исключение",  # Error handling
+            "Транзакци",  # Transaction management
+            "Запрос",  # Query optimization
+            "Индекс",  # Index usage
         ]
 
-        mentioned = [
-            ind for ind in quality_indicators
-            if ind.lower() in content.lower()
-        ]
+        mentioned = [ind for ind in quality_indicators if ind.lower() in content.lower()]
 
         if len(mentioned) >= 2:
             return CheckResult(
@@ -319,14 +317,15 @@ class ImplementerVerifier(BaseVerifier):
     def _check_documentation_updates(self, content: str) -> CheckResult:
         """Check if documentation was updated."""
         doc_keywords = [
-            "документац", "readme", "комментар", "описани",
-            "docstring", "jsdoc",
+            "документац",
+            "readme",
+            "комментар",
+            "описани",
+            "docstring",
+            "jsdoc",
         ]
 
-        has_docs = any(
-            kw in content.lower()
-            for kw in doc_keywords
-        )
+        has_docs = any(kw in content.lower() for kw in doc_keywords)
 
         if has_docs:
             return CheckResult(
@@ -349,10 +348,7 @@ class ImplementerVerifier(BaseVerifier):
         design_terms = list(set(design_terms))[:20]  # Take first 20 unique terms
 
         # Check how many are mentioned in result
-        mentioned = sum(
-            1 for term in design_terms
-            if term.lower() in result_content.lower()
-        )
+        mentioned = sum(1 for term in design_terms if term.lower() in result_content.lower())
 
         ratio = mentioned / len(design_terms) if design_terms else 0
 
@@ -373,14 +369,16 @@ class ImplementerVerifier(BaseVerifier):
     def _check_error_handling(self, content: str) -> CheckResult:
         """Check if error handling was considered."""
         error_keywords = [
-            "ошибк", "исключен", "error", "exception",
-            "try", "catch", "попытка",
+            "ошибк",
+            "исключен",
+            "error",
+            "exception",
+            "try",
+            "catch",
+            "попытка",
         ]
 
-        has_error_handling = any(
-            kw in content.lower()
-            for kw in error_keywords
-        )
+        has_error_handling = any(kw in content.lower() for kw in error_keywords)
 
         if has_error_handling:
             return CheckResult(
@@ -398,7 +396,7 @@ class ImplementerVerifier(BaseVerifier):
 
     def _check_requirement_implementation(
         self,
-        requirement: Dict[str, str],
+        requirement: dict[str, str],
         result_content: str,
     ) -> RequirementStatus:
         """Check if a specific requirement is implemented."""
@@ -419,15 +417,11 @@ class ImplementerVerifier(BaseVerifier):
                 return RequirementStatus.WARNING  # Mentioned but status unclear
 
         # Check for keywords from description
-        keywords = [
-            w for w in description.split()
-            if len(w) > 3 and w.isalpha()
-        ][:5]  # First 5 significant words
+        keywords = [w for w in description.split() if len(w) > 3 and w.isalpha()][
+            :5
+        ]  # First 5 significant words
 
-        matched = sum(
-            1 for kw in keywords
-            if kw.lower() in result_content.lower()
-        )
+        matched = sum(1 for kw in keywords if kw.lower() in result_content.lower())
 
         if matched >= 2:
             return RequirementStatus.PASSED  # Likely addressed
@@ -448,10 +442,7 @@ class ImplementerVerifier(BaseVerifier):
 
     def _check_test_results(self, content: str) -> CheckResult:
         """Check for test results in QA report."""
-        if (
-            self._has_section(content, "Результаты тест")
-            or self._has_section(content, "Тесты")
-        ):
+        if self._has_section(content, "Результаты тест") or self._has_section(content, "Тесты"):
             return CheckResult(
                 check_type=CheckType.COMPLETENESS,
                 passed=True,
@@ -469,10 +460,7 @@ class ImplementerVerifier(BaseVerifier):
         """Check for coverage section in QA report."""
         coverage_keywords = ["покрыти", "coverage", "%", "процент"]
 
-        has_coverage = any(
-            kw in content.lower()
-            for kw in coverage_keywords
-        )
+        has_coverage = any(kw in content.lower() for kw in coverage_keywords)
 
         if has_coverage:
             return CheckResult(
@@ -511,14 +499,17 @@ class ImplementerVerifier(BaseVerifier):
     def _check_qa_verdict(self, content: str) -> CheckResult:
         """Check for QA verdict in report."""
         verdict_keywords = [
-            "вердикт", "итог", "заключен", "рекоменд",
-            "approved", "rejected", "passed", "failed",
+            "вердикт",
+            "итог",
+            "заключен",
+            "рекоменд",
+            "approved",
+            "rejected",
+            "passed",
+            "failed",
         ]
 
-        has_verdict = any(
-            kw in content.lower()
-            for kw in verdict_keywords
-        )
+        has_verdict = any(kw in content.lower() for kw in verdict_keywords)
 
         if has_verdict:
             return CheckResult(
@@ -536,8 +527,8 @@ class ImplementerVerifier(BaseVerifier):
 
     def _generate_summary(
         self,
-        checks: List[CheckResult],
-        requirements: Optional[List[RequirementCheck]] = None,
+        checks: list[CheckResult],
+        requirements: list[RequirementCheck] | None = None,
     ) -> str:
         """Generate summary from checks and requirements."""
         passed_checks = sum(1 for c in checks if c.passed)
@@ -547,10 +538,7 @@ class ImplementerVerifier(BaseVerifier):
         summary_parts = [f"Проверок: {passed_checks}/{total_checks}"]
 
         if requirements:
-            passed_reqs = sum(
-                1 for r in requirements
-                if r.status == RequirementStatus.PASSED
-            )
+            passed_reqs = sum(1 for r in requirements if r.status == RequirementStatus.PASSED)
             summary_parts.append(f"Требований: {passed_reqs}/{len(requirements)}")
 
         if errors:

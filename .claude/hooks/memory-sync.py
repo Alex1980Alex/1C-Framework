@@ -27,10 +27,27 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+HOOK_NAME = "memory-sync"
 
 MEMORY_PATHS = [
     "src/memory/",
 ]
+
+
+def _emit_langfuse_span(status: str, change_count: int = 0) -> None:
+    """Roadmap §5c.4: эмитит Langfuse observation. Никогда не блокирует hook."""
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from src.pdf_framework.observability.langfuse_setup import emit_observation
+
+        emit_observation(
+            name=HOOK_NAME,
+            input={"watched_paths": MEMORY_PATHS},
+            output={"status": status, "change_count": change_count},
+            metadata={"hook": HOOK_NAME, "event": "Stop"},
+        )
+    except Exception:
+        pass
 
 
 def get_memory_changes() -> list[str]:
@@ -82,6 +99,9 @@ def main():
             f"- Verifying MCP servers start correctly: memory-ai, vector-memory, skill-learning\n"
             f"- Running integration tests: pytest tests/integration/test_memory_unified.py"
         )
+        _emit_langfuse_span("changes-detected", change_count=len(changes))
+    else:
+        _emit_langfuse_span("clean")
 
     # Always allow stop (advisory only)
     json.dump(output, sys.stdout)

@@ -15,6 +15,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.agents.rag.state import RAGState
 from src.pdf_framework.config import SelfRAGSettings
+from src.pdf_framework.prompts import RewriterSignature, async_chain_of_thought, is_dspy_available
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
@@ -109,6 +110,38 @@ async def rewrite_query(
                 }
         except Exception as e:
             logger.warning("[REWRITE] Cheap LLM failed, falling back: %s", e)
+
+    # DSPy path — ChainOfThought with RewriterSignature
+    if is_dspy_available():
+        try:
+            history_parts = []
+            graded_docs = state.get("graded_documents", [])
+            if graded_docs:
+                irrelevant = [d for d in graded_docs if not d["is_relevant"]]
+                if irrelevant:
+                    history_parts = [d.get("content_preview", "N/A")[:80] for d in irrelevant[:3]]
+            dspy_result = await async_chain_of_thought(
+                RewriterSignature,
+                query=original_question,
+                history="\n".join(f"- {p}" for p in history_parts) if history_parts else "",
+            )
+            rewritten = dspy_result.get("rewritten_query", "").strip()
+            if rewritten and len(rewritten) >= 5 and rewritten != original_question:
+                logger.info(
+                    "[REWRITE] Retry %d (dspy): '%s...' → '%s...' (strategy: %s)",
+                    new_retry_count,
+                    original_question[:50],
+                    rewritten[:50],
+                    new_strategy,
+                )
+                return {
+                    "question": rewritten,
+                    "search_strategy": new_strategy,
+                    "retry_count": new_retry_count,
+                }
+            logger.warning("[REWRITE] DSPy returned invalid result, falling back")
+        except Exception as e:
+            logger.warning("[REWRITE] DSPy failed, falling back: %s", e)
 
     # Rewrite query via LLM (Claude fallback)
     rewritten = await _rewrite_via_llm(

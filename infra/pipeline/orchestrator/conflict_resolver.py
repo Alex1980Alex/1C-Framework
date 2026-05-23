@@ -14,17 +14,17 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Callable
+from typing import Any
 
 from .models import (
-    TaskNode,
     Conflict,
-    ConflictType,
     ConflictResolution,
+    ConflictType,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,14 +34,16 @@ logger = logging.getLogger(__name__)
 # Resolution Strategies
 # =============================================================================
 
+
 class ResolutionStrategy(Enum):
     """Strategy for automatic conflict resolution."""
-    TAKE_FIRST = "take_first"       # Take first task's result
-    TAKE_LAST = "take_last"         # Take last task's result
-    TAKE_PRIORITY = "take_priority" # Take highest priority task's result
-    MERGE = "merge"                 # Attempt to merge conflicting values
-    MANUAL = "manual"               # Require manual intervention
-    SKIP = "skip"                   # Skip conflicting changes
+
+    TAKE_FIRST = "take_first"  # Take first task's result
+    TAKE_LAST = "take_last"  # Take last task's result
+    TAKE_PRIORITY = "take_priority"  # Take highest priority task's result
+    MERGE = "merge"  # Attempt to merge conflicting values
+    MANUAL = "manual"  # Require manual intervention
+    SKIP = "skip"  # Skip conflicting changes
 
 
 @dataclass
@@ -51,14 +53,15 @@ class ResolutionRule:
     resource_pattern: str  # Regex pattern for resource matching
     conflict_type: ConflictType
     strategy: ResolutionStrategy
-    priority_order: Optional[list[str]] = None  # Task ID priority for TAKE_PRIORITY
+    priority_order: list[str] | None = None  # Task ID priority for TAKE_PRIORITY
 
     def matches(self, resource: str, conflict_type: ConflictType) -> bool:
         """Check if this rule matches the conflict."""
         import re
+
         return (
-            conflict_type == self.conflict_type and
-            re.match(self.resource_pattern, resource) is not None
+            conflict_type == self.conflict_type
+            and re.match(self.resource_pattern, resource) is not None
         )
 
 
@@ -70,7 +73,7 @@ class ResolutionResult:
     resolved: bool
     resolution: ConflictResolution
     chosen_value: Any = None
-    chosen_task_id: Optional[str] = None
+    chosen_task_id: str | None = None
     reason: str = ""
     requires_manual_review: bool = False
 
@@ -95,7 +98,7 @@ class ConflictReport:
     unresolved_conflicts: int = 0
     manual_review_required: int = 0
     resolutions: list[ResolutionResult] = field(default_factory=list)
-    generated_at: Optional[datetime] = None
+    generated_at: datetime | None = None
 
     @property
     def all_resolved(self) -> bool:
@@ -119,6 +122,7 @@ class ConflictReport:
 # Conflict Resolver
 # =============================================================================
 
+
 class ConflictResolver:
     """
     Resolves conflicts between parallel task outputs.
@@ -133,8 +137,8 @@ class ConflictResolver:
     def __init__(
         self,
         default_strategy: ResolutionStrategy = ResolutionStrategy.TAKE_LAST,
-        rules: Optional[list[ResolutionRule]] = None,
-        manual_handler: Optional[Callable[[Conflict, dict[str, Any]], ResolutionResult]] = None,
+        rules: list[ResolutionRule] | None = None,
+        manual_handler: Callable[[Conflict, dict[str, Any]], ResolutionResult] | None = None,
     ):
         """
         Initialize conflict resolver.
@@ -295,7 +299,7 @@ class ConflictResolver:
         self,
         conflict: Conflict,
         task_outputs: dict[str, Any],
-        priority_order: Optional[list[str]],
+        priority_order: list[str] | None,
     ) -> ResolutionResult:
         """Take the highest priority task's output."""
         if not priority_order:
@@ -389,7 +393,9 @@ class ConflictResolver:
             return "\n".join(values)
 
         # Cannot merge other types
-        raise ValueError(f"Cannot merge values of mixed types: {[type(v).__name__ for v in values]}")
+        raise ValueError(
+            f"Cannot merge values of mixed types: {[type(v).__name__ for v in values]}"
+        )
 
     def _resolve_manual(
         self,
@@ -427,6 +433,7 @@ class ConflictResolver:
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def resolve_conflicts(
     conflicts: list[Conflict],
@@ -496,7 +503,7 @@ def save_conflict_report(
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(report.to_dict(), f, indent=2, ensure_ascii=False)
 
     logger.info(f"Saved conflict report to {output_path}")
@@ -512,5 +519,5 @@ def load_conflict_report(input_path: Path) -> dict:
     Returns:
         Dict representation of ConflictReport
     """
-    with open(input_path, 'r', encoding='utf-8') as f:
+    with open(input_path, encoding="utf-8") as f:
         return json.load(f)

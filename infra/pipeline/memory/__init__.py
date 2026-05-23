@@ -11,29 +11,30 @@ This module provides:
 """
 
 from models import (
+    ErrorRecord,
+    LearningContext,
     MemoryEntry,
     MemoryType,
-    PatternType,
     Pattern,
-    ErrorRecord,
+    PatternType,
     Recommendation,
-    LearningContext,
 )
-from .unified_memory_client import (
-    UnifiedMemoryClient,
-    MemoryConfig,
+
+from .error_learner import (
+    ErrorAnalyzer,
+    ErrorLearner,
 )
 from .pattern_saver import (
-    PatternSaver,
     PatternMatcher,
-)
-from .error_learner import (
-    ErrorLearner,
-    ErrorAnalyzer,
+    PatternSaver,
 )
 from .recommender import (
-    Recommender,
     RecommendationEngine,
+    Recommender,
+)
+from .unified_memory_client import (
+    MemoryConfig,
+    UnifiedMemoryClient,
 )
 
 __all__ = [

@@ -4,33 +4,33 @@ Tests for Conflict Resolver.
 Sprint 3.2.4: Разрешение конфликтов
 """
 
-import pytest
+import tempfile
 from datetime import datetime
 from pathlib import Path
-import tempfile
-import json
 
+import pytest
 from models import (
     Conflict,
-    ConflictType,
     ConflictResolution,
-)
-from .conflict_resolver import (
-    ResolutionStrategy,
-    ResolutionRule,
-    ResolutionResult,
-    ConflictReport,
-    ConflictResolver,
-    resolve_conflicts,
-    create_default_rules,
-    save_conflict_report,
-    load_conflict_report,
+    ConflictType,
 )
 
+from .conflict_resolver import (
+    ConflictReport,
+    ConflictResolver,
+    ResolutionResult,
+    ResolutionRule,
+    ResolutionStrategy,
+    create_default_rules,
+    load_conflict_report,
+    resolve_conflicts,
+    save_conflict_report,
+)
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def simple_conflict():
@@ -88,6 +88,7 @@ def list_outputs():
 # Test ResolutionResult
 # =============================================================================
 
+
 class TestResolutionResult:
     """Test ResolutionResult dataclass."""
 
@@ -123,6 +124,7 @@ class TestResolutionResult:
 # =============================================================================
 # Test ConflictReport
 # =============================================================================
+
 
 class TestConflictReport:
     """Test ConflictReport dataclass."""
@@ -164,6 +166,7 @@ class TestConflictReport:
 # Test ResolutionRule
 # =============================================================================
 
+
 class TestResolutionRule:
     """Test ResolutionRule matching."""
 
@@ -191,6 +194,7 @@ class TestResolutionRule:
 # =============================================================================
 # Test ConflictResolver - Basic Strategies
 # =============================================================================
+
 
 class TestConflictResolverTakeFirst:
     """Test TAKE_FIRST resolution strategy."""
@@ -248,12 +252,14 @@ class TestConflictResolverTakePriority:
     def test_take_priority(self, multi_task_conflict, task_outputs):
         """Test priority-based resolution."""
         resolver = ConflictResolver(default_strategy=ResolutionStrategy.TAKE_PRIORITY)
-        resolver.add_rule(ResolutionRule(
-            resource_pattern=r"file:.*",
-            conflict_type=ConflictType.WRITE_WRITE,
-            strategy=ResolutionStrategy.TAKE_PRIORITY,
-            priority_order=["T2", "T1", "T3"],  # T2 is highest priority
-        ))
+        resolver.add_rule(
+            ResolutionRule(
+                resource_pattern=r"file:.*",
+                conflict_type=ConflictType.WRITE_WRITE,
+                strategy=ResolutionStrategy.TAKE_PRIORITY,
+                priority_order=["T2", "T1", "T3"],  # T2 is highest priority
+            )
+        )
 
         result = resolver.resolve_conflict(multi_task_conflict, task_outputs)
 
@@ -273,6 +279,7 @@ class TestConflictResolverTakePriority:
 # =============================================================================
 # Test ConflictResolver - Merge Strategy
 # =============================================================================
+
 
 class TestConflictResolverMerge:
     """Test MERGE resolution strategy."""
@@ -319,6 +326,7 @@ class TestConflictResolverMerge:
 # Test ConflictResolver - Manual and Skip
 # =============================================================================
 
+
 class TestConflictResolverManual:
     """Test MANUAL resolution strategy."""
 
@@ -332,6 +340,7 @@ class TestConflictResolverManual:
 
     def test_manual_with_handler(self, simple_conflict, task_outputs):
         """Test manual resolution with custom handler."""
+
         def custom_handler(conflict, outputs):
             return ResolutionResult(
                 conflict_id=conflict.id,
@@ -367,6 +376,7 @@ class TestConflictResolverSkip:
 # Test ConflictResolver - Rule Matching
 # =============================================================================
 
+
 class TestConflictResolverRules:
     """Test rule-based conflict resolution."""
 
@@ -381,11 +391,13 @@ class TestConflictResolverRules:
         )
 
         resolver = ConflictResolver(default_strategy=ResolutionStrategy.TAKE_LAST)
-        resolver.add_rule(ResolutionRule(
-            resource_pattern=r"file:.*\.bsl$",
-            conflict_type=ConflictType.WRITE_WRITE,
-            strategy=ResolutionStrategy.TAKE_FIRST,
-        ))
+        resolver.add_rule(
+            ResolutionRule(
+                resource_pattern=r"file:.*\.bsl$",
+                conflict_type=ConflictType.WRITE_WRITE,
+                strategy=ResolutionStrategy.TAKE_FIRST,
+            )
+        )
 
         result = resolver.resolve_conflict(bsl_conflict, task_outputs)
 
@@ -406,6 +418,7 @@ class TestConflictResolverRules:
 # =============================================================================
 # Test ConflictResolver - Resolve All
 # =============================================================================
+
 
 class TestConflictResolverResolveAll:
     """Test resolving multiple conflicts."""
@@ -442,6 +455,7 @@ class TestConflictResolverResolveAll:
 # =============================================================================
 # Test Convenience Functions
 # =============================================================================
+
 
 class TestConvenienceFunctions:
     """Test convenience functions."""
@@ -480,6 +494,7 @@ class TestConvenienceFunctions:
 # =============================================================================
 # Test ResolutionStrategy
 # =============================================================================
+
 
 class TestResolutionStrategy:
     """Test ResolutionStrategy enum."""

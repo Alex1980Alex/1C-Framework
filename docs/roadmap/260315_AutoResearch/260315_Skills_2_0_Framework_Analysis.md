@@ -116,7 +116,7 @@ Comparator (каждые 5 итераций):
 
 **Скиллы без YAML (добавить первыми):**
 ```
-bsl-development, llm-rotation, 1c-mcp-toolkit, deployment,
+bsl-development, llm-rotation, 1c-mcp-crud, deployment,
 embedding-models, evaluation-benchmark, framework-caching,
 framework-mcp-ui, framework-quickstart, graph-operations,
 indexing-pipeline, memory-unified, prompt-engineering,
@@ -224,7 +224,7 @@ Target:    40% (Волна 1), 80% (Волна 3)
 Executor:
   - Изучает 1 объект: get_metadata → find_references → execute_query → код модуля
   - Записывает в cache/documents/{name}.md
-  Инструменты: 1c-mcp-toolkit, EDT-MCP, bsl-semantic-search
+  Инструменты: 1c-mcp-crud, EDT-MCP, bsl-semantic-search
 
 Reviewer:
   - Проверяет на базе: "в регистре X есть движения от документа Y?"

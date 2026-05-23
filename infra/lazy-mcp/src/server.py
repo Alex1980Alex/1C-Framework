@@ -10,30 +10,29 @@ MCP сервер с динамической загрузкой инструме
 
 import asyncio
 import json
-import sys
-import os
 import logging
+import os
+import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Windows: force SelectorEventLoop (ProactorEventLoop can cause issues with anyio stdio)
-if sys.platform == 'win32':
+if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent))
 
-from mcp.server.fastmcp import FastMCP
-
-from registry import Registry
 from loader import ServerLoader
-from tool_interceptor import get_interceptor, intercept_tool_call, ToolCategory
+from mcp.server.fastmcp import FastMCP
+from registry import Registry
+from tool_interceptor import ToolCategory, get_interceptor, intercept_tool_call
 
 # Настройка логирования — ТОЛЬКО stderr, никогда stdout (MCP protocol)
 logging.basicConfig(
     level=logging.WARNING,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stderr)]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stderr)],
 )
 logger = logging.getLogger("lazy-mcp")
 
@@ -63,9 +62,9 @@ def safe_serialize(obj: Any) -> Any:
     if isinstance(obj, (list, tuple)):
         return [safe_serialize(i) for i in obj]
     # dataclass-like objects (ZaiResponse, InterceptResult, etc.)
-    if hasattr(obj, '__dataclass_fields__'):
+    if hasattr(obj, "__dataclass_fields__"):
         return safe_serialize({k: getattr(obj, k) for k in obj.__dataclass_fields__})
-    if hasattr(obj, '__dict__'):
+    if hasattr(obj, "__dict__"):
         return safe_serialize(vars(obj))
     return str(obj)
 
@@ -80,46 +79,123 @@ def safe_json_dumps(obj: Any, **kwargs) -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 TASK_ROUTING = {
     "1c-development": {
-        "keywords": ["BSL", "1С", "1C", "процедура", "функция", "модуль", "конфигурация",
-                     "справочник", "документ", "регистр", "СправочникМенеджер", "ДокументОбъект",
-                     "analyze BSL", "parse 1C", "AST", "syntax tree"],
-        "tasks": ["анализ BSL кода", "поиск процедур/функций", "API платформы 1С",
-                  "семантический поиск по коду", "отладка BSL"]
+        "keywords": [
+            "BSL",
+            "1С",
+            "1C",
+            "процедура",
+            "функция",
+            "модуль",
+            "конфигурация",
+            "справочник",
+            "документ",
+            "регистр",
+            "СправочникМенеджер",
+            "ДокументОбъект",
+            "analyze BSL",
+            "parse 1C",
+            "AST",
+            "syntax tree",
+        ],
+        "tasks": [
+            "анализ BSL кода",
+            "поиск процедур/функций",
+            "API платформы 1С",
+            "семантический поиск по коду",
+            "отладка BSL",
+        ],
     },
     "documentation": {
-        "keywords": ["документация", "docs", "RAG", "поиск правил", "best practices",
-                     "автодокументирование", "generate docs", "search documentation"],
-        "tasks": ["поиск в документации", "генерация документации", "правила разработки"]
+        "keywords": [
+            "документация",
+            "docs",
+            "RAG",
+            "поиск правил",
+            "best practices",
+            "автодокументирование",
+            "generate docs",
+            "search documentation",
+        ],
+        "tasks": ["поиск в документации", "генерация документации", "правила разработки"],
     },
     "memory": {
-        "keywords": ["память", "memory", "контекст", "история", "запомни", "вспомни",
-                     "save context", "remember", "recall", "knowledge graph"],
-        "tasks": ["сохранение контекста", "поиск в истории", "knowledge management"]
+        "keywords": [
+            "память",
+            "memory",
+            "контекст",
+            "история",
+            "запомни",
+            "вспомни",
+            "save context",
+            "remember",
+            "recall",
+            "knowledge graph",
+        ],
+        "tasks": ["сохранение контекста", "поиск в истории", "knowledge management"],
     },
     "code-analysis": {
-        "keywords": ["символы", "symbols", "LSP", "рефакторинг", "навигация",
-                     "Python", "JavaScript", "TypeScript", "find references", "go to definition"],
-        "tasks": ["анализ Python/JS/TS кода", "поиск символов", "навигация по коду"]
+        "keywords": [
+            "символы",
+            "symbols",
+            "LSP",
+            "рефакторинг",
+            "навигация",
+            "Python",
+            "JavaScript",
+            "TypeScript",
+            "find references",
+            "go to definition",
+        ],
+        "tasks": ["анализ Python/JS/TS кода", "поиск символов", "навигация по коду"],
     },
     "file-operations": {
-        "keywords": ["файл", "file", "поиск", "grep", "search", "read", "write",
-                     "directory", "папка", "содержимое"],
-        "tasks": ["поиск в файлах", "чтение/запись файлов", "операции с директориями"]
+        "keywords": [
+            "файл",
+            "file",
+            "поиск",
+            "grep",
+            "search",
+            "read",
+            "write",
+            "directory",
+            "папка",
+            "содержимое",
+        ],
+        "tasks": ["поиск в файлах", "чтение/запись файлов", "операции с директориями"],
     },
     "reasoning": {
-        "keywords": ["думай", "think", "анализируй", "рассуждение", "step by step",
-                     "пошагово", "сложная задача", "branching", "complex problem"],
-        "tasks": ["структурированное мышление", "пошаговый анализ", "сложные задачи"]
+        "keywords": [
+            "думай",
+            "think",
+            "анализируй",
+            "рассуждение",
+            "step by step",
+            "пошагово",
+            "сложная задача",
+            "branching",
+            "complex problem",
+        ],
+        "tasks": ["структурированное мышление", "пошаговый анализ", "сложные задачи"],
     },
     "web": {
-        "keywords": ["веб", "web", "HTTP", "API", "search", "интернет", "браузер",
-                     "fetch", "puppeteer", "scrape"],
-        "tasks": ["веб-поиск", "HTTP запросы", "браузерная автоматизация"]
+        "keywords": [
+            "веб",
+            "web",
+            "HTTP",
+            "API",
+            "search",
+            "интернет",
+            "браузер",
+            "fetch",
+            "puppeteer",
+            "scrape",
+        ],
+        "tasks": ["веб-поиск", "HTTP запросы", "браузерная автоматизация"],
     },
     "utils": {
         "keywords": ["zip", "архив", "конвертация", "markdown", "convert", "docling"],
-        "tasks": ["архивация", "конвертация форматов"]
-    }
+        "tasks": ["архивация", "конвертация форматов"],
+    },
 }
 
 
@@ -138,13 +214,15 @@ def recommend_categories(task_description: str) -> list[dict]:
                 matched_keywords.append(keyword)
 
         if score > 0:
-            recommendations.append({
-                "category": category,
-                "score": score,
-                "matched_keywords": matched_keywords,
-                "typical_tasks": info["tasks"],
-                "path": f"/{category}"
-            })
+            recommendations.append(
+                {
+                    "category": category,
+                    "score": score,
+                    "matched_keywords": matched_keywords,
+                    "typical_tasks": info["tasks"],
+                    "path": f"/{category}",
+                }
+            )
 
     # Сортируем по релевантности
     recommendations.sort(key=lambda x: x["score"], reverse=True)
@@ -188,11 +266,12 @@ async def execute_tool(tool_path: str, arguments: dict | None = None) -> str:
     Example: execute_tool("/1c-development/ast-grep-mcp/ast_grep", {"pattern": "...", "language": "bsl"})
     """
     try:
-        result = await handle_execute_tool({
-            "tool_path": tool_path,
-            "arguments": arguments or {}
-        })
-        return safe_json_dumps(result, ensure_ascii=False, indent=2) if isinstance(result, dict) else str(result)
+        result = await handle_execute_tool({"tool_path": tool_path, "arguments": arguments or {}})
+        return (
+            safe_json_dumps(result, ensure_ascii=False, indent=2)
+            if isinstance(result, dict)
+            else str(result)
+        )
     except Exception as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
@@ -209,7 +288,7 @@ async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
     if not task_description:
         return {
             "error": "task_description is required",
-            "hint": "Опишите задачу, например: 'найди все процедуры в BSL коде'"
+            "hint": "Опишите задачу, например: 'найди все процедуры в BSL коде'",
         }
 
     log_stderr(f"[lazy-mcp] Analyzing task: {task_description}")
@@ -217,7 +296,7 @@ async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
     result = {
         "task": task_description,
         "source": "hybrid",  # static + docs-rag
-        "recommendations": []
+        "recommendations": [],
     }
 
     # ═══════════════════════════════════════════════════════════════════
@@ -234,12 +313,14 @@ async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
                 {
                     "query": f"MCP инструмент tool {task_description}",
                     "limit": 5,
-                    "search_type": "hybrid"
-                }
+                    "search_type": "hybrid",
+                },
             )
 
             # Парсим результаты поиска
-            if search_result and (not isinstance(search_result, dict) or "error" not in search_result):
+            if search_result and (
+                not isinstance(search_result, dict) or "error" not in search_result
+            ):
                 log_stderr(f"[lazy-mcp] Got docs results: {type(search_result)}")
                 docs_recommendations = parse_docs_recommendations(search_result, task_description)
                 result["source"] = "1c-docs-rag"
@@ -258,15 +339,17 @@ async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
 
     # Добавляем рекомендации из документации (если есть)
     for doc_rec in docs_recommendations[:2]:
-        result["recommendations"].append({
-            "source": "1c-docs-rag",
-            "type": "documentation",
-            "title": doc_rec.get("title", ""),
-            "relevance": doc_rec.get("relevance", 0),
-            "doc_id": doc_rec.get("doc_id", ""),
-            "suggested_tools": doc_rec.get("tools", []),
-            "hint": doc_rec.get("hint", "")
-        })
+        result["recommendations"].append(
+            {
+                "source": "1c-docs-rag",
+                "type": "documentation",
+                "title": doc_rec.get("title", ""),
+                "relevance": doc_rec.get("relevance", 0),
+                "doc_id": doc_rec.get("doc_id", ""),
+                "suggested_tools": doc_rec.get("tools", []),
+                "hint": doc_rec.get("hint", ""),
+            }
+        )
 
     # Добавляем статические рекомендации
     for rec in static_recommendations[:3]:
@@ -281,7 +364,7 @@ async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
             "matched_keywords": rec["matched_keywords"],
             "typical_tasks": rec["typical_tasks"],
             "path": rec["path"],
-            "servers": servers
+            "servers": servers,
         }
 
         # Подсказки по инструментам
@@ -301,13 +384,13 @@ async def handle_recommend_tools(arguments: dict) -> dict[str, Any]:
             result["quick_action"] = {
                 "message": f"📚 Найдена документация: {top.get('title', '')}",
                 "tool_path": tool.get("path", ""),
-                "example": tool.get("example", "")
+                "example": tool.get("example", ""),
             }
         elif top.get("type") == "category" and top.get("relevance_score", 0) >= 2:
             result["quick_action"] = {
                 "message": f"🎯 Рекомендую категорию '{top['category']}'",
                 "tool_path": top.get("suggested_tool", {}).get("path", ""),
-                "hint": top.get("suggested_tool", {}).get("hint", "")
+                "hint": top.get("suggested_tool", {}).get("hint", ""),
             }
 
     return result
@@ -320,35 +403,35 @@ def parse_docs_recommendations(search_result: Any, task: str) -> list[dict]:
     # Результат может быть строкой или объектом
     if isinstance(search_result, str):
         # Парсим markdown-like результат
-        lines = search_result.split('\n')
+        lines = search_result.split("\n")
         current_doc = {}
 
         for line in lines:
-            if line.startswith('## '):
+            if line.startswith("## "):
                 if current_doc:
                     recommendations.append(current_doc)
                 current_doc = {"title": line[3:].strip(), "tools": []}
-            elif 'AST-GREP' in line.upper() or 'ast_grep' in line:
-                current_doc.setdefault("tools", []).append({
-                    "path": "/1c-development/ast-grep-mcp/ast_grep",
-                    "name": "ast_grep",
-                    "example": "pattern='Процедура $NAME', language='bsl'"
-                })
-            elif 'RIPGREP' in line.upper() or 'ripgrep' in line.lower():
-                current_doc.setdefault("tools", []).append({
-                    "path": "/file-operations/ripgrep/search",
-                    "name": "search"
-                })
-            elif 'docs-rag' in line.lower() or 'search_docs' in line:
-                current_doc.setdefault("tools", []).append({
-                    "path": "/documentation/1c-docs-rag/search_docs",
-                    "name": "search_docs"
-                })
-            elif '🆔 ID:' in line:
-                current_doc["doc_id"] = line.split('`')[1] if '`' in line else ""
-            elif 'Релевантность:' in line:
+            elif "AST-GREP" in line.upper() or "ast_grep" in line:
+                current_doc.setdefault("tools", []).append(
+                    {
+                        "path": "/1c-development/ast-grep-mcp/ast_grep",
+                        "name": "ast_grep",
+                        "example": "pattern='Процедура $NAME', language='bsl'",
+                    }
+                )
+            elif "RIPGREP" in line.upper() or "ripgrep" in line.lower():
+                current_doc.setdefault("tools", []).append(
+                    {"path": "/file-operations/ripgrep/search", "name": "search"}
+                )
+            elif "docs-rag" in line.lower() or "search_docs" in line:
+                current_doc.setdefault("tools", []).append(
+                    {"path": "/documentation/1c-docs-rag/search_docs", "name": "search_docs"}
+                )
+            elif "🆔 ID:" in line:
+                current_doc["doc_id"] = line.split("`")[1] if "`" in line else ""
+            elif "Релевантность:" in line:
                 try:
-                    current_doc["relevance"] = float(line.split(':')[1].split()[0])
+                    current_doc["relevance"] = float(line.split(":")[1].split()[0])
                 except:
                     pass
 
@@ -358,37 +441,34 @@ def parse_docs_recommendations(search_result: Any, task: str) -> list[dict]:
     return recommendations
 
 
-def get_suggested_tool(category: str) -> Optional[dict]:
+def get_suggested_tool(category: str) -> dict | None:
     """Получить подсказку по инструменту для категории"""
     suggestions = {
         "1c-development": {
             "path": "/1c-development/ast-grep-mcp/ast_grep",
-            "hint": "Для поиска процедур: pattern='Процедура $NAME($$$PARAMS)', language='bsl'"
+            "hint": "Для поиска процедур: pattern='Процедура $NAME($$$PARAMS)', language='bsl'",
         },
         "documentation": {
             "path": "/documentation/1c-docs-rag/search_docs",
-            "hint": "query='ваш поисковый запрос'"
+            "hint": "query='ваш поисковый запрос'",
         },
         "memory": {
             "path": "/memory/unified-memory/search_memory",
-            "hint": "query='что искать в памяти'"
+            "hint": "query='что искать в памяти'",
         },
         "file-operations": {
             "path": "/file-operations/ripgrep/search",
-            "hint": "pattern='regex', path='.'"
+            "hint": "pattern='regex', path='.'",
         },
         "reasoning": {
             "path": "/reasoning/sequential-thinking/sequentialthinking",
-            "hint": "thought='первый шаг анализа', thoughtNumber=1, totalThoughts=5"
+            "hint": "thought='первый шаг анализа', thoughtNumber=1, totalThoughts=5",
         },
         "code-analysis": {
             "path": "/code-analysis/serena/find_symbol",
-            "hint": "name_path='ClassName/method_name'"
+            "hint": "name_path='ClassName/method_name'",
         },
-        "web": {
-            "path": "/web/brave/brave_web_search",
-            "hint": "query='поисковый запрос'"
-        }
+        "web": {"path": "/web/brave/brave_web_search", "hint": "query='поисковый запрос'"},
     }
     return suggestions.get(category)
 
@@ -416,7 +496,7 @@ async def handle_get_tools(arguments: dict) -> dict[str, Any]:
 
     # Если это уровень сервера - загружаем и получаем реальные инструменты
     if info.get("type") == "tools":
-        parts = path.strip('/').split('/')
+        parts = path.strip("/").split("/")
         if len(parts) >= 2:
             server_name = parts[1]
             server = await loader.get_server(server_name)
@@ -425,11 +505,15 @@ async def handle_get_tools(arguments: dict) -> dict[str, Any]:
                 # Форматируем инструменты для отображения
                 tools_info = []
                 for tool in server.tools:
-                    tools_info.append({
-                        "name": tool.get("name", "unknown"),
-                        "description": tool.get("description", "")[:200] + "..." if len(tool.get("description", "")) > 200 else tool.get("description", ""),
-                        "full_path": f"{path}/{tool.get('name', 'unknown')}"
-                    })
+                    tools_info.append(
+                        {
+                            "name": tool.get("name", "unknown"),
+                            "description": tool.get("description", "")[:200] + "..."
+                            if len(tool.get("description", "")) > 200
+                            else tool.get("description", ""),
+                            "full_path": f"{path}/{tool.get('name', 'unknown')}",
+                        }
+                    )
                 info["items"] = tools_info
                 info["tools_count"] = len(tools_info)
 
@@ -472,7 +556,7 @@ async def handle_execute_tool(arguments: dict) -> Any:
         if server and server.tools:
             return {
                 "message": f"No tool specified. Available tools in {server_name}:",
-                "tools": [t.get("name") for t in server.tools]
+                "tools": [t.get("name") for t in server.tools],
             }
         return {"error": f"Could not load server: {server_name}"}
 
@@ -497,8 +581,7 @@ async def handle_execute_tool(arguments: dict) -> Any:
                     return await loader.execute_tool(srv, tl, args)
 
                 intercept_result = await intercept_tool_call(
-                    server_name, tool_name, tool_args,
-                    execute_direct=direct_execute
+                    server_name, tool_name, tool_args, execute_direct=direct_execute
                 )
 
                 if intercept_result.intercepted:
@@ -510,17 +593,21 @@ async def handle_execute_tool(arguments: dict) -> Any:
                         )
 
                     # Для Category B добавляем метаданные о валидации
-                    if tool_category == ToolCategory.B and isinstance(intercept_result.result, dict):
+                    if tool_category == ToolCategory.B and isinstance(
+                        intercept_result.result, dict
+                    ):
                         if intercept_result.result.get("needs_validation"):
                             return {
                                 "zai_result": intercept_result.result.get("zai_result"),
                                 "validation_required": True,
-                                "validation_prompt": intercept_result.result.get("validation_prompt"),
+                                "validation_prompt": intercept_result.result.get(
+                                    "validation_prompt"
+                                ),
                                 "routing": {
                                     "category": tool_category.value,
                                     "provider": intercept_result.provider,
-                                    "latency_ms": intercept_result.latency_ms
-                                }
+                                    "latency_ms": intercept_result.latency_ms,
+                                },
                             }
 
                     return {
@@ -528,8 +615,8 @@ async def handle_execute_tool(arguments: dict) -> Any:
                         "routing": {
                             "category": tool_category.value,
                             "provider": intercept_result.provider,
-                            "latency_ms": intercept_result.latency_ms
-                        }
+                            "latency_ms": intercept_result.latency_ms,
+                        },
                     }
 
             # Category C или неперехваченный - прямое выполнение
@@ -552,7 +639,7 @@ def setup():
     log_stderr("[lazy-mcp] Starting Lazy-MCP Server...")
 
     # Определяем путь к конфигурации (приоритет: env > default)
-    env_config = os.environ.get('LAZY_MCP_CONFIG')
+    env_config = os.environ.get("LAZY_MCP_CONFIG")
     if env_config:
         config_path = Path(env_config)
         log_stderr(f"[lazy-mcp] Using config from LAZY_MCP_CONFIG: {config_path}")
@@ -571,8 +658,12 @@ def setup():
     registry = Registry(config_path)
     loader = ServerLoader(registry, max_active=5)
 
-    log_stderr(f"[lazy-mcp] Loaded {len(registry.servers)} servers in {len(registry.categories)} categories")
-    log_stderr("[lazy-mcp] Ready. Exposing 3 meta-tools: recommend_tools, get_tools_in_category, execute_tool")
+    log_stderr(
+        f"[lazy-mcp] Loaded {len(registry.servers)} servers in {len(registry.categories)} categories"
+    )
+    log_stderr(
+        "[lazy-mcp] Ready. Exposing 3 meta-tools: recommend_tools, get_tools_in_category, execute_tool"
+    )
 
 
 def create_default_config(path: Path) -> None:
@@ -646,7 +737,7 @@ categories:
         description: "Пошаговое структурированное мышление"
         type: "npx"
 """
-    with open(path, 'w', encoding='utf-8') as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(default_config)
 
 

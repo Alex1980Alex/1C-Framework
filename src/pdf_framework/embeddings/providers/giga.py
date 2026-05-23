@@ -8,6 +8,15 @@ Uses instruction-based prompting (E5-instruct family):
 - Passage: plain text (no prefix)
 
 Also supports BGE-M3 as fallback (568M params, 100+ languages, dense+sparse).
+
+**Status (2026-04-30):** Path D alternative. Production uses Qwen3-Embedding-8B (Phase 8,
+MTEB-Code 80.68) via TEI. Giga may outperform on pure Russian text (ruMTEB 69.1) but
+has not been benchmarked on code-heavy queries. Activate via EMBEDDING__PROVIDER=giga.
+
+Trade-offs vs Qwen3:
+- Lower memory: 1024d vs 4096d (4× savings)
+- Untested on code-heavy queries (BSL/Python)
+- Roadmap §32.6.2: potential A/B vs Qwen3+Late on 50q golden-set
 """
 
 import asyncio

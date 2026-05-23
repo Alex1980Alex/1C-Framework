@@ -4,21 +4,20 @@ Implements recovery strategies, recovery plans, and
 checkpoint-based restoration for pipeline failures.
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Optional, Any, Dict, List, Callable, Awaitable, Union
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
+from .error_handler import ErrorCategory, ErrorContext, ErrorSeverity
 from .state_manager import (
-    StateManager,
-    StateCheckpoint,
-    CheckpointMetadata,
-    PipelinePhase,
     CheckpointType,
+    PipelinePhase,
+    StateManager,
 )
-from .error_handler import ErrorContext, ErrorSeverity, ErrorCategory
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +25,14 @@ logger = logging.getLogger(__name__)
 class RecoveryStrategy(Enum):
     """Recovery strategy types."""
 
-    RESTART_PHASE = "restart_phase"       # Restart current phase
-    RESTART_PIPELINE = "restart_pipeline" # Restart entire pipeline
+    RESTART_PHASE = "restart_phase"  # Restart current phase
+    RESTART_PIPELINE = "restart_pipeline"  # Restart entire pipeline
     RESUME_FROM_CHECKPOINT = "resume_from_checkpoint"  # Resume from last checkpoint
     SKIP_AND_CONTINUE = "skip_and_continue"  # Skip failed step, continue
-    ROLLBACK_PHASE = "rollback_phase"     # Rollback to previous phase
+    ROLLBACK_PHASE = "rollback_phase"  # Rollback to previous phase
     RETRY_WITH_MODIFICATION = "retry_with_modification"  # Retry with changed params
     ESCALATE_TO_HUMAN = "escalate_to_human"  # Require human intervention
-    ABORT = "abort"                       # Abort pipeline execution
+    ABORT = "abort"  # Abort pipeline execution
 
 
 class RecoveryAction(Enum):
@@ -57,8 +56,8 @@ class RecoveryStep:
 
     action: RecoveryAction
     description: str
-    params: Dict[str, Any] = field(default_factory=dict)
-    timeout_seconds: Optional[float] = None
+    params: dict[str, Any] = field(default_factory=dict)
+    timeout_seconds: float | None = None
     required: bool = True  # If False, can skip on failure
     order: int = 0
 
@@ -72,14 +71,14 @@ class RecoveryPlan:
     created_at: datetime = field(default_factory=datetime.now)
 
     # Target
-    target_phase: Optional[PipelinePhase] = None
-    target_checkpoint_id: Optional[str] = None
+    target_phase: PipelinePhase | None = None
+    target_checkpoint_id: str | None = None
 
     # Steps
-    steps: List[RecoveryStep] = field(default_factory=list)
+    steps: list[RecoveryStep] = field(default_factory=list)
 
     # Context
-    error_context: Optional[ErrorContext] = None
+    error_context: ErrorContext | None = None
     reason: str = ""
 
     # Constraints
@@ -91,12 +90,7 @@ class RecoveryPlan:
     notify_on_complete: bool = True
     require_confirmation: bool = False
 
-    def add_step(
-        self,
-        action: RecoveryAction,
-        description: str,
-        **kwargs
-    ) -> "RecoveryPlan":
+    def add_step(self, action: RecoveryAction, description: str, **kwargs) -> "RecoveryPlan":
         """Add a step to the plan.
 
         Args:
@@ -108,16 +102,11 @@ class RecoveryPlan:
             Self for chaining
         """
         order = len(self.steps)
-        step = RecoveryStep(
-            action=action,
-            description=description,
-            order=order,
-            **kwargs
-        )
+        step = RecoveryStep(action=action, description=description, order=order, **kwargs)
         self.steps.append(step)
         return self
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "plan_id": self.plan_id,
@@ -149,7 +138,7 @@ class RecoveryResult:
     success: bool
     plan: RecoveryPlan
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     # Execution details
     steps_completed: int = 0
@@ -157,17 +146,17 @@ class RecoveryResult:
     steps_skipped: int = 0
 
     # State
-    restored_phase: Optional[PipelinePhase] = None
-    restored_checkpoint_id: Optional[str] = None
+    restored_phase: PipelinePhase | None = None
+    restored_checkpoint_id: str | None = None
 
     # Errors
-    errors: List[str] = field(default_factory=list)
-    final_error: Optional[str] = None
+    errors: list[str] = field(default_factory=list)
+    final_error: str | None = None
 
     # Output
     message: str = ""
     requires_human_action: bool = False
-    human_action_description: Optional[str] = None
+    human_action_description: str | None = None
 
     @property
     def duration_seconds(self) -> float:
@@ -176,7 +165,7 @@ class RecoveryResult:
             return (self.completed_at - self.started_at).total_seconds()
         return 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "success": self.success,
@@ -227,21 +216,18 @@ class RecoveryHandler:
     def __init__(
         self,
         state_manager: StateManager,
-        config: Optional[RecoveryConfig] = None,
+        config: RecoveryConfig | None = None,
     ):
         self._state_manager = state_manager
         self._config = config or RecoveryConfig()
 
         # Recovery history
         self._recovery_attempts: int = 0
-        self._recovery_history: List[RecoveryResult] = []
-        self._current_plan: Optional[RecoveryPlan] = None
+        self._recovery_history: list[RecoveryResult] = []
+        self._current_plan: RecoveryPlan | None = None
 
         # Action handlers
-        self._action_handlers: Dict[
-            RecoveryAction,
-            Callable[..., Awaitable[bool]]
-        ] = {
+        self._action_handlers: dict[RecoveryAction, Callable[..., Awaitable[bool]]] = {
             RecoveryAction.LOAD_CHECKPOINT: self._action_load_checkpoint,
             RecoveryAction.RESTORE_STATE: self._action_restore_state,
             RecoveryAction.RESET_PHASE: self._action_reset_phase,
@@ -255,9 +241,9 @@ class RecoveryHandler:
         }
 
         # Callbacks
-        self._on_recovery_start: Optional[Callable[[RecoveryPlan], None]] = None
-        self._on_recovery_complete: Optional[Callable[[RecoveryResult], None]] = None
-        self._on_escalation: Optional[Callable[[RecoveryResult], None]] = None
+        self._on_recovery_start: Callable[[RecoveryPlan], None] | None = None
+        self._on_recovery_complete: Callable[[RecoveryResult], None] | None = None
+        self._on_escalation: Callable[[RecoveryResult], None] | None = None
 
     @property
     def recovery_attempts(self) -> int:
@@ -265,12 +251,12 @@ class RecoveryHandler:
         return self._recovery_attempts
 
     @property
-    def current_plan(self) -> Optional[RecoveryPlan]:
+    def current_plan(self) -> RecoveryPlan | None:
         """Get current recovery plan."""
         return self._current_plan
 
     @property
-    def last_result(self) -> Optional[RecoveryResult]:
+    def last_result(self) -> RecoveryResult | None:
         """Get last recovery result."""
         return self._recovery_history[-1] if self._recovery_history else None
 
@@ -318,9 +304,9 @@ class RecoveryHandler:
     def create_plan(
         self,
         strategy: RecoveryStrategy,
-        error: Optional[ErrorContext] = None,
-        target_phase: Optional[PipelinePhase] = None,
-        target_checkpoint_id: Optional[str] = None,
+        error: ErrorContext | None = None,
+        target_phase: PipelinePhase | None = None,
+        target_checkpoint_id: str | None = None,
     ) -> RecoveryPlan:
         """Create a recovery plan.
 
@@ -402,9 +388,7 @@ class RecoveryHandler:
 
         elif strategy == RecoveryStrategy.ROLLBACK_PHASE:
             # Find previous phase
-            prev_phase = self._get_previous_phase(
-                target_phase or self._state_manager.current_phase
-            )
+            prev_phase = self._get_previous_phase(target_phase or self._state_manager.current_phase)
             plan.add_step(
                 RecoveryAction.RESET_PHASE,
                 f"Откат к фазе {prev_phase.value}",
@@ -514,10 +498,7 @@ class RecoveryHandler:
             except Exception as e:
                 logger.error(f"Error in recovery start callback: {e}")
 
-        logger.info(
-            f"Starting recovery plan: {plan.plan_id} "
-            f"(strategy={plan.strategy.value})"
-        )
+        logger.info(f"Starting recovery plan: {plan.plan_id} " f"(strategy={plan.strategy.value})")
 
         try:
             # Execute steps with timeout
@@ -526,7 +507,7 @@ class RecoveryHandler:
                 timeout=plan.timeout_seconds,
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             result.final_error = f"Recovery timed out after {plan.timeout_seconds}s"
             result.errors.append(result.final_error)
             logger.error(result.final_error)
@@ -606,7 +587,7 @@ class RecoveryHandler:
                         result.steps_skipped += 1
                         logger.warning(f"Optional step skipped: {step.description}")
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 result.steps_failed += 1
                 result.errors.append(f"Step timed out: {step.description}")
                 if step.required:
@@ -732,10 +713,7 @@ class RecoveryHandler:
         result: RecoveryResult,
     ) -> bool:
         """Notify user about recovery status."""
-        message = step.params.get(
-            "message",
-            f"Pipeline recovery: {plan.strategy.value}"
-        )
+        message = step.params.get("message", f"Pipeline recovery: {plan.strategy.value}")
         logger.info(f"User notification: {message}")
         # In real implementation, this would send notification
         return True
@@ -805,7 +783,7 @@ class RecoveryHandler:
 
     async def recover_from_checkpoint(
         self,
-        checkpoint_id: Optional[str] = None,
+        checkpoint_id: str | None = None,
     ) -> RecoveryResult:
         """Recover from a specific checkpoint.
 
@@ -825,7 +803,7 @@ class RecoveryHandler:
         """Reset recovery attempt counter."""
         self._recovery_attempts = 0
 
-    def get_history(self) -> List[RecoveryResult]:
+    def get_history(self) -> list[RecoveryResult]:
         """Get recovery history.
 
         Returns:

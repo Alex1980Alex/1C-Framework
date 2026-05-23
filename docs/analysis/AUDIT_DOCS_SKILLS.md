@@ -1,22 +1,354 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-04-04 19:27
+**Generated:** 2026-05-17 17:19
 
 ## Summary
 
 | Category | In Code | Doc Gaps | Skill Gaps | Doc Coverage | Skill Coverage |
 |----------|---------|----------|------------|-------------|----------------|
 | Agent Types | 5 | **0** | **0** | 100.0% | 100.0% |
+| bsl_tool | 33 | **32** | **0** | 3.0% | 100.0% |
 | CLI Commands | 17 | **0** | **0** | 100.0% | 100.0% |
-| Config Variables (.env) | 296 | **0** | **0** | 100.0% | 100.0% |
+| Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
 | REST API Endpoints | 92 | **0** | **0** | 100.0% | 100.0% |
+| hook | 54 | **33** | **0** | 38.9% | 100.0% |
 | MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
+| memory_subsystem | 60 | **39** | **0** | 35.0% | 100.0% |
 | Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
-| **TOTAL** | **439** | **0** | **0** | | |
+| wiki_component | 5 | **0** | **0** | 100.0% | 100.0% |
+| **TOTAL** | **593** | **104** | **0** | | |
+
+## Documentation Gaps (in code, NOT in docs)
+
+### bsl_tool (32 gaps)
+
+| Feature | Source | Should be in |
+|---------|--------|-------------|
+| `CallGraphStore` | `src\bsl\call_graph\store.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLStyleProfile` | `src\bsl\coding_assistant\style_extractor.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLStyleExtractor` | `src\bsl\coding_assistant\style_extractor.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `EvalResult` | `src\bsl\evaluation\metrics.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `ObjectInfo` | `src\bsl\knowledge_graph\metadata_extractor.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `MetadataExtractor` | `src\bsl\knowledge_graph\metadata_extractor.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `OAuth2BearerMiddleware` | `src\bsl\mcp_server\http_server.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `MCPHttpServer` | `src\bsl\mcp_server\http_server.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `MCPProxy` | `src\bsl\mcp_server\mcp_server.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `OneCClient` | `src\bsl\mcp_server\onec_client.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLASTParser` | `src\bsl\parser\bsl_ast_parser.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLChunk` | `src\bsl\parser\bsl_chunker.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLChunker` | `src\bsl\parser\bsl_chunker.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLContextEnricher` | `src\bsl\parser\context_enricher.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `SymbolType` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `CompilationDirective` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `ModuleType` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLParam` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLCall` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLSymbol` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLVariable` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLRegion` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLModule` | `src\bsl\parser\models.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLSearchSettings` | `src\bsl\semantic_search\config.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `RouterResult` | `src\bsl\semantic_search\hybrid_router.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `SonarQubeConfig` | `src\bsl\sonar\config_manager.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `ConfigManager` | `src\bsl\sonar\config_manager.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `Issue` | `src\bsl\sonar\report_generator.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `AnalysisReport` | `src\bsl\sonar\report_generator.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `ReportGenerator` | `src\bsl\sonar\report_generator.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `BSLRule` | `src\bsl\sonar\rules_manager.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+| `RulesManager` | `src\bsl\sonar\rules_manager.py` | `16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+
+### hook (33 gaps)
+
+| Feature | Source | Should be in |
+|---------|--------|-------------|
+| `analyze-1c-task-preflight` | `.claude\hooks\analyze-1c-task-preflight.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `audit-coverage-check` | `.claude\hooks\audit-coverage-check.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `bsl-tool-router` | `.claude\hooks\bsl-tool-router.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `bulk-action-guard` | `.claude\hooks\bulk-action-guard.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `code-review-enforcer` | `.claude\hooks\code-review-enforcer.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `delegation-outcome-stop` | `.claude\hooks\delegation-outcome-stop.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `delegation-outcome-tracker` | `.claude\hooks\delegation-outcome-tracker.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `docs-change-tracker` | `.claude\hooks\docs-change-tracker.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `implement-1c-task-preflight` | `.claude\hooks\implement-1c-task-preflight.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `implement-1c-task-smoke-stop-alert` | `.claude\hooks\implement-1c-task-smoke-stop-alert.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `logging-status-banner` | `.claude\hooks\logging-status-banner.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `mcp-invocation-logger` | `.claude\hooks\mcp-invocation-logger.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `memory-first-hook` | `.claude\hooks\memory-first-hook.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `memory-sync` | `.claude\hooks\memory-sync.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-auto-git-save` | `.claude\hooks\posttooluse-auto-git-save.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-bash-errors` | `.claude\hooks\posttooluse-bash-errors.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-delegation-tracker` | `.claude\hooks\posttooluse-delegation-tracker.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-docs-tracker` | `.claude\hooks\posttooluse-docs-tracker.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-quality-feedback` | `.claude\hooks\posttooluse-quality-feedback.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-skill-metrics` | `.claude\hooks\posttooluse-skill-metrics.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `posttooluse-web-cache` | `.claude\hooks\posttooluse-web-cache.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `ralph_activator` | `.claude\hooks\ralph_activator.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `search-optimizer` | `.claude\hooks\search-optimizer.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `session-context-enforcer` | `.claude\hooks\session-context-enforcer.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `session-memory-save` | `.claude\hooks\session-memory-save.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `session-mypy-banner` | `.claude\hooks\session-mypy-banner.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `skill-quality-monitor` | `.claude\hooks\skill-quality-monitor.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `skill-usage-metrics` | `.claude\hooks\skill-usage-metrics.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `slash-command-tracker` | `.claude\hooks\slash-command-tracker.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `submodule-status-check` | `.claude\hooks\submodule-status-check.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `todo-sync` | `.claude\hooks\todo-sync.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `z-ai-delegation-enforcer` | `.claude\hooks\z-ai-delegation-enforcer.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+| `z-ai-write-guard` | `.claude\hooks\z-ai-write-guard.py` | `09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
+
+### memory_subsystem (39 gaps)
+
+| Feature | Source | Should be in |
+|---------|--------|-------------|
+| `LinkType` | `src\memory\orchestrator\link_registry.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `EntityLink` | `src\memory\orchestrator\link_registry.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `RelatedEntity` | `src\memory\orchestrator\link_registry.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `AiMemorySearchAdapter` | `src\memory\orchestrator\memory_orchestrator.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `VectorMemorySearchAdapter` | `src\memory\orchestrator\memory_orchestrator.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `SkillLearningSearchAdapter` | `src\memory\orchestrator\memory_orchestrator.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `RoutingDecision` | `src\memory\orchestrator\memory_router.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `RoutingStats` | `src\memory\orchestrator\memory_router.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ContentClassifier` | `src\memory\orchestrator\memory_router.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `PropagationEvent` | `src\memory\orchestrator\propagation_engine.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `PropagationResult` | `src\memory\orchestrator\propagation_engine.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `IDRegistry` | `src\memory\orchestrator\unified_id.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `LinkedEntity` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `SearchResultItem` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `UnifiedSearchResult` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `BaseSearchAdapter` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `Deduplicator` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `LinkEnricher` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `UnifiedSearchEngine` | `src\memory\orchestrator\unified_search.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `PatternType` | `src\memory\vector_memory\models.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ConfidenceLevel` | `src\memory\vector_memory\models.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `EvidenceSource` | `src\memory\vector_memory\models.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `LearnedPattern` | `src\memory\vector_memory\models.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `PatternSearchResult` | `src\memory\vector_memory\models.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `LearningStats` | `src\memory\vector_memory\models.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `CacheEntry` | `src\memory\infrastructure\cache.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `LRUCache` | `src\memory\infrastructure\cache.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `CircuitState` | `src\memory\infrastructure\circuit_breaker.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `CircuitStats` | `src\memory\infrastructure\circuit_breaker.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `CircuitBreakerRegistry` | `src\memory\infrastructure\circuit_breaker.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ConflictStrategy` | `src\memory\infrastructure\conflict_resolver.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ConflictRecord` | `src\memory\infrastructure\conflict_resolver.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ConflictResult` | `src\memory\infrastructure\conflict_resolver.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `Subscription` | `src\memory\infrastructure\event_bus.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `EventBusStats` | `src\memory\infrastructure\event_bus.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `MetricsCollector` | `src\memory\infrastructure\metrics.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `MetricsTimer` | `src\memory\infrastructure\metrics.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ManagedSubscription` | `src\memory\infrastructure\subscription_manager.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `SubscriptionManager` | `src\memory\infrastructure\subscription_manager.py` | `27_UNIFIED_MEMORY/27.1_Обзор.md, 27_UNIFIED_MEMORY/27.2_Оркестратор.md, 27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 
 ## Action Items
 
 ### Documentation updates needed:
+
+**`09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md`** — 33 missing features:
+  - [ ] Add `analyze-1c-task-preflight` (from `.claude\hooks\analyze-1c-task-preflight.py`)
+  - [ ] Add `audit-coverage-check` (from `.claude\hooks\audit-coverage-check.py`)
+  - [ ] Add `bsl-tool-router` (from `.claude\hooks\bsl-tool-router.py`)
+  - [ ] Add `bulk-action-guard` (from `.claude\hooks\bulk-action-guard.py`)
+  - [ ] Add `code-review-enforcer` (from `.claude\hooks\code-review-enforcer.py`)
+  - [ ] Add `delegation-outcome-stop` (from `.claude\hooks\delegation-outcome-stop.py`)
+  - [ ] Add `delegation-outcome-tracker` (from `.claude\hooks\delegation-outcome-tracker.py`)
+  - [ ] Add `docs-change-tracker` (from `.claude\hooks\docs-change-tracker.py`)
+  - [ ] Add `implement-1c-task-preflight` (from `.claude\hooks\implement-1c-task-preflight.py`)
+  - [ ] Add `implement-1c-task-smoke-stop-alert` (from `.claude\hooks\implement-1c-task-smoke-stop-alert.py`)
+  - [ ] Add `logging-status-banner` (from `.claude\hooks\logging-status-banner.py`)
+  - [ ] Add `mcp-invocation-logger` (from `.claude\hooks\mcp-invocation-logger.py`)
+  - [ ] Add `memory-first-hook` (from `.claude\hooks\memory-first-hook.py`)
+  - [ ] Add `memory-sync` (from `.claude\hooks\memory-sync.py`)
+  - [ ] Add `posttooluse-auto-git-save` (from `.claude\hooks\posttooluse-auto-git-save.py`)
+  - [ ] Add `posttooluse-bash-errors` (from `.claude\hooks\posttooluse-bash-errors.py`)
+  - [ ] Add `posttooluse-delegation-tracker` (from `.claude\hooks\posttooluse-delegation-tracker.py`)
+  - [ ] Add `posttooluse-docs-tracker` (from `.claude\hooks\posttooluse-docs-tracker.py`)
+  - [ ] Add `posttooluse-quality-feedback` (from `.claude\hooks\posttooluse-quality-feedback.py`)
+  - [ ] Add `posttooluse-skill-metrics` (from `.claude\hooks\posttooluse-skill-metrics.py`)
+  - ... and 13 more
+
+**`13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md`** — 33 missing features:
+  - [ ] Add `analyze-1c-task-preflight` (from `.claude\hooks\analyze-1c-task-preflight.py`)
+  - [ ] Add `audit-coverage-check` (from `.claude\hooks\audit-coverage-check.py`)
+  - [ ] Add `bsl-tool-router` (from `.claude\hooks\bsl-tool-router.py`)
+  - [ ] Add `bulk-action-guard` (from `.claude\hooks\bulk-action-guard.py`)
+  - [ ] Add `code-review-enforcer` (from `.claude\hooks\code-review-enforcer.py`)
+  - [ ] Add `delegation-outcome-stop` (from `.claude\hooks\delegation-outcome-stop.py`)
+  - [ ] Add `delegation-outcome-tracker` (from `.claude\hooks\delegation-outcome-tracker.py`)
+  - [ ] Add `docs-change-tracker` (from `.claude\hooks\docs-change-tracker.py`)
+  - [ ] Add `implement-1c-task-preflight` (from `.claude\hooks\implement-1c-task-preflight.py`)
+  - [ ] Add `implement-1c-task-smoke-stop-alert` (from `.claude\hooks\implement-1c-task-smoke-stop-alert.py`)
+  - [ ] Add `logging-status-banner` (from `.claude\hooks\logging-status-banner.py`)
+  - [ ] Add `mcp-invocation-logger` (from `.claude\hooks\mcp-invocation-logger.py`)
+  - [ ] Add `memory-first-hook` (from `.claude\hooks\memory-first-hook.py`)
+  - [ ] Add `memory-sync` (from `.claude\hooks\memory-sync.py`)
+  - [ ] Add `posttooluse-auto-git-save` (from `.claude\hooks\posttooluse-auto-git-save.py`)
+  - [ ] Add `posttooluse-bash-errors` (from `.claude\hooks\posttooluse-bash-errors.py`)
+  - [ ] Add `posttooluse-delegation-tracker` (from `.claude\hooks\posttooluse-delegation-tracker.py`)
+  - [ ] Add `posttooluse-docs-tracker` (from `.claude\hooks\posttooluse-docs-tracker.py`)
+  - [ ] Add `posttooluse-quality-feedback` (from `.claude\hooks\posttooluse-quality-feedback.py`)
+  - [ ] Add `posttooluse-skill-metrics` (from `.claude\hooks\posttooluse-skill-metrics.py`)
+  - ... and 13 more
+
+**`16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md`** — 32 missing features:
+  - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
+  - [ ] Add `BSLStyleProfile` (from `src\bsl\coding_assistant\style_extractor.py`)
+  - [ ] Add `BSLStyleExtractor` (from `src\bsl\coding_assistant\style_extractor.py`)
+  - [ ] Add `EvalResult` (from `src\bsl\evaluation\metrics.py`)
+  - [ ] Add `ObjectInfo` (from `src\bsl\knowledge_graph\metadata_extractor.py`)
+  - [ ] Add `MetadataExtractor` (from `src\bsl\knowledge_graph\metadata_extractor.py`)
+  - [ ] Add `OAuth2BearerMiddleware` (from `src\bsl\mcp_server\http_server.py`)
+  - [ ] Add `MCPHttpServer` (from `src\bsl\mcp_server\http_server.py`)
+  - [ ] Add `MCPProxy` (from `src\bsl\mcp_server\mcp_server.py`)
+  - [ ] Add `OneCClient` (from `src\bsl\mcp_server\onec_client.py`)
+  - [ ] Add `BSLASTParser` (from `src\bsl\parser\bsl_ast_parser.py`)
+  - [ ] Add `BSLChunk` (from `src\bsl\parser\bsl_chunker.py`)
+  - [ ] Add `BSLChunker` (from `src\bsl\parser\bsl_chunker.py`)
+  - [ ] Add `BSLContextEnricher` (from `src\bsl\parser\context_enricher.py`)
+  - [ ] Add `SymbolType` (from `src\bsl\parser\models.py`)
+  - [ ] Add `CompilationDirective` (from `src\bsl\parser\models.py`)
+  - [ ] Add `ModuleType` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLParam` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
+  - ... and 12 more
+
+**`17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md`** — 32 missing features:
+  - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
+  - [ ] Add `BSLStyleProfile` (from `src\bsl\coding_assistant\style_extractor.py`)
+  - [ ] Add `BSLStyleExtractor` (from `src\bsl\coding_assistant\style_extractor.py`)
+  - [ ] Add `EvalResult` (from `src\bsl\evaluation\metrics.py`)
+  - [ ] Add `ObjectInfo` (from `src\bsl\knowledge_graph\metadata_extractor.py`)
+  - [ ] Add `MetadataExtractor` (from `src\bsl\knowledge_graph\metadata_extractor.py`)
+  - [ ] Add `OAuth2BearerMiddleware` (from `src\bsl\mcp_server\http_server.py`)
+  - [ ] Add `MCPHttpServer` (from `src\bsl\mcp_server\http_server.py`)
+  - [ ] Add `MCPProxy` (from `src\bsl\mcp_server\mcp_server.py`)
+  - [ ] Add `OneCClient` (from `src\bsl\mcp_server\onec_client.py`)
+  - [ ] Add `BSLASTParser` (from `src\bsl\parser\bsl_ast_parser.py`)
+  - [ ] Add `BSLChunk` (from `src\bsl\parser\bsl_chunker.py`)
+  - [ ] Add `BSLChunker` (from `src\bsl\parser\bsl_chunker.py`)
+  - [ ] Add `BSLContextEnricher` (from `src\bsl\parser\context_enricher.py`)
+  - [ ] Add `SymbolType` (from `src\bsl\parser\models.py`)
+  - [ ] Add `CompilationDirective` (from `src\bsl\parser\models.py`)
+  - [ ] Add `ModuleType` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLParam` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
+  - ... and 12 more
+
+**`27_UNIFIED_MEMORY/27.1_Обзор.md`** — 39 missing features:
+  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `VectorMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `SkillLearningSearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `RoutingDecision` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `RoutingStats` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `ContentClassifier` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `PropagationEvent` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `PropagationResult` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `IDRegistry` (from `src\memory\orchestrator\unified_id.py`)
+  - [ ] Add `LinkedEntity` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `PatternType` (from `src\memory\vector_memory\models.py`)
+  - ... and 19 more
+
+**`27_UNIFIED_MEMORY/27.2_Оркестратор.md`** — 39 missing features:
+  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `VectorMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `SkillLearningSearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `RoutingDecision` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `RoutingStats` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `ContentClassifier` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `PropagationEvent` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `PropagationResult` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `IDRegistry` (from `src\memory\orchestrator\unified_id.py`)
+  - [ ] Add `LinkedEntity` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `PatternType` (from `src\memory\vector_memory\models.py`)
+  - ... and 19 more
+
+**`27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md`** — 39 missing features:
+  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `VectorMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `SkillLearningSearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `RoutingDecision` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `RoutingStats` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `ContentClassifier` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `PropagationEvent` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `PropagationResult` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `IDRegistry` (from `src\memory\orchestrator\unified_id.py`)
+  - [ ] Add `LinkedEntity` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `PatternType` (from `src\memory\vector_memory\models.py`)
+  - ... and 19 more
+
+**`28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md`** — 32 missing features:
+  - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
+  - [ ] Add `BSLStyleProfile` (from `src\bsl\coding_assistant\style_extractor.py`)
+  - [ ] Add `BSLStyleExtractor` (from `src\bsl\coding_assistant\style_extractor.py`)
+  - [ ] Add `EvalResult` (from `src\bsl\evaluation\metrics.py`)
+  - [ ] Add `ObjectInfo` (from `src\bsl\knowledge_graph\metadata_extractor.py`)
+  - [ ] Add `MetadataExtractor` (from `src\bsl\knowledge_graph\metadata_extractor.py`)
+  - [ ] Add `OAuth2BearerMiddleware` (from `src\bsl\mcp_server\http_server.py`)
+  - [ ] Add `MCPHttpServer` (from `src\bsl\mcp_server\http_server.py`)
+  - [ ] Add `MCPProxy` (from `src\bsl\mcp_server\mcp_server.py`)
+  - [ ] Add `OneCClient` (from `src\bsl\mcp_server\onec_client.py`)
+  - [ ] Add `BSLASTParser` (from `src\bsl\parser\bsl_ast_parser.py`)
+  - [ ] Add `BSLChunk` (from `src\bsl\parser\bsl_chunker.py`)
+  - [ ] Add `BSLChunker` (from `src\bsl\parser\bsl_chunker.py`)
+  - [ ] Add `BSLContextEnricher` (from `src\bsl\parser\context_enricher.py`)
+  - [ ] Add `SymbolType` (from `src\bsl\parser\models.py`)
+  - [ ] Add `CompilationDirective` (from `src\bsl\parser\models.py`)
+  - [ ] Add `ModuleType` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLParam` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
+  - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
+  - ... and 12 more
+
+**`32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md`** — 39 missing features:
+  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
+  - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `VectorMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `SkillLearningSearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
+  - [ ] Add `RoutingDecision` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `RoutingStats` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `ContentClassifier` (from `src\memory\orchestrator\memory_router.py`)
+  - [ ] Add `PropagationEvent` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `PropagationResult` (from `src\memory\orchestrator\propagation_engine.py`)
+  - [ ] Add `IDRegistry` (from `src\memory\orchestrator\unified_id.py`)
+  - [ ] Add `LinkedEntity` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `PatternType` (from `src\memory\vector_memory\models.py`)
+  - ... and 19 more
 
 ### Skill updates needed:
 
@@ -29,6 +361,42 @@
 - `rag` — `src\pdf_framework\agents\rag\agent.py`
 - `research_v2` — `src\pdf_framework\agents\research_v2\agent.py`
 - `multi` — `src\pdf_framework\agents\multi\orchestrator.py`
+
+### bsl_tool (33)
+
+- `CallGraphStore` — `src\bsl\call_graph\store.py`
+- `BSLStyleProfile` — `src\bsl\coding_assistant\style_extractor.py`
+- `BSLStyleExtractor` — `src\bsl\coding_assistant\style_extractor.py`
+- `EvalResult` — `src\bsl\evaluation\metrics.py`
+- `ObjectInfo` — `src\bsl\knowledge_graph\metadata_extractor.py`
+- `MetadataExtractor` — `src\bsl\knowledge_graph\metadata_extractor.py`
+- `Config` — `src\bsl\mcp_server\config.py`
+- `OAuth2BearerMiddleware` — `src\bsl\mcp_server\http_server.py`
+- `MCPHttpServer` — `src\bsl\mcp_server\http_server.py`
+- `MCPProxy` — `src\bsl\mcp_server\mcp_server.py`
+- `OneCClient` — `src\bsl\mcp_server\onec_client.py`
+- `BSLASTParser` — `src\bsl\parser\bsl_ast_parser.py`
+- `BSLChunk` — `src\bsl\parser\bsl_chunker.py`
+- `BSLChunker` — `src\bsl\parser\bsl_chunker.py`
+- `BSLContextEnricher` — `src\bsl\parser\context_enricher.py`
+- `SymbolType` — `src\bsl\parser\models.py`
+- `CompilationDirective` — `src\bsl\parser\models.py`
+- `ModuleType` — `src\bsl\parser\models.py`
+- `BSLParam` — `src\bsl\parser\models.py`
+- `BSLCall` — `src\bsl\parser\models.py`
+- `BSLSymbol` — `src\bsl\parser\models.py`
+- `BSLVariable` — `src\bsl\parser\models.py`
+- `BSLRegion` — `src\bsl\parser\models.py`
+- `BSLModule` — `src\bsl\parser\models.py`
+- `BSLSearchSettings` — `src\bsl\semantic_search\config.py`
+- `RouterResult` — `src\bsl\semantic_search\hybrid_router.py`
+- `SonarQubeConfig` — `src\bsl\sonar\config_manager.py`
+- `ConfigManager` — `src\bsl\sonar\config_manager.py`
+- `Issue` — `src\bsl\sonar\report_generator.py`
+- `AnalysisReport` — `src\bsl\sonar\report_generator.py`
+- `ReportGenerator` — `src\bsl\sonar\report_generator.py`
+- `BSLRule` — `src\bsl\sonar\rules_manager.py`
+- `RulesManager` — `src\bsl\sonar\rules_manager.py`
 
 ### CLI Commands (17)
 
@@ -50,7 +418,7 @@
 - `autorag` — `src/cli/main.py`
 - `feedback` — `src/cli/main.py`
 
-### Config Variables (.env) (296)
+### Config Variables (.env) (298)
 
 - `AGENT__MODEL` — `src\pdf_framework\config\agent.py`
 - `AGENT__TEMPERATURE` — `src\pdf_framework\config\agent.py`
@@ -87,6 +455,8 @@
 - `EMBEDDING__MODEL` — `src\pdf_framework\config\embedding.py`
 - `EMBEDDING__DIMENSIONS` — `src\pdf_framework\config\embedding.py`
 - `EMBEDDING__BATCH_SIZE` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__TEI_BASE_URL` — `src\pdf_framework\config\embedding.py`
+- `EMBEDDING__TEI_CLIENT_BATCH` — `src\pdf_framework\config\embedding.py`
 - `EMBEDDING__CACHE_ENABLED` — `src\pdf_framework\config\embedding.py`
 - `EMBEDDING__CACHE_DIR` — `src\pdf_framework\config\embedding.py`
 - `EMBEDDING__DEVICE` — `src\pdf_framework\config\embedding.py`
@@ -444,6 +814,63 @@
 - `POST /toc/{document_id}/generate-summaries` — `src\api\routes\toc.py`
 - `WEBSOCKET /websocket/ws/search` — `src\api\routes\websocket.py`
 
+### hook (54)
+
+- `analyze-1c-task-preflight` — `.claude\hooks\analyze-1c-task-preflight.py`
+- `approval-gate` — `.claude\hooks\approval-gate.py`
+- `audit-coverage-check` — `.claude\hooks\audit-coverage-check.py`
+- `auto-git-save-prompt` — `.claude\hooks\auto-git-save-prompt.py`
+- `auto-git-save` — `.claude\hooks\auto-git-save.py`
+- `bsl-tool-router` — `.claude\hooks\bsl-tool-router.py`
+- `bulk-action-guard` — `.claude\hooks\bulk-action-guard.py`
+- `code-review-enforcer` — `.claude\hooks\code-review-enforcer.py`
+- `code-skill-enforcer` — `.claude\hooks\code-skill-enforcer.py`
+- `code-verify-reminder` — `.claude\hooks\code-verify-reminder.py`
+- `decision-to-triad` — `.claude\hooks\decision-to-triad.py`
+- `delegation-outcome-stop` — `.claude\hooks\delegation-outcome-stop.py`
+- `delegation-outcome-tracker` — `.claude\hooks\delegation-outcome-tracker.py`
+- `docs-change-enforcer` — `.claude\hooks\docs-change-enforcer.py`
+- `docs-change-tracker` — `.claude\hooks\docs-change-tracker.py`
+- `document-persistence` — `.claude\hooks\document-persistence.py`
+- `ensure-docker-qdrant` — `.claude\hooks\ensure-docker-qdrant.py`
+- `factory-enforcer` — `.claude\hooks\factory-enforcer.py`
+- `git-commit-enforcer` — `.claude\hooks\git-commit-enforcer.py`
+- `implement-1c-task-preflight` — `.claude\hooks\implement-1c-task-preflight.py`
+- `implement-1c-task-smoke-stop-alert` — `.claude\hooks\implement-1c-task-smoke-stop-alert.py`
+- `knowledge-cache-reminder` — `.claude\hooks\knowledge-cache-reminder.py`
+- `logging-status-banner` — `.claude\hooks\logging-status-banner.py`
+- `mcp-invocation-logger` — `.claude\hooks\mcp-invocation-logger.py`
+- `memory-first-hook` — `.claude\hooks\memory-first-hook.py`
+- `memory-sync` — `.claude\hooks\memory-sync.py`
+- `posttooluse-auto-git-save` — `.claude\hooks\posttooluse-auto-git-save.py`
+- `posttooluse-bash-errors` — `.claude\hooks\posttooluse-bash-errors.py`
+- `posttooluse-delegation-tracker` — `.claude\hooks\posttooluse-delegation-tracker.py`
+- `posttooluse-docs-tracker` — `.claude\hooks\posttooluse-docs-tracker.py`
+- `posttooluse-quality-feedback` — `.claude\hooks\posttooluse-quality-feedback.py`
+- `posttooluse-skill-metrics` — `.claude\hooks\posttooluse-skill-metrics.py`
+- `posttooluse-web-cache` — `.claude\hooks\posttooluse-web-cache.py`
+- `ralph_activator` — `.claude\hooks\ralph_activator.py`
+- `ralph_wiggum_stop` — `.claude\hooks\ralph_wiggum_stop.py`
+- `research-task-detector` — `.claude\hooks\research-task-detector.py`
+- `root-clutter-guard` — `.claude\hooks\root-clutter-guard.py`
+- `search-optimizer` — `.claude\hooks\search-optimizer.py`
+- `session-context-enforcer` — `.claude\hooks\session-context-enforcer.py`
+- `session-memory-save` — `.claude\hooks\session-memory-save.py`
+- `session-mypy-banner` — `.claude\hooks\session-mypy-banner.py`
+- `skill-eval-enforcer-shell` — `.claude\hooks\skill-eval-enforcer-shell.py`
+- `skill-eval-enforcer` — `.claude\hooks\skill-eval-enforcer.py`
+- `skill-quality-monitor` — `.claude\hooks\skill-quality-monitor.py`
+- `skill-router` — `.claude\hooks\skill-router.py`
+- `skill-usage-metrics` — `.claude\hooks\skill-usage-metrics.py`
+- `slash-command-tracker` — `.claude\hooks\slash-command-tracker.py`
+- `submodule-status-check` — `.claude\hooks\submodule-status-check.py`
+- `task-enforcer` — `.claude\hooks\task-enforcer.py`
+- `task-protocol-enforcer` — `.claude\hooks\task-protocol-enforcer.py`
+- `task-protocol-observer` — `.claude\hooks\task-protocol-observer.py`
+- `todo-sync` — `.claude\hooks\todo-sync.py`
+- `z-ai-delegation-enforcer` — `.claude\hooks\z-ai-delegation-enforcer.py`
+- `z-ai-write-guard` — `.claude\hooks\z-ai-write-guard.py`
+
 ### MCP Tools (15)
 
 - `index_pdf` — `src/mcp_server/server.py`
@@ -462,6 +889,69 @@
 - `visual_hybrid_search` — `src/mcp_server/server.py`
 - `plan_execute` — `src/mcp_server/server.py`
 
+### memory_subsystem (60)
+
+- `LinkType` — `src\memory\orchestrator\link_registry.py`
+- `EntityLink` — `src\memory\orchestrator\link_registry.py`
+- `RelatedEntity` — `src\memory\orchestrator\link_registry.py`
+- `LinkRegistry` — `src\memory\orchestrator\link_registry.py`
+- `ContentType` — `src\memory\orchestrator\memcube.py`
+- `MemoryCube` — `src\memory\orchestrator\memcube.py`
+- `AiMemorySearchAdapter` — `src\memory\orchestrator\memory_orchestrator.py`
+- `VectorMemorySearchAdapter` — `src\memory\orchestrator\memory_orchestrator.py`
+- `SkillLearningSearchAdapter` — `src\memory\orchestrator\memory_orchestrator.py`
+- `MemoryOrchestrator` — `src\memory\orchestrator\memory_orchestrator.py`
+- `RoutingDecision` — `src\memory\orchestrator\memory_router.py`
+- `RoutingStats` — `src\memory\orchestrator\memory_router.py`
+- `ClassificationResult` — `src\memory\orchestrator\memory_router.py`
+- `ContentClassifier` — `src\memory\orchestrator\memory_router.py`
+- `MemoryRouter` — `src\memory\orchestrator\memory_router.py`
+- `PropagationEvent` — `src\memory\orchestrator\propagation_engine.py`
+- `PropagationResult` — `src\memory\orchestrator\propagation_engine.py`
+- `PropagationEngine` — `src\memory\orchestrator\propagation_engine.py`
+- `MemoryType` — `src\memory\orchestrator\unified_id.py`
+- `SourceServer` — `src\memory\orchestrator\unified_id.py`
+- `UnifiedID` — `src\memory\orchestrator\unified_id.py`
+- `IDRegistry` — `src\memory\orchestrator\unified_id.py`
+- `SearchOptions` — `src\memory\orchestrator\unified_search.py`
+- `LinkedEntity` — `src\memory\orchestrator\unified_search.py`
+- `SearchResultItem` — `src\memory\orchestrator\unified_search.py`
+- `UnifiedSearchResult` — `src\memory\orchestrator\unified_search.py`
+- `BaseSearchAdapter` — `src\memory\orchestrator\unified_search.py`
+- `ScoreNormalizer` — `src\memory\orchestrator\unified_search.py`
+- `RRFMerger` — `src\memory\orchestrator\unified_search.py`
+- `Deduplicator` — `src\memory\orchestrator\unified_search.py`
+- `Reranker` — `src\memory\orchestrator\unified_search.py`
+- `LinkEnricher` — `src\memory\orchestrator\unified_search.py`
+- `UnifiedSearchEngine` — `src\memory\orchestrator\unified_search.py`
+- `PatternType` — `src\memory\vector_memory\models.py`
+- `ConfidenceLevel` — `src\memory\vector_memory\models.py`
+- `EvidenceSource` — `src\memory\vector_memory\models.py`
+- `LearnedPattern` — `src\memory\vector_memory\models.py`
+- `PatternSearchResult` — `src\memory\vector_memory\models.py`
+- `LearningStats` — `src\memory\vector_memory\models.py`
+- `WikiDecayService` — `src\memory\librarian\wiki_decay.py`
+- `WikiPromoter` — `src\memory\librarian\wiki_promoter.py`
+- `CacheEntry` — `src\memory\infrastructure\cache.py`
+- `LRUCache` — `src\memory\infrastructure\cache.py`
+- `CircuitState` — `src\memory\infrastructure\circuit_breaker.py`
+- `CircuitStats` — `src\memory\infrastructure\circuit_breaker.py`
+- `CircuitBreaker` — `src\memory\infrastructure\circuit_breaker.py`
+- `CircuitBreakerRegistry` — `src\memory\infrastructure\circuit_breaker.py`
+- `ConflictStrategy` — `src\memory\infrastructure\conflict_resolver.py`
+- `ConflictRecord` — `src\memory\infrastructure\conflict_resolver.py`
+- `ConflictResult` — `src\memory\infrastructure\conflict_resolver.py`
+- `ConflictResolver` — `src\memory\infrastructure\conflict_resolver.py`
+- `Event` — `src\memory\infrastructure\event_bus.py`
+- `Subscription` — `src\memory\infrastructure\event_bus.py`
+- `EventBusStats` — `src\memory\infrastructure\event_bus.py`
+- `EventBus` — `src\memory\infrastructure\event_bus.py`
+- `EventStore` — `src\memory\infrastructure\event_store.py`
+- `MetricsCollector` — `src\memory\infrastructure\metrics.py`
+- `MetricsTimer` — `src\memory\infrastructure\metrics.py`
+- `ManagedSubscription` — `src\memory\infrastructure\subscription_manager.py`
+- `SubscriptionManager` — `src\memory\infrastructure\subscription_manager.py`
+
 ### Search Strategies (14)
 
 - `adaptive` — `src\pdf_framework\search\strategies\adaptive.py`
@@ -478,3 +968,11 @@
 - `vector` — `src\pdf_framework\search\strategies\vector_search.py`
 - `visual` — `src\pdf_framework\search\strategies\visual.py`
 - `web` — `src\pdf_framework\search\strategies\web_search.py`
+
+### wiki_component (5)
+
+- `WikiExporter` — `src\pdf_framework\indexing\wiki_exporter.py`
+- `ForwardSyncService` — `src\pdf_framework\indexing\wiki_exporter.py`
+- `IncrementalWikiSync` — `src\pdf_framework\indexing\wiki_exporter.py`
+- `ReverseSyncService` — `src\pdf_framework\indexing\wiki_exporter.py`
+- `WikiSearchIndexer` — `src\pdf_framework\indexing\wiki_exporter.py`

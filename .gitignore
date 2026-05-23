@@ -3,6 +3,13 @@
 .venv/
 venv/
 
+# Local scratch / backup directory (path migration backups, ad-hoc artefacts)
+.tmp/
+
+# Detached subprojects (own git history, not part of parent repo)
+configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/
+configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -12,6 +19,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 
 # Data (all DB files and large data)
 data/
@@ -73,13 +84,49 @@ temp_*.txt
 *.mcp-server.log
 mcp_debug.log
 bsl-semantic-diff-mcp.log
+# Rotated MCP logs (RotatingFileHandler produces mcp-server.log.<date>.<N>.gz)
+mcp-server.log.*
+*.log.*.gz
 
 # Build artifacts
 tools/*/build/
 infra/*/build/
 *.log
 
+# Obsidian (machine-specific)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/plugins/
+.obsidian/trash.json
+.obsidian/community-plugins.json
+.obsidian hotkeys.json
+
 test_all_phases_results.json
 cache/
 .scannerwork/
 logs/dump_cfg/
+
+# Z.AI backend switcher (contains API key)
+scripts/claude-backend/zai-config.json
+
+# Dev secrets and 1C platform artifacts (contain DB credentials in plaintext)
+# Note: fce77bbca already leaked CREATEINFOBASE + tmp/dev_creds_53196.txt + mcp-server.log
+# into local history — rotate the affected DB password before pushing this branch.
+CREATEINFOBASE
+tmp/dev_creds_*.txt
+/mcp-server.log
+
+# Claude Code local-scope settings — contain permission allowlists with
+# command literals (HF_TOKEN=..., OPENROUTER_API_KEY=...). Tracking this
+# file caused HF + OpenRouter secret leaks on 2026-05-10 (commits 035e48cc6,
+# e32c81df6, 3fad1ca7) — scrubbed via git-filter-repo, then untracked.
+# Always local-only — use env-var references in commands, never literals.
+.claude/settings.local.json
+**/*.local.json
+
+# 3rd-party tool distributions — should not live in source tree.
+# Use installers / package managers / LFS instead.
+tools/sonar-scanner-*/
+
+# OpenSpec lint report — генерируется scripts/openspec_lint_ci.py.
+openspec-lint-report.md

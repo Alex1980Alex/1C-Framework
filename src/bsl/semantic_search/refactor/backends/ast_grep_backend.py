@@ -6,6 +6,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+
+@runtime_checkable
+class PreFilter(Protocol):
+    """Structural type for pre-filters limiting matches to expected files."""
+
+    def allowed_files(self, old_name: str, module_hint: str | None = None) -> set[Path] | None: ...
+
+
 from ..types import (
     BackendError,
     FileEdit,
@@ -42,18 +50,26 @@ class AstGrepBackend:
     SUPPORTED_EXTENSIONS = (".bsl", ".os")
 
     _CONFIDENCE = {
-        "module_export_proc": 0.80,
-        "module_export_func": 0.80,
-        "module_local_proc": 0.75,
-        "module_local_func": 0.75,
-        "local_variable": 0.40,
-        "form_handler": 0.60,
+        "module_export_proc": 0.95,
+        "module_export_func": 0.95,
+        "module_local_proc": 0.95,
+        "module_local_func": 0.95,
+        "local_variable": 0.95,
+        "form_handler": 0.95,
         "unknown": 0.30,
     }
 
-    def __init__(self, runner: AstGrepRunner, workspace_root: Path) -> None:
+    def __init__(
+        self,
+        runner: AstGrepRunner,
+        workspace_root: Path,
+        prefilter: PreFilter | None = None,
+    ) -> None:
         self._runner = runner
         self._workspace_root = workspace_root.resolve()
+        self._prefilter = prefilter
+        self.last_prefilter_dropped: int = 0
+        self.last_prefilter_used: bool = False
 
     def can_handle(self, uri: str) -> bool:
         """True for .bsl and .os file URIs."""
@@ -65,6 +81,10 @@ class AstGrepBackend:
 
     def plan_rename(self, uri: str, line: int, character: int, new_name: str) -> WorkspaceEdit:
         """Extract identifier at (line, character), run ast-grep, build WorkspaceEdit."""
+        # Reset per-call telemetry counters early so callers reading the attrs
+        # after a raised BackendError do not see values leaked from a prior call.
+        self.last_prefilter_dropped = 0
+        self.last_prefilter_used = False
         path = self._uri_to_path(uri)
         if not path.exists():
             raise BackendError(f"file not found: {path}", code="file_not_found")
@@ -74,12 +94,14 @@ class AstGrepBackend:
             raise BackendError(f"cannot read file: {exc!r}", code="read_failed") from exc
 
         lines = text.splitlines()
-        if line < 0 or line >= len(lines):
+        # Convert 1-based line (from EDT-MCP/Serena) to 0-based index.
+        line_idx = line - 1 if line > 0 else line
+        if line_idx < 0 or line_idx >= len(lines):
             raise BackendError(
                 f"line {line} out of range (file has {len(lines)} lines)",
                 code="position_out_of_range",
             )
-        old_name = self._word_at(lines[line], character)
+        old_name = self._word_at(lines[line_idx], character)
         if not old_name:
             raise BackendError(
                 f"no identifier at line {line}, character {character}",
@@ -104,16 +126,23 @@ class AstGrepBackend:
     @staticmethod
     def _word_at(line_text: str, character: int) -> str:
         """Extract the identifier (Unicode word chars) at the given position."""
-        if character < 0 or character > len(line_text):
+        if character < 0 or character >= len(line_text):
             return ""
 
         def _is_id(ch: str) -> bool:
             return ch.isalnum() or ch == "_"
 
-        start = character
+        # If position is on whitespace, scan forward to find the identifier.
+        pos = character
+        while pos < len(line_text) and not _is_id(line_text[pos]):
+            pos += 1
+        if pos >= len(line_text):
+            return ""
+
+        start = pos
         while start > 0 and _is_id(line_text[start - 1]):
             start -= 1
-        end = character
+        end = pos
         while end < len(line_text) and _is_id(line_text[end]):
             end += 1
         return line_text[start:end]

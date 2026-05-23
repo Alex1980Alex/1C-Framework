@@ -25,9 +25,9 @@ export interface DocumentationToolConfig extends BaseToolConfig {
 export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
   readonly name = 'generate_documentation';
   readonly description = 'Generates documentation for a code repository by recursively analyzing directories and files';
-  
+
   private openRouterClient: OpenRouterClient;
-  
+
   /**
    * Creates a new documentation tool
    * @param apiKey OpenRouter API key (optional)
@@ -37,7 +37,7 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
   constructor(apiKey?: string, model?: string, updateExisting?: boolean) {
     // Get default config
     const config = getConfig();
-    
+
     // Create tool config
     const toolConfig: DocumentationToolConfig = {
       outputFilename: config.documentation.outputFilename,
@@ -47,13 +47,13 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
       topLevelPrompt: documentationPrompts.topLevelPrompt,
       withChildrenPrompt: documentationPrompts.withChildrenPrompt
     };
-    
+
     super(toolConfig);
-    
+
     // Initialize OpenRouter client
     this.openRouterClient = new OpenRouterClient(apiKey, model, true);
   }
-  
+
   /**
    * Generates documentation for a directory
    * @param directoryPath Path to the source directory
@@ -75,7 +75,7 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
     const docFilePath = path.join(targetDir, this.config.outputFilename);
     const existingDocumentation = this.readExistingFile(docFilePath);
     const isUpdate = existingDocumentation !== null;
-    
+
     // Skip generation if the file exists and updateExisting is false
     if (isUpdate && !this.config.updateExisting) {
       console.error(`Skipping documentation for ${directoryPath} - File exists and updateExisting is false`);
@@ -87,13 +87,13 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
         skipped: true
       };
     }
-    
+
     // Convert analyzed files to format expected by OpenRouterClient
     const files = analysisResult.analyzedFiles.map((file) => ({
       path: path.relative(directoryPath, file.path),
       content: file.content
     }));
-    
+
     try {
       // Check if this is a BSL file - use Russian prompts for 1C code
       const isBSLFile = analysisResult.analyzedFiles.some(file => file.path.toLowerCase().endsWith('.bsl'));
@@ -230,7 +230,7 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
         isTopLevel,
         childrenContent
       );
-      
+
       if (!genResult.successful) {
         return {
           outputPath: docFilePath,
@@ -240,13 +240,13 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
           isUpdate
         };
       }
-      
+
       // Ensure output directory exists (important when outputDir is different from source)
       await fs.promises.mkdir(targetDir, { recursive: true });
 
       // Write the generated documentation to file
       await fs.promises.writeFile(docFilePath, genResult.content, 'utf8');
-      
+
       return {
         outputPath: docFilePath,
         success: true,
@@ -263,7 +263,7 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
       };
     }
   }
-  
+
   /**
    * Creates fallback content for directories that exceed limits
    * @param directoryPath Path to the directory
@@ -275,13 +275,13 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
     analysisResult: AnalysisResult
   ): Promise<string> {
     const dirName = path.basename(directoryPath);
-    
+
     let content = `# ${dirName} - Documentation Skipped\n\n`;
-    
+
     if (analysisResult.limited && analysisResult.limitReason) {
       content += `## Reason\n\n${analysisResult.limitReason}\n\n`;
     }
-    
+
     if (analysisResult.analyzedFiles.length > 0) {
       content += `## Analyzed Files\n\n`;
       for (const file of analysisResult.analyzedFiles) {
@@ -289,7 +289,7 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
       }
       content += '\n';
     }
-    
+
     if (analysisResult.excludedFiles.length > 0) {
       content += `## Excluded Files\n\n`;
       for (const file of analysisResult.excludedFiles) {
@@ -297,14 +297,14 @@ export class DocumentationTool extends BaseTool<DocumentationToolConfig> {
       }
       content += '\n';
     }
-    
+
     content += `## How to Fix\n\n`;
     content += `You can manually document this directory by replacing this file with a proper documentation.md file.\n`;
     content += `Alternatively, you can increase the file limits in the tool configuration and run again.\n`;
-    
+
     return content;
   }
-  
+
   /**
    * Reads an existing file if it exists
    * @param filePath Path to the file

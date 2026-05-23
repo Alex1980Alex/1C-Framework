@@ -100,4 +100,3 @@ Implement Azure-specific error handling for authentication failures, endpoint co
 ### Description: Create comprehensive documentation for the Azure OpenAI provider integration
 ### Details:
 Update provider documentation to include Azure OpenAI setup instructions. Add configuration examples for Azure OpenAI environment variables. Include troubleshooting guidance for common Azure-specific issues. Document the required Azure resource creation process with references to Microsoft's documentation. Provide examples of valid configuration settings and explain each required parameter. Include information about Azure OpenAI model deployment requirements.
-

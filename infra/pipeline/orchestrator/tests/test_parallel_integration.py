@@ -10,48 +10,35 @@ Tests the complete workflow:
 4. Conflict resolution → ConflictReport
 """
 
-import pytest
+import asyncio
+import json
+import tempfile
 from datetime import datetime
 from pathlib import Path
-import tempfile
-import json
-import asyncio
 
+import pytest
 from models import (
-    TaskNode,
-    TaskGraph,
-    ParallelGroup,
-    MergeStrategy,
     Conflict,
-    ConflictType,
     ConflictResolution,
-    TaskStatus,
+    ConflictType,
+    MergeStrategy,
+    TaskGraph,
+    TaskNode,
 )
-from .task_decomposer import (
-    TaskDecomposer,
-    DecompositionPattern,
-    ResourcePattern,
-    decompose_task,
-    find_parallel_groups,
-    build_dependency_graph,
-    analyze_parallelism,
-)
+
 from .parallel_executor import (
-    ParallelExecutor,
-    TaskResult,
+    ExecutionProgress,
     ExecutionReport,
     ExecutionState,
-    ExecutionProgress,
     TaskExecutorInterface,
-    MockTaskExecutor,
-    execute_graph,
+    TaskResult,
     run_graph_sync,
 )
-
 
 # =============================================================================
 # Helper: Custom Task Executor for Tests
 # =============================================================================
+
 
 class CallableTaskExecutor(TaskExecutorInterface):
     """Task executor that wraps a callable for testing."""
@@ -99,26 +86,22 @@ class CallableTaskExecutor(TaskExecutorInterface):
                 completed_at=completed_at,
                 execution_time_ms=execution_time_ms,
             )
-from .result_merger import (
-    ResultMerger,
-    MergeResult,
-    MergedOutput,
-    MergeStatus,
-    merge_results,
-)
+
+
 from .conflict_resolver import (
     ConflictResolver,
-    ResolutionStrategy,
     ResolutionRule,
-    ConflictReport,
-    resolve_conflicts,
+    ResolutionStrategy,
     create_default_rules,
 )
-
+from .result_merger import (
+    ResultMerger,
+)
 
 # =============================================================================
 # Integration Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def simple_task_graph():
@@ -208,22 +191,19 @@ def complex_task_graph():
 
     # Wave 2: Three tasks depending on Wave 1
     t3 = TaskNode(
-        id="T3",
-        name="Load Data",
-        resources_read={"db:schema"},
-        resources_write={"db:data"}
+        id="T3", name="Load Data", resources_read={"db:schema"}, resources_write={"db:data"}
     )
     t4 = TaskNode(
         id="T4",
         name="Init Cache",
         resources_read={"cache:config"},
-        resources_write={"cache:entries"}
+        resources_write={"cache:entries"},
     )
     t5 = TaskNode(
         id="T5",
         name="Config API",
         resources_read={"db:schema", "cache:config"},
-        resources_write={"api:config"}
+        resources_write={"api:config"},
     )
 
     # Wave 3: Final task
@@ -231,7 +211,7 @@ def complex_task_graph():
         id="T6",
         name="Start Server",
         resources_read={"db:data", "cache:entries", "api:config"},
-        resources_write={"server:state"}
+        resources_write={"server:state"},
     )
 
     for t in [t1, t2, t3, t4, t5, t6]:
@@ -252,6 +232,7 @@ def complex_task_graph():
 # =============================================================================
 # Test: Task Decomposition → Parallel Groups
 # =============================================================================
+
 
 class TestTaskDecompositionIntegration:
     """Test task decomposition creates correct parallel groups."""
@@ -291,11 +272,13 @@ class TestTaskDecompositionIntegration:
 # Test: Parallel Execution
 # =============================================================================
 
+
 class TestParallelExecutionIntegration:
     """Test parallel task execution."""
 
     def test_execute_simple_graph(self, simple_task_graph):
         """Test executing simple parallel tasks."""
+
         # Create mock task handler
         def task_handler(task: TaskNode):
             return {"task_id": task.id, "result": f"Output from {task.name}"}
@@ -310,6 +293,7 @@ class TestParallelExecutionIntegration:
 
     def test_execute_with_failure(self, simple_task_graph):
         """Test execution handles task failures."""
+
         def failing_handler(task: TaskNode):
             if task.id == "T1":
                 raise Exception("Task T1 failed")
@@ -361,6 +345,7 @@ class TestParallelExecutionIntegration:
 # Test: Result Merging
 # =============================================================================
 
+
 class TestResultMergingIntegration:
     """Test merging results from parallel execution."""
 
@@ -406,11 +391,7 @@ class TestResultMergingIntegration:
             project_id="TEST",
             graph_id="TEST-exec",
             state=ExecutionState.COMPLETED,
-            progress=ExecutionProgress(
-                total_tasks=2,
-                completed_tasks=1,
-                failed_tasks=1
-            ),
+            progress=ExecutionProgress(total_tasks=2, completed_tasks=1, failed_tasks=1),
             results=results,
         )
 
@@ -429,6 +410,7 @@ class TestResultMergingIntegration:
 
         # Create a parallel group with both tasks to test conflict detection
         from .models import ParallelGroup
+
         group = ParallelGroup(
             id="conflict_group",
             tasks=list(conflicting_task_graph.tasks.values()),
@@ -445,6 +427,7 @@ class TestResultMergingIntegration:
 # =============================================================================
 # Test: Conflict Resolution
 # =============================================================================
+
 
 class TestConflictResolutionIntegration:
     """Test conflict detection and resolution."""
@@ -496,16 +479,20 @@ class TestConflictResolutionIntegration:
         }
 
         resolver = ConflictResolver(default_strategy=ResolutionStrategy.TAKE_FIRST)
-        resolver.add_rule(ResolutionRule(
-            resource_pattern=r"file:.*\.bsl$",
-            conflict_type=ConflictType.WRITE_WRITE,
-            strategy=ResolutionStrategy.TAKE_LAST,  # BSL: take last
-        ))
-        resolver.add_rule(ResolutionRule(
-            resource_pattern=r"file:.*\.json$",
-            conflict_type=ConflictType.WRITE_WRITE,
-            strategy=ResolutionStrategy.MERGE,  # JSON: merge
-        ))
+        resolver.add_rule(
+            ResolutionRule(
+                resource_pattern=r"file:.*\.bsl$",
+                conflict_type=ConflictType.WRITE_WRITE,
+                strategy=ResolutionStrategy.TAKE_LAST,  # BSL: take last
+            )
+        )
+        resolver.add_rule(
+            ResolutionRule(
+                resource_pattern=r"file:.*\.json$",
+                conflict_type=ConflictType.WRITE_WRITE,
+                strategy=ResolutionStrategy.MERGE,  # JSON: merge
+            )
+        )
 
         report = resolver.resolve_all(conflicts, task_outputs)
 
@@ -537,6 +524,7 @@ class TestConflictResolutionIntegration:
 # Test: Full Pipeline Integration
 # =============================================================================
 
+
 class TestFullPipelineIntegration:
     """Test the complete parallel execution pipeline."""
 
@@ -564,7 +552,7 @@ class TestFullPipelineIntegration:
             resolver = ConflictResolver()
             conflict_report = resolver.resolve_all(
                 merged_output.unresolved_conflicts,
-                {r.task_id: r.output for r in exec_report.results.values()}
+                {r.task_id: r.output for r in exec_report.results.values()},
             )
             assert conflict_report.all_resolved
 
@@ -588,11 +576,7 @@ class TestFullPipelineIntegration:
             all_conflicts.extend(mr.conflicts)
 
         if all_conflicts:
-            task_outputs = {
-                r.task_id: r.output
-                for r in exec_report.results.values()
-                if r.success
-            }
+            task_outputs = {r.task_id: r.output for r in exec_report.results.values() if r.success}
 
             resolver = ConflictResolver(default_strategy=ResolutionStrategy.TAKE_LAST)
             conflict_report = resolver.resolve_all(all_conflicts, task_outputs)
@@ -623,6 +607,7 @@ class TestFullPipelineIntegration:
 
     def test_pipeline_saves_artifacts(self, simple_task_graph):
         """Test that pipeline can save artifacts to disk."""
+
         def task_handler(task: TaskNode):
             return {"result": f"Data from {task.id}"}
 
@@ -636,13 +621,13 @@ class TestFullPipelineIntegration:
             output_path = Path(tmpdir) / "merged_output.json"
 
             # Save merged output
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(merged_output.to_dict(), f, indent=2)
 
             # Verify saved
             assert output_path.exists()
 
-            with open(output_path, 'r', encoding='utf-8') as f:
+            with open(output_path, encoding="utf-8") as f:
                 loaded = json.load(f)
 
             assert loaded["project_id"] == merged_output.project_id
@@ -653,11 +638,13 @@ class TestFullPipelineIntegration:
 # Test: Error Handling and Recovery
 # =============================================================================
 
+
 class TestErrorHandlingIntegration:
     """Test error handling across the pipeline."""
 
     def test_graceful_task_failure(self, simple_task_graph):
         """Test pipeline handles task failures gracefully."""
+
         def failing_handler(task: TaskNode):
             if task.id == "T1":
                 raise ValueError("Simulated failure")
@@ -696,6 +683,7 @@ class TestErrorHandlingIntegration:
 # Test: Performance Characteristics
 # =============================================================================
 
+
 class TestPerformanceIntegration:
     """Test performance characteristics of parallel execution."""
 
@@ -706,11 +694,9 @@ class TestPerformanceIntegration:
         # Create many independent tasks
         graph = TaskGraph(id="PERF-TEST", name="Performance Test")
         for i in range(10):
-            graph.add_task(TaskNode(
-                id=f"T{i}",
-                name=f"Task {i}",
-                resources_write={f"file:output{i}.bsl"}
-            ))
+            graph.add_task(
+                TaskNode(id=f"T{i}", name=f"Task {i}", resources_write={f"file:output{i}.bsl"})
+            )
 
         def slow_handler(task: TaskNode):
             time.sleep(0.01)  # 10ms per task
@@ -730,6 +716,7 @@ class TestPerformanceIntegration:
 
     def test_execution_metrics(self, simple_task_graph):
         """Test that execution tracks metrics."""
+
         def task_handler(task: TaskNode):
             return {"result": "ok"}
 

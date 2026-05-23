@@ -95,4 +95,3 @@ Create the main entry point at `scripts/modules/git/index.js` that exposes the t
 2. When a branch is finished, update the task status to 'completed'
 
 Skip all advanced integrations, error handling, and edge cases. Do not implement remote repository support beyond the absolute basics. Focus only on making the commands accessible through the main CLI interface.
-

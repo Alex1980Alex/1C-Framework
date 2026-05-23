@@ -1,0 +1,58 @@
+{
+  "changeName": "gkstcplk-2507-auto-disallow-by-nomenclature",
+  "documentType": "all",
+  "overallScore": 7.6,
+  "critiques": [
+    {
+      "id": "70da1d59",
+      "category": "security",
+      "severity": "warning",
+      "title": "未提及认证授权",
+      "description": "API 或用户相关变更应说明认证授权策略",
+      "suggestion": "添加认证和授权相关说明"
+    },
+    {
+      "id": "6b13f390",
+      "category": "edge_case",
+      "severity": "warning",
+      "title": "未提及错误处理",
+      "description": "应说明异常和错误情况的处理方式",
+      "suggestion": "添加错误处理和异常情况的说明"
+    },
+    {
+      "id": "52ef1f48",
+      "category": "edge_case",
+      "severity": "info",
+      "title": "未考虑并发场景",
+      "description": "涉及数据更新的变更应考虑并发情况",
+      "suggestion": "考虑添加并发控制相关说明"
+    },
+    {
+      "id": "4a604ae5",
+      "category": "clarity",
+      "severity": "info",
+      "title": "使用了未定义的术语",
+      "description": "发现多个可能需要解释的缩写: REPORT, ID, RLS, SQL, NULL",
+      "suggestion": "确保首次使用时解释专业术语和缩写"
+    }
+  ],
+  "suggestions": [
+    "审查安全相关设计，确保认证、授权和数据验证机制到位",
+    "增加边界条件和错误处理的说明",
+    "改进文档清晰度，统一术语使用"
+  ],
+  "summary": {
+    "total": 4,
+    "critical": 0,
+    "warning": 2,
+    "info": 2,
+    "byCategory": {
+      "completeness": 0,
+      "feasibility": 0,
+      "security": 1,
+      "edge_case": 2,
+      "clarity": 1
+    }
+  },
+  "createdAt": "2026-05-20T13:38:34.928Z"
+}

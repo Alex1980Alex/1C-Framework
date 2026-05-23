@@ -237,23 +237,23 @@ description: "This document provides examples of how to use the new AI client ut
     - Use `handleClaudeError` to provide user-friendly error messages
     - Return standardized error objects with code and message
   </Accordion>
-  
+
   <Accordion title="Progress Reporting">
     - Report progress at key points (starting, processing, completing)
     - Include meaningful status messages
     - Include error details in progress reports when failures occur
   </Accordion>
-  
+
   <Accordion title="Session Handling">
     - Always pass the session from the context to the AI client getters
     - Use `getModelConfig` to respect user settings from session
   </Accordion>
-  
+
   <Accordion title="Model Selection">
     - Use `getBestAvailableAIModel` when you need to select between different models
     - Set `requiresResearch: true` when you need Perplexity capabilities
   </Accordion>
-  
+
   <Accordion title="AsyncOperationManager Integration">
     - Create descriptive operation names
     - Handle all errors within the operation function

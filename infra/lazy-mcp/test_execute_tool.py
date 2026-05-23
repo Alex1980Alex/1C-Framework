@@ -1,9 +1,11 @@
 """Test execute_tool with multiple server types"""
-import subprocess
+
 import json
-import time
+import subprocess
 import threading
+import time
 from pathlib import Path
+
 
 def main():
     python_exe = Path(__file__).parent / ".venv" / "Scripts" / "python.exe"
@@ -17,23 +19,24 @@ def main():
         stderr=subprocess.PIPE,
         cwd=str(Path(__file__).parent),
         bufsize=0,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
     )
 
     time.sleep(2)
 
     if proc.poll() is not None:
-        stderr = proc.stderr.read().decode('utf-8', errors='ignore')
+        stderr = proc.stderr.read().decode("utf-8", errors="ignore")
         print(f"Server failed: {stderr[:500]}")
         return
 
     def send(method, params=None, req_id=1, timeout=60):
         request = {"jsonrpc": "2.0", "id": req_id, "method": method, "params": params or {}}
         msg = json.dumps(request) + "\n"
-        proc.stdin.write(msg.encode('utf-8'))
+        proc.stdin.write(msg.encode("utf-8"))
         proc.stdin.flush()
 
         response_line = [None]
+
         def read():
             try:
                 response_line[0] = proc.stdout.readline()
@@ -45,16 +48,20 @@ def main():
         t.join(timeout=timeout)
 
         if response_line[0]:
-            decoded = response_line[0].decode('utf-8', errors='ignore').strip()
+            decoded = response_line[0].decode("utf-8", errors="ignore").strip()
             return json.loads(decoded) if decoded else None
         return None
 
     # Initialize
-    resp = send("initialize", {
-        "protocolVersion": "2024-11-05",
-        "capabilities": {},
-        "clientInfo": {"name": "test", "version": "1.0"}
-    }, 1)
+    resp = send(
+        "initialize",
+        {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "test", "version": "1.0"},
+        },
+        1,
+    )
     print(f"Initialize: {'OK' if resp and 'result' in resp else 'FAIL'}")
 
     # Tests
@@ -62,19 +69,26 @@ def main():
         # Native Python servers
         ("1c-docs-rag (Python)", "/documentation/1c-docs-rag/get_stats", {}, 90),
         ("memory-ai (Python)", "/memory/memory-ai/get_categories", {}, 60),
-
         # NPX servers
-        ("filesystem (NPX)", "/file-operations/filesystem/list_directory",
-         {"path": "D:/1C-Enterprise_Framework"}, 60),
+        (
+            "filesystem (NPX)",
+            "/file-operations/filesystem/list_directory",
+            {"path": "D:/1C-Enterprise_Framework"},
+            60,
+        ),
         ("ripgrep (NPX)", "/file-operations/ripgrep/list-file-types", {}, 60),
-
         # Code reasoning
-        ("code-reasoning (NPX)", "/reasoning/code-reasoning/code-reasoning", {
-            "thought": "Testing lazy-mcp proxy",
-            "thought_number": 1,
-            "total_thoughts": 1,
-            "next_thought_needed": False
-        }, 60),
+        (
+            "code-reasoning (NPX)",
+            "/reasoning/code-reasoning/code-reasoning",
+            {
+                "thought": "Testing lazy-mcp proxy",
+                "thought_number": 1,
+                "total_thoughts": 1,
+                "next_thought_needed": False,
+            },
+            60,
+        ),
     ]
 
     results = []
@@ -86,13 +100,12 @@ def main():
         print(f"Path: {tool_path}")
         print(f"{'='*60}")
 
-        resp = send("tools/call", {
-            "name": "execute_tool",
-            "arguments": {
-                "tool_path": tool_path,
-                "arguments": args
-            }
-        }, req_id, timeout=timeout)
+        resp = send(
+            "tools/call",
+            {"name": "execute_tool", "arguments": {"tool_path": tool_path, "arguments": args}},
+            req_id,
+            timeout=timeout,
+        )
         req_id += 1
 
         status = "UNKNOWN"
@@ -122,7 +135,7 @@ def main():
         else:
             status = "TIMEOUT"
 
-        safe_detail = ''.join(c if ord(c) < 128 else '?' for c in detail)
+        safe_detail = "".join(c if ord(c) < 128 else "?" for c in detail)
         print(f"Status: {status}")
         if safe_detail:
             print(f"Detail: {safe_detail}...")
@@ -150,6 +163,7 @@ def main():
         proc.wait(timeout=5)
     except:
         proc.kill()
+
 
 if __name__ == "__main__":
     main()

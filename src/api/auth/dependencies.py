@@ -70,6 +70,22 @@ async def get_current_tenant(
     return payload.tenant_id
 
 
+def assert_tenant_access(path_tenant_id: str, current_tenant: str, role: str) -> None:
+    """Block IDOR: non-admin can only operate on their own tenant.
+
+    Raises HTTP 403 if a non-admin caller passed a tenant_id that does not match
+    the JWT-derived current_tenant. Admins (role="admin") can act on any tenant.
+
+    Used across routes that accept a path/query/body `tenant_id` parameter
+    (documents, jobs, graph, tenants).
+    """
+    if role != "admin" and path_tenant_id != current_tenant:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="access to other tenant denied",
+        )
+
+
 async def get_current_role(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
 ) -> Literal["viewer", "editor", "admin"]:

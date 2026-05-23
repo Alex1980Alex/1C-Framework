@@ -1,16 +1,16 @@
 {
-  "version": 1,
-  "created_at": "2026-04-17",
+  "version": 2,
+  "created_at": "2026-04-18",
   "source_repo": "D:\\1С-Framework",
   "tasks": [
     {
       "id": "T01",
       "category": "CAT-1-local-variable",
-      "commit_sha": "synthetic",
+      "commit_sha": "97de8a6",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl",
       "line": 54,
-      "character": 6,
+      "character": 1,
       "old_name": "СписокРегионов",
       "new_name": "РегionsСписок",
       "expected_files_affected": 1,
@@ -18,16 +18,16 @@
       "expected_files": [
         "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl"
       ],
-      "notes": "Local variable inside procedure body. ast-grep should find it within scope."
+      "notes": "Local variable: СписокРегионов."
     },
     {
       "id": "T02",
       "category": "CAT-1-local-variable",
-      "commit_sha": "synthetic",
+      "commit_sha": "97de8a6",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl",
-      "line": 208,
-      "character": 6,
+      "line": 303,
+      "character": 1,
       "old_name": "РезультатЗапроса",
       "new_name": "ЗапросРезультат",
       "expected_files_affected": 1,
@@ -35,33 +35,33 @@
       "expected_files": [
         "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl"
       ],
-      "notes": "Local variable from query result. Single-file, single-occurrence."
+      "notes": "Local variable: РезультатЗапроса."
     },
     {
       "id": "T03",
       "category": "CAT-1-local-variable",
-      "commit_sha": "synthetic",
+      "commit_sha": "97de8a6",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификаторСлужебный/Ext/Module.bsl",
       "line": 223,
-      "character": 6,
+      "character": 1,
       "old_name": "НаименованияРегионов",
       "new_name": "ИменаРегионов",
       "expected_files_affected": 1,
       "expected_edits": 1,
       "expected_files": [
-        "src/bsl/CommonModules/АдресныйКлассифаторСлужебный/Ext/Module.bsl"
+        "src/bsl/CommonModules/АдресныйКлассификаторСлужебный/Ext/Module.bsl"
       ],
-      "notes": "Local variable inside a loop body. Scope-aware backend should distinguish."
+      "notes": "Local variable: НаименованияРегионов."
     },
     {
       "id": "T04",
       "category": "CAT-1-local-variable",
-      "commit_sha": "synthetic",
+      "commit_sha": "97de8a6",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификаторКлиент/Ext/Module.bsl",
       "line": 17,
-      "character": 18,
+      "character": 41,
       "old_name": "Параметры",
       "new_name": "Парам",
       "expected_files_affected": 1,
@@ -69,16 +69,16 @@
       "expected_files": [
         "src/bsl/CommonModules/АдресныйКлассификаторКлиент/Ext/Module.bsl"
       ],
-      "notes": "Procedure parameter rename. Common name — must be scope-aware to avoid renaming all 'Параметры' in file."
+      "notes": "Parameter: Параметры (in procedure signature)."
     },
     {
       "id": "T05",
       "category": "CAT-2-module-local-proc",
-      "commit_sha": "synthetic",
+      "commit_sha": "e09730e",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl",
       "line": 177,
-      "character": 10,
+      "character": 1,
       "old_name": "Выборка",
       "new_name": "РезультатВыборки",
       "expected_files_affected": 1,
@@ -86,16 +86,16 @@
       "expected_files": [
         "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl"
       ],
-      "notes": "Local variable used within a query result iteration. Module-local context."
+      "notes": "Module-local: Выборка."
     },
     {
       "id": "T06",
       "category": "CAT-2-module-local-proc",
-      "commit_sha": "synthetic",
+      "commit_sha": "7e2b3c2",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
       "line": 11,
-      "character": 9,
+      "character": 8,
       "old_name": "ПеревестиТекст",
       "new_name": "ВыполнитьПеревод",
       "expected_files_affected": 1,
@@ -103,16 +103,16 @@
       "expected_files": [
         "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl"
       ],
-      "notes": "Export function rename. Declaration + body references within same module."
+      "notes": "Module-local: ПеревестиТекст."
     },
     {
       "id": "T07",
       "category": "CAT-2-module-local-proc",
-      "commit_sha": "synthetic",
+      "commit_sha": "7e2b3c2",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
       "line": 66,
-      "character": 9,
+      "character": 8,
       "old_name": "МаксимальныйРазмерПорции",
       "new_name": "ПредельныйОбъёмПорции",
       "expected_files_affected": 1,
@@ -120,16 +120,16 @@
       "expected_files": [
         "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl"
       ],
-      "notes": "Export function with single declaration, no internal callers in same module."
+      "notes": "Module-local: МаксимальныйРазмерПорции."
     },
     {
       "id": "T08",
       "category": "CAT-2-module-local-proc",
-      "commit_sha": "synthetic",
+      "commit_sha": "7e2b3c2",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
       "line": 72,
-      "character": 9,
+      "character": 8,
       "old_name": "ДоступныеЯзыки",
       "new_name": "ПоддерживаемыеЯзыки",
       "expected_files_affected": 1,
@@ -137,16 +137,16 @@
       "expected_files": [
         "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl"
       ],
-      "notes": "Simple export function, no cross-file callers known. Module-local scope."
+      "notes": "Module-local: ДоступныеЯзыки."
     },
     {
       "id": "T09",
       "category": "CAT-3-cross-file-export",
-      "commit_sha": "synthetic",
+      "commit_sha": "732cb0b",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификаторПовтИсп/Ext/Module.bsl",
-      "line": 1,
-      "character": 9,
+      "line": 356,
+      "character": 19,
       "old_name": "СписокРегионов",
       "new_name": "ПереченьРегионов",
       "expected_files_affected": 3,
@@ -156,16 +156,16 @@
         "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl",
         "src/bsl/CommonModules/АдресныйКлассификаторСлужебный/Ext/Module.bsl"
       ],
-      "notes": "Export function called from 2+ modules. Declaration in ПовтИсп, calls in АдресныйКлассификатор (line 54) and Служебный."
+      "notes": "Cross-file export: СписокРегионов."
     },
     {
       "id": "T10",
       "category": "CAT-3-cross-file-export",
-      "commit_sha": "synthetic",
+      "commit_sha": "732cb0b",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификаторПовтИсп/Ext/Module.bsl",
-      "line": 1,
-      "character": 9,
+      "line": 261,
+      "character": 8,
       "old_name": "ИсточникДанныхАдресногоКлассификатораВебСервис",
       "new_name": "ЭтоВебСервисИсточник",
       "expected_files_affected": 2,
@@ -174,15 +174,15 @@
         "src/bsl/CommonModules/АдресныйКлассификаторПовтИсп/Ext/Module.bsl",
         "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl"
       ],
-      "notes": "Export function referenced in АдресныйКлассификатор lines 146 and 212. Cross-file scope test."
+      "notes": "Cross-file export: ИсточникДанныхАдресногоКлассификатораВебСервис."
     },
     {
       "id": "T11",
       "category": "CAT-3-cross-file-export",
-      "commit_sha": "synthetic",
+      "commit_sha": "478049a",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
-      "line": 21,
+      "line": 17,
       "character": 9,
       "old_name": "ПеревестиТексты",
       "new_name": "ПеревестиМассивТекстов",
@@ -192,16 +192,16 @@
         "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
         "src/bsl/CommonModules/GoogleПереводчикКлиент/Ext/Module.bsl"
       ],
-      "notes": "Export function rename. Caller in GoogleПереводчикКлиент module."
+      "notes": "Cross-file export: ПеревестиТексты."
     },
     {
       "id": "T12",
       "category": "CAT-3-cross-file-export",
-      "commit_sha": "synthetic",
+      "commit_sha": "478049a",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
-      "line": 137,
-      "character": 9,
+      "line": 32,
+      "character": 63,
       "old_name": "НастройкиАвторизации",
       "new_name": "ПараметрыАвторизации",
       "expected_files_affected": 2,
@@ -210,16 +210,16 @@
         "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
         "src/bsl/CommonModules/GoogleПереводчикПовтИсп/Ext/Module.bsl"
       ],
-      "notes": "Export function for auth settings. Caller in GoogleПереводчикПовтИсп module."
+      "notes": "Cross-file export: НастройкиАвторизации."
     },
     {
       "id": "T13",
       "category": "CAT-4-form-handler",
-      "commit_sha": "synthetic",
+      "commit_sha": "40e7357",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/Catalogs/Валюты/Forms/ПараметрыПрописиВалюты_en/Ext/Form/Module.bsl",
       "line": 12,
-      "character": 11,
+      "character": 10,
       "old_name": "ПриСозданииНаСервере",
       "new_name": "ПриИнициализацииНаСервере",
       "expected_files_affected": 2,
@@ -228,16 +228,16 @@
         "src/bsl/Catalogs/Валюты/Forms/ПараметрыПрописиВалюты_en/Ext/Form/Module.bsl",
         "src/bsl/Catalogs/Валюты/Forms/ПараметрыПрописиВалюты_en/Ext/Form/Form.xml"
       ],
-      "notes": "Form lifecycle handler. Declaration in Module.bsl + reference in Form.xml. ast-grep sees BSL but needs XML awareness."
+      "notes": "Form handler: ПриСозданииНаСервере."
     },
     {
       "id": "T14",
       "category": "CAT-4-form-handler",
-      "commit_sha": "synthetic",
+      "commit_sha": "40e7357",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/Catalogs/Валюты/Forms/ФормаСписка/Ext/Form/Module.bsl",
       "line": 12,
-      "character": 11,
+      "character": 10,
       "old_name": "ПриСозданииНаСервере",
       "new_name": "ПриФормированииНаСервере",
       "expected_files_affected": 2,
@@ -246,16 +246,16 @@
         "src/bsl/Catalogs/Валюты/Forms/ФормаСписка/Ext/Form/Module.bsl",
         "src/bsl/Catalogs/Валюты/Forms/ФормаСписка/Ext/Form/Form.xml"
       ],
-      "notes": "Standard form handler in list form. BSL+XML cross-reference."
+      "notes": "Form handler: ПриСозданииНаСервере."
     },
     {
       "id": "T15",
       "category": "CAT-4-form-handler",
-      "commit_sha": "synthetic",
+      "commit_sha": "40e7357",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/Catalogs/Валюты/Forms/ПараметрыПрописиВалюты_en/Ext/Form/Module.bsl",
       "line": 27,
-      "character": 11,
+      "character": 10,
       "old_name": "ПриОткрытии",
       "new_name": "ПослеЗагрузки",
       "expected_files_affected": 2,
@@ -264,16 +264,16 @@
         "src/bsl/Catalogs/Валюты/Forms/ПараметрыПрописиВалюты_en/Ext/Form/Module.bsl",
         "src/bsl/Catalogs/Валюты/Forms/ПараметрыПрописиВалюты_en/Ext/Form/Form.xml"
       ],
-      "notes": "ПриОткрытии handler. Referenced in Form.xml event binding."
+      "notes": "Form handler: ПриОткрытии."
     },
     {
       "id": "T16",
       "category": "CAT-4-form-handler",
-      "commit_sha": "synthetic",
+      "commit_sha": "649b105",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/Catalogs/ВариантыОтчетов/Forms/РазмещениеВРазделах/Ext/Form/Module.bsl",
       "line": 26,
-      "character": 11,
+      "character": 10,
       "old_name": "ПриОткрытии",
       "new_name": "НаСтарте",
       "expected_files_affected": 2,
@@ -282,27 +282,27 @@
         "src/bsl/Catalogs/ВариантыОтчетов/Forms/РазмещениеВРазделах/Ext/Form/Module.bsl",
         "src/bsl/Catalogs/ВариантыОтчетов/Forms/РазмещениеВРазделах/Ext/Form/Form.xml"
       ],
-      "notes": "Another ПриОткрытии handler. Tests ast-grep XML visibility vs multilspy."
+      "notes": "Form handler: ПриОткрытии."
     },
     {
       "id": "T17",
       "category": "CAT-5-edge-case",
-      "commit_sha": "synthetic",
+      "commit_sha": "5f520bb",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдминистрированиеКластера/Ext/Module.bsl",
       "line": 1060,
-      "character": 40,
+      "character": 64,
       "old_name": "Выполнить",
       "new_name": "Исполнить",
       "expected_files_affected": 0,
       "expected_edits": 0,
       "expected_files": [],
-      "notes": "Mention of Выполнить() in a comment, not actual code. Both backends should detect this is not a real rename target → manual tier."
+      "notes": "Edge case: Выполнить."
     },
     {
       "id": "T18",
       "category": "CAT-5-edge-case",
-      "commit_sha": "synthetic",
+      "commit_sha": "018d763",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/АдресныйКлассификатор/Ext/Module.bsl",
       "line": 146,
@@ -312,37 +312,37 @@
       "expected_files_affected": 0,
       "expected_edits": 0,
       "expected_files": [],
-      "notes": "Substring of function name — 'ИсточникДанных' appears inside 'ИсточникДанныхАдресногоКлассификатораВебСервис'. Edge case for partial match."
+      "notes": "Edge case: ИсточникДанных."
     },
     {
       "id": "T19",
       "category": "CAT-5-edge-case",
-      "commit_sha": "synthetic",
+      "commit_sha": "8cf1e71",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
       "line": 219,
-      "character": 9,
+      "character": 8,
       "old_name": "Разрешения",
       "new_name": "ПраваДоступа",
       "expected_files_affected": 0,
       "expected_edits": 0,
       "expected_files": [],
-      "notes": "Common Russian word used as function name. High false-positive risk — appears in many unrelated contexts across codebase."
+      "notes": "Edge case: Разрешения."
     },
     {
       "id": "T20",
       "category": "CAT-5-edge-case",
-      "commit_sha": "synthetic",
+      "commit_sha": "8cf1e71",
       "parent_sha": "synthetic",
       "file_uri": "src/bsl/CommonModules/GoogleПереводчик/Ext/Module.bsl",
       "line": 177,
-      "character": 9,
+      "character": 8,
       "old_name": "НастройкаВыполнена",
       "new_name": "КонфигурацияГотова",
       "expected_files_affected": 0,
       "expected_edits": 0,
       "expected_files": [],
-      "notes": "Function that may be called from dynamic code or form event bindings invisible to static analysis. Expected: manual tier activation."
+      "notes": "Edge case: НастройкаВыполнена."
     }
   ]
 }

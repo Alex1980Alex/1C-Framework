@@ -3,58 +3,50 @@ Integration tests for QA Agent.
 """
 
 import pytest
-
 from agents.qa import (
     QAAgent,
     QAAgentConfig,
     QAContext,
+    ReportGenerator,
     ResultAnalyzer,
     TestGenerator,
     TestRunner,
-    ReportGenerator,
     create_qa_agent,
     run_qa,
 )
 from agents.qa.models import (
+    Defect,
+    QAReport,
+    Severity,
     TestCase,
     TestResult,
     TestStatus,
-    TestType,
     TestSuite,
-    Defect,
-    Severity,
-    QAReport,
+    TestType,
+)
+from agents.qa.report_generator import (
+    ExtendedReportGenerator,
+    generate_report,
 )
 from agents.qa.result_analyzer import (
-    ChangeType,
-    FileChange,
-    ImplementedFunction,
-    CodeBlock,
     AnalysisResult,
+    ImplementedFunction,
     analyze_result,
 )
 from agents.qa.test_generator import (
-    TestCategory,
-    Requirement,
-    generate_tests,
     BSLTestTemplates,
+    generate_tests,
 )
 from agents.qa.test_runner import (
     RunConfig,
-    RunSummary,
-    create_runner,
     create_dry_runner,
+    create_runner,
 )
-from agents.qa.report_generator import (
-    generate_report,
-    write_qa_report,
-    ExtendedReportGenerator,
-)
-
 
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_result_md():
@@ -198,6 +190,7 @@ def qa_agent():
 # ResultAnalyzer Tests
 # =============================================================================
 
+
 class TestResultAnalyzer:
     """Test suite for ResultAnalyzer."""
 
@@ -206,7 +199,7 @@ class TestResultAnalyzer:
         result = analyzer.analyze(sample_result_md)
 
         assert len(result.file_changes) >= 1
-        assert any('Module.bsl' in f.path for f in result.file_changes)
+        assert any("Module.bsl" in f.path for f in result.file_changes)
 
     def test_analyze_extracts_functions(self, analyzer, sample_result_md):
         """Test that functions are extracted from code blocks."""
@@ -214,14 +207,14 @@ class TestResultAnalyzer:
 
         assert len(result.functions) >= 1
         func_names = [f.name for f in result.functions]
-        assert 'ПолучитьДанныеТовара' in func_names or 'ОбработатьПриемку' in func_names
+        assert "ПолучитьДанныеТовара" in func_names or "ОбработатьПриемку" in func_names
 
     def test_analyze_extracts_code_blocks(self, analyzer, sample_result_md):
         """Test that code blocks are extracted."""
         result = analyzer.analyze(sample_result_md)
 
         assert len(result.code_blocks) >= 1
-        bsl_blocks = [b for b in result.code_blocks if b.language == 'bsl']
+        bsl_blocks = [b for b in result.code_blocks if b.language == "bsl"]
         assert len(bsl_blocks) >= 1
 
     def test_analyze_extracts_requirements(self, analyzer, sample_result_md):
@@ -229,7 +222,7 @@ class TestResultAnalyzer:
         result = analyzer.analyze(sample_result_md)
 
         assert len(result.requirements_covered) >= 1
-        assert 'REQ-001' in result.requirements_covered or 'ТРБ-003' in result.requirements_covered
+        assert "REQ-001" in result.requirements_covered or "ТРБ-003" in result.requirements_covered
 
     def test_analyze_result_properties(self, analyzer, sample_result_md):
         """Test AnalysisResult properties."""
@@ -244,10 +237,10 @@ class TestResultAnalyzer:
         result = analyzer.analyze(sample_result_md)
         data = result.to_dict()
 
-        assert 'total_files' in data
-        assert 'total_functions' in data
-        assert 'file_changes' in data
-        assert 'functions' in data
+        assert "total_files" in data
+        assert "total_functions" in data
+        assert "file_changes" in data
+        assert "functions" in data
 
     def test_analyze_empty_content(self, analyzer):
         """Test analysis of empty content."""
@@ -274,6 +267,7 @@ class TestResultAnalyzer:
 # TestGenerator Tests
 # =============================================================================
 
+
 class TestTestGenerator:
     """Test suite for TestGenerator."""
 
@@ -282,7 +276,7 @@ class TestTestGenerator:
         requirements = generator.load_spec(sample_spec_md)
 
         assert len(requirements) >= 1
-        assert any(r.id.startswith('REQ') or r.id.startswith('ТРБ') for r in requirements)
+        assert any(r.id.startswith("REQ") or r.id.startswith("ТРБ") for r in requirements)
 
     def test_load_analysis(self, generator, analyzer, sample_result_md):
         """Test loading analysis result."""
@@ -305,10 +299,7 @@ class TestTestGenerator:
         generator.load_spec(sample_spec_md)
         suite = generator.generate()
 
-        positive_tests = [
-            tc for tc in suite.test_cases
-            if 'negative' not in tc.tags
-        ]
+        positive_tests = [tc for tc in suite.test_cases if "negative" not in tc.tags]
         assert len(positive_tests) > 0
 
     def test_generate_creates_negative_tests(self, generator, sample_spec_md):
@@ -316,10 +307,7 @@ class TestTestGenerator:
         generator.load_spec(sample_spec_md)
         suite = generator.generate()
 
-        negative_tests = [
-            tc for tc in suite.test_cases
-            if 'negative' in tc.tags
-        ]
+        negative_tests = [tc for tc in suite.test_cases if "negative" in tc.tags]
         assert len(negative_tests) > 0
 
     def test_generate_for_function(self, generator, analyzer, sample_result_md):
@@ -349,13 +337,14 @@ class TestTestGenerator:
 
         bsl_code = BSLTestTemplates.generate_bsl_test(func, "МойМодуль")
 
-        assert 'Процедура Тест_ТестоваяФункция' in bsl_code
-        assert 'МойМодуль.ТестоваяФункция' in bsl_code
+        assert "Процедура Тест_ТестоваяФункция" in bsl_code
+        assert "МойМодуль.ТестоваяФункция" in bsl_code
 
 
 # =============================================================================
 # TestRunner Tests
 # =============================================================================
+
 
 class TestTestRunner:
     """Test suite for TestRunner."""
@@ -378,7 +367,10 @@ class TestTestRunner:
         runner.run(suite)
 
         assert runner.summary.total > 0
-        assert runner.summary.passed + runner.summary.failed + runner.summary.skipped == runner.summary.total
+        assert (
+            runner.summary.passed + runner.summary.failed + runner.summary.skipped
+            == runner.summary.total
+        )
 
     def test_run_creates_defects(self, runner, generator, sample_spec_md):
         """Test that defects are created for failures."""
@@ -441,11 +433,11 @@ class TestTestRunner:
         suite = generator.generate()
 
         runner.run(suite)
-        coverage = runner.get_coverage(['REQ-001', 'REQ-002'])
+        coverage = runner.get_coverage(["REQ-001", "REQ-002"])
 
-        assert 'total' in coverage
-        assert 'covered' in coverage
-        assert 'percentage' in coverage
+        assert "total" in coverage
+        assert "covered" in coverage
+        assert "percentage" in coverage
 
     def test_callbacks(self, runner):
         """Test callback registration."""
@@ -485,6 +477,7 @@ class TestTestRunner:
 # ReportGenerator Tests
 # =============================================================================
 
+
 class TestReportGenerator:
     """Test suite for ReportGenerator."""
 
@@ -521,7 +514,7 @@ class TestReportGenerator:
         )
 
         assert report.verdict is not None
-        assert any(v in report.verdict for v in ['PASSED', 'FAILED', 'WARNING'])
+        assert any(v in report.verdict for v in ["PASSED", "FAILED", "WARNING"])
 
     def test_generate_creates_recommendations(self, reporter, runner, generator, sample_spec_md):
         """Test that recommendations are generated."""
@@ -555,9 +548,9 @@ class TestReportGenerator:
 
         markdown = report.to_markdown()
 
-        assert '# QA Report' in markdown or '# Отчёт QA' in markdown
-        assert 'TEST' in markdown
-        assert 'TASK-001' in markdown
+        assert "# QA Report" in markdown or "# Отчёт QA" in markdown
+        assert "TEST" in markdown
+        assert "TASK-001" in markdown
 
     def test_extended_report_generator(self, runner, generator, sample_spec_md):
         """Test extended report generator."""
@@ -576,7 +569,7 @@ class TestReportGenerator:
         )
 
         assert isinstance(markdown, str)
-        assert 'BSL' in markdown or 'Метрики' in markdown
+        assert "BSL" in markdown or "Метрики" in markdown
 
     def test_convenience_function(self, runner, generator, sample_spec_md):
         """Test generate_report convenience function."""
@@ -598,6 +591,7 @@ class TestReportGenerator:
 # =============================================================================
 # QAAgent Tests
 # =============================================================================
+
 
 class TestQAAgent:
     """Test suite for QAAgent."""
@@ -701,11 +695,11 @@ class TestQAAgent:
 
         summary = qa_agent.get_summary()
 
-        assert 'project_id' in summary
-        assert 'task_id' in summary
-        assert 'verdict' in summary
-        assert 'total_tests' in summary
-        assert 'pass_rate' in summary
+        assert "project_id" in summary
+        assert "task_id" in summary
+        assert "verdict" in summary
+        assert "total_tests" in summary
+        assert "pass_rate" in summary
 
     def test_get_defects_markdown(self, qa_agent, sample_result_md, sample_spec_md):
         """Test get_defects_markdown method."""
@@ -761,6 +755,7 @@ class TestQAAgent:
 # Model Tests
 # =============================================================================
 
+
 class TestModels:
     """Test suite for QA models."""
 
@@ -791,8 +786,8 @@ class TestModels:
         )
 
         data = tc.to_dict()
-        assert data['id'] == "TC-001"
-        assert data['test_type'] == "functional"
+        assert data["id"] == "TC-001"
+        assert data["test_type"] == "functional"
 
     def test_test_result_creation(self):
         """Test TestResult creation."""
@@ -865,9 +860,9 @@ class TestModels:
 
         markdown = defect.to_markdown()
 
-        assert 'BUG-001' in markdown
-        assert 'Bug Title' in markdown
-        assert 'CRITICAL' in markdown.upper()
+        assert "BUG-001" in markdown
+        assert "Bug Title" in markdown
+        assert "CRITICAL" in markdown.upper()
 
     def test_qa_report_metrics(self):
         """Test QAReport metrics."""
@@ -876,16 +871,24 @@ class TestModels:
         # Create some test results
         passed_result = TestResult(
             test_case=TestCase(
-                id="TC-001", name="Test 1", description="D",
-                test_type=TestType.UNIT, steps=["S"], expected_result="R"
+                id="TC-001",
+                name="Test 1",
+                description="D",
+                test_type=TestType.UNIT,
+                steps=["S"],
+                expected_result="R",
             ),
             status=TestStatus.PASSED,
             actual_result="OK",
         )
         failed_result = TestResult(
             test_case=TestCase(
-                id="TC-002", name="Test 2", description="D",
-                test_type=TestType.UNIT, steps=["S"], expected_result="R"
+                id="TC-002",
+                name="Test 2",
+                description="D",
+                test_type=TestType.UNIT,
+                steps=["S"],
+                expected_result="R",
             ),
             status=TestStatus.FAILED,
             actual_result="Failed",
@@ -912,6 +915,7 @@ class TestModels:
 # =============================================================================
 # Edge Cases and Error Handling
 # =============================================================================
+
 
 class TestEdgeCases:
     """Test edge cases and error handling."""
@@ -958,4 +962,4 @@ Some text without code blocks.
         agent = QAAgent()
         summary = agent.get_summary()
 
-        assert 'error' in summary
+        assert "error" in summary

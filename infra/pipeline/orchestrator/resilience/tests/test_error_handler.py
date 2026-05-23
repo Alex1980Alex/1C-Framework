@@ -1,21 +1,19 @@
 """Tests for error_handler module."""
 
-import pytest
 import asyncio
-from datetime import datetime
+
+import pytest
 
 from .error_handler import (
-    ErrorSeverity,
+    DegradationLevel,
+    ErrorAggregator,
     ErrorCategory,
     ErrorContext,
+    ErrorSeverity,
+    FatalError,
+    GracefulDegradationHandler,
     PipelineError,
     RecoverableError,
-    FatalError,
-    DegradationLevel,
-    DegradationState,
-    GracefulDegradationHandler,
-    ErrorAggregator,
-    with_graceful_degradation,
 )
 
 

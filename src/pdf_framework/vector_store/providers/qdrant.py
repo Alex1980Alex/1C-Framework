@@ -77,13 +77,31 @@ class QdrantVectorStore(BaseVectorStore):
                 api_key=api_key if api_key else None,
             )
 
-            # Check if collection exists, create if not
+            # Check if collection exists, create if not.
+            # Также резолвим aliases — после MRL/MIGRATE-3 (§4.1.6-15) имя из
+            # конфига часто указывает на alias (`pdf_documents` → физический
+            # `pdf_documents_mrl_1024`). `get_collections()` возвращает только
+            # физические коллекции, поэтому без `get_aliases()` мы уходим в
+            # create_collection и получаем 400 "Alias with the same name already
+            # exists".
             collections = await self._client.get_collections()
-            collection_names = [c.name for c in collections.collections]
+            collection_names = {c.name for c in collections.collections}
+            try:
+                aliases = await self._client.get_aliases()
+                alias_names = {a.alias_name for a in aliases.aliases}
+            except AttributeError as exc:
+                # старые qdrant-client без get_aliases() — деградируем тихо
+                logger.debug("[QDRANT] get_aliases() unavailable: %s", exc)
+                alias_names = set()
+
+            exists = (
+                self._collection_name in collection_names
+                or self._collection_name in alias_names
+            )
 
             bm25_enabled = getattr(self._settings, "qdrant_bm25_enabled", False)
 
-            if self._collection_name not in collection_names:
+            if not exists:
                 logger.info(
                     f"[QDRANT] Creating collection: {self._collection_name} (dims={self._settings.dimensions}, bm25={bm25_enabled})"
                 )
@@ -241,13 +259,13 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         # Build filter if provided
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -280,12 +298,12 @@ class QdrantVectorStore(BaseVectorStore):
             await self.initialize()
 
         import numpy as np
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -447,12 +465,12 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue, PayloadSelectorInclude
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue, PayloadSelectorInclude
 
         scroll_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             scroll_filter = Filter(must=conditions)
@@ -506,14 +524,15 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         if not filter:
             return 0
 
         # Count before delete
         conditions = [
-            FieldCondition(key=key, match=MatchValue(value=value)) for key, value in filter.items()
+            FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+            for key, value in filter.items()
         ]
         qdrant_filter = Filter(must=conditions)
 
@@ -599,6 +618,7 @@ class QdrantVectorStore(BaseVectorStore):
             Filter,
             Fusion,
             FusionQuery,
+            MatchAny,
             MatchValue,
             Prefetch,
         )
@@ -610,7 +630,7 @@ class QdrantVectorStore(BaseVectorStore):
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -931,12 +951,12 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchValue(value=value))
+                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)

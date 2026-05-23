@@ -125,9 +125,9 @@ timestamp() ->
 
 -spec format_datetime(integer()) -> string().
 format_datetime(Timestamp) ->
-    {{Year, Month, Day}, {Hour, Minute, Second}} = 
+    {{Year, Month, Day}, {Hour, Minute, Second}} =
         calendar:gregorian_seconds_to_datetime(Timestamp + 62167219200),
-    lists:flatten(io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w", 
+    lists:flatten(io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
         [Year, Month, Day, Hour, Minute, Second])).
 
 -spec days_between(integer(), integer()) -> integer().

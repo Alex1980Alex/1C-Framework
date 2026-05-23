@@ -286,7 +286,7 @@
   {
     "name": "MCPToolkit Form (Form Module)",
     "type": "Form Module (managed)",
-    "path": "D:\\1С-Framework\\tools\\1c-mcp-toolkit\\toolkit\\1c-mcp-toolkit-main\\1c\\MCPToolkit\\MCPToolkit\\Forms\\Форма\\Ext\\Form\\Module.bsl",
+    "path": "D:\\1С-Framework\\tools\\1c-mcp-crud\\1c-mcp-toolkit\\toolkit\\1c-mcp-toolkit-main\\1c\\MCPToolkit\\MCPToolkit\\Forms\\Форма\\Ext\\Form\\Module.bsl",
     "exists": true,
     "size_bytes": 747880,
     "line_count": 12442,

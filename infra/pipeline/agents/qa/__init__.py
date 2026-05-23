@@ -18,11 +18,6 @@ Usage:
     )
 """
 
-from agents.qa.models import TestCase, TestResult, TestSuite, QAReport
-from agents.qa.result_analyzer import ResultAnalyzer, analyze_result
-from agents.qa.test_generator import TestGenerator, generate_tests, BSLTestTemplates
-from agents.qa.test_runner import TestRunner, create_runner, create_dry_runner
-from agents.qa.report_generator import ReportGenerator
 from agents.qa.agent import (
     QAAgent,
     QAAgentConfig,
@@ -30,6 +25,11 @@ from agents.qa.agent import (
     create_qa_agent,
     run_qa,
 )
+from agents.qa.models import QAReport, TestCase, TestResult, TestSuite
+from agents.qa.report_generator import ReportGenerator
+from agents.qa.result_analyzer import ResultAnalyzer, analyze_result
+from agents.qa.test_generator import BSLTestTemplates, TestGenerator, generate_tests
+from agents.qa.test_runner import TestRunner, create_dry_runner, create_runner
 
 __all__ = [
     # Main Agent

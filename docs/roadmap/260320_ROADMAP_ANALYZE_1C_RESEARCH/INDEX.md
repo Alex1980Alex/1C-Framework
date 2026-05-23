@@ -52,7 +52,7 @@ AutoResearch v2 решает эти проблемы для кода (ruff error
 ┌───────────────────────▼──────────────────────────────────┐
 │  Level 3: MCP Infrastructure                             │
 │  bsl-semantic-search   → поиск паттернов в конфигурации  │
-│  1c-mcp-toolkit        → get_metadata, execute_query     │
+│  1c-mcp-crud        → get_metadata, execute_query     │
 │  bsl-platform-context  → API платформы 1С                │
 │  serena                → символьный анализ кода          │
 │  pdf-vector-graph      → документация 1С 8.3.27          │
@@ -148,7 +148,7 @@ Phase 2 (Prompts) ──┬──┘──→ Phase 4 (Subagents) → Phase 6 (S
 
 ### Executor — фазы 1-4, доработка по feedback
 
-**Инструменты:** Read, Write, Edit, Git, bsl-semantic-search, 1c-mcp-toolkit, bsl-platform-context, serena, Grep/Glob
+**Инструменты:** Read, Write, Edit, Git, bsl-semantic-search, 1c-mcp-crud, bsl-platform-context, serena, Grep/Glob
 
 **Протокол:**
 1. Итерация 1: полный анализ фаз 1-4 → ANALYSIS-REPORT.md
@@ -164,7 +164,7 @@ Phase 2 (Prompts) ──┬──┘──→ Phase 4 (Subagents) → Phase 6 (S
 
 ### Reviewer — фаза 5 + scoring + MCP verification
 
-**Инструменты:** Read (read-only), Bash (scorer), Git, 1c-mcp-toolkit (execute_query для проверки SQL)
+**Инструменты:** Read (read-only), Bash (scorer), Git, 1c-mcp-crud (execute_query для проверки SQL)
 
 **Протокол:**
 1. Запускает `python scripts/score-analysis-report.py analysis-report.md`

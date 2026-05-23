@@ -3,11 +3,11 @@
 
 grant {
     // There is no restriction to any algorithms if KeyRecovery is enforced.
-    permission javax.crypto.CryptoPermission *, "KeyRecovery"; 
+    permission javax.crypto.CryptoPermission *, "KeyRecovery";
 
     // There is no restriction to any algorithms if KeyEscrow is enforced.
-    permission javax.crypto.CryptoPermission *, "KeyEscrow"; 
+    permission javax.crypto.CryptoPermission *, "KeyEscrow";
 
-    // There is no restriction to any algorithms if KeyWeakening is enforced. 
+    // There is no restriction to any algorithms if KeyWeakening is enforced.
     permission javax.crypto.CryptoPermission *, "KeyWeakening";
 };

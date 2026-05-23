@@ -84,4 +84,3 @@ Design a tabular format for displaying ICE scores in the terminal. Use color cod
 ### Description: Connect the ICE analysis functionality with the existing complexity reporting system
 ### Details:
 Modify the existing complexity report to include ICE scores. Ensure consistent formatting between complexity and ICE reports. Add cross-referencing between reports. Update the command-line help documentation. Test the integrated system with various project sizes and configurations.
-

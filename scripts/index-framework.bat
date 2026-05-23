@@ -5,7 +5,7 @@ setlocal EnableDelayedExpansion
 :: ============================================================
 :: Индексация фреймворка D:\1С-Framework
 :: Multi-Language: BSL, JavaScript, TypeScript, Python, Markdown
-:: РЕКУРСИВНО с корня, ИСКЛЮЧАЯ src/projects/configuration/
+:: РЕКУРСИВНО с корня, ИСКЛЮЧАЯ configuration/
 :: ============================================================
 
 set FRAMEWORK_ROOT=D:\1С-Framework
@@ -50,7 +50,7 @@ echo ─────────────────────────
 echo   Корень: %FRAMEWORK_ROOT%
 echo.
 echo АВТОМАТИЧЕСКИ ИСКЛЮЧЕНО:
-echo   - src/projects/configuration/ (отдельные проекты)
+echo   - configuration/ (отдельные проекты)
 echo   - node_modules/, dist/, build/, __pycache__/
 echo   - .venv/, venv/, .git/
 echo ────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ echo   - src/bsl/ (BSL инфраструктура)
 echo   - tools/ (MCP серверы)
 echo.
 echo НЕ проиндексировано (используйте index-folder.bat):
-echo   - src/projects/configuration/* (отдельные проекты)
+echo   - configuration/* (отдельные проекты)
 echo.
 echo Доступен поиск:
 echo   mcp__bsl-semantic-search__bsl_search("запрос")

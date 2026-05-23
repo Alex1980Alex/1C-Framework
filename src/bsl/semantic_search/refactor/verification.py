@@ -18,6 +18,7 @@ class VerifyResult:
     baseline_errors: list[str] = field(default_factory=list)
     after_errors: list[str] = field(default_factory=list)
     reason: str | None = None
+    prefilter_dropped: int = 0
 
     @property
     def ok(self) -> bool:

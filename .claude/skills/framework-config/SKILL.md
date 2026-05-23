@@ -5,6 +5,8 @@ description: "Переменные окружения PDF Vector Framework (.env
 
 # Framework Configuration — все .env параметры
 
+> **Phase 8 defaults aligned (2026-05-01, §2.1):** `EmbeddingSettings`/`VectorStoreSettings` no-env defaults теперь production: `EMBEDDING__PROVIDER=tei`, `MODEL=Qwen/Qwen3-Embedding-8B`, `DIMENSIONS=4096`; `VECTOR_STORE__DIMENSIONS=4096`. Новые поля: `EMBEDDING__TEI_BASE_URL`, `EMBEDDING__TEI_CLIENT_BATCH`. Regression: `tests/unit/test_config.py::test_phase8_invariants`.
+
 ## Когда использовать
 - "как настроить .env", "какие переменные окружения", "конфигурация фреймворка"
 - "ANTHROPIC__API_KEY", "EMBEDDING__MODEL", "какой профиль выбрать"
@@ -32,14 +34,23 @@ VECTOR_STORE__QDRANT_URL=http://localhost:6333
 | `ANTHROPIC__BASE_URL` | `https://api.anthropic.com` | Base URL API (для proxy) |
 | `AGENT__TEMPERATURE` | `0.0` | Температура генерации |
 
-### Embedding
+### Embedding (Phase 8 production switchover, 2026-04-30)
 
 | Переменная | Default | Описание |
 |------------|---------|----------|
-| `EMBEDDING__MODEL` | `intfloat/multilingual-e5-large` | Модель эмбеддингов |
-| `EMBEDDING__DIMENSIONS` | `1024` | Размерность (должна соответствовать модели) |
+| `EMBEDDING__PROVIDER` | `tei` | **Production default**: TEI HTTP. Альтернативы: `local`/`jina`/`giga` |
+| `EMBEDDING__MODEL` | `Qwen/Qwen3-Embedding-8B` | **Production default**. Legacy E5 — `intfloat/multilingual-e5-large` |
+| `EMBEDDING__DIMENSIONS` | `4096` | **Production**: 4096 (Qwen3). Legacy: 1024 (E5/MRL) или 768 (nomic в memory hooks) |
+| `EMBEDDING__TEI_BASE_URL` | `http://localhost:8080` | TEI Docker (`pdf-rag-tei` контейнер) |
+| `EMBEDDING__BATCH_SIZE` | `16` | Размер batch на TEI request (sub-batched на 32 server-cap) |
+| `EMBEDDING__DEVICE` | `auto` | Для local backend: `cuda` для Qwen3-8B на 16+ GB VRAM |
+| `EMBEDDING__DTYPE` | — | Для local: `float16` на 24GB GPU; bf16 fallback на CPU |
+| `QWEN3_MODEL_DIR` | `D:/hf-manual/Qwen3-Embedding-8B` | Bind-mount path для TEI Docker (Phase 8.12.6); локальные веса 14.1 GiB |
+| `ZAI_API_KEY` | — | Z.AI API key (через `LLMRotationService`) |
 
-> E5 модели требуют prefix: `"query: "` для запросов, `"passage: "` для индексации (добавляется автоматически).
+> **Qwen3-Embedding-8B** (production default): query instruction `"Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "`; passages — без prefix. Через TEI HTTP (см. `src/framework_search/embedder.py` или `Qwen3TEIEmbedder` из `scripts/reindex_bsl_qwen3.py`).
+>
+> **E5 модели** (legacy, до Phase 8): prefix `"query: "` / `"passage: "` (auto).
 
 ### Vector Store
 
@@ -436,11 +447,11 @@ QUEUE__RETRY_DELAY_SECONDS=
 QUEUE__QUEUE_NAME=
 QUEUE__HEALTH_CHECK_INTERVAL=
 OBSERVABILITY__LANGSMITH_ENABLED=
-OBSERVABILITY__LANGFUSE_ENABLED=
-OBSERVABILITY__LANGFUSE_PUBLIC_KEY=
-OBSERVABILITY__LANGFUSE_SECRET_KEY=
-OBSERVABILITY__LANGFUSE_HOST=
-OBSERVABILITY__LANGFUSE_PROJECT_NAME=
+OBSERVABILITY__LANGFUSE_ENABLED=false                        # см. .env.example (roadmap §3.4-ter, 2026-05-15)
+OBSERVABILITY__LANGFUSE_PUBLIC_KEY=pk-lf-...
+OBSERVABILITY__LANGFUSE_SECRET_KEY=sk-lf-...
+OBSERVABILITY__LANGFUSE_HOST=https://cloud.langfuse.com
+OBSERVABILITY__LANGFUSE_PROJECT_NAME=pdf-framework
 CACHE__EMBEDDING_TTL_DAYS=
 CACHE__EMBEDDING_DB_PATH=
 CACHE__LLM_TTL_SECONDS=

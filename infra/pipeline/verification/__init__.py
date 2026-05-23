@@ -4,6 +4,7 @@ Verification module for Development Pipeline.
 Provides verification mechanisms for all agents.
 """
 
+from verification.architect_verifier import ArchitectVerifier
 from verification.base_verifier import (
     BaseVerifier,
     CheckResult,
@@ -11,9 +12,8 @@ from verification.base_verifier import (
     RequirementCheck,
     VerificationResult,
 )
-from verification.pm_spec_verifier import PMSpecVerifier
-from verification.architect_verifier import ArchitectVerifier
 from verification.implementer_verifier import ImplementerVerifier
+from verification.pm_spec_verifier import PMSpecVerifier
 from verification.revision_handler import (
     RevisionAction,
     RevisionHandler,

@@ -55,16 +55,16 @@ function createErrorSimulationScript(errorType, failureCount = 2) {
       // Mock for network error simulation
       let currentAttempt = 0;
       const failureCount = ${failureCount};
-      
+
       // Simulate network error for the first few attempts
       currentAttempt++;
       console.log(\`[Mock] API call attempt \${currentAttempt}\`);
-      
+
       if (currentAttempt <= failureCount) {
         console.log(\`[Mock] Simulating network error (attempt \${currentAttempt}/\${failureCount})\`);
         throw new Error('Network error: Connection refused');
       }
-      
+
       const response = await anthropic.messages.create(`;
 			break;
 
@@ -73,16 +73,16 @@ function createErrorSimulationScript(errorType, failureCount = 2) {
       // Mock for timeout error simulation
       let currentAttempt = 0;
       const failureCount = ${failureCount};
-      
+
       // Simulate timeout error for the first few attempts
       currentAttempt++;
       console.log(\`[Mock] API call attempt \${currentAttempt}\`);
-      
+
       if (currentAttempt <= failureCount) {
         console.log(\`[Mock] Simulating timeout error (attempt \${currentAttempt}/\${failureCount})\`);
         throw new Error('Request timed out after 60000ms');
       }
-      
+
       const response = await anthropic.messages.create(`;
 			break;
 
@@ -91,11 +91,11 @@ function createErrorSimulationScript(errorType, failureCount = 2) {
       // Mock for invalid JSON response
       let currentAttempt = 0;
       const failureCount = ${failureCount};
-      
+
       // Simulate invalid JSON for the first few attempts
       currentAttempt++;
       console.log(\`[Mock] API call attempt \${currentAttempt}\`);
-      
+
       if (currentAttempt <= failureCount) {
         console.log(\`[Mock] Simulating invalid JSON response (attempt \${currentAttempt}/\${failureCount})\`);
         return {
@@ -106,7 +106,7 @@ function createErrorSimulationScript(errorType, failureCount = 2) {
           ]
         };
       }
-      
+
       const response = await anthropic.messages.create(`;
 			break;
 
@@ -115,11 +115,11 @@ function createErrorSimulationScript(errorType, failureCount = 2) {
       // Mock for empty tasks array
       let currentAttempt = 0;
       const failureCount = ${failureCount};
-      
+
       // Simulate empty tasks array for the first few attempts
       currentAttempt++;
       console.log(\`[Mock] API call attempt \${currentAttempt}\`);
-      
+
       if (currentAttempt <= failureCount) {
         console.log(\`[Mock] Simulating empty tasks array (attempt \${currentAttempt}/\${failureCount})\`);
         return {
@@ -130,7 +130,7 @@ function createErrorSimulationScript(errorType, failureCount = 2) {
           ]
         };
       }
-      
+
       const response = await anthropic.messages.create(`;
 			break;
 

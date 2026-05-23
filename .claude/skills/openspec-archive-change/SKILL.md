@@ -82,7 +82,26 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
-6. **Display summary**
+6. **Save to memory** (auto, after successful archive)
+
+   Сохранить summary архивного change'а в `vector-memory` через `memory-orchestrator` для семантического поиска аналогов в будущем:
+
+   ```
+   mcp__memory-orchestrator__route_and_save(
+     content="archived OpenSpec change: <name>. Summary: <первый параграф proposal.md>. Capabilities: <список из specs/>.",
+     metadata={
+       "category": "openspec-archived",
+       "change_id": "<name>",
+       "jira_task_id": "<из .openspec.yaml если есть>",
+       "archive_date": "YYYY-MM-DD",
+       "schema": "<schema-name>"
+     }
+   )
+   ```
+
+   Graceful degradation: если orchestrator недоступен — log warning и продолжить.
+
+7. **Display summary**
 
    Show archive completion summary including:
    - Change name

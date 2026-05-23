@@ -1,28 +1,26 @@
 """Tests for Error Learner module."""
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock
 
-from .error_learner import (
-    ErrorLearner,
-    ErrorAnalyzer,
-    ErrorCategory,
-    ErrorSignature,
-    ErrorAnalysis,
-    PreventionRule,
-)
+import pytest
 from models import (
     ErrorRecord,
     ErrorSeverity,
-    Recommendation,
-    RecommendationType,
-    MemoryType,
+)
+
+from .error_learner import (
+    ErrorAnalysis,
+    ErrorAnalyzer,
+    ErrorCategory,
+    ErrorLearner,
+    ErrorSignature,
+    PreventionRule,
 )
 from .unified_memory_client import (
-    UnifiedMemoryClient,
     SaveResult,
     SearchResult,
+    UnifiedMemoryClient,
 )
 
 
@@ -141,7 +139,7 @@ class TestPreventionRule:
 
     def test_rule_types(self):
         """Test different rule types."""
-        rule_types = ['code_check', 'pre_condition', 'validation', 'warning']
+        rule_types = ["code_check", "pre_condition", "validation", "warning"]
 
         for rule_type in rule_types:
             rule = PreventionRule(
@@ -435,6 +433,7 @@ class TestErrorAnalyzer:
         )
 
         from .models import LearningContext
+
         context = LearningContext(
             project_id="test_project",
             session_id="sess_1",

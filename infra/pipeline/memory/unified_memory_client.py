@@ -7,30 +7,28 @@ This module provides a client interface for interacting with the
 unified-memory MCP server to store and retrieve memory entries.
 """
 
-import json
 import asyncio
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Callable
 from enum import Enum
-from pathlib import Path
+from typing import Any
 
 from models import (
-    MemoryEntry,
+    ErrorRecord,
+    LearningContext,
     MemoryType,
     Pattern,
-    ErrorRecord,
     Recommendation,
-    LearningContext,
 )
-
 
 logger = logging.getLogger(__name__)
 
 
 class SearchMode(Enum):
     """Search mode for memory queries."""
+
     SEMANTIC = "semantic"
     FULLTEXT = "fulltext"
     HYBRID = "hybrid"
@@ -64,8 +62,8 @@ class MemoryConfig:
     retry_delay_seconds: float = 1.0
 
     # Project context
-    project_id: Optional[str] = None
-    session_id: Optional[str] = None
+    project_id: str | None = None
+    session_id: str | None = None
 
 
 @dataclass
@@ -78,11 +76,11 @@ class SearchResult:
     score: float
     importance: float
     created_at: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SearchResult":
+    def from_dict(cls, data: dict[str, Any]) -> "SearchResult":
         """Create SearchResult from dictionary."""
         return cls(
             id=data.get("id", ""),
@@ -101,9 +99,9 @@ class SaveResult:
     """Result from memory save operation."""
 
     success: bool
-    memory_id: Optional[str] = None
-    message: Optional[str] = None
-    error: Optional[str] = None
+    memory_id: str | None = None
+    message: str | None = None
+    error: str | None = None
 
 
 class MemoryCache:
@@ -112,9 +110,9 @@ class MemoryCache:
     def __init__(self, ttl_seconds: int = 300, max_size: int = 1000) -> None:
         self.ttl_seconds = ttl_seconds
         self.max_size = max_size
-        self._cache: Dict[str, tuple[Any, datetime]] = {}
+        self._cache: dict[str, tuple[Any, datetime]] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache if not expired."""
         if key in self._cache:
             value, timestamp = self._cache[key]
@@ -174,8 +172,8 @@ class UnifiedMemoryClient:
 
     def __init__(
         self,
-        config: Optional[MemoryConfig] = None,
-        mcp_caller: Optional[Callable] = None,
+        config: MemoryConfig | None = None,
+        mcp_caller: Callable | None = None,
     ):
         """
         Initialize Unified Memory Client.
@@ -189,10 +187,14 @@ class UnifiedMemoryClient:
         self._mcp_caller = mcp_caller
 
         # Initialize cache
-        self._cache = MemoryCache(
-            ttl_seconds=self.config.cache_ttl_seconds,
-            max_size=self.config.max_cache_size,
-        ) if self.config.enable_cache else None
+        self._cache = (
+            MemoryCache(
+                ttl_seconds=self.config.cache_ttl_seconds,
+                max_size=self.config.max_cache_size,
+            )
+            if self.config.enable_cache
+            else None
+        )
 
         # Session state
         self._session_id = self.config.session_id or self._generate_session_id()
@@ -205,8 +207,8 @@ class UnifiedMemoryClient:
     async def _call_mcp(
         self,
         tool_name: str,
-        params: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        params: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Call MCP tool with retry logic.
 
@@ -227,21 +229,15 @@ class UnifiedMemoryClient:
                 else:
                     # In production, this would call the actual MCP tool
                     # For now, return mock response
-                    logger.warning(
-                        f"MCP caller not configured, returning mock for {tool_name}"
-                    )
+                    logger.warning(f"MCP caller not configured, returning mock for {tool_name}")
                     result = self._mock_mcp_response(tool_name, params)
 
                 return result
 
             except Exception as e:
-                logger.warning(
-                    f"MCP call attempt {attempt + 1} failed: {e}"
-                )
+                logger.warning(f"MCP call attempt {attempt + 1} failed: {e}")
                 if attempt < self.config.max_retries - 1:
-                    await asyncio.sleep(
-                        self.config.retry_delay_seconds * (attempt + 1)
-                    )
+                    await asyncio.sleep(self.config.retry_delay_seconds * (attempt + 1))
                 else:
                     raise
 
@@ -250,8 +246,8 @@ class UnifiedMemoryClient:
     def _mock_mcp_response(
         self,
         tool_name: str,
-        params: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        params: dict[str, Any],
+    ) -> dict[str, Any]:
         """Generate mock MCP response for testing."""
         if tool_name == "save_memory":
             return {
@@ -292,9 +288,9 @@ class UnifiedMemoryClient:
         self,
         content: str,
         memory_type: MemoryType = MemoryType.GENERAL,
-        importance: Optional[float] = None,
-        tags: Optional[List[str]] = None,
-        context: Optional[Dict[str, Any]] = None,
+        importance: float | None = None,
+        tags: list[str] | None = None,
+        context: dict[str, Any] | None = None,
     ) -> SaveResult:
         """
         Save content to unified memory.
@@ -408,13 +404,13 @@ class UnifiedMemoryClient:
     async def search_memory(
         self,
         query: str,
-        mode: Optional[SearchMode] = None,
-        memory_type: Optional[MemoryType] = None,
-        limit: Optional[int] = None,
-        min_score: Optional[float] = None,
+        mode: SearchMode | None = None,
+        memory_type: MemoryType | None = None,
+        limit: int | None = None,
+        min_score: float | None = None,
         code_only: bool = False,
         entity_only: bool = False,
-    ) -> List[SearchResult]:
+    ) -> list[SearchResult]:
         """
         Search memory with intelligent aggregation.
 
@@ -452,10 +448,7 @@ class UnifiedMemoryClient:
         try:
             result = await self._call_mcp("search_memory", params)
 
-            results = [
-                SearchResult.from_dict(r)
-                for r in result.get("results", [])
-            ]
+            results = [SearchResult.from_dict(r) for r in result.get("results", [])]
 
             # Cache results
             if self._cache:
@@ -471,7 +464,7 @@ class UnifiedMemoryClient:
         self,
         query: str,
         limit: int = 10,
-    ) -> List[SearchResult]:
+    ) -> list[SearchResult]:
         """Search for patterns in memory."""
         return await self.search_memory(
             query=query,
@@ -483,7 +476,7 @@ class UnifiedMemoryClient:
         self,
         query: str,
         limit: int = 10,
-    ) -> List[SearchResult]:
+    ) -> list[SearchResult]:
         """Search for error records in memory."""
         return await self.search_memory(
             query=query,
@@ -493,10 +486,10 @@ class UnifiedMemoryClient:
 
     async def get_context(
         self,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
         depth: int = 3,
         include_related: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get context for current or specific session.
 
@@ -524,7 +517,7 @@ class UnifiedMemoryClient:
         self,
         entity_name: str,
         analysis_type: str = "dependencies",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Analyze dependencies for an entity.
 
@@ -546,7 +539,7 @@ class UnifiedMemoryClient:
             logger.error(f"Failed to analyze dependencies: {e}")
             return {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Check health of all memory backends.
 
@@ -559,7 +552,7 @@ class UnifiedMemoryClient:
             logger.error(f"Health check failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """
         Get memory statistics.
 
@@ -575,7 +568,7 @@ class UnifiedMemoryClient:
     def set_project_context(
         self,
         project_id: str,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
     ) -> None:
         """
         Set project context for memory operations.
@@ -610,6 +603,6 @@ class UnifiedMemoryClient:
         return self._session_id
 
     @property
-    def project_id(self) -> Optional[str]:
+    def project_id(self) -> str | None:
         """Get current project ID."""
         return self._project_id

@@ -1,0 +1,74 @@
+# kb-lint configuration for PDF Vector & Graph Framework wiki
+# Docs: https://pypi.org/project/kb-lint/
+#
+# Note: kb-lint reads config from <wiki_path>/.kblintrc.yml or
+# <wiki_path>/pyproject.toml [tool.kb-lint] — project root configs are NOT
+# read by kb-lint 0.1.1 (see kb_lint/config.py:60-78).
+
+required_frontmatter:
+  - unified_id
+  - status
+  - tags
+  - confidence
+recommended_frontmatter:
+  - related
+  - created_at
+  - updated_at
+  - promoted_from
+min_article_words: 50
+ignore_patterns:
+  - "_templates/**"
+  - "templates/**"
+  - "archive/**"
+  - "entities/**"           # LightRAG-ingested entity catalog (3000+ auto-
+                            # generated files). Frontmatter is uniform from
+                            # the ingestion pipeline, orphan check is noise
+                            # (no curated [[backlinks]] exist into entities),
+                            # structure check is mostly Cyrillic-stem false
+                            # positives (safety-patch blocks fixes). Treat
+                            # entities/ as data, not curated wiki content.
+                            # Lint focuses on patterns/, drafts/, root pages.
+  - ".git/**"
+  - "node_modules/**"
+  - ".claude/**"
+  - "src/**"
+  - "tests/**"
+  - "tools/**"
+  - "scripts/**"
+  - "features/**"
+  - "data/**"
+  - "build/**"
+  - "tmp/**"
+checks:
+  - links
+  - frontmatter
+  - orphans
+  - structure
+  - consistency
+severity_threshold: warning
+recognized_directories:
+  - patterns
+  - drafts
+  - assets
+allowed_confidence_levels:
+  - high
+  - medium
+  - low
+  # Numeric values: discrete steps 0.0-1.0 + integers (semantic
+  # precision retained vs text bucketing). Wiki frontmatter convention
+  # is float; text levels kept for legacy entries.
+  # Quoted as strings — kb-lint 0.1.1 frontmatter.py:99 ", ".join
+  # ожидает str instances, int/float падают TypeError.
+  - '0'
+  - '0.0'
+  - '0.1'
+  - '0.2'
+  - '0.3'
+  - '0.4'
+  - '0.5'
+  - '0.6'
+  - '0.7'
+  - '0.8'
+  - '0.9'
+  - '1'
+  - '1.0'

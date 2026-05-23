@@ -1,0 +1,9 @@
+{
+  "source": "framework_code_v1",
+  "stages": {
+    "truncate": {
+      "1024": 24527,
+      "512": 24527
+    }
+  }
+}

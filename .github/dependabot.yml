@@ -1,0 +1,31 @@
+# Dependabot — D.5.2 of 260430_AUDIT_DEPS_AND_CI.md
+# Полу-автоматический CVE/version watch для Python deps + GitHub Actions.
+# pip-audit (security-audit job в ci.yml) ловит активные CVE; Dependabot —
+# превентивные version bumps.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Moscow"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
+      - "automated"
+    commit-message:
+      prefix: "chore(ci)"

@@ -10,7 +10,6 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Any
 
 from agents.initializer.models import ContextReport, InitializerConfig
 
@@ -26,7 +25,7 @@ class CacheEntry:
     expires_at: datetime
     context_data: dict = field(default_factory=dict)
     file_count: int = 0
-    last_modified: Optional[datetime] = None
+    last_modified: datetime | None = None
 
     @property
     def is_expired(self) -> bool:
@@ -48,10 +47,7 @@ class CacheEntry:
             "expires_at": self.expires_at.isoformat(),
             "context_data": self.context_data,
             "file_count": self.file_count,
-            "last_modified": (
-                self.last_modified.isoformat()
-                if self.last_modified else None
-            ),
+            "last_modified": (self.last_modified.isoformat() if self.last_modified else None),
         }
 
     @classmethod
@@ -66,8 +62,7 @@ class CacheEntry:
             context_data=data.get("context_data", {}),
             file_count=data.get("file_count", 0),
             last_modified=(
-                datetime.fromisoformat(data["last_modified"])
-                if data.get("last_modified") else None
+                datetime.fromisoformat(data["last_modified"]) if data.get("last_modified") else None
             ),
         )
 
@@ -85,8 +80,8 @@ class ContextCache:
 
     def __init__(
         self,
-        cache_dir: Optional[Path] = None,
-        config: Optional[InitializerConfig] = None,
+        cache_dir: Path | None = None,
+        config: InitializerConfig | None = None,
     ):
         """
         Initialize cache.
@@ -110,7 +105,7 @@ class ContextCache:
         cache_file = self.cache_dir / "context_cache.json"
         if cache_file.exists():
             try:
-                with open(cache_file, "r", encoding="utf-8") as f:
+                with open(cache_file, encoding="utf-8") as f:
                     data = json.load(f)
 
                 for key, entry_data in data.items():
@@ -121,7 +116,7 @@ class ContextCache:
                     except (KeyError, ValueError):
                         continue
 
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 pass
 
     def _save_cache(self) -> None:
@@ -129,23 +124,17 @@ class ContextCache:
         cache_file = self.cache_dir / "context_cache.json"
 
         # Filter out expired entries
-        valid_entries = {
-            k: v.to_dict()
-            for k, v in self._memory_cache.items()
-            if not v.is_expired
-        }
+        valid_entries = {k: v.to_dict() for k, v in self._memory_cache.items() if not v.is_expired}
 
         try:
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(valid_entries, f, ensure_ascii=False, indent=2)
-        except IOError:
+        except OSError:
             pass
 
     def _get_cache_key(self, project_path: str) -> str:
         """Generate cache key from project path."""
-        return hashlib.md5(
-            project_path.encode("utf-8")
-        ).hexdigest()
+        return hashlib.md5(project_path.encode("utf-8")).hexdigest()
 
     def _compute_directory_hash(self, directory: Path) -> str:
         """
@@ -168,9 +157,7 @@ class ContextCache:
                         file_path = Path(root) / file
                         try:
                             stat = file_path.stat()
-                            hash_parts.append(
-                                f"{file_path}:{stat.st_mtime}:{stat.st_size}"
-                            )
+                            hash_parts.append(f"{file_path}:{stat.st_mtime}:{stat.st_size}")
                         except OSError:
                             continue
 
@@ -209,7 +196,7 @@ class ContextCache:
 
         return True
 
-    def get(self, project_path: str) -> Optional[CacheEntry]:
+    def get(self, project_path: str) -> CacheEntry | None:
         """
         Get cached entry.
 
@@ -229,7 +216,7 @@ class ContextCache:
         self,
         project_path: str,
         context_report: ContextReport,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> CacheEntry:
         """
         Cache context report.
@@ -308,10 +295,7 @@ class ContextCache:
         Returns:
             Number of entries removed
         """
-        expired_keys = [
-            k for k, v in self._memory_cache.items()
-            if v.is_expired
-        ]
+        expired_keys = [k for k, v in self._memory_cache.items() if v.is_expired]
 
         for key in expired_keys:
             del self._memory_cache[key]
@@ -324,10 +308,7 @@ class ContextCache:
     def get_stats(self) -> dict:
         """Get cache statistics."""
         total = len(self._memory_cache)
-        expired = sum(
-            1 for v in self._memory_cache.values()
-            if v.is_expired
-        )
+        expired = sum(1 for v in self._memory_cache.values() if v.is_expired)
         valid = total - expired
 
         return {
@@ -340,12 +321,12 @@ class ContextCache:
 
 
 # Global cache instance
-_global_cache: Optional[ContextCache] = None
+_global_cache: ContextCache | None = None
 
 
 def get_cache(
-    cache_dir: Optional[Path] = None,
-    config: Optional[InitializerConfig] = None,
+    cache_dir: Path | None = None,
+    config: InitializerConfig | None = None,
 ) -> ContextCache:
     """Get or create global cache instance."""
     global _global_cache
@@ -359,7 +340,7 @@ def get_cache(
 def cache_context(
     project_path: str,
     context_report: ContextReport,
-    ttl: Optional[int] = None,
+    ttl: int | None = None,
 ) -> CacheEntry:
     """
     Cache context report.
@@ -378,7 +359,7 @@ def cache_context(
     return cache.set(project_path, context_report, ttl)
 
 
-def get_cached_context(project_path: str) -> Optional[CacheEntry]:
+def get_cached_context(project_path: str) -> CacheEntry | None:
     """
     Get cached context.
 

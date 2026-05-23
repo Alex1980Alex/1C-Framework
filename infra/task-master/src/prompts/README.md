@@ -72,7 +72,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 ## Prompt Template Reference
 
 ### 1. parse-prd.json
-**Purpose**: Parse a Product Requirements Document into structured tasks  
+**Purpose**: Parse a Product Requirements Document into structured tasks
 **Variants**: `default`, `research` (when research mode is enabled)
 
 **Required Parameters**:
@@ -88,7 +88,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master parse-prd` command to convert PRD documents into actionable task lists.
 
 ### 2. add-task.json
-**Purpose**: Generate a new task based on user description  
+**Purpose**: Generate a new task based on user description
 **Variants**: `default`, `research` (when research mode is enabled)
 
 **Required Parameters**:
@@ -106,7 +106,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master add-task` command to create new tasks with AI assistance.
 
 ### 3. expand-task.json
-**Purpose**: Break down a task into detailed subtasks with three sophisticated strategies  
+**Purpose**: Break down a task into detailed subtasks with three sophisticated strategies
 **Variants**: `complexity-report` (when expansionPrompt exists), `research` (when research mode is enabled), `default` (standard case)
 
 **Required Parameters**:
@@ -129,7 +129,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master expand` command to break complex tasks into manageable subtasks using the most appropriate strategy based on available context and complexity analysis.
 
 ### 4. update-task.json
-**Purpose**: Update a single task with new information, supporting full updates and append mode  
+**Purpose**: Update a single task with new information, supporting full updates and append mode
 **Variants**: `default`, `append` (when appendMode is true), `research` (when research mode is enabled)
 
 **Required Parameters**:
@@ -146,7 +146,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master update-task` command to modify existing tasks.
 
 ### 5. update-tasks.json
-**Purpose**: Update multiple tasks based on new context or changes  
+**Purpose**: Update multiple tasks based on new context or changes
 **Variants**: `default`, `research` (when research mode is enabled)
 
 **Required Parameters**:
@@ -160,7 +160,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master update` command to bulk update multiple tasks.
 
 ### 6. update-subtask.json
-**Purpose**: Append information to a subtask by generating only new content  
+**Purpose**: Append information to a subtask by generating only new content
 **Variants**: `default`, `research` (when research mode is enabled)
 
 **Required Parameters**:
@@ -177,7 +177,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master update-subtask` command to log progress and findings on subtasks.
 
 ### 7. analyze-complexity.json
-**Purpose**: Analyze task complexity and generate expansion recommendations  
+**Purpose**: Analyze task complexity and generate expansion recommendations
 **Variants**: `default`, `research` (when research mode is enabled), `batch` (when analyzing >10 tasks)
 
 **Required Parameters**:
@@ -191,7 +191,7 @@ All prompt templates are validated against JSON schemas located in `/src/prompts
 **Usage**: Used by `task-master analyze-complexity` command to determine which tasks need breakdown.
 
 ### 8. research.json
-**Purpose**: Perform AI-powered research with project context  
+**Purpose**: Perform AI-powered research with project context
 **Variants**: `default`, `low` (concise responses), `medium` (balanced), `high` (detailed)
 
 **Required Parameters**:

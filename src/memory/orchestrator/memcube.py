@@ -29,6 +29,7 @@ class ContentType(str, Enum):
     SKILL = "skill"  # Confirmed workflow, practice
     CODE = "code"  # Code snippet, function, pattern
     OBSERVATION = "observation"  # General observation, note
+    WIKI = "wiki"  # Wiki page content (frontmatter + markdown)
 
 
 @dataclass
@@ -217,6 +218,120 @@ class MemoryCube:
             "updated_at": self.updated_at.isoformat(),
             "version": self.version,
         }
+
+    def to_wiki_page(self) -> str:
+        """Serialize to Obsidian-compatible markdown with YAML frontmatter."""
+        import yaml
+
+        frontmatter = {
+            "unified_id": f"{self.memory_type.value}:{self.source.value}:{self.cube_id}",
+            "memory_type": self.memory_type.value,
+            "content_type": self.content_type.value,
+            "source": self.source.value,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "confidence": self.confidence,
+            "importance": self.importance,
+            "version": self.version,
+        }
+        if self.title:
+            frontmatter["title"] = self.title
+        if self.tags:
+            frontmatter["tags"] = self.tags
+        if self.expires_at:
+            frontmatter["expires_at"] = self.expires_at.isoformat()
+        if self.metadata:
+            frontmatter["metadata"] = self.metadata
+
+        lines = ["---"]
+        lines.append(yaml.dump(frontmatter, allow_unicode=True, default_flow_style=False).strip())
+        lines.append("---")
+        lines.append("")
+
+        if self.what:
+            lines.append(f"## What\n\n{self.what}\n")
+        if self.why:
+            lines.append(f"## Why\n\n{self.why}\n")
+        if self.where:
+            lines.append(f"## Where\n\n{self.where}\n")
+        if self.learned:
+            lines.append(f"## Learned\n\n{self.learned}\n")
+        if self.content:
+            lines.append(f"## Content\n\n{self.content}")
+
+        return "\n".join(lines)
+
+    @classmethod
+    def from_wiki_page(cls, md: str) -> MemoryCube:
+        """Parse wiki page markdown with YAML frontmatter back to MemoryCube."""
+        import yaml
+
+        if not md.startswith("---"):
+            return cls(content=md, content_type=ContentType.WIKI)
+
+        parts = md.split("---", 2)
+        if len(parts) < 3:
+            return cls(content=md, content_type=ContentType.WIKI)
+
+        frontmatter = yaml.safe_load(parts[1])
+        body = parts[2].strip()
+
+        # Parse structured sections from body
+        sections = {"what": None, "why": None, "where": None, "learned": None, "content": None}
+        current_section = None
+        section_lines: dict[str, list[str]] = {k: [] for k in sections}
+        fallback_lines = []
+
+        for line in body.split("\n"):
+            if line.startswith("## "):
+                section_name = line[3:].strip().lower()
+                current_section = None
+                if section_name in sections:
+                    current_section = section_name
+                else:
+                    fallback_lines.append(line)
+            elif current_section is not None:
+                section_lines[current_section].append(line)
+            else:
+                fallback_lines.append(line)
+
+        for key, lines in section_lines.items():
+            text = "\n".join(lines).strip()
+            if text:
+                sections[key] = text
+
+        content = sections.get("content") or "\n".join(fallback_lines).strip()
+
+        cube = cls(
+            cube_id=frontmatter.get("unified_id", "").split(":")[-1] or str(uuid4()),
+            content=content,
+            content_type=ContentType(frontmatter.get("content_type", "wiki")),
+            memory_type=MemoryType(frontmatter["memory_type"])
+            if "memory_type" in frontmatter
+            else MemoryType.EPISODIC,
+            source=SourceServer(frontmatter["source"])
+            if "source" in frontmatter
+            else SourceServer.MEMORY_AI,
+            title=frontmatter.get("title"),
+            confidence=frontmatter.get("confidence", 0.7),
+            importance=frontmatter.get("importance", 0.5),
+            tags=frontmatter.get("tags", []),
+            metadata=frontmatter.get("metadata", {}),
+            what=sections["what"].strip() if sections["what"] else None,
+            why=sections["why"].strip() if sections["why"] else None,
+            where=sections["where"].strip() if sections["where"] else None,
+            learned=sections["learned"].strip() if sections["learned"] else None,
+            version=frontmatter.get("version", 1),
+        )
+
+        if "created_at" in frontmatter:
+            cube.created_at = datetime.fromisoformat(frontmatter["created_at"])
+        if "updated_at" in frontmatter:
+            cube.updated_at = datetime.fromisoformat(frontmatter["updated_at"])
+        if "expires_at" in frontmatter:
+            cube.expires_at = datetime.fromisoformat(frontmatter["expires_at"])
+
+        return cube
 
     def __repr__(self) -> str:
         return (

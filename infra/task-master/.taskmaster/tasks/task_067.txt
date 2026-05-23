@@ -103,4 +103,3 @@ This task has two main components:\n\n1. Add `--json` flag to all relevant CLI c
 5. Add a `--reset` flag to remove all existing Taskmaster keybindings before adding new ones
 6. Add a `--list` option to display currently installed Taskmaster keybindings
 7. Implement an `--uninstall` option to remove all Taskmaster keybindings
-

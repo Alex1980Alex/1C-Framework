@@ -61,4 +61,3 @@ Search through the codebase for all hardcoded prompt strings. For each prompt, c
 ### Description: Modify all functions that use hardcoded prompts to import them from the centralized structure
 ### Details:
 For each function that previously used a hardcoded prompt, add an import statement to pull in the prompt from the centralized structure. Test each function after modification to ensure it still works correctly. Update any tests that might be affected by the refactoring. Create a pull request with the changes and document the new prompt structure in the project documentation.
-

@@ -4,32 +4,34 @@ Test Generator for QA Agent.
 Generates test cases based on spec.md requirements and result.md analysis.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
-from enum import Enum
 import re
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
 
-from agents.qa.models import TestCase, TestType, TestSuite
+from agents.qa.models import TestCase, TestSuite, TestType
 from agents.qa.result_analyzer import AnalysisResult, ImplementedFunction
 
 
 class TestCategory(Enum):
     """Test categories."""
-    POSITIVE = "positive"      # Normal flow
-    NEGATIVE = "negative"      # Error handling
-    BOUNDARY = "boundary"      # Edge cases
+
+    POSITIVE = "positive"  # Normal flow
+    NEGATIVE = "negative"  # Error handling
+    BOUNDARY = "boundary"  # Edge cases
     INTEGRATION = "integration"  # Component interaction
 
 
 @dataclass
 class Requirement:
     """Represents a requirement from spec.md."""
+
     id: str
     description: str
     priority: int = 3
-    acceptance_criteria: List[str] = field(default_factory=list)
+    acceptance_criteria: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -55,23 +57,17 @@ class TestGenerator:
     """
 
     # Patterns for parsing spec.md
-    REQUIREMENT_PATTERN = re.compile(
-        r'[-*]\s*(REQ-\d+|ТРБ-\d+)[:\s]+(.+)',
-        re.IGNORECASE
-    )
+    REQUIREMENT_PATTERN = re.compile(r"[-*]\s*(REQ-\d+|ТРБ-\d+)[:\s]+(.+)", re.IGNORECASE)
 
-    ACCEPTANCE_CRITERIA_PATTERN = re.compile(
-        r'[-*]\s*(?:AC|КП)[-\d]*[:\s]+(.+)',
-        re.IGNORECASE
-    )
+    ACCEPTANCE_CRITERIA_PATTERN = re.compile(r"[-*]\s*(?:AC|КП)[-\d]*[:\s]+(.+)", re.IGNORECASE)
 
     def __init__(self) -> None:
         """Initialize generator."""
-        self.requirements: List[Requirement] = []
-        self.analysis: Optional[AnalysisResult] = None
+        self.requirements: list[Requirement] = []
+        self.analysis: AnalysisResult | None = None
         self._test_counter = 0
 
-    def load_spec(self, content: str) -> List[Requirement]:
+    def load_spec(self, content: str) -> list[Requirement]:
         """
         Load and parse spec.md content.
 
@@ -123,7 +119,7 @@ class TestGenerator:
 
         return suite
 
-    def generate_for_requirement(self, requirement: Requirement) -> List[TestCase]:
+    def generate_for_requirement(self, requirement: Requirement) -> list[TestCase]:
         """
         Generate test cases for a single requirement.
 
@@ -135,7 +131,7 @@ class TestGenerator:
         """
         return self._generate_requirement_tests(requirement)
 
-    def generate_for_function(self, function: ImplementedFunction) -> List[TestCase]:
+    def generate_for_function(self, function: ImplementedFunction) -> list[TestCase]:
         """
         Generate test cases for a single function.
 
@@ -152,7 +148,7 @@ class TestGenerator:
         self._test_counter += 1
         return f"TC-{self._test_counter:03d}"
 
-    def _parse_requirements(self, content: str) -> List[Requirement]:
+    def _parse_requirements(self, content: str) -> list[Requirement]:
         """Parse requirements from spec.md content."""
         requirements = []
 
@@ -162,7 +158,7 @@ class TestGenerator:
 
             # Find acceptance criteria after this requirement
             start = match.end()
-            end = content.find('\n\n', start)
+            end = content.find("\n\n", start)
             if end == -1:
                 end = start + 500
 
@@ -171,161 +167,181 @@ class TestGenerator:
             for ac_match in self.ACCEPTANCE_CRITERIA_PATTERN.finditer(section):
                 criteria.append(ac_match.group(1).strip())
 
-            requirements.append(Requirement(
-                id=req_id,
-                description=description,
-                acceptance_criteria=criteria,
-            ))
+            requirements.append(
+                Requirement(
+                    id=req_id,
+                    description=description,
+                    acceptance_criteria=criteria,
+                )
+            )
 
         return requirements
 
-    def _generate_requirement_tests(self, req: Requirement) -> List[TestCase]:
+    def _generate_requirement_tests(self, req: Requirement) -> list[TestCase]:
         """Generate tests for a requirement."""
         tests = []
 
         # Main positive test
-        tests.append(TestCase(
-            id=self._next_id(),
-            name=f"Проверка {req.id}: {req.description[:50]}",
-            description=f"Проверка выполнения требования {req.id}",
-            test_type=TestType.FUNCTIONAL,
-            requirement_id=req.id,
-            preconditions=["Система запущена", "Пользователь авторизован"],
-            steps=[
-                f"Выполнить действие согласно требованию {req.id}",
-                "Проверить результат",
-            ],
-            expected_result=req.description,
-            priority=req.priority,
-            tags=["requirement", "functional"],
-        ))
+        tests.append(
+            TestCase(
+                id=self._next_id(),
+                name=f"Проверка {req.id}: {req.description[:50]}",
+                description=f"Проверка выполнения требования {req.id}",
+                test_type=TestType.FUNCTIONAL,
+                requirement_id=req.id,
+                preconditions=["Система запущена", "Пользователь авторизован"],
+                steps=[
+                    f"Выполнить действие согласно требованию {req.id}",
+                    "Проверить результат",
+                ],
+                expected_result=req.description,
+                priority=req.priority,
+                tags=["requirement", "functional"],
+            )
+        )
 
         # Generate tests for acceptance criteria
         for i, criterion in enumerate(req.acceptance_criteria, 1):
-            tests.append(TestCase(
-                id=self._next_id(),
-                name=f"КП-{i} для {req.id}",
-                description=f"Проверка критерия приёмки: {criterion}",
-                test_type=TestType.FUNCTIONAL,
-                requirement_id=req.id,
-                steps=[
-                    f"Проверить критерий: {criterion}",
-                ],
-                expected_result=criterion,
-                priority=req.priority,
-                tags=["acceptance_criteria"],
-            ))
+            tests.append(
+                TestCase(
+                    id=self._next_id(),
+                    name=f"КП-{i} для {req.id}",
+                    description=f"Проверка критерия приёмки: {criterion}",
+                    test_type=TestType.FUNCTIONAL,
+                    requirement_id=req.id,
+                    steps=[
+                        f"Проверить критерий: {criterion}",
+                    ],
+                    expected_result=criterion,
+                    priority=req.priority,
+                    tags=["acceptance_criteria"],
+                )
+            )
 
         # Negative test
-        tests.append(TestCase(
-            id=self._next_id(),
-            name=f"Негативный тест {req.id}",
-            description=f"Проверка обработки ошибок для {req.id}",
-            test_type=TestType.FUNCTIONAL,
-            requirement_id=req.id,
-            preconditions=["Система запущена"],
-            steps=[
-                "Передать некорректные данные",
-                "Проверить сообщение об ошибке",
-            ],
-            expected_result="Система корректно обрабатывает ошибку",
-            priority=req.priority + 1,  # Lower priority
-            tags=["negative", "error_handling"],
-        ))
+        tests.append(
+            TestCase(
+                id=self._next_id(),
+                name=f"Негативный тест {req.id}",
+                description=f"Проверка обработки ошибок для {req.id}",
+                test_type=TestType.FUNCTIONAL,
+                requirement_id=req.id,
+                preconditions=["Система запущена"],
+                steps=[
+                    "Передать некорректные данные",
+                    "Проверить сообщение об ошибке",
+                ],
+                expected_result="Система корректно обрабатывает ошибку",
+                priority=req.priority + 1,  # Lower priority
+                tags=["negative", "error_handling"],
+            )
+        )
 
         return tests
 
-    def _generate_function_tests(self, func: ImplementedFunction) -> List[TestCase]:
+    def _generate_function_tests(self, func: ImplementedFunction) -> list[TestCase]:
         """Generate tests for a function/procedure."""
         tests = []
 
         # Unit test - positive
-        tests.append(TestCase(
-            id=self._next_id(),
-            name=f"Unit: {func.name} - позитивный",
-            description=f"Проверка функции {func.name} с корректными данными",
-            test_type=TestType.UNIT,
-            preconditions=self._generate_preconditions(func),
-            steps=self._generate_positive_steps(func),
-            expected_result=func.returns if func.returns else "Функция выполняется без ошибок",
-            priority=1 if func.is_export else 2,
-            tags=["unit", "positive"],
-        ))
+        tests.append(
+            TestCase(
+                id=self._next_id(),
+                name=f"Unit: {func.name} - позитивный",
+                description=f"Проверка функции {func.name} с корректными данными",
+                test_type=TestType.UNIT,
+                preconditions=self._generate_preconditions(func),
+                steps=self._generate_positive_steps(func),
+                expected_result=func.returns if func.returns else "Функция выполняется без ошибок",
+                priority=1 if func.is_export else 2,
+                tags=["unit", "positive"],
+            )
+        )
 
         # Unit test - boundary
         if func.parameters:
-            tests.append(TestCase(
-                id=self._next_id(),
-                name=f"Unit: {func.name} - граничные значения",
-                description=f"Проверка функции {func.name} с граничными значениями",
-                test_type=TestType.UNIT,
-                preconditions=self._generate_preconditions(func),
-                steps=self._generate_boundary_steps(func),
-                expected_result="Функция корректно обрабатывает граничные значения",
-                priority=2,
-                tags=["unit", "boundary"],
-            ))
+            tests.append(
+                TestCase(
+                    id=self._next_id(),
+                    name=f"Unit: {func.name} - граничные значения",
+                    description=f"Проверка функции {func.name} с граничными значениями",
+                    test_type=TestType.UNIT,
+                    preconditions=self._generate_preconditions(func),
+                    steps=self._generate_boundary_steps(func),
+                    expected_result="Функция корректно обрабатывает граничные значения",
+                    priority=2,
+                    tags=["unit", "boundary"],
+                )
+            )
 
         # Unit test - negative
-        tests.append(TestCase(
-            id=self._next_id(),
-            name=f"Unit: {func.name} - негативный",
-            description=f"Проверка функции {func.name} с некорректными данными",
-            test_type=TestType.UNIT,
-            preconditions=self._generate_preconditions(func),
-            steps=self._generate_negative_steps(func),
-            expected_result="Функция выбрасывает исключение или возвращает ошибку",
-            priority=2,
-            tags=["unit", "negative"],
-        ))
+        tests.append(
+            TestCase(
+                id=self._next_id(),
+                name=f"Unit: {func.name} - негативный",
+                description=f"Проверка функции {func.name} с некорректными данными",
+                test_type=TestType.UNIT,
+                preconditions=self._generate_preconditions(func),
+                steps=self._generate_negative_steps(func),
+                expected_result="Функция выбрасывает исключение или возвращает ошибку",
+                priority=2,
+                tags=["unit", "negative"],
+            )
+        )
 
         # If export - integration test
         if func.is_export:
-            tests.append(TestCase(
-                id=self._next_id(),
-                name=f"Integration: {func.name}",
-                description=f"Интеграционный тест экспортной функции {func.name}",
-                test_type=TestType.INTEGRATION,
-                preconditions=[
-                    "Модуль загружен",
-                    "Зависимости доступны",
-                ],
-                steps=[
-                    f"Вызвать {func.name} из внешнего модуля",
-                    "Проверить результат",
-                    "Проверить побочные эффекты",
-                ],
-                expected_result="Функция работает корректно при внешнем вызове",
-                priority=1,
-                tags=["integration", "export"],
-            ))
+            tests.append(
+                TestCase(
+                    id=self._next_id(),
+                    name=f"Integration: {func.name}",
+                    description=f"Интеграционный тест экспортной функции {func.name}",
+                    test_type=TestType.INTEGRATION,
+                    preconditions=[
+                        "Модуль загружен",
+                        "Зависимости доступны",
+                    ],
+                    steps=[
+                        f"Вызвать {func.name} из внешнего модуля",
+                        "Проверить результат",
+                        "Проверить побочные эффекты",
+                    ],
+                    expected_result="Функция работает корректно при внешнем вызове",
+                    priority=1,
+                    tags=["integration", "export"],
+                )
+            )
 
         return tests
 
-    def _generate_preconditions(self, func: ImplementedFunction) -> List[str]:
+    def _generate_preconditions(self, func: ImplementedFunction) -> list[str]:
         """Generate preconditions for function test."""
         preconditions = [
             "Модуль загружен",
         ]
 
         if func.parameters:
-            preconditions.append(f"Подготовлены тестовые данные для {len(func.parameters)} параметров")
+            preconditions.append(
+                f"Подготовлены тестовые данные для {len(func.parameters)} параметров"
+            )
 
         return preconditions
 
-    def _generate_positive_steps(self, func: ImplementedFunction) -> List[str]:
+    def _generate_positive_steps(self, func: ImplementedFunction) -> list[str]:
         """Generate positive test steps."""
         steps = []
 
         if func.parameters:
             steps.append(f"Подготовить корректные значения для: {', '.join(func.parameters)}")
 
-        steps.append(f"Вызвать {func.name}({', '.join(func.parameters) if func.parameters else ''})")
+        steps.append(
+            f"Вызвать {func.name}({', '.join(func.parameters) if func.parameters else ''})"
+        )
         steps.append("Проверить возвращаемое значение")
 
         return steps
 
-    def _generate_boundary_steps(self, func: ImplementedFunction) -> List[str]:
+    def _generate_boundary_steps(self, func: ImplementedFunction) -> list[str]:
         """Generate boundary test steps."""
         steps = [
             "Определить граничные значения параметров",
@@ -339,7 +355,7 @@ class TestGenerator:
 
         return steps
 
-    def _generate_negative_steps(self, func: ImplementedFunction) -> List[str]:
+    def _generate_negative_steps(self, func: ImplementedFunction) -> list[str]:
         """Generate negative test steps."""
         steps = [
             "Подготовить некорректные данные",
@@ -360,7 +376,7 @@ class TestGenerator:
 class BSLTestTemplates:
     """Templates for generating BSL test code."""
 
-    UNIT_TEST_TEMPLATE = '''
+    UNIT_TEST_TEMPLATE = """
 Процедура Тест_{function_name}() Экспорт
     // Arrange
     {arrange_code}
@@ -371,14 +387,14 @@ class BSLTestTemplates:
     // Assert
     {assert_code}
 КонецПроцедуры
-'''
+"""
 
-    ARRANGE_TEMPLATE = '''    // Подготовка тестовых данных
-    {params_init}'''
+    ARRANGE_TEMPLATE = """    // Подготовка тестовых данных
+    {params_init}"""
 
-    ACT_TEMPLATE = '''    Результат = {module_name}.{function_name}({params});'''
+    ACT_TEMPLATE = """    Результат = {module_name}.{function_name}({params});"""
 
-    ASSERT_TEMPLATE = '''    Ожидаем.Что(Результат).{assertion};'''
+    ASSERT_TEMPLATE = """    Ожидаем.Что(Результат).{assertion};"""
 
     @classmethod
     def generate_bsl_test(
@@ -393,11 +409,11 @@ class BSLTestTemplates:
             params_init.append(f"Парам{i + 1} = ; // {param}")
 
         arrange = cls.ARRANGE_TEMPLATE.format(
-            params_init='\n    '.join(params_init) if params_init else "// Нет параметров"
+            params_init="\n    ".join(params_init) if params_init else "// Нет параметров"
         )
 
         # Generate act
-        params_str = ', '.join([f"Парам{i + 1}" for i in range(len(func.parameters))])
+        params_str = ", ".join([f"Парам{i + 1}" for i in range(len(func.parameters))])
         act = cls.ACT_TEMPLATE.format(
             module_name=module_name,
             function_name=func.name,
@@ -420,7 +436,7 @@ class BSLTestTemplates:
 # Convenience function
 def generate_tests(
     spec_content: str,
-    analysis: Optional[AnalysisResult] = None,
+    analysis: AnalysisResult | None = None,
     suite_name: str = "Generated Tests",
 ) -> TestSuite:
     """

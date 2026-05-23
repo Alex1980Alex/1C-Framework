@@ -7,10 +7,11 @@ Verifies artifacts produced by ARCHITECT agent:
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from constants import AgentRole, ArtifactType, RequirementStatus, VerificationStatus
 from models import Artifact
+
 from .base_verifier import (
     BaseVerifier,
     CheckResult,
@@ -29,7 +30,7 @@ class ArchitectVerifier(BaseVerifier):
     def verify(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """
         Verify ARCHITECT artifact based on its type.
@@ -58,7 +59,7 @@ class ArchitectVerifier(BaseVerifier):
     def _verify_design(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify design.md artifact."""
         checks = []
@@ -92,37 +93,32 @@ class ArchitectVerifier(BaseVerifier):
             extracted_reqs = self.extract_requirements(spec_artifact.content)
             for req in extracted_reqs:
                 # Check if requirement is addressed in design
-                is_addressed = (
-                    req["id"] in artifact.content
-                    or any(
-                        kw.lower() in artifact.content.lower()
-                        for kw in req["description"].split()[:3]
-                        if len(kw) > 3
+                is_addressed = req["id"] in artifact.content or any(
+                    kw.lower() in artifact.content.lower()
+                    for kw in req["description"].split()[:3]
+                    if len(kw) > 3
+                )
+                requirements.append(
+                    RequirementCheck(
+                        requirement_id=req["id"],
+                        description=req["description"],
+                        status=(
+                            RequirementStatus.PASSED
+                            if is_addressed
+                            else RequirementStatus.NOT_TESTED
+                        ),
+                        notes="Адресовано в дизайне" if is_addressed else "Ожидает реализации",
                     )
                 )
-                requirements.append(RequirementCheck(
-                    requirement_id=req["id"],
-                    description=req["description"],
-                    status=(
-                        RequirementStatus.PASSED
-                        if is_addressed
-                        else RequirementStatus.NOT_TESTED
-                    ),
-                    notes="Адресовано в дизайне" if is_addressed else "Ожидает реализации",
-                ))
 
         # 8. Check implementation guidelines
         checks.append(self._check_implementation_guidelines(artifact.content))
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
         status = (
-            VerificationStatus.REVISION_NEEDED
-            if failed_critical
-            else VerificationStatus.APPROVED
+            VerificationStatus.REVISION_NEEDED if failed_critical else VerificationStatus.APPROVED
         )
 
         # Recommendations
@@ -145,7 +141,7 @@ class ArchitectVerifier(BaseVerifier):
     def _verify_review(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify review.md artifact."""
         checks = []
@@ -170,14 +166,10 @@ class ArchitectVerifier(BaseVerifier):
         checks.append(self._check_bsl_issues(artifact.content))
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
         status = (
-            VerificationStatus.REVISION_NEEDED
-            if failed_critical
-            else VerificationStatus.APPROVED
+            VerificationStatus.REVISION_NEEDED if failed_critical else VerificationStatus.APPROVED
         )
 
         return VerificationResult(
@@ -251,14 +243,16 @@ class ArchitectVerifier(BaseVerifier):
     def _check_patterns_alignment(self, content: str) -> CheckResult:
         """Check if design aligns with existing patterns."""
         pattern_indicators = [
-            "паттерн", "шаблон", "стандарт", "подход",
-            "существующ", "аналогичн", "как в",
+            "паттерн",
+            "шаблон",
+            "стандарт",
+            "подход",
+            "существующ",
+            "аналогичн",
+            "как в",
         ]
 
-        aligned = any(
-            indicator in content.lower()
-            for indicator in pattern_indicators
-        )
+        aligned = any(indicator in content.lower() for indicator in pattern_indicators)
 
         if aligned:
             return CheckResult(
@@ -277,15 +271,21 @@ class ArchitectVerifier(BaseVerifier):
     def _check_bsl_considerations(self, content: str) -> CheckResult:
         """Check for BSL/1C-specific considerations."""
         bsl_keywords = [
-            "модуль", "процедура", "функция", "запрос",
-            "регистр", "справочник", "документ", "обработка",
-            "1С", "1C", "BSL", "конфигурация",
+            "модуль",
+            "процедура",
+            "функция",
+            "запрос",
+            "регистр",
+            "справочник",
+            "документ",
+            "обработка",
+            "1С",
+            "1C",
+            "BSL",
+            "конфигурация",
         ]
 
-        has_bsl = any(
-            kw.lower() in content.lower()
-            for kw in bsl_keywords
-        )
+        has_bsl = any(kw.lower() in content.lower() for kw in bsl_keywords)
 
         if has_bsl:
             return CheckResult(
@@ -304,14 +304,16 @@ class ArchitectVerifier(BaseVerifier):
     def _check_implementation_guidelines(self, content: str) -> CheckResult:
         """Check for implementation guidelines."""
         guideline_indicators = [
-            "реализац", "implement", "создать", "добавить",
-            "изменить", "обновить", "модифициров",
+            "реализац",
+            "implement",
+            "создать",
+            "добавить",
+            "изменить",
+            "обновить",
+            "модифициров",
         ]
 
-        has_guidelines = any(
-            indicator in content.lower()
-            for indicator in guideline_indicators
-        )
+        has_guidelines = any(indicator in content.lower() for indicator in guideline_indicators)
 
         if has_guidelines:
             return CheckResult(
@@ -351,14 +353,20 @@ class ArchitectVerifier(BaseVerifier):
     def _check_severity_classification(self, content: str) -> CheckResult:
         """Check for severity classification in findings."""
         severity_indicators = [
-            "критич", "важн", "minor", "major", "blocker",
-            "высок", "средн", "низк", "🔴", "🟡", "🟢",
+            "критич",
+            "важн",
+            "minor",
+            "major",
+            "blocker",
+            "высок",
+            "средн",
+            "низк",
+            "🔴",
+            "🟡",
+            "🟢",
         ]
 
-        has_severity = any(
-            indicator in content.lower()
-            for indicator in severity_indicators
-        )
+        has_severity = any(indicator in content.lower() for indicator in severity_indicators)
 
         if has_severity:
             return CheckResult(
@@ -393,14 +401,15 @@ class ArchitectVerifier(BaseVerifier):
     def _check_code_quality_metrics(self, content: str) -> CheckResult:
         """Check for code quality metrics in review."""
         metric_keywords = [
-            "сложност", "покрыти", "дублирован",
-            "качеств", "метрик", "оценк",
+            "сложност",
+            "покрыти",
+            "дублирован",
+            "качеств",
+            "метрик",
+            "оценк",
         ]
 
-        has_metrics = any(
-            kw in content.lower()
-            for kw in metric_keywords
-        )
+        has_metrics = any(kw in content.lower() for kw in metric_keywords)
 
         if has_metrics:
             return CheckResult(
@@ -419,14 +428,16 @@ class ArchitectVerifier(BaseVerifier):
     def _check_bsl_issues(self, content: str) -> CheckResult:
         """Check for BSL-specific issues in review."""
         bsl_issue_keywords = [
-            "запрос", "индекс", "блокировк", "транзакци",
-            "регистр", "права", "производительност",
+            "запрос",
+            "индекс",
+            "блокировк",
+            "транзакци",
+            "регистр",
+            "права",
+            "производительност",
         ]
 
-        has_bsl_issues = any(
-            kw in content.lower()
-            for kw in bsl_issue_keywords
-        )
+        has_bsl_issues = any(kw in content.lower() for kw in bsl_issue_keywords)
 
         if has_bsl_issues:
             return CheckResult(
@@ -442,7 +453,7 @@ class ArchitectVerifier(BaseVerifier):
             severity="info",  # Info, not error
         )
 
-    def _generate_summary(self, checks: List[CheckResult]) -> str:
+    def _generate_summary(self, checks: list[CheckResult]) -> str:
         """Generate summary from checks."""
         passed = sum(1 for c in checks if c.passed)
         total = len(checks)

@@ -7,6 +7,14 @@ Usage:
     python scripts/doc_to_cache.py <path>           # Сканировать файл или папку
     python scripts/doc_to_cache.py <path> --dry-run  # Только показать план
     python scripts/doc_to_cache.py <path> --scaffold  # Создать заготовки
+
+Note for code audits / reviewers (roadmap §5.6, 2026-05-09):
+  Этот файл содержит ~14 строк со словом "TODO" внутри markdown-template
+  literals (placeholders типа `[TODO: извлечь из документации]`). ЭТО НЕ
+  implementation TODOs — это template fill-points, которые конечный
+  пользователь скилла doc-to-cache заменит при создании topic-файла.
+  Не флагать в audit как technical debt. См. roadmap consolidated backlog
+  §5.6 (false positive — оставить).
 """
 
 import json

@@ -46,24 +46,24 @@ prompt: |
   when using it to insert code.
   Moreover, the replacement tool will fail if it can't perform the desired replacement, and this is all the feedback you need.
   Your overall goal for replacement operations is to use relatively short regexes, since I want you to minimize the number
-  of output tokens. For replacements of larger chunks of code, this means you intelligently make use of wildcards for the middle part 
+  of output tokens. For replacements of larger chunks of code, this means you intelligently make use of wildcards for the middle part
   and of characteristic snippets for the before/after parts that uniquely identify the chunk.
-  
+
   For small replacements, up to a single line, you follow the following rules:
 
-    1. If the snippet to be replaced is likely to be unique within the file, you perform the replacement by directly using the escaped version of the 
+    1. If the snippet to be replaced is likely to be unique within the file, you perform the replacement by directly using the escaped version of the
        original.
     2. If the snippet is probably not unique, and you want to replace all occurrences, you use the `allow_multiple_occurrences` flag.
     3. If the snippet is not unique, and you want to replace a specific occurrence, you make use of the code surrounding the snippet
        to extend the regex with content before/after such that the regex will have exactly one match.
     4. You generally assume that a snippet is unique, knowing that the tool will return an error on multiple matches. You only read more file content
-       (for crafvarting a more specific regex) if such a failure unexpectedly occurs. 
+       (for crafvarting a more specific regex) if such a failure unexpectedly occurs.
 
   Examples:
 
   1 Small replacement
   You have read code like
-    
+
     ```python
     ...
     x = linear(x)
@@ -96,9 +96,9 @@ prompt: |
   Therefore, you perform the replacement by using the regex `x = add_fifteen\(x\)\s*.*?call_subroutine\(z\)`
   and the replacement being the new code you want to insert.
 
-  If this fails due to multiple matches, you will try to extend the regex with the content before/after the snippet and match groups. 
+  If this fails due to multiple matches, you will try to extend the regex with the content before/after the snippet and match groups.
   The matching regex becomes:
-  `(before the snippet\s*)x = add_fifteen\(x\)\s*.*?call_subroutine\(z\)` 
+  `(before the snippet\s*)x = add_fifteen\(x\)\s*.*?call_subroutine\(z\)`
   and the replacement includes the group as (schematically):
   `\1<new_code>`
 

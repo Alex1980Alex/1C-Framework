@@ -26,17 +26,18 @@ ZAIProxy (HTTP server, port 8000)
   └── SSE streaming support
 ```
 
-## Providers (priority order)
+## Providers (priority order — post-cleanup 2026-05-16, roadmap 260509 §2.2)
 
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
-| 0 | **zai-glm5** | **glm-5** | **anthropic** | Yes (ZAI_API_KEY) |
-| 1 | zhipu | glm-4-flash | openai | Yes |
-| 2 | gemini | gemini-2.0-flash | openai | Yes |
-| 3 | openrouter | llama-3.3-70b:free | openai | Yes |
-| 4 | mistral | mistral-small-latest | openai | Yes |
-| 5 | ollama-local | qwen2.5:7b | ollama | No |
-| 6 | ollama-cloud | qwen2.5:7b | ollama | No |
+| 0 | **claude-cli-haiku** | **haiku** | **claude-cli** | No (CLI subscription) |
+| 1 | **claude-cli-sonnet** | **sonnet** | **claude-cli** | No (CLI subscription) |
+| 2 | ollama-local | qwen2.5-coder:7b | ollama | No |
+| 3 | anthropic-sonnet | claude-sonnet-4-6 | anthropic | **Yes** (ANTHROPIC_API_KEY — silent skip if unset) |
+
+**claude-cli-** providers use `claude -p` subprocess via the user's Claude Code CLI subscription quota (flat-rate, not token-billed). Latency 5-15s per spawn — acceptable for batch/indexing, **not for hot-path** (Self-RAG grader, hallucination check). For hot-path, set `ANTHROPIC_API_KEY` to enable anthropic-sonnet HTTP escape hatch.
+
+**Removed** (broken / misconfigured per audit): zai-glm5, zhipu, gemini, openrouter, mistral, ollama-cloud. Re-add via custom `providers=` arg to `LLMRotationService` if needed.
 
 ## Health States
 
@@ -51,12 +52,22 @@ ZAIProxy (HTTP server, port 8000)
 - 3+ consecutive errors -> 5min cooldown
 - Success resets consecutive errors -> HEALTHY
 
+## Installation
+
+```bash
+pip install -e ".[llm-rotation]"
+```
+
+Pulls (per `pyproject.toml`):
+- `mistralai>=1.0`, `openai>=1.0`, `google-generativeai>=0.8` — provider SDKs
+- **`claude-agent-sdk>=0.2,<0.3`** — Anthropic Python package for `claude-cli-*` providers (roadmap 260516 Phase 1, commit `8742cb090`). Manages CLI subprocess + agent loop internally, exposes typed messages (`AssistantMessage`, `ResultMessage`). Required for `format="claude-cli"` providers; HTTP providers (anthropic-sonnet, ollama-local) don't need it.
+
 ## Configuration
 
 ```env
-LLM_ROTATION_PRIMARY_PROVIDER=zai-glm5
+LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-haiku
 LLM_ROTATION_MAX_RETRIES=3
-LLM_ROTATION_TIMEOUT=30
+LLM_ROTATION_TIMEOUT=90
 LLM_ROTATION_COOLDOWN_SECONDS=300
 LLM_ROTATION_RATE_LIMIT_COOLDOWN=60
 ```

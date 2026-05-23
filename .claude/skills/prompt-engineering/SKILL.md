@@ -64,3 +64,16 @@ grader = optimizer.load_optimized_module("grader")
 - Metrics: `src/pdf_framework/optimization/dspy_metrics.py`
 - API: `src/api/routes/optimization.py`
 - Data: `data/dspy_optimized/` (saved modules)
+- Signatures (Hermes Phase 2): `src/pdf_framework/prompts/signatures.py`
+
+## Hermes Phase 2: RAG Agent Signatures
+
+3 DSPy Signatures used directly by RAG agent nodes (async via `asyncio.to_thread`):
+
+| Signature | Agent Node | Output |
+|-----------|-----------|--------|
+| `GraderSignature` | `grader.py` | `relevance_score: relevant/partial/irrelevant` |
+| `RewriterSignature` | `rewriter.py` | `rewritten_query: str` (via ChainOfThought) |
+| `HallucinationCheckSignature` | `hallucination_checker.py` | `grounded: bool, reasoning: str` |
+
+Async adapters: `async_predict()`, `async_chain_of_thought()` — wrap sync DSPy for async agents.

@@ -9,10 +9,12 @@ SQLite FTS5 fallback когда Qdrant недоступен.
 Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
+import atexit
 import logging
 import os
 import sqlite3
 import sys
+import threading
 from collections.abc import Callable
 from pathlib import Path as FilePath
 from typing import Any
@@ -33,6 +35,8 @@ except ImportError:
     sys.exit(1)
 
 # Импорты сервисов
+from src.framework_search.config import DEFAULT_TEI_URL
+
 from .config import get_bsl_settings
 from .refactor import (
     BackendError,
@@ -41,8 +45,9 @@ from .refactor import (
     RenameDriver,
     RenameResult,
 )
-from .services.embedding import EmbeddingService
 from .services.search import BSLSearchService, SearchMode, SearchRequest
+
+TEI_PRODUCTION_MODEL = "Qwen/Qwen3-Embedding-8B"
 
 # Создаем FastMCP server
 mcp = FastMCP("BSL Semantic Search")
@@ -55,8 +60,8 @@ register_resources_and_prompts(mcp)
 # Глобальные сервисы (ленивая инициализация)
 _services_initialized = False
 search_service = None
-embedding_service = None
-_qdrant_available = False
+_qdrant_available: bool | None = None
+_warmup_thread: threading.Thread | None = None
 
 # Auto-detect framework root and SQLite DB path
 _FRAMEWORK_ROOT = FilePath(__file__).resolve().parent.parent.parent.parent
@@ -85,19 +90,35 @@ def _get_sqlite_conn():
     return conn
 
 
+def _bg_warmup() -> None:
+    global _qdrant_available
+    try:
+        _qdrant_available = _check_qdrant()
+    except Exception as exc:
+        _qdrant_available = False
+        logger.warning(f"BG warmup failed: {exc}")
+
+
+def _start_warmup() -> None:
+    global _warmup_thread
+    if _warmup_thread is None:
+        _warmup_thread = threading.Thread(target=_bg_warmup, daemon=True, name="bsl-mcp-warmup")
+        _warmup_thread.start()
+
+
 async def ensure_services():
     """Ленивая инициализация всех сервисов"""
-    global _services_initialized, search_service, embedding_service, _qdrant_available
+    global _services_initialized, search_service, _qdrant_available
 
     if _services_initialized:
         return
 
     logger.info("=== Инициализация BSL Semantic Search сервисов ===")
 
-    settings = get_bsl_settings()
-
-    # Проверяем Qdrant
-    _qdrant_available = _check_qdrant()
+    if _warmup_thread is not None and _warmup_thread.is_alive():
+        _warmup_thread.join(timeout=3.0)
+    if _qdrant_available is None:
+        _qdrant_available = _check_qdrant()
     if _qdrant_available:
         logger.info("Qdrant ДОСТУПЕН")
     else:
@@ -107,12 +128,6 @@ async def ensure_services():
         else:
             logger.warning("SQLite DB не найдена. Запустите: scripts/index-folder.bat")
 
-    # Embedding Service
-    embedding_service = EmbeddingService(
-        ollama_host=settings.ollama_host, model=settings.embedding_model
-    )
-    logger.info("Embedding Service OK")
-
     # BSL Search Service
     search_service = BSLSearchService(
         qdrant_service=None, neo4j_service=None, hybrid_engine=None, llm_service=None
@@ -121,6 +136,9 @@ async def ensure_services():
 
     _services_initialized = True
     logger.info("=== Все сервисы инициализированы ===")
+
+
+_start_warmup()
 
 
 # ================================================================
@@ -204,27 +222,98 @@ async def bsl_search(query: str, limit: int = 10, mode: str = "semantic") -> str
 # Tool 2: bsl_similar - Поиск похожих модулей
 # ================================================================
 @mcp.tool()
-async def bsl_similar(file_path: str, limit: int = 5) -> str:
-    """
-    Поиск модулей, похожих на указанный
+def bsl_similar(file_path: str, limit: int = 5) -> str:
+    """Find modules similar to the given file_path using Qdrant vector similarity.
 
     Args:
-        file_path: Путь к файлу-образцу
-        limit: Количество похожих модулей
+        file_path: module_path in the Qdrant index (e.g. path to BSL file)
+        limit: number of similar modules to return
 
     Returns:
-        Список похожих модулей с оценкой схожести
+        Markdown table of similar modules with similarity scores
     """
-    await ensure_services()
-
     logger.info(f"bsl_similar: file='{file_path}', limit={limit}")
 
     try:
-        # TODO: Реализовать через vector search по существующему embedding
-        return f"""## Похожие модули для {file_path}
+        pipeline = _get_hybrid_pipeline()
+        qdrant = pipeline._qdrant
+        collection = pipeline._collection
 
-Функционал в разработке. Используйте bsl_search для семантического поиска.
-"""
+        if qdrant is None:
+            return (
+                f"## Похожие модули для {file_path}\n\n"
+                "Qdrant недоступен. Запустите: `docker start qdrant`"
+            )
+
+        # Locate vectors for the source module_path
+        try:
+            from qdrant_client.http import models as qm
+
+            scroll_filter = qm.Filter(
+                must=[qm.FieldCondition(key="module_path", match=qm.MatchValue(value=file_path))]
+            )
+        except Exception:
+            scroll_filter = {"must": [{"key": "module_path", "match": {"value": file_path}}]}
+
+        points, _ = qdrant.scroll(
+            collection_name=collection,
+            scroll_filter=scroll_filter,
+            limit=5,
+            with_vectors=True,
+            with_payload=False,
+        )
+
+        if not points:
+            return (
+                f"## Похожие модули для {file_path}\n\nФайл не найден в индексе. Запустите reindex."
+            )
+
+        # Extract query vector (handle named-vector dict or plain list)
+        vec = points[0].vector
+        if isinstance(vec, dict):
+            vec = list(vec.values())[0]
+
+        # Find k nearest neighbours, exclude source
+        response = qdrant.query_points(
+            collection_name=collection,
+            query=vec,
+            limit=limit + 5,
+            with_payload=True,
+        )
+        hits = response.points if hasattr(response, "points") else []
+
+        seen_paths: set[str] = {file_path}
+        results = []
+        for hit in hits:
+            p = hit.payload or {}
+            hit_path = p.get("module_path", "")
+            if hit_path in seen_paths:
+                continue
+            seen_paths.add(hit_path)
+            results.append(
+                {
+                    "path": hit_path,
+                    "name": p.get("name", ""),
+                    "score": hit.score,
+                    "symbol_type": p.get("symbol_type", ""),
+                }
+            )
+            if len(results) >= limit:
+                break
+
+        if not results:
+            return f"## Похожие модули для {file_path}\n\nПохожих модулей не найдено."
+
+        rows = "\n".join(
+            f"| {i+1} | `{r['path']}` | {r['name']} | {r['score']:.3f} | {r['symbol_type']} |"
+            for i, r in enumerate(results)
+        )
+        return (
+            f"## Похожие модули для {file_path}\n\n"
+            f"| # | Путь | Имя | Сходство | Тип |\n"
+            f"|---|-----|-----|----------|-----|\n"
+            f"{rows}\n"
+        )
 
     except Exception as e:
         logger.error(f"Ошибка в bsl_similar: {e}", exc_info=True)
@@ -321,13 +410,13 @@ async def bsl_stats() -> str:
 
 **Коллекция**: {settings.collection_name}
 **Векторная размерность**: {settings.embedding_dim}
-**Модель embeddings**: {settings.embedding_model}
+**Модель embeddings**: {TEI_PRODUCTION_MODEL}
 
 **Количество точек**: {collection_info.points_count}
 **Статус**: {collection_info.status}
 
 **Qdrant**: {settings.qdrant_host}:{settings.qdrant_port}
-**Ollama**: {settings.ollama_host}
+**Embedder**: TEI (FrameworkTEIEmbedder) {DEFAULT_TEI_URL}
 """
             except Exception as e:
                 logger.warning(f"Qdrant stats failed, trying SQLite: {e}")
@@ -361,8 +450,8 @@ async def bsl_stats() -> str:
 **По типам**:
 {type_stats}
 
-**Ollama**: {settings.ollama_host}
-**Модель embeddings**: {settings.embedding_model}
+**Embedder**: TEI (FrameworkTEIEmbedder) {DEFAULT_TEI_URL}
+**Модель embeddings**: {TEI_PRODUCTION_MODEL}
 """
         except FileNotFoundError:
             return "Индекс не найден. Запустите: scripts/index-folder.bat"
@@ -473,14 +562,16 @@ def _get_metadata_extractor(project_root: str | None = None):
         if project_root:
             root = FilePath(project_root)
         else:
-            # Auto-detect EDT project under src/projects/configuration/
-            config_dir = _FRAMEWORK_ROOT / "src" / "projects" / "configuration"
-            root = _FRAMEWORK_ROOT
-            if config_dir.is_dir():
-                for d in sorted(config_dir.iterdir()):
-                    if d.is_dir() and (d / "src").is_dir():
-                        root = d
-                        break
+            # Auto-detect via .bsl-language-server.json marker.
+            # Falls back to framework root if no BSL projects found.
+            from src.bsl.project_discovery import find_bsl_projects, get_bsl_source_root
+
+            projects = find_bsl_projects(_FRAMEWORK_ROOT)
+            if projects:
+                # Pick first discovered project; configurationRoot tells where src lives.
+                root = FilePath(get_bsl_source_root(projects[0]).parent)
+            else:
+                root = FilePath(_FRAMEWORK_ROOT)
         _metadata_extractor = MetadataExtractor(root)
     return _metadata_extractor
 
@@ -699,33 +790,30 @@ def _get_hybrid_pipeline():
         except Exception:
             qdrant = None
 
-        # E5-large embedder via FastEmbed ONNX (~3s load vs ~40s for PyTorch)
+        # TEI Qwen3 4096d fallback (Phase 8 §2.1.6). Was E5-large 1024d, dim-mismatched.
         embedder = None
         if qdrant:
             try:
-                import warnings
+                from src.framework_search.embedder import FrameworkTEIEmbedder
 
-                warnings.filterwarnings("ignore", category=UserWarning)
-                from fastembed import TextEmbedding
-
-                class _E5Embedder:
+                class _TEIEmbedder:
                     def __init__(self):
-                        self._model = TextEmbedding("intfloat/multilingual-e5-large")
+                        self._tei = FrameworkTEIEmbedder()
 
                     def embed_query(self, text: str) -> list[float]:
-                        results = list(self._model.query_embed(text))
-                        return results[0].tolist()
+                        return self._tei.embed_batch([text], is_query=True)[0]
 
-                embedder = _E5Embedder()
-            except ImportError:
-                pass
+                embedder = _TEIEmbedder()
+                atexit.register(embedder._tei.close)
+            except Exception as exc:  # noqa: BLE001 — TEI down → no fallback
+                logger.debug("TEI embedder fallback unavailable: %s", exc, exc_info=True)
 
         # Call graph (optional)
         cg = None
         try:
             cg = _get_call_graph()
-        except Exception:
-            pass
+        except Exception as exc:  # noqa: BLE001 — call graph optional
+            logger.debug("Call graph unavailable: %s", exc, exc_info=True)
 
         _hybrid_pipeline = BSLHybridPipeline(
             sqlite_db=_SQLITE_DB,

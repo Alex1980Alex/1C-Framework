@@ -6,7 +6,7 @@ public struct Utils {
         formatter.dateStyle = .medium
         return formatter.string(from: date)
     }
-    
+
     public static func calculateArea(radius: Double) -> Double {
         return Double.pi * radius * radius
     }

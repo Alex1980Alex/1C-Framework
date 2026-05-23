@@ -653,8 +653,8 @@ claude mcp add --transport stdio db -- npx -y @bytebase/dbhub \
 <Steps>
   <Step title="Импортировать серверы из Claude Desktop">
     ```bash  theme={null}
-    # Базовый синтаксис 
-    claude mcp add-from-claude-desktop 
+    # Базовый синтаксис
+    claude mcp add-from-claude-desktop
     ```
   </Step>
 
@@ -664,7 +664,7 @@ claude mcp add --transport stdio db -- npx -y @bytebase/dbhub \
 
   <Step title="Проверить, что серверы были импортированы">
     ```bash  theme={null}
-    claude mcp list 
+    claude mcp list
     ```
   </Step>
 </Steps>

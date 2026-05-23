@@ -2,25 +2,16 @@
 Tests for REVIEWER Report Generator.
 """
 
-import pytest
-from datetime import datetime
-
+from agents.reviewer.models import (
+    ReviewReport,
+    ReviewVerdict,
+)
 from agents.reviewer.report_generator import (
     ReviewContext,
     ReviewGenerator,
     generate_review,
     generate_review_markdown,
 )
-from agents.reviewer.models import (
-    ReviewReport,
-    ReviewIssue,
-    IssueSeverity,
-    IssueCategory,
-    ReviewVerdict,
-    FileChange,
-    StandardCheck,
-)
-
 
 # Sample content for testing
 SIMPLE_DIFF = """diff --git a/src/Module.bsl b/src/Module.bsl
@@ -137,10 +128,7 @@ class TestReviewContext:
 
     def test_creation(self):
         """Test context creation."""
-        ctx = ReviewContext(
-            project_id="PROJECT",
-            task_id="TASK-123"
-        )
+        ctx = ReviewContext(project_id="PROJECT", task_id="TASK-123")
         assert ctx.project_id == "PROJECT"
         assert ctx.task_id == "TASK-123"
         assert ctx.spec_content is None
@@ -155,7 +143,7 @@ class TestReviewContext:
             design_content="design content",
             result_content="result content",
             diff_text="diff text",
-            bsl_files={"file.bsl": "code"}
+            bsl_files={"file.bsl": "code"},
         )
         assert ctx.spec_content == "spec content"
         assert ctx.design_content == "design content"
@@ -164,10 +152,7 @@ class TestReviewContext:
     def test_to_dict(self):
         """Test serialization."""
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            spec_content="spec",
-            bsl_files={"a.bsl": "1", "b.bsl": "2"}
+            project_id="P", task_id="T", spec_content="spec", bsl_files={"a.bsl": "1", "b.bsl": "2"}
         )
         d = ctx.to_dict()
         assert d["project_id"] == "P"
@@ -202,11 +187,7 @@ class TestReviewGenerator:
     def test_generate_with_diff(self):
         """Test generation with diff text."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            diff_text=SIMPLE_DIFF
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", diff_text=SIMPLE_DIFF)
 
         report = gen.generate(ctx)
 
@@ -216,11 +197,7 @@ class TestReviewGenerator:
     def test_generate_with_bsl_files(self):
         """Test generation with BSL files."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"module.bsl": SAMPLE_BSL_CODE}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"module.bsl": SAMPLE_BSL_CODE})
 
         report = gen.generate(ctx)
 
@@ -236,7 +213,7 @@ class TestReviewGenerator:
             project_id="P",
             task_id="T",
             design_content=SAMPLE_DESIGN,
-            bsl_files={"МодульОбработки.bsl": "Процедура Тест() КонецПроцедуры"}
+            bsl_files={"МодульОбработки.bsl": "Процедура Тест() КонецПроцедуры"},
         )
 
         report = gen.generate(ctx)
@@ -252,7 +229,7 @@ class TestReviewGenerator:
             task_id="TASK-123",
             diff_text=SIMPLE_DIFF,
             design_content=SAMPLE_DESIGN,
-            bsl_files={"module.bsl": SAMPLE_BSL_CODE}
+            bsl_files={"module.bsl": SAMPLE_BSL_CODE},
         )
 
         report = gen.generate(ctx)
@@ -267,11 +244,7 @@ class TestReviewGenerator:
     def test_generate_markdown(self):
         """Test markdown generation."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_CODE})
 
         report = gen.generate(ctx)
         markdown = gen.generate_markdown(report)
@@ -289,7 +262,7 @@ class TestReviewGenerator:
         gen.save_report(report, str(output_file))
 
         assert output_file.exists()
-        content = output_file.read_text(encoding='utf-8')
+        content = output_file.read_text(encoding="utf-8")
         assert len(content) > 0
 
 
@@ -299,16 +272,11 @@ class TestStandardChecks:
     def test_naming_vars_pass(self):
         """Test variable naming check - pass."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_CODE})
 
         report = gen.generate(ctx)
         naming_check = next(
-            (c for c in report.standard_checks if "переменных" in c.standard_name.lower()),
-            None
+            (c for c in report.standard_checks if "переменных" in c.standard_name.lower()), None
         )
 
         assert naming_check is not None
@@ -319,15 +287,12 @@ class TestStandardChecks:
         """Test variable naming check - fail."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_WITH_SHORT_VARS}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_WITH_SHORT_VARS}
         )
 
         report = gen.generate(ctx)
         naming_check = next(
-            (c for c in report.standard_checks if "переменных" in c.standard_name.lower()),
-            None
+            (c for c in report.standard_checks if "переменных" in c.standard_name.lower()), None
         )
 
         assert naming_check is not None
@@ -338,15 +303,12 @@ class TestStandardChecks:
         """Test transaction check - balanced."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_WITH_TRANSACTIONS}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_WITH_TRANSACTIONS}
         )
 
         report = gen.generate(ctx)
         trans_check = next(
-            (c for c in report.standard_checks if "транзакции" in c.standard_name.lower()),
-            None
+            (c for c in report.standard_checks if "транзакции" in c.standard_name.lower()), None
         )
 
         assert trans_check is not None
@@ -356,15 +318,12 @@ class TestStandardChecks:
         """Test transaction check - unbalanced."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_UNBALANCED_TRANSACTIONS}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_UNBALANCED_TRANSACTIONS}
         )
 
         report = gen.generate(ctx)
         trans_check = next(
-            (c for c in report.standard_checks if "транзакции" in c.standard_name.lower()),
-            None
+            (c for c in report.standard_checks if "транзакции" in c.standard_name.lower()), None
         )
 
         assert trans_check is not None
@@ -374,16 +333,11 @@ class TestStandardChecks:
         """Test localization check - with НСтр."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_WITH_LOCALIZATION}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_WITH_LOCALIZATION}
         )
 
         report = gen.generate(ctx)
-        loc_check = next(
-            (c for c in report.standard_checks if "НСтр" in c.standard_name),
-            None
-        )
+        loc_check = next((c for c in report.standard_checks if "НСтр" in c.standard_name), None)
 
         assert loc_check is not None
         assert loc_check.passed is True
@@ -392,16 +346,11 @@ class TestStandardChecks:
         """Test localization check - without НСтр."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_WITHOUT_LOCALIZATION}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_WITHOUT_LOCALIZATION}
         )
 
         report = gen.generate(ctx)
-        loc_check = next(
-            (c for c in report.standard_checks if "НСтр" in c.standard_name),
-            None
-        )
+        loc_check = next((c for c in report.standard_checks if "НСтр" in c.standard_name), None)
 
         assert loc_check is not None
         assert loc_check.passed is False
@@ -410,15 +359,12 @@ class TestStandardChecks:
         """Test magic numbers detection."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_WITH_MAGIC_NUMBERS}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_WITH_MAGIC_NUMBERS}
         )
 
         report = gen.generate(ctx)
         magic_check = next(
-            (c for c in report.standard_checks if "магические" in c.standard_name.lower()),
-            None
+            (c for c in report.standard_checks if "магические" in c.standard_name.lower()), None
         )
 
         assert magic_check is not None
@@ -427,17 +373,10 @@ class TestStandardChecks:
     def test_sql_injection_detected(self):
         """Test SQL injection detection."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_SQL_INJECTION}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": BSL_SQL_INJECTION})
 
         report = gen.generate(ctx)
-        sql_check = next(
-            (c for c in report.standard_checks if "SQL" in c.standard_name),
-            None
-        )
+        sql_check = next((c for c in report.standard_checks if "SQL" in c.standard_name), None)
 
         assert sql_check is not None
         # May detect via concatenation pattern
@@ -446,16 +385,11 @@ class TestStandardChecks:
     def test_error_handling_check(self):
         """Test error handling check."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_CODE})
 
         report = gen.generate(ctx)
         error_check = next(
-            (c for c in report.standard_checks if "ошибок" in c.standard_name.lower()),
-            None
+            (c for c in report.standard_checks if "ошибок" in c.standard_name.lower()), None
         )
 
         assert error_check is not None
@@ -470,9 +404,7 @@ class TestVerdictAndScore:
         """Test approved verdict for clean code."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_WITH_TRANSACTIONS}
+            project_id="P", task_id="T", bsl_files={"test.bsl": BSL_WITH_TRANSACTIONS}
         )
 
         report = gen.generate(ctx)
@@ -483,11 +415,7 @@ class TestVerdictAndScore:
     def test_blocked_verdict_with_security_issue(self):
         """Test blocked verdict for security issues."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": BSL_SQL_INJECTION}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": BSL_SQL_INJECTION})
 
         report = gen.generate(ctx)
 
@@ -499,11 +427,7 @@ class TestVerdictAndScore:
     def test_quality_score_calculation(self):
         """Test quality score is calculated."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_CODE})
 
         report = gen.generate(ctx)
 
@@ -517,9 +441,7 @@ class TestConvenienceFunctions:
     def test_generate_review(self):
         """Test generate_review function."""
         report = generate_review(
-            project_id="PROJECT",
-            task_id="TASK-123",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
+            project_id="PROJECT", task_id="TASK-123", bsl_files={"test.bsl": SAMPLE_BSL_CODE}
         )
 
         assert isinstance(report, ReviewReport)
@@ -528,20 +450,14 @@ class TestConvenienceFunctions:
 
     def test_generate_review_with_diff(self):
         """Test generate_review with diff."""
-        report = generate_review(
-            project_id="P",
-            task_id="T",
-            diff_text=SIMPLE_DIFF
-        )
+        report = generate_review(project_id="P", task_id="T", diff_text=SIMPLE_DIFF)
 
         assert len(report.files_reviewed) >= 1
 
     def test_generate_review_markdown(self):
         """Test generate_review_markdown function."""
         markdown = generate_review_markdown(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
+            project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_CODE}
         )
 
         assert isinstance(markdown, str)
@@ -549,10 +465,7 @@ class TestConvenienceFunctions:
 
     def test_generate_review_empty(self):
         """Test generate_review with no content."""
-        report = generate_review(
-            project_id="P",
-            task_id="T"
-        )
+        report = generate_review(project_id="P", task_id="T")
 
         assert isinstance(report, ReviewReport)
         assert report.verdict == ReviewVerdict.APPROVED
@@ -573,7 +486,7 @@ class TestIntegration:
             bsl_files={
                 "module1.bsl": SAMPLE_BSL_CODE,
                 "module2.bsl": BSL_WITH_TRANSACTIONS,
-            }
+            },
         )
 
         # Generate report
@@ -602,7 +515,7 @@ class TestIntegration:
                 "good.bsl": BSL_WITH_TRANSACTIONS,
                 "bad.bsl": BSL_SQL_INJECTION,
                 "ugly.bsl": BSL_WITH_SHORT_VARS,
-            }
+            },
         )
 
         report = gen.generate(ctx)
@@ -621,7 +534,7 @@ class TestIntegration:
             diff_text=SIMPLE_DIFF,  # Contains src/Module.bsl
             bsl_files={
                 "other.bsl": SAMPLE_BSL_CODE,
-            }
+            },
         )
 
         report = gen.generate(ctx)
@@ -637,11 +550,7 @@ class TestEdgeCases:
     def test_empty_bsl_file(self):
         """Test with empty BSL file."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"empty.bsl": ""}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"empty.bsl": ""})
 
         report = gen.generate(ctx)
 
@@ -651,9 +560,7 @@ class TestEdgeCases:
         """Test with Unicode content."""
         gen = ReviewGenerator()
         ctx = ReviewContext(
-            project_id="ПРОЕКТ",
-            task_id="ЗАДАЧА-123",
-            bsl_files={"модуль.bsl": SAMPLE_BSL_CODE}
+            project_id="ПРОЕКТ", task_id="ЗАДАЧА-123", bsl_files={"модуль.bsl": SAMPLE_BSL_CODE}
         )
 
         report = gen.generate(ctx)
@@ -665,11 +572,7 @@ class TestEdgeCases:
         """Test with large BSL file."""
         large_code = SAMPLE_BSL_CODE * 100
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"large.bsl": large_code}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"large.bsl": large_code})
 
         report = gen.generate(ctx)
 
@@ -684,7 +587,7 @@ class TestEdgeCases:
             bsl_files={
                 "path/with spaces/модуль.bsl": SAMPLE_BSL_CODE,
                 "путь/к/файлу.bsl": SAMPLE_BSL_CODE,
-            }
+            },
         )
 
         report = gen.generate(ctx)
@@ -694,11 +597,7 @@ class TestEdgeCases:
     def test_all_standard_checks_present(self):
         """Test all standard checks are present."""
         gen = ReviewGenerator()
-        ctx = ReviewContext(
-            project_id="P",
-            task_id="T",
-            bsl_files={"test.bsl": SAMPLE_BSL_CODE}
-        )
+        ctx = ReviewContext(project_id="P", task_id="T", bsl_files={"test.bsl": SAMPLE_BSL_CODE})
 
         report = gen.generate(ctx)
 
@@ -716,4 +615,3 @@ class TestEdgeCases:
         check_names = [c.standard_name for c in report.standard_checks]
         for expected in expected_checks:
             assert expected in check_names
-

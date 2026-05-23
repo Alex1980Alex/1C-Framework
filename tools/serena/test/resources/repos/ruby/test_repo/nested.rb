@@ -7,7 +7,7 @@ class OuterClass
     inner_function = lambda do |x|
       x * 2
     end
-    
+
     result = inner_function.call(5)
     puts "Result: #{result}"
   end

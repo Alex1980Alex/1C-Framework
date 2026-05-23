@@ -39,7 +39,7 @@ export interface AnalysisResult {
    * Files that were successfully analyzed
    */
   analyzedFiles: EnhancedAnalysisFile[];
-  
+
   /**
    * Files that were excluded due to size or other limits
    */
@@ -47,17 +47,17 @@ export interface AnalysisResult {
     path: string;
     reason: string;
   }>;
-  
+
   /**
    * Whether the analysis was limited due to size/count constraints
    */
   limited: boolean;
-  
+
   /**
    * Total size of all analyzed files in bytes
    */
   totalSize: number;
-  
+
   /**
    * Reason for limitation if any
    */
@@ -69,7 +69,7 @@ export interface AnalysisResult {
  */
 export class FileAnalyzer {
   private config = getConfig();
-  
+
   /**
    * Analyzes files in a directory
    * @param directoryPath Path to the directory
@@ -83,7 +83,7 @@ export class FileAnalyzer {
       limited: false,
       totalSize: 0
     };
-    
+
     // Filter files based on extension
     const codeFiles = filePaths.filter(file => {
       const ext = path.extname(file).toLowerCase();
@@ -95,15 +95,15 @@ export class FileAnalyzer {
         });
         return false;
       }
-      
+
       return this.config.fileProcessing.codeExtensions.includes(ext);
     });
-    
+
     // Check if there are too many files
     if (codeFiles.length > this.config.fileProcessing.maxFilesPerDirectory) {
       result.limited = true;
       result.limitReason = `Too many files (${codeFiles.length} > ${this.config.fileProcessing.maxFilesPerDirectory})`;
-      
+
       // Still analyze files up to the limit
       const limitedFiles = codeFiles.slice(0, this.config.fileProcessing.maxFilesPerDirectory);
       for (const file of codeFiles) {
@@ -116,14 +116,14 @@ export class FileAnalyzer {
           });
         }
       }
-      
+
       return result;
     }
-    
+
     // Process all files
     for (const file of codeFiles) {
       await this.processFile(file, result);
-      
+
       // Check if total size has exceeded limit
       const maxTotalSize = this.config.fileProcessing.maxFilesPerDirectory * this.config.fileProcessing.maxFileSizeKb * 1024;
       if (result.totalSize > maxTotalSize) {
@@ -132,10 +132,10 @@ export class FileAnalyzer {
         break;
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Checks if a directory has enough code files to be documented
    * @param directoryPath Path to the directory
@@ -148,18 +148,18 @@ export class FileAnalyzer {
       const ext = path.extname(file).toLowerCase();
       return ext !== '.md' && this.config.fileProcessing.codeExtensions.includes(ext);
     });
-    
+
     // Skip directories with only one code file unless they have subdirectories
     if (codeFiles.length === 1 && !hasSubdirectories) {
       return false;
     }
-    
+
     // If directory has no code files but has subdirectories, we should still document
     // to synthesize information from subdirectory documentation
     if (codeFiles.length === 0 && hasSubdirectories) {
       return true;
     }
-    
+
     // Need at least 1 code file to document
     return codeFiles.length > 0;
   }
@@ -173,7 +173,7 @@ export class FileAnalyzer {
   public testShouldDocumentEmptyDirWithSubdirs(hasSubdirectories: boolean): boolean {
     return this.shouldDocument("/test/path", [], hasSubdirectories);
   }
-  
+
   /**
    * Creates content for an undocumented.md file
    * @param directoryPath Path to the directory
@@ -182,13 +182,13 @@ export class FileAnalyzer {
    */
   public createUndocumentedContent(directoryPath: string, result: AnalysisResult): string {
     const dirName = path.basename(directoryPath);
-    
+
     let content = `# ${dirName} - Documentation Skipped\n\n`;
-    
+
     if (result.limited && result.limitReason) {
       content += `## Reason\n\n${result.limitReason}\n\n`;
     }
-    
+
     if (result.analyzedFiles.length > 0) {
       content += `## Analyzed Files\n\n`;
       for (const file of result.analyzedFiles) {
@@ -196,7 +196,7 @@ export class FileAnalyzer {
       }
       content += '\n';
     }
-    
+
     if (result.excludedFiles.length > 0) {
       content += `## Excluded Files\n\n`;
       for (const file of result.excludedFiles) {
@@ -204,14 +204,14 @@ export class FileAnalyzer {
       }
       content += '\n';
     }
-    
+
     content += `## How to Fix\n\n`;
     content += `You can manually document this directory by replacing this file with a proper documentation.md file.\n`;
     content += `Alternatively, you can increase the file limits in the tool configuration and run again.\n`;
-    
+
     return content;
   }
-  
+
   /**
    * Process a single file and add it to the analysis result
    * @param filePath Path to the file

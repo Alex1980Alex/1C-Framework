@@ -17,6 +17,10 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from _progress import make_tracker  # noqa: E402
 
 from src.bsl.call_graph.store import CallGraphStore
 from src.bsl.parser import BSLASTParser
@@ -37,9 +41,16 @@ def main() -> None:
         print(f"ERROR: {project} is not a directory")
         sys.exit(1)
 
+    tracker = make_tracker("build_call_graph").start()
+    tracker.event("startup", project=str(project), db=str(args.db), clear=bool(args.clear))
+
     t0 = time.time()
-    parser = BSLASTParser()
-    store = CallGraphStore(args.db)
+    with tracker.stage("init"):
+        parser = BSLASTParser()
+        store = CallGraphStore(args.db)
+        if args.clear:
+            store.clear()
+            print("Cleared existing call graph")
 
     if args.clear:
         store.clear()
@@ -51,19 +62,27 @@ def main() -> None:
         if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
     )
     print(f"Found {len(bsl_files)} BSL files")
+    tracker.event("file_scan_done", count=len(bsl_files))
+    tracker.set_state(total_files=len(bsl_files), file_idx=0, errors=0)
 
     errors = 0
-    for i, fp in enumerate(bsl_files, 1):
-        try:
-            module = parser.parse_file(str(fp))
-            store.add_module(module)
-        except Exception as e:
-            errors += 1
-            if errors <= 10:
-                print(f"[ERROR] {fp.name}: {e}")
+    with tracker.stage("parse_and_store"):
+        for i, fp in enumerate(bsl_files, 1):
+            # Heartbeat picks up file_idx + current; per-200-file print stays
+            # as a coarse pulse so terminal log readers see something even
+            # if heartbeat is disabled by env.
+            tracker.set_state(file_idx=i, current=fp.name, errors=errors)
+            try:
+                module = parser.parse_file(str(fp))
+                store.add_module(module)
+            except Exception as e:
+                errors += 1
+                if errors <= 10:
+                    print(f"[ERROR] {fp.name}: {e}")
+                tracker.event("parse_error", path=str(fp), err=str(e)[:200])
 
-        if i % 200 == 0:
-            print(f"[{i}/{len(bsl_files)}] processed...")
+            if i % 200 == 0:
+                print(f"[{i}/{len(bsl_files)}] processed...")
 
     elapsed = time.time() - t0
     stats = store.stats()
@@ -82,6 +101,17 @@ def main() -> None:
     print(f"  Time:       {elapsed:.1f}s")
     print(f"  DB:         {args.db}")
     print(f"{'=' * 50}")
+
+    tracker.stop(
+        summary={
+            "files": len(bsl_files),
+            "symbols": stats.get("symbols", 0),
+            "calls": stats.get("calls", 0),
+            "modules": stats.get("modules", 0),
+            "errors": errors,
+            "elapsed_s": round(elapsed, 1),
+        }
+    )
 
 
 if __name__ == "__main__":

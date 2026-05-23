@@ -59,8 +59,11 @@ class AdaptiveSearchStrategy:
         self._classifier = QueryClassifier(
             api_key=api_key,
             base_url=base_url,
+            cache_enabled=self._settings.classifier_cache_enabled,
         )
         self._router = StrategyRouter(available_strategies=search_manager.available_strategies)
+        # Wire route_*_strategy config overrides into the router
+        self._apply_route_overrides()
 
         # Initialize decomposer if enabled
         self._decomposer = None
@@ -314,6 +317,21 @@ class AdaptiveSearchStrategy:
             search_type="adaptive_decomposed",
             elapsed_ms=elapsed,
         )
+
+    def _apply_route_overrides(self) -> None:
+        """Apply route_*_strategy overrides from AdaptiveRAGSettings to the router."""
+        strategy_map = {
+            "simple": self._settings.route_simple_strategy,
+            "moderate": self._settings.route_moderate_strategy,
+            "complex": self._settings.route_complex_strategy,
+            "thematic": self._settings.route_thematic_strategy,
+        }
+        current_routes = self._router.get_routes()
+        for complexity, strategy in strategy_map.items():
+            if complexity in current_routes and current_routes[complexity].strategy != strategy:
+                current_routes[complexity].strategy = strategy
+                self._router.add_route(complexity, current_routes[complexity])
+                logger.debug("[ADAPTIVE] Route override: %s → %s", complexity, strategy)
 
     def _create_forced_classification(self, route: str) -> QueryClassification:
         """Create a classification for forced routing."""

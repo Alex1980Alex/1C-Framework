@@ -30,12 +30,12 @@ const mockConfig = {
 ```javascript
 function createMockFactory(config = mockConfig) {
   const mocks = {};
-  
+
   if (config.core?.moveTasksBetweenTags) {
     mocks.moveTasksBetweenTags = createMock('moveTasksBetweenTags');
   }
   // ... other mocks
-  
+
   return mocks;
 }
 ```

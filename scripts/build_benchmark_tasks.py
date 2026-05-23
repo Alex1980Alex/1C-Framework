@@ -1,27 +1,23 @@
 #!/usr/bin/env python3
-"""Scan git history for rename-like commits and propose benchmark tasks.
-
-Usage:
-    python scripts/build_benchmark_tasks.py [--output tasks.json] [--limit 40]
-"""
+"""Generate benchmark tasks JSON for BSL rename refactoring."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
-from datetime import datetime, timezone
+import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
-_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "PYTHONIOENCODING": "utf-8"}
+REPO_ROOT = Path(__file__).resolve().parent.parent
+BSL_SRC = REPO_ROOT / "src" / "bsl"
+OUTPUT_DIR = REPO_ROOT / "docs" / "roadmap" / "benchmark"
 
-_KW = r"(?:Процедура|Функция|Procedure|Function|Перем|Var)"
-_RE_OLD = re.compile(rf"^-\s*{_KW}\s+(\w+)\s*\(")
-_RE_NEW = re.compile(rf"^\+\s*{_KW}\s+(\w+)\s*\(")
-
-CATEGORY_MAP = {"Перем": "CAT-1-local-variable", "Var": "CAT-1-local-variable"}
+_RE_OLD = r"^-\s*(?:Процедура|Функция|Procedure|Function|Перем|Var)\s+(\w+)\s*\("
+_RE_NEW = r"^\+\s*(?:Процедура|Функция|Procedure|Function|Перем|Var)\s+(\w+)\s*\("
 
 
 def _git(*args: str, cwd: Path | None = None) -> str:
@@ -33,9 +29,7 @@ def _git(*args: str, cwd: Path | None = None) -> str:
         env=_ENV,
         encoding="utf-8",
     )
-    if r.returncode != 0:
-        raise RuntimeError(f"git {args[0]} failed: {r.stderr.strip()}")
-    return r.stdout
+    return result.stdout
 
 
 def _extract_renames(diff: str) -> list[dict]:
@@ -98,6 +92,12 @@ def find_rename_commits(repo_root: Path, limit: int = 100) -> list[dict]:
             )
     return commits
 
+        current_file: str | None = None
+        for dl in diff.splitlines():
+            fm = re_file.match(dl)
+            if fm:
+                current_file = fm.group(1)
+                break
 
 def build_tasks(repo_root: Path, output: Path, limit: int) -> None:
     commits = find_rename_commits(repo_root, limit)
@@ -135,12 +135,35 @@ def build_tasks(repo_root: Path, output: Path, limit: int) -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Build benchmark tasks from git rename history")
-    ap.add_argument("--repo", type=Path, default=Path("."))
-    ap.add_argument("--output", type=Path, default=Path("docs/roadmap/benchmark/tasks-auto.json"))
-    ap.add_argument("--limit", type=int, default=40)
-    args = ap.parse_args()
-    build_tasks(args.repo.resolve(), args.output.resolve(), args.limit)
+    parser = argparse.ArgumentParser(description="Build benchmark tasks for BSL rename refactoring")
+    parser.add_argument("--auto", action="store_true", help="Scan git history for rename commits")
+    parser.add_argument("--write", action="store_true", help="Write output to file")
+    parser.add_argument("--limit", type=int, default=40, help="Max commits (auto mode)")
+    args = parser.parse_args()
+
+    if args.auto:
+        tasks = _build_auto_tasks(args.limit)
+        output_name = "tasks-auto.json"
+    else:
+        tasks = _build_curated_tasks()
+        output_name = "tasks.json"
+
+    data = {
+        "version": 2,
+        "created_at": datetime.now().strftime("%Y-%m-%d"),
+        "source_repo": str(REPO_ROOT),
+        "tasks": tasks,
+    }
+
+    output_str = json.dumps(data, indent=2, ensure_ascii=False)
+
+    if args.write:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        out_path = OUTPUT_DIR / output_name
+        out_path.write_text(output_str, encoding="utf-8")
+        print(f"Wrote {len(tasks)} tasks to {out_path}", file=sys.stderr)
+    else:
+        print(output_str)
 
 
 if __name__ == "__main__":

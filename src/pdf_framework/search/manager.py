@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from src.pdf_framework.config import AgentSettings, SearchSettings
+from src.pdf_framework.observability.langfuse_setup import emit_observation
 from src.pdf_framework.schemas.documents import SearchResponse, SearchResult
 
 if TYPE_CHECKING:
@@ -146,6 +148,20 @@ class SearchManager:
             available = list(self._strategies.keys())
             raise ValueError(f"Unknown search strategy '{strategy}'. Available: {available}")
 
+        # Roadmap §5c.5: instrument top-level search dispatch with Langfuse span.
+        # flush=False so we don't block on HTTP send per call — Langfuse SDK
+        # has a background thread that flushes the queue.
+        t_search_start = time.monotonic()
+        span_input = {
+            "query_len": len(query or ""),
+            "strategy": strategy,
+            "k": k,
+            "rerank": bool(rerank),
+            "expand_query": bool(expand_query),
+            "section_prefix": section_prefix,
+            "filter_keys": sorted((filter or {}).keys()),
+        }
+
         # Phase 17: Semantic cache pre-check
         query_embedding: list[float] | None = None
         if self._semantic_cache and not expand_query and self._embedding_engine:
@@ -158,6 +174,19 @@ class SearchManager:
                 rerank=rerank,
             )
             if cached is not None:
+                try:
+                    emit_observation(
+                        name="search.manager.search",
+                        input=span_input,
+                        output={
+                            "status": "cache-hit",
+                            "results": len(cached.results),
+                            "duration_ms": round((time.monotonic() - t_search_start) * 1000, 1),
+                        },
+                        flush=False,
+                    )
+                except Exception:
+                    pass
                 return cached
 
         # Phase 2.3: Query expansion
@@ -238,6 +267,21 @@ class SearchManager:
                 )
             except Exception as e:
                 logger.warning("[SEARCH] Semantic cache write failed: %s", e)
+
+        try:
+            emit_observation(
+                name="search.manager.search",
+                input=span_input,
+                output={
+                    "status": "ok",
+                    "results": len(response.results),
+                    "total_found": response.total_found,
+                    "duration_ms": round((time.monotonic() - t_search_start) * 1000, 1),
+                },
+                flush=False,
+            )
+        except Exception:
+            pass
 
         return response
 

@@ -7,26 +7,21 @@ Coordinates codebase scanning, file selection, context generation, and caching.
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
+from agents.initializer.codebase_scanner import CodebaseScanner
+from agents.initializer.context_cache import (
+    cache_context,
+    get_cache,
+    get_cached_context,
+    is_cache_valid,
+)
+from agents.initializer.context_generator import ContextGenerator
+from agents.initializer.file_selector import FileSelector
 from agents.initializer.models import (
+    ContextReport,
     InitializerConfig,
     InitializerInput,
     InitializerOutput,
-    ProjectStructure,
-    ContextReport,
-    RelevantFile,
-)
-from agents.initializer.codebase_scanner import CodebaseScanner, scan_directory
-from agents.initializer.file_selector import FileSelector, select_relevant_files
-from agents.initializer.context_generator import ContextGenerator, generate_context
-from agents.initializer.context_cache import (
-    ContextCache,
-    CacheEntry,
-    get_cache,
-    cache_context,
-    get_cached_context,
-    is_cache_valid,
 )
 
 
@@ -35,11 +30,11 @@ class InitializerResult:
     """Result of initialization process."""
 
     success: bool
-    context_report: Optional[ContextReport] = None
+    context_report: ContextReport | None = None
     cache_hit: bool = False
     scan_time_ms: float = 0
     total_time_ms: float = 0
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
     @property
     def summary(self) -> str:
@@ -68,12 +63,12 @@ class InitializerAgent:
         agent = InitializerAgent()
         result = agent.run(
             project_id="GKSTCPLK-1996",
-            project_path="src/projects/configuration/...",
+            project_path="configuration/...",
             task_description="Добавить регистр накопления"
         )
     """
 
-    def __init__(self, config: Optional[InitializerConfig] = None) -> None:
+    def __init__(self, config: InitializerConfig | None = None) -> None:
         """
         Initialize agent.
 
@@ -92,7 +87,7 @@ class InitializerAgent:
         project_path: str,
         task_description: str,
         force_rescan: bool = False,
-        output_dir: Optional[str] = None,
+        output_dir: str | None = None,
     ) -> InitializerResult:
         """
         Run initialization process.
@@ -206,16 +201,11 @@ class InitializerAgent:
             success=result.success,
             context_report=result.context_report,
             context_markdown=(
-                result.context_report.markdown_content
-                if result.context_report else ""
+                result.context_report.markdown_content if result.context_report else ""
             ),
-            relevant_files=(
-                result.context_report.relevant_files
-                if result.context_report else []
-            ),
+            relevant_files=(result.context_report.relevant_files if result.context_report else []),
             project_structure=(
-                result.context_report.project_structure
-                if result.context_report else None
+                result.context_report.project_structure if result.context_report else None
             ),
             cache_hit=result.cache_hit,
             processing_time_ms=result.total_time_ms,
@@ -239,9 +229,7 @@ class InitializerAgent:
         return self.cache.get_stats()
 
 
-def create_initializer(
-    config: Optional[InitializerConfig] = None
-) -> InitializerAgent:
+def create_initializer(config: InitializerConfig | None = None) -> InitializerAgent:
     """
     Create INITIALIZER agent instance.
 
@@ -259,8 +247,8 @@ def run_initializer(
     project_path: str,
     task_description: str,
     force_rescan: bool = False,
-    output_dir: Optional[str] = None,
-    config: Optional[InitializerConfig] = None,
+    output_dir: str | None = None,
+    config: InitializerConfig | None = None,
 ) -> InitializerResult:
     """
     Run INITIALIZER agent.
@@ -291,8 +279,8 @@ def run_initializer(
 def initialize_project(
     project_path: str,
     task_description: str = "",
-    output_dir: Optional[str] = None,
-) -> Optional[ContextReport]:
+    output_dir: str | None = None,
+) -> ContextReport | None:
     """
     Initialize project and get context report.
 

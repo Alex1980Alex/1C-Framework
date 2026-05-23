@@ -45,8 +45,8 @@ LANGUAGE_TO_EXTENSION: Dict[str, str] = {
 
 # Глобальные паттерны пропуска (для всех языков)
 GLOBAL_SKIP_PATTERNS: List[str] = [
-    "src\\projects\\configuration",
-    "src/projects/configuration",
+    "configuration\\",
+    "configuration/",
     "node_modules",
     "__pycache__",
     ".venv",
@@ -130,7 +130,7 @@ def get_all_source_files(
         project_root: Корневая папка проекта
         languages: Список языков для индексации (bsl, javascript, python, markdown)
         skip_patterns: Паттерны для пропуска по типам файлов
-        filter_global: Фильтровать по глобальным паттернам (src/projects/configuration и т.д.)
+        filter_global: Фильтровать по глобальным паттернам (configuration и т.д.)
 
     Returns:
         Список словарей: [{"path": Path, "type": str, "doc_type": str, "lang_name": str}]
@@ -192,14 +192,14 @@ def should_skip_file(file_path: Path, file_type: str, skip_patterns: Dict[str, L
         file_path: Путь к файлу
         file_type: Тип файла (bsl, javascript, etc.)
         skip_patterns: Паттерны для пропуска
-        check_global: Проверять глобальные паттерны (src/projects/configuration и т.д.)
+        check_global: Проверять глобальные паттерны (configuration и т.д.)
 
     Returns:
         True если файл нужно пропустить
     """
     path_str = str(file_path)
 
-    # Проверяем глобальные паттерны (например, src/projects/configuration)
+    # Проверяем глобальные паттерны (например, configuration)
     if check_global:
         for pattern in GLOBAL_SKIP_PATTERNS:
             if pattern in path_str:
@@ -534,4 +534,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

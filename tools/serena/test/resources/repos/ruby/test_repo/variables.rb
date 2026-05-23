@@ -28,11 +28,11 @@ class DataContainer
   def process_data(input_data)
     @data = input_data
     @status = "processing"
-    
+
     # Process the data
     result = @data.transform_values { |v| v.to_s.upcase }
     @status = "completed"
-    
+
     result
   end
 
@@ -73,9 +73,9 @@ end
 # Module level variables and functions
 module ProcessingHelper
   PROCESSING_MODES = ["sync", "async", "batch"].freeze
-  
+
   @@instance_count = 0
-  
+
   def self.create_processor(mode = "sync")
     @@instance_count += 1
     {
@@ -84,7 +84,7 @@ module ProcessingHelper
       created_at: Time.now
     }
   end
-  
+
   def self.get_instance_count
     @@instance_count
   end
@@ -94,7 +94,7 @@ end
 dataclass_instance = DataContainer.new
 dataclass_instance.status = "initialized"
 
-second_dataclass = DataContainer.new  
+second_dataclass = DataContainer.new
 second_dataclass.update_status("ready")
 
 tracker = StatusTracker.new
@@ -104,13 +104,13 @@ tracker.add_item(second_dataclass)
 # Function that uses the variables
 def demonstrate_variable_usage
   puts "Global counter: #{$global_counter}"
-  
+
   container = DataContainer.new
   container.status = "demo"
-  
+
   processor = ProcessingHelper.create_processor("async")
   puts "Created processor #{processor[:id]} in #{processor[:mode]} mode"
-  
+
   container
 end
 
@@ -120,20 +120,20 @@ class VariableInteractionTest
     @internal_status = "created"
     @data_containers = []
   end
-  
+
   def add_container(container)
     @data_containers << container
     container.status = "added_to_collection"
     @internal_status = "modified"
   end
-  
+
   def process_all_containers
     @data_containers.each do |container|
       container.status = "batch_processed"
     end
     @internal_status = "processing_complete"
   end
-  
+
   def get_status_summary
     statuses = @data_containers.map(&:status)
     {

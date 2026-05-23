@@ -13,8 +13,8 @@ __version__ = "0.1.0"
 __author__ = "Claude Code"
 
 from constants import (
-    AgentRole,
     AgentMode,
+    AgentRole,
     ArtifactType,
     PipelinePhase,
     VerificationStatus,

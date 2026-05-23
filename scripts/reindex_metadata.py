@@ -3,7 +3,7 @@
 Auto-reindex 1C:Enterprise configuration metadata into Qdrant — Phase 9
 
 Pipeline:
-1. Export metadata via 1c-mcp-toolkit HTTP API (get_metadata)
+1. Export metadata via 1c-mcp-crud HTTP API (get_metadata)
 2. Parse metadata tree into flat MetadataRecord records
 3. Incremental update with SHA-256 hash comparison
 4. Qdrant upsert with embeddings (nomic-embed-text via Ollama)

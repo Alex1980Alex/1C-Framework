@@ -1,26 +1,26 @@
 """Tests for FileSelector."""
 
-import pytest
 from datetime import datetime
 from pathlib import Path
+
+from models import (
+    FileInfo,
+    FileType,
+    InitializerConfig,
+    ModuleInfo,
+    ObjectType,
+    ProjectStructure,
+    ProjectType,
+    RelevantFile,
+)
 
 from ..file_selector import (
     FileSelector,
     RelevanceKeyword,
-    select_relevant_files,
-    rank_files_by_relevance,
-    get_high_relevance_files,
     get_files_by_type,
-)
-from models import (
-    ObjectType,
-    FileType,
-    FileInfo,
-    ModuleInfo,
-    ProjectStructure,
-    ProjectType,
-    RelevantFile,
-    InitializerConfig,
+    get_high_relevance_files,
+    rank_files_by_relevance,
+    select_relevant_files,
 )
 
 
@@ -144,10 +144,7 @@ class TestFileSelector:
     def test_select_respects_limit(self):
         """Test that selection respects limit parameter."""
         selector = FileSelector()
-        modules = [
-            create_test_module(f"Документ{i}", ObjectType.DOCUMENT)
-            for i in range(10)
-        ]
+        modules = [create_test_module(f"Документ{i}", ObjectType.DOCUMENT) for i in range(10)]
         structure = create_test_structure(modules)
 
         result = selector.select(structure, "документ", limit=5)

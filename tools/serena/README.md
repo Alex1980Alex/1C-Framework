@@ -107,7 +107,7 @@ Most users report that Serena has strong positive effects on the results of thei
 very capable agents like Claude Code. Serena is often described to be a [game changer](https://www.reddit.com/r/ClaudeAI/comments/1lfsdll/try_out_serena_mcp_thank_me_later/), providing an enormous [productivity boost](https://www.reddit.com/r/ClaudeCode/comments/1mguoia/absolutely_insane_improvement_of_claude_code).
 
 Serena excels at navigating and manipulating complex codebases, providing tools that support precise code retrieval and editing in the presence of large, strongly structured codebases.
-However, when dealing with tasks that involve only very few/small files, you may not benefit from including Serena on top of your existing coding agent. 
+However, when dealing with tasks that involve only very few/small files, you may not benefit from including Serena on top of your existing coding agent.
 In particular, when writing code from scratch, Serena will not provide much value initially, as the more complex structures that Serena handles more gracefully than simplistic, file-based approaches are yet to be created.
 
 Several videos and blog posts have talked about Serena:
@@ -292,7 +292,7 @@ uv run serena start-mcp-server --transport streamable-http --port 9121
 
 and then configure your client to connect to `http://localhost:9121/mcp`.
 
-ℹ️ Note that SSE transport is supported as well, but its use is discouraged. 
+ℹ️ Note that SSE transport is supported as well, but its use is discouraged.
 Use Streamable HTTP instead.
 
 #### Command-Line Arguments
@@ -787,7 +787,7 @@ larger codebases.
 ### Sponsors
 
 We are very grateful to our [sponsors](https://github.com/sponsors/oraios) who help us drive Serena's development. The core team
-(the founders of [Oraios AI](https://oraios-ai.de/)) put in a lot of work in order to turn Serena into a useful open source project. 
+(the founders of [Oraios AI](https://oraios-ai.de/)) put in a lot of work in order to turn Serena into a useful open source project.
 So far, there is no business model behind this project, and sponsors are our only source of income from it.
 
 Sponsors help us dedicating more time to the project, managing contributions, and working on larger features (like better tooling based on more advanced

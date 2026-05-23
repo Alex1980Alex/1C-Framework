@@ -18,7 +18,7 @@ export abstract class BaseStrategy {
   }
 
   abstract processThought(request: ReasoningRequest): Promise<ReasoningResponse>;
-  
+
   protected async getNode(id: string): Promise<ThoughtNode | undefined> {
     return this.stateManager.getNode(id);
   }
@@ -32,32 +32,32 @@ export abstract class BaseStrategy {
     const logicalScore = this.calculateLogicalScore(node, parent);
     const depthPenalty = this.calculateDepthPenalty(node);
     const completionBonus = node.isComplete ? 0.2 : 0;
-    
+
     return (logicalScore + depthPenalty + completionBonus) / 3;
   }
 
   private calculateLogicalScore(node: ThoughtNode, parent?: ThoughtNode): number {
     let score = 0;
-    
+
     // Length and complexity
     score += Math.min(node.thought.length / 200, 0.3);
-    
+
     // Logical connectors
     if (/\b(therefore|because|if|then|thus|hence|so)\b/i.test(node.thought)) {
       score += 0.2;
     }
-    
+
     // Mathematical/logical expressions
     if (/[+\-*/=<>]/.test(node.thought)) {
       score += 0.2;
     }
-    
+
     // Parent-child coherence
     if (parent) {
       const coherence = this.calculateCoherence(parent.thought, node.thought);
       score += coherence * 0.3;
     }
-    
+
     return score;
   }
 
@@ -69,7 +69,7 @@ export abstract class BaseStrategy {
     // Simple coherence based on shared terms
     const parentTerms = new Set(parentThought.toLowerCase().split(/\W+/));
     const childTerms = childThought.toLowerCase().split(/\W+/);
-    
+
     const sharedTerms = childTerms.filter(term => parentTerms.has(term)).length;
     return Math.min(sharedTerms / childTerms.length, 1);
   }
@@ -90,12 +90,12 @@ export abstract class BaseStrategy {
 
   public async getMetrics(): Promise<StrategyMetrics> {
     const nodes = await this.stateManager.getAllNodes();
-    
+
     return {
       name: this.constructor.name,
       nodesExplored: nodes.length,
-      averageScore: nodes.length > 0 
-        ? nodes.reduce((sum, n) => sum + n.score, 0) / nodes.length 
+      averageScore: nodes.length > 0
+        ? nodes.reduce((sum, n) => sum + n.score, 0) / nodes.length
         : 0,
       maxDepth: nodes.length > 0
         ? Math.max(...nodes.map(n => n.depth))

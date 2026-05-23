@@ -5,6 +5,7 @@ and comparing original vs optimized prompts.
 """
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -34,7 +35,7 @@ class AddPairsRequest(BaseModel):
 
 
 @router.get("/stats")
-async def get_optimization_stats():
+async def get_optimization_stats() -> dict[str, Any]:
     """Get DSPy optimization statistics."""
     components = await get_components()
     optimizer = getattr(components, "dspy_optimizer", None)
@@ -45,8 +46,8 @@ async def get_optimization_stats():
 
 
 @router.post("/optimize")
-async def run_optimization(request: OptimizeRequest):
-    """Start DSPy MIPROv2 optimization run.
+async def run_optimization(request: OptimizeRequest) -> dict[str, Any]:
+    """Start DSPy GEPA optimization run (migrated from MIPROv2 per roadmap 260509 §3.4).
 
     Optimizes prompt templates for specified modules using the evaluation dataset.
     """
@@ -60,11 +61,12 @@ async def run_optimization(request: OptimizeRequest):
         module_names=request.modules,
     )
 
-    return result.model_dump()
+    dumped: dict[str, Any] = result.model_dump()
+    return dumped
 
 
 @router.get("/dataset")
-async def get_evaluation_dataset():
+async def get_evaluation_dataset() -> dict[str, Any]:
     """View the current evaluation dataset."""
     components = await get_components()
     optimizer = getattr(components, "dspy_optimizer", None)
@@ -79,7 +81,7 @@ async def get_evaluation_dataset():
 
 
 @router.post("/dataset/add")
-async def add_evaluation_pairs(request: AddPairsRequest):
+async def add_evaluation_pairs(request: AddPairsRequest) -> dict[str, int]:
     """Add question-answer pairs to the evaluation dataset."""
     components = await get_components()
     optimizer = getattr(components, "dspy_optimizer", None)
@@ -105,7 +107,7 @@ async def add_evaluation_pairs(request: AddPairsRequest):
 
 
 @router.get("/last-result")
-async def get_last_result():
+async def get_last_result() -> dict[str, Any]:
     """Get the result of the last optimization run."""
     components = await get_components()
     optimizer = getattr(components, "dspy_optimizer", None)
@@ -116,4 +118,5 @@ async def get_last_result():
     if result is None:
         return {"status": "no_runs"}
 
-    return result.model_dump()
+    dumped: dict[str, Any] = result.model_dump()
+    return dumped

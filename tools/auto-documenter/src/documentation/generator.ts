@@ -12,22 +12,22 @@ export interface DocumentationResult {
    * Path to the generated documentation file
    */
   documentationPath: string;
-  
+
   /**
    * Whether documentation was generated successfully
    */
   success: boolean;
-  
+
   /**
    * Content of the generated documentation
    */
   content: string;
-  
+
   /**
    * Error message if generation failed
    */
   error?: string;
-  
+
   /**
    * Whether this was a fresh generation or an update
    */
@@ -46,7 +46,7 @@ export class DocumentationGenerator {
   private config = getConfig();
   private openRouterClient: OpenRouterClient;
   private updateExisting: boolean;
-  
+
   /**
    * Creates a new documentation generator
    * @param apiKey OpenRouter API key (optional)
@@ -57,7 +57,7 @@ export class DocumentationGenerator {
     this.openRouterClient = new OpenRouterClient(apiKey, model);
     this.updateExisting = updateExisting !== undefined ? updateExisting : this.config.documentation.updateExisting;
   }
-  
+
   /**
    * Generates documentation for a directory
    * @param directoryPath Path to the directory
@@ -75,7 +75,7 @@ export class DocumentationGenerator {
     const docFilePath = path.join(directoryPath, this.config.documentation.outputFilename);
     const existingDocumentation = this.readExistingDocumentation(docFilePath);
     const isUpdate = existingDocumentation !== null;
-    
+
     // Skip generation if the file exists and updateExisting is false
     if (isUpdate && !this.updateExisting) {
       console.error(`Skipping documentation for ${directoryPath} - File exists and updateExisting is false`);
@@ -87,13 +87,13 @@ export class DocumentationGenerator {
         skipped: true
       };
     }
-    
+
     // Convert analyzed files to format expected by OpenRouterClient
     const files = analysisResult.analyzedFiles.map((file) => ({
       path: path.relative(directoryPath, file.path),
       content: file.content
     }));
-    
+
     try {
       // Generate documentation using OpenRouter
       const genResult = await this.openRouterClient.generateDocumentation(
@@ -102,7 +102,7 @@ export class DocumentationGenerator {
         isTopLevel,
         childrenDocs
       );
-      
+
       if (!genResult.successful) {
         return {
           documentationPath: docFilePath,
@@ -112,10 +112,10 @@ export class DocumentationGenerator {
           isUpdate
         };
       }
-      
+
       // Write the generated documentation to file
       await fs.promises.writeFile(docFilePath, genResult.content, 'utf8');
-      
+
       return {
         documentationPath: docFilePath,
         success: true,
@@ -132,7 +132,7 @@ export class DocumentationGenerator {
       };
     }
   }
-  
+
   /**
    * Creates an undocumented.md file for directories that exceed limits
    * @param directoryPath Path to the directory
@@ -141,16 +141,16 @@ export class DocumentationGenerator {
    */
   public async createUndocumentedFile(directoryPath: string, analysisResult: AnalysisResult): Promise<string> {
     const undocPath = path.join(directoryPath, this.config.documentation.fallbackFilename);
-    
+
     // Create content for undocumented.md
     const content = this.createUndocumentedContent(directoryPath, analysisResult);
-    
+
     // Write to file
     await fs.promises.writeFile(undocPath, content, 'utf8');
-    
+
     return undocPath;
   }
-  
+
   /**
    * Reads existing documentation if it exists
    * @param docFilePath Path to the documentation file
@@ -167,7 +167,7 @@ export class DocumentationGenerator {
       return null;
     }
   }
-  
+
   /**
    * Creates content for an undocumented.md file
    * @param directoryPath Path to the directory
@@ -176,13 +176,13 @@ export class DocumentationGenerator {
    */
   private createUndocumentedContent(directoryPath: string, result: AnalysisResult): string {
     const dirName = path.basename(directoryPath);
-    
+
     let content = `# ${dirName} - Documentation Skipped\n\n`;
-    
+
     if (result.limited && result.limitReason) {
       content += `## Reason\n\n${result.limitReason}\n\n`;
     }
-    
+
     if (result.analyzedFiles.length > 0) {
       content += `## Analyzed Files\n\n`;
       for (const file of result.analyzedFiles) {
@@ -190,7 +190,7 @@ export class DocumentationGenerator {
       }
       content += '\n';
     }
-    
+
     if (result.excludedFiles.length > 0) {
       content += `## Excluded Files\n\n`;
       for (const file of result.excludedFiles) {
@@ -198,11 +198,11 @@ export class DocumentationGenerator {
       }
       content += '\n';
     }
-    
+
     content += `## How to Fix\n\n`;
     content += `You can manually document this directory by replacing this file with a proper documentation.md file.\n`;
     content += `Alternatively, you can increase the file limits in the tool configuration and run again.\n`;
-    
+
     return content;
   }
 }

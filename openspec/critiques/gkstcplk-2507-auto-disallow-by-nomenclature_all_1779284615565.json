@@ -1,0 +1,32 @@
+{
+  "changeName": "gkstcplk-2507-auto-disallow-by-nomenclature",
+  "documentType": "all",
+  "overallScore": 9.8,
+  "critiques": [
+    {
+      "id": "03c039bd",
+      "category": "clarity",
+      "severity": "info",
+      "title": "使用了未定义的术语",
+      "description": "发现多个可能需要解释的缩写: REPORT, ID, RLS, SQL, NULL",
+      "suggestion": "确保首次使用时解释专业术语和缩写"
+    }
+  ],
+  "suggestions": [
+    "改进文档清晰度，统一术语使用"
+  ],
+  "summary": {
+    "total": 1,
+    "critical": 0,
+    "warning": 0,
+    "info": 1,
+    "byCategory": {
+      "completeness": 0,
+      "feasibility": 0,
+      "security": 0,
+      "edge_case": 0,
+      "clarity": 1
+    }
+  },
+  "createdAt": "2026-05-20T13:43:35.565Z"
+}

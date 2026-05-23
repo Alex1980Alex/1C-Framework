@@ -259,7 +259,7 @@ describe('ClaudeApiService', () => {
         .mockResolvedValueOnce(mockSuccessResponse);
 
       const promise = service.generate('test');
-      
+
       // First attempt fails, should wait for 100ms (initialDelay)
       await jest.advanceTimersByTimeAsync(100);
 

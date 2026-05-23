@@ -11,7 +11,7 @@ try to do an automatic install based on freeform instructions.
 3. In the config, check if the path to your project was added. If not, add it to the `projects` section
 4. In your project, create a `.serena` if needed and check whether `project.yml` exists there.
 5. If no `project.yml` was found, create it using `cp /path/to/serena/myproject.template.yml /path/to/your/project/.serena/project.yml`
-6. Read the instructions in `project.yml`. Make sure the `project.yml` has the correct project language configured. 
+6. Read the instructions in `project.yml`. Make sure the `project.yml` has the correct project language configured.
    Remove the  project_root entry there.
 7. Finally, add the Serena MCP server config like this:
 

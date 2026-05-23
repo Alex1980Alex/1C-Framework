@@ -8,10 +8,11 @@ Verifies artifacts produced by PM-SPEC agent:
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from constants import AgentRole, ArtifactType, RequirementStatus, VerificationStatus
 from models import Artifact
+
 from .base_verifier import (
     BaseVerifier,
     CheckResult,
@@ -30,7 +31,7 @@ class PMSpecVerifier(BaseVerifier):
     def verify(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """
         Verify PM-SPEC artifact based on its type.
@@ -61,7 +62,7 @@ class PMSpecVerifier(BaseVerifier):
     def _verify_context(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify context.md artifact."""
         checks = []
@@ -83,14 +84,10 @@ class PMSpecVerifier(BaseVerifier):
         checks.append(self._check_relevant_modules(artifact.content))
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
         status = (
-            VerificationStatus.REVISION_NEEDED
-            if failed_critical
-            else VerificationStatus.APPROVED
+            VerificationStatus.REVISION_NEEDED if failed_critical else VerificationStatus.APPROVED
         )
 
         # Add recommendations
@@ -112,7 +109,7 @@ class PMSpecVerifier(BaseVerifier):
     def _verify_spec(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify spec.md artifact."""
         checks = []
@@ -141,22 +138,20 @@ class PMSpecVerifier(BaseVerifier):
 
         # Build requirements list
         for req in extracted_reqs:
-            requirements.append(RequirementCheck(
-                requirement_id=req["id"],
-                description=req["description"],
-                status=RequirementStatus.NOT_TESTED,
-                notes="Ожидает реализации",
-            ))
+            requirements.append(
+                RequirementCheck(
+                    requirement_id=req["id"],
+                    description=req["description"],
+                    status=RequirementStatus.NOT_TESTED,
+                    notes="Ожидает реализации",
+                )
+            )
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
         status = (
-            VerificationStatus.REVISION_NEEDED
-            if failed_critical
-            else VerificationStatus.APPROVED
+            VerificationStatus.REVISION_NEEDED if failed_critical else VerificationStatus.APPROVED
         )
 
         # Recommendations
@@ -182,7 +177,7 @@ class PMSpecVerifier(BaseVerifier):
     def _verify_verification(
         self,
         artifact: Artifact,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VerificationResult:
         """Verify verification.md artifact."""
         checks = []
@@ -206,14 +201,10 @@ class PMSpecVerifier(BaseVerifier):
             checks.append(self.check_traceability(spec_artifact, artifact))
 
         # Determine overall status
-        failed_critical = any(
-            not c.passed and c.severity == "error" for c in checks
-        )
+        failed_critical = any(not c.passed and c.severity == "error" for c in checks)
 
         status = (
-            VerificationStatus.REVISION_NEEDED
-            if failed_critical
-            else VerificationStatus.APPROVED
+            VerificationStatus.REVISION_NEEDED if failed_critical else VerificationStatus.APPROVED
         )
 
         return VerificationResult(
@@ -316,7 +307,7 @@ class PMSpecVerifier(BaseVerifier):
             severity="error",
         )
 
-    def _check_requirements_section(self, content: str) -> tuple[CheckResult, List[Dict]]:
+    def _check_requirements_section(self, content: str) -> tuple[CheckResult, list[dict]]:
         """Check requirements section and extract requirements."""
         requirements = self.extract_requirements(content)
 
@@ -342,7 +333,7 @@ class PMSpecVerifier(BaseVerifier):
             [],
         )
 
-    def _check_acceptance_criteria_section(self, content: str) -> tuple[CheckResult, List[Dict]]:
+    def _check_acceptance_criteria_section(self, content: str) -> tuple[CheckResult, list[dict]]:
         """Check acceptance criteria section and extract criteria."""
         criteria = self.extract_acceptance_criteria(content)
 
@@ -384,11 +375,17 @@ class PMSpecVerifier(BaseVerifier):
             severity="info",
         )
 
-    def _check_requirements_measurability(self, requirements: List[Dict]) -> CheckResult:
+    def _check_requirements_measurability(self, requirements: list[dict]) -> CheckResult:
         """Check that requirements are measurable."""
         vague_keywords = [
-            "быстро", "хорошо", "удобно", "красиво", "нормально",
-            "лучше", "оптимально", "эффективно",
+            "быстро",
+            "хорошо",
+            "удобно",
+            "красиво",
+            "нормально",
+            "лучше",
+            "оптимально",
+            "эффективно",
         ]
 
         vague_reqs = []
@@ -461,7 +458,7 @@ class PMSpecVerifier(BaseVerifier):
             severity="warning",
         )
 
-    def _generate_summary(self, checks: List[CheckResult]) -> str:
+    def _generate_summary(self, checks: list[CheckResult]) -> str:
         """Generate summary from checks."""
         passed = sum(1 for c in checks if c.passed)
         total = len(checks)

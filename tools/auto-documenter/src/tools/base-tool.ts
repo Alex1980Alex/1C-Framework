@@ -18,22 +18,22 @@ export interface AutoToolResult {
    * Path to the generated file
    */
   outputPath: string;
-  
+
   /**
    * Whether generation was successful
    */
   success: boolean;
-  
+
   /**
    * Content of the generated file
    */
   content: string;
-  
+
   /**
    * Error message if generation failed
    */
   error?: string;
-  
+
   /**
    * Whether this was a fresh generation or an update
    */
@@ -53,35 +53,35 @@ export abstract class BaseTool<T extends BaseToolConfig> {
    * The name of the tool (used for registration)
    */
   abstract readonly name: string;
-  
+
   /**
    * The description of the tool
    */
   abstract readonly description: string;
-  
+
   /**
    * The configuration for the tool
    */
   protected config: T;
-  
+
   constructor(config: T) {
     this.config = config;
   }
-  
+
   /**
    * Get the output filename for this tool
    */
   getOutputFilename(): string {
     return this.config.outputFilename;
   }
-  
+
   /**
    * Get the fallback filename for this tool
    */
   getFallbackFilename(): string {
     return this.config.fallbackFilename;
   }
-  
+
   /**
    * Abstract method to generate content for a directory
    * @param directoryPath Path to the source directory
@@ -97,7 +97,7 @@ export abstract class BaseTool<T extends BaseToolConfig> {
     childrenContent?: Array<{ path: string; content: string }>,
     outputDir?: string
   ): Promise<AutoToolResult>;
-  
+
   /**
    * Abstract method to create fallback content for directories that exceed limits
    */
@@ -105,7 +105,7 @@ export abstract class BaseTool<T extends BaseToolConfig> {
     directoryPath: string,
     analysisResult: AnalysisResult
   ): Promise<string>;
-  
+
   /**
    * Get the input schema for the tool
    */
@@ -137,13 +137,13 @@ export abstract class BaseTool<T extends BaseToolConfig> {
       required: ['path'],
     };
   }
-  
+
   /**
    * Format the aggregation result for display
    */
   formatResultSummary(result: any): string {
     let summary = `# ${this.name} Generation Complete\n\n`;
-    
+
     summary += `## Summary\n\n`;
     summary += `- Total directories processed: ${result.totalDirectories}\n`;
     summary += `- Successful generations: ${result.successfulGenerations}\n`;
@@ -151,7 +151,7 @@ export abstract class BaseTool<T extends BaseToolConfig> {
     summary += `- Skipped generations: ${result.skippedGenerations}\n`;
     summary += `- Failed generations: ${result.failedGenerations}\n`;
     summary += `- Fallback files created: ${result.fallbackFiles}\n\n`;
-    
+
     if (result.errors.length > 0) {
       summary += `## Errors\n\n`;
       for (const error of result.errors) {
@@ -159,12 +159,12 @@ export abstract class BaseTool<T extends BaseToolConfig> {
       }
       summary += '\n';
     }
-    
+
     summary += `## Next Steps\n\n`;
     summary += `- Review the generated ${this.config.outputFilename} files\n`;
     summary += `- Manually update any ${this.config.fallbackFilename} files if needed\n`;
     summary += `- Consider adjusting configuration parameters if too many files were skipped\n`;
-    
+
     return summary;
   }
 }

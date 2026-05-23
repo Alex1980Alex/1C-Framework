@@ -6,4 +6,3 @@ pub fn add() -> i32 {
 pub fn multiply() -> i32 {
     2 * 3
 }
-

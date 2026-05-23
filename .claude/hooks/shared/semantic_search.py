@@ -1,46 +1,82 @@
 """Shared semantic search utilities for Claude Code hooks.
 
 Provides fast, timeout-bounded vector search over skill_library and
-experience_bank Qdrant collections using Ollama embeddings.
+experience_embeddings Qdrant collections via TEI HTTP backend (Phase 9.1
+alignment with main retrieval stack — Qwen3-Embedding-8B 4096d).
+
 All functions fail gracefully (return empty/None) so hooks never block.
+
+Migration (2026-04-30, Phase 9.1):
+  - Ollama nomic-embed-text 768d -> TEI Qwen3-Embedding-8B 4096d
+  - search_experiences_semantic: bug fix collection name 'experience_bank' -> 'experience_embeddings'
+  - Default timeout bumped 0.4s -> 1.5s (TEI cold ~600ms first call, ~80ms warm)
 """
 
 import json
 import os
 import urllib.request
 
+# TEI configuration (matches src/framework_search/embedder.py defaults).
+TEI_URL = os.environ.get("TEI_URL", "http://localhost:8080") + "/embed"
+QUERY_INSTRUCTION = (
+    "Instruct: Given a web search query, retrieve relevant passages "
+    "that answer the query\nQuery: "
+)
+
 
 def _is_disabled() -> bool:
     return os.environ.get("SKILL_ROUTER_SEMANTIC_DISABLED") == "1"
 
 
-def embed_query_ollama(
-    text: str, model: str = "nomic-embed-text", timeout: float = 0.4
-) -> list[float] | None:
-    """Embed text via Ollama HTTP API. Returns 768-dim vector or None on error."""
+def embed_query_tei(text: str, timeout: float = 1.5) -> list[float] | None:
+    """Embed text via TEI HTTP /embed. Returns 4096-dim Qwen3 vector or None on error.
+
+    Prepends QUERY_INSTRUCTION (default web-retrieval template — Qwen3 calibration
+    requires this prefix; deviations break alignment, see roadmap §21.10 H1 ablation).
+    Truncates input to 8000 chars to stay under TEI MAX_INPUT_LENGTH=4096 tokens.
+    """
     if _is_disabled():
         return None
 
     try:
-        payload = json.dumps({"model": model, "prompt": text[:4000]}).encode("utf-8")
+        body = QUERY_INSTRUCTION + text[:8000]
+        payload = json.dumps(
+            {
+                "inputs": [body],
+                "normalize": True,
+                "truncate": True,
+                "truncation_direction": "Right",
+            }
+        ).encode("utf-8")
         req = urllib.request.Request(
-            "http://localhost:11434/api/embeddings",
+            TEI_URL,
             data=payload,
             headers={"Content-Type": "application/json"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            return data.get("embedding")
+            # TEI returns either [[...]] or {"embeddings": [[...]]}
+            if isinstance(data, list) and data and isinstance(data[0], list):
+                return data[0]
+            if isinstance(data, dict) and "embeddings" in data:
+                vecs = data["embeddings"]
+                if vecs and isinstance(vecs[0], list):
+                    return vecs[0]
+            return None
     except Exception:
         return None
+
+
+# Backwards-compat alias — older hook code may import embed_query_ollama by name.
+embed_query_ollama = embed_query_tei
 
 
 def search_qdrant_semantic(
     collection: str,
     embedding: list[float],
     limit: int = 3,
-    timeout: float = 0.3,
+    timeout: float = 0.5,
 ) -> list[dict]:
     """Search Qdrant collection by vector. Returns list of {id, score, payload}."""
     if _is_disabled():
@@ -79,7 +115,7 @@ def search_skills_semantic(query: str, limit: int = 3, total_timeout: float = 0.
         return []
 
     try:
-        embed = embed_query_ollama(query, timeout=total_timeout * 0.6)
+        embed = embed_query_tei(query, timeout=total_timeout * 0.7)
         if not embed:
             return []
 
@@ -102,9 +138,12 @@ def search_skills_semantic(query: str, limit: int = 3, total_timeout: float = 0.
 
 
 def search_experiences_semantic(
-    query: str, limit: int = 5, total_timeout: float = 0.5
+    query: str, limit: int = 5, total_timeout: float = 2.0
 ) -> list[dict]:
-    """Search experience_bank collection.
+    """Search experience_embeddings collection.
+
+    Bug fix 2026-04-30: was querying 'experience_bank' (does not exist);
+    actual collection is 'experience_embeddings'.
 
     Returns list of {experience_id, score, insight, matched_by}.
     """
@@ -112,12 +151,12 @@ def search_experiences_semantic(
         return []
 
     try:
-        embed = embed_query_ollama(query, timeout=total_timeout * 0.6)
+        embed = embed_query_tei(query, timeout=total_timeout * 0.7)
         if not embed:
             return []
 
         results = search_qdrant_semantic(
-            "experience_bank", embed, limit, timeout=total_timeout * 0.4
+            "experience_embeddings", embed, limit, timeout=total_timeout * 0.3
         )
 
         formatted = []

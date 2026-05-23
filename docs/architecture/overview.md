@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, overview]
+related: ["[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[bsl-integration]]", "[[core-framework-separation]]"]
+---
+
 # Architecture Overview
 
 ## PDF Vector & Graph Framework
@@ -186,7 +192,7 @@ Environment variables: `EMBEDDING__MODEL=intfloat/multilingual-e5-large`, `VECTO
 
 ## Claude Code Integration
 
-The framework extends Claude Code CLI with a **Hooks + Skills + MCP Triad**:
+The framework extends Claude Code CLI with a **[[triad-architecture|Hooks + Skills + MCP Triad]]**:
 
 ### Structure (`.claude/`)
 
@@ -197,7 +203,7 @@ The framework extends Claude Code CLI with a **Hooks + Skills + MCP Triad**:
 
 All hooks and skills live in `.claude/` within the project directory.
 
-### Ralph Wiggum Autonomous Loop
+### [[ralph-wiggum|Ralph Wiggum Autonomous Loop]]
 
 Prevents premature task completion:
 - **Activator** detects complex tasks, sets iteration limits (8-15)
@@ -294,11 +300,11 @@ src/
 
 | Document | Description |
 |----------|-------------|
-| [Integration Structure](core-framework-separation.md) | All 12 hooks + 9 skills in `.claude/` |
-| [Triad Architecture](triad-architecture.md) | Hooks + Skills + MCP: when, how, and with what |
-| [Hooks Reference](hooks-reference.md) | All 12 hooks: events, matchers, logic, signals |
-| [Skills Reference](skills-reference.md) | All 9 skills: triggers, workflows, cache |
-| [Ralph Wiggum](ralph-wiggum.md) | Autonomous loop system + self-correcting LLM retries |
+| [[core-framework-separation]] | All 12 hooks + 9 skills in `.claude/` |
+| [[triad-architecture]] | Hooks + Skills + MCP: when, how, and with what |
+| [[hooks-reference]] | All 12 hooks: events, matchers, logic, signals |
+| [[skills-reference]] | All 9 skills: triggers, workflows, cache |
+| [[ralph-wiggum]] | Autonomous loop system + self-correcting LLM retries |
 
 ## See Also
 

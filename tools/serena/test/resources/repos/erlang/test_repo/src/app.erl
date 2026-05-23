@@ -102,7 +102,7 @@ init([]) ->
         intensity => 5,
         period => 10
     },
-    
+
     ChildSpecs = [
         #{
             id => services,
@@ -113,5 +113,5 @@ init([]) ->
             modules => [services]
         }
     ],
-    
+
     {ok, {SupFlags, ChildSpecs}}.

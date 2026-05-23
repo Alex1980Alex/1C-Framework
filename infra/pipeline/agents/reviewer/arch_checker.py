@@ -4,29 +4,30 @@ Architecture Checker for REVIEWER Agent.
 Validates code architecture against design.md specification.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Set, Tuple
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from agents.reviewer.models import (
     ArchIssue,
-    ReviewIssue,
-    IssueSeverity,
     IssueCategory,
+    IssueSeverity,
+    ReviewIssue,
 )
 
 
 @dataclass
 class ComponentSpec:
     """Expected component from design.md."""
+
     name: str
     type: str  # module, procedure, function, form, register, etc.
     required: bool = True
-    interface: Optional[List[str]] = None  # Expected exports
-    dependencies: Optional[List[str]] = None  # Expected dependencies
+    interface: list[str] | None = None  # Expected exports
+    dependencies: list[str] | None = None  # Expected dependencies
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "name": self.name,
@@ -40,11 +41,12 @@ class ComponentSpec:
 @dataclass
 class ArchCheckResult:
     """Result of architecture check."""
-    issues: List[ArchIssue] = field(default_factory=list)
-    missing_components: List[str] = field(default_factory=list)
-    extra_components: List[str] = field(default_factory=list)
-    interface_violations: List[str] = field(default_factory=list)
-    circular_dependencies: List[Tuple[str, str]] = field(default_factory=list)
+
+    issues: list[ArchIssue] = field(default_factory=list)
+    missing_components: list[str] = field(default_factory=list)
+    extra_components: list[str] = field(default_factory=list)
+    interface_violations: list[str] = field(default_factory=list)
+    circular_dependencies: list[tuple[str, str]] = field(default_factory=list)
     score: float = 100.0  # 0-100
 
     @property
@@ -52,7 +54,7 @@ class ArchCheckResult:
         """Check if architecture is valid."""
         return len(self.issues) == 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "issues_count": len(self.issues),
@@ -114,7 +116,7 @@ class ArchChecker:
             IssueSeverity.RECOMMENDATION: 0,
         }
 
-    def parse_design(self, design_content: str) -> List[ComponentSpec]:
+    def parse_design(self, design_content: str) -> list[ComponentSpec]:
         """
         Parse design.md to extract expected components.
 
@@ -129,31 +131,33 @@ class ArchChecker:
         # Find component definitions
         # Pattern: ## Компонент: ИмяКомпонента or ### Module: НазваниеМодуля
         component_pattern = re.compile(
-            r'(?:#{2,3})\s*(?:Компонент|Component|Module|Модуль):\s*([^\n]+)',
-            re.IGNORECASE
+            r"(?:#{2,3})\s*(?:Компонент|Component|Module|Модуль):\s*([^\n]+)", re.IGNORECASE
         )
 
         for match in component_pattern.finditer(design_content):
             name = match.group(1).strip()
 
             # Determine type from context
-            comp_type = self._detect_component_type(name, design_content[match.start():])
+            comp_type = self._detect_component_type(name, design_content[match.start() :])
 
             # Find interface (exported functions/procedures)
-            interface = self._extract_interface(design_content[match.start():match.start() + 2000])
+            interface = self._extract_interface(
+                design_content[match.start() : match.start() + 2000]
+            )
 
-            components.append(ComponentSpec(
-                name=name,
-                type=comp_type,
-                required=True,
-                interface=interface,
-            ))
+            components.append(
+                ComponentSpec(
+                    name=name,
+                    type=comp_type,
+                    required=True,
+                    interface=interface,
+                )
+            )
 
         # Also look for explicit tables
         # | Компонент | Тип | Описание |
         table_pattern = re.compile(
-            r'\|\s*([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\|\s*([^\|]+)\s*\|',
-            re.IGNORECASE
+            r"\|\s*([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\|\s*([^\|]+)\s*\|", re.IGNORECASE
         )
 
         for match in table_pattern.finditer(design_content):
@@ -161,16 +165,18 @@ class ArchChecker:
             comp_type = match.group(2).strip().lower()
 
             # Skip header rows
-            if name.lower() in ('компонент', 'component', 'модуль', 'module', '---'):
+            if name.lower() in ("компонент", "component", "модуль", "module", "---"):
                 continue
 
             # Avoid duplicates
             if not any(c.name == name for c in components):
-                components.append(ComponentSpec(
-                    name=name,
-                    type=comp_type,
-                    required=True,
-                ))
+                components.append(
+                    ComponentSpec(
+                        name=name,
+                        type=comp_type,
+                        required=True,
+                    )
+                )
 
         return components
 
@@ -185,43 +191,42 @@ class ArchChecker:
                 return eng
 
         # Infer from naming patterns
-        if 'модуль' in name_lower or 'module' in name_lower:
-            return 'CommonModule'
-        if 'форма' in name_lower or 'form' in name_lower:
-            return 'Form'
-        if 'регистр' in name_lower or 'register' in name_lower:
-            return 'Register'
-        if 'обработка' in name_lower or 'dataprocessor' in name_lower:
-            return 'DataProcessor'
-        if 'отчёт' in name_lower or 'report' in name_lower:
-            return 'Report'
+        if "модуль" in name_lower or "module" in name_lower:
+            return "CommonModule"
+        if "форма" in name_lower or "form" in name_lower:
+            return "Form"
+        if "регистр" in name_lower or "register" in name_lower:
+            return "Register"
+        if "обработка" in name_lower or "dataprocessor" in name_lower:
+            return "DataProcessor"
+        if "отчёт" in name_lower or "report" in name_lower:
+            return "Report"
 
-        return 'unknown'
+        return "unknown"
 
-    def _extract_interface(self, context: str) -> Optional[List[str]]:
+    def _extract_interface(self, context: str) -> list[str] | None:
         """Extract expected interface (exports) from context."""
         exports = []
 
         # Look for function/procedure definitions in code blocks
         func_pattern = re.compile(
-            r'(?:Функция|Процедура|Function|Procedure)\s+([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\(',
-            re.IGNORECASE
+            r"(?:Функция|Процедура|Function|Procedure)\s+([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\(",
+            re.IGNORECASE,
         )
 
         for match in func_pattern.finditer(context):
             func_name = match.group(1)
             # Check if marked as export
-            line_end = context.find('\n', match.end())
+            line_end = context.find("\n", match.end())
             if line_end > 0:
-                line = context[match.start():line_end]
-                if 'Экспорт' in line or 'Export' in line:
+                line = context[match.start() : line_end]
+                if "Экспорт" in line or "Export" in line:
                     exports.append(func_name)
 
         # Also look for bullet lists
         # - ПолучитьДанные() - получает данные
         bullet_pattern = re.compile(
-            r'[-*]\s*([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\(',
-            re.IGNORECASE
+            r"[-*]\s*([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\(", re.IGNORECASE
         )
 
         for match in bullet_pattern.finditer(context):
@@ -233,9 +238,9 @@ class ArchChecker:
 
     def check(
         self,
-        spec: List[ComponentSpec],
-        implemented_files: List[str],
-        code_content: Optional[Dict[str, str]] = None
+        spec: list[ComponentSpec],
+        implemented_files: list[str],
+        code_content: dict[str, str] | None = None,
     ) -> ArchCheckResult:
         """
         Check implementation against specification.
@@ -258,13 +263,15 @@ class ArchChecker:
             if component.required:
                 if not self._is_component_implemented(component.name, impl_names):
                     result.missing_components.append(component.name)
-                    result.issues.append(ArchIssue(
-                        component=component.name,
-                        issue_type="missing",
-                        description=f"Компонент '{component.name}' не реализован",
-                        severity=IssueSeverity.CRITICAL,
-                        recommendation=f"Реализовать {component.type}: {component.name}",
-                    ))
+                    result.issues.append(
+                        ArchIssue(
+                            component=component.name,
+                            issue_type="missing",
+                            description=f"Компонент '{component.name}' не реализован",
+                            severity=IssueSeverity.CRITICAL,
+                            recommendation=f"Реализовать {component.type}: {component.name}",
+                        )
+                    )
 
         # Check interfaces if code content provided
         if code_content:
@@ -273,34 +280,35 @@ class ArchChecker:
                     file_path = self._find_component_file(component.name, implemented_files)
                     if file_path and file_path in code_content:
                         violations = self._check_interface(
-                            component.interface,
-                            code_content[file_path]
+                            component.interface, code_content[file_path]
                         )
                         for missing_func in violations:
-                            result.interface_violations.append(
-                                f"{component.name}.{missing_func}"
+                            result.interface_violations.append(f"{component.name}.{missing_func}")
+                            result.issues.append(
+                                ArchIssue(
+                                    component=component.name,
+                                    issue_type="wrong_interface",
+                                    description=f"Отсутствует экспортная функция: {missing_func}",
+                                    severity=IssueSeverity.WARNING,
+                                    related_files=[file_path],
+                                    recommendation=f"Добавить: Функция {missing_func}(...) Экспорт",
+                                )
                             )
-                            result.issues.append(ArchIssue(
-                                component=component.name,
-                                issue_type="wrong_interface",
-                                description=f"Отсутствует экспортная функция: {missing_func}",
-                                severity=IssueSeverity.WARNING,
-                                related_files=[file_path],
-                                recommendation=f"Добавить: Функция {missing_func}(...) Экспорт",
-                            ))
 
         # Check for circular dependencies
         if code_content:
             circular = self._detect_circular_dependencies(code_content)
             result.circular_dependencies = circular
             for dep1, dep2 in circular:
-                result.issues.append(ArchIssue(
-                    component=dep1,
-                    issue_type="circular_dep",
-                    description=f"Циклическая зависимость: {dep1} ↔ {dep2}",
-                    severity=IssueSeverity.WARNING,
-                    recommendation="Вынести общий код в отдельный модуль",
-                ))
+                result.issues.append(
+                    ArchIssue(
+                        component=dep1,
+                        issue_type="circular_dep",
+                        description=f"Циклическая зависимость: {dep1} ↔ {dep2}",
+                        severity=IssueSeverity.WARNING,
+                        recommendation="Вынести общий код в отдельный модуль",
+                    )
+                )
 
         # Check BSL-specific patterns
         if code_content:
@@ -312,7 +320,7 @@ class ArchChecker:
 
         return result
 
-    def _extract_component_names(self, file_paths: List[str]) -> Set[str]:
+    def _extract_component_names(self, file_paths: list[str]) -> set[str]:
         """Extract component names from file paths."""
         names = set()
         for path in file_paths:
@@ -321,7 +329,7 @@ class ArchChecker:
             name = p.stem
 
             # Also add parent folder name for modules
-            if name.lower() in ('module', 'ext'):
+            if name.lower() in ("module", "ext"):
                 parent = p.parent.name
                 if parent:
                     names.add(parent)
@@ -330,7 +338,7 @@ class ArchChecker:
 
         return names
 
-    def _is_component_implemented(self, name: str, impl_names: Set[str]) -> bool:
+    def _is_component_implemented(self, name: str, impl_names: set[str]) -> bool:
         """Check if component is implemented."""
         name_lower = name.lower()
 
@@ -343,7 +351,7 @@ class ArchChecker:
 
         return False
 
-    def _find_component_file(self, name: str, file_paths: List[str]) -> Optional[str]:
+    def _find_component_file(self, name: str, file_paths: list[str]) -> str | None:
         """Find file path for component."""
         name_lower = name.lower()
 
@@ -353,11 +361,7 @@ class ArchChecker:
 
         return None
 
-    def _check_interface(
-        self,
-        expected: List[str],
-        code: str
-    ) -> List[str]:
+    def _check_interface(self, expected: list[str], code: str) -> list[str]:
         """Check if expected interface is implemented."""
         missing = []
         code_lower = code.lower()
@@ -365,21 +369,18 @@ class ArchChecker:
         for func_name in expected:
             # Look for function/procedure with export
             pattern = re.compile(
-                rf'(?:Функция|Процедура)\s+{re.escape(func_name)}\s*\([^)]*\)\s*Экспорт',
-                re.IGNORECASE
+                rf"(?:Функция|Процедура)\s+{re.escape(func_name)}\s*\([^)]*\)\s*Экспорт",
+                re.IGNORECASE,
             )
             if not pattern.search(code):
                 missing.append(func_name)
 
         return missing
 
-    def _detect_circular_dependencies(
-        self,
-        code_content: Dict[str, str]
-    ) -> List[Tuple[str, str]]:
+    def _detect_circular_dependencies(self, code_content: dict[str, str]) -> list[tuple[str, str]]:
         """Detect circular dependencies between modules."""
         # Build dependency graph
-        deps: Dict[str, Set[str]] = {}
+        deps: dict[str, set[str]] = {}
 
         for file_path, content in code_content.items():
             module_name = Path(file_path).stem
@@ -388,14 +389,21 @@ class ArchChecker:
             # Find module references
             # Common pattern: МодульИмя.Функция(
             ref_pattern = re.compile(
-                r'([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\.\s*[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*\s*\('
+                r"([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)\s*\.\s*[А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*\s*\("
             )
 
             for match in ref_pattern.finditer(content):
                 ref_module = match.group(1)
                 # Skip built-in objects
-                if ref_module not in ('Справочники', 'Документы', 'РегистрыСведений',
-                                     'ОбщегоНазначения', 'Строка', 'Массив', 'Запрос'):
+                if ref_module not in (
+                    "Справочники",
+                    "Документы",
+                    "РегистрыСведений",
+                    "ОбщегоНазначения",
+                    "Строка",
+                    "Массив",
+                    "Запрос",
+                ):
                     deps[module_name].add(ref_module)
 
         # Find cycles
@@ -410,7 +418,7 @@ class ArchChecker:
 
         return circular
 
-    def _check_bsl_patterns(self, code_content: Dict[str, str]) -> List[ArchIssue]:
+    def _check_bsl_patterns(self, code_content: dict[str, str]) -> list[ArchIssue]:
         """Check BSL-specific architectural patterns."""
         issues = []
 
@@ -421,81 +429,98 @@ class ArchChecker:
             if self._is_server_module(file_path, content):
                 client_calls = self._find_client_calls(content)
                 if client_calls:
-                    issues.append(ArchIssue(
-                        component=module_name,
-                        issue_type="wrong_structure",
-                        description=f"Серверный модуль вызывает клиентские методы: {', '.join(client_calls[:3])}",
-                        severity=IssueSeverity.CRITICAL,
-                        related_files=[file_path],
-                        recommendation="Перенести вызовы на клиент или использовать callback",
-                    ))
+                    issues.append(
+                        ArchIssue(
+                            component=module_name,
+                            issue_type="wrong_structure",
+                            description=f"Серверный модуль вызывает клиентские методы: {', '.join(client_calls[:3])}",
+                            severity=IssueSeverity.CRITICAL,
+                            related_files=[file_path],
+                            recommendation="Перенести вызовы на клиент или использовать callback",
+                        )
+                    )
 
             # Check 2: Общий модуль должен иметь явное указание контекста
-            if 'CommonModules' in file_path:
+            if "CommonModules" in file_path:
                 if not self._has_context_annotation(content):
-                    issues.append(ArchIssue(
-                        component=module_name,
-                        issue_type="wrong_structure",
-                        description="Общий модуль без явного указания контекста выполнения",
-                        severity=IssueSeverity.RECOMMENDATION,
-                        related_files=[file_path],
-                        recommendation="Добавить &НаСервере, &НаКлиенте или &НаСервереБезКонтекста",
-                    ))
+                    issues.append(
+                        ArchIssue(
+                            component=module_name,
+                            issue_type="wrong_structure",
+                            description="Общий модуль без явного указания контекста выполнения",
+                            severity=IssueSeverity.RECOMMENDATION,
+                            related_files=[file_path],
+                            recommendation="Добавить &НаСервере, &НаКлиенте или &НаСервереБезКонтекста",
+                        )
+                    )
 
             # Check 3: Модуль формы не должен содержать бизнес-логику
-            if 'Form' in file_path and 'Module.bsl' in file_path:
+            if "Form" in file_path and "Module.bsl" in file_path:
                 if self._has_business_logic(content):
-                    issues.append(ArchIssue(
-                        component=module_name,
-                        issue_type="wrong_structure",
-                        description="Модуль формы содержит бизнес-логику",
-                        severity=IssueSeverity.RECOMMENDATION,
-                        related_files=[file_path],
-                        recommendation="Вынести логику в общий модуль или модуль объекта",
-                    ))
+                    issues.append(
+                        ArchIssue(
+                            component=module_name,
+                            issue_type="wrong_structure",
+                            description="Модуль формы содержит бизнес-логику",
+                            severity=IssueSeverity.RECOMMENDATION,
+                            related_files=[file_path],
+                            recommendation="Вынести логику в общий модуль или модуль объекта",
+                        )
+                    )
 
         return issues
 
     def _is_server_module(self, file_path: str, content: str) -> bool:
         """Check if module is server-side."""
         # Check path
-        if 'CommonModules' in file_path:
-            return '&НаСервере' in content or '&НаСервереБезКонтекста' in content
+        if "CommonModules" in file_path:
+            return "&НаСервере" in content or "&НаСервереБезКонтекста" in content
 
         # Object modules are always server
-        if 'ObjectModule.bsl' in file_path or 'ManagerModule.bsl' in file_path:
+        if "ObjectModule.bsl" in file_path or "ManagerModule.bsl" in file_path:
             return True
 
         return False
 
-    def _find_client_calls(self, content: str) -> List[str]:
+    def _find_client_calls(self, content: str) -> list[str]:
         """Find client-only method calls in code."""
         client_methods = [
-            'Предупреждение', 'Вопрос', 'ОткрытьФорму', 'ОткрытьФормуМодально',
-            'ПоказатьВводДаты', 'ПоказатьВводЗначения', 'ПоказатьПредупреждение',
-            'ПоказатьВопрос', 'ПолучитьФорму',
+            "Предупреждение",
+            "Вопрос",
+            "ОткрытьФорму",
+            "ОткрытьФормуМодально",
+            "ПоказатьВводДаты",
+            "ПоказатьВводЗначения",
+            "ПоказатьПредупреждение",
+            "ПоказатьВопрос",
+            "ПолучитьФорму",
         ]
 
         found = []
         for method in client_methods:
-            if re.search(rf'\b{method}\s*\(', content):
+            if re.search(rf"\b{method}\s*\(", content):
                 found.append(method)
 
         return found
 
     def _has_context_annotation(self, content: str) -> bool:
         """Check if module has context annotation."""
-        annotations = ['&НаСервере', '&НаКлиенте', '&НаСервереБезКонтекста', '&НаКлиентеНаСервереБезКонтекста']
+        annotations = [
+            "&НаСервере",
+            "&НаКлиенте",
+            "&НаСервереБезКонтекста",
+            "&НаКлиентеНаСервереБезКонтекста",
+        ]
         return any(ann in content for ann in annotations)
 
     def _has_business_logic(self, content: str) -> bool:
         """Check if form module contains business logic (heuristic)."""
         # Indicators of business logic in form
         indicators = [
-            r'Запрос\s*=\s*Новый\s+Запрос',  # Query creation
-            r'НачатьТранзакцию\s*\(',  # Transaction
-            r'\.Записать\s*\(',  # Object write
-            r'\.Провести\s*\(',  # Document posting
+            r"Запрос\s*=\s*Новый\s+Запрос",  # Query creation
+            r"НачатьТранзакцию\s*\(",  # Transaction
+            r"\.Записать\s*\(",  # Object write
+            r"\.Провести\s*\(",  # Document posting
         ]
 
         indicator_count = 0
@@ -521,7 +546,7 @@ class ArchChecker:
 
         # Other issues
         for issue in result.issues:
-            if issue.issue_type not in ('missing', 'wrong_interface', 'circular_dep'):
+            if issue.issue_type not in ("missing", "wrong_interface", "circular_dep"):
                 if issue.severity == IssueSeverity.CRITICAL:
                     score -= 10.0
                 elif issue.severity == IssueSeverity.WARNING:
@@ -531,7 +556,7 @@ class ArchChecker:
 
         return max(0.0, score)
 
-    def to_review_issues(self, result: ArchCheckResult) -> List[ReviewIssue]:
+    def to_review_issues(self, result: ArchCheckResult) -> list[ReviewIssue]:
         """
         Convert architecture issues to review issues.
 
@@ -568,9 +593,7 @@ class ArchChecker:
 
 # Convenience functions
 def check_architecture(
-    design_content: str,
-    implemented_files: List[str],
-    code_content: Optional[Dict[str, str]] = None
+    design_content: str, implemented_files: list[str], code_content: dict[str, str] | None = None
 ) -> ArchCheckResult:
     """
     Check implementation against design specification.
@@ -588,7 +611,7 @@ def check_architecture(
     return checker.check(spec, implemented_files, code_content)
 
 
-def parse_design_spec(design_content: str) -> List[ComponentSpec]:
+def parse_design_spec(design_content: str) -> list[ComponentSpec]:
     """
     Parse design.md to extract component specifications.
 

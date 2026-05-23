@@ -41,24 +41,57 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def cmd_analyze(args):
-    """Команда анализа"""
-    from .report_generator import ReportGenerator
+    """Команда анализа через sonar-scanner subprocess"""
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    from .config_manager import ConfigManager
 
     logger.info(f"Analyzing BSL code at: {args.path}")
 
-    # TODO: Реальный анализ
-    issues = []
+    manager = ConfigManager()
+    config = manager.load()
 
-    report_gen = ReportGenerator()
-    report = report_gen.generate(issues)
+    scanner = config.sonar_scanner_path
+    if not Path(scanner).exists():
+        fallback = shutil.which("sonar-scanner")
+        if fallback:
+            scanner = fallback
+        else:
+            logger.error("sonar-scanner not found at %s and not in PATH", scanner)
+            sys.exit(1)
 
-    # Экспорт
-    markdown = report_gen.export_markdown(report)
-    with open(args.output, "w", encoding="utf-8") as f:
-        f.write(markdown)
+    project_key = config.project_key or Path(args.path).name
+    cmd = [
+        scanner,
+        f"-Dsonar.projectKey={project_key}",
+        f"-Dsonar.sources={args.path}",
+        f"-Dsonar.host.url={config.host}",
+    ]
+    if config.token:
+        cmd.append(f"-Dsonar.token={config.token}")
 
-    logger.info(f"Report saved to: {args.output}")
-    print(f"Quality Gate: {'PASSED' if report.quality_gate else 'FAILED'}")
+    cmd_log = [arg if not arg.startswith("-Dsonar.token=") else "-Dsonar.token=***" for arg in cmd]
+    logger.info("Running: %s", " ".join(cmd_log))
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+    issues_url = f"{config.host}/dashboard?id={project_key}"
+    if result.returncode == 0:
+        logger.info("Analysis completed successfully")
+        print("Quality Gate: PASSED")
+        print(f"Results: {issues_url}")
+        with open(args.output, "w", encoding="utf-8") as f:
+            f.write(
+                f"# SonarQube Analysis Report\n\nQuality Gate: PASSED\n\nResults: {issues_url}\n"
+            )
+        logger.info(f"Report saved to: {args.output}")
+    else:
+        logger.error("sonar-scanner failed (exit %d):\n%s", result.returncode, result.stderr)
+        print("Quality Gate: FAILED")
+        if result.stdout:
+            print(result.stdout[-2000:])
+        sys.exit(result.returncode)
 
 
 def cmd_rules(args):

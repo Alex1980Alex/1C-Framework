@@ -2,18 +2,14 @@
 Tests for REVIEWER ArchChecker.
 """
 
-import pytest
-from pathlib import Path
-
 from agents.reviewer.arch_checker import (
-    ComponentSpec,
-    ArchCheckResult,
     ArchChecker,
+    ArchCheckResult,
+    ComponentSpec,
     check_architecture,
     parse_design_spec,
 )
-from agents.reviewer.models import IssueSeverity, IssueCategory
-
+from agents.reviewer.models import IssueCategory, IssueSeverity
 
 # Sample design.md content for testing
 SIMPLE_DESIGN = """
@@ -130,11 +126,7 @@ class TestComponentSpec:
 
     def test_creation(self):
         """Test spec creation."""
-        spec = ComponentSpec(
-            name="МойМодуль",
-            type="CommonModule",
-            required=True
-        )
+        spec = ComponentSpec(name="МойМодуль", type="CommonModule", required=True)
         assert spec.name == "МойМодуль"
         assert spec.type == "CommonModule"
         assert spec.required is True
@@ -142,9 +134,7 @@ class TestComponentSpec:
     def test_with_interface(self):
         """Test spec with interface."""
         spec = ComponentSpec(
-            name="АПИ",
-            type="CommonModule",
-            interface=["ПолучитьДанные", "СохранитьДанные"]
+            name="АПИ", type="CommonModule", interface=["ПолучитьДанные", "СохранитьДанные"]
         )
         assert spec.interface is not None
         assert len(spec.interface) == 2
@@ -154,19 +144,14 @@ class TestComponentSpec:
         spec = ComponentSpec(
             name="Модуль",
             type="CommonModule",
-            dependencies=["ОбщегоНазначения", "СтроковыеФункции"]
+            dependencies=["ОбщегоНазначения", "СтроковыеФункции"],
         )
         assert spec.dependencies is not None
         assert "ОбщегоНазначения" in spec.dependencies
 
     def test_to_dict(self):
         """Test serialization."""
-        spec = ComponentSpec(
-            name="Тест",
-            type="Report",
-            required=False,
-            interface=["Сформировать"]
-        )
+        spec = ComponentSpec(name="Тест", type="Report", required=False, interface=["Сформировать"])
         d = spec.to_dict()
         assert d["name"] == "Тест"
         assert d["type"] == "Report"
@@ -189,34 +174,26 @@ class TestArchCheckResult:
         from .models import ArchIssue
 
         result = ArchCheckResult()
-        result.issues.append(ArchIssue(
-            component="Модуль",
-            issue_type="missing",
-            description="Компонент не реализован"
-        ))
+        result.issues.append(
+            ArchIssue(
+                component="Модуль", issue_type="missing", description="Компонент не реализован"
+            )
+        )
         assert result.passed is False
 
     def test_with_missing_components(self):
         """Test result with missing components."""
-        result = ArchCheckResult(
-            missing_components=["Модуль1", "Модуль2"]
-        )
+        result = ArchCheckResult(missing_components=["Модуль1", "Модуль2"])
         assert len(result.missing_components) == 2
 
     def test_with_circular_dependencies(self):
         """Test result with circular dependencies."""
-        result = ArchCheckResult(
-            circular_dependencies=[("A", "B"), ("C", "D")]
-        )
+        result = ArchCheckResult(circular_dependencies=[("A", "B"), ("C", "D")])
         assert len(result.circular_dependencies) == 2
 
     def test_to_dict(self):
         """Test serialization."""
-        result = ArchCheckResult(
-            missing_components=["X"],
-            extra_components=["Y", "Z"],
-            score=80.0
-        )
+        result = ArchCheckResult(missing_components=["X"], extra_components=["Y", "Z"], score=80.0)
         d = result.to_dict()
         assert d["missing_components"] == 1
         assert d["extra_components"] == 2
@@ -289,10 +266,7 @@ class TestArchChecker:
 
         assert "ОтсутствующийМодуль" in result.missing_components
         assert result.score < 100.0
-        assert any(
-            issue.issue_type == "missing"
-            for issue in result.issues
-        )
+        assert any(issue.issue_type == "missing" for issue in result.issues)
 
     def test_check_interface_violations(self):
         """Test check for interface violations."""
@@ -301,7 +275,7 @@ class TestArchChecker:
             ComponentSpec(
                 name="АПИМодуль",
                 type="CommonModule",
-                interface=["ПолучитьКонтрагента", "СоздатьДокумент"]
+                interface=["ПолучитьКонтрагента", "СоздатьДокумент"],
             ),
         ]
         files = ["src/CommonModules/АПИМодуль/Ext/Module.bsl"]
@@ -310,10 +284,7 @@ class TestArchChecker:
         result = checker.check(spec, files, code)
 
         # СоздатьДокумент should be missing
-        assert any(
-            "СоздатьДокумент" in v
-            for v in result.interface_violations
-        )
+        assert any("СоздатьДокумент" in v for v in result.interface_violations)
 
     def test_detect_circular_dependencies(self):
         """Test circular dependency detection."""
@@ -341,15 +312,14 @@ class TestArchChecker:
         checker = ArchChecker()
         spec = []
         files = ["src/CommonModules/СерверныйМодуль/Ext/Module.bsl"]
-        code = {
-            "src/CommonModules/СерверныйМодуль/Ext/Module.bsl": SERVER_WITH_CLIENT_CALLS
-        }
+        code = {"src/CommonModules/СерверныйМодуль/Ext/Module.bsl": SERVER_WITH_CLIENT_CALLS}
 
         result = checker.check(spec, files, code)
 
         # Should detect client call in server code
         server_issues = [
-            i for i in result.issues
+            i
+            for i in result.issues
             if "клиентские методы" in i.description.lower() or "client" in i.description.lower()
         ]
         assert len(server_issues) > 0
@@ -359,16 +329,11 @@ class TestArchChecker:
         checker = ArchChecker()
         spec = []
         files = ["src/CommonModules/МойМодуль/Ext/Module.bsl"]
-        code = {
-            "src/CommonModules/МойМодуль/Ext/Module.bsl": COMMON_MODULE_NO_CONTEXT
-        }
+        code = {"src/CommonModules/МойМодуль/Ext/Module.bsl": COMMON_MODULE_NO_CONTEXT}
 
         result = checker.check(spec, files, code)
 
-        context_issues = [
-            i for i in result.issues
-            if "контекст" in i.description.lower()
-        ]
+        context_issues = [i for i in result.issues if "контекст" in i.description.lower()]
         assert len(context_issues) > 0
 
     def test_check_common_module_with_context(self):
@@ -376,16 +341,11 @@ class TestArchChecker:
         checker = ArchChecker()
         spec = []
         files = ["src/CommonModules/МойМодуль/Ext/Module.bsl"]
-        code = {
-            "src/CommonModules/МойМодуль/Ext/Module.bsl": COMMON_MODULE_WITH_CONTEXT
-        }
+        code = {"src/CommonModules/МойМодуль/Ext/Module.bsl": COMMON_MODULE_WITH_CONTEXT}
 
         result = checker.check(spec, files, code)
 
-        context_issues = [
-            i for i in result.issues
-            if "контекст" in i.description.lower()
-        ]
+        context_issues = [i for i in result.issues if "контекст" in i.description.lower()]
         assert len(context_issues) == 0
 
     def test_check_form_with_business_logic(self):
@@ -399,10 +359,7 @@ class TestArchChecker:
 
         result = checker.check(spec, files, code)
 
-        form_issues = [
-            i for i in result.issues
-            if "бизнес-логик" in i.description.lower()
-        ]
+        form_issues = [i for i in result.issues if "бизнес-логик" in i.description.lower()]
         assert len(form_issues) > 0
 
     def test_check_form_without_business_logic(self):
@@ -416,10 +373,7 @@ class TestArchChecker:
 
         result = checker.check(spec, files, code)
 
-        form_issues = [
-            i for i in result.issues
-            if "бизнес-логик" in i.description.lower()
-        ]
+        form_issues = [i for i in result.issues if "бизнес-логик" in i.description.lower()]
         assert len(form_issues) == 0
 
     def test_to_review_issues(self):
@@ -428,18 +382,22 @@ class TestArchChecker:
 
         checker = ArchChecker()
         result = ArchCheckResult()
-        result.issues.append(ArchIssue(
-            component="Модуль",
-            issue_type="missing",
-            description="Компонент не реализован",
-            severity=IssueSeverity.CRITICAL,
-        ))
-        result.issues.append(ArchIssue(
-            component="Форма",
-            issue_type="wrong_structure",
-            description="Неправильная структура",
-            severity=IssueSeverity.WARNING,
-        ))
+        result.issues.append(
+            ArchIssue(
+                component="Модуль",
+                issue_type="missing",
+                description="Компонент не реализован",
+                severity=IssueSeverity.CRITICAL,
+            )
+        )
+        result.issues.append(
+            ArchIssue(
+                component="Форма",
+                issue_type="wrong_structure",
+                description="Неправильная структура",
+                severity=IssueSeverity.WARNING,
+            )
+        )
 
         review_issues = checker.to_review_issues(result)
 
@@ -475,8 +433,7 @@ class TestDetectComponentType:
         """Test CommonModule detection."""
         checker = ArchChecker()
         comp_type = checker._detect_component_type(
-            "МодульОбработки",
-            "Это общий модуль для обработки данных"
+            "МодульОбработки", "Это общий модуль для обработки данных"
         )
         assert comp_type == "CommonModule"
 
@@ -484,18 +441,14 @@ class TestDetectComponentType:
         """Test Form detection."""
         checker = ArchChecker()
         comp_type = checker._detect_component_type(
-            "ФормаДокумента",
-            "Это форма для отображения документа"
+            "ФормаДокумента", "Это форма для отображения документа"
         )
         assert comp_type == "Form"
 
     def test_detect_dataprocessor(self):
         """Test DataProcessor detection."""
         checker = ArchChecker()
-        comp_type = checker._detect_component_type(
-            "МояОбработка",
-            "DataProcessors context"
-        )
+        comp_type = checker._detect_component_type("МояОбработка", "DataProcessors context")
         assert comp_type == "DataProcessors"
 
 
@@ -506,8 +459,10 @@ class TestConvenienceFunctions:
         """Test check_architecture function."""
         result = check_architecture(
             SIMPLE_DESIGN,
-            ["src/CommonModules/МодульОбработки/Ext/Module.bsl",
-             "src/CommonModules/МодульФормы/Ext/Module.bsl"]
+            [
+                "src/CommonModules/МодульОбработки/Ext/Module.bsl",
+                "src/CommonModules/МодульФормы/Ext/Module.bsl",
+            ],
         )
         assert isinstance(result, ArchCheckResult)
         assert result.score >= 80.0
@@ -592,4 +547,3 @@ class TestEdgeCases:
         )
         score = checker._calculate_score(result)
         assert score == 0.0
-

@@ -123,7 +123,7 @@ globs: .cursor/rules/*.md
 alwaysApply: true
 ---
 
-This references [dev_workflow.mdc](mdc:.cursor/rules/dev_workflow.mdc) and 
+This references [dev_workflow.mdc](mdc:.cursor/rules/dev_workflow.mdc) and
 [taskmaster.mdc](mdc:.cursor/rules/taskmaster.mdc).
 Files are in the .cursor/rules directory and we should reference the rules directory.`;
 

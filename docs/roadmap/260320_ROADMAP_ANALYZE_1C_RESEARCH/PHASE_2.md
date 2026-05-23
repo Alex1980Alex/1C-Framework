@@ -9,7 +9,7 @@
 ## Problem Statement
 
 AutoResearch v2 промпты заточены под код (ruff, pytest, git commit). Для анализа 1С задач нужны промпты, которые:
-- Направляют Executor на использование MCP tools (bsl-semantic-search, 1c-mcp-toolkit)
+- Направляют Executor на использование MCP tools (bsl-semantic-search, 1c-mcp-crud)
 - Учат Reviewer проверять поля через get_metadata и SQL через execute_query
 - Дают Comparator критерии оценки качества анализа, а не кода
 

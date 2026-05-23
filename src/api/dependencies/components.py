@@ -1,5 +1,8 @@
 """FastAPI dependency injection for framework components."""
 
+import logging
+import time
+
 from src.pdf_framework.agents.memory.conversation import ConversationMemory
 from src.pdf_framework.config import Settings, get_settings
 from src.pdf_framework.embeddings import get_embedding_engine
@@ -31,17 +34,42 @@ from src.pdf_framework.vector_store.base import BaseVectorStore
 from src.pdf_framework.vector_store.indexing.indexer import DocumentIndexer
 from src.pdf_framework.vector_store.parent_store import ParentDocumentStore
 
+logger = logging.getLogger(__name__)
+
 
 class Components:
     """Holds all initialized framework components."""
 
     def __init__(self) -> None:
+        # Granular timing for Lazy-init diagnostics. В изолированном тесте этот
+        # конструктор отрабатывает за ~0.4с, в production через MCP stdio видели
+        # затяжки до 4+ минут — без пошагового лога невозможно локализовать
+        # виновника (см. roadmap / память feedback_pdf_mcp_init_duration).
+        _t0 = time.monotonic()
+        _t = [_t0]
+
+        def _step(name: str) -> None:
+            now = time.monotonic()
+            logger.info(
+                "[Components] %-32s %6.2fs (cum %6.2fs)",
+                name,
+                now - _t[0],
+                now - _t0,
+            )
+            _t[0] = now
+
         self.settings: Settings = get_settings()
+        _step("get_settings()")
         self.loader: BaseLoader = get_loader(self.settings.pdf)
+        _step("get_loader()")
         self.pipeline: ProcessingPipeline = ProcessingPipeline(self.settings.pdf)
+        _step("ProcessingPipeline()")
         self.embedding_engine: BaseEmbeddingEngine = get_embedding_engine(self.settings.embedding)
+        _step("get_embedding_engine()")
         self.vector_store: BaseVectorStore = get_vector_store(self.settings.vector_store)
+        _step("get_vector_store()")
         self.graph_store: BaseGraphStore = get_graph_store(self.settings.graph_store)
+        _step("get_graph_store()")
 
         # Phase 16: BM25 Store (SQLite FTS5)
         self.bm25_store: BM25Store | None = None
@@ -59,6 +87,7 @@ class Components:
             min_size=self.settings.layout.min_image_size,
             base_url=self.settings.agent.base_url,
         )
+        _step("ImageExtractor()")
 
         # Phase 17: Semantic Search Cache
         self.semantic_cache: SemanticSearchCache | None = None
@@ -81,6 +110,7 @@ class Components:
             embedding_engine=self.embedding_engine,
             semantic_cache=self.semantic_cache,
         )
+        _step("SearchManager()")
 
         # Phase 30: Section-first pipeline (requires BM25)
         if self.bm25_store is not None:
@@ -90,6 +120,7 @@ class Components:
                 bm25_store=self.bm25_store,
                 search_manager=self.search_manager,
             )
+            _step("SectionFirstPipeline (Phase 30)")
 
         # Register search strategies
         vector_strategy = VectorSearchStrategy(self.embedding_engine, self.vector_store)
@@ -127,6 +158,7 @@ class Components:
         self.search_manager.register_strategy("graph", graph_strategy)
         self.search_manager.register_strategy("hybrid", hybrid_strategy)
         self.search_manager.register_strategy("mmr", mmr_strategy)
+        _step("strategies: vector/graph/hybrid/mmr/bm25")
 
         # Phase 6: GraphRAG strategies
         graphrag_local = GraphRAGLocalStrategy(
@@ -146,6 +178,7 @@ class Components:
         )
         self.search_manager.register_strategy("graphrag_local", graphrag_local)
         self.search_manager.register_strategy("graphrag_global", graphrag_global)
+        _step("strategies: graphrag_local/global")
 
         # Phase 38: LightRAG entity embeddings + strategy
         self.entity_embeddings = None
@@ -188,6 +221,7 @@ class Components:
                     settings=self.settings.light_rag,
                 )
                 self.search_manager.register_strategy("graphrag_auto", graphrag_auto)
+            _step("LightRAG (+EntityEmbeddingBuilder, +auto-select)")
 
         # Phase 7: Parent-Child Auto-Merge strategy
         if self.settings.parent_child.enabled:
@@ -202,6 +236,7 @@ class Components:
                 fetch_multiplier=self.settings.parent_child.fetch_multiplier,
             )
             self.search_manager.register_strategy("auto_merge", auto_merge)
+            _step("AutoMerge (Phase 7 parent-child)")
         else:
             self.parent_store = None  # type: ignore[assignment]
 
@@ -214,6 +249,7 @@ class Components:
                 base_url=self.settings.agent.base_url,
             )
             self.search_manager.register_strategy("adaptive", adaptive_strategy)
+            _step("AdaptiveSearchStrategy (Phase 8)")
 
         # Phase 9: Conversation Memory
         self.conversation_memory: ConversationMemory = ConversationMemory(
@@ -222,6 +258,7 @@ class Components:
             max_history=self.settings.conversation.max_history,
             auto_cleanup_days=self.settings.conversation.auto_cleanup_days,
         )
+        _step("ConversationMemory()")
 
         # Phase 3.3: Two-stage pipeline
         if self.settings.two_stage.enabled:
@@ -242,6 +279,7 @@ class Components:
                 settings=self.settings.two_stage,
             )
             self.search_manager.register_strategy("two_stage", two_stage)
+            _step("TwoStagePipeline (+CrossEncoder/FlashRank)")
 
         # Phase 34: DSPy Optimizer
         self.dspy_optimizer = None
@@ -255,6 +293,7 @@ class Components:
                 base_url=self.settings.agent.base_url,
                 model=self.settings.optimization.model,
             )
+            _step("DSPyOptimizer (Phase 34)")
 
         # Phase 32: Collection Store + Document Registry
         from src.pdf_framework.knowledge_base.collection_store import CollectionStore
@@ -266,6 +305,7 @@ class Components:
         self.document_registry: DocumentRegistry = DocumentRegistry(
             db_path=self.settings.data_dir / "document_registry.db",
         )
+        _step("CollectionStore+DocumentRegistry (Phase 32)")
 
         # Phase 37: Web Search + Source Fusion
         self.web_search_strategy = None
@@ -286,6 +326,7 @@ class Components:
                 web_strategy=self.web_search_strategy,
                 confidence_threshold=self.settings.external.confidence_threshold,
             )
+            _step("WebSearch+SourceFusion (Phase 37)")
 
         # Phase 36: Research Session Store
         self.research_session_store = None
@@ -299,6 +340,7 @@ class Components:
             )
         except ImportError:
             pass
+        _step("ResearchSessionStore (Phase 36)")
 
         # Phase 40: Enterprise Analytics
         from src.pdf_framework.analytics import AuditLogger, CostTracker, QueryTracker
@@ -310,6 +352,7 @@ class Components:
         self.audit_logger: AuditLogger = AuditLogger(
             db_path=self.settings.data_dir / "audit.db",
         )
+        _step("Analytics: Query+Cost+Audit (Phase 40)")
 
         # Phase 18: Document Version Manager
         self.version_manager = None
@@ -321,6 +364,7 @@ class Components:
             )
         except ImportError:
             pass
+        _step("DocumentVersionManager (Phase 18)")
 
         # Phase 19: Deep Research Planner
         self.research_planner = None
@@ -330,6 +374,7 @@ class Components:
             self.research_planner = ResearchPlanner()
         except ImportError:
             pass
+        _step("ResearchPlanner (Phase 19)")
 
         # Phase 22: Async Feedback Store + FewShot + Boost
         self.feedback_store = None
@@ -362,6 +407,7 @@ class Components:
                 )
             except ImportError:
                 pass
+            _step("Feedback bundle (Store+Collector+FewShot+Boost, Phase 22)")
 
         # Phase 30: Section Summary Service
         self.section_summary = None
@@ -374,6 +420,7 @@ class Components:
                 model=self.settings.hierarchical.summary_model,
                 db_path=self.settings.hierarchical.summary_db_path,
             )
+            _step("SectionSummaryService (Phase 30)")
 
         # Phase 13.2: RAPTOR Search Strategy
         if self.settings.raptor.enabled:
@@ -393,35 +440,57 @@ class Components:
                 config=raptor_config,
             )
             self.search_manager.register_strategy("raptor", raptor_strategy)
+            _step("RAPTORSearchStrategy (Phase 13.2)")
+
+        logger.info("[Components] __init__ DONE in %.2fs", time.monotonic() - _t0)
 
     async def initialize(self) -> None:
         """Initialize async components (stores)."""
-        await self.vector_store.initialize()
-        await self.graph_store.initialize()
+        _t0 = time.monotonic()
+        _t = [_t0]
+
+        async def _astep(name: str, coro) -> None:
+            t1 = time.monotonic()
+            await coro
+            now = time.monotonic()
+            logger.info(
+                "[Components.init] %-32s %6.2fs (cum %6.2fs)",
+                name,
+                now - t1,
+                now - _t0,
+            )
+            _t[0] = now
+
+        await _astep("vector_store.initialize", self.vector_store.initialize())
+        await _astep("graph_store.initialize", self.graph_store.initialize())
         if self.parent_store is not None:
-            await self.parent_store.initialize()
+            await _astep("parent_store.initialize", self.parent_store.initialize())
         if self.bm25_store is not None:
-            await self.bm25_store.initialize()
+            await _astep("bm25_store.initialize", self.bm25_store.initialize())
         if self.semantic_cache is not None:
-            await self.semantic_cache.initialize()
+            await _astep("semantic_cache.initialize", self.semantic_cache.initialize())
         # Phase 18
         if self.version_manager is not None:
-            await self.version_manager.initialize()
+            await _astep("version_manager.initialize", self.version_manager.initialize())
         # Phase 22
         if self.feedback_store is not None:
-            await self.feedback_store.initialize()
+            await _astep("feedback_store.initialize", self.feedback_store.initialize())
         # Phase 30
         if self.section_summary is not None:
-            await self.section_summary.initialize()
+            await _astep("section_summary.initialize", self.section_summary.initialize())
         # Phase 32
-        await self.collection_store.initialize()
-        await self.document_registry.initialize()
+        await _astep("collection_store.initialize", self.collection_store.initialize())
+        await _astep("document_registry.initialize", self.document_registry.initialize())
         # Phase 36
         if self.research_session_store is not None:
-            await self.research_session_store.initialize()
+            await _astep(
+                "research_session_store.initialize",
+                self.research_session_store.initialize(),
+            )
         # Phase 40
-        await self.query_tracker.initialize()
-        await self.audit_logger.initialize()
+        await _astep("query_tracker.initialize", self.query_tracker.initialize())
+        await _astep("audit_logger.initialize", self.audit_logger.initialize())
+        logger.info("[Components.init] DONE in %.2fs", time.monotonic() - _t0)
 
 
 _components: Components | None = None

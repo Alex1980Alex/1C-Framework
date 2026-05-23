@@ -381,3 +381,152 @@ def test_confidence_matches_routing_matrix(tmp_path: Path) -> None:
     result = orch.rename(uri, 0, 10, "Новая", dry_run=True, content=content)
     expected = RoutingMatrix.route_for(SymbolKind.MODULE_EXPORT_PROC).confidence
     assert result.confidence == expected
+
+
+def _load_denylist_setup() -> None:
+    """Load bundled YAML so RoutingMatrix._DENYLIST is populated. Call reset() in finally."""
+    RoutingMatrix.load()
+
+
+def test_denylist_blocks_ast_grep_primary_form_handler(tmp_path: Path) -> None:
+    """form_handler with denylisted name 'Параметры' → manual_required, ast-grep skipped."""
+    _load_denylist_setup()
+    try:
+        form_dir = tmp_path / "src" / "forms"
+        form_dir.mkdir(parents=True)
+        file_a = form_dir / "form_module.bsl"
+        file_a.write_text(
+            "Процедура ПриОткрытии(Параметры) Экспорт\nКонецПроцедуры\n",
+            encoding="utf-8",
+        )
+        uri = _file_uri(file_a)
+
+        lsp = _StubLspClient()
+        runner = _FakeRunner(
+            matches=[
+                AstGrepMatch(
+                    file=file_a, start_line=0, start_character=22,
+                    end_line=0, end_character=31,
+                )
+            ]
+        )
+        orch, _ = _make_orchestrator(tmp_path, lsp, runner)
+
+        content = file_a.read_text(encoding="utf-8")
+        result = orch.rename(uri, 0, 22, "Парам", dry_run=True, content=content)
+
+        assert result.reason == "manual_required"
+        assert result.manual_instruction is not None
+        assert "denylist" in (result.manual_instruction.warnings[0]).lower()
+        assert result.manual_instruction.old_name == "Параметры"
+        assert runner.calls == 0
+    finally:
+        RoutingMatrix.reset()
+
+
+def test_denylist_skips_ast_grep_fallback_for_module_export(tmp_path: Path) -> None:
+    """module_export_proc with denylisted name: multilspy fails → ast-grep fallback skipped → manual."""
+    _load_denylist_setup()
+    try:
+        file_a = tmp_path / "module.bsl"
+        file_a.write_text(
+            "Процедура Параметры() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
+        )
+        uri = _file_uri(file_a)
+
+        lsp = _StubLspClient(response=None)
+        runner = _FakeRunner(
+            matches=[
+                AstGrepMatch(
+                    file=file_a, start_line=0, start_character=10,
+                    end_line=0, end_character=19,
+                )
+            ]
+        )
+        orch, _ = _make_orchestrator(tmp_path, lsp, runner)
+
+        content = file_a.read_text(encoding="utf-8")
+        result = orch.rename(uri, 0, 10, "Парам", dry_run=True, content=content)
+
+        assert result.reason == "manual_required"
+        assert result.manual_instruction is not None
+        assert "denylist" in (result.manual_instruction.warnings[0]).lower()
+        assert lsp.calls == 1
+        assert runner.calls == 0
+    finally:
+        RoutingMatrix.reset()
+
+
+def test_denylist_does_not_block_multilspy_local_variable(tmp_path: Path) -> None:
+    """LOCAL_VARIABLE primary=multilspy: denylisted name still works (scope-aware)."""
+    _load_denylist_setup()
+    try:
+        file_a = tmp_path / "module.bsl"
+        file_a.write_text(
+            "Процедура Тест()\n    Перем Параметры;\nКонецПроцедуры\n",
+            encoding="utf-8",
+        )
+        uri = _file_uri(file_a)
+
+        lsp = _StubLspClient(_lsp_edit(uri, 1, 10, 19, "Парам"))
+        runner = _FakeRunner()
+        orch, _ = _make_orchestrator(tmp_path, lsp, runner)
+
+        content = file_a.read_text(encoding="utf-8")
+        result = orch.rename(uri, 1, 10, "Парам", dry_run=True, content=content)
+
+        assert result.symbol_kind == SymbolKind.LOCAL_VARIABLE
+        assert result.primary_backend == "multilspy"
+        assert result.reason != "manual_required"
+        assert lsp.calls == 1
+        assert runner.calls == 0
+    finally:
+        RoutingMatrix.reset()
+
+
+def test_denylist_unknown_name_passes_through(tmp_path: Path) -> None:
+    """Non-denylisted name on form_handler → ast-grep runs as normal."""
+    _load_denylist_setup()
+    try:
+        form_dir = tmp_path / "src" / "forms"
+        form_dir.mkdir(parents=True)
+        file_a = form_dir / "form_module.bsl"
+        file_a.write_text(
+            "Процедура ОбработчикСпецифичный() Экспорт\nКонецПроцедуры\n",
+            encoding="utf-8",
+        )
+        uri = _file_uri(file_a)
+
+        lsp = _StubLspClient()
+        runner = _FakeRunner(
+            matches=[
+                AstGrepMatch(
+                    file=file_a, start_line=0, start_character=10,
+                    end_line=0, end_character=31,
+                )
+            ]
+        )
+        orch, _ = _make_orchestrator(tmp_path, lsp, runner)
+
+        content = file_a.read_text(encoding="utf-8")
+        result = orch.rename(uri, 0, 10, "Новая", dry_run=True, content=content)
+
+        assert result.primary_backend == "ast-grep"
+        assert result.reason != "manual_required"
+        assert runner.calls == 1
+    finally:
+        RoutingMatrix.reset()
+
+
+def test_denylist_yaml_loaded_from_bundled_file() -> None:
+    """Bundled routing_matrix.yaml denylist contains the documented common names."""
+    _load_denylist_setup()
+    try:
+        assert RoutingMatrix.is_denied("Параметры")
+        assert RoutingMatrix.is_denied("Результат")
+        assert RoutingMatrix.is_denied("Parameters")
+        assert not RoutingMatrix.is_denied("РассчитатьОстаток")
+        assert not RoutingMatrix.is_denied(None)
+        assert not RoutingMatrix.is_denied("")
+    finally:
+        RoutingMatrix.reset()

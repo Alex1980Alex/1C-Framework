@@ -12,16 +12,16 @@ The MCP provider enables Task Master to act as an MCP client, using MCP servers 
 
 The **MCP Provider** (`mcp`) provides:
 
-✅ **Full AI SDK Compatibility** - Complete LanguageModelV1 interface implementation  
-✅ **Structured Object Generation** - Schema-driven outputs for PRD parsing and task creation  
-✅ **Enhanced Error Handling** - Robust JSON extraction and validation  
-✅ **Session Management** - Automatic session detection and context handling  
-✅ **Schema Validation** - Type-safe object generation with Zod validation  
+✅ **Full AI SDK Compatibility** - Complete LanguageModelV1 interface implementation
+✅ **Structured Object Generation** - Schema-driven outputs for PRD parsing and task creation
+✅ **Enhanced Error Handling** - Robust JSON extraction and validation
+✅ **Session Management** - Automatic session detection and context handling
+✅ **Schema Validation** - Type-safe object generation with Zod validation
 
 ### Quick Setup
 
 ```bash
-# Set MCP provider for main role  
+# Set MCP provider for main role
 task-master models set-main --provider mcp --model claude-3-5-sonnet-20241022
 ```
 
@@ -53,7 +53,7 @@ Add MCP provider to your `.taskmaster/config.json`:
       "temperature": 0.2
     },
     "research": {
-      "provider": "mcp", 
+      "provider": "mcp",
       "modelId": "claude-3-5-sonnet-20241022",
       "maxTokens": 8700,
       "temperature": 0.1
@@ -74,7 +74,7 @@ Add MCP provider to your `.taskmaster/config.json`:
   - **SWE Score**: 0.49
   - **Features**: Text + Object generation
 
-- **`claude-3-opus-20240229`** - Enhanced reasoning model for complex tasks  
+- **`claude-3-opus-20240229`** - Enhanced reasoning model for complex tasks
   - **SWE Score**: 0.725
   - **Features**: Text + Object generation
 
@@ -87,7 +87,7 @@ Add MCP provider to your `.taskmaster/config.json`:
   - **Supported Roles**: main, research, fallback
   - **Features**: Text + Object generation
 
-- **`claude-3-opus-20240229`** - Enhanced reasoning model for complex tasks  
+- **`claude-3-opus-20240229`** - Enhanced reasoning model for complex tasks
   - **SWE Score**: 0.725
   - **Cost**: $0 (session-based)
   - **Max Tokens**: 200,000
@@ -106,7 +106,7 @@ Add MCP provider to your `.taskmaster/config.json`:
 MCP model IDs use a simple format:
 
 - **`claude-3-5-sonnet-20241022`** - Uses Claude 3.5 Sonnet via MCP sampling
-- **`claude-3-opus-20240229`** - Uses Claude 3 Opus via MCP sampling  
+- **`claude-3-opus-20240229`** - Uses Claude 3 Opus via MCP sampling
 - **`mcp-sampling`** - Uses MCP client's sampling capability for text generation
 
 ## Session Requirements
@@ -208,7 +208,7 @@ server.on("connect", (event) => {
     // Create and register MCP provider
     const mcpProvider = new MCPProvider();
     mcpProvider.setSession(session);
-    
+
     // Auto-register with provider registry
     providerRegistry.registerProvider('mcp', mcpProvider);
   }
@@ -257,7 +257,7 @@ AI operations use MCP sampling with different levels of support:
 **Important**: The MCP provider has **no support** for text streaming:
 
 **MCPProvider**:
-- **❌ No Streaming Support**: Throws error "MCP Provider does not support streaming text, use generateText instead"  
+- **❌ No Streaming Support**: Throws error "MCP Provider does not support streaming text, use generateText instead"
 - **Solution**: Always use `generateText()` instead of `streamText()` with this provider
 
 **Recommendation**: For streaming functionality, configure a non-MCP fallback provider (like Anthropic or OpenAI) in your fallback role.
@@ -425,7 +425,7 @@ import { MCPProvider } from './mcp-server/src/providers/mcp-provider.js';
 // Test session capabilities
 if (session && session.clientCapabilities && session.clientCapabilities.sampling) {
   console.log('MCP sampling available');
-  
+
   // Test provider creation
   const provider = new MCPProvider();
   provider.setSession(session);
@@ -510,7 +510,7 @@ Configure MCP sampling for different roles:
       "modelId": "mcp-sampling"
     },
     "research": {
-      "provider": "mcp", 
+      "provider": "mcp",
       "modelId": "mcp-sampling"
     },
     "fallback": {

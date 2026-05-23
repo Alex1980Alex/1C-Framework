@@ -7,15 +7,15 @@ Handles persistence and retrieval of projects and tasks.
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from agents.project_manager.models import (
     Project,
+    ProjectManagerConfig,
     ProjectStatus,
     Task,
-    TaskStatus,
     TaskPriority,
-    ProjectManagerConfig,
+    TaskStatus,
 )
 
 
@@ -26,7 +26,7 @@ class ProjectRepository:
     Stores projects as JSON files in the configured directory.
     """
 
-    def __init__(self, config: Optional[ProjectManagerConfig] = None) -> None:
+    def __init__(self, config: ProjectManagerConfig | None = None) -> None:
         """Initialize repository."""
         self.config = config or ProjectManagerConfig()
         self._ensure_dirs()
@@ -61,7 +61,7 @@ class ProjectRepository:
             print(f"Error saving project {project.project_id}: {e}")
             return False
 
-    def load(self, project_id: str) -> Optional[Project]:
+    def load(self, project_id: str) -> Project | None:
         """
         Load project from disk.
 
@@ -76,7 +76,7 @@ class ProjectRepository:
             if not file_path.exists():
                 return None
 
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             return self._dict_to_project(data)
@@ -103,7 +103,7 @@ class ProjectRepository:
             print(f"Error deleting project {project_id}: {e}")
             return False
 
-    def list_all(self) -> List[Project]:
+    def list_all(self) -> list[Project]:
         """
         List all projects.
 
@@ -118,7 +118,7 @@ class ProjectRepository:
                 projects.append(project)
         return projects
 
-    def list_active(self) -> List[Project]:
+    def list_active(self) -> list[Project]:
         """
         List active projects.
 
@@ -127,7 +127,7 @@ class ProjectRepository:
         """
         return [p for p in self.list_all() if p.status.is_active]
 
-    def list_by_status(self, status: ProjectStatus) -> List[Project]:
+    def list_by_status(self, status: ProjectStatus) -> list[Project]:
         """
         List projects by status.
 
@@ -151,7 +151,7 @@ class ProjectRepository:
         """
         return self._get_project_file(project_id).exists()
 
-    def _dict_to_project(self, data: Dict[str, Any]) -> Project:
+    def _dict_to_project(self, data: dict[str, Any]) -> Project:
         """Convert dictionary to Project object."""
         # Parse tasks
         tasks = []
@@ -164,8 +164,12 @@ class ProjectRepository:
                 status=TaskStatus(task_data.get("status", "pending")),
                 assigned_agent=task_data.get("assigned_agent"),
                 created_at=datetime.fromisoformat(task_data["created_at"]),
-                started_at=datetime.fromisoformat(task_data["started_at"]) if task_data.get("started_at") else None,
-                completed_at=datetime.fromisoformat(task_data["completed_at"]) if task_data.get("completed_at") else None,
+                started_at=datetime.fromisoformat(task_data["started_at"])
+                if task_data.get("started_at")
+                else None,
+                completed_at=datetime.fromisoformat(task_data["completed_at"])
+                if task_data.get("completed_at")
+                else None,
                 estimated_hours=task_data.get("estimated_hours"),
                 dependencies=task_data.get("dependencies", []),
                 input_artifacts=task_data.get("input_artifacts", []),
@@ -185,8 +189,12 @@ class ProjectRepository:
             config_path=Path(data["config_path"]) if data.get("config_path") else None,
             tasks=tasks,
             created_at=datetime.fromisoformat(data["created_at"]),
-            started_at=datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None,
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+            started_at=datetime.fromisoformat(data["started_at"])
+            if data.get("started_at")
+            else None,
+            completed_at=datetime.fromisoformat(data["completed_at"])
+            if data.get("completed_at")
+            else None,
             current_run_id=data.get("current_run_id"),
             run_history=data.get("run_history", []),
             tags=data.get("tags", []),
@@ -207,7 +215,7 @@ class TaskRepository:
         """Initialize with project repository."""
         self.project_repo = project_repo
 
-    def get_task(self, project_id: str, task_id: str) -> Optional[Task]:
+    def get_task(self, project_id: str, task_id: str) -> Task | None:
         """
         Get specific task.
 
@@ -282,7 +290,7 @@ class TaskRepository:
         project.tasks = [t for t in project.tasks if t.task_id != task_id]
         return self.project_repo.save(project)
 
-    def get_pending_tasks(self, project_id: str) -> List[Task]:
+    def get_pending_tasks(self, project_id: str) -> list[Task]:
         """
         Get pending tasks for project.
 
@@ -298,7 +306,7 @@ class TaskRepository:
 
         return [t for t in project.tasks if t.status == TaskStatus.PENDING]
 
-    def get_tasks_by_priority(self, project_id: str, priority: TaskPriority) -> List[Task]:
+    def get_tasks_by_priority(self, project_id: str, priority: TaskPriority) -> list[Task]:
         """
         Get tasks by priority.
 
@@ -315,7 +323,7 @@ class TaskRepository:
 
         return [t for t in project.tasks if t.priority == priority]
 
-    def get_ready_tasks(self, project_id: str) -> List[Task]:
+    def get_ready_tasks(self, project_id: str) -> list[Task]:
         """
         Get tasks ready to execute (no unmet dependencies).
 

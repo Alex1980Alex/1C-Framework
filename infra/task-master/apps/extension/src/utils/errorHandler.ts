@@ -612,9 +612,9 @@ ${errorDetails.message}
 ${errorDetails.context ? JSON.stringify(errorDetails.context, null, 2) : 'None'}
 
 **Steps to Reproduce:**
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 **Expected Behavior:**
 

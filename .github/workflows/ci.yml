@@ -41,6 +41,9 @@ jobs:
       - name: Ruff format check
         run: ruff format --check src/
 
+      - name: TOC ↔ filesystem consistency
+        run: python scripts/validate_toc.py --json
+
   typecheck:
     name: Type Check (mypy)
     runs-on: ubuntu-latest
@@ -72,6 +75,47 @@ jobs:
       - name: mypy
         run: mypy src/
         continue-on-error: true  # strict mode may have existing violations
+
+  mypy-baseline:
+    name: Type Check (mypy-baseline ratchet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev,qdrant,morphology]"
+
+      # Ratchet gate: fails if mypy total error count grows or if any error
+      # not present in mypy-baseline.txt is introduced. Exclude pattern mirrors
+      # .pre-commit-config.yaml mypy hook (see roadmap 260514). Re-sync the
+      # baseline via:
+      #   mypy src/ --ignore-missing-imports --warn-return-any \
+      #     --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$|src/api/auth/)' \
+      #     | python -m mypy_baseline sync
+      # then commit mypy-baseline.txt with the reduction.
+      - name: mypy-baseline filter
+        run: |
+          set -o pipefail
+          python -m mypy src/ \
+            --ignore-missing-imports --warn-return-any \
+            --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$)' \
+            | python -m mypy_baseline filter
 
   docstrings:
     name: Docstring Coverage (interrogate)
@@ -129,16 +173,79 @@ jobs:
       - name: Run pre-commit
         run: uv run pre-commit run --all-files
 
-  test:
-    name: Tests (Python ${{ matrix.python-version }})
+  test-unit:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    # Unit tests gate merges. No external services required. (roadmap 260509 §2.5)
     runs-on: ubuntu-latest
-    continue-on-error: true  # qdrant container may fail to initialize
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev,morphology]"
+
+      - name: Run unit tests
+        run: pytest tests/ -v -m unit --cov=src --cov-report=term --cov-report=xml
+
+      - name: Retrieval smoke gate (schema validation)
+        # Quality NDCG gate активируется когда golden_v1.json ≥ 50 items.
+        # До тех пор — schema validation. Roadmap 260509 §2.1.
+        run: pytest tests/eval/test_smoke_gate.py -v
+
+      - name: DeepEval gate (schema validation)
+        # Faithfulness/hallucination gate активируется при установленном [eval]
+        # extra И golden_v1 с ≥ 50 items и ground-truth chunk_ids.
+        # До тех пор — schema validation. Roadmap 260509 §3.9.
+        run: pytest tests/eval/test_deepeval.py -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unit
+          name: codecov-unit
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage XML artifact (unit)
+        # Belt-and-suspenders: artifact даже если Codecov upload fails (rate limit / network).
+        # Retention 30d для local download + offline review.
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-unit-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 30
+
+  test-integration:
+    name: Integration Tests (Python ${{ matrix.python-version }})
+    # Integration tests are best-effort: external services (Qdrant) may flake. (roadmap 260509 §2.5)
+    runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
     services:
       qdrant:
-        image: qdrant/qdrant:v1.12.0
+        image: qdrant/qdrant:v1.17.1
         ports:
           - 6333:6333
         # No docker `--health-cmd` — the qdrant 1.12.0 image is distroless
@@ -172,8 +279,8 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -e ".[dev,qdrant,morphology]"
 
-      - name: Run tests
-        run: pytest tests/ -v --cov=src --cov-report=term --cov-report=xml
+      - name: Run integration & e2e tests
+        run: pytest tests/ -v -m "integration or e2e" --cov=src --cov-report=term --cov-report=xml
         env:
           VECTOR_STORE__PROVIDER: qdrant
           VECTOR_STORE__QDRANT_URL: http://localhost:6333
@@ -182,10 +289,42 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
+          flags: integration
+          name: codecov-integration
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage XML artifact (integration)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-integration-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 30
+
+  security-audit:
+    name: Security Audit (pip-audit)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies + pip-audit
+        run: |
+          uv pip install --system -e ".[dev,qdrant,morphology]"
+          uv pip install --system pip-audit
+
+      - name: Audit installed packages
+        run: pip-audit --strict
+        continue-on-error: true  # advisory; fix CVSS >= 7.0 within 7 days, medium in next iteration
 
   skill-router-eval:
     name: Skill Router Evaluation

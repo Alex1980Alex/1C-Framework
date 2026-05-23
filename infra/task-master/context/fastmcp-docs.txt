@@ -208,7 +208,7 @@ const runWithTestServer = async ({
 
     const session = await new Promise<FastMCPSession>((resolve) => {
       server.on("connect", (event) => {
-        
+
         resolve(event.session);
       });
 
@@ -3846,4 +3846,3 @@ export default defineConfig({
     },
   },
 });
-

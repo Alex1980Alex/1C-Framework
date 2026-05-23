@@ -8,28 +8,28 @@ Coordinates:
 - ReportGenerator - producing qa_report.md
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass
 from pathlib import Path
-from datetime import datetime
+from typing import Any
 
 from agents.qa.models import QAReport, TestSuite
-from agents.qa.result_analyzer import ResultAnalyzer, AnalysisResult
-from agents.qa.test_generator import TestGenerator
-from agents.qa.test_runner import TestRunner, RunConfig
 from agents.qa.report_generator import ReportGenerator
+from agents.qa.result_analyzer import AnalysisResult, ResultAnalyzer
+from agents.qa.test_generator import TestGenerator
+from agents.qa.test_runner import RunConfig, TestRunner
 
 
 @dataclass
 class QAAgentConfig:
     """Configuration for QA Agent."""
+
     stop_on_failure: bool = False
     timeout_ms: int = 30000
     generate_bsl_tests: bool = True
     min_pass_rate: float = 70.0
-    output_dir: Optional[str] = None
+    output_dir: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "stop_on_failure": self.stop_on_failure,
@@ -43,12 +43,13 @@ class QAAgentConfig:
 @dataclass
 class QAContext:
     """Context for QA Agent execution."""
+
     project_id: str
     task_id: str
     result_content: str
     spec_content: str
-    design_content: Optional[str] = None
-    artifacts_dir: Optional[str] = None
+    design_content: str | None = None
+    artifacts_dir: str | None = None
 
 
 class QAAgent:
@@ -81,7 +82,7 @@ class QAAgent:
         report = agent.run_with_context(context)
     """
 
-    def __init__(self, config: Optional[QAAgentConfig] = None) -> None:
+    def __init__(self, config: QAAgentConfig | None = None) -> None:
         """
         Initialize QA Agent.
 
@@ -93,16 +94,18 @@ class QAAgent:
         # Initialize components
         self.analyzer = ResultAnalyzer()
         self.generator = TestGenerator()
-        self.runner = TestRunner(RunConfig(
-            timeout_ms=self.config.timeout_ms,
-            stop_on_failure=self.config.stop_on_failure,
-        ))
+        self.runner = TestRunner(
+            RunConfig(
+                timeout_ms=self.config.timeout_ms,
+                stop_on_failure=self.config.stop_on_failure,
+            )
+        )
         self.reporter = ReportGenerator()
 
         # State
-        self._analysis: Optional[AnalysisResult] = None
-        self._test_suite: Optional[TestSuite] = None
-        self._report: Optional[QAReport] = None
+        self._analysis: AnalysisResult | None = None
+        self._test_suite: TestSuite | None = None
+        self._report: QAReport | None = None
 
     def run(
         self,
@@ -110,7 +113,7 @@ class QAAgent:
         task_id: str,
         result_content: str,
         spec_content: str,
-        design_content: Optional[str] = None,
+        design_content: str | None = None,
     ) -> QAReport:
         """
         Run QA workflow.
@@ -183,7 +186,7 @@ class QAAgent:
         task_id: str,
         result_path: str,
         spec_path: str,
-        design_path: Optional[str] = None,
+        design_path: str | None = None,
     ) -> QAReport:
         """
         Run QA workflow from file paths.
@@ -198,12 +201,12 @@ class QAAgent:
         Returns:
             QAReport
         """
-        result_content = Path(result_path).read_text(encoding='utf-8')
-        spec_content = Path(spec_path).read_text(encoding='utf-8')
+        result_content = Path(result_path).read_text(encoding="utf-8")
+        spec_content = Path(spec_path).read_text(encoding="utf-8")
 
         design_content = None
         if design_path:
-            design_content = Path(design_path).read_text(encoding='utf-8')
+            design_content = Path(design_path).read_text(encoding="utf-8")
 
         return self.run(
             project_id=project_id,
@@ -222,23 +225,23 @@ class QAAgent:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         content = self._report.to_markdown()
-        output_path.write_text(content, encoding='utf-8')
+        output_path.write_text(content, encoding="utf-8")
 
         return str(output_path)
 
     # Properties for accessing internal state
     @property
-    def analysis(self) -> Optional[AnalysisResult]:
+    def analysis(self) -> AnalysisResult | None:
         """Get last analysis result."""
         return self._analysis
 
     @property
-    def test_suite(self) -> Optional[TestSuite]:
+    def test_suite(self) -> TestSuite | None:
         """Get generated test suite."""
         return self._test_suite
 
     @property
-    def report(self) -> Optional[QAReport]:
+    def report(self) -> QAReport | None:
         """Get last generated report."""
         return self._report
 
@@ -257,7 +260,7 @@ class QAAgent:
         return self._report.pass_rate
 
     # Convenience methods
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of last run."""
         if not self._report:
             return {"error": "No report generated"}

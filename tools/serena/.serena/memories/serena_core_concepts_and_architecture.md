@@ -49,7 +49,7 @@ Modular tool architecture with several categories:
 - Text search and pattern matching
 - Regex-based replacements
 
-#### Symbol Tools (`symbol_tools.py`)  
+#### Symbol Tools (`symbol_tools.py`)
 - Language-aware symbol finding and navigation
 - Symbol body replacement and insertion
 - Reference finding across codebase

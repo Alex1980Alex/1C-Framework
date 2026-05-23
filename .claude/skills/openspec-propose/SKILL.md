@@ -39,7 +39,7 @@ When ready to implement, run /opsx:apply
 
    a. **Check existing objects** — for each metadata object mentioned in the user's request:
       ```
-      mcp__1c-mcp-toolkit__get_metadata(object_type="<type>", object_name="<name>")
+      mcp__1c-mcp-crud__get_metadata(object_type="<type>", object_name="<name>")
       ```
       This determines whether the object is ADDED (new) or MODIFIED (existing).
 

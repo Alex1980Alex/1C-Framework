@@ -9,9 +9,13 @@ Version: 2.0.0 - Consolidated functional + class-based RBAC
 
 import functools
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
+
+DecoratedAsync = Callable[..., Awaitable[Any]]
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +97,7 @@ def get_all_roles() -> list[str]:
     return sorted(ROLE_LEVELS.keys(), key=lambda r: ROLE_LEVELS[r])
 
 
-def require_role(min_role: str):
+def require_role(min_role: str) -> Callable[[DecoratedAsync], DecoratedAsync]:
     """Decorator: require minimum role level.
 
     Usage:
@@ -103,9 +107,9 @@ def require_role(min_role: str):
     """
     min_level = ROLE_LEVELS.get(min_role, 0)
 
-    def decorator(func):
+    def decorator(func: DecoratedAsync) -> DecoratedAsync:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             from fastapi import HTTPException
 
             payload = kwargs.get("payload")
@@ -130,7 +134,7 @@ def require_role(min_role: str):
     return decorator
 
 
-def require_permission(permission: str):
+def require_permission(permission: str) -> Callable[[DecoratedAsync], DecoratedAsync]:
     """Decorator: require specific permission.
 
     Usage:
@@ -139,9 +143,9 @@ def require_permission(permission: str):
             ...
     """
 
-    def decorator(func):
+    def decorator(func: DecoratedAsync) -> DecoratedAsync:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             from fastapi import HTTPException
 
             payload = kwargs.get("payload")
@@ -194,7 +198,7 @@ class Role(BaseModel):
 class RBACManager:
     """Role-Based Access Control manager."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._users: dict[str, User] = {}
         self._roles = {
             "admin": Role(

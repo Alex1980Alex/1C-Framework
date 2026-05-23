@@ -135,7 +135,7 @@ def test_route_for_form_handler_prefers_ast_grep() -> None:
     decision = RoutingMatrix.route_for(SymbolKind.FORM_HANDLER)
     assert decision.primary == "ast-grep"
     assert decision.fallback == "multilspy"
-    assert decision.confidence == 0.60
+    assert decision.confidence == 0.95  # calibrated pilot-B
 
 
 def test_route_for_unknown_is_ast_grep_fallback() -> None:

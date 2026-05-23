@@ -1,6 +1,6 @@
 ---
 name: bsl-development
-description: "BSL Development — разработка на 1С:Предприятие. ИСПОЛЬЗУЙ когда пишешь BSL код, модули 1С, процедуры/функции, обработки проведения, формы. Триггеры: 'BSL', '1С код', 'модуль 1С', 'процедура BSL', 'конфигурация 1С', 'справочник', 'документ 1С', 'регистр', 'модуль объекта', 'модуль формы', 'общий модуль', 'обработка проведения', 'ПередЗаписью'. НЕ для запросов к данным (→ 1c-mcp-toolkit), НЕ для документации 1С (→ 1c-doc-research)."
+description: "BSL Development — разработка на 1С:Предприятие. ИСПОЛЬЗУЙ когда пишешь BSL код, модули 1С, процедуры/функции, обработки проведения, формы. Триггеры: 'BSL', '1С код', 'модуль 1С', 'процедура BSL', 'конфигурация 1С', 'справочник', 'документ 1С', 'регистр', 'модуль объекта', 'модуль формы', 'общий модуль', 'обработка проведения', 'ПередЗаписью'. НЕ для запросов к данным (→ 1c-mcp-crud), НЕ для документации 1С (→ 1c-doc-research)."
 ---
 
 # BSL Development — разработка на 1С:Предприятие
@@ -27,7 +27,8 @@ description: "BSL Development — разработка на 1С:Предприя
 | **Reasoning (ОБЯЗАТЕЛЬНЫЙ)** | `mcp-reasoner` | 3 BSL-стратегии: архитектура, документы, подсистемы |
 | Семантический поиск | `bsl-semantic-search` | Поиск похожего кода (3,908+ модулей) |
 | Автодокументация | `auto-documenter` | generate_documentation, autoreview, autotestplan |
-| Отладка | `bsl-debugger` | breakpoints, step, variables, evaluate |
+| Отладка (OneScript, статика) | `bsl-debugger` | breakpoints, step, variables, evaluate — без live 1С |
+| Live отладка (RDBG, Scenario B) | `1c-debug` | post-BP-fire handshake против running 1С: debug_set_breakpoint, debug_variables, debug_evaluate, debug_step (см. [16.7](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) |
 | API платформы | `bsl-platform-context` | Типы, методы, свойства 1С:8.3.27 |
 | AST-анализ | `ast-grep-mcp` | Tree-sitter парсинг BSL |
 | LSP | `serena` | Symbol extraction, рефакторинг |
@@ -113,12 +114,75 @@ mcp__bsl-debugger__get_variables()
 Использовать auto-documenter с профилем #7 (lazy-mcp)
 ```
 
-## Конфигурация
+## Конфигурация (Phase 8.12.8 production switchover, 2026-04-30)
 
 - **MCP профиль:** `.mcp/bsl.json`
-- **Embeddings:** nomic-embed-text (768d)
-- **Qdrant collection:** `bsl_code_v2`
-- **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — используется когда Qdrant недоступен
+- **Embeddings:** Qwen3-Embedding-8B (4096d, через Ollama `qwen3-embedding`)
+- **Qdrant collection:** `bsl_code_v4_late` (Qwen3 + Late Chunking pooling, +26% recall vs E5 baseline на 50q expanded pilot)
+- **Query instruction:** default web-retrieval template из HF model card (BSL-specific варианты дали -100%, см. roadmap §21.10 H1 ablation)
+- **SQLite fallback:** `cache/docs-mcp/hybrid_search.db` (FTS5, 12983 docs) — когда Qdrant недоступен
+- **Legacy collections:** `bsl_code_v3` (E5 1024d, drop pending Phase 8.11.3), `bsl_code_v2` (nomic 768d, deprecated), `bsl_code_v4` (Qwen3+std 4096d, research-baseline only — std pooling даёт -64% recall vs Late)
+
+## Индексация BSL — варианты и decision flowchart
+
+> **Полная справка:** [chapter 31.6 Варианты индексации и типичные ошибки](../../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md)
+
+### Decision flowchart — какой backend выбрать
+
+```
+Что делаешь?
+├── Изменил 1-N .bsl файлов в существующем проекте (commit/PR)
+│   → INCREMENTAL: --paths <files> --embedder qwen3-tei --batch-size 32
+│     TEI остаётся up; ~секунды; std pooling (mixed quality acceptable)
+│
+├── Добавил новый 1С-проект целиком (или раз в N недель re-alignment)
+│   → FULL: --project <root> --embedder qwen3-st --pooling-mode late-chunking
+│           --batch-size 50 --buffer-size 512 (БЕЗ --enable-fa2)
+│     ОБЯЗАТЕЛЬНО `docker stop pdf-rag-tei` ПЕРЕД! ~60-90 мин на 2000+ файлов
+│
+└── BREAKING change (новая модель / payload schema)
+    → FULL + --recreate (дропает ВСЮ коллекцию всех проектов!)
+```
+
+### Матрица backend × pooling
+
+| Backend | Pooling | Late Chunking | GPU | Скорость | Когда |
+|---|---|---|---|---|---|
+| `qwen3-st` | last_token | **✓ да** | 16 GB FP16 | медленная (warmup ~30c) | **Full reindex** в `bsl_code_v4_late` |
+| `qwen3-tei` | last_token (TEI) | ✗ нет | 16 GB (постоянно) | быстрая | **Incremental** + online queries |
+| `e5` | mean | ✗ нет | 0 (CPU OK) | средняя | legacy, DEPRECATED |
+
+**Ключевое:** `qwen3-st late-chunking` и `qwen3-tei` дают **разные** embedding-векторы. На BSL benchmark разница = **+64% recall@10** в пользу Late.
+
+### Auto-reindex BSL при git commit
+
+При активном `git config core.hooksPath scripts/git_hooks` автоматически запускается incremental reindex `bsl_code_v4_late` для изменённых `.bsl` файлов (через `qwen3-tei`, std pooling). Auto-detect project root через walk до `configuration/<X>/`. Delete-stale: удаляет chunks с тем же `module_path` но другим `chunk_id` (ловит удалённые/переименованные функции). Лог: `cache/bsl_reindex.log`.
+
+### Типичные ошибки (помни всегда!)
+
+1. **`qwen3-tei` для FULL reindex** → mixed-pooling коллекция, gradual recall drop. → Для `--project` ВСЕГДА `qwen3-st --pooling-mode late-chunking`.
+2. **`qwen3-st` БЕЗ остановки TEI** → CUDA OOM (две копии 8B FP16 = 32 GB на 24GB GPU). → `docker stop pdf-rag-tei` ПЕРЕД, потом `start`.
+3. **`--enable-fa2` на `ИБTransportManagementDevelop`** → OOM на XXL chunks. → `--batch-size 50 --buffer-size 512` БЕЗ `--enable-fa2`. Memory `feedback_bsl_reindex_fallback`.
+4. **Не делать `build_call_graph.py` ПЕРЕД reindex** → пустые `calls`/`caller_count` в payload. → `python scripts/build_call_graph.py --project <root> --db cache/bsl_call_graph.db` (16 сек) ПЕРЕД.
+5. **Matryoshka truncation на BSL** → -12% до -20% recall (Cyrillic identifiers не сжимаются). → SQ int8 — да, MRL — нет. Memory `feedback_mrl_content_matters`.
+6. **`--recreate` для добавления проекта** → дроп всей коллекции (все конфигурации). → Без `--recreate`, новые chunks доupsert'ятся.
+7. **`qwen3-st` БЕЗ `--pooling-mode late-chunking`** → std pooling (default), но запишет в `_late` коллекцию. → Для `bsl_code_v4_late` ОБЯЗАТЕЛЬНО `--pooling-mode late-chunking`.
+
+### Pre-flight checklist (перед любым reindex)
+
+```bash
+# 1. TEI healthy (для qwen3-tei или верификация перед stop)
+curl -s http://localhost:8080/info | python -m json.tool | head -3
+
+# 2. Qdrant healthy
+curl -s http://localhost:6333/collections/bsl_code_v4_late | grep points_count
+
+# 3. GPU свободен (для qwen3-st use case)
+nvidia-smi --query-gpu=memory.used,memory.free --format=csv | head -2
+
+# 4. Call graph актуален (для context-enrichment)
+ls -lh cache/bsl_call_graph.db
+```
 
 ## Зависимости
 
@@ -128,3 +192,39 @@ mcp__bsl-debugger__get_variables()
 - Фаза 48: BSL Debugger
 - Фаза 52: Serena LSP Integration
 - Фаза 57: MCP Reasoner (3 BSL-стратегии)
+
+
+## Незадокументированные bsl_tool
+
+- `CallGraphStore` (src\bsl\call_graph\store.py)
+- `BSLStyleProfile` (src\bsl\coding_assistant\style_extractor.py)
+- `BSLStyleExtractor` (src\bsl\coding_assistant\style_extractor.py)
+- `EvalResult` (src\bsl\evaluation\metrics.py)
+- `ObjectInfo` (src\bsl\knowledge_graph\metadata_extractor.py)
+- `MetadataExtractor` (src\bsl\knowledge_graph\metadata_extractor.py)
+- `OAuth2BearerMiddleware` (src\bsl\mcp_server\http_server.py)
+- `MCPHttpServer` (src\bsl\mcp_server\http_server.py)
+- `MCPProxy` (src\bsl\mcp_server\mcp_server.py)
+- `OneCClient` (src\bsl\mcp_server\onec_client.py)
+- `BSLASTParser` (src\bsl\parser\bsl_ast_parser.py)
+- `BSLChunk` (src\bsl\parser\bsl_chunker.py)
+- `BSLChunker` (src\bsl\parser\bsl_chunker.py)
+- `BSLContextEnricher` (src\bsl\parser\context_enricher.py)
+- `SymbolType` (src\bsl\parser\models.py)
+- `CompilationDirective` (src\bsl\parser\models.py)
+- `ModuleType` (src\bsl\parser\models.py)
+- `BSLParam` (src\bsl\parser\models.py)
+- `BSLCall` (src\bsl\parser\models.py)
+- `BSLSymbol` (src\bsl\parser\models.py)
+- `BSLVariable` (src\bsl\parser\models.py)
+- `BSLRegion` (src\bsl\parser\models.py)
+- `BSLModule` (src\bsl\parser\models.py)
+- `BSLSearchSettings` (src\bsl\semantic_search\config.py)
+- `RouterResult` (src\bsl\semantic_search\hybrid_router.py)
+- `SonarQubeConfig` (src\bsl\sonar\config_manager.py)
+- `ConfigManager` (src\bsl\sonar\config_manager.py)
+- `Issue` (src\bsl\sonar\report_generator.py)
+- `AnalysisReport` (src\bsl\sonar\report_generator.py)
+- `ReportGenerator` (src\bsl\sonar\report_generator.py)
+- `BSLRule` (src\bsl\sonar\rules_manager.py)
+- `RulesManager` (src\bsl\sonar\rules_manager.py)

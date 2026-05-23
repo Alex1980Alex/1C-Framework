@@ -4,19 +4,45 @@
 from __future__ import annotations
 
 import argparse
-import subprocess
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
 
+
+def _ast_grep_binary() -> str:
+    if sys.platform == "win32":
+        npm_bin = Path.home() / "AppData" / "Roaming" / "npm" / "ast-grep.cmd"
+        if npm_bin.exists():
+            return str(npm_bin)
+    return shutil.which("ast-grep") or "ast-grep"
+
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "src"))
+sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
+
+from benchmark.runner import BenchmarkRunner
+
+from src.bsl.semantic_search.refactor.backends.ast_grep_runner import SubprocessAstGrepRunner
 
 
-class _StubBackend:
-    """Stub backend that returns empty WorkspaceEdit for dry-run testing."""
+def _build_multilspy_backend(repo_root: Path):
+    from src.bsl.semantic_search.refactor.backends.multilspy_backend import MultilspyBackend
+    from src.bsl.semantic_search.refactor.backends.real_bsl_client import create_bsl_client
 
-    def can_handle(self, uri: str) -> bool:
-        return uri.lower().endswith((".bsl", ".os"))
+    # BSL LS expects workspace root to be the 1C Configuration dir
+    # (Configuration.xml present). src/bsl/ holds our test configuration.
+    bsl_root = repo_root / "src" / "bsl"
+    bsl_files = list(bsl_root.rglob("*.bsl"))
+    print(f"[multilspy] preloading {len(bsl_files)} .bsl files...")
+    client = create_bsl_client(
+        workspace_root=bsl_root,
+        preload=bsl_files,
+        populate_wait_secs=2.0,
+        start_timeout=120.0,
+    )
+    print("[multilspy] preload complete, client ready")
 
     def plan_rename(self, uri: str, line: int, character: int, new_name: str):
         from bsl.semantic_search.refactor.types import WorkspaceEdit
@@ -65,45 +91,20 @@ def _append_trend(run_id: str, backends: list[str], results: list, trend_path: P
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Run BSL rename benchmarks")
-    ap.add_argument("--tasks", type=Path, default=Path("docs/roadmap/benchmark/tasks.json"))
-    ap.add_argument("--backends", type=str, default="ast-grep")
-    ap.add_argument("--run-id", type=str, required=True)
-    ap.add_argument("--output", type=Path, default=None)
-    ap.add_argument("--categories", type=str, default=None)
-    ap.add_argument("--task-id", type=str, default=None)
-    ap.add_argument("--append-trend", action="store_true")
-    args = ap.parse_args()
-
-    output = args.output or Path(f"data/benchmark-run-{args.run_id}")
-    backend_names = [b.strip() for b in args.backends.split(",")]
-    categories = [c.strip() for c in args.categories.split(",")] if args.categories else None
-    task_ids = [args.task_id] if args.task_id else None
-
-    sys.path.insert(0, str(REPO_ROOT / "src"))
-    sys.path.insert(0, str(REPO_ROOT / "docs" / "roadmap"))
-    from benchmark.runner import BenchmarkRunner
-
-    backends = _build_backends(backend_names)
-    runner = BenchmarkRunner(
-        repo_root=REPO_ROOT,
-        tasks_path=args.tasks,
-        output_dir=output,
+    parser = argparse.ArgumentParser(description="Run BSL rename benchmark")
+    parser.add_argument(
+        "--backends",
+        nargs="+",
+        choices=["ast-grep", "multilspy"],
+        default=["ast-grep"],
     )
-    results = runner.run(
-        backends=backends,
-        run_id=args.run_id,
-        categories=categories,
-        task_ids=task_ids,
-    )
+    parser.add_argument("--run-id", default=None)
+    parser.add_argument("--append-trend", action="store_true")
+    args = parser.parse_args()
 
-    total = len(results)
-    successes = sum(1 for r in results if r.applied)
-    print("\n=== Benchmark Summary ===")
-    print(f"Run ID:    {args.run_id}")
-    print(f"Total:     {total}")
-    print(f"Successes: {successes}")
-    print(f"Failures:  {total - successes}")
+    run_id = args.run_id or f"run-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    tasks_path = REPO_ROOT / "docs" / "roadmap" / "benchmark" / "tasks.json"
+    output_dir = REPO_ROOT / "docs" / "roadmap" / "benchmark" / "results"
 
     if args.append_trend:
         _append_trend(

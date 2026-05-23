@@ -64,6 +64,15 @@ repos:
         name: No Direct Commits to Main
         args: ['--branch', 'main']
 
+  # gitleaks — secret scanning (added 2026-05-10 after HF + OpenRouter leak
+  # via .claude/settings.local.json). Blocks commits that introduce known
+  # secret patterns (HF/OpenAI/Anthropic/AWS/GCP/Slack/GitHub PAT/private keys).
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        name: Gitleaks (secret scan)
+
   # Ruff - Python linter and formatter
   # v0.8.0 was the original pin but it diverges from local dev ruff (0.15+):
   # 741 false-positive errors on src/ (UP005/006/007 transitions etc) that

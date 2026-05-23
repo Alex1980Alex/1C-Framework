@@ -51,9 +51,9 @@ class FileLock:
     def __init__(self, filepath: Path, timeout: float = 5.0):
         self.filepath = filepath
         self.timeout = timeout
-        self._lock_file = None
+        self._lock_file: IO[Any] | None = None
 
-    def __enter__(self):
+    def __enter__(self) -> "FileLock":
         self.filepath.parent.mkdir(parents=True, exist_ok=True)
         lock_path = self.filepath.with_suffix(".lock")
         self._lock_file = open(lock_path, "w", encoding="utf-8")
@@ -73,7 +73,7 @@ class FileLock:
             pass
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         if self._lock_file:
             try:
                 self._platform_unlock()
@@ -84,7 +84,14 @@ class FileLock:
             except OSError:
                 pass
 
-    def _platform_lock(self):
+    def _platform_lock(self) -> None:
+        # Invariant: __enter__ opens self._lock_file before any _platform_lock
+        # call. None here means refactor regression — fail loud instead of
+        # silently reporting "acquired".
+        if self._lock_file is None:
+            raise RuntimeError(
+                "FileLock._platform_lock called before __enter__ opened the lock file"
+            )
         if sys.platform == "win32":
             import msvcrt
 
@@ -94,7 +101,13 @@ class FileLock:
 
             fcntl.flock(self._lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
-    def _platform_unlock(self):
+    def _platform_unlock(self) -> None:
+        # Same invariant as _platform_lock — __enter__ owns the open. If
+        # __exit__ runs without __enter__ ever having succeeded, callers
+        # already check `if self._lock_file:` before invoking this method,
+        # so reaching this branch means refactor regression.
+        if self._lock_file is None:
+            raise RuntimeError("FileLock._platform_unlock called with no open lock file")
         if sys.platform == "win32":
             import msvcrt
 
@@ -393,7 +406,8 @@ def get_task_with_metadata(created_by: str) -> dict[str, Any] | None:
     data = _read_todos()
     for t in data.get("todos", []):
         if t.get("createdBy") == created_by and t.get("status") == "pending":
-            return t
+            task: dict[str, Any] = t
+            return task
     return None
 
 

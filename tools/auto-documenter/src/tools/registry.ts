@@ -11,7 +11,7 @@ import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
  */
 export class ToolRegistry {
   private tools: Map<string, BaseTool<any>> = new Map();
-  
+
   /**
    * Creates a new tool registry
    * @param apiKey OpenRouter API key (optional)
@@ -21,7 +21,7 @@ export class ToolRegistry {
     // Register available tools
     this.registerTools(apiKey, model);
   }
-  
+
   /**
    * Registers all available tools
    * @param apiKey OpenRouter API key (optional)
@@ -48,7 +48,7 @@ export class ToolRegistry {
     const dependencyGraphTool = new DependencyGraphTool(apiKey, model);
     this.registerTool(dependencyGraphTool);
   }
-  
+
   /**
    * Registers a tool
    * @param tool Tool to register
@@ -56,7 +56,7 @@ export class ToolRegistry {
   public registerTool(tool: BaseTool<any>) {
     this.tools.set(tool.name, tool);
   }
-  
+
   /**
    * Gets a tool by name
    * @param name Name of the tool
@@ -64,17 +64,17 @@ export class ToolRegistry {
    */
   public getTool(name: string): BaseTool<any> {
     const tool = this.tools.get(name);
-    
+
     if (!tool) {
       throw new McpError(
         ErrorCode.MethodNotFound,
         `Unknown tool: ${name}`
       );
     }
-    
+
     return tool;
   }
-  
+
   /**
    * Gets all tools
    * @returns Array of all registered tools
@@ -82,7 +82,7 @@ export class ToolRegistry {
   public getAllTools(): BaseTool<any>[] {
     return Array.from(this.tools.values());
   }
-  
+
   /**
    * Checks if a tool exists
    * @param name Name of the tool
@@ -91,7 +91,7 @@ export class ToolRegistry {
   public hasTool(name: string): boolean {
     return this.tools.has(name);
   }
-  
+
   /**
    * Gets tool input schemas
    * @returns Array of tool schemas

@@ -9,23 +9,22 @@ Components:
 - ReviewerAgent - главный оркестратор
 """
 
+from agents.reviewer.agent import ReviewerAgent, create_reviewer, run_review
+from agents.reviewer.arch_checker import ArchChecker, check_architecture
+from agents.reviewer.diff_analyzer import DiffAnalyzer, analyze_changes, parse_diff
 from agents.reviewer.models import (
-    ReviewIssue,
-    IssueSeverity,
-    IssueCategory,
-    FileChange,
-    DiffHunk,
-    StyleViolation,
     ArchIssue,
+    DiffHunk,
+    FileChange,
+    IssueCategory,
+    IssueSeverity,
+    ReviewIssue,
     ReviewReport,
     ReviewVerdict,
+    StyleViolation,
 )
-
-from agents.reviewer.diff_analyzer import DiffAnalyzer, parse_diff, analyze_changes
-from agents.reviewer.style_checker import StyleChecker, check_style
-from agents.reviewer.arch_checker import ArchChecker, check_architecture
 from agents.reviewer.report_generator import ReviewGenerator, generate_review
-from agents.reviewer.agent import ReviewerAgent, create_reviewer, run_review
+from agents.reviewer.style_checker import StyleChecker, check_style
 
 __all__ = [
     # Models

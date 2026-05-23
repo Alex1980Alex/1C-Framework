@@ -14,6 +14,7 @@
     "framework": [
       "search",
       "indexing",
+      "framework-search",
       "eval-benchmark",
       "graph",
       "agents",
@@ -55,7 +56,8 @@
       "tenacity-retry",
       "code-verify",
       "learning-loop",
-      "task-protocol"
+      "task-protocol",
+      "obsidian-vault"
     ]
   },
   "affinities": {
@@ -486,6 +488,49 @@
         "подготовь файлы для семантического поиска"
       ]
     },
+    "framework-search": {
+      "keywords": [
+        "найди в фреймворке",
+        "find in framework",
+        "где в коде",
+        "where in code",
+        "self-search",
+        "framework search",
+        "index_framework",
+        "framework_code_v1",
+        "переиндексировать фреймворк",
+        "reindex framework",
+        "семантический поиск по фреймворку",
+        "поиск по коду",
+        "code search self",
+        "find similar code",
+        "найти похожий код",
+        "scripts/index_framework.py",
+        "watch_framework",
+        "framework-search-mcp"
+      ],
+      "skills": [
+        "framework-search"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "найди в фреймворке": 4,
+        "framework_code_v1": 5,
+        "index_framework": 4,
+        "self-search": 3,
+        "поиск по фреймворку": 3
+      },
+      "utterances": [
+        "найди в коде фреймворка где обрабатывается X",
+        "проиндексируй фреймворк для семантического поиска",
+        "какие skills делают что-то с embeddings",
+        "найди похожие реализации в кодовой базе",
+        "где определён hook X",
+        "find code in framework by description",
+        "index framework code into Qdrant",
+        "search the framework own codebase semantically"
+      ]
+    },
     "eval-benchmark": {
       "keywords": [
         "evaluation",
@@ -677,7 +722,11 @@
       "skills": [
         "framework-cli"
       ],
-      "optional": ["framework-api", "framework-quickstart", "framework-mcp-ui"],
+      "optional": [
+        "framework-api",
+        "framework-quickstart",
+        "framework-mcp-ui"
+      ],
       "weighted_keywords": {
         "CLI команд": 3,
         "cli команд": 3,
@@ -1822,7 +1871,7 @@
         "execute_query",
         "get_metadata",
         "execute_code",
-        "1c-mcp-toolkit",
+        "1c-mcp-crud",
         "метаданные конфигурации",
         "структура базы",
         "журнал регистрации",
@@ -1840,12 +1889,12 @@
         "execute_query": 5,
         "get_metadata": 5,
         "execute_code 1с": 5,
-        "1c-mcp-toolkit": 5,
+        "1c-mcp-crud": 5,
         "get_event_log": 5,
         "get_object_by_link": 5,
         "find_references_to_object": 5,
         "get_access_rights": 5,
-        "mcp__1c-toolkit": 5,
+        "mcp__1c-mcp-crud": 5,
         "запрос к базе": 4,
         "данные из базы 1С": 4,
         "метаданные 1С": 4,
@@ -1868,7 +1917,73 @@
         "get metadata from 1C configuration"
       ],
       "skills": [
-        "1c-mcp-toolkit"
+        "1c-mcp-crud"
+      ],
+      "optional": []
+    },
+    "1c-debug-hmr": {
+      "keywords": [
+        "отладка 1С",
+        "debug 1С",
+        "BSL debugger",
+        "remote debug 1C",
+        "breakpoint BSL",
+        "set BP BSL",
+        "callStackFormed",
+        "rphost debug",
+        "ManagedClient debug",
+        "StopOnNextLine",
+        "pre-existing rphost",
+        "force_recycle_rphost",
+        "debug_connect",
+        "debug_ping",
+        "debug_set_breakpoint",
+        "debug_stack_trace",
+        "debug_variables",
+        "debug_evaluate",
+        "debug_step",
+        "debug_targets",
+        "debug_break_on_next",
+        "debug_target_state",
+        "debug_get_breakpoints",
+        "debug_attach_targets",
+        "debug_disconnect",
+        "HMR debug wrapper",
+        ".active.json",
+        "session restoration debug",
+        "mcp_hmr_proc",
+        "RDBG"
+      ],
+      "weighted_keywords": {
+        "mcp__1c-debug-hmr": 5,
+        "mcp__1c-debug": 5,
+        "debug_connect": 5,
+        "debug_set_breakpoint": 5,
+        "debug_stack_trace": 5,
+        "debug_variables": 5,
+        "debug_break_on_next": 5,
+        "force_recycle_rphost": 5,
+        "callStackFormed": 4,
+        "StopOnNextLine": 4,
+        "pre-existing rphost": 4,
+        "RDBG": 4,
+        "отладка 1С": 4,
+        "breakpoint BSL": 4
+      },
+      "utterances": [
+        "поставь breakpoint в модуле",
+        "запусти отладку 1С",
+        "покажи стэк вызовов BSL",
+        "прочитай локалы на брейкпоинте",
+        "вычисли BSL выражение",
+        "пошагово пройди код",
+        "почему BP не срабатывает",
+        "force-recycle pre-existing rphost",
+        "set up BP and inspect locals",
+        "trigger BSL execution and stop on next statement"
+      ],
+      "skills": [
+        "1c-debug-hmr"
       ],
       "optional": []
     },
@@ -1894,6 +2009,86 @@
         "memory-unified"
       ],
       "optional": []
+    },
+    "obsidian-vault": {
+      "keywords": [
+        "obsidian",
+        "vault",
+        "wiki",
+        "wiki-link",
+        "wiki page",
+        "graph view",
+        "obsidian vault",
+        "вики",
+        "хранилище знаний"
+      ],
+      "skills": [
+        "obsidian-vault"
+      ],
+      "optional": [],
+      "weighted_keywords": {
+        "obsidian": 5,
+        "vault": 4,
+        "wiki": 4,
+        "wiki-link": 5,
+        "graph view": 3,
+        "вики": 4
+      },
+      "utterances": [
+        "open the vault",
+        "add a wiki page",
+        "create wiki-link",
+        "открыть хранилище",
+        "создать вики-страницу",
+        "как устроен vault",
+        "how to use obsidian vault"
+      ]
+    },
+    "wiki-pipeline": {
+      "keywords": [
+        "wiki exporter",
+        "wiki_exporter",
+        "export graph",
+        "export_graph_to_wiki",
+        "wiki pipeline",
+        "incremental wiki",
+        "reverse sync",
+        "docs/wiki/entities",
+        "WikiExporter",
+        "IncrementalWikiSync",
+        "ReverseSyncService",
+        "WikiSearchIndexer",
+        "экспорт графа в wiki",
+        "wiki-страницы из графа"
+      ],
+      "skills": [
+        "wiki-pipeline"
+      ],
+      "optional": [
+        "obsidian-vault",
+        "graph-operations"
+      ],
+      "weighted_keywords": {
+        "wiki exporter": 5,
+        "wiki_exporter": 5,
+        "export graph": 4,
+        "export_graph_to_wiki": 5,
+        "wiki pipeline": 5,
+        "incremental wiki": 5,
+        "reverse sync": 4,
+        "WikiExporter": 5,
+        "docs/wiki/entities": 4,
+        "экспорт графа в wiki": 5
+      },
+      "utterances": [
+        "export graph entities to wiki pages",
+        "run wiki exporter on the knowledge graph",
+        "sync wiki pages back to graph store",
+        "index wiki pages in hybrid search",
+        "экспортировать граф в wiki-страницы",
+        "запустить wiki pipeline",
+        "обратная синхронизация wiki в граф"
+      ]
     }
   },
   "min_score_gap": 2,
@@ -1910,7 +2105,7 @@
     "enabled": true,
     "fallback_trigger": 2,
     "strong": 0.75,
-    "moderate": 0.50,
+    "moderate": 0.5,
     "strong_bonus": 2,
     "moderate_bonus": 1,
     "timeout_ms": 500,

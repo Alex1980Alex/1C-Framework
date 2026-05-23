@@ -1,16 +1,16 @@
 """Tests for state_manager module."""
 
-import pytest
 import asyncio
 import tempfile
-import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 from .state_manager import (
+    CheckpointMetadata,
     CheckpointType,
     PipelinePhase,
-    CheckpointMetadata,
     StateCheckpoint,
     StateManager,
     StateManagerConfig,
@@ -369,4 +369,3 @@ class TestStateManager:
         assert progress["completed_count"] == 2
         assert "Step 1" in progress["completed"]
         assert "Step 2" in progress["completed"]
-

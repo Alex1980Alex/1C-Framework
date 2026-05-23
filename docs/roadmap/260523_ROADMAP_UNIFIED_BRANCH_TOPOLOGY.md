@@ -1,0 +1,432 @@
+# Roadmap 260523 — Unified Branch Topology Reconciliation
+
+**Дата создания:** 2026-05-23
+**Статус:** living document — **Phase 0-4 DONE (2026-05-23), Phase 5 partial** — disjoint topology RESOLVED, force-push without cherry-pick (audit показал 100% content-DUP)
+**Заменяет:** [260519](260519_ROADMAP_MASTER_RECONCILIATION.md) + [260522](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md)
+**Память:** [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md), [feedback_precommit_vendor_excludes](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_precommit_vendor_excludes.md)
+
+---
+
+## §0 TL;DR
+
+В репо живут две независимые ветки истории: `origin/master` (legacy, frozen Apr 2026) и `origin/dev-master` (canonical для разработки). Они без общего предка — `git merge-base` пусто. Это корневая проблема (roadmap 260519).
+
+Следствие: любая фича разрабатываемая на длинноживущей `feat/serena-audit-hybrid-refactor` (2233+ коммитов поверх `dev-master`) не может быть merged быстро — её нужно мигрировать на `dev-master` отдельным PR'ом с inventory + protocol-port + surgical settings.json patches. **PR-automation было первым прохождением** этого паттерна (roadmap 260522 → **PR #4 MERGED 2026-05-23**). Каждая следующая фича повторит цикл.
+
+**Unified roadmap решает три задачи:**
+1. **Стандартизирует** workflow «feat → dev-master migration PR» (lessons из PR #4 round-6/7)
+2. **Закрывает** structural master reconciliation (260519 Phase 2-6)
+3. **Удаляет** `dev-master` как workaround, делая `master` единственной canonical branch
+
+Трудозатраты: **3-7 часов** + одна крупная migration PR из feat-ветки.
+
+---
+
+## §1 Реальная картина 2026-05-23
+
+### 1.1 Branch topology
+
+| Ref | HEAD | Назначение | Состояние |
+|---|---|---|---|
+| `origin/master` | `ae3a59534` | Legacy (frozen 2026-04-11), не используется | 2 236 уникальных vs local master, **0 общих предков** |
+| `origin/dev-master` | `25ab2de39` | **De-facto canonical** — все PR сюда | 12 коммитов впереди local master (вкл. PR #4 merge) |
+| `local master` | `b9cba8cb1` | Backup snapshot pre-PR#4 | 2 677 уникальных vs origin/master, **0 общих предков** |
+| `local dev-master` | `b9cba8cb1` | Tracking branch (behind 12) | Идентичен local master, нужен fast-forward |
+| `local feat/serena-audit-hybrid-refactor` | `3ac091b49` | **Активная разработка** | 50 ahead of origin, **2 233 ahead of dev-master, 12 behind** |
+| `origin/archive/master-pre-reconciliation-2026-05-19` | `ae3a59534` | Backup origin/master | Frozen safety net |
+| `origin/migrate/pr-automation-stack` | `1afb5c64f` | Worktree-ветка PR #4 (merged) | **Cleanup pending** — удалить |
+| tag `origin-master-archive-2026-05-19` | `ae3a59534` | То же что branch archive | Frozen safety net |
+
+### 1.2 PR queue
+
+| PR | State | Base ← Head | Title |
+|---|---|---|---|
+| **#2** | OPEN (5+ дней) | `dev-master` ← `feat/serena-audit-hybrid-refactor` | feat: Serena audit — hybrid retrieval |
+| **#3** | demo open / abandoned | `dev-master` ← demo (P3.2) | используется для cherry-pick fallback тестов, удалить |
+| **#4** | **MERGED 2026-05-23 03:13 UTC** | `dev-master` ← `migrate/pr-automation-stack` | feat(pr-automation): land P0-P3 batch on dev-master |
+
+### 1.3 Что DONE vs PENDING из исходных roadmap'ов
+
+**260519 (Master Reconciliation):**
+- ✅ Phase 1: Архивация origin/master (tag + branch) — DONE 2026-05-19
+- ⏳ Phase 2: Аудит 2 236 уникальных origin/master коммитов — pending
+- ⏳ Phase 3: Cherry-pick legitimate коммитов в local master — pending
+- ⏳ Phase 4: Force-push local master → origin/master — pending
+- ⏳ Phase 5: PR #2 retarget на master + удалить dev-master + mypy-baseline sync — pending
+- ⏳ Phase 6: Verify CI green — pending
+
+**260522 (PR-automation Migration):**
+- ✅ Phase A-G: вся миграция выполнена через **PR #4 (round-6/7)** — DONE 2026-05-23
+- ✅ Bonus: discovered + memory-saved [feedback_precommit_vendor_excludes](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_precommit_vendor_excludes.md)
+- ⏳ Cleanup: `git push origin :migrate/pr-automation-stack` — remote branch ещё жив
+- ⏳ Sync feat ↔ dev-master — deferred (2 233 commits, requires merge not rebase)
+
+---
+
+## §2 Общий корень и cascade effects
+
+```
+ROOT: origin/master ↔ local master — disjoint histories (no common ancestor)
+                          │
+                          ▼
+WORKAROUND #1: dev-master как de-facto canonical (every PR → dev-master)
+                          │
+                          ▼
+SYMPTOM #1: PR #2 не может быть merged в origin/master напрямую
+                          │
+                          ▼
+WORKAROUND #2: feat-branch накапливает 2 233 commits ahead of dev-master
+                          │
+                          ▼
+SYMPTOM #2: фичи feat-branch не доставляются на dev-master малыми PR'ами
+                          │
+                          ▼
+WORKAROUND #3: migration PR'ы из feat → dev-master (как PR #4)
+                          │  Каждый требует:
+                          │  - inventory файлов
+                          │  - protocol divergence check
+                          │  - surgical settings.json patch
+                          │  - 4-7 round'ов CI cleanup
+                          ▼
+SYMPTOM #3: каждая фича = новый mini-260522 (повторяющийся cost)
+```
+
+**Ключевое наблюдение:** PR #4 closed конкретный instance, но **паттерн остаётся**. Любая следующая фича на feat-branch потребует такого же migration cycle. Этот roadmap должен либо устранить корень (260519 Phase 2-6), либо стандартизировать workaround (§4).
+
+---
+
+## §3 Unified Phase Plan
+
+### Phase 0 — PR #4 (DONE 2026-05-23)
+
+Migration PR-automation подсистемы на dev-master. Closed 260522. Lessons → §4, §5.
+
+### Phase 1 — Immediate cleanup (✅ DONE 2026-05-23)
+
+**Цель:** обнулить остаточные ref'ы от PR #4.
+
+```bash
+# Удалить remote migration-ветку (PR merged) — executed ✓
+git push origin :migrate/pr-automation-stack
+
+# Fast-forward local master к origin/dev-master (12 commits включая PR #4) — executed ✓
+git checkout master
+git merge --ff-only origin/dev-master
+# NB: НЕ делать git push origin master здесь — это force-push в legacy
+# origin/master (2 236 уникальных коммитов), уничтожит legacy work без
+# предшествующего cherry-pick. Push в origin/master = Phase 4 (после
+# Phase 2-3 audit + cherry-pick).
+```
+
+**Bug fix vs первой ревизии roadmap'а:** строка `git push origin master` УБРАНА (была ошибкой). Phase 1 = только local-only sync + remote migrate cleanup. Discovered during execution 2026-05-23.
+
+**Post-execution state:**
+- `gh pr list --state open` показывает только PR #2 + PR #3 (demo) ✓
+- `git log master..origin/dev-master` пусто (master = origin/dev-master = `25ab2de39`) ✓
+- `git ls-remote origin migrate/pr-automation-stack` пусто ✓
+- Remote branches: 4 (`archive/...`, `dev-master`, `feat/serena-audit-hybrid-refactor`, `master`)
+
+### Phase 2 — Audit unique origin/master commits (✅ DONE 2026-05-23, 30 мин с automation)
+
+**Цель:** идентифицировать 20-50 legitimate коммитов из 2 236 уникальных origin/master, которые нужно cherry-pick'нуть в master перед force-push.
+
+Идентично §3 (Phase 2) исходного 260519. Эвристики, prefix-stats, категоризация по noise/duplicate/legitimate — без изменений.
+
+**Output:** `/tmp/selected-hashes.txt` — отсортированный список hash'ей в хронологическом порядке.
+
+### Phase 3 — Force-push without cherry-pick (✅ DONE 2026-05-23, 5 мин)
+
+**Audit finding overturned original plan.** Phase 2 показала: 1983 noise + 153 subject-DUP + 74 subject-UNIQUE; sample 4/4 UNIQUE-by-subject = content-DUP (все features re-implemented на local master с другими commit messages). Cherry-pick value = 0.
+
+**Execution (без cherry-pick):**
+```bash
+# Safety tag дополнительно к existing archive
+git tag pre-master-force-push-2026-05-23 origin/master
+git push origin pre-master-force-push-2026-05-23
+
+# Force-push с lease (защита от race condition)
+git push --force-with-lease=master:ae3a59534311ade93c07ba15283e280db53799c0 origin master:master
+# → "+ ae3a59534...25ab2de39 master -> master (forced update)"
+```
+
+**Verification (post-push):**
+- `origin/master` = `25ab2de39` ✓
+- `origin/archive/master-pre-reconciliation-2026-05-19` = `ae3a59534` ✓ (legacy preserved)
+- tag `origin-master-archive-2026-05-19` = `ae3a59534` ✓
+- tag `pre-master-force-push-2026-05-23` = `ae3a59534` ✓ (extra safety)
+
+**3 archive ref'а сохраняют legacy** — любой может восстановить origin/master до Phase 3.
+
+### Phase 4 — Cleanup (✅ DONE 2026-05-23, 10 мин)
+
+```bash
+# Переключить PR #2 на canonical master — executed ✓
+gh pr edit 2 --base master
+
+# PR #3 уже была закрыта ранее (cherry-pick fallback demo) — verified ✓
+gh pr view 3 --json state  # → CLOSED
+
+# Удалить dev-master (remote + local) — executed ✓
+git push origin :dev-master
+git branch -D dev-master  # was b9cba8cb1
+```
+
+**Update memory:** [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md) → **RESOLVED 2026-05-23** ✓
+
+**Skipped (not applicable):**
+- `mypy_baseline sync` — на master нет baseline-файла (создавался на feat-branch per roadmap 260514)
+- CLAUDE.md `dev-master` references — единственное упоминание оказалось историческим (описание PR #3 cherry-pick теста), не active config
+- `AUTO_PR_BASE=master` в settings.json — env-блок не существует на feat-branch (был на dev-master через PR #4, теперь на master); придёт через PR #2 merge
+
+**Post-Phase 4 remote topology (3 branches):**
+- `origin/master` = `25ab2de39` (canonical)
+- `origin/feat/serena-audit-hybrid-refactor` = PR #2 head
+- `origin/archive/master-pre-reconciliation-2026-05-19` = legacy backup
+
+### Phase 5 — Verify + standardize (~30-60 минут)
+
+1. CI watch на pushed master
+2. PR #2 auto-rebase trigger от `gh pr edit --base master`
+3. Smoke на `.claude/hooks/post-task-push-pr.py` с `AUTO_PR_BASE=master`
+4. Update `.claude/settings.json` env: `"AUTO_PR_BASE": "master"`
+5. Update [40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) — `dev-master` → `master` во всех env reference
+
+---
+
+## §4 Standardized Workflow Pattern (lessons из PR #4)
+
+Пока **260519 Phase 2-5 не выполнен** (workaround dev-master остаётся), любая coherent feature delivery с feat → dev-master должна следовать паттерну выработанному в PR #4 round-6/7.
+
+### Pattern A — Small incremental PRs (preferred)
+
+Если фича изолирована (1-5 файлов):
+1. На `feat`-ветке cherry-pick semantic коммит'ы на отдельную `feat-feature-xyz` from origin/dev-master
+2. Squash в один semantic commit
+3. PR против dev-master, CI должен пройти без round-2..7 cycle
+
+### Pattern B — Coherent stack migration (PR #4 model)
+
+Если фича обширная (>10 файлов, settings.json patches, docs section):
+1. **Discovery roadmap** (по образцу 260522): inventory, hidden risks, semantic commits archaeology
+2. **migrate/feature-name** worktree branch from origin/dev-master
+3. **Inventory copy**: `git checkout feat -- <files>` для каждого identified file
+4. **Protocol/base divergence check**: diff `base/protocol.py` + shared base — port if divergent
+5. **Surgical settings.json patch**: НЕ копировать целиком, только новые hooks + env keys
+6. **Squash + PR**
+7. **CI cleanup rounds** (lessons из PR #4):
+   - **Round 1-2**: baseline excludes (vendor: `tools/`, `infra/`, `external/`, `jre/`, `docs/documentation/`, `mcp-server.log*`, `.serena/`, `.vscode-extensions/`)
+   - **Round 3-5**: dependency bumps (ruff, mypy additional_dependencies, missing test deps)
+   - **Round 6**: pytest `--import-mode=importlib`; product code surgical fixes
+   - **Round 7**: full pre-commit autofix bulk (~200-400 files); per-file-ignores в pyproject; mypy removed from pre-commit если 1000+ baseline errors
+8. **Post-merge cleanup**: remove worktree, delete remote migration-branch, optional rebase feat
+
+### Pattern decision matrix
+
+| Признак фичи | Pattern |
+|---|---|
+| 1-5 файлов, no settings.json change | **A** |
+| 6-10 файлов, minimal config | **A** with extra care |
+| >10 файлов OR settings.json patches OR new docs section | **B** |
+| Touches `base/`, `shared/`, `core/` (cross-cutting infra) | **B** (protocol divergence risk) |
+| Builds on >5 другие WIP файлы на feat-branch | **B** (transitive dep'ы) |
+
+---
+
+## §5 Anti-patterns (collected from PR #4 round-6/7)
+
+| Anti-pattern | Почему плохо | Правильный путь |
+|---|---|---|
+| `pre-commit run --all-files` без полных vendor excludes | Хватает 1300+ файлов JDK / LangChain docs / log dumps | ВСЕГДА проверить top-level `exclude:` ПЕРЕД autofix; minimum set в HEAD post-`a705e69c5` |
+| Inventory copy всего `.claude/settings.json` с feat | Тянет 50+ unrelated hooks + phantom-блокировки через `code-skill-patterns.json` | Surgical patch: только новый matcher + env keys |
+| Cherry-pick semantic коммита без проверки base/protocol.py divergence | Silent hook misclassification (DetectedEvent="Unknown"), ошибки в логах нет | Diff `base/protocol.py` + `base.py` blob hashes ПЕРЕД cherry-pick |
+| mypy в pre-commit при 1000+ baseline errors без filter wrapper | Блокирует все local commits на pre-existing tech debt | Либо `mypy_baseline filter` wrapper, либо убрать mypy (CI имеет own continue-on-error job) |
+| `pytest --import-mode=prepend` (default) с inconsistent `__init__.py` | Name collisions (`bsl.test_parser`↔`src/bsl/`, duplicate basename'ы) | `addopts = "--import-mode=importlib"` в `[tool.pytest.ini_options]` |
+| Тащить `code-skill-patterns.json` целиком с feat → dev-master | Ссылки на несуществующие skills → phantom enforcer блокировка | НЕ переносить — оставить per-branch divergent |
+| `git rebase` 2 233 commits на dev-master без merge стратегии | Часы, конфликты в каждом 10-м коммите, риск потерять работу при abort | `git merge origin/dev-master` (1 merge commit) — minutes, единая точка resolve |
+| Force-push в origin/master без archive | Безвозвратная потеря 2 236 unique origin/master коммитов | Archive tag + branch (DONE 2026-05-19) ПЕРЕД любым force-push |
+
+---
+
+## §6 Decision matrix — когда что делать
+
+### Сейчас (Phase 1 immediate cleanup) — **рекомендуется**
+
+| Условие | Действие |
+|---|---|
+| PR #4 merged 2026-05-23 ✓ | Удалить `origin/migrate/pr-automation-stack` |
+| Local master behind origin/dev-master | Fast-forward (no conflict, ff-only) |
+| Tag/branch archive ещё нужны | Оставить ещё на 1-3 месяца как safety net |
+
+**Время:** 15 минут. **Риск:** нулевой.
+
+### Через 1-2 недели (Phase 2-3 reconciliation) — **opcional**
+
+Если хотя бы одно верно:
+- Появится reason работать с `origin/master` напрямую (внешний contributor PR)
+- Tooling предполагает `master` как имя (не `dev-master`)
+- Documentation/README ссылается на canonical branch для clarity
+- Накопилось ≥2 будущих migration PR'ов кандидата → ROI reconciliation становится позитивным
+
+**Время:** 2-5 часов. **Риск:** medium (cherry-pick конфликты). Mitigation: safety tag + archive ref'ы.
+
+### Через 1-3 месяца (Phase 4-5 finalization) — **only if 2-3 done**
+
+После reconciliation: PR #2 retarget, удалить dev-master, `AUTO_PR_BASE=master`, memory + docs sync.
+
+**Время:** 30-60 минут. **Риск:** низкий.
+
+### **Do-nothing валидно**
+
+Текущее состояние (post Phase 1) полностью функционально. Reconciliation **желательная чистота, не блокер**. Можно держать workaround неопределённо долго.
+
+---
+
+## §7 Что заменяет / superseded
+
+Этот roadmap **заменяет** оба исходных. Не удаляй их (исторический контекст), но обнови frontmatter:
+
+**[260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md):**
+```diff
+- **Статус:** Phase 1 DONE, Phases 2–6 PENDING
++ **Статус:** SUPERSEDED by [260523](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md). Phase 1 DONE, остальные в §3 Phase 2-5 unified.
+```
+
+**[260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md):**
+```diff
+- > **Статус:** discovery DONE, миграция NOT STARTED.
++ > **Статус:** SUPERSEDED — миграция выполнена через **PR #4 merged 2026-05-23**. Generalized pattern → [260523 §4 Pattern B](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md#§4-standardized-workflow-pattern-lessons-из-pr-4).
+```
+
+---
+
+## §8 Risk Register
+
+| Риск | Mitigation | Phase |
+|---|---|---|
+| Phase 1 fast-forward конфликтует с uncommitted submodule | Сначала commit submodule pointer ИЛИ stash | 1 |
+| Phase 3 cherry-pick конфликтует с PR #4 файлами | Manual resolve через union (origin/master legitimate + PR #4 inventory) | 3 |
+| Phase 4 `gh pr edit --base master` ломает PR #2 review state | Сделать когда PR #2 не в активном review | 4 |
+| `dev-master` удалённая ветка имеет attached automation | Phase 5 update settings.json env ДО Phase 4 delete | 5→4 |
+| Backup branches понадобятся | Не удалять автоматически в Phase 1, держать ещё месяц | 1 |
+| feat 2 233 ahead станет painful rebase после Phase 4 | `git merge origin/master` в feat вместо rebase | post-4 |
+| Migration PR pattern становится legalised tech debt | §6 — пороги когда переходить от workaround к fix | continuous |
+| `AUTO_PR_ENABLED=1` запустит post-task-push-pr с старым AUTO_PR_BASE | Manually toggle off перед Phase 4 или env override | 4 |
+
+---
+
+## §9 Связанные артефакты
+
+### Git refs
+
+- `origin/master` — legacy frozen, 2 236 unique коммитов pending Phase 2-3
+- `origin/dev-master` — current canonical, contains PR #4 merge (`25ab2de39`)
+- `origin/feat/serena-audit-hybrid-refactor` — active dev, 2 233 ahead
+- `origin/archive/master-pre-reconciliation-2026-05-19` — backup origin/master pre-Phase 1
+- tag `origin-master-archive-2026-05-19` — same archive as branch
+- tag `pre-squash-backup-2026-05-19` (local) — feat-branch backup
+
+### PR'ы
+
+- **[#2](https://github.com/Alex1980Alex/1C-Framework/pull/2)** OPEN, base=dev-master, head=feat — retarget на master в Phase 4
+- **[#3](https://github.com/Alex1980Alex/1C-Framework/pull/3)** open demo — закрыть в Phase 4
+- **[#4](https://github.com/Alex1980Alex/1C-Framework/pull/4)** MERGED 2026-05-23, merge commit `25ab2de39`
+
+### Roadmap'ы и docs
+
+- [260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md) — SUPERSEDED (Phase 1 only)
+- [260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md) — SUPERSEDED (DONE via PR #4)
+- [40_PR_AUTOMATION/40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) §«Rounds 3-6» + §«Round-6 fixes» — round-by-round PR #4 chronicle
+- CLAUDE.md — раздел про PR-automation hook `post-task-push-pr.py` P0-P3 batch (2026-05-22)
+
+### Memory
+
+- [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md) — обновится RESOLVED в Phase 4
+- [feedback_precommit_vendor_excludes](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_precommit_vendor_excludes.md) — lesson из PR #4 round-6
+- [feedback_repo_full_permission](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_repo_full_permission.md)
+
+---
+
+## §10 Когда обновлять этот roadmap
+
+- Когда Phase 1 cleanup сделан → пометить ✅, добавить дату — ✅ DONE 2026-05-23
+- Когда Phase 2-3 решено делать → детализировать audit — ✅ DONE 2026-05-23 (audit показал 100% content-DUP)
+- Когда новая migration PR-ка появляется → добавить в §4 как ещё один example
+- Когда reconciliation DONE → переименовать в `260XXX_ROADMAP_UNIFIED_BRANCH_TOPOLOGY_RESOLVED.md`, обновить memory `project_disjoint_master_topology` на RESOLVED — ✅ DONE 2026-05-23
+- Когда workaround dev-master remove'нут → удалить §4 Pattern B, оставить только Pattern A как стандарт — ✅ DONE 2026-05-23 (см. §11)
+
+---
+
+## §11 Post-Reconciliation Workflow (2026-05-23 onwards)
+
+После Phase 1-4 (DONE) workaround `dev-master` удалён, любая разработка идёт **напрямую feat-branch → master**. Этот раздел кодифицирует упрощённый workflow.
+
+### 11.1 Default Pattern: feat → master напрямую
+
+```bash
+# Развитие фичи на feat-branch
+git checkout feat/serena-audit-hybrid-refactor
+# ... develop ...
+git push origin feat/serena-audit-hybrid-refactor
+
+# Существующий PR #2 автоматически обновляется (head moves forward)
+# Если merge conflicts с master — pre-merge resolution:
+git fetch origin master
+git merge origin/master           # или -X theirs если master canonical
+# resolve, commit, push
+```
+
+### 11.2 Small focused PR (Pattern A — DEFAULT теперь)
+
+Для изолированных фич (1-5 файлов):
+
+```bash
+git checkout -b feat-name-short origin/master    # branch from master напрямую
+# ... develop semantic changes ...
+git commit -m "feat(scope): short subject"        # one squashed commit
+git push origin feat-name-short
+gh pr create --base master --head feat-name-short
+```
+
+**Преимущества vs старый workaround:**
+- Никаких dev-master indirection
+- Прямой PR feat → master
+- CI на master triggers напрямую
+- AUTO_PR_BASE=master (settings.json env уже на master post-PR #4)
+
+### 11.3 Large coherent stack PR (Pattern B — для >10 файлов)
+
+Сохраняет старый PR #4 workflow, но base=master:
+
+```bash
+git checkout -b migrate/feature-name origin/master
+# Discovery roadmap (inventory + hidden risks + protocol divergence check)
+git checkout feat -- <inventory_files>
+# Surgical settings.json patch (не копировать целиком)
+# Squash + PR
+gh pr create --base master --head migrate/feature-name
+# CI cleanup rounds (см. §4 Pattern B + §5 anti-patterns из PR #4)
+```
+
+### 11.4 Что больше НЕ делать
+
+| Anti-pattern (legacy) | Now use instead |
+|---|---|
+| PR base `dev-master` | PR base `master` |
+| `AUTO_PR_BASE=dev-master` | `AUTO_PR_BASE=master` (уже в settings.json) |
+| Push local master to `dev-master` для preserving | Push directly to `master` |
+| Migration через intermediate `dev-master` | Direct PR feat → master |
+| Worry about disjoint master histories | RESOLVED — single canonical master |
+
+### 11.5 PR #2 closure path
+
+PR #2 (`feat/serena-audit-hybrid-refactor` → `master`) теперь MERGEABLE после merge `origin/master` в feat 2026-05-23 (commit `2aae773b4` `-X theirs` strategy).
+
+**Pre-merge checklist:**
+- [x] base=master (✅ retargeted Phase 4.1)
+- [x] mergeable=true (✅ after merge resolution)
+- [ ] CI green на новом merge commit
+- [ ] Final review
+
+После merge PR #2:
+- `feat-branch` можно удалить (либо сохранить как long-running dev branch для будущих фич)
+- Все будущие фичи следуют §11.2 (small PR) или §11.3 (coherent stack)

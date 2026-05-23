@@ -14,7 +14,7 @@ The schema system provides:
 ## Schema Files
 
 ### `prompt-template.schema.json` (Main Schema)
-**Version**: 1.0.0  
+**Version**: 1.0.0
 **Purpose**: Main schema for Task Master prompt template files
 
 **Validates**:
@@ -37,7 +37,7 @@ The schema system provides:
 - `prompts.*`: Additional prompt variants
 
 ### `parameter.schema.json` (Parameter Schema)
-**Version**: 1.0.0  
+**Version**: 1.0.0
 **Purpose**: Reusable schema for individual prompt parameters
 
 **Supports**:
@@ -67,7 +67,7 @@ The schema system provides:
 ```
 
 ### `variant.schema.json` (Variant Schema)
-**Version**: 1.0.0  
+**Version**: 1.0.0
 **Purpose**: Schema for prompt template variants
 
 **Validates**:
@@ -93,7 +93,7 @@ The schema system provides:
 ### Template ID Validation
 - **Pattern**: `^[a-z][a-z0-9-]*[a-z0-9]$`
 - **Format**: Kebab-case, alphanumeric with hyphens
-- **Examples**: 
+- **Examples**:
   - ✅ `add-task`, `parse-prd`, `analyze-complexity`
   - ❌ `AddTask`, `add_task`, `-invalid-`, `task-`
 
@@ -399,4 +399,4 @@ The schema includes custom validation for:
 - **`$id` Field**: Use GitHub blob URLs for stable schema identification
 - **Local References**: Use relative paths for development and testing
 - **External Tools**: GitHub blob URLs provide stable, version-controlled access
-- **Documentation**: Link to GitHub for public schema access 
+- **Documentation**: Link to GitHub for public schema access

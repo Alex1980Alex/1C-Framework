@@ -22,12 +22,12 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
   async processThought(request: ReasoningRequest): Promise<ReasoningResponse> {
     // Generate architecture-focused thoughts based on BSL context
     const currentNode = await this.generateArchitectureThought(request);
-    
+
     // Enhanced evaluation for 1C architecture
     currentNode.score = this.evaluateBSLArchitecture(currentNode);
-    
+
     await this.saveNode(currentNode);
-    
+
     return {
       nodeId: currentNode.id,
       thought: currentNode.thought,
@@ -41,10 +41,10 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
   private async generateArchitectureThought(request: ReasoningRequest): Promise<ThoughtNode> {
     const nodeId = this.generateNodeId();
-    
+
     // Architecture-specific thought generation
     let architectureThought = '';
-    
+
     if (request.thoughtNumber <= 2) {
       architectureThought = this.generateSubsystemAnalysis(request.thought);
     } else if (request.thoughtNumber <= 4) {
@@ -69,7 +69,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
   private generateSubsystemAnalysis(originalThought: string): string {
     this.subsystemsAnalyzed++;
-    
+
     const subsystemPatterns = [
       'Анализирую архитектуру подсистем 1С для выявления нарушений принципов разделения ответственности',
       'Исследую взаимодействие между подсистемами для обнаружения циклических зависимостей',
@@ -78,11 +78,11 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
     ];
 
     const basePattern = subsystemPatterns[Math.floor(Math.random() * subsystemPatterns.length)];
-    
+
     return `${basePattern}. В контексте "${originalThought}" особое внимание уделяю:
-    
+
 1. **Выявление границ подсистем**: проверяю, четко ли разграничены зоны ответственности
-2. **Анализ связанности**: ищу случаи слишком тесной связи между подсистемами  
+2. **Анализ связанности**: ищу случаи слишком тесной связи между подсистемами
 3. **Оценка когезии**: проверяю, насколько логично сгруппированы объекты внутри подсистем
 4. **Поиск "божественных объектов"**: выявляю объекты с избыточной функциональностью
 
@@ -91,7 +91,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
   private generateDependencyAnalysis(originalThought: string): string {
     this.dependencyIssues++;
-    
+
     return `Провожу глубокий анализ зависимостей в архитектуре 1С. Основываясь на предыдущем анализе подсистем:
 
 **Выявленные проблемы зависимостей:**
@@ -111,7 +111,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
   private generatePatternAnalysis(originalThought: string): string {
     this.architecturalPatterns++;
-    
+
     return `Анализирую применение архитектурных паттернов в 1С решении:
 
 **Обнаруженные паттерны:**
@@ -121,7 +121,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 4. **Observer для событий**: анализирую механизмы подписки на события
 
 **Антипаттерны (требующие устранения):**
-- **God Object**: объекты с избыточной ответственностью  
+- **God Object**: объекты с избыточной ответственностью
 - **Spaghetti Code**: запутанная логика без четкой структуры
 - **Copy-Paste Programming**: дублирование кода вместо выделения общих функций
 - **Hard Coding**: захардкоженные значения вместо параметризации
@@ -138,7 +138,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
     return `На основе проведенного анализа архитектуры формирую конкретные рекомендации:
 
 **Приоритетные улучшения:**
-1. **Рефакторинг подсистем**: 
+1. **Рефакторинг подсистем**:
    - Разделить избыточно связанные подсистемы
    - Выделить общую инфраструктурную подсистему
    - Создать четкие API для межсистемного взаимодействия
@@ -160,7 +160,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
 **Метрики для отслеживания прогресса:**
 - Цикломатическая сложность модулей
-- Коэффициент связанности между подсистемами  
+- Коэффициент связанности между подсистемами
 - Количество нарушений архитектурных принципов
 - Время, необходимое для внедрения новых функций
 
@@ -172,13 +172,13 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
     // Architecture-specific scoring
     const thought = node.thought.toLowerCase();
-    
+
     // Bonus for architectural terms
     const architectureTerms = [
       'подсистема', 'зависимость', 'паттерн', 'архитектура', 'модуль',
       'инкапсуляция', 'связанность', 'когезия', 'рефакторинг', 'api'
     ];
-    
+
     for (const term of architectureTerms) {
       if (thought.includes(term)) {
         score += 0.15;
@@ -190,7 +190,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
       'общий модуль', 'объектный модуль', 'модуль формы', 'bsl', '1с',
       'метаданные', 'конфигурация', 'подписка на события'
     ];
-    
+
     for (const term of bslTerms) {
       if (thought.includes(term)) {
         score += 0.2;
@@ -223,7 +223,7 @@ export class BSLArchitectureAnalyzer extends BaseStrategy {
 
   public async getMetrics(): Promise<BSLArchitectureMetrics> {
     const baseMetrics = await super.getMetrics();
-    
+
     return {
       ...baseMetrics,
       name: 'BSL Architecture Analyzer',

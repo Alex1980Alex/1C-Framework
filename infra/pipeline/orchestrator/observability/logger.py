@@ -11,14 +11,13 @@ from __future__ import annotations
 
 import json
 import sys
-import logging
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Optional, Dict, Any, List, TextIO
-from pathlib import Path
 import threading
 from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, TextIO
 
 
 class LogLevel(Enum):
@@ -42,16 +41,16 @@ class LogLevel(Enum):
         }
         return levels[self]
 
-    def __ge__(self, other: "LogLevel") -> bool:
+    def __ge__(self, other: LogLevel) -> bool:
         return self.numeric >= other.numeric
 
-    def __gt__(self, other: "LogLevel") -> bool:
+    def __gt__(self, other: LogLevel) -> bool:
         return self.numeric > other.numeric
 
-    def __le__(self, other: "LogLevel") -> bool:
+    def __le__(self, other: LogLevel) -> bool:
         return self.numeric <= other.numeric
 
-    def __lt__(self, other: "LogLevel") -> bool:
+    def __lt__(self, other: LogLevel) -> bool:
         return self.numeric < other.numeric
 
 
@@ -59,17 +58,17 @@ class LogLevel(Enum):
 class LogContext:
     """Context for log entries with correlation IDs."""
 
-    pipeline_id: Optional[str] = None
-    session_id: Optional[str] = None
-    request_id: Optional[str] = None
-    task_id: Optional[str] = None
-    agent_name: Optional[str] = None
-    phase: Optional[str] = None
-    step: Optional[int] = None
-    user_id: Optional[str] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
+    pipeline_id: str | None = None
+    session_id: str | None = None
+    request_id: str | None = None
+    task_id: str | None = None
+    agent_name: str | None = None
+    phase: str | None = None
+    step: int | None = None
+    user_id: str | None = None
+    extra: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary, excluding None values."""
         result = {}
         if self.pipeline_id:
@@ -93,7 +92,7 @@ class LogContext:
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LogContext":
+    def from_dict(cls, data: dict[str, Any]) -> LogContext:
         """Create from dictionary."""
         return cls(
             pipeline_id=data.get("pipeline_id"),
@@ -107,7 +106,7 @@ class LogContext:
             extra=data.get("extra", {}),
         )
 
-    def with_extra(self, **kwargs) -> "LogContext":
+    def with_extra(self, **kwargs) -> LogContext:
         """Create new context with additional extra fields."""
         new_extra = {**self.extra, **kwargs}
         return LogContext(
@@ -131,13 +130,13 @@ class LogEntry:
     level: LogLevel
     message: str
     logger_name: str
-    context: Optional[LogContext] = None
-    exception: Optional[str] = None
-    stack_trace: Optional[str] = None
-    duration_ms: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    context: LogContext | None = None
+    exception: str | None = None
+    stack_trace: str | None = None
+    duration_ms: float | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         result = {
             "timestamp": self.timestamp.isoformat(),
@@ -159,12 +158,12 @@ class LogEntry:
 
         return result
 
-    def to_json(self, indent: Optional[int] = None) -> str:
+    def to_json(self, indent: int | None = None) -> str:
         """Convert to JSON string."""
         return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LogEntry":
+    def from_dict(cls, data: dict[str, Any]) -> LogEntry:
         """Create from dictionary."""
         return cls(
             timestamp=datetime.fromisoformat(data["timestamp"]),
@@ -198,10 +197,10 @@ class ConsoleHandler(LogHandler):
     """Handler that writes to console with optional color."""
 
     COLORS = {
-        LogLevel.DEBUG: "\033[36m",     # Cyan
-        LogLevel.INFO: "\033[32m",      # Green
-        LogLevel.WARNING: "\033[33m",   # Yellow
-        LogLevel.ERROR: "\033[31m",     # Red
+        LogLevel.DEBUG: "\033[36m",  # Cyan
+        LogLevel.INFO: "\033[32m",  # Green
+        LogLevel.WARNING: "\033[33m",  # Yellow
+        LogLevel.ERROR: "\033[31m",  # Red
         LogLevel.CRITICAL: "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
@@ -232,7 +231,9 @@ class ConsoleHandler(LogHandler):
 
             if self.use_color:
                 color = self.COLORS.get(entry.level, "")
-                line = f"{timestamp} {color}{level}{self.RESET} [{entry.logger_name}] {entry.message}"
+                line = (
+                    f"{timestamp} {color}{level}{self.RESET} [{entry.logger_name}] {entry.message}"
+                )
             else:
                 line = f"{timestamp} {level} [{entry.logger_name}] {entry.message}"
 
@@ -304,7 +305,7 @@ class MemoryHandler(LogHandler):
     ):
         super().__init__(min_level)
         self.max_entries = max_entries
-        self._entries: List[LogEntry] = []
+        self._entries: list[LogEntry] = []
         self._lock = threading.Lock()
 
     def handle(self, entry: LogEntry) -> None:
@@ -317,14 +318,14 @@ class MemoryHandler(LogHandler):
 
             # Trim if needed
             if len(self._entries) > self.max_entries:
-                self._entries = self._entries[-self.max_entries:]
+                self._entries = self._entries[-self.max_entries :]
 
     def get_entries(
         self,
-        level: Optional[LogLevel] = None,
-        logger_name: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[LogEntry]:
+        level: LogLevel | None = None,
+        logger_name: str | None = None,
+        limit: int | None = None,
+    ) -> list[LogEntry]:
         """Get stored entries with optional filtering."""
         with self._lock:
             entries = list(self._entries)
@@ -352,8 +353,8 @@ class PipelineLogger:
     def __init__(
         self,
         name: str,
-        context: Optional[LogContext] = None,
-        handlers: Optional[List[LogHandler]] = None,
+        context: LogContext | None = None,
+        handlers: list[LogHandler] | None = None,
     ):
         self.name = name
         self._context = context
@@ -361,7 +362,7 @@ class PipelineLogger:
         self._local = threading.local()
 
     @property
-    def context(self) -> Optional[LogContext]:
+    def context(self) -> LogContext | None:
         """Get current context (thread-local or default)."""
         return getattr(self._local, "context", None) or self._context
 
@@ -384,7 +385,7 @@ class PipelineLogger:
         finally:
             self._local.context = old_context
 
-    def child(self, name: str, context: Optional[LogContext] = None) -> "PipelineLogger":
+    def child(self, name: str, context: LogContext | None = None) -> PipelineLogger:
         """Create a child logger with inherited handlers."""
         child_name = f"{self.name}.{name}"
         child_context = context or self.context
@@ -398,9 +399,9 @@ class PipelineLogger:
         self,
         level: LogLevel,
         message: str,
-        exception: Optional[str] = None,
-        stack_trace: Optional[str] = None,
-        duration_ms: Optional[float] = None,
+        exception: str | None = None,
+        stack_trace: str | None = None,
+        duration_ms: float | None = None,
         **metadata,
     ) -> LogEntry:
         """Create and dispatch a log entry."""
@@ -439,8 +440,8 @@ class PipelineLogger:
     def error(
         self,
         message: str,
-        exception: Optional[str] = None,
-        stack_trace: Optional[str] = None,
+        exception: str | None = None,
+        stack_trace: str | None = None,
         **metadata,
     ) -> LogEntry:
         """Log at ERROR level."""
@@ -455,8 +456,8 @@ class PipelineLogger:
     def critical(
         self,
         message: str,
-        exception: Optional[str] = None,
-        stack_trace: Optional[str] = None,
+        exception: str | None = None,
+        stack_trace: str | None = None,
         **metadata,
     ) -> LogEntry:
         """Log at CRITICAL level."""
@@ -497,6 +498,7 @@ class PipelineLogger:
         except Exception as e:
             duration_ms = (datetime.now() - start).total_seconds() * 1000
             import traceback
+
             self._log(
                 LogLevel.ERROR,
                 f"Failed: {message}",
@@ -509,8 +511,8 @@ class PipelineLogger:
 
 
 # Global logger registry
-_loggers: Dict[str, PipelineLogger] = {}
-_default_handlers: List[LogHandler] = []
+_loggers: dict[str, PipelineLogger] = {}
+_default_handlers: list[LogHandler] = []
 _config_lock = threading.Lock()
 
 
@@ -518,7 +520,7 @@ def configure_logging(
     level: LogLevel = LogLevel.INFO,
     console: bool = True,
     console_json: bool = False,
-    file_path: Optional[Path] = None,
+    file_path: Path | None = None,
     memory: bool = False,
     memory_max_entries: int = 1000,
 ) -> None:
@@ -555,7 +557,7 @@ def configure_logging(
 
 def get_logger(
     name: str,
-    context: Optional[LogContext] = None,
+    context: LogContext | None = None,
 ) -> PipelineLogger:
     """Get or create a logger by name."""
     with _config_lock:
@@ -570,7 +572,7 @@ def get_logger(
         return _loggers[name]
 
 
-def get_memory_handler() -> Optional[MemoryHandler]:
+def get_memory_handler() -> MemoryHandler | None:
     """Get the global memory handler if configured."""
     for handler in _default_handlers:
         if isinstance(handler, MemoryHandler):

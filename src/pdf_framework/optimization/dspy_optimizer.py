@@ -1,10 +1,15 @@
-"""DSPy MIPROv2 optimizer runner (Phase 34).
+"""DSPy GEPA optimizer runner (Phase 34, migrated to GEPA per roadmap 260509 §3.4).
 
 Handles:
 - Loading/saving evaluation datasets
-- Running MIPROv2 optimization
+- Running GEPA optimization (Generative Evolutionary Prompt Adaptation,
+  DSPy ≥3.0; supersedes MIPROv2 deprecated in DSPy 3.x)
 - Saving/loading optimized modules
 - A/B comparison between original and optimized prompts
+
+Migration note: prior MIPROv2 → dspy.GEPA via reflection-based optimization.
+2-arg CompositeMetric wrapped via _gepa_metric adapter to satisfy the
+GEPAFeedbackMetric Protocol (gold, pred, trace, pred_name, pred_trace).
 """
 
 import json
@@ -47,7 +52,7 @@ class DSPyOptimizer:
 
     Provides:
     - Dataset management (load, add, export)
-    - Module optimization via MIPROv2
+    - Module optimization via GEPA (migrated from MIPROv2 per roadmap 260509 §3.4)
     - Optimized module persistence
     - Before/after metric comparison
     """
@@ -97,13 +102,34 @@ class DSPyOptimizer:
         """Add a new evaluation pair to the dataset."""
         self._dataset.append(pair)
 
-    def add_pairs_from_feedback(self, feedback_store: Any) -> int:
-        """Import high-confidence Q&A pairs from feedback store.
+    async def add_pairs_from_feedback(self, feedback_store: Any) -> int:
+        """Import positive Q&A pairs from FeedbackStore (score=1).
+
+        Loads up to 100 most recent positive feedback entries and adds
+        them to the evaluation dataset as EvaluationPair objects.
 
         Returns number of pairs added.
         """
-        # TODO: integrate with FeedbackStore to auto-populate
-        return 0
+        try:
+            positive_entries = await feedback_store.get_positive(limit=100)
+            count = 0
+            for entry in positive_entries:
+                self.add_pair(
+                    EvaluationPair(
+                        question=entry.question,
+                        answer=entry.answer,
+                        source="feedback",
+                    )
+                )
+                count += 1
+            if count:
+                logger.info("[DSPY] Imported %d positive feedback pairs", count)
+            return count
+        except AttributeError:
+            raise  # feedback_store missing get_positive — programming error, re-raise
+        except Exception as e:
+            logger.warning("[DSPY] Failed to import from feedback store: %s", e)
+            return 0
 
     @property
     def dataset_size(self) -> int:
@@ -118,10 +144,15 @@ class DSPyOptimizer:
         max_trials: int = 50,
         module_names: list[str] | None = None,
     ) -> OptimizationResult:
-        """Run MIPROv2 optimization on specified modules.
+        """Run GEPA optimization on specified modules (roadmap 260509 §3.4).
+
+        Source: dspy 3.2.1 — `dspy.GEPA` (Generative Evolutionary Prompt
+        Adaptation). Replaces MIPROv2 per upstream deprecation. Uses
+        reflection-based optimization with explicit feedback metric.
 
         Args:
-            max_trials: Maximum optimization trials per module.
+            max_trials: Used as `max_full_evals` budget for GEPA. Legacy
+                arg name kept for API back-compat with MIPROv2 callers.
             module_names: Which modules to optimize (default: all).
 
         Returns:
@@ -216,18 +247,35 @@ class DSPyOptimizer:
                 avg_before = sum(before_scores) / len(before_scores) if before_scores else 0.0
                 result.metrics_before[name] = round(avg_before, 3)
 
-                # MIPROv2 optimization
+                # GEPA optimization (Source: dspy 3.2.1 inspect.signature(dspy.GEPA))
                 try:
-                    optimizer = dspy.MIPROv2(
-                        metric=metric,
-                        num_candidates=3,
-                        max_errors=5,
-                        verbose=False,
+                    # GEPA expects GEPAFeedbackMetric Protocol:
+                    #   metric(gold, pred, trace, pred_name, pred_trace) -> float
+                    # Adapter wraps the existing 2-arg CompositeMetric.
+                    def _gepa_metric(
+                        gold: Any,
+                        pred: Any,
+                        trace: Any = None,
+                        pred_name: str | None = None,
+                        pred_trace: Any = None,
+                    ) -> float:
+                        try:
+                            return float(
+                                metric(gold.toDict() if hasattr(gold, "toDict") else gold, pred)
+                            )
+                        except Exception:
+                            return 0.0
+
+                    optimizer = dspy.GEPA(
+                        metric=_gepa_metric,
+                        max_full_evals=max_trials,
+                        reflection_lm=lm,  # reuse configured LM for reflection step
+                        skip_perfect_score=True,
+                        track_stats=False,
                     )
                     optimized = optimizer.compile(
                         module,
                         trainset=trainset,
-                        num_trials=max_trials,
                     )
 
                     # Save optimized module

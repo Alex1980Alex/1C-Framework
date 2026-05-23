@@ -182,3 +182,13 @@ CONVERSATION__MAX_HISTORY=10
 - Routing: `src/pdf_framework/agents/routing/`
 - Memory: `src/pdf_framework/agents/memory/conversation.py`, `backends.py`
 - Middleware: `src/pdf_framework/agents/rag/middleware.py`
+- DSPy Signatures: `src/pdf_framework/prompts/signatures.py` (Hermes Phase 2)
+
+## DSPy Integration (Hermes Phase 2)
+
+3 RAG nodes use DSPy Signatures as a middle path between cheap LLM and LangChain:
+- `grader.py` — `GraderSignature` (3-level: relevant/partial/irrelevant)
+- `rewriter.py` — `RewriterSignature` (ChainOfThought)
+- `hallucination_checker.py` — `HallucinationCheckSignature` (typed grounded: bool)
+
+Fallback chain: `cheap_llm_call` → `dspy.Predict/ChainOfThought` → LangChain Claude

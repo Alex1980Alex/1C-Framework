@@ -395,24 +395,47 @@ class UnifiedSearchEngine:
         sources_searched = []
         sources_failed = []
 
-        for name, task in tasks.items():
-            task_start = time.time()
-            try:
-                results = await task
-                source_results[name] = results
-                sources_searched.append(name)
-            except TimeoutError:
-                duration_ms = (time.time() - task_start) * 1000
+        # Hard ceiling: even if per-adapter wait_for misbehaves in a long-running
+        # MCP session (thread pool exhaustion, event loop starvation), the whole
+        # gather phase cannot exceed this bound. See cache/memory-orchestrator-timeout-bug-2026-04-23.md.
+        hard_timeout = options.timeout_ms / 1000 * 1.5
+
+        try:
+            async with asyncio.timeout(hard_timeout):
+                for name, task in tasks.items():
+                    task_start = time.time()
+                    try:
+                        results = await task
+                        source_results[name] = results
+                        sources_searched.append(name)
+                    except TimeoutError:
+                        duration_ms = (time.time() - task_start) * 1000
+                        sources_failed.append(
+                            SourceError(source=name, error="timeout", duration_ms=duration_ms)
+                        )
+                        logger.warning(f"Search timeout for {name} ({duration_ms:.0f}ms)")
+                    except Exception as e:
+                        duration_ms = (time.time() - task_start) * 1000
+                        sources_failed.append(
+                            SourceError(source=name, error=str(e), duration_ms=duration_ms)
+                        )
+                        logger.error(f"Search error for {name}: {e}")
+        except TimeoutError:
+            for name, task in tasks.items():
+                if name in source_results or any(e.source == name for e in sources_failed):
+                    continue
+                if task.done() and not task.cancelled() and task.exception() is None:
+                    source_results[name] = task.result()
+                    sources_searched.append(name)
+                    continue
+                if not task.done():
+                    task.cancel()
                 sources_failed.append(
-                    SourceError(source=name, error="timeout", duration_ms=duration_ms)
+                    SourceError(source=name, error="hard_timeout", duration_ms=hard_timeout * 1000)
                 )
-                logger.warning(f"Search timeout for {name} ({duration_ms:.0f}ms)")
-            except Exception as e:
-                duration_ms = (time.time() - task_start) * 1000
-                sources_failed.append(
-                    SourceError(source=name, error=str(e), duration_ms=duration_ms)
-                )
-                logger.error(f"Search error for {name}: {e}")
+            logger.error(
+                f"Search hard timeout after {hard_timeout:.1f}s; cancelled remaining adapters"
+            )
 
         # Filter by memory type (per-source before fusion)
         if memory_types:

@@ -155,6 +155,9 @@ class TaskExecutor:
             applied = bool(edit.file_edits)
             files_affected = len(edit.file_edits)
 
+            from urllib.parse import unquote
+
+            wt_prefix = worktree_path.as_posix()
             for fe in edit.file_edits:
                 uri_norm = fe.uri.replace("\\", "/")
                 wt_prefix = worktree_path.as_posix()
@@ -162,6 +165,9 @@ class TaskExecutor:
                     uri_norm = uri_norm[len(wt_prefix) :].lstrip("/")
                 if uri_norm.startswith("file:///"):
                     uri_norm = uri_norm[8:]
+                uri_norm = unquote(uri_norm)
+                if uri_norm.startswith(wt_prefix):
+                    uri_norm = uri_norm[len(wt_prefix) :].lstrip("/")
                 actual_files.append(uri_norm)
 
             actual_files = sorted(set(actual_files))
@@ -224,16 +230,20 @@ class ReportBuilder:
                 backend_stats[b] = {"total": 0, "applied": 0, "rolled_back": 0, "durations": []}
             bs = backend_stats[b]
             bs["total"] += 1
-            if r.applied:
+            # Success = edits match expected (handles edge cases: expected_files=[]
+            # + no edits returned = correct refusal). `applied` = produced any
+            # edit, which is NOT the same as "did the right thing".
+            success = r.edits_match_expected
+            if success:
                 bs["applied"] += 1
             if r.rolled_back:
                 bs["rolled_back"] += 1
             bs["durations"].append(r.duration_ms_plan)
 
             cat = task_cat_map.get(r.task_id, "uncategorized")
-            per_category.setdefault(cat, {}).setdefault(b, []).append(r.applied)
+            per_category.setdefault(cat, {}).setdefault(b, []).append(success)
 
-            if not r.applied or r.error_code is not None:
+            if not success or r.error_code is not None:
                 failure_taxonomy.setdefault(b, []).append(r.task_id)
 
         per_backend: dict[str, dict[str, Any]] = {}

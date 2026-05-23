@@ -45,5 +45,3 @@ Test connectivity to Perplexity API. Verify research-oriented prompts return use
 ### Dependencies: None
 ### Description: Implement a system to compare response quality between Perplexity and Claude, and provide configuration options for model selection. Create metrics for evaluating response quality (e.g., specificity, relevance, actionability). Add configuration options that allow users to specify which model to use for different types of tasks. Implement a caching mechanism to reduce API calls and costs when appropriate.
 ### Details:
-
-

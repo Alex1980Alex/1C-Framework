@@ -6,8 +6,8 @@ description: >
   обучение на опыте. Триггеры: 'классифицировать задачу', 'delegation classifier',
   'что делегировать', 'оценка делегирования', 'delegation outcome', 'delegation feedback'.
   НЕ для самого процесса делегирования — используй z-ai-delegation.
-version: 1.0.0
-updated: 2026-03-20
+version: 1.1.0
+updated: 2026-04-21
 tags: [delegation, classification, learning, token-economy, feedback-loop]
 ---
 
@@ -191,3 +191,35 @@ _ORCHESTRATOR_SIGNALS += [
 | Не делать periodic review | Правила устаревают | Каждые 20 задач: анализ + adjustment |
 | Менять матрицу по 1 case | Шум, нестабильность | Минимум 5 cases с паттерном |
 | docs = Never | Docs — идеальный кандидат для Medium | Override: docs 30+ lines = Medium |
+
+## Contextual Bandit (Iter 3, v1.1)
+
+LinUCB contextual bandit для автоматического обучения routing из outcomes.
+
+**Модуль:** `src/shared/delegation_bandit.py`
+**State:** `data/delegation-bandit.pkl` (pickle)
+**CLI:** `python -m src.shared.delegation_bandit [train|stats|dashboard]`
+
+### Warm-up стратегия
+
+| Outcomes | Режим | Логика |
+|----------|-------|--------|
+| < 20 | WARM-UP | Rule-based (_rule_based_classify) |
+| 20-50 | HYBRID | Bandit + rules majority vote |
+| > 50 | AUTONOMOUS | Pure bandit (rules fallback at low confidence) |
+
+### Интеграция
+
+- `delegation-outcome-tracker.py`: online `bandit.update(context, classification, reward)` при каждой записи
+- `z-ai-delegation-enforcer.py`: `bandit.predict(context)` при AUTONOMOUS режиме, fallback на keyword signals
+
+### Features (6-dim)
+
+| # | Feature | Encoding |
+|---|---------|----------|
+| 0 | content_type | ordinal (docs=0..template=4) |
+| 1 | line_count | min(lines/200, 1.0) |
+| 2 | has_code | bool |
+| 3 | has_architecture | bool |
+| 4 | domain | ordinal/7.0 |
+| 5 | is_code_extension | bool (.py/.ts/.bsl/.js/.go) |

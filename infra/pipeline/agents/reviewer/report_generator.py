@@ -5,36 +5,35 @@ Generates review.md artifact from analysis results.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
+from agents.reviewer.arch_checker import ArchChecker
+from agents.reviewer.diff_analyzer import DiffAnalyzer
 from agents.reviewer.models import (
-    ReviewReport,
-    ReviewIssue,
-    IssueSeverity,
-    IssueCategory,
-    ReviewVerdict,
     FileChange,
+    IssueCategory,
+    ReviewIssue,
+    ReviewReport,
     StandardCheck,
 )
-from agents.reviewer.diff_analyzer import DiffAnalyzer, AnalysisResult
-from agents.reviewer.style_checker import StyleChecker, StyleCheckResult
-from agents.reviewer.arch_checker import ArchChecker, ArchCheckResult
+from agents.reviewer.style_checker import StyleChecker
 
 
 @dataclass
 class ReviewContext:
     """Context for review generation."""
+
     project_id: str
     task_id: str
-    spec_content: Optional[str] = None
-    design_content: Optional[str] = None
-    result_content: Optional[str] = None
-    diff_text: Optional[str] = None
-    bsl_files: Dict[str, str] = field(default_factory=dict)
+    spec_content: str | None = None
+    design_content: str | None = None
+    result_content: str | None = None
+    diff_text: str | None = None
+    bsl_files: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "project_id": self.project_id,
@@ -117,10 +116,12 @@ class ReviewGenerator:
 
             # Add file to reviewed if not already from diff
             if not any(f.file_path == file_path for f in report.files_reviewed):
-                report.files_reviewed.append(FileChange(
-                    file_path=file_path,
-                    change_type="reviewed",
-                ))
+                report.files_reviewed.append(
+                    FileChange(
+                        file_path=file_path,
+                        change_type="reviewed",
+                    )
+                )
 
         # Phase 3: Check architecture
         if context.design_content:
@@ -134,10 +135,7 @@ class ReviewGenerator:
             report.issues.extend(arch_issues)
 
         # Phase 4: Standard checks
-        report.standard_checks = self._run_standard_checks(
-            context.bsl_files,
-            report.issues
-        )
+        report.standard_checks = self._run_standard_checks(context.bsl_files, report.issues)
 
         # Phase 5: Determine verdict and score
         report.verdict = report.determine_verdict()
@@ -146,10 +144,8 @@ class ReviewGenerator:
         return report
 
     def _run_standard_checks(
-        self,
-        bsl_files: Dict[str, str],
-        existing_issues: List[ReviewIssue]
-    ) -> List[StandardCheck]:
+        self, bsl_files: dict[str, str], existing_issues: list[ReviewIssue]
+    ) -> list[StandardCheck]:
         """Run standard compliance checks."""
         checks = []
 
@@ -158,32 +154,25 @@ class ReviewGenerator:
 
         # Check each standard
         for name, check_type in self.STANDARD_CHECKS:
-            passed, status, comment = self._check_standard(
-                check_type,
-                all_code,
-                existing_issues
+            passed, status, comment = self._check_standard(check_type, all_code, existing_issues)
+            checks.append(
+                StandardCheck(
+                    standard_name=name,
+                    passed=passed,
+                    status=status,
+                    comment=comment,
+                )
             )
-            checks.append(StandardCheck(
-                standard_name=name,
-                passed=passed,
-                status=status,
-                comment=comment,
-            ))
 
         return checks
 
-    def _check_standard(
-        self,
-        check_type: str,
-        code: str,
-        issues: List[ReviewIssue]
-    ) -> tuple:
+    def _check_standard(self, check_type: str, code: str, issues: list[ReviewIssue]) -> tuple:
         """Check single standard, return (passed, status, comment)."""
         import re
 
         if check_type == "naming_vars":
             # Check for short variable names
-            short_vars = re.findall(r'\bПерем\s+[а-яa-z]{1,2}\s*[,;]', code, re.IGNORECASE)
+            short_vars = re.findall(r"\bПерем\s+[а-яa-z]{1,2}\s*[,;]", code, re.IGNORECASE)
             if short_vars:
                 return False, "⚠️", f"Найдено {len(short_vars)} коротких имён"
             return True, "✅", "Имена информативны"
@@ -197,8 +186,10 @@ class ReviewGenerator:
 
         elif check_type == "comments":
             # Check for export functions without comments
-            exports = re.findall(r'(?:Функция|Процедура)\s+\w+[^)]*\)\s+Экспорт', code)
-            commented = re.findall(r'//[^\n]*\n\s*(?:Функция|Процедура)\s+\w+[^)]*\)\s+Экспорт', code)
+            exports = re.findall(r"(?:Функция|Процедура)\s+\w+[^)]*\)\s+Экспорт", code)
+            commented = re.findall(
+                r"//[^\n]*\n\s*(?:Функция|Процедура)\s+\w+[^)]*\)\s+Экспорт", code
+            )
             if exports and len(commented) < len(exports) * 0.5:
                 return False, "⚠️", f"{len(exports) - len(commented)} без комментариев"
             return True, "✅", "Экспортные методы задокументированы"
@@ -209,15 +200,15 @@ class ReviewGenerator:
             if empty_handlers:
                 return False, "❌", f"Найдено {len(empty_handlers)} пустых обработчиков"
             # Check for any try-except
-            if 'Попытка' in code and 'КонецПопытки' in code:
+            if "Попытка" in code and "КонецПопытки" in code:
                 return True, "✅", "Обработка ошибок присутствует"
             return True, "⚠️", "Явная обработка ошибок не обнаружена"
 
         elif check_type == "transactions":
             # Check transaction pattern
-            begin_trans = code.count('НачатьТранзакцию')
-            commit_trans = code.count('ЗафиксироватьТранзакцию')
-            rollback = code.count('ОтменитьТранзакцию')
+            begin_trans = code.count("НачатьТранзакцию")
+            commit_trans = code.count("ЗафиксироватьТранзакцию")
+            rollback = code.count("ОтменитьТранзакцию")
 
             if begin_trans > 0:
                 if begin_trans != commit_trans:
@@ -233,7 +224,7 @@ class ReviewGenerator:
             if sql_issues:
                 return False, "❌", f"Найдено {len(sql_issues)} уязвимостей"
             # Check for safe query patterns
-            if 'Запрос.Текст' in code and ('+" ' in code or "+ '" in code):
+            if "Запрос.Текст" in code and ('+" ' in code or "+ '" in code):
                 return False, "⚠️", "Возможна конкатенация в запросах"
             return True, "✅", "SQL-инъекции не обнаружены"
 
@@ -252,7 +243,7 @@ class ReviewGenerator:
             magic = re.findall(r'(?<!["\'])\b\d{4,}\b(?!["\'])', code)
             if magic:
                 # Filter out dates and common values
-                filtered = [m for m in magic if not (m.startswith('20') and len(m) == 8)]
+                filtered = [m for m in magic if not (m.startswith("20") and len(m) == 8)]
                 if filtered:
                     return False, "⚠️", f"Найдено {len(filtered)} магических чисел"
             return True, "✅", "Магические числа не обнаружены"
@@ -271,11 +262,7 @@ class ReviewGenerator:
         """
         return report.to_markdown()
 
-    def save_report(
-        self,
-        report: ReviewReport,
-        output_path: str
-    ) -> None:
+    def save_report(self, report: ReviewReport, output_path: str) -> None:
         """
         Save report to file.
 
@@ -284,16 +271,16 @@ class ReviewGenerator:
             output_path: Path to review.md
         """
         markdown = self.generate_markdown(report)
-        Path(output_path).write_text(markdown, encoding='utf-8')
+        Path(output_path).write_text(markdown, encoding="utf-8")
 
 
 # Convenience functions
 def generate_review(
     project_id: str,
     task_id: str,
-    diff_text: Optional[str] = None,
-    bsl_files: Optional[Dict[str, str]] = None,
-    design_content: Optional[str] = None,
+    diff_text: str | None = None,
+    bsl_files: dict[str, str] | None = None,
+    design_content: str | None = None,
 ) -> ReviewReport:
     """
     Generate code review report.
@@ -323,8 +310,8 @@ def generate_review(
 def generate_review_markdown(
     project_id: str,
     task_id: str,
-    diff_text: Optional[str] = None,
-    bsl_files: Optional[Dict[str, str]] = None,
+    diff_text: str | None = None,
+    bsl_files: dict[str, str] | None = None,
 ) -> str:
     """
     Generate review markdown directly.

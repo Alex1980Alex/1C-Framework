@@ -10,14 +10,14 @@ Provides comprehensive metrics capabilities:
 
 from __future__ import annotations
 
-import time
-import threading
 import statistics
-from enum import Enum
+import threading
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Callable
-from contextlib import contextmanager
+from enum import Enum
+from typing import Any
 
 
 class MetricType(Enum):
@@ -47,9 +47,9 @@ class MetricValue:
 
     value: float
     timestamp: datetime = field(default_factory=datetime.now)
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         result = {
             "value": self.value,
@@ -68,9 +68,9 @@ class Metric:
     metric_type: MetricType
     description: str = ""
     unit: MetricUnit = MetricUnit.NONE
-    labels: List[str] = field(default_factory=list)
+    labels: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -84,7 +84,7 @@ class Metric:
 class Counter:
     """A monotonically increasing counter metric."""
 
-    def __init__(self, name: str, description: str = "", labels: List[str] = None) -> None:
+    def __init__(self, name: str, description: str = "", labels: list[str] = None) -> None:
         self.metric = Metric(
             name=name,
             metric_type=MetricType.COUNTER,
@@ -92,14 +92,14 @@ class Counter:
             unit=MetricUnit.COUNT,
             labels=labels or [],
         )
-        self._values: Dict[tuple, float] = {}
+        self._values: dict[tuple, float] = {}
         self._lock = threading.Lock()
 
-    def _key(self, labels: Dict[str, str]) -> tuple:
+    def _key(self, labels: dict[str, str]) -> tuple:
         """Create hashable key from labels."""
         return tuple(sorted(labels.items()))
 
-    def inc(self, value: float = 1.0, labels: Dict[str, str] = None) -> None:
+    def inc(self, value: float = 1.0, labels: dict[str, str] = None) -> None:
         """Increment the counter."""
         labels = labels or {}
         key = self._key(labels)
@@ -107,7 +107,7 @@ class Counter:
         with self._lock:
             self._values[key] = self._values.get(key, 0.0) + value
 
-    def get(self, labels: Dict[str, str] = None) -> float:
+    def get(self, labels: dict[str, str] = None) -> float:
         """Get current counter value."""
         labels = labels or {}
         key = self._key(labels)
@@ -115,7 +115,7 @@ class Counter:
         with self._lock:
             return self._values.get(key, 0.0)
 
-    def get_all(self) -> List[MetricValue]:
+    def get_all(self) -> list[MetricValue]:
         """Get all counter values with labels."""
         with self._lock:
             return [
@@ -126,7 +126,7 @@ class Counter:
                 for key, value in self._values.items()
             ]
 
-    def reset(self, labels: Dict[str, str] = None) -> None:
+    def reset(self, labels: dict[str, str] = None) -> None:
         """Reset counter (use with caution)."""
         if labels:
             key = self._key(labels)
@@ -141,7 +141,7 @@ class Counter:
 class Gauge:
     """A point-in-time value metric."""
 
-    def __init__(self, name: str, description: str = "", labels: List[str] = None) -> None:
+    def __init__(self, name: str, description: str = "", labels: list[str] = None) -> None:
         self.metric = Metric(
             name=name,
             metric_type=MetricType.GAUGE,
@@ -149,14 +149,14 @@ class Gauge:
             unit=MetricUnit.NONE,
             labels=labels or [],
         )
-        self._values: Dict[tuple, float] = {}
+        self._values: dict[tuple, float] = {}
         self._lock = threading.Lock()
 
-    def _key(self, labels: Dict[str, str]) -> tuple:
+    def _key(self, labels: dict[str, str]) -> tuple:
         """Create hashable key from labels."""
         return tuple(sorted(labels.items()))
 
-    def set(self, value: float, labels: Dict[str, str] = None) -> None:
+    def set(self, value: float, labels: dict[str, str] = None) -> None:
         """Set the gauge value."""
         labels = labels or {}
         key = self._key(labels)
@@ -164,7 +164,7 @@ class Gauge:
         with self._lock:
             self._values[key] = value
 
-    def inc(self, value: float = 1.0, labels: Dict[str, str] = None) -> None:
+    def inc(self, value: float = 1.0, labels: dict[str, str] = None) -> None:
         """Increment the gauge."""
         labels = labels or {}
         key = self._key(labels)
@@ -172,11 +172,11 @@ class Gauge:
         with self._lock:
             self._values[key] = self._values.get(key, 0.0) + value
 
-    def dec(self, value: float = 1.0, labels: Dict[str, str] = None) -> None:
+    def dec(self, value: float = 1.0, labels: dict[str, str] = None) -> None:
         """Decrement the gauge."""
         self.inc(-value, labels)
 
-    def get(self, labels: Dict[str, str] = None) -> float:
+    def get(self, labels: dict[str, str] = None) -> float:
         """Get current gauge value."""
         labels = labels or {}
         key = self._key(labels)
@@ -184,7 +184,7 @@ class Gauge:
         with self._lock:
             return self._values.get(key, 0.0)
 
-    def get_all(self) -> List[MetricValue]:
+    def get_all(self) -> list[MetricValue]:
         """Get all gauge values with labels."""
         with self._lock:
             return [
@@ -196,7 +196,7 @@ class Gauge:
             ]
 
     @contextmanager
-    def track_inprogress(self, labels: Dict[str, str] = None):
+    def track_inprogress(self, labels: dict[str, str] = None):
         """Track in-progress operations."""
         self.inc(1.0, labels)
         try:
@@ -214,7 +214,7 @@ class Histogram:
         self,
         name: str,
         description: str = "",
-        labels: List[str] = None,
+        labels: list[str] = None,
         buckets: tuple = None,
     ):
         self.metric = Metric(
@@ -225,14 +225,14 @@ class Histogram:
             labels=labels or [],
         )
         self._buckets = buckets or self.DEFAULT_BUCKETS
-        self._values: Dict[tuple, List[float]] = {}
+        self._values: dict[tuple, list[float]] = {}
         self._lock = threading.Lock()
 
-    def _key(self, labels: Dict[str, str]) -> tuple:
+    def _key(self, labels: dict[str, str]) -> tuple:
         """Create hashable key from labels."""
         return tuple(sorted(labels.items()))
 
-    def observe(self, value: float, labels: Dict[str, str] = None) -> None:
+    def observe(self, value: float, labels: dict[str, str] = None) -> None:
         """Record an observation."""
         labels = labels or {}
         key = self._key(labels)
@@ -242,7 +242,7 @@ class Histogram:
                 self._values[key] = []
             self._values[key].append(value)
 
-    def get_buckets(self, labels: Dict[str, str] = None) -> Dict[float, int]:
+    def get_buckets(self, labels: dict[str, str] = None) -> dict[float, int]:
         """Get bucket counts."""
         labels = labels or {}
         key = self._key(labels)
@@ -259,7 +259,7 @@ class Histogram:
 
         return buckets
 
-    def get_count(self, labels: Dict[str, str] = None) -> int:
+    def get_count(self, labels: dict[str, str] = None) -> int:
         """Get total count of observations."""
         labels = labels or {}
         key = self._key(labels)
@@ -267,7 +267,7 @@ class Histogram:
         with self._lock:
             return len(self._values.get(key, []))
 
-    def get_sum(self, labels: Dict[str, str] = None) -> float:
+    def get_sum(self, labels: dict[str, str] = None) -> float:
         """Get sum of all observations."""
         labels = labels or {}
         key = self._key(labels)
@@ -276,7 +276,7 @@ class Histogram:
             values = self._values.get(key, [])
             return sum(values)
 
-    def get_statistics(self, labels: Dict[str, str] = None) -> Dict[str, float]:
+    def get_statistics(self, labels: dict[str, str] = None) -> dict[str, float]:
         """Get statistical summary."""
         labels = labels or {}
         key = self._key(labels)
@@ -310,7 +310,7 @@ class Histogram:
             "p99": sorted_values[int(count * 0.99)] if count > 1 else sorted_values[0],
         }
 
-    def reset(self, labels: Dict[str, str] = None) -> None:
+    def reset(self, labels: dict[str, str] = None) -> None:
         """Reset histogram."""
         if labels:
             key = self._key(labels)
@@ -329,7 +329,7 @@ class Timer:
         self,
         name: str,
         description: str = "",
-        labels: List[str] = None,
+        labels: list[str] = None,
         buckets: tuple = None,
     ):
         self.metric = Metric(
@@ -343,16 +343,17 @@ class Timer:
             name=f"{name}_seconds",
             description=description,
             labels=labels,
-            buckets=buckets or (0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 60.0, float("inf")),
+            buckets=buckets
+            or (0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 60.0, float("inf")),
         )
         self._lock = threading.Lock()
 
-    def observe(self, duration_seconds: float, labels: Dict[str, str] = None) -> None:
+    def observe(self, duration_seconds: float, labels: dict[str, str] = None) -> None:
         """Record a duration observation."""
         self._histogram.observe(duration_seconds, labels)
 
     @contextmanager
-    def time(self, labels: Dict[str, str] = None):
+    def time(self, labels: dict[str, str] = None):
         """Context manager for timing operations."""
         start = time.perf_counter()
         try:
@@ -361,11 +362,11 @@ class Timer:
             duration = time.perf_counter() - start
             self.observe(duration, labels)
 
-    def get_statistics(self, labels: Dict[str, str] = None) -> Dict[str, float]:
+    def get_statistics(self, labels: dict[str, str] = None) -> dict[str, float]:
         """Get timing statistics."""
         return self._histogram.get_statistics(labels)
 
-    def get_count(self, labels: Dict[str, str] = None) -> int:
+    def get_count(self, labels: dict[str, str] = None) -> int:
         """Get count of timings."""
         return self._histogram.get_count(labels)
 
@@ -375,10 +376,10 @@ class MetricsCollector:
 
     def __init__(self, prefix: str = "pipeline") -> None:
         self.prefix = prefix
-        self._counters: Dict[str, Counter] = {}
-        self._gauges: Dict[str, Gauge] = {}
-        self._histograms: Dict[str, Histogram] = {}
-        self._timers: Dict[str, Timer] = {}
+        self._counters: dict[str, Counter] = {}
+        self._gauges: dict[str, Gauge] = {}
+        self._histograms: dict[str, Histogram] = {}
+        self._timers: dict[str, Timer] = {}
         self._lock = threading.Lock()
 
     def _prefixed_name(self, name: str) -> str:
@@ -391,7 +392,7 @@ class MetricsCollector:
         self,
         name: str,
         description: str = "",
-        labels: List[str] = None,
+        labels: list[str] = None,
     ) -> Counter:
         """Get or create a counter."""
         full_name = self._prefixed_name(name)
@@ -409,7 +410,7 @@ class MetricsCollector:
         self,
         name: str,
         description: str = "",
-        labels: List[str] = None,
+        labels: list[str] = None,
     ) -> Gauge:
         """Get or create a gauge."""
         full_name = self._prefixed_name(name)
@@ -427,7 +428,7 @@ class MetricsCollector:
         self,
         name: str,
         description: str = "",
-        labels: List[str] = None,
+        labels: list[str] = None,
         buckets: tuple = None,
     ) -> Histogram:
         """Get or create a histogram."""
@@ -447,7 +448,7 @@ class MetricsCollector:
         self,
         name: str,
         description: str = "",
-        labels: List[str] = None,
+        labels: list[str] = None,
         buckets: tuple = None,
     ) -> Timer:
         """Get or create a timer."""
@@ -463,7 +464,7 @@ class MetricsCollector:
                 )
             return self._timers[full_name]
 
-    def collect_all(self) -> Dict[str, Any]:
+    def collect_all(self) -> dict[str, Any]:
         """Collect all metric values."""
         result = {
             "timestamp": datetime.now().isoformat(),
@@ -514,7 +515,7 @@ class MetricsCollector:
 
 
 # Global metrics collector
-_metrics: Optional[MetricsCollector] = None
+_metrics: MetricsCollector | None = None
 _metrics_lock = threading.Lock()
 
 

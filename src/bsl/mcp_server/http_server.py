@@ -74,7 +74,7 @@ class OAuth2BearerMiddleware(BaseHTTPMiddleware):
 
         # 2. OAuth2 формат: через хранилище
         if not creds:
-            creds = self.oauth2_service.validate_access_token(token)
+            creds = await self.oauth2_service.validate_access_token(token)
 
         if not creds:
             return JSONResponse(
@@ -526,7 +526,7 @@ class MCPHttpServer:
                 )
 
             # Генерируем authorization code
-            code = self.oauth2_service.generate_authorization_code(
+            code = await self.oauth2_service.generate_authorization_code(
                 login=username,
                 password=password,
                 redirect_uri=redirect_uri,
@@ -624,7 +624,7 @@ class MCPHttpServer:
                         },
                     )
 
-                result = self.oauth2_service.exchange_code_for_tokens(
+                result = await self.oauth2_service.exchange_code_for_tokens(
                     code, redirect_uri, code_verifier
                 )
                 if not result:
@@ -656,7 +656,7 @@ class MCPHttpServer:
                         },
                     )
 
-                result = self.oauth2_service.refresh_tokens(refresh_token)
+                result = await self.oauth2_service.refresh_tokens(refresh_token)
                 if not result:
                     return JSONResponse(
                         status_code=400,

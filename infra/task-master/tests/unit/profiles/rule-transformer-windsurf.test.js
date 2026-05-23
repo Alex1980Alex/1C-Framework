@@ -118,7 +118,7 @@ globs: **/*
 alwaysApply: true
 ---
 
-This references [dev_workflow.mdc](mdc:.cursor/rules/dev_workflow.mdc) and 
+This references [dev_workflow.mdc](mdc:.cursor/rules/dev_workflow.mdc) and
 [taskmaster.mdc](mdc:.cursor/rules/taskmaster.mdc).`;
 
 		// Mock file read to return our test content

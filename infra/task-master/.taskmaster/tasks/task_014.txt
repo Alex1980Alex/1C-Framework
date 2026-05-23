@@ -45,5 +45,3 @@ Review guidelines with actual AI agents to verify they can follow the procedures
 ### Dependencies: 14.1, 14.2, 14.3
 ### Description: Develop a system that dynamically adjusts task priorities based on project progress, dependencies, and external factors. This should include an algorithm for recalculating priorities, a mechanism for propagating priority changes through dependency chains, and an API for external systems to influence priorities. Implement this as a background process that periodically updates the tasks.json file.
 ### Details:
-
-

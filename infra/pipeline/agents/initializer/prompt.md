@@ -30,7 +30,7 @@
 
 ```yaml
 project_id: "GKSTCPLK-1996"
-project_path: "src/projects/configuration/251222_GKSTCPLK-1996/src"
+project_path: "configuration/251222_GKSTCPLK-1996/src"
 task_description: "Добавить новый регистр накопления для учёта остатков"
 force_rescan: false  # Игнорировать кеш
 ```
@@ -176,7 +176,7 @@ from shared.pipeline.agents.initializer import run_initializer
 
 context = run_initializer(
     project_id="GKSTCPLK-1996",
-    project_path="src/projects/configuration/251222_GKSTCPLK-1996/src",
+    project_path="configuration/251222_GKSTCPLK-1996/src",
     task_description="Добавить регистр накопления",
     force_rescan=False
 )

@@ -65,4 +65,3 @@ Update README, onboarding guides, and any developer documentation to align with 
 ### Description: Run comprehensive tests to ensure that the refactor has not introduced any regressions or broken existing functionality.
 ### Details:
 Execute automated and manual tests, focusing on areas affected by dependency management changes.
-

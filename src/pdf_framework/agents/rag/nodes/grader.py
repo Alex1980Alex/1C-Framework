@@ -17,6 +17,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.agents.rag.state import RAGState
 from src.pdf_framework.config import SelfRAGSettings
+from src.pdf_framework.prompts import GraderSignature, async_predict, is_dspy_available
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
@@ -99,6 +100,29 @@ async def grade_documents(
                     "[GRADE] Cheap LLM failed for %s, falling back: %s", result.chunk.id[:12], e
                 )
             # Fall through to Claude on failure
+
+        # DSPy path — typed GraderSignature with 3-level scoring
+        if is_dspy_available():
+            try:
+                dspy_result = await async_predict(
+                    GraderSignature,
+                    question=question,
+                    document=content_preview,
+                )
+                score = dspy_result.get("relevance_score", "").lower()
+                if score in ("relevant", "partial", "irrelevant"):
+                    is_relevant = score in ("relevant", "partial")
+                    logger.info("[GRADE] DSPy: %s for %s", score, result.chunk.id[:12])
+                    return {
+                        "chunk_id": result.chunk.id,
+                        "is_relevant": is_relevant,
+                        "reason": f"dspy: {score}",
+                        "score": result.score,
+                        "content_preview": content_preview[:100],
+                    }
+                logger.warning("[GRADE] DSPy unexpected score: %s", score)
+            except Exception as e:
+                logger.warning("[GRADE] DSPy failed for %s: %s", result.chunk.id[:12], e)
 
         base_messages = [
             SystemMessage(content=prompt["system"]),

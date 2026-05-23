@@ -134,6 +134,8 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "cooldown": "⏳",
             }
             for pname, info in stats.items():
+                if pname.startswith("_") or "status" not in info:
+                    continue
                 icon = status_icons.get(info["status"], "❓")
                 lines.append(
                     f"**{icon} {pname}** (priority {info['priority']})\n"

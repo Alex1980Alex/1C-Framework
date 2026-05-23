@@ -1,9 +1,9 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.1.1
-updated: 2026-04-14
-tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-toolkit, bsl-debugger]
+version: 2.7.0
+updated: 2026-05-11
+tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-crud, bsl-debugger, 1c-debug-hmr]
 triggers:
   - реализовать задачу 1С
   - implement 1c task
@@ -11,12 +11,20 @@ triggers:
   - реализация по ANALYSIS-REPORT
 ---
 
-# Реализация задачи 1С — 8-этапный pipeline (v2)
+# Реализация задачи 1С — 8-этапный pipeline (v2.7)
 
 > **История версий:**
+> - **v2.7.0 (2026-05-11):** интеграция `1c-debug-hmr` в Этап 0 (preflight через `debug_health_check`) и Этап 5 (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки, regression diff через `debug_session_diff` против baseline `prev_session_id` из footer'а IMPLEMENTATION-PROGRESS.md). Capability matrix расширена осью `1c-debug-hmr` с новым режимом **Full (no-BP)** — pipeline работает при отсутствии debug-hmr, BP-verification SKIP. Шаблон IMPLEMENTATION-PROGRESS.md получил блок «Debug session» и footer-маркер `<!-- debug_session_id: <UUID> -->`. Этап 4 актуализирован: переход с `1c-debug` (plain) на `1c-debug-hmr` (default), plain оставлен через `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` для CI. Pre-existing rphost gap покрыт через `force_recycle_rphost=True` (Solution A) для dev и опциональный thin client `/Debug` (Solution C) для shared base. Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 (§3.1+§3.2+§3.3).
+> - **v2.6.2 (2026-05-08):** добавлено **Ограничение 3** в раздел «Известные ограничения 1c-mcp-crud» — `execute_code` запрещает `Возврат` вне процедуры/функции (фрагмент оборачивается в анонимный top-level блок, не тело функции). Workaround — переписывать ранние выходы через ветвление `Если/Иначе` с присваиванием `Результат` в каждой ветке. Источник — известное ограничение, обнаруженное в ходе e2e GKSTCPLK-2182-A 2026-05-07 ([roadmap §7](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md#7-validation-end-to-end-2026-05-07)). Никакого нового кода / decision gate / tools — только формулировка раздела ограничений.
+> - **v2.6.1 (2026-05-07):** follow-up к v2.6.0 после повторного e2e на той же сессии. **Этап 8 — переписан layout-блок** под точную 3-уровневую структуру. v2.6.0 описывала main как «tracks два submodule напрямую», но фактически **оба** submodule-пути проходят через обычную (не-git) подпапку: `configuration/` и `ИБTransportManagementDevelop/` — это level 2, регулярные директории main repo без своего `.git/`; submodule (gitlink) сидит на level 3 (`configuration/<TaskFolder>/`, `ИБTransportManagementDevelop/Конфигурация/`). Уточнено что path в индексе main хранится цельным (`"configuration/260304_GKSTCPLK-2182…"`, `"ИБTransportManagementDevelop/Конфигурация"`) и что `git add <subfolder>` без слеша/подсуба родителя — это **другая операция** (модификация level-2 директории), а не bump submodule. Diagnostic-пример обновлён ровно под этот layout. Никакого нового кода / нового decision gate / новых tools — только формулировка Этапа 8.
+> - **v2.6.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2182-A (АРМ «Композитные пробы»). Две правки. **Этап 1 — path-fallback:** ANALYSIS-REPORT'ы пишут Designer-style пути (`Documents/<Имя>/Ext/ManagerModule.bsl`, `DataProcessors/<Имя>/Forms/<Форма>/Ext/Form/Module.bsl`); EDT в проекте flatten'ит их до своих абсолютных путей (напр. `DataProcessors/гкс_АРМКомпозитныеПробы/Forms/Форма/Module.bsl`). При этом `read_method_source(project, <designer_path>, ...)` падает с `File not found`. Добавлен явный шаг-fallback: при File-not-found → `list_modules(project, objectName=<ИмяОбъектаКонфигурации>)` → перебрать возвращённые `module_path`, выбрать совпадающий по типу модуля (Manager / Object / Form), повторить `read_method_source` с EDT-путём. Зафиксировать соответствие Designer→EDT в IMPLEMENTATION-PROGRESS.md (для будущих правок этой же задачи). **Этап 8 — layout:** диаграмма «трёх уровней вложенности» в v2.5.0 описывала `ИБTransportManagementDevelop/` как отдельный standalone-репо (НЕ submodule main). E2e-валидация 2026-05-07 (4 коммита в 3 репозиториях: `d3db501` BSL → `71a9ba481` main gitlink Конфигурация → `c6616817` docs submodule PROGRESS → `907b89ce1` main gitlink configuration) показала: фактически main repo tracks **два submodule напрямую** — `configuration/<TaskFolder>` (документация) и `ИБTransportManagementDevelop/Конфигурация` (BSL-исходники). Папка `ИБTransportManagementDevelop/` сама — обычная подпапка main repo, не отдельный git-репозиторий. Промежуточного «middle repo» с собственным `.git` нет; шаг 2 v2.5.0 (commit gitlink в `ИБTransportManagementDevelop`) удалён. Diagnostic-блок переписан под new-layout (`git ls-files --stage ИБTransportManagementDevelop/Конфигурация` ожидает entry с mode 160000).
+> - **v2.5.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2335. **Этап 4** — явный graceful-skip для `bsl_analyze` на production BSL: OneScript-парсер падает на директивах препроцессора `#Если ... Тогда` и chained-вызовах вида `Запрос.Выполнить().Пустой()` (стандартные 1С-конструкции). Если EDT `get_project_errors` = 0, ошибки `bsl_analyze` на этих паттернах фиксируем как tool-limitation и идём дальше. **Этап 6** — добавлен ОБЯЗАТЕЛЬНЫЙ шаг 0 «Обновление БД» через `mcp__edt-mcp__update_database` (или ручной EDT → Update Database) ПЕРЕД любым `execute_code`-вызовом изменённой функции; без этого live-инфобаза работает на старой скомпилированной конфигурации и `execute_code` возвращает старое поведение. **Этап 8** — переписан раздел git: 3-уровневая структура repo (main / submodule / nested standalone), запрет `git add <submodule-dir>` (подцепляет untracked), pattern `git -c user.name=... -c user.email=...` для submodule без локальной identity (CLAUDE.md запрещает `git config`). Добавлен раздел [Известные ограничения 1c-mcp-crud](#известные-ограничения-1c-mcp-crud) с workaround'ами для сериализации ссылок (`ПРЕДСТАВЛЕНИЕ()`) и пустого `attributes:[]` для регистров.
+> - **v2.4.0 (2026-05-07):** в Preflight добавлен **TCP-probe** портов `:8765` (edt-mcp) и `:1550` (1С debug agent) — отдельный сигнал от наличия MCP-tool в сессии. Добавлен **fallback для Этапа 5** (`find_references` через `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph`; `get_project_errors` через `bsl-debugger:bsl_analyze` per-file). Кросс-ссылки на новый раздел [16.6 EDT-MCP setup](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) и smoke-test `scripts/smoke_test_implement_1c_task.py`. Триггер изменений — выполнение Phase 4 + 5 [roadmap'а 260505](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md).
+> - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
+> - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
 > - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
 > - **v2.1.0 (2026-04-14):** добавлен Этап 0 (откачен).
-> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-toolkit + bsl-debug-server.
+> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-crud + bsl-debug-server.
 
 ## Overview
 
@@ -26,7 +34,7 @@ Skill для реализации задачи по конфигурации 1С
 
 **Отличия v2 от v1:**
 - EDT-MCP: чтение/запись BSL-модулей прямо в проект EDT, валидация запросов, проверка ошибок
-- 1c-mcp-toolkit: верификация SQL на живых данных ДО записи, подготовка тестовых данных, проверка результатов ПОСЛЕ
+- 1c-mcp-crud: верификация SQL на живых данных ДО записи, подготовка тестовых данных, проверка результатов ПОСЛЕ
 - bsl-debug-server: статический анализ BSL-кода, отладка чистой логики в OneScript
 
 ## Входные данные
@@ -53,8 +61,10 @@ Skill для реализации задачи по конфигурации 1С
 | `get_content_assist` | Этап 3: автодополнение имён (перечисления, регистры, методы) |
 | `search_in_code` | Этап 1, 5: поиск паттернов в коде проекта |
 | `get_symbol_info` | Этап 1: информация о символе (тип, параметры) |
+| `get_applications` | Этап 6: получить applicationId работающего инфобейса (вход для update_database) |
+| `update_database` | Этап 6: обновить конфигурацию БД ПЕРЕД live-вызовом изменённой функции (shared-state action — спросить пользователя) |
 
-### 1c-mcp-toolkit — верификация на живых данных
+### 1c-mcp-crud — верификация на живых данных
 
 | Инструмент | Когда использовать |
 |---|---|
@@ -78,21 +88,99 @@ Skill для реализации задачи по конфигурации 1С
 **Ограничение bsl-debug-server:** Работает через OneScript, НЕ через 1С:Предприятие.
 Нет доступа к объектам 1С (Документы, Регистры, Справочники). Подходит ТОЛЬКО для:
 - Проверки чистой логики (условия, циклы, формирование массивов)
-- Статического анализа (bsl_analyze) — работает с любым BSL-кодом
-- НЕ подходит для запросов к базе — для этого используй 1c-mcp-toolkit
+- Статического анализа (bsl_analyze) — но **с известными false-positive'ами на стандартных 1С-конструкциях** (директивы препроцессора `#Если ... Тогда`, chained `Запрос.Выполнить().Пустой()`). См. Этап 4 → graceful skip.
+- НЕ подходит для запросов к базе — для этого используй 1c-mcp-crud
+
+### 1c-debug-hmr — live отладка через RDBG (HMR wrapper, default since 2026-05-10)
+
+`1c-debug-hmr` обёрнут HMR subprocess'ом (`mcp_hmr_proc.py`) — wrapper reload'ит сервер при изменении `mcp_debug_server.py` / `bsl_locals.py` / `uuid_index.py` без потери session к dbgs (persistence через `data/debug_sessions/.active.json`). Используется по умолчанию в Этапе 0 (`debug_health_check`) и Этапе 5.x (BP-verification).
+
+Plain `1c-debug` (без HMR) — оставлен как CI/production-вариант (нет watcher overhead'а); переключение через env-флаг `IMPLEMENT_1C_USE_PLAIN_DEBUG=true`.
+
+| Инструмент | Когда использовать |
+|---|---|
+| `debug_health_check` | Этап 0: structured probe среды (`mode="probe"` / `"prepare"`); <1с вместо 5-7 manual TCP/HTTP probes |
+| `debug_connect` | Этап 0 / Этап 5.x: attach как Debug UI к dbgs.exe :1550 (**сначала** Shift+F5 в Конфигураторе/EDT — иначе `ibInDebug`). `force_recycle_rphost=True` — Solution A для pre-existing rphost gap |
+| `debug_set_breakpoint` | Этап 5.x (шаг 2): BP в новой/изменённой процедуре через UUID метаданных, `propertyID` auto-resolve |
+| `debug_get_breakpoints` | Этап 5.x (шаг 3): verify BP в client cache |
+| `debug_break_on_next` | Этап 5.x (fallback a): catch-all для следующей BSL-операции в attached rphost |
+| `debug_ping` | Этап 5.x (шаг 5): диспатч событий (targetStarted/callStackFormed/rteProcessing); также крутится в фоне `_ping_loop` |
+| `debug_stack_trace` | Этап 5.x (шаг 6): кадры stack'а в момент остановки (cache hit из push event, без явного `target_id`) |
+| `debug_variables` | Этап 5.x (шаг 7): локальные переменные в текущем кадре (auto-resolve через `last_stopped_target_id`) |
+| `debug_evaluate` | Этап 5.x: любое BSL-выражение в контексте остановки (composite types до 4096 char) |
+| `debug_step` | Этап 5.x (шаг 8): Continue / Step / StepIn / StepOut |
+| `debug_session_summary` | Этап 7: вывод session-метрик (BP fire, eval, UI+ retries) в IMPLEMENTATION-PROGRESS |
+| `debug_session_diff` | Этап 5.y: regression diff против baseline `prev_session_id` из footer'а PROGRESS |
+| `debug_disconnect` | Этап 5.x: clean teardown (опционально — HMR session переживает reload) |
+
+**Когда применять:** в режиме **Full** — по умолчанию для BP-verification всех `[ADDED]`/`[MODIFIED]` точек (Этап 5.x). В режиме **Full (no-BP)** — SKIP с пометкой. См. [16.7 Autonomous Debug Workflow](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) §16.7.10 для setup и [36.7 HMR Subprocess Wrapper](../../../docs/framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md) для HMR-специфики. Skill: [1c-debug-hmr](../1c-debug-hmr/SKILL.md).
 
 ### Вспомогательные
 
 | Инструмент | Когда использовать |
 |---|---|
 | `bsl-semantic-search` | Этап 1: поиск похожего кода в конфигурации |
+| `bsl-semantic-search` (refactor) | Этап 3: `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after/before_method` — **только для refactoring-задач** (см. условный этап 3R ниже) |
 | `bsl-platform-context` | Этап 3: API платформы 1С (методы, свойства, типы) |
-| `Serena` | Этап 1: символьный анализ кода (если EDT-MCP недоступен) — **НЕ работает на BSL**, см. [аудит](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) |
 | `Grep/Glob` | Этап 1: поиск файлов и паттернов на диске |
 
 ---
 
 ## 8 этапов реализации
+
+### Этап 0: Preflight — проверка доступности MCP-серверов (ОБЯЗАТЕЛЬНО)
+
+**Цель:** До чтения ANALYSIS-REPORT убедиться, что инструменты pipeline зарегистрированы в текущей сессии. Без этой проверки skill уходит в этапы, где нужные tool-вызовы просто не существуют, и тратит итерации впустую.
+
+**Шаги:**
+
+1. Проверить три ключевых сервера через `ToolSearch` (или прямой вызов любого ping-tool сервера):
+
+   | Сервер | Probe-вызов | Ожидание |
+   |---|---|---|
+   | `edt-mcp` | `mcp__edt-mcp__list_projects` (или `ToolSearch query: "edt"`) | в результатах есть `mcp__edt-mcp__*` |
+   | `1c-mcp-crud` | `mcp__1c-mcp-crud__get_metadata` (или `ToolSearch query: "+1c crud"`) | в результатах есть `mcp__1c-mcp-crud__*` |
+   | `bsl-debug-server` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
+
+2. **TCP-probe ключевых портов** — отдельный сигнал от наличия MCP-tool в сессии (tool может быть зарегистрирован, но HTTP-bridge упасть):
+
+   | Порт | Сервис | Команда | Ожидание |
+   |---|---|---|---|
+   | `:8765` | EDT-MCP HTTP-bridge | `Test-NetConnection -ComputerName localhost -Port 8765 -InformationLevel Quiet` | `True` для режимов **Full** и **Code-only** |
+   | `:1550` | 1С debug agent (`ragent.exe -debug`) | `Test-NetConnection -ComputerName localhost -Port 1550 -InformationLevel Quiet` | `True` только если нужна runtime-отладка в Этапе 4 |
+
+   Альтернатива одной командой:
+   ```powershell
+   python scripts/smoke_test_implement_1c_task.py
+   ```
+   Скрипт парсит [.mcp.json](../../../.mcp.json), TCP-probe + MCP-handshake, возвращает exit-code `0` (Full) / `1` (degraded) / `2` (unusable). Подробности: [16.6 EDT-MCP setup](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md).
+
+3. **Debug environment health** — вызвать `mcp__1c-debug-hmr__debug_health_check(mode="probe")` (structured <1с health-check вместо 5-7 manual probes). Парсить ответ:
+
+   - `ready: true` → BP-verification в Этапе 5 доступна, продолжить
+   - `ready: false` + непустой `auto_prepare_available[]` → предложить пользователю prepare-actions (whitelist: kill-stale-rphosts, restart-ragent через `mode="prepare"`); НЕ запускать без подтверждения (shared-state action)
+   - `ready: false` + manual fix only → BP-verification в Этапе 5 будет SKIP с пометкой; surface `recommended_workflow` token из ответа
+   - tool недоступен (debug-hmr не зарегистрирован) → fallback к `mcp__1c-debug__*` (plain wrapper), либо BP-verification SKIP
+
+4. Сопоставить результат с матрицей капабилити:
+
+   | edt-mcp | 1c-mcp-crud | bsl-debug-server | 1c-debug-hmr | Режим pipeline |
+   |---|---|---|---|---|
+   | ✓ | ✓ | ✓ | ✓ | **Full** — все 8 этапов работают как описано, Этап 5 включает BP-verification |
+   | ✓ | ✓ | ✓ | ✗ | **Full (no-BP)** — все этапы работают, Этап 5 BP-verification SKIP (заметка в IMPLEMENTATION-PROGRESS) |
+   | ✓ | ✗ | * | * | **Code-only** — Этапы 1, 3 (write), 4, 5, 7, 8. Этап 2 — только `validate_query` (синтаксис), без `execute_query`. Этап 6 — SKIP с пометкой "ожидает ручного тестирования". BP-verification доступна если debug-hmr ✓ |
+   | ✗ | ✓ | * | * | **Read-only verify** — Этап 2 на данных, Этап 6 на данных. Запись кода невозможна (нет `write_module_source`) → STOP с просьбой запустить EDT |
+   | ✗ | ✗ | * | * | **Read-only research** — только Этап 1 через fallback (см. ниже), сбор контекста. Запись и валидация невозможны → STOP перед Этапом 2 |
+
+   `1c-debug-hmr` — ортогональная ось: его отсутствие НЕ блокирует pipeline, только отключает live BP-verification в Этапе 5 (см. §5.x). Smoke-test `scripts/smoke_test_implement_1c_task.py --json` отражает доступность в поле `mcp_health.debug_hmr`.
+
+5. Если режим не **Full** — сообщить пользователю явно: какие серверы отсутствуют, какие этапы будут пропущены, что нужно поднять (EDT на `localhost:8765`, путь к `1c-mcp-crud` в `.mcp.json`, см. [16.6](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md)). Если debug-hmr unavailable но pipeline-mode иначе Full — это **Full (no-BP)**, не блокировать, только warn. Дождаться решения: продолжить в деградированном режиме или прервать.
+
+6. Сохранить выбранный режим в IMPLEMENTATION-PROGRESS.md под заголовком `Pipeline mode: Full | Full (no-BP) | Code-only | Read-only verify | Read-only research`. Если debug-hmr ✓ — также записать `debug_session_id` (из `debug_health_check` response или `debug_connect` Этапа 5) в footer файла как `<!-- debug_session_id: <UUID> -->` (используется в §5.x regression diff на повторных прогонах той же задачи).
+
+**Контрольная точка:** Известен режим pipeline. Все последующие этапы выполняются с учётом ограничений режима.
+
+---
 
 ### Этап 1: Подготовка
 
@@ -106,12 +194,16 @@ Skill для реализации задачи по конфигурации 1С
    - Порядок выполнения
    - Зависимости между точками
 
-2. Определить проект EDT:
+2. Определить проект EDT (**режим Full / Code-only**):
    ```
    EDT-MCP: list_projects → получить имя проекта (напр. "УправлениеТранспортомНаПЛК")
    ```
 
+   **Fallback (режим Read-only research, edt-mcp недоступен):** имя проекта берётся из пути src/ в ANALYSIS-REPORT (обычно `<repo>/configuration/<TaskFolder>/src/` или `ИБTransportManagementDevelop/src/`). Имя «проекта EDT» в этом режиме не используется как идентификатор — все обращения идут к файлам напрямую.
+
 3. Для КАЖДОЙ точки модификации:
+
+   **Основной путь (edt-mcp доступен):**
    ```
    EDT-MCP: get_module_structure(project, module_path)
      → получить актуальные номера строк методов
@@ -119,10 +211,42 @@ Skill для реализации задачи по конфигурации 1С
      → получить текущий код точки вставки
    ```
 
-4. Сверить номера строк из ANALYSIS-REPORT с актуальными из EDT-MCP.
-   Если расхождение — использовать актуальные номера.
+   **Path-fallback при File-not-found (Designer→EDT flatten):**
 
-**Контрольная точка:** Для каждой точки модификации известны актуальные строки и текущий код.
+   ANALYSIS-REPORT'ы используют Designer-style пути из выгрузки конфигурации (например `Documents/<Имя>/Ext/ManagerModule.bsl`, `DataProcessors/<Имя>/Forms/<Форма>/Ext/Form/Module.bsl`). EDT в открытом проекте хранит модули по своему layout'у (`DataProcessors/<Имя>/Forms/<Форма>/Module.bsl` без `Ext/Form/`). При расхождении `read_method_source(project, <designer_path>, ...)` падает с `File not found`.
+
+   ```
+   EDT-MCP: list_modules(project, objectName="<ИмяОбъектаКонфигурации>")
+     → массив { module_path, module_type } для всех модулей объекта
+   ```
+
+   Из массива выбрать `module_path` совпадающий по типу (`ManagerModule` / `ObjectModule` / `FormModule` / `CommandModule`) и повторить `read_method_source` с EDT-путём. Соответствие Designer→EDT зафиксировать в IMPLEMENTATION-PROGRESS.md, чтобы последующие точки той же задачи использовали уже разрешённый путь без повторного fallback'а.
+
+   **Fallback (edt-mcp недоступен):** структура модуля и тело метода читаются без EDT.
+   ```
+   bsl-code-search: get_module_ast(file_path)
+     → процедуры/функции в модуле (имена + диапазоны строк)
+   ИЛИ
+   bsl-semantic-search: bsl_object_info(object_name)
+     → метаданные объекта + список модулей + call graph stats
+   bsl-semantic-search: bsl_coding_context(object_name, task_description)
+     → агрегированный контекст: object info + dependencies + style + similar code
+
+   Read(file_path, offset=method_start_line, limit=method_length)
+     → текущий код точки вставки (через стандартный Read)
+   ```
+
+   **Ограничения fallback'а** (зафиксировать в IMPLEMENTATION-PROGRESS.md):
+   - Нет `get_content_assist` — автодополнение имён перечислений/регистров недоступно, проверять вручную через `bsl-platform-context` или `Grep` по конфигурации.
+   - Нет `get_symbol_info` — типы параметров/возвращаемых значений выводить из сигнатуры в `get_module_ast` или из аннотаций кода.
+   - Нет `search_in_code` по проекту EDT — заменяется на `Grep` + `bsl_search` (семантический).
+
+4. Сверить номера строк из ANALYSIS-REPORT с актуальными.
+   - **Full / Code-only:** актуальные = из EDT-MCP.
+   - **Read-only research:** актуальные = из `get_module_ast`.
+   Если расхождение — использовать актуальные номера и зафиксировать в IMPLEMENTATION-PROGRESS.md.
+
+**Контрольная точка:** Для каждой точки модификации известны актуальные строки и текущий код. Источник (EDT-MCP / bsl-code-search) задокументирован.
 
 ---
 
@@ -142,7 +266,7 @@ Skill для реализации задачи по конфигурации 1С
 
 3. Если validate_query прошёл — проверить на живых данных:
    ```
-   1c-mcp-toolkit: execute_query(query_text_with_test_params)
+   1c-mcp-crud: execute_query(query_text_with_test_params)
      → убедиться что запрос возвращает ожидаемые данные
    ```
 
@@ -150,7 +274,7 @@ Skill для реализации задачи по конфигурации 1С
 
 5. Проверить имена полей:
    ```
-   1c-mcp-toolkit: get_metadata(object_type, object_name)
+   1c-mcp-crud: get_metadata(object_type, object_name)
      → сверить имена полей в запросе с метаданными
    ```
 
@@ -167,6 +291,56 @@ Skill для реализации задачи по конфигурации 1С
 ### Этап 3: BSL-изменения
 
 **Цель:** Внести код в модули **строго в порядке** из ANALYSIS-REPORT.
+
+#### Decision gate: рефакторинг или новый функционал?
+
+Перед началом Этапа 3 для каждой точки модификации определить тип операции:
+
+| Тип операции | Признак | Путь |
+|---|---|---|
+| **Новый функционал** | Добавление новой процедуры/реквизита/формы/подсистемы; вставка строк в существующий метод | **Стандартный Этап 3** (EDT-MCP `write_module_source`) |
+| **Рефакторинг** | Переименование процедуры/переменной/параметра; замена тела существующего метода целиком; safe delete с проверкой references | **Этап 3R** (см. ниже) — активировать [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) |
+| **Гибрид** | Новый функционал + попутное переименование существующих символов | Сначала Этап 3R (рефакторинг), потом Этап 3 (новый код) |
+
+**Критерий однозначный:** если существующий символ меняет имя/удаляется/заменяется тело — это рефакторинг, `bsl_rename_symbol` / `bsl_replace_method_body` / `bsl_safe_delete_symbol`. Если только добавляются новые символы или строки внутри метода — это не рефакторинг, стандартный путь.
+
+#### Этап 3R: Рефакторинг через bsl-semantic-search refactor (условный)
+
+**Применяется только если decision gate определил операцию как рефакторинг.**
+
+1. **Классифицировать символ** (routing matrix v2 — `src/bsl/semantic_search/refactor/routing_matrix.yaml`):
+   - `local_variable` / `parameter` / `module_local_proc` → ast-grep in-file (confidence 0.95)
+   - `module_export_proc` → ast-grep cross-file через Neo4j граф (confidence 0.85)
+   - `form_handler` → ast-grep + XML (confidence 0.95 после R5.5 calibration)
+   - `unknown` / динамические вызовы (`Выполнить()`) → **manual tier**
+
+2. **Вызвать нужный инструмент** (ВСЕГДА сначала `dry_run: true`):
+   ```
+   mcp__bsl-semantic-search__bsl_rename_symbol(
+       uri: "file:///path/to/Module.bsl",
+       line: N, character: M,
+       new_name: "НовоеИмя",
+       dry_run: true
+   )
+   ```
+   Или `bsl_replace_method_body` / `bsl_insert_after_method` — см. [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md).
+
+3. **Проверить план** (dry_run response):
+   - `status: "plan"` → показать `files_affected` + `edits`
+   - `status: "manual_required"` → переключиться на manual tier (Grep + Edit)
+
+4. **Подтвердить изменения** (`dry_run: false` с `confirm_token` из plan).
+
+5. **Верифицировать через EDT-MCP:**
+   ```
+   EDT-MCP: get_project_errors(project, severity="ERROR") → 0 ошибок
+   ```
+
+6. **Логировать в IMPLEMENTATION-PROGRESS.md:** backend (ast-grep/multilspy/manual), confidence, N файлов изменено.
+
+Полный workflow: [bsl-refactoring-workflow/SKILL.md](../bsl-refactoring-workflow/SKILL.md).
+
+#### Стандартный Этап 3: Новый функционал (EDT-MCP)
 
 **Цикл для КАЖДОЙ точки модификации (в порядке выполнения):**
 
@@ -212,17 +386,19 @@ Skill для реализации задачи по конфигурации 1С
 
 1. Для каждого изменённого модуля:
    ```
-   bsl-debug-server: bsl_analyze(file_path_or_code)
+   bsl-debug-server: bsl_analyze(file=<absolute_path>)
      → получить предупреждения и ошибки линтера
    ```
 
-2. Для новых процедур с чистой логикой (без обращений к базе):
+2. **Если `bsl_analyze` падает с parse error** — проверить, попадает ли ошибка в список known false-positive'ов (см. ниже). Если да — фиксируем как tool-limitation и считаем этап пройденным (EDT-валидация в Этапе 3 уже подтвердила корректность кода). Если нет — есть реальная ошибка, исправлять через Этап 3.
+
+3. Для новых процедур с чистой логикой (без обращений к базе):
    ```
    bsl-debug-server: bsl_execute(code_fragment)
      → проверить что логика работает (условия, циклы, массивы)
    ```
 
-3. При сложной логике (вложенные циклы, условия) — пошаговая отладка:
+4. При сложной логике (вложенные циклы, условия) — пошаговая отладка:
    ```
    bsl-debug-server: bsl_debug_start(file, breakpoints)
    bsl-debug-server: bsl_debug_step(session, "stepInto")
@@ -231,14 +407,50 @@ Skill для реализации задачи по конфигурации 1С
    bsl-debug-server: bsl_debug_stop(session)
    ```
 
-4. Исправить найденные проблемы (повторить Этап 3 для исправлений).
+5. **Live runtime debug в Этапе 4 — экспериментальный шаг, НЕ путать с обязательной BP-verification Этапа 5.x.**
 
-**Контрольная точка:** bsl_analyze возвращает 0 ошибок и 0 критичных предупреждений.
+   Этот шаг используется опционально для проверки сложной чистой логики (вложенные циклы по runtime-данным) ДО выхода в Этап 5. Обязательная live-валидация изменённого кода против ANALYSIS-REPORT — это **Этап 5.x BP verification** (8-шаговый протокол), а не этот шаг.
 
-**Когда ПРОПУСТИТЬ bsl_execute/bsl_debug:**
+   Базовый вызов (через `1c-debug-hmr` MCP, fallback к `1c-debug`):
+   ```
+   1c-debug-hmr: debug_connect(infobase_alias="<база>")  # если не connected с Этапа 0
+   1c-debug-hmr: debug_set_breakpoint(object_id="<UUID>", line=42, module_type="ObjectModule")
+   1c-debug-hmr: debug_ping()
+   ```
+   После срабатывания BP (post-BP-fire handshake, roadmap §13 / 2026-05-09):
+   ```
+   1c-debug-hmr: debug_stack_trace()       # без target_id — auto-resolve last_stopped
+   1c-debug-hmr: debug_variables()         # значения переменных в кадре stop'а
+   1c-debug-hmr: debug_evaluate(expression="Контрагент.ИНН")
+   1c-debug-hmr: debug_step(action="StepIn")
+   1c-debug-hmr: debug_step(action="Continue")  # release rphost
+   ```
+   Smoke-проверка инфраструктуры до начала: `python scripts/smoke_test_debug_pipeline.py --probe-only --json` — exit_code=0 значит handshake OK. Если `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` — заменить `1c-debug-hmr` на `1c-debug`.
+
+6. Исправить найденные **реальные** проблемы (повторить Этап 3 для исправлений).
+
+**Контрольная точка:**
+- EDT `get_project_errors(severity="ERRORS") = 0` (авторитетный источник для 1С) — ОБЯЗАТЕЛЬНО
+- `bsl_analyze` = 0 ошибок ИЛИ все ошибки попадают в known false-positive'ы
+
+**Known false-positive'ы `bsl_analyze` (OneScript-парсер ≠ 1С-компилятор):**
+
+| Паттерн | Сообщение парсера | Корректное поведение |
+|---|---|---|
+| `#Если ТолстыйКлиентОбычноеПриложение Или Сервер ... Тогда` (директива препроцессора в строке 1) | `Неожиданный токен: Тогда` | Стандартная BSL-директива препроцессора. EDT компилирует. Игнорировать. |
+| `Запрос.Выполнить().Пустой()` (chained method call) | `Ожидается имя свойства` | Стандартный паттерн 1С. Игнорировать. |
+| `НовыйОбъект.Записать(РежимЗаписиДокумента.Проведение)` (composite ref в аргументе) | разные | Если EDT принимает — игнорировать. |
+
+**Workaround при padении на препроцессоре:** передавать в `bsl_analyze(source=<тело_метода>)` только тело новой функции (без директив препроцессора), а не весь файл через `file=...`.
+
+**Когда ПРОПУСТИТЬ bsl_execute/bsl_debug (но НЕ bsl_analyze):**
 - Код состоит только из вызовов методов 1С (РегистрыСведений, Документы)
 - Код — простой SQL-запрос + проверка результата
-- В этих случаях достаточно bsl_analyze
+- В этих случаях достаточно bsl_analyze (или его graceful-skip)
+
+**Логирование в IMPLEMENTATION-PROGRESS.md:**
+- `bsl_analyze: 0 errors / N warnings` — успех
+- `bsl_analyze: SKIP (OneScript false-positive on <pattern>); EDT errors = 0` — tool-limitation, проверка через EDT
 
 ---
 
@@ -249,25 +461,101 @@ Skill для реализации задачи по конфигурации 1С
 **Шаги:**
 
 1. Для каждого изменённого/нового метода:
+
+   **Основной путь (edt-mcp доступен):**
    ```
    EDT-MCP: find_references(project, module, symbol)
      → найти все места вызова
    ```
 
+   **Fallback (edt-mcp недоступен, режим Read-only research):**
+   ```
+   bsl-code-search: find_callers(symbol_name)
+     → AST-уровень: прямые вызовы по конфигурации
+   bsl-semantic-search: bsl_call_graph(object_name, depth=2)
+     → семантический граф зависимостей через Neo4j
+   ```
+   Ограничение: оба fallback'а работают по индексу, не учитывают live-проект EDT — могут пропустить недавно добавленные вызовы (до переиндексации). Зафиксировать в IMPLEMENTATION-PROGRESS.md.
+
 2. Проверить общие ошибки проекта:
+
+   **Основной путь (edt-mcp доступен):**
    ```
    EDT-MCP: get_project_errors(project, severity="ERROR")
    EDT-MCP: get_project_errors(project, severity="WARNING")
      → убедиться что новых ошибок/предупреждений не появилось
    ```
 
+   **Fallback (edt-mcp недоступен):**
+   ```
+   bsl-debugger: bsl_analyze(file_path) для каждого изменённого .bsl
+     → статический линтер по локальному файлу (без cross-module проверки)
+   ```
+   В режиме без EDT cross-module ошибки (несовпадение сигнатур, отсутствующие модули) обнаружить нельзя — отметить как «требует EDT-валидации перед merge».
+
 3. Если в ANALYSIS-REPORT указаны объекты-источники данных:
    ```
-   1c-mcp-toolkit: get_metadata(object_type, object_name)
+   1c-mcp-crud: get_metadata(object_type, object_name)
      → финальная проверка что все используемые поля существуют
    ```
 
-**Контрольная точка:** Нет новых ошибок, все ссылки на изменённые методы корректны.
+#### Этап 5.x: Live BP verification (ОБЯЗАТЕЛЬНО при режиме Full, SKIP при Full (no-BP))
+
+**Цель:** доказать live-trace'ом что новый код действительно исполняется по ожидаемому пути. EDT `get_project_errors=0` означает «компилируется», но НЕ означает «вызывается». Без BP-trace pipeline может пропустить случай, когда `[MODIFIED]` точка изменена в другом месте, чем планировалось (например, реализация изменила процедуру Б случайно вместо процедуры А из ANALYSIS-REPORT).
+
+**Когда применяется:** для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки модификации из ANALYSIS-REPORT. Точки `[REFACTOR]` (rename / replace body / safe delete) — BP не требуется (изменение тождественно по поведению).
+
+**8-шаговый протокол** (для одной точки модификации):
+
+1. `mcp__1c-debug-hmr__debug_connect(infobase_alias=<имя из workspace>)` — если ещё не connected с Этапа 0. Ответ: `{status: "connected", session_id, attach: "registered"}`.
+2. `mcp__1c-debug-hmr__debug_set_breakpoint(object_id=<UUID>, line=<MODIFIED_LINE>, module_type=<TYPE>)` — `object_id` берётся из EDT-MCP `get_metadata_details(fqn)` или из ANALYSIS-REPORT (если автор указал UUID); `module_type` ∈ {`ObjectModule`, `ManagerModule`, `FormModule`, `CommandModule`, `ValueManagerModule`, `RecordSetModule`}. Wrapper auto-resolves `propertyID`.
+3. `mcp__1c-debug-hmr__debug_get_breakpoints` — verify BP в client cache; ожидаем enabled=true, lineNo совпадает.
+4. **Триггер выполнения** (выбрать один из):
+   - `mcp__1c-mcp-crud__execute_code` с минимальным BSL-harness'ом, вызывающим изменённую процедуру (например, `НовыйОбъект = Документы.<Имя>.СоздатьДокумент(); НовыйОбъект.<Поле> = ...; НовыйОбъект.Записать(РежимЗаписиДокумента.Проведение);`)
+   - `mcp__1c-mcp-crud__execute_query` для HTTP-сервисов / регистров — если изменения в SDBL-логике
+   - **ВАЖНО:** harness должен вызывать обновлённую конфигурацию БД — убедиться что шаг 0 Этапа 6 (`update_database`) выполнен ДО триггера, иначе BP fire на старой версии или вообще не fire'нет
+5. `mcp__1c-debug-hmr__debug_ping` — wait for `callStackFormed` event (max 3 ping iterations с паузой ~500ms между ними). Ответ содержит `last_stopped_target_id` после fire.
+6. **Если stopped:** `mcp__1c-debug-hmr__debug_stack_trace` (без `target_id` — auto-resolve из push event) → assert `frames[0].lineNo == MODIFIED_LINE` и `frames[0].moduleName` содержит ожидаемый объект. Если lineNo не совпадает — pipeline блокируется с error в IMPLEMENTATION-PROGRESS «BP-verification failed: expected line N in <module>, got line M».
+7. **Опционально:** `mcp__1c-debug-hmr__debug_variables` (auto-resolve target/stack) для assertion state'а — проверить значения локальных переменных против ожиданий из ANALYSIS-REPORT (если автор указал invariants).
+8. `mcp__1c-debug-hmr__debug_step(action="Continue")` — release rphost, дать сценарию завершиться. Без этого rphost остаётся в pause-state, следующие тесты падают по таймауту.
+
+**Fallback при BP не fire'нул** (шаг 5 даёт 3 timeout'а подряд):
+
+a. `mcp__1c-debug-hmr__debug_break_on_next` → повторить триггер. Полезно когда BP стоит на неактивной ветке (условие не сработало) — `break_on_next` ловит ЛЮБУЮ следующую BSL-операцию в attached rphost.
+b. Если и `break_on_next` не сработал — **pre-existing rphost gap** (см. roadmap 260508 §10/§11). В dev-среде: `force_recycle_rphost=True` в `debug_connect` — перезапустит rphost, новый процесс получит BP на свежем cold-start (Solution A). В shared base: НЕ recycle (другие пользователи), вместо этого использовать thin client `/Debug` (Solution C, см. 36.7) — оператор открывает Конфигуратор, начинает отладку, BP fire'нет на следующем сценарии.
+c. Если оба fallback'а не сработали — BP-verification помечается SKIP в IMPLEMENTATION-PROGRESS с описанием попыток; **pipeline блокируется** перед переходом на Этап 6, требуется ручная диагностика через `scripts/smoke_test_debug_pipeline.py --probe-only --json`.
+
+**Timeout для user-in-the-loop ветки (Solution C, shared base):** если выбран путь «оператор открывает Конфигуратор и запускает отладку вручную», пipelin'у нужен явный таймаут ожидания (default **15 минут** от начала Solution C wait'а). По истечении — BP-verification помечается `SKIP (user-action timeout, N minutes)` в IMPLEMENTATION-PROGRESS, pipeline продолжает на Этап 6 с warning'ом, что fix не валидирован live-trace'ом. Без таймаута pipeline зависает индефинитно при недоступном операторе. Cleanup: при abort'е/timeout'е Этапа 5.x — **обязательно** вызвать `debug_step(action="Continue")` для всех pending BP, иначе rphost остаётся в pause-state и блокирует следующие сессии (try/finally pattern).
+
+**Success criterion Этапа 5:** ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (либо SKIP с обоснованной причиной). Если хотя бы одна точка не покрыта без причины — **блокировать переход на Этап 6** с error «BP coverage incomplete: N of M MODIFIED points unverified».
+
+**Логирование в IMPLEMENTATION-PROGRESS.md** (для каждой точки):
+
+```markdown
+### Точка N — BP verification
+- Module: <FQN>:<lineNo>
+- BP set: ✓ (propertyID=<auto>, enabled=true)
+- Trigger: execute_code "<краткое описание harness>"
+- Stack hit: frames[0].lineNo=<actual_line>, moduleName=<actual_module> — assert PASS / FAIL
+- Variables (если проверялись): <name=value@stack_level>
+- Step Continue: ✓ released rphost
+```
+
+#### Этап 5.y: Regression diff (опционально, при повторных прогонах)
+
+**Цель:** автоматически детектировать регрессию на повторных запусках `/implement-1c-task` для той же задачи (например, после правки по review).
+
+**Когда применяется:** если в IMPLEMENTATION-PROGRESS.md footer есть `<!-- debug_session_id: <UUID> -->` от предыдущего прогона.
+
+**Шаги:**
+
+1. Прочитать `prev_session_id` из footer существующего IMPLEMENTATION-PROGRESS.md (если файл новый — SKIP с пометкой «no baseline, first run»).
+2. После завершения Этапа 5.x (BP verification успешен) — вызвать `mcp__1c-debug-hmr__debug_session_diff(prev_session_id=<UUID из footer>, curr_session_id=<текущий>)`.
+3. Парсить `verdict` ∈ {`NO_REGRESSION`, `IMPROVEMENT`, `NEUTRAL`, `REGRESSION`}.
+4. **Если `REGRESSION`** — блокировать переход на Этап 6 с error: вывести markdown-таблицу метрик из ответа (UI+ retries, BP fire counts, eval failures) в IMPLEMENTATION-PROGRESS под заголовком «Regression diff vs <prev_session_id>».
+5. **Если `NO_REGRESSION` / `IMPROVEMENT` / `NEUTRAL`** — записать таблицу метрик в PROGRESS, продолжить.
+
+**Контрольная точка:** Нет новых ошибок, все ссылки на изменённые методы корректны, ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (или обоснованно SKIP), regression verdict ≠ REGRESSION (если baseline есть).
 
 ---
 
@@ -275,15 +563,44 @@ Skill для реализации задачи по конфигурации 1С
 
 **Цель:** Выполнить тест-план из ANALYSIS-REPORT на реальной базе.
 
+**КРИТИЧНО — почему этот этап имеет ОБЯЗАТЕЛЬНЫЙ шаг 0:**
+
+EDT-MCP `write_module_source` правит **исходники** проекта (`src/...`) и помечает изменения для последующей сборки. Запущенная инфобаза 1С работает с **уже скомпилированной** конфигурацией БД. Пока конфигурация БД не обновлена, любой `1c-mcp-crud: execute_code(...)` или проведение документа выполняет **СТАРУЮ** версию изменённой функции. Без шага 0 Этап 6 даёт ложно-отрицательный результат: «фикс не сработал» — потому что live-инфобаза не видит изменений.
+
 **Шаги:**
+
+0. **ОБНОВЛЕНИЕ КОНФИГУРАЦИИ БД** (ОБЯЗАТЕЛЬНО, никогда не пропускать):
+
+   **Основной путь (автоматически):**
+   ```
+   EDT-MCP: get_applications(projectName)
+     → найти applicationId работающего инфобейса
+   EDT-MCP: update_database(projectName, applicationId, fullUpdate=false, autoRestructure=true)
+     → инкрементальное обновление; полное (fullUpdate=true) — если меняется структура хранения
+   ```
+   Примечание: `update_database` модифицирует live-инфобазу — это **shared-state action** (CLAUDE.md). Если в инфобазе работают другие пользователи или это production — ОСТАНОВИТЬСЯ и спросить у пользователя.
+
+   **Программный gate (вместо LLM-judgment):** перед `update_database` обязательно проверить число активных подключений:
+   ```
+   EDT-MCP: get_applications(projectName)
+     → если len(applications) > 1 (есть подключения помимо текущей сессии Claude) —
+       HARD-STOP, явно показать список подключений и запросить подтверждение пользователя.
+   ```
+   Это убирает зависимость от того, «вспомнит» ли LLM о shared-state риске. Без программного gate можно случайно ребилднуть БД при работающих коллегах.
+
+   **Ручной путь (когда `update_database` отсутствует или нужна ручная проверка):**
+   - Сообщить пользователю: «Обнови конфигурацию БД через EDT (Project → Update Database) или через Конфигуратор (F7 → Обновить конфигурацию базы данных). После обновления скажи 'готово'.»
+   - Дождаться подтверждения.
+
+   **Smoke-test что обновление прошло:** вызвать изменённую функцию через `execute_code` на одном тестовом объекте; результат должен соответствовать новой логике.
 
 1. **Подготовка тестовых данных** (если требуется в тест-плане):
    ```
-   1c-mcp-toolkit: execute_query(find_test_candidates)
+   1c-mcp-crud: execute_query(find_test_candidates)
      → найти подходящие объекты для тестирования
-   1c-mcp-toolkit: execute_code(create_test_data)
+   1c-mcp-crud: execute_code(create_test_data)
      → создать тестовые записи согласно тест-плану
-   1c-mcp-toolkit: execute_query(verify_test_data)
+   1c-mcp-crud: execute_query(verify_test_data)
      → убедиться что тестовые данные созданы
    ```
 
@@ -296,20 +613,25 @@ Skill для реализации задачи по конфигурации 1С
 
 3. **Проверка результата**:
    ```
-   1c-mcp-toolkit: execute_query(verification_query)
+   1c-mcp-crud: execute_query(verification_query)
      → проверить что данные изменились как ожидалось
    ```
 
 4. **Очистка тестовых данных** (если создавались):
    ```
-   1c-mcp-toolkit: execute_code(cleanup_test_data)
+   1c-mcp-crud: execute_code(cleanup_test_data)
      → вернуть данные к исходному состоянию
    ```
 
-5. Зафиксировать результаты в IMPLEMENTATION-PROGRESS.md
+5. Зафиксировать результаты в IMPLEMENTATION-PROGRESS.md, включая:
+   - Способ обновления БД (auto через update_database / manual через EDT)
+   - Подтверждение что live-вызов изменённой функции вернул новое значение
 
-**ВАЖНО:** Этот этап ИНТЕРАКТИВНЫЙ — требует участия пользователя для проведения документов.
-Если пользователь не может провести сейчас — пометить как "ожидает ручного тестирования".
+**Альтернатива при невозможности обновить БД** (production-окружение, другие пользователи в БД, отсутствие applicationId):
+- **SQL-симуляция новой логики** через `execute_query` — построить запрос, повторяющий поведение изменённой функции на тех же данных. Сравнить старое vs новое поведение на репрезентативных кейсах из тест-плана. Зафиксировать как `Тест: симуляция через SQL (без обновления БД)` — это НЕ полная live-валидация, требует пометки в IMPLEMENTATION-PROGRESS.md.
+
+**ВАЖНО:** Этот этап ИНТЕРАКТИВНЫЙ — требует участия пользователя для проведения документов и (часто) для обновления БД.
+Если пользователь не может провести сейчас — пометить как "ожидает ручного тестирования", при этом SQL-симуляция должна быть выполнена в любом случае.
 
 ---
 
@@ -324,6 +646,8 @@ Skill для реализации задачи по конфигурации 1С
 
 ## Статус: В работе / Завершено / Ожидает тестирования
 
+Pipeline mode: Full | Full (no-BP) | Code-only | Read-only verify | Read-only research
+
 ## Выполненные точки модификации
 
 ### Точка N: Описание
@@ -333,38 +657,136 @@ Skill для реализации задачи по конфигурации 1С
 - **Валидация запросов:** validate_query OK / исправлен (описание)
 - **Ошибки EDT:** 0 / исправлены (описание)
 - **bsl_analyze:** 0 ошибок / N предупреждений (список)
+- **BP verification:** PASS (frames[0].lineNo=N) / SKIP (причина) / FAIL (детали)
 - **Тест на данных:** пройден / ожидает / не требуется
 - **Отклонения от ANALYSIS-REPORT:** нет / описание
+
+## Debug session (если режим Full)
+
+- session_id: <UUID>
+- session_summary: вывод `debug_session_summary(format="markdown")` — счётчики BP fire, eval, UI+ retries
+- Regression diff vs prev (если был baseline): verdict, изменения метрик
 
 ## Результаты тестирования
 - Тест X.Y: PASS / FAIL / SKIP (причина)
 
 ## Открытые вопросы (если есть)
+
+<!-- debug_session_id: <UUID последнего успешного прогона; читается следующим запуском /implement-1c-task для regression diff Этапа 5.y> -->
 ```
+
+**Правила footer'а:**
+- `debug_session_id` записывается ТОЛЬКО при успешном завершении всего pipeline (Этап 5.x PASS, Этап 6 PASS).
+- При REGRESSION verdict в Этапе 5.y — footer НЕ перезаписывается (baseline сохраняется для следующей попытки исправления).
+- Если режим не Full и BP-verification была SKIP — footer не создаётся (нет валидной session для diff).
 
 ---
 
 ### Этап 8: Git commit
 
-**Цель:** Закоммитить изменения.
+**Цель:** Закоммитить изменения, аккуратно работая с многоуровневой структурой репозиториев.
 
-**Шаги:**
+#### Структура репозиториев
 
-1. Если проект в submodule:
+Layout — **трёхуровневый**, при этом level 2 это **обычная директория** main repo (не git-репо, не submodule). Подтверждено 2026-05-07 через `git ls-files --stage` и инспекцию `.git/` в каждой папке цепочки.
+
+```
+Level 1 — MAIN repo (.git здесь)
+C:\1С-Framework\
+│
+├── configuration/                                 ← Level 2: обычная подпапка main, БЕЗ своего .git/
+│   ├── 260304_GKSTCPLK-2182…/                     ← Level 3: SUBMODULE (gitlink in main)
+│   │   ├── .git                                   ← gitlink-файл (содержимое = "gitdir: ...")
+│   │   └── docs/<task>/IMPLEMENTATION-PROGRESS.md
+│   └── 260416_GKSTCPLK-2368…/                     ← Level 3: SUBMODULE (gitlink in main)
+│
+├── ИБTransportManagementDevelop/                  ← Level 2: обычная подпапка main, БЕЗ своего .git/
+│   └── Конфигурация/                              ← Level 3: SUBMODULE (gitlink in main)
+│       ├── .git                                   ← gitlink-файл
+│       └── src/.../*.bsl                          ← BSL-исходники (правит EDT-MCP)
+│
+├── external/1c_mcp/                               ← обычно untracked в main
+└── …
+```
+
+**Ключевые факты:**
+- **Level 1 (main repo):** единственный репозиторий с настоящим каталогом `.git/` в корне. Все gitlink'и хранятся в индексе main.
+- **Level 2 (`configuration/`, `ИБTransportManagementDevelop/`):** просто директории — `git rev-parse --is-inside-work-tree` внутри них всё ещё показывает main, своего `.git/` НЕТ. Сюда нельзя `cd` и сделать локальный коммит — это будет коммит в main.
+- **Level 3 (`configuration/<TaskFolder>/`, `ИБTransportManagementDevelop/Конфигурация/`):** submodule'ы — отдельные git-репозитории со своим `.git`-указателем (gitfile), своей историей и своим `HEAD`.
+- В индексе main путь submodule хранится **цельным** (со слешем): `"configuration/<TaskFolder>"` и `"ИБTransportManagementDevelop/Конфигурация"`. Это и есть аргумент для `git add` при bump'е gitlink'а.
+- `git add ИБTransportManagementDevelop` (без `/Конфигурация`) — **другая** операция: индексирует level-2 директорию как контент main, что обычно нежелательно (см. Diagnostic ниже).
+- Промежуточного git-репо между level 1 и level 3 нет (в отличие от ошибочного описания v2.5.0). Поэтому шага «commit gitlink в middle repo» в этом pipeline не существует.
+
+#### Шаги
+
+1. **Submodule с BSL-кодом** (`ИБTransportManagementDevelop/Конфигурация`):
    ```bash
-   cd <submodule_path>
-   git add -A
-   git commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
-   cd <main_repo>
-   git add <submodule_path>
-   git commit -m "chore: update submodule ref (НОМЕР-ЗАДАЧИ)"
+   git -C "ИБTransportManagementDevelop/Конфигурация" add <specific_file_path>
+   git -C "ИБTransportManagementDevelop/Конфигурация" commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
+   ```
+   ⚠ **НЕ использовать `git add -A`** — submodule может содержать чужой dirty state.
+   ⚠ **НЕ использовать `git add <submodule-dir>`** в родителе — git попытается проиндексировать **untracked файлы внутри** (включая длинные пути Windows → fatal: filename too long).
+
+2. **Submodule с документацией** (`configuration/<TaskFolder>`) — закоммитить IMPLEMENTATION-PROGRESS.md:
+   ```bash
+   git -C "configuration/<TaskFolder>" add "docs/<task>/IMPLEMENTATION-PROGRESS.md"
+   git -C "configuration/<TaskFolder>" commit -m "docs(НОМЕР-ЗАДАЧИ): add implementation progress"
    ```
 
-2. Если проект в основном репо:
+3. **Main repo** — обновить оба gitlink'а (по одному коммиту на submodule или одним коммитом сразу):
    ```bash
-   git add <changed_files>
-   git commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
+   git add "ИБTransportManagementDevelop/Конфигурация"
+   git commit -m "chore(НОМЕР-ЗАДАЧИ): bump Конфигурация submodule ref"
+
+   git add "configuration/<TaskFolder>"
+   git commit -m "chore(НОМЕР-ЗАДАЧИ): bump configuration submodule ref"
    ```
+   Здесь `git add <submodule_path>` — **корректно**: git распознаёт submodule entry и обновляет только gitlink, не содержимое.
+
+**Итого:** одна задача = до 4 коммитов в 3 репозиториях (BSL submodule, docs submodule, main ×2 gitlink). Если правка только в одном из submodule — соответствующая половина пропускается.
+
+#### Git identity без `git config`
+
+CLAUDE.md запрещает `git config` (включая локальный). Если submodule наследует identity от родителя — коммит проходит. Если в submodule пусто — коммит падает с `fatal: unable to auto-detect email address`. Решение — **per-command override**:
+
+```bash
+git -c user.name="Имя" -c user.email="email@example.com" commit -m "..."
+```
+
+Эти `-c` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Identity берётся из main repo (`git config user.name` + `git config user.email`).
+
+#### Diagnostic: подтвердить 3-уровневый layout перед коммитом
+
+Шаг 1 — убедиться что **level 3** (submodule) действительно зарегистрирован в индексе **level 1** (main):
+
+```bash
+git ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
+# ожидается: 160000 <hash> 0  ИБTransportManagementDevelop/Конфигурация
+git ls-files --stage "configuration/<TaskFolder>"
+# ожидается: 160000 <hash> 0  configuration/<TaskFolder>
+```
+
+Mode `160000` = gitlink (submodule). Если строка пуста или mode ≠ `160000` — submodule не зарегистрирован, остановиться и сверить с пользователем (вероятно сломан `.gitmodules` или рабочий tree разошёлся с индексом).
+
+Шаг 2 — убедиться что **level 2** (`configuration/`, `ИБTransportManagementDevelop/`) — действительно простая директория, а не самозванец:
+
+```bash
+test -d "ИБTransportManagementDevelop/.git" && echo "АНОМАЛИЯ: level 2 имеет свой .git" || echo "OK: level 2 — обычная директория"
+test -d "configuration/.git" && echo "АНОМАЛИЯ: level 2 имеет свой .git" || echo "OK: level 2 — обычная директория"
+```
+
+Ожидание: `OK` для обоих. Если у level-2 директории появился собственный `.git/` — это другой layout (как ошибочно описывала v2.5.0), и git-flow из шагов 1-3 надо переcмотреть отдельно.
+
+Шаг 3 — `git status` в main: типичный `m configuration/<TaskFolder>` или `m ИБTransportManagementDevelop/Конфигурация` (lowercase `m` = submodule modified content) — **нормально**, ожидается перед bump'ом gitlink'а. А вот `M ИБTransportManagementDevelop` (uppercase, без `/Конфигурация`) — **аномалия**: значит внутри level-2 директории появились трекаемые main'ом файлы вне зарегистрированного submodule. Не bump'ить, разобраться сначала.
+
+**⚠ Windows + Cyrillic submodule paths (`ИБTransportManagementDevelop/Конфигурация`):** по умолчанию `core.quotepath=true`, и git выводит кириллицу как octal-escape (`"\320\230\320\221..."`). Это ломает парсинг `git status --porcelain` в скриптах и затрудняет визуальную проверку. CLAUDE.md запрещает `git config` (включая локальный), поэтому решение — **per-command override**:
+
+```bash
+git -c core.quotepath=false status --short
+git -c core.quotepath=false ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
+```
+
+Эти `-c core.quotepath=false` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Без флага кириллические пути нечитаемы. См. memory `git-porcelain-parsing` для деталей парсинга.
 
 ---
 
@@ -435,6 +857,95 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 
 ---
 
+## Известные ограничения 1c-mcp-crud
+
+Сервер `1c-mcp-crud` подключается к live-инфобазе через HTTP-сервис расширения `MCP_Сервер`. У текущей версии расширения есть два известных артефакта, которые проявляются на Этапах 2, 5 и 6.
+
+### Ограничение 1: `get_metadata` для регистра сведений возвращает пустой `attributes:[]`
+
+**Проявление:**
+```json
+{"success": true, "data": {
+  "fullName": "РегистрСведений.<имя>",
+  "name": "<имя>",
+  "synonym": "...",
+  "attributes": []
+}}
+```
+
+Поля `Измерения` / `Ресурсы` / `Реквизиты` отсутствуют, хотя в конфигурации они есть.
+
+**Workaround:** проверять имена полей через `execute_query` (выбрать первые 5 строк со всеми ожидаемыми колонками — если запрос не падает, поля существуют):
+```sql
+ВЫБРАТЬ ПЕРВЫЕ 5
+    Регистр.<Поле1>, Регистр.<Поле2>, ...
+ИЗ РегистрСведений.<имя> КАК Регистр
+```
+
+Альтернатива — `EDT-MCP: get_metadata_details(fqn)` (если EDT доступен — даёт полную структуру).
+
+### Ограничение 2: `execute_query` падает на сериализации композитных ссылочных типов
+
+**Проявление:**
+```
+{"success": false, "error":
+  "{MCP_Сервер ОбщийМодуль.mcp_Сериализация.Модуль(142)}:
+   Метод объекта не обнаружен (УникальныйИдентификатор)"}
+```
+
+Возникает при возврате полей с композитным ссылочным типом (например, `ДокументСсылка.X, ДокументСсылка.Y` в одном поле — типично для реквизитов вида `гкс_ДокументРегистрации`).
+
+**Workaround:** оборачивать такие поля в `ПРЕДСТАВЛЕНИЕ()`:
+```sql
+ВЫБРАТЬ
+    ПРЕДСТАВЛЕНИЕ(ЛА.гкс_ДокументРегистрации) КАК ДокументРегистрации,
+    ПРЕДСТАВЛЕНИЕ(ЛА.Ссылка) КАК ЛабораторныйАнализ
+ИЗ Документ.гкс_ЛабораторныйАнализ КАК ЛА
+```
+
+`ПРЕДСТАВЛЕНИЕ()` возвращает строку, сериализация не ломается. Если нужна именно ссылка для дальнейшего использования (например, передать как параметр) — использовать `execute_code` с явным присваиванием в `Результат`, обходя сериализацию query-результата:
+```bsl
+Результат = РегистрыСведений.<имя>.СоздатьМенеджерЗаписи();
+```
+
+### Ограничение 3: `execute_code` запрещает `Возврат` вне процедуры/функции
+
+**Проявление:** код-сниппет с ранним выходом через `Возврат` падает на парсинге:
+```bsl
+Если Условие Тогда
+    Результат = "ничего";
+    Возврат;  // ← parse error: Возврат допустим только внутри Процедура/Функция
+КонецЕсли;
+```
+
+`1c-mcp-crud:execute_code` оборачивает переданный фрагмент в анонимный исполняемый блок верхнего уровня — это не тело функции, поэтому `Возврат` некорректен.
+
+**Workaround:** переписать через ветвление `Если/Иначе`, присваивая `Результат` в каждой ветке:
+```bsl
+Если Условие Тогда
+    Результат = "ничего";
+Иначе
+    // основная логика
+    Результат = ВыборкаЛогики();
+КонецЕсли;
+```
+
+Альтернатива — обернуть код в локальную функцию через `Выполнить()`-обёртку, но это усложняет отладку. По умолчанию использовать `Если/Иначе`.
+
+**⚠ Caveat: side-effects между early-exit точками.** Workaround `Если/Иначе` корректен **только для чистых early returns** (вычислили значение и вышли). Если между точками возможного `Возврат` есть side-effects (`Сообщить()`, `Лог()`, INSERT в базу, изменение глобального состояния) — переписывание ломает порядок исполнения: оригинал делал `Возврат` ДО side-effect'а нижних веток, а `Если/Иначе` исполнит side-effect'ы в неправильной ветке или не исполнит вовсе. В таком случае — НЕ применять `Если/Иначе`-workaround, а:
+
+1. **Извлечь логику в named procedure** конфигурации (с настоящим `Возврат`)
+2. Из `execute_code` вызвать эту процедуру (`Результат = ИмяОбщегоМодуля.ИмяПроцедуры(Параметры);`)
+3. Side-effects сохраняют порядок, отладка через стандартные средства 1С
+
+Это чище, чем `Выполнить()`-обёртка, и не страдает от parser limitation `execute_code`.
+
+### Когда workaround'ы недостаточны
+
+Если задача требует получить именно ссылочные значения через query (без `execute_code`-обхода) — отметить в IMPLEMENTATION-PROGRESS.md как `требует доработки расширения MCP_Сервер` и провалидировать алгоритм через `execute_code` или EDT-симуляцию.
+
+---
+
 ## Обработка ошибок
 
 ### EDT-MCP: get_project_errors вернул ошибки
@@ -453,7 +964,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 4. Повторить validate_query
 5. Если поле не найдено — возможно, нужен другой алиас или полное имя
 
-### 1c-mcp-toolkit: execute_query вернул пустой результат
+### 1c-mcp-crud: execute_query вернул пустой результат
 
 1. Проверить параметры запроса (правильные ссылки?)
 2. Проверить условия WHERE (слишком строгие?)
@@ -473,11 +984,21 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 
 - [ ] Все точки модификации из ANALYSIS-REPORT реализованы
 - [ ] Каждый блок кода имеет комментарий с номером задачи
-- [ ] EDT-MCP: get_project_errors = 0 ошибок
-- [ ] Все SQL-запросы прошли validate_query
-- [ ] Все SQL-запросы проверены на живых данных (execute_query)
-- [ ] bsl_analyze: 0 ошибок (предупреждения допустимы)
-- [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной
+- [ ] EDT-MCP: `get_project_errors(severity="ERRORS") = 0`
+- [ ] Все SQL-запросы прошли `validate_query`
+- [ ] Все SQL-запросы проверены на живых данных (`execute_query`) — с workaround `ПРЕДСТАВЛЕНИЕ()` для ссылок (см. Известные ограничения 1c-mcp-crud)
+- [ ] `bsl_analyze`: 0 ошибок ИЛИ только known false-positive'ы (chained call / препроцессор) — зафиксировано в IMPLEMENTATION-PROGRESS.md
+- [ ] **Этап 6 → шаг 0**: конфигурация БД обновлена (`update_database` или ручной EDT) — без этого live-вызовы возвращают старое поведение
+- [ ] **Этап 5.x BP-verification (режим Full)**: ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (frames[0].lineNo соответствует MODIFIED_LINE), либо обоснованно помечены SKIP в IMPLEMENTATION-PROGRESS. Точки `[REFACTOR]` — освобождены.
+- [ ] **Этап 5.y Regression diff (если есть baseline session_id в footer)**: `debug_session_diff` verdict ∈ {NO_REGRESSION, IMPROVEMENT, NEUTRAL}; при REGRESSION pipeline блокируется.
+- [ ] **Footer IMPLEMENTATION-PROGRESS.md**: `<!-- debug_session_id: <UUID> -->` записан (если режим Full и BP-verification PASS) — для regression diff на следующем прогоне
+- [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной (минимум — SQL-симуляция, если БД не обновлена)
+- [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
 - [ ] Отклонения от ANALYSIS-REPORT зафиксированы
-- [ ] Git commit выполнен
+- [ ] **Git commit:**
+  - [ ] Коммит во внутреннем repo с BSL (без `git add -A`, без `git add <submodule-dir>`)
+  - [ ] Промежуточный repo обновил gitlink (если есть вложенный submodule)
+  - [ ] Documentation submodule (`configuration/<TaskFolder>`) закоммичен с PROGRESS-файлом
+  - [ ] Main repo обновил gitlink на documentation submodule
+  - [ ] Submodule без identity → коммит через `git -c user.name=... -c user.email=...`

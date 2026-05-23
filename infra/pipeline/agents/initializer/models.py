@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Any
+from typing import Any
 
 
 class FileType(Enum):
@@ -40,11 +40,11 @@ class FileType(Enum):
 class ProjectType(Enum):
     """Types of 1C projects."""
 
-    CONFIGURATION = "configuration"      # Full 1C configuration
-    EXTENSION = "extension"              # Configuration extension (cfe)
+    CONFIGURATION = "configuration"  # Full 1C configuration
+    EXTENSION = "extension"  # Configuration extension (cfe)
     EXTERNAL_DATAPROCESSOR = "external_dataprocessor"  # External processing (epf)
     EXTERNAL_REPORT = "external_report"  # External report (erf)
-    SUBSYSTEM = "subsystem"              # Part of configuration
+    SUBSYSTEM = "subsystem"  # Part of configuration
     UNKNOWN = "unknown"
 
     @property
@@ -64,35 +64,35 @@ class ProjectType(Enum):
 class ObjectType(Enum):
     """Types of 1C metadata objects."""
 
-    CATALOG = "Catalog"                     # Справочник
-    DOCUMENT = "Document"                   # Документ
+    CATALOG = "Catalog"  # Справочник
+    DOCUMENT = "Document"  # Документ
     ACCUMULATION_REGISTER = "AccumulationRegister"  # Регистр накопления
-    INFORMATION_REGISTER = "InformationRegister"    # Регистр сведений
-    CALCULATION_REGISTER = "CalculationRegister"    # Регистр расчёта
-    ACCOUNTING_REGISTER = "AccountingRegister"      # Регистр бухгалтерии
-    COMMON_MODULE = "CommonModule"          # Общий модуль
-    DATA_PROCESSOR = "DataProcessor"        # Обработка
-    REPORT = "Report"                       # Отчёт
-    ENUM = "Enum"                           # Перечисление
-    CONSTANT = "Constant"                   # Константа
-    CHART_OF_ACCOUNTS = "ChartOfAccounts"   # План счетов
+    INFORMATION_REGISTER = "InformationRegister"  # Регистр сведений
+    CALCULATION_REGISTER = "CalculationRegister"  # Регистр расчёта
+    ACCOUNTING_REGISTER = "AccountingRegister"  # Регистр бухгалтерии
+    COMMON_MODULE = "CommonModule"  # Общий модуль
+    DATA_PROCESSOR = "DataProcessor"  # Обработка
+    REPORT = "Report"  # Отчёт
+    ENUM = "Enum"  # Перечисление
+    CONSTANT = "Constant"  # Константа
+    CHART_OF_ACCOUNTS = "ChartOfAccounts"  # План счетов
     CHART_OF_CCS = "ChartOfCharacteristicTypes"  # План видов характеристик
-    SEQUENCE = "Sequence"                   # Последовательность
-    SCHEDULED_JOB = "ScheduledJob"          # Регламентное задание
-    WEB_SERVICE = "WebService"              # Веб-сервис
-    HTTP_SERVICE = "HTTPService"            # HTTP-сервис
-    EXCHANGE_PLAN = "ExchangePlan"          # План обмена
-    FILTER_CRITERION = "FilterCriterion"    # Критерий отбора
-    ROLE = "Role"                           # Роль
-    SUBSYSTEM = "Subsystem"                 # Подсистема
-    STYLE = "Style"                         # Стиль
-    LANGUAGE = "Language"                   # Язык
-    INTERFACE = "Interface"                 # Интерфейс
-    FORM = "Form"                           # Форма
-    COMMAND = "Command"                     # Команда
+    SEQUENCE = "Sequence"  # Последовательность
+    SCHEDULED_JOB = "ScheduledJob"  # Регламентное задание
+    WEB_SERVICE = "WebService"  # Веб-сервис
+    HTTP_SERVICE = "HTTPService"  # HTTP-сервис
+    EXCHANGE_PLAN = "ExchangePlan"  # План обмена
+    FILTER_CRITERION = "FilterCriterion"  # Критерий отбора
+    ROLE = "Role"  # Роль
+    SUBSYSTEM = "Subsystem"  # Подсистема
+    STYLE = "Style"  # Стиль
+    LANGUAGE = "Language"  # Язык
+    INTERFACE = "Interface"  # Интерфейс
+    FORM = "Form"  # Форма
+    COMMAND = "Command"  # Команда
     FUNCTIONAL_OPTION = "FunctionalOption"  # Функциональная опция
-    DEFINED_TYPE = "DefinedType"            # Определяемый тип
-    OTHER = "Other"                         # Другое
+    DEFINED_TYPE = "DefinedType"  # Определяемый тип
+    OTHER = "Other"  # Другое
 
     @property
     def ru_name(self) -> str:
@@ -209,7 +209,7 @@ class FileInfo:
     file_type: FileType
     size_bytes: int = 0
     line_count: int = 0
-    last_modified: Optional[datetime] = None
+    last_modified: datetime | None = None
     encoding: str = "utf-8"
 
     @property
@@ -245,7 +245,7 @@ class DirectoryInfo:
 
     path: Path
     name: str
-    object_type: Optional[ObjectType] = None
+    object_type: ObjectType | None = None
     files: list[FileInfo] = field(default_factory=list)
     subdirectories: list["DirectoryInfo"] = field(default_factory=list)
 
@@ -321,8 +321,8 @@ class ModuleInfo:
 class DependencyInfo:
     """Information about dependency between modules."""
 
-    source: str          # Module that depends on target
-    target: str          # Module being depended on
+    source: str  # Module that depends on target
+    target: str  # Module being depended on
     dependency_type: str  # "uses", "extends", "implements", etc.
     references: list[str] = field(default_factory=list)  # Specific references
 
@@ -340,8 +340,8 @@ class DependencyInfo:
 class PatternInfo:
     """Information about coding patterns in project."""
 
-    name: str                    # Pattern name
-    description: str             # Pattern description
+    name: str  # Pattern name
+    description: str  # Pattern description
     examples: list[str] = field(default_factory=list)
     occurrences: int = 0
 
@@ -413,7 +413,7 @@ class RelevantFile:
     file_info: FileInfo
     relevance_score: float  # 0.0 - 1.0
     relevance_reason: str
-    module_name: Optional[str] = None
+    module_name: str | None = None
 
     @property
     def relevance_category(self) -> str:
@@ -455,10 +455,7 @@ class ContextReport:
     @property
     def medium_relevance_files(self) -> list[RelevantFile]:
         """Files with medium relevance (0.5 - 0.8)."""
-        return [
-            f for f in self.relevant_files
-            if 0.5 <= f.relevance_score <= 0.8
-        ]
+        return [f for f in self.relevant_files if 0.5 <= f.relevance_score <= 0.8]
 
     @property
     def low_relevance_files(self) -> list[RelevantFile]:
@@ -483,11 +480,11 @@ class ContextReport:
 class InitializerConfig:
     """Configuration for INITIALIZER agent."""
 
-    max_files: int = 10000          # Maximum files to scan
-    max_depth: int = 10             # Maximum directory depth
-    scan_timeout: int = 60          # Scan timeout in seconds
-    cache_ttl: int = 3600           # Cache TTL in seconds
-    max_relevant_files: int = 20    # Maximum relevant files to return
+    max_files: int = 10000  # Maximum files to scan
+    max_depth: int = 10  # Maximum directory depth
+    scan_timeout: int = 60  # Scan timeout in seconds
+    cache_ttl: int = 3600  # Cache TTL in seconds
+    max_relevant_files: int = 20  # Maximum relevant files to return
     min_relevance_score: float = 0.3  # Minimum relevance score
     include_patterns: list[str] = field(default_factory=lambda: ["*.bsl", "*.xml"])
     exclude_patterns: list[str] = field(default_factory=lambda: ["*.log", "*.tmp"])
@@ -512,7 +509,7 @@ class InitializerInput:
     project_path: str
     task_description: str
     force_rescan: bool = False
-    output_dir: Optional[str] = None  # Directory for context.md output
+    output_dir: str | None = None  # Directory for context.md output
     config: InitializerConfig = field(default_factory=InitializerConfig)
 
     def to_dict(self) -> dict:
@@ -532,15 +529,15 @@ class InitializerOutput:
     """Output from INITIALIZER agent."""
 
     success: bool
-    context_report: Optional[ContextReport] = None
-    context_file_path: Optional[str] = None
-    error_message: Optional[str] = None
+    context_report: ContextReport | None = None
+    context_file_path: str | None = None
+    error_message: str | None = None
     scan_duration_ms: int = 0
     cached: bool = False
     # Additional fields used by agent.run_from_input
     context_markdown: str = ""
-    relevant_files: List[Any] = field(default_factory=list)
-    project_structure: Optional[Any] = None
+    relevant_files: list[Any] = field(default_factory=list)
+    project_structure: Any | None = None
     cache_hit: bool = False
     processing_time_ms: int = 0
 

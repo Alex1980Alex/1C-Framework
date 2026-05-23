@@ -55,7 +55,7 @@ The current help menu in `displayHelp()` function (ui.js:434-734) is hardcoded w
 - **Cross-References**: Add intelligent linking between related commands
 
 ### 4. Integration Points
-- **Commands.js Integration**: 
+- **Commands.js Integration**:
   - Access the programInstance after all commands are registered
   - Extract metadata without affecting command functionality
   - Handle edge cases like hidden commands or aliases
@@ -320,7 +320,7 @@ const categoryRules = {
 function categorizeCommands(commandMetadata) {
   const categorizedCommands = {};
   const uncategorized = [];
-  
+
   // Initialize categories
   Object.keys(categoryRules).forEach(categoryName => {
     categorizedCommands[categoryName] = {
@@ -328,7 +328,7 @@ function categorizeCommands(commandMetadata) {
       commands: []
     };
   });
-  
+
   // Categorize each command
   Object.values(commandMetadata).forEach(command => {
     const category = findBestCategory(command);
@@ -338,7 +338,7 @@ function categorizeCommands(commandMetadata) {
       uncategorized.push(command);
     }
   });
-  
+
   // Handle uncategorized commands
   if (uncategorized.length > 0) {
     categorizedCommands['Other Commands'] = {
@@ -346,7 +346,7 @@ function categorizeCommands(commandMetadata) {
       commands: uncategorized
     };
   }
-  
+
   return categorizedCommands;
 }
 ```
@@ -389,10 +389,10 @@ function categorizeCommands(commandMetadata) {
 ```javascript
 function formatCommand(command) {
   const { name, description, options, arguments: args, aliases } = command;
-  
+
   // Build usage line
   let usage = `task-master ${name}`;
-  
+
   // Add arguments
   if (args && args.length > 0) {
     args.forEach(arg => {
@@ -403,17 +403,17 @@ function formatCommand(command) {
       }
     });
   }
-  
+
   // Add options indicator
   if (options && options.length > 0) {
     usage += ' [options]';
   }
-  
+
   // Format aliases
-  const aliasText = aliases && aliases.length > 0 
-    ? ` (aliases: ${aliases.join(', ')})` 
+  const aliasText = aliases && aliases.length > 0
+    ? ` (aliases: ${aliases.join(', ')})`
     : '';
-  
+
   return {
     usage,
     description: description || 'No description available',
@@ -433,14 +433,14 @@ function formatCommand(command) {
 ```javascript
 function generateCategorySection(categoryName, categoryData) {
   const { color, commands } = categoryData;
-  
+
   let section = `\n${chalk[color].bold(categoryName)}:\n`;
-  
+
   commands.forEach(command => {
     const formatted = formatCommand(command);
     section += `  ${chalk.cyan(formatted.usage)}${formatted.aliasText}\n`;
     section += `    ${formatted.description}\n`;
-    
+
     if (formatted.options.length > 0) {
       section += `    Options:\n`;
       formatted.options.forEach(option => {
@@ -449,7 +449,7 @@ function generateCategorySection(categoryName, categoryData) {
     }
     section += '\n';
   });
-  
+
   return section;
 }
 ```
@@ -530,7 +530,7 @@ function displayHelp(options = {}) {
     verbose = false,        // Show detailed help
     noColor = false         // Disable colors for accessibility
   } = options;
-  
+
   // Dynamic help generation logic
 }
 ```
@@ -577,7 +577,7 @@ function displayHelp(options = {}, programInstance = null) {
     console.warn('Dynamic help unavailable, using static fallback');
     return displayStaticHelp();
   }
-  
+
   const commandMetadata = extractCommandMetadata(programInstance);
   const categorizedCommands = categorizeCommands(commandMetadata);
   return generateHelpContent(categorizedCommands, options);
@@ -668,37 +668,37 @@ export function setProgramInstance(program) {
 function searchCommands(query, commandMetadata) {
   const results = [];
   const searchTerms = query.toLowerCase().split(' ');
-  
+
   Object.values(commandMetadata).forEach(command => {
     let score = 0;
-    
+
     // Search in command name (highest weight)
     if (command.name.toLowerCase().includes(query.toLowerCase())) {
       score += 10;
     }
-    
+
     // Search in description (medium weight)
     if (command.description && command.description.toLowerCase().includes(query.toLowerCase())) {
       score += 5;
     }
-    
+
     // Search in option descriptions (lower weight)
     command.options?.forEach(option => {
       if (option.description.toLowerCase().includes(query.toLowerCase())) {
         score += 2;
       }
     });
-    
+
     // Fuzzy matching for command names
     if (fuzzyMatch(command.name, query)) {
       score += 3;
     }
-    
+
     if (score > 0) {
       results.push({ command, score });
     }
   });
-  
+
   return results.sort((a, b) => b.score - a.score);
 }
 ```
@@ -714,29 +714,29 @@ function searchCommands(query, commandMetadata) {
 function suggestRelatedCommands(commandName, commandMetadata) {
   const suggestions = [];
   const command = commandMetadata[commandName];
-  
+
   if (!command) return suggestions;
-  
+
   // Find commands in same category
   const category = findCommandCategory(commandName);
   if (category) {
     suggestions.push(...getCategoryCommands(category));
   }
-  
+
   // Find commands with similar names
   Object.keys(commandMetadata).forEach(name => {
     if (name !== commandName && similarity(name, commandName) > 0.6) {
       suggestions.push(commandMetadata[name]);
     }
   });
-  
+
   // Find commands with related functionality
   const keywords = extractKeywords(command.description);
   keywords.forEach(keyword => {
     const related = findCommandsByKeyword(keyword, commandMetadata);
     suggestions.push(...related);
   });
-  
+
   return deduplicateAndScore(suggestions);
 }
 ```
@@ -757,22 +757,22 @@ class HelpCache {
     this.lastUpdate = null;
     this.commandMetadata = null;
   }
-  
+
   getHelp(key, generator) {
     if (this.cache.has(key) && !this.isStale()) {
       return this.cache.get(key);
     }
-    
+
     const content = generator();
     this.cache.set(key, content);
     return content;
   }
-  
+
   invalidate() {
     this.cache.clear();
     this.lastUpdate = Date.now();
   }
-  
+
   isStale() {
     return Date.now() - this.lastUpdate > 300000; // 5 minutes
   }
@@ -808,10 +808,10 @@ function displayCommandHelp(commandName, commandMetadata) {
     suggestSimilarCommands(commandName, commandMetadata);
     return;
   }
-  
+
   console.log(chalk.cyan.bold(`\\n${command.name.toUpperCase()} COMMAND HELP\\n`));
   console.log(`Description: ${command.description}\\n`);
-  
+
   // Usage examples
   if (command.examples) {
     console.log(chalk.yellow.bold('Examples:'));
@@ -820,7 +820,7 @@ function displayCommandHelp(commandName, commandMetadata) {
       console.log(`    ${example.description}\\n`);
     });
   }
-  
+
   // Detailed options
   if (command.options && command.options.length > 0) {
     console.log(chalk.yellow.bold('Options:'));
@@ -834,7 +834,7 @@ function displayCommandHelp(commandName, commandMetadata) {
       }
     });
   }
-  
+
   // Related commands
   const related = suggestRelatedCommands(commandName, commandMetadata);
   if (related.length > 0) {
@@ -858,13 +858,13 @@ function displayCommandHelp(commandName, commandMetadata) {
 ```javascript
 function enhanceErrorWithHelp(error, commandName, commandMetadata) {
   console.error(chalk.red(error.message));
-  
+
   // Suggest correct usage
   if (commandMetadata[commandName]) {
     console.log(chalk.yellow('\\nCorrect usage:'));
     console.log(`  ${formatCommandUsage(commandMetadata[commandName])}`);
   }
-  
+
   // Suggest similar commands
   const suggestions = findSimilarCommands(commandName, commandMetadata);
   if (suggestions.length > 0) {
@@ -873,7 +873,7 @@ function enhanceErrorWithHelp(error, commandName, commandMetadata) {
       console.log(`  ${chalk.cyan(cmd.name)} - ${cmd.description}`);
     });
   }
-  
+
   // Provide help command
   console.log(chalk.gray(`\\nFor more help: task-master help ${commandName}`));
 }
@@ -935,64 +935,64 @@ describe('Dynamic Help System', () => {
     test('should extract basic command information', () => {
       const mockProgram = createMockProgram();
       const metadata = extractCommandMetadata(mockProgram);
-      
+
       expect(metadata).toHaveProperty('init');
       expect(metadata.init.name).toBe('init');
       expect(metadata.init.description).toBeDefined();
       expect(metadata.init.options).toBeArray();
     });
-    
+
     test('should handle commands with complex options', () => {
       const mockProgram = createComplexMockProgram();
       const metadata = extractCommandMetadata(mockProgram);
-      
+
       expect(metadata.parseRrd.options).toHaveLength(5);
       expect(metadata.parseRrd.options[0]).toHaveProperty('flags');
       expect(metadata.parseRrd.options[0]).toHaveProperty('description');
     });
-    
+
     test('should handle missing descriptions gracefully', () => {
       const mockProgram = createIncompleteProgram();
       const metadata = extractCommandMetadata(mockProgram);
-      
+
       expect(metadata.undocumented.description).toBe('No description available');
     });
   });
-  
+
   describe('categorizeCommands', () => {
     test('should categorize commands correctly', () => {
       const mockMetadata = createMockMetadata();
       const categorized = categorizeCommands(mockMetadata);
-      
+
       expect(categorized).toHaveProperty('Project Setup & Configuration');
       expect(categorized['Project Setup & Configuration'].commands).toContainEqual(
         expect.objectContaining({ name: 'init' })
       );
     });
-    
+
     test('should handle uncategorized commands', () => {
       const mockMetadata = { unknownCommand: { name: 'unknown', description: 'test' } };
       const categorized = categorizeCommands(mockMetadata);
-      
+
       expect(categorized).toHaveProperty('Other Commands');
       expect(categorized['Other Commands'].commands).toHaveLength(1);
     });
   });
-  
+
   describe('generateHelpContent', () => {
     test('should generate properly formatted help content', () => {
       const mockCategorized = createMockCategorizedCommands();
       const content = generateHelpContent(mockCategorized);
-      
+
       expect(content).toContain('Task Master CLI');
       expect(content).toContain('Project Setup & Configuration');
       expect(content).toContain('task-master init');
     });
-    
+
     test('should handle empty categories', () => {
       const emptyCategorized = { 'Empty Category': { commands: [] } };
       const content = generateHelpContent(emptyCategorized);
-      
+
       expect(content).not.toContain('Empty Category');
     });
   });
@@ -1006,28 +1006,28 @@ describe('Help System Integration', () => {
   test('should integrate with actual CLI commands', async () => {
     const { program } = await import('../../scripts/modules/commands.js');
     const metadata = extractCommandMetadata(program);
-    
+
     // Verify all expected commands are present
     const expectedCommands = ['init', 'parse-prd', 'list', 'add-task', 'expand'];
     expectedCommands.forEach(cmd => {
       expect(metadata).toHaveProperty(cmd);
     });
   });
-  
+
   test('should maintain backward compatibility', () => {
     const originalHelp = captureConsoleOutput(() => {
       displayHelp(); // Original function call
     });
-    
+
     expect(originalHelp).toContain('Task Master CLI');
     expect(originalHelp).toContain('Available Commands');
   });
-  
+
   test('should handle help command with options', () => {
     const categoryHelp = captureConsoleOutput(() => {
       displayHelp({ category: 'Task Management' });
     });
-    
+
     expect(categoryHelp).toContain('Task Management');
     expect(categoryHelp).toContain('list');
     expect(categoryHelp).not.toContain('init'); // Should not contain other categories
@@ -1043,21 +1043,21 @@ describe('Help System Performance', () => {
     const start = performance.now();
     const metadata = extractCommandMetadata(largeMockProgram);
     const end = performance.now();
-    
+
     expect(end - start).toBeLessThan(100); // Should complete in under 100ms
   });
-  
+
   test('should cache help content effectively', () => {
     const cache = new HelpCache();
-    
+
     const start1 = performance.now();
     const content1 = cache.getHelp('main', () => generateHelpContent(mockData));
     const end1 = performance.now();
-    
+
     const start2 = performance.now();
     const content2 = cache.getHelp('main', () => generateHelpContent(mockData));
     const end2 = performance.now();
-    
+
     expect(content1).toBe(content2);
     expect(end2 - start2).toBeLessThan((end1 - start1) / 10); // Cached should be 10x faster
   });
@@ -1072,14 +1072,14 @@ describe('Help System Accessibility', () => {
     const noColorHelp = captureConsoleOutput(() => {
       displayHelp({ noColor: true });
     });
-    
+
     // Should not contain ANSI color codes
     expect(noColorHelp).not.toMatch(/\u001b\[[0-9;]*m/);
   });
-  
+
   test('should format content for screen readers', () => {
     const accessibleHelp = generateAccessibleHelp(mockMetadata);
-    
+
     expect(accessibleHelp).toContain('Heading level 1: Task Master CLI');
     expect(accessibleHelp).toContain('List item: init command');
   });
@@ -1132,11 +1132,11 @@ export function createMockProgram() {
 export function captureConsoleOutput(fn) {
   const originalLog = console.log;
   let output = '';
-  
+
   console.log = (...args) => {
     output += args.join(' ') + '\n';
   };
-  
+
   try {
     fn();
     return output;
@@ -1301,4 +1301,3 @@ jobs:
    - Screen reader compatibility testing
    - High contrast mode support
    - Keyboard navigation support
-

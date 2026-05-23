@@ -2,9 +2,7 @@
 Integration tests for ArchitectVerifier.
 """
 
-import pytest
-
-from constants import VerificationStatus, ArtifactType, AgentRole
+from constants import AgentRole, ArtifactType, VerificationStatus
 from models import Artifact, ArtifactMetadata
 from verification import ArchitectVerifier, CheckType
 
@@ -25,10 +23,7 @@ class TestArchitectVerifier:
         assert len(result.checks) > 0
 
         # Check that all critical checks passed
-        critical_failed = [
-            c for c in result.checks
-            if not c.passed and c.severity == "error"
-        ]
+        critical_failed = [c for c in result.checks if not c.passed and c.severity == "error"]
         assert len(critical_failed) == 0, f"Critical checks failed: {critical_failed}"
 
     def test_verify_incomplete_design(self, incomplete_design_artifact):
@@ -39,20 +34,14 @@ class TestArchitectVerifier:
         assert len(result.checks) > 0
 
         # Check that some critical checks failed
-        critical_failed = [
-            c for c in result.checks
-            if not c.passed and c.severity == "error"
-        ]
+        critical_failed = [c for c in result.checks if not c.passed and c.severity == "error"]
         assert len(critical_failed) > 0
 
     def test_architectural_decisions_check(self, sample_design_artifact):
         """Test that architectural decisions section is checked."""
         result = self.verifier.verify(sample_design_artifact)
 
-        completeness_checks = [
-            c for c in result.checks
-            if c.check_type == CheckType.COMPLETENESS
-        ]
+        completeness_checks = [c for c in result.checks if c.check_type == CheckType.COMPLETENESS]
 
         # Should have completeness checks for architectural decisions
         assert len(completeness_checks) > 0
@@ -63,8 +52,7 @@ class TestArchitectVerifier:
 
         # Design artifact should have plan check
         assert any(
-            "план" in c.message.lower() or "реализаци" in c.message.lower()
-            for c in result.checks
+            "план" in c.message.lower() or "реализаци" in c.message.lower() for c in result.checks
         )
 
     def test_risks_section_check(self, sample_design_artifact):
@@ -72,10 +60,7 @@ class TestArchitectVerifier:
         result = self.verifier.verify(sample_design_artifact)
 
         # Should check for risks section
-        risk_checks = [
-            c for c in result.checks
-            if "риск" in c.message.lower()
-        ]
+        risk_checks = [c for c in result.checks if "риск" in c.message.lower()]
         assert len(risk_checks) > 0
 
     def test_bsl_considerations_check(self, sample_design_artifact):
@@ -84,16 +69,14 @@ class TestArchitectVerifier:
 
         # Should check for BSL-specific elements
         bsl_checks = [
-            c for c in result.checks
-            if "bsl" in c.message.lower() or "1с" in c.message.lower()
+            c for c in result.checks if "bsl" in c.message.lower() or "1с" in c.message.lower()
         ]
         assert len(bsl_checks) > 0
 
     def test_traceability_to_spec(self, sample_design_artifact, sample_spec_artifact):
         """Test traceability check when spec is provided."""
         result = self.verifier.verify(
-            sample_design_artifact,
-            context={"spec": sample_spec_artifact}
+            sample_design_artifact, context={"spec": sample_spec_artifact}
         )
 
         # Should include requirements tracking
@@ -228,7 +211,6 @@ class TestArchitectVerifierEdgeCases:
         # Should still pass, BSL check is informational
         # But may have info-level warning about no BSL content
         bsl_checks = [
-            c for c in result.checks
-            if "bsl" in c.message.lower() and c.severity == "info"
+            c for c in result.checks if "bsl" in c.message.lower() and c.severity == "info"
         ]
         assert len(bsl_checks) >= 0  # May or may not be present

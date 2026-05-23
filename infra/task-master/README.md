@@ -181,7 +181,7 @@ Initialize taskmaster-ai in my project
 
 #### 5. Make sure you have a PRD (Recommended)
 
-For **new projects**: Create your PRD at `.taskmaster/docs/prd.txt`  
+For **new projects**: Create your PRD at `.taskmaster/docs/prd.txt`
 For **existing projects**: You can use `scripts/prd.txt` or migrate with `task-master migrate`
 
 An example PRD template is available after initialization in `.taskmaster/templates/example_prd.txt`.
@@ -283,7 +283,7 @@ Task Master includes built-in Cursor editor integration with keyboard shortcuts 
 The `.cursor/keybindings.json` file provides convenient shortcuts using `Ctrl+Shift+T` prefix:
 
 - `Ctrl+Shift+T L` - List all tasks
-- `Ctrl+Shift+T J` - List tasks in JSON format  
+- `Ctrl+Shift+T J` - List tasks in JSON format
 - `Ctrl+Shift+T N` - Get next available task
 - `Ctrl+Shift+T P` - List pending tasks
 - `Ctrl+Shift+T S` - Show specific task (leaves cursor for ID input)

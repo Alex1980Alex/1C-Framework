@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, bsl, 1c, integration]
+related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[core-framework-separation]]"]
+---
+
 # BSL Integration Architecture
 
 **Date:** 2026-03-08 | **Migration:** Phases 44-55 | **Source:** D:\1C-Enterprise_Framework

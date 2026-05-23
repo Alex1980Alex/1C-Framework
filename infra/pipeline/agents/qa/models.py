@@ -5,13 +5,14 @@ Data classes for test cases, results, and reports.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class TestType(Enum):
     """Types of tests."""
+
     UNIT = "unit"
     INTEGRATION = "integration"
     FUNCTIONAL = "functional"
@@ -23,6 +24,7 @@ class TestType(Enum):
 
 class TestStatus(Enum):
     """Test execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     PASSED = "passed"
@@ -33,10 +35,11 @@ class TestStatus(Enum):
 
 class Severity(Enum):
     """Defect severity levels."""
+
     CRITICAL = "critical"  # Blocking, system crash
-    MAJOR = "major"        # Major functionality broken
-    MINOR = "minor"        # Minor issues, workarounds exist
-    TRIVIAL = "trivial"    # Cosmetic issues
+    MAJOR = "major"  # Major functionality broken
+    MINOR = "minor"  # Minor issues, workarounds exist
+    TRIVIAL = "trivial"  # Cosmetic issues
 
 
 @dataclass
@@ -55,18 +58,19 @@ class TestCase:
         expected_result: Expected outcome
         priority: Test priority (1-5, 1 is highest)
     """
+
     id: str
     name: str
     description: str
     test_type: TestType
-    requirement_id: Optional[str] = None
-    preconditions: List[str] = field(default_factory=list)
-    steps: List[str] = field(default_factory=list)
+    requirement_id: str | None = None
+    preconditions: list[str] = field(default_factory=list)
+    steps: list[str] = field(default_factory=list)
     expected_result: str = ""
     priority: int = 3
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -128,13 +132,14 @@ class TestResult:
         screenshots: Paths to screenshots if any
         logs: Execution logs
     """
+
     test_case: TestCase
     status: TestStatus
     actual_result: str = ""
-    error_message: Optional[str] = None
+    error_message: str | None = None
     execution_time_ms: int = 0
-    screenshots: List[str] = field(default_factory=list)
-    logs: List[str] = field(default_factory=list)
+    screenshots: list[str] = field(default_factory=list)
+    logs: list[str] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
 
     @property
@@ -142,7 +147,7 @@ class TestResult:
         """Check if test passed."""
         return self.status == TestStatus.PASSED
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "test_id": self.test_case.id,
@@ -184,17 +189,18 @@ class Defect:
         expected_behavior: What should happen
         status: Current status
     """
+
     id: str
     title: str
     description: str
     severity: Severity
-    test_case_id: Optional[str] = None
-    steps_to_reproduce: List[str] = field(default_factory=list)
+    test_case_id: str | None = None
+    steps_to_reproduce: list[str] = field(default_factory=list)
     actual_behavior: str = ""
     expected_behavior: str = ""
     status: str = "open"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "id": self.id,
@@ -257,10 +263,11 @@ class TestSuite:
         test_cases: List of test cases
         tags: Suite tags
     """
+
     name: str
     description: str = ""
-    test_cases: List[TestCase] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    test_cases: list[TestCase] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     def add_test(self, test_case: TestCase) -> None:
         """Add a test case to the suite."""
@@ -271,22 +278,22 @@ class TestSuite:
         """Get total number of tests."""
         return len(self.test_cases)
 
-    def get_by_requirement(self, requirement_id: str) -> List[TestCase]:
+    def get_by_requirement(self, requirement_id: str) -> list[TestCase]:
         """Get all tests for a specific requirement."""
         return [tc for tc in self.test_cases if tc.requirement_id == requirement_id]
 
-    def get_by_type(self, test_type: TestType) -> List[TestCase]:
+    def get_by_type(self, test_type: TestType) -> list[TestCase]:
         """Get all tests of a specific type."""
         return [tc for tc in self.test_cases if tc.test_type == test_type]
 
-    def get_test(self, test_id: str) -> Optional[TestCase]:
+    def get_test(self, test_id: str) -> TestCase | None:
         """Get test case by ID."""
         for tc in self.test_cases:
             if tc.id == test_id:
                 return tc
         return None
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "name": self.name,
@@ -312,13 +319,14 @@ class QAReport:
         recommendations: QA recommendations
         verdict: Overall QA verdict
     """
+
     project_id: str
     task_id: str
     test_suite: TestSuite
-    results: List[TestResult] = field(default_factory=list)
-    defects: List[Defect] = field(default_factory=list)
-    coverage: Dict[str, Any] = field(default_factory=dict)
-    recommendations: List[str] = field(default_factory=list)
+    results: list[TestResult] = field(default_factory=list)
+    defects: list[Defect] = field(default_factory=list)
+    coverage: dict[str, Any] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
     verdict: str = "PENDING"
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -350,16 +358,16 @@ class QAReport:
         return (self.passed_tests / self.total_tests) * 100
 
     @property
-    def critical_defects(self) -> List[Defect]:
+    def critical_defects(self) -> list[Defect]:
         """Get critical defects."""
         return [d for d in self.defects if d.severity == Severity.CRITICAL]
 
     @property
-    def major_defects(self) -> List[Defect]:
+    def major_defects(self) -> list[Defect]:
         """Get major defects."""
         return [d for d in self.defects if d.severity == Severity.MAJOR]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "project_id": self.project_id,
@@ -408,40 +416,48 @@ class QAReport:
 
         # Results table
         if self.results:
-            lines.extend([
-                "## 📋 Результаты тестирования",
-                "",
-                "| ID | Название | Статус | Время |",
-                "|----|----------|--------|-------|",
-            ])
+            lines.extend(
+                [
+                    "## 📋 Результаты тестирования",
+                    "",
+                    "| ID | Название | Статус | Время |",
+                    "|----|----------|--------|-------|",
+                ]
+            )
             for result in self.results:
                 lines.append(result.to_markdown())
             lines.append("")
 
         # Defects section
         if self.defects:
-            lines.extend([
-                "## 🐛 Найденные дефекты",
-                "",
-                f"**Всего:** {len(self.defects)} "
-                f"(🔴 Критических: {len(self.critical_defects)}, "
-                f"🟠 Важных: {len(self.major_defects)})",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 🐛 Найденные дефекты",
+                    "",
+                    f"**Всего:** {len(self.defects)} "
+                    f"(🔴 Критических: {len(self.critical_defects)}, "
+                    f"🟠 Важных: {len(self.major_defects)})",
+                    "",
+                ]
+            )
             for defect in self.defects:
                 lines.append(defect.to_markdown())
                 lines.append("")
 
         # Coverage section
         if self.coverage:
-            lines.extend([
-                "## 📈 Покрытие",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 📈 Покрытие",
+                    "",
+                ]
+            )
             if "requirements" in self.coverage:
                 req_cov = self.coverage["requirements"]
-                lines.append(f"**Покрытие требований:** {req_cov.get('covered', 0)}/{req_cov.get('total', 0)} "
-                           f"({req_cov.get('percentage', 0):.1f}%)")
+                lines.append(
+                    f"**Покрытие требований:** {req_cov.get('covered', 0)}/{req_cov.get('total', 0)} "
+                    f"({req_cov.get('percentage', 0):.1f}%)"
+                )
             if "code" in self.coverage:
                 code_cov = self.coverage["code"]
                 lines.append(f"**Покрытие кода:** {code_cov.get('percentage', 0):.1f}%")
@@ -449,19 +465,23 @@ class QAReport:
 
         # Recommendations
         if self.recommendations:
-            lines.extend([
-                "## 💡 Рекомендации",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 💡 Рекомендации",
+                    "",
+                ]
+            )
             for rec in self.recommendations:
                 lines.append(f"- {rec}")
             lines.append("")
 
         # Footer
-        lines.extend([
-            "---",
-            "",
-            f"*Отчёт сгенерирован QA Agent*",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "*Отчёт сгенерирован QA Agent*",
+            ]
+        )
 
         return "\n".join(lines)

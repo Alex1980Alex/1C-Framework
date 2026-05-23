@@ -5,7 +5,7 @@
 # Priority: high
 # Description: Add new CLI commands 'scope-up' and 'scope-down' to enable users to dynamically increase or decrease the complexity of tasks or subtasks, with support for multiple IDs, strength levels, milestone-aware adjustments, and custom prompts for targeted modifications.
 # Details:
-1. Extend the CLI (commands.js) to introduce 'scope-up' and 'scope-down' commands, following established subcommand patterns for consistency and discoverability. 
+1. Extend the CLI (commands.js) to introduce 'scope-up' and 'scope-down' commands, following established subcommand patterns for consistency and discoverability.
 2. Accept comma-separated task/subtask IDs and an optional '--strength' flag (light|regular|heavy, defaulting to regular). Validate all inputs, ensuring referenced tasks/subtasks exist and strength is valid.
 3. Implement a '--prompt' flag that allows users to specify custom instructions for how to scope up/down tasks, including targeting specific parts of tasks/subtasks (e.g., removing unnecessary test sections, focusing on particular implementation aspects).
 4. Fetch current task details and associated milestone context to inform the adjustment logic.
@@ -130,7 +130,7 @@ MCP Integration Complete:
 - Both follow the exact same pattern as add-task direct function with proper error handling and silent mode
 
 ✅ **MCP Tools Created:**
-- Created `mcp-server/src/tools/scope-up.js` - MCP tool for scope_up_task 
+- Created `mcp-server/src/tools/scope-up.js` - MCP tool for scope_up_task
 - Created `mcp-server/src/tools/scope-down.js` - MCP tool for scope_down_task
 - Both follow the exact same pattern as add-task tool with proper Zod schema validation
 
@@ -141,7 +141,7 @@ MCP Integration Complete:
 
 ✅ **Tool Parameters:**
 - `id`: Comma-separated list of task IDs (required)
-- `strength`: light/regular/heavy (optional, defaults to regular)  
+- `strength`: light/regular/heavy (optional, defaults to regular)
 - `prompt`: Custom scoping instructions (optional)
 - `file`: Path to tasks.json (optional, auto-detected)
 - `projectRoot`: Absolute project path (required)
@@ -155,4 +155,3 @@ MCP Integration Complete:
 
 **Status**: MCP integration complete. Requires MCP server restart for new tools to become available.
 </info added on 2025-08-02T14:00:38.363Z>
-

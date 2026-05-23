@@ -18,8 +18,6 @@
 docs/extension-CI-setup.md
 docs/extension-DEV-guide.md
 
-# Exclude 
+# Exclude
 assets/.DS_Store
 assets/banner.png
-
-

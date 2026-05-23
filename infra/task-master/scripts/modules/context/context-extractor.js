@@ -42,7 +42,7 @@ export async function extractFromFile(filePath, options = {}) {
 	try {
 		// Resolve absolute path
 		const absolutePath = path.resolve(filePath);
-		
+
 		// Check if file exists
 		if (!fs.existsSync(absolutePath)) {
 			return {
@@ -118,7 +118,7 @@ export async function extractFromFiles(filePaths, options = {}) {
 
 	for (const filePath of filePaths) {
 		const result = await extractFromFile(filePath, options);
-		
+
 		if (result.success) {
 			// Check if adding this file would exceed total size limit
 			if (totalSize + result.size > maxTotalSize) {
@@ -155,14 +155,14 @@ export async function extractFromFiles(filePaths, options = {}) {
  * @returns {Promise<ContextResult[]>} Array of extraction results
  */
 export async function extractFromCursorRules(rulesPattern, options = {}) {
-	const { 
-		rulesDir = '.cursor/rules', 
-		projectRoot = process.cwd() 
+	const {
+		rulesDir = '.cursor/rules',
+		projectRoot = process.cwd()
 	} = options;
 
 	try {
 		const rulesPath = path.resolve(projectRoot, rulesDir);
-		
+
 		// Check if rules directory exists
 		if (!fs.existsSync(rulesPath)) {
 			return [{
@@ -229,10 +229,10 @@ export async function extractFromCursorRules(rulesPattern, options = {}) {
  * @returns {string} Formatted context content
  */
 export function formatContextForPrompt(contextResults, options = {}) {
-	const { 
-		includeSource = true, 
-		includeErrors = false, 
-		separator = '\n\n---\n\n' 
+	const {
+		includeSource = true,
+		includeErrors = false,
+		separator = '\n\n---\n\n'
 	} = options;
 
 	const sections = [];
@@ -240,11 +240,11 @@ export function formatContextForPrompt(contextResults, options = {}) {
 	for (const result of contextResults) {
 		if (result.success && result.content.trim()) {
 			let section = '';
-			
+
 			if (includeSource) {
 				section += `### Context from: ${result.source}\n\n`;
 			}
-			
+
 			section += result.content.trim();
 			sections.push(section);
 		} else if (includeErrors && !result.success) {
@@ -278,10 +278,10 @@ export function getContextStats(contextResults) {
 	if (successfulResults.length > 0) {
 		stats.totalCharacters = successfulResults.reduce((sum, r) => sum + r.size, 0);
 		stats.averageFileSize = Math.round(stats.totalCharacters / successfulResults.length);
-		
+
 		const sizes = successfulResults.map(r => ({ source: r.source, size: r.size }));
 		sizes.sort((a, b) => b.size - a.size);
-		
+
 		stats.largestFile = sizes[0];
 		stats.smallestFile = sizes[sizes.length - 1];
 	}
@@ -311,7 +311,7 @@ export function validateContext(content, options = {}) {
 		if (content.includes('\uFFFD')) {
 			issues.push('Content contains invalid UTF-8 characters');
 		}
-		
+
 		// Check for unusual control characters
 		const controlChars = content.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g);
 		if (controlChars) {
@@ -356,11 +356,11 @@ export function truncateContext(content, maxLength, options = {}) {
 	switch (strategy) {
 		case 'start':
 			return marker + content.slice(content.length - availableLength);
-		
+
 		case 'middle':
 			const halfLength = Math.floor(availableLength / 2);
 			return content.slice(0, halfLength) + marker + content.slice(content.length - halfLength);
-		
+
 		case 'end':
 		default:
 			return content.slice(0, availableLength) + marker;

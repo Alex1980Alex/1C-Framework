@@ -35,17 +35,17 @@ class UserManager
   def create_user_with_tracking(id, name, email = nil)
     user = @service.create_user(id, name)
     user.email = email if email
-    
+
     update_statistics
     notify_user_created(user)
-    
+
     user
   end
 
   def get_user_details(id)
     user = @service.get_user(id)
     return nil unless user
-    
+
     {
       user_info: user.full_info,
       created_at: Time.now,
@@ -55,12 +55,12 @@ class UserManager
 
   def bulk_create_users(user_data_list)
     created_users = []
-    
+
     user_data_list.each do |data|
       user = create_user_with_tracking(data[:id], data[:name], data[:email])
       created_users << user
     end
-    
+
     created_users
   end
 
@@ -85,27 +85,27 @@ def process_user_data(raw_data)
       email: entry["email"] || entry[:email]
     }
   end
-  
+
   processed.reject { |entry| entry[:name].nil? || entry[:name].empty? }
 end
 
 def main
   # Example usage
   manager = UserManager.new
-  
+
   sample_data = [
     { id: 1, name: "Alice Johnson", email: "alice@example.com" },
     { id: 2, name: "Bob Smith", email: "bob@example.com" },
     { id: 3, name: "Charlie Brown" }
   ]
-  
+
   users = manager.bulk_create_users(sample_data)
-  
+
   users.each do |user|
     details = manager.get_user_details(user.id)
     puts details[:user_info]
   end
-  
+
   puts "\nFinal statistics:"
   stats = UserStats.new
   stats.update_stats(users.length, users.length)

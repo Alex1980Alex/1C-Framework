@@ -5330,7 +5330,7 @@ Examples:
 
 				const outputFormat = options.json ? 'json' : 'text';
 				const result = await tags(taskMaster.getTasksPath(), listOptions, context, outputFormat);
-				
+
 				if (options.json && result) {
 					console.log(JSON.stringify(result, null, 2));
 				}

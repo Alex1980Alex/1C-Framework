@@ -11,14 +11,15 @@ Provides visualization and monitoring capabilities:
 from __future__ import annotations
 
 import threading
-from enum import Enum
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List, Callable
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from .logger import get_logger, get_memory_handler, LogLevel, LogEntry
-from .metrics import get_metrics, MetricsCollector
-from .tracer import get_tracer, get_span_processor, Span, SpanStatus
+from .logger import LogLevel, get_memory_handler
+from .metrics import get_metrics
+from .tracer import SpanStatus, get_span_processor
 
 
 class PanelType(Enum):
@@ -74,7 +75,7 @@ class DashboardConfig:
     compact_mode: bool = False
     auto_refresh: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "title": self.title,
@@ -87,7 +88,7 @@ class DashboardConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DashboardConfig":
+    def from_dict(cls, data: dict[str, Any]) -> DashboardConfig:
         """Create from dictionary."""
         return cls(
             title=data.get("title", "Pipeline Dashboard"),
@@ -111,10 +112,10 @@ class DashboardPanel:
     width: int = 1  # Grid columns (1-4)
     height: int = 1  # Grid rows
     visible: bool = True
-    data_source: Optional[str] = None
-    options: Dict[str, Any] = field(default_factory=dict)
+    data_source: str | None = None
+    options: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "panel_id": self.panel_id,
@@ -129,7 +130,7 @@ class DashboardPanel:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DashboardPanel":
+    def from_dict(cls, data: dict[str, Any]) -> DashboardPanel:
         """Create from dictionary."""
         return cls(
             panel_id=data["panel_id"],
@@ -152,9 +153,9 @@ class StatusCheck:
     status: HealthStatus
     message: str = ""
     last_check: datetime = field(default_factory=datetime.now)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "name": self.name,
@@ -170,14 +171,14 @@ class Dashboard:
 
     def __init__(
         self,
-        config: Optional[DashboardConfig] = None,
+        config: DashboardConfig | None = None,
     ):
         self.config = config or DashboardConfig()
-        self._panels: Dict[str, DashboardPanel] = {}
-        self._health_checks: Dict[str, Callable[[], StatusCheck]] = {}
-        self._custom_data_sources: Dict[str, Callable[[], Any]] = {}
+        self._panels: dict[str, DashboardPanel] = {}
+        self._health_checks: dict[str, Callable[[], StatusCheck]] = {}
+        self._custom_data_sources: dict[str, Callable[[], Any]] = {}
         self._lock = threading.Lock()
-        self._last_refresh: Optional[datetime] = None
+        self._last_refresh: datetime | None = None
 
         # Register default health checks
         self._register_default_health_checks()
@@ -228,10 +229,10 @@ class Dashboard:
             metrics = get_metrics()
             data = metrics.collect_all()
             metric_count = (
-                len(data.get("counters", {})) +
-                len(data.get("gauges", {})) +
-                len(data.get("histograms", {})) +
-                len(data.get("timers", {}))
+                len(data.get("counters", {}))
+                + len(data.get("gauges", {}))
+                + len(data.get("histograms", {}))
+                + len(data.get("timers", {}))
             )
 
             return StatusCheck(
@@ -301,12 +302,12 @@ class Dashboard:
                 return True
             return False
 
-    def get_panel(self, panel_id: str) -> Optional[DashboardPanel]:
+    def get_panel(self, panel_id: str) -> DashboardPanel | None:
         """Get a panel by ID."""
         with self._lock:
             return self._panels.get(panel_id)
 
-    def list_panels(self) -> List[DashboardPanel]:
+    def list_panels(self) -> list[DashboardPanel]:
         """List all panels sorted by position."""
         with self._lock:
             panels = list(self._panels.values())
@@ -330,7 +331,7 @@ class Dashboard:
         with self._lock:
             self._custom_data_sources[name] = source_fn
 
-    def get_health_status(self) -> Dict[str, StatusCheck]:
+    def get_health_status(self) -> dict[str, StatusCheck]:
         """Run all health checks and get status."""
         results = {}
         with self._lock:
@@ -368,9 +369,9 @@ class Dashboard:
 
     def get_logs(
         self,
-        level: Optional[LogLevel] = None,
-        limit: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        level: LogLevel | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Get recent log entries."""
         handler = get_memory_handler()
         if handler is None:
@@ -381,7 +382,7 @@ class Dashboard:
 
         return [e.to_dict() for e in entries]
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get metrics summary."""
         try:
             metrics = get_metrics()
@@ -391,9 +392,9 @@ class Dashboard:
 
     def get_traces(
         self,
-        trace_id: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        trace_id: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Get recent traces."""
         processor = get_span_processor()
         if processor is None:
@@ -404,7 +405,7 @@ class Dashboard:
 
         return [s.to_dict() for s in spans]
 
-    def get_panel_data(self, panel_id: str) -> Dict[str, Any]:
+    def get_panel_data(self, panel_id: str) -> dict[str, Any]:
         """Get data for a specific panel."""
         panel = self.get_panel(panel_id)
         if panel is None:
@@ -431,8 +432,7 @@ class Dashboard:
             return {
                 "overall": self.get_overall_health().value,
                 "checks": {
-                    name: check.to_dict()
-                    for name, check in self.get_health_status().items()
+                    name: check.to_dict() for name, check in self.get_health_status().items()
                 },
             }
 
@@ -446,7 +446,7 @@ class Dashboard:
 
         return {}
 
-    def refresh(self) -> Dict[str, Any]:
+    def refresh(self) -> dict[str, Any]:
         """Refresh all dashboard data."""
         self._last_refresh = datetime.now()
 
@@ -522,7 +522,7 @@ class Dashboard:
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Export dashboard configuration."""
         return {
             "config": self.config.to_dict(),
@@ -530,7 +530,7 @@ class Dashboard:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Dashboard":
+    def from_dict(cls, data: dict[str, Any]) -> Dashboard:
         """Create dashboard from dictionary."""
         config = DashboardConfig.from_dict(data.get("config", {}))
         dashboard = cls(config=config)
@@ -552,50 +552,58 @@ def create_dashboard(
 
     if include_default_panels:
         # Status panel
-        dashboard.add_panel(DashboardPanel(
-            panel_id="status",
-            title="System Status",
-            panel_type=PanelType.STATUS,
-            position=0,
-            width=4,
-            height=1,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="status",
+                title="System Status",
+                panel_type=PanelType.STATUS,
+                position=0,
+                width=4,
+                height=1,
+            )
+        )
 
         # Logs panel
-        dashboard.add_panel(DashboardPanel(
-            panel_id="logs",
-            title="Recent Logs",
-            panel_type=PanelType.LOGS,
-            position=1,
-            width=2,
-            height=2,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="logs",
+                title="Recent Logs",
+                panel_type=PanelType.LOGS,
+                position=1,
+                width=2,
+                height=2,
+            )
+        )
 
         # Metrics panel
-        dashboard.add_panel(DashboardPanel(
-            panel_id="metrics",
-            title="Metrics",
-            panel_type=PanelType.METRICS,
-            position=2,
-            width=2,
-            height=2,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="metrics",
+                title="Metrics",
+                panel_type=PanelType.METRICS,
+                position=2,
+                width=2,
+                height=2,
+            )
+        )
 
         # Traces panel
-        dashboard.add_panel(DashboardPanel(
-            panel_id="traces",
-            title="Recent Traces",
-            panel_type=PanelType.TRACES,
-            position=3,
-            width=4,
-            height=2,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="traces",
+                title="Recent Traces",
+                panel_type=PanelType.TRACES,
+                position=3,
+                width=4,
+                height=2,
+            )
+        )
 
     return dashboard
 
 
 # Global dashboard instance
-_dashboard: Optional[Dashboard] = None
+_dashboard: Dashboard | None = None
 _dashboard_lock = threading.Lock()
 
 

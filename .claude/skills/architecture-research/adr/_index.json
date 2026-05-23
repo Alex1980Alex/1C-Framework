@@ -56,6 +56,42 @@
       "date": "2026-02-12",
       "research": "../cache/core-vs-framework-separation.md",
       "tags": ["core-framework", "separation", "user-level", "project-level", "claude-code", "portability"]
+    },
+    {
+      "id": "ADR-007",
+      "file": "007-skill-delegated-subagent.md",
+      "title": "Skill-Delegated Subagent — передача знаний через prompt",
+      "status": "accepted",
+      "date": "2026-02-24",
+      "research": "../cache/skill-delegated-subagent-pattern.md",
+      "tags": ["skill", "subagent", "knowledge-delegation", "prompt-pattern"]
+    },
+    {
+      "id": "ADR-008",
+      "file": "008-qwen3-late-chunking-for-bsl-retrieval.md",
+      "title": "Qwen3-Embedding-8B + Late Chunking для BSL retrieval (Phase 8.12)",
+      "status": "accepted",
+      "date": "2026-04-30",
+      "research": "../cache/embedding-deployment-fa2-tei-chunking.md",
+      "tags": ["embedding-model", "qwen3", "late-chunking", "bsl-retrieval", "phase-8-12", "production-switchover", "tei", "ollama"]
+    },
+    {
+      "id": "ADR-009",
+      "file": "009-deepeval-thresholds.md",
+      "title": "DeepEval CI Gating Thresholds (faithfulness ≥ 0.7, hallucination ≤ 0.1)",
+      "status": "proposed",
+      "date": "2026-05-09",
+      "research": null,
+      "tags": ["eval", "deepeval", "ci-gate", "rag-quality", "faithfulness", "hallucination", "phase-3-9"]
+    },
+    {
+      "id": "ADR-010",
+      "file": "010-langfuse-production-observability.md",
+      "title": "Langfuse для Production LLM Observability (Cloud + self-host fallback)",
+      "status": "proposed",
+      "date": "2026-05-09",
+      "research": null,
+      "tags": ["observability", "langfuse", "tracing", "production", "phase-5c", "monitoring", "cost-tracking"]
     }
   ]
 }

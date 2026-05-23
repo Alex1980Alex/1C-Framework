@@ -53,9 +53,9 @@ Var Body;
 //  // ДанныеКакБайты теперь содержит двоичные данные строки "Тестовые данные"
 //
 Function GetBodyAsBinaryData() Export
-	
+
 	BodyType = TypeOf(Body);
-	
+
 	If Body = Undefined Then
 		Return GetBinaryDataFromBase64String("");
 	ElsIf BodyType = Type("BinaryData") Then
@@ -63,7 +63,7 @@ Function GetBodyAsBinaryData() Export
 	ElsIf BodyType = Type("String") Then
 		Return GetBinaryDataFromString(Body);
 	EndIf;
-	
+
 EndFunction
 
 // Возвращает тело HTTP-запроса как поток для чтения.
@@ -82,9 +82,9 @@ EndFunction
 //  ПотокТела.Закрыть();
 //
 Function GetBodyAsStream() Export
-	
+
 	Return GetBodyAsBinaryData().OpenStreamForRead();
-	
+
 EndFunction
 
 // Возвращает тело HTTP-запроса как строку.
@@ -109,9 +109,9 @@ EndFunction
 //  // ТекстовоеПредставление будет содержать "Данные в windows-1251"
 //
 Function GetBodyAsString(Encoding = Undefined) Export
-	
+
 	BodyType = TypeOf(Body);
-	
+
 	If Body = Undefined Then
 		Return "";
 	ElsIf BodyType = Тип("BinaryData") Then
@@ -119,7 +119,7 @@ Function GetBodyAsString(Encoding = Undefined) Export
 	ElsIf BodyType = Тип("String") Then
 		Return Body;
 	EndIf;
-	
+
 EndFunction
 
 // Устанавливает тело HTTP-запроса из двоичных данных.
@@ -137,10 +137,10 @@ EndFunction
 //  Запрос.УстановитьТелоКакДвоичныеДанные(ФайлДанных.ПолучитьДвоичныеДанные());
 //
 Function УстановитьТелоКакДвоичныеДанные(Data) Export
-	
+
 	Body = Data;
 	Return ThisObject;
-	
+
 EndFunction
 
 // Устанавливает тело HTTP-запроса из строки.
@@ -157,10 +157,10 @@ EndFunction
 //  Запрос.УстановитьТелоКакСтроку("<soap:Envelope>...</soap:Envelope>");
 //
 Function УстановитьТелоКакСтроку(String) Export
-	
+
 	Body = String;
 	Return ThisObject;
-	
+
 EndFunction
 
 // Устанавливает тело HTTP-запроса как строку JSON, сериализуя переданные данные.
@@ -181,15 +181,15 @@ EndFunction
 //    .ДобавитьЗаголовок("Content-Type", "application/json");
 //
 Function УстановитьТелоКакСтрокуJSON(Data) Export
-	
+
 	JSONWriter = Новый JSONWriter();
 	JSONWriter.SetString();
 	WriteJSON(JSONWriter, Data);
-	
+
 	Body = JSONWriter.Close();
-	
+
 	Return ThisObject;
-	
+
 EndFunction
 
 // Добавляет HTTP-заголовок к запросу.
@@ -208,10 +208,10 @@ EndFunction
 //         .ДобавитьЗаголовок("X-Custom-Header", "MyValue");
 //
 Function ДобавитьЗаголовок(HeaderName, Value) Export
-	
+
 	Headers.Insert(HeaderName, Value);
 	Return ThisObject;
-	
+
 EndFunction
 
 // Добавляет параметр в строку запроса (query string).
@@ -234,10 +234,10 @@ EndFunction
 //  // Сформированный URL будет примерно: http://example.com/api/items?filter=active&limit=10
 //
 Function ДобавитьПараметрЗапроса(ParameterName, Value) Export
-	
+
 	QueryOptions.Insert(ParameterName, Value);
 	Return ThisObject;
-	
+
 EndFunction
 
 // Добавляет параметр для подстановки в путь URL (path parameter).
@@ -262,10 +262,10 @@ EndFunction
 //  // Сформированный URL будет: http://api.example.com/orders/12345/items/ABC
 //
 Function ДобавитьПараметрURL(ParameterName, Value) Export
-	
+
 	URLParameters.Insert(ParameterName, Value);
 	Return ThisObject;
-	
+
 EndFunction
 
 // Устанавливает HTTP-метод для запроса.
@@ -282,10 +282,10 @@ EndFunction
 //  Запрос.Метод("POST");
 //
 Function Метод(Value) Export
-	
+
 	HTTPMethod = Value;
 	Return ThisObject;
-	
+
 EndFunction
 
 // Устанавливает базовый URL для HTTP-запроса.
@@ -305,10 +305,10 @@ EndFunction
 //  Запрос.БазовыйURL("https://api.example.com/production");
 //
 Function БазовыйURL(Value) Export
-	
+
 	BaseURL = Value;
 	Return ThisObject;
-	
+
 EndFunction
 
 // Устанавливает относительный URL (путь) для HTTP-запроса.
@@ -329,10 +329,10 @@ EndFunction
 //  // Полный URL будет: http://server.com/api/data/export
 //
 Function ОтносительныйURL(Value) Export
-	
+
 	RelativeURL = Value;
 	Return ThisObject;
-	
+
 EndFunction
 
 #КонецОбласти
@@ -340,14 +340,14 @@ EndFunction
 #Область СлужебныеПроцедурыИФункции
 
 Процедура Initialize()
-	
+
 	HTTPMethod = "GET";
 	BaseURL = "";
 	Headers = New Map();
 	RelativeURL = "";
 	URLParameters = New Map();
 	QueryOptions = New Map();
-	
+
 КонецПроцедуры
 
 #КонецОбласти

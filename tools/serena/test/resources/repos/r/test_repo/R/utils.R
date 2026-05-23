@@ -19,13 +19,13 @@ process_data <- function(data) {
     if (!is.data.frame(data)) {
         stop("Input must be a data frame")
     }
-    
+
     # Remove rows with any missing values
     clean_data <- na.omit(data)
-    
+
     # Add a processed flag
     clean_data$processed <- TRUE
-    
+
     return(clean_data)
 }
 

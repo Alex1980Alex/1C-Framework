@@ -1,20 +1,19 @@
 """Tests for monitoring dashboard module."""
 
-import pytest
 from datetime import datetime
 
 from .dashboard import (
-    PanelType,
-    HealthStatus,
+    Dashboard,
     DashboardConfig,
     DashboardPanel,
+    HealthStatus,
+    PanelType,
     StatusCheck,
-    Dashboard,
     create_dashboard,
     get_dashboard,
     reset_dashboard,
 )
-from .logger import configure_logging, get_logger, LogLevel
+from .logger import configure_logging, get_logger
 from .metrics import get_metrics, reset_metrics
 from .tracer import configure_tracing, get_tracer
 
@@ -292,24 +291,30 @@ class TestDashboard:
     def test_list_panels_sorted(self):
         """Test panels are sorted by position."""
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="third",
-            title="Third",
-            panel_type=PanelType.LOGS,
-            position=3,
-        ))
-        dashboard.add_panel(DashboardPanel(
-            panel_id="first",
-            title="First",
-            panel_type=PanelType.LOGS,
-            position=1,
-        ))
-        dashboard.add_panel(DashboardPanel(
-            panel_id="second",
-            title="Second",
-            panel_type=PanelType.LOGS,
-            position=2,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="third",
+                title="Third",
+                panel_type=PanelType.LOGS,
+                position=3,
+            )
+        )
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="first",
+                title="First",
+                panel_type=PanelType.LOGS,
+                position=1,
+            )
+        )
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="second",
+                title="Second",
+                panel_type=PanelType.LOGS,
+                position=2,
+            )
+        )
 
         panels = dashboard.list_panels()
 
@@ -415,11 +420,13 @@ class TestDashboard:
         logger.info("Test message")
 
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="logs",
-            title="Logs",
-            panel_type=PanelType.LOGS,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="logs",
+                title="Logs",
+                panel_type=PanelType.LOGS,
+            )
+        )
 
         data = dashboard.get_panel_data("logs")
 
@@ -434,11 +441,13 @@ class TestDashboard:
         counter.inc(5)
 
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="metrics",
-            title="Metrics",
-            panel_type=PanelType.METRICS,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="metrics",
+                title="Metrics",
+                panel_type=PanelType.METRICS,
+            )
+        )
 
         data = dashboard.get_panel_data("metrics")
 
@@ -452,11 +461,13 @@ class TestDashboard:
             pass
 
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="traces",
-            title="Traces",
-            panel_type=PanelType.TRACES,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="traces",
+                title="Traces",
+                panel_type=PanelType.TRACES,
+            )
+        )
 
         data = dashboard.get_panel_data("traces")
 
@@ -465,11 +476,13 @@ class TestDashboard:
     def test_get_panel_data_status(self):
         """Test getting status panel data."""
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="status",
-            title="Status",
-            panel_type=PanelType.STATUS,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="status",
+                title="Status",
+                panel_type=PanelType.STATUS,
+            )
+        )
 
         data = dashboard.get_panel_data("status")
 
@@ -487,11 +500,13 @@ class TestDashboard:
     def test_refresh(self):
         """Test dashboard refresh."""
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="test",
-            title="Test",
-            panel_type=PanelType.STATUS,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="test",
+                title="Test",
+                panel_type=PanelType.STATUS,
+            )
+        )
 
         result = dashboard.refresh()
 
@@ -504,18 +519,22 @@ class TestDashboard:
     def test_refresh_excludes_hidden_panels(self):
         """Test refresh excludes hidden panels."""
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="visible",
-            title="Visible",
-            panel_type=PanelType.STATUS,
-            visible=True,
-        ))
-        dashboard.add_panel(DashboardPanel(
-            panel_id="hidden",
-            title="Hidden",
-            panel_type=PanelType.STATUS,
-            visible=False,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="visible",
+                title="Visible",
+                panel_type=PanelType.STATUS,
+                visible=True,
+            )
+        )
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="hidden",
+                title="Hidden",
+                panel_type=PanelType.STATUS,
+                visible=False,
+            )
+        )
 
         result = dashboard.refresh()
 
@@ -534,11 +553,13 @@ class TestDashboard:
     def test_to_dict(self):
         """Test dashboard export."""
         dashboard = Dashboard()
-        dashboard.add_panel(DashboardPanel(
-            panel_id="test",
-            title="Test",
-            panel_type=PanelType.LOGS,
-        ))
+        dashboard.add_panel(
+            DashboardPanel(
+                panel_id="test",
+                title="Test",
+                panel_type=PanelType.LOGS,
+            )
+        )
 
         result = dashboard.to_dict()
 
@@ -568,13 +589,15 @@ class TestDashboard:
     def test_dashboard_roundtrip(self):
         """Test dashboard export/import roundtrip."""
         original = Dashboard(DashboardConfig(title="Roundtrip"))
-        original.add_panel(DashboardPanel(
-            panel_id="panel1",
-            title="Panel 1",
-            panel_type=PanelType.METRICS,
-            position=1,
-            width=2,
-        ))
+        original.add_panel(
+            DashboardPanel(
+                panel_id="panel1",
+                title="Panel 1",
+                panel_type=PanelType.METRICS,
+                position=1,
+                width=2,
+            )
+        )
 
         data = original.to_dict()
         restored = Dashboard.from_dict(data)
@@ -638,11 +661,13 @@ class TestGlobalDashboard:
     def test_reset_dashboard(self):
         """Test resetting global dashboard."""
         dashboard1 = get_dashboard()
-        dashboard1.add_panel(DashboardPanel(
-            panel_id="temp",
-            title="Temp",
-            panel_type=PanelType.LOGS,
-        ))
+        dashboard1.add_panel(
+            DashboardPanel(
+                panel_id="temp",
+                title="Temp",
+                panel_type=PanelType.LOGS,
+            )
+        )
 
         reset_dashboard()
 

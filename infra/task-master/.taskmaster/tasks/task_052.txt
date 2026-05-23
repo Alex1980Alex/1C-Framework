@@ -80,4 +80,3 @@ Create an interactive selection interface where users can review suggestions, se
 ### Description: Implement various configuration options and command flags for customizing suggestion behavior
 ### Details:
 Create a comprehensive set of command flags for controlling suggestion quantity, specificity, format, and other parameters. Implement persistent configuration options that users can set as defaults. Document all available options and provide examples of common usage patterns.
-

@@ -32,6 +32,33 @@
 | 4 Статанализ | `bsl_execute` | Проверить чистую логику (без базы) |
 | 4 Статанализ | `bsl_debug_start/step/variables` | Пошаговая отладка |
 
+## bsl-semantic-search refactor (рефакторинг, добавлено 2026-04-19)
+
+Активируется когда задача содержит рефакторинг (rename / замена тела / удаление с проверкой references).
+Routing matrix v2 (`src/bsl/semantic_search/refactor/routing_matrix.yaml`) выбирает backend автоматически.
+
+| Этап | Инструмент | Назначение |
+|---|---|---|
+| 1 Подготовка | `bsl_find_references` | Cross-file поиск вызовов (primary, заменяет EDT-MCP `find_references` для rename-сценариев) |
+| 3 BSL | `bsl_rename_symbol` | Переименование функции/переменной с verification (dry_run → confirm_token → apply) |
+| 3 BSL | `bsl_replace_method_body` | Атомарная замена тела метода (без line drift после предыдущих Edit) |
+| 3 BSL | `bsl_insert_after_method` | Вставка нового метода после якорного |
+| 3 BSL | `bsl_insert_before_method` | Вставка нового метода перед якорным |
+| 5 Верификация | `bsl_safe_delete_symbol` | Удаление с проверкой references (0 callers = safe) |
+
+**Когда применять:**
+- Rename процедуры/переменной/параметра → `bsl_rename_symbol` (ВСЕГДА dry_run first)
+- Замена тела существующего метода → `bsl_replace_method_body` (вместо ручного `write_module_source` с line numbers)
+- Добавление нового метода рядом с существующим → `bsl_insert_after_method` (якорь стабильнее, чем startLine)
+
+**Когда НЕ применять:**
+- Добавление нового функционала (новые реквизиты, формы, подсистемы) → EDT-MCP `write_module_source` напрямую
+- Точечная правка 1-2 строк внутри метода → EDT-MCP `write_module_source` с `searchReplace`
+- Динамические вызовы (`Выполнить("Метод()")`) → manual tier (routing matrix вернёт `manual_required`)
+
+**Полный workflow:** [.claude/skills/bsl-refactoring-workflow/SKILL.md](../../bsl-refactoring-workflow/SKILL.md)
+**Symbol-anchored editing:** [.claude/skills/bsl-symbol-editing/SKILL.md](../../bsl-symbol-editing/SKILL.md)
+
 ## Ограничения
 
 - **bsl-debug-server**: OneScript, НЕ 1С:Предприятие. Нет доступа к Документы/Регистры/Справочники

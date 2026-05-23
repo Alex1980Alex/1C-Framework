@@ -4,16 +4,17 @@ Implements state checkpointing, persistence, and recovery
 for pipeline execution state.
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import datetime
-from pathlib import Path
-from typing import Optional, Any, Dict, List, Callable, TypeVar
 import asyncio
-import json
 import hashlib
+import json
 import logging
 import os
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +24,12 @@ T = TypeVar("T")
 class CheckpointType(Enum):
     """Types of checkpoints."""
 
-    MANUAL = "manual"           # Manually created
-    AUTOMATIC = "automatic"     # Auto-created on progress
-    PHASE_START = "phase_start" # At phase start
-    PHASE_END = "phase_end"     # At phase end
-    ERROR = "error"             # Created on error
-    RECOVERY = "recovery"       # Created during recovery
+    MANUAL = "manual"  # Manually created
+    AUTOMATIC = "automatic"  # Auto-created on progress
+    PHASE_START = "phase_start"  # At phase start
+    PHASE_END = "phase_end"  # At phase end
+    ERROR = "error"  # Created on error
+    RECOVERY = "recovery"  # Created during recovery
 
 
 class PipelinePhase(Enum):
@@ -57,8 +58,8 @@ class CheckpointMetadata:
 
     # Context
     pipeline_id: str
-    task_id: Optional[str] = None
-    agent_type: Optional[str] = None
+    task_id: str | None = None
+    agent_type: str | None = None
 
     # Progress info
     step_number: int = 0
@@ -66,19 +67,19 @@ class CheckpointMetadata:
     progress_percent: float = 0.0
 
     # Error info (if checkpoint_type == ERROR)
-    error_message: Optional[str] = None
-    error_type: Optional[str] = None
+    error_message: str | None = None
+    error_type: str | None = None
 
     # Storage info
-    file_path: Optional[str] = None
+    file_path: str | None = None
     file_size_bytes: int = 0
-    checksum: Optional[str] = None
+    checksum: str | None = None
 
     # Additional metadata
-    tags: List[str] = field(default_factory=list)
-    custom_data: Dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    custom_data: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "checkpoint_id": self.checkpoint_id,
@@ -101,7 +102,7 @@ class CheckpointMetadata:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "CheckpointMetadata":
+    def from_dict(cls, data: dict[str, Any]) -> "CheckpointMetadata":
         """Create from dictionary."""
         return cls(
             checkpoint_id=data["checkpoint_id"],
@@ -132,25 +133,25 @@ class StateCheckpoint:
 
     # Pipeline state
     current_phase: PipelinePhase
-    phase_data: Dict[str, Any] = field(default_factory=dict)
+    phase_data: dict[str, Any] = field(default_factory=dict)
 
     # Artifacts
-    artifacts: Dict[str, str] = field(default_factory=dict)  # name -> path
-    artifact_contents: Dict[str, str] = field(default_factory=dict)  # name -> content
+    artifacts: dict[str, str] = field(default_factory=dict)  # name -> path
+    artifact_contents: dict[str, str] = field(default_factory=dict)  # name -> content
 
     # Execution state
-    completed_steps: List[str] = field(default_factory=list)
-    pending_steps: List[str] = field(default_factory=list)
-    failed_steps: List[str] = field(default_factory=list)
+    completed_steps: list[str] = field(default_factory=list)
+    pending_steps: list[str] = field(default_factory=list)
+    failed_steps: list[str] = field(default_factory=list)
 
     # Variables/context
-    variables: Dict[str, Any] = field(default_factory=dict)
+    variables: dict[str, Any] = field(default_factory=dict)
 
     # History
-    phase_history: List[Dict[str, Any]] = field(default_factory=list)
-    error_history: List[Dict[str, Any]] = field(default_factory=list)
+    phase_history: list[dict[str, Any]] = field(default_factory=list)
+    error_history: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "metadata": self.metadata.to_dict(),
@@ -167,7 +168,7 @@ class StateCheckpoint:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "StateCheckpoint":
+    def from_dict(cls, data: dict[str, Any]) -> "StateCheckpoint":
         """Create from dictionary."""
         return cls(
             metadata=CheckpointMetadata.from_dict(data["metadata"]),
@@ -221,33 +222,33 @@ class StateManager:
     def __init__(
         self,
         pipeline_id: str,
-        config: Optional[StateManagerConfig] = None,
+        config: StateManagerConfig | None = None,
     ):
         self._pipeline_id = pipeline_id
         self._config = config or StateManagerConfig()
 
         # Current state
         self._current_phase = PipelinePhase.INIT
-        self._phase_data: Dict[str, Any] = {}
-        self._artifacts: Dict[str, str] = {}
-        self._artifact_contents: Dict[str, str] = {}
-        self._completed_steps: List[str] = []
-        self._pending_steps: List[str] = []
-        self._failed_steps: List[str] = []
-        self._variables: Dict[str, Any] = {}
+        self._phase_data: dict[str, Any] = {}
+        self._artifacts: dict[str, str] = {}
+        self._artifact_contents: dict[str, str] = {}
+        self._completed_steps: list[str] = []
+        self._pending_steps: list[str] = []
+        self._failed_steps: list[str] = []
+        self._variables: dict[str, Any] = {}
 
         # History
-        self._phase_history: List[Dict[str, Any]] = []
-        self._error_history: List[Dict[str, Any]] = []
-        self._checkpoints: List[CheckpointMetadata] = []
+        self._phase_history: list[dict[str, Any]] = []
+        self._error_history: list[dict[str, Any]] = []
+        self._checkpoints: list[CheckpointMetadata] = []
 
         # Auto-checkpoint
-        self._auto_checkpoint_task: Optional[asyncio.Task] = None
-        self._last_checkpoint_time: Optional[datetime] = None
+        self._auto_checkpoint_task: asyncio.Task | None = None
+        self._last_checkpoint_time: datetime | None = None
 
         # Listeners
-        self._phase_listeners: List[Callable[[PipelinePhase, PipelinePhase], None]] = []
-        self._checkpoint_listeners: List[Callable[[StateCheckpoint], None]] = []
+        self._phase_listeners: list[Callable[[PipelinePhase, PipelinePhase], None]] = []
+        self._checkpoint_listeners: list[Callable[[StateCheckpoint], None]] = []
 
         # Ensure checkpoint directory exists
         self._checkpoint_path = Path(self._config.checkpoint_dir) / pipeline_id
@@ -271,7 +272,7 @@ class StateManager:
         return len(self._checkpoints)
 
     @property
-    def last_checkpoint(self) -> Optional[CheckpointMetadata]:
+    def last_checkpoint(self) -> CheckpointMetadata | None:
         """Get last checkpoint metadata."""
         return self._checkpoints[-1] if self._checkpoints else None
 
@@ -280,7 +281,7 @@ class StateManager:
     def set_phase(
         self,
         phase: PipelinePhase,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
     ) -> None:
         """Set current pipeline phase.
 
@@ -297,12 +298,14 @@ class StateManager:
             self._phase_data = {}
 
         # Record in history
-        self._phase_history.append({
-            "from_phase": old_phase.value,
-            "to_phase": phase.value,
-            "timestamp": datetime.now().isoformat(),
-            "data": self._phase_data,
-        })
+        self._phase_history.append(
+            {
+                "from_phase": old_phase.value,
+                "to_phase": phase.value,
+                "timestamp": datetime.now().isoformat(),
+                "data": self._phase_data,
+            }
+        )
 
         logger.info(f"Phase changed: {old_phase.value} -> {phase.value}")
 
@@ -317,11 +320,11 @@ class StateManager:
         if self._config.auto_checkpoint_on_phase_change:
             asyncio.create_task(self._create_auto_checkpoint(CheckpointType.PHASE_START))
 
-    def get_phase_data(self) -> Dict[str, Any]:
+    def get_phase_data(self) -> dict[str, Any]:
         """Get current phase data."""
         return self._phase_data.copy()
 
-    def update_phase_data(self, data: Dict[str, Any]) -> None:
+    def update_phase_data(self, data: dict[str, Any]) -> None:
         """Update phase data.
 
         Args:
@@ -352,7 +355,7 @@ class StateManager:
         """
         return self._variables.get(name, default)
 
-    def get_all_variables(self) -> Dict[str, Any]:
+    def get_all_variables(self) -> dict[str, Any]:
         """Get all variables."""
         return self._variables.copy()
 
@@ -362,7 +365,7 @@ class StateManager:
         self,
         name: str,
         path: str,
-        content: Optional[str] = None,
+        content: str | None = None,
     ) -> None:
         """Register an artifact.
 
@@ -375,7 +378,7 @@ class StateManager:
         if content is not None:
             self._artifact_contents[name] = content
 
-    def get_artifact_path(self, name: str) -> Optional[str]:
+    def get_artifact_path(self, name: str) -> str | None:
         """Get artifact path.
 
         Args:
@@ -386,7 +389,7 @@ class StateManager:
         """
         return self._artifacts.get(name)
 
-    def get_artifact_content(self, name: str) -> Optional[str]:
+    def get_artifact_content(self, name: str) -> str | None:
         """Get artifact content.
 
         Args:
@@ -397,7 +400,7 @@ class StateManager:
         """
         return self._artifact_contents.get(name)
 
-    def list_artifacts(self) -> List[str]:
+    def list_artifacts(self) -> list[str]:
         """List all artifact names."""
         return list(self._artifacts.keys())
 
@@ -416,7 +419,7 @@ class StateManager:
         if step not in self._completed_steps:
             self._completed_steps.append(step)
 
-    def mark_step_failed(self, step: str, error: Optional[str] = None) -> None:
+    def mark_step_failed(self, step: str, error: str | None = None) -> None:
         """Mark a step as failed.
 
         Args:
@@ -428,11 +431,13 @@ class StateManager:
         if step not in self._failed_steps:
             self._failed_steps.append(step)
 
-        self._error_history.append({
-            "step": step,
-            "error": error,
-            "timestamp": datetime.now().isoformat(),
-        })
+        self._error_history.append(
+            {
+                "step": step,
+                "error": error,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
         # Auto-checkpoint on error
         if self._config.auto_checkpoint_on_error:
@@ -447,7 +452,7 @@ class StateManager:
         if step not in self._pending_steps:
             self._pending_steps.append(step)
 
-    def set_pending_steps(self, steps: List[str]) -> None:
+    def set_pending_steps(self, steps: list[str]) -> None:
         """Set all pending steps.
 
         Args:
@@ -455,7 +460,7 @@ class StateManager:
         """
         self._pending_steps = steps.copy()
 
-    def get_progress(self) -> Dict[str, Any]:
+    def get_progress(self) -> dict[str, Any]:
         """Get progress information.
 
         Returns:
@@ -480,10 +485,10 @@ class StateManager:
     async def create_checkpoint(
         self,
         checkpoint_type: CheckpointType = CheckpointType.MANUAL,
-        task_id: Optional[str] = None,
-        agent_type: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        custom_data: Optional[Dict[str, Any]] = None,
+        task_id: str | None = None,
+        agent_type: str | None = None,
+        tags: list[str] | None = None,
+        custom_data: dict[str, Any] | None = None,
     ) -> StateCheckpoint:
         """Create a state checkpoint.
 
@@ -587,7 +592,7 @@ class StateManager:
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
 
-    async def load_checkpoint(self, checkpoint_id: str) -> Optional[StateCheckpoint]:
+    async def load_checkpoint(self, checkpoint_id: str) -> StateCheckpoint | None:
         """Load checkpoint from file.
 
         Args:
@@ -612,10 +617,10 @@ class StateManager:
 
     def _read_file(self, filepath: Path) -> str:
         """Read file content (sync)."""
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             return f.read()
 
-    async def load_latest_checkpoint(self) -> Optional[StateCheckpoint]:
+    async def load_latest_checkpoint(self) -> StateCheckpoint | None:
         """Load the most recent checkpoint.
 
         Returns:
@@ -686,7 +691,7 @@ class StateManager:
                 except Exception as e:
                     logger.warning(f"Failed to remove checkpoint file: {e}")
 
-    def list_checkpoints(self) -> List[CheckpointMetadata]:
+    def list_checkpoints(self) -> list[CheckpointMetadata]:
         """List all checkpoints.
 
         Returns:

@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, triad, hooks, skills, mcp]
+related: ["[[overview]]", "[[ralph-wiggum]]", "[[hooks-reference]]", "[[skills-reference]]", "[[PATTERNS]]", "[[bsl-integration]]", "[[core-framework-separation]]"]
+---
+
 # Hooks + Skills + MCP Triad Architecture
 
 ## Три слоя
@@ -184,7 +190,7 @@ MCP — это tools. Hooks — это events. Skills — это knowledge. Тр
 
 ## См. также
 
-- [Core/Framework Separation](core-framework-separation.md)
-- [Hooks Reference](hooks-reference.md)
-- [Skills Reference](skills-reference.md)
-- [Ralph Wiggum](ralph-wiggum.md)
+- [[core-framework-separation]]
+- [[hooks-reference]]
+- [[skills-reference]]
+- [[ralph-wiggum]]

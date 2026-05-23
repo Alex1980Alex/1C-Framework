@@ -222,15 +222,15 @@ if (manualTaskData?.testStrategy)
 
 // User Prompt
 const userPrompt = `You are generating the details for Task #${newTaskId}. Based on the user's request: "${prompt}", create a comprehensive new task for a software development project.
-      
+
       ${contextTasks}
       ${contextFromArgs ? `\nConsider these additional details provided by the user:${contextFromArgs}` : ''}
-      
+
       Based on the information about existing tasks and their dependencies, suggest appropriate dependencies for this task if any are needed. The task IDs mentioned above can be referenced in your implementation details.
-      
+
       Return your answer as a single JSON object matching the schema precisely:
       ${taskStructureDesc}
-      
+
       Make sure the details and test strategy are thorough and specific. Don't include the task ID in the title.`;
 // ... existing code ...
 ```
@@ -286,15 +286,15 @@ const taskStructureDesc = `
 
 // User Prompt
 const userPrompt = `You are generating the details for Task #${newTaskId}. Based on the user's request: "${prompt}", create a comprehensive new task for a software development project.
-      
+
       ${contextTasks}
       ${contextFromArgs ? `\nConsider these additional details provided by the user:${contextFromArgs}` : ''}
-      
+
       Based on the information about existing tasks and their dependencies, include appropriate dependencies in the "dependencies" array if any are needed. Only include task IDs that this new task directly depends on.
-      
+
       Return your answer as a single JSON object matching the schema precisely:
       ${taskStructureDesc}
-      
+
       Make sure the details and test strategy are thorough and specific. Don't include the task ID in the title.`;
 
 // ... existing code ...
@@ -1609,38 +1609,38 @@ Now, let's update the user prompt to utilize the enhanced dependency information
 
 // User Prompt
 const userPrompt = `You are generating the details for Task #${newTaskId}. Based on the user's request: "${prompt}", create a comprehensive new task for a software development project.
-      
+
       ${contextTasks}
       ${contextFromArgs ? `\nConsider these additional details provided by the user:${contextFromArgs}` : ''}
-      
+
       Based on the information about existing tasks and their dependencies, include appropriate dependencies in the "dependencies" array if any are needed. Only include task IDs that this new task directly depends on.
-      
+
       Return your answer as a single JSON object matching the schema precisely:
       ${taskStructureDesc}
-      
+
       Make sure the details and test strategy are thorough and specific. Don't include the task ID in the title.`;
 
 // ... existing code to ...
 
 // User Prompt - Enhanced for better dependency analysis
 const userPrompt = `You are generating the details for Task #${newTaskId}. Based on the user's request: "${prompt}", create a comprehensive new task for a software development project.
-      
+
       ${contextTasks}
       ${contextFromArgs ? `\nConsider these additional details provided by the user:${contextFromArgs}` : ''}
-      
+
       Based on the detailed information about existing tasks and their dependency relationships, carefully consider which dependencies this new task should have:
-      
+
       1. ANALYZE: Review the entire dependency structure provided above, including both direct and indirect dependencies.
       2. IDENTIFY: Determine which specific existing tasks must be completed before this new task can begin.
       3. CONSIDER: Think about both technical requirements and logical task ordering.
       4. DECIDE: Select only the most direct, specific dependencies - avoid including a parent task if you're already including its child task.
       5. VALIDATE: Ensure all selected dependencies are necessary and sufficient for this task to begin.
-      
+
       Include these carefully selected task IDs in the "dependencies" array of your response. If there are no logical dependencies, return an empty array [].
-      
+
       Return your answer as a single JSON object matching the schema precisely:
       ${taskStructureDesc}
-      
+
       Make sure the details and test strategy are thorough and specific. Don't include the task ID in the title.`;
 
 // ... existing code ...

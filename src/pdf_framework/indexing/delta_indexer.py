@@ -427,7 +427,7 @@ class DeltaIndexer:
         finally:
             conn.close()
 
-    def clear_hash_db(self):
+    def clear_hash_db(self) -> None:
         """Clear all stored hashes (full reindex on next run)."""
         conn = sqlite3.connect(self._hash_db_path)
         try:

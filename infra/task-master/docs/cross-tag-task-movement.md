@@ -203,7 +203,7 @@ The cross-tag move functionality is also available through MCP tools:
 // Move task with dependencies
 await moveTask({
   from: "5",
-  fromTag: "backlog", 
+  fromTag: "backlog",
   toTag: "in-progress",
   withDependencies: true
 });
@@ -212,7 +212,7 @@ await moveTask({
 await moveTask({
   from: "5",
   fromTag: "backlog",
-  toTag: "in-progress", 
+  toTag: "in-progress",
   ignoreDependencies: true
 });
 ```

@@ -220,4 +220,3 @@ Implement the main import_task command with GitHub subcommand. Add command-line 
 ### Description: Implement comprehensive testing suite covering all aspects of the LLM-powered import system.
 ### Details:
 Create unit tests for all new components. Implement integration tests with real GitHub content. Add LLM response validation and quality tests. Create performance tests for large discussions. Implement end-to-end workflow testing. Add mock data for consistent testing. Test bidirectional compatibility with export feature.
-

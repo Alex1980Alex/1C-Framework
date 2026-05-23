@@ -2,20 +2,17 @@
 Tests for REVIEWER models.
 """
 
-import pytest
-from datetime import datetime
-
 from agents.reviewer.models import (
-    IssueSeverity,
-    IssueCategory,
-    ReviewVerdict,
+    ArchIssue,
     DiffHunk,
     FileChange,
+    IssueCategory,
+    IssueSeverity,
     ReviewIssue,
-    StyleViolation,
-    ArchIssue,
-    StandardCheck,
     ReviewReport,
+    ReviewVerdict,
+    StandardCheck,
+    StyleViolation,
 )
 
 
@@ -69,49 +66,44 @@ class TestDiffHunk:
 
     def test_creation(self):
         """Test hunk creation."""
-        hunk = DiffHunk(
-            old_start=1,
-            old_count=5,
-            new_start=1,
-            new_count=7,
-            content="test content"
-        )
+        hunk = DiffHunk(old_start=1, old_count=5, new_start=1, new_count=7, content="test content")
         assert hunk.old_start == 1
         assert hunk.new_count == 7
 
     def test_has_changes_with_additions(self):
         """Test has_changes with additions."""
         hunk = DiffHunk(
-            old_start=1, old_count=1, new_start=1, new_count=2,
-            content="",
-            added_lines=["new line"]
+            old_start=1, old_count=1, new_start=1, new_count=2, content="", added_lines=["new line"]
         )
         assert hunk.has_changes is True
 
     def test_has_changes_with_removals(self):
         """Test has_changes with removals."""
         hunk = DiffHunk(
-            old_start=1, old_count=2, new_start=1, new_count=1,
+            old_start=1,
+            old_count=2,
+            new_start=1,
+            new_count=1,
             content="",
-            removed_lines=["old line"]
+            removed_lines=["old line"],
         )
         assert hunk.has_changes is True
 
     def test_has_changes_empty(self):
         """Test has_changes when empty."""
-        hunk = DiffHunk(
-            old_start=1, old_count=1, new_start=1, new_count=1,
-            content=""
-        )
+        hunk = DiffHunk(old_start=1, old_count=1, new_start=1, new_count=1, content="")
         assert hunk.has_changes is False
 
     def test_to_dict(self):
         """Test serialization."""
         hunk = DiffHunk(
-            old_start=10, old_count=5, new_start=10, new_count=8,
+            old_start=10,
+            old_count=5,
+            new_start=10,
+            new_count=8,
             content="",
             added_lines=["a", "b", "c"],
-            removed_lines=["x"]
+            removed_lines=["x"],
         )
         d = hunk.to_dict()
         assert d["old_start"] == 10
@@ -124,10 +116,7 @@ class TestFileChange:
 
     def test_creation(self):
         """Test file change creation."""
-        fc = FileChange(
-            file_path="src/Module.bsl",
-            change_type="modified"
-        )
+        fc = FileChange(file_path="src/Module.bsl", change_type="modified")
         assert fc.file_path == "src/Module.bsl"
         assert fc.is_bsl is True
 
@@ -144,27 +133,21 @@ class TestFileChange:
 
     def test_total_changes(self):
         """Test total changes calculation."""
-        fc = FileChange(
-            file_path="test.bsl",
-            change_type="modified",
-            additions=10,
-            deletions=3
-        )
+        fc = FileChange(file_path="test.bsl", change_type="modified", additions=10, deletions=3)
         assert fc.total_changes == 13
 
     def test_changes_from_hunks(self):
         """Test changes calculated from hunks."""
         hunk = DiffHunk(
-            old_start=1, old_count=5, new_start=1, new_count=8,
+            old_start=1,
+            old_count=5,
+            new_start=1,
+            new_count=8,
             content="",
             added_lines=["a", "b", "c"],
-            removed_lines=["x", "y"]
+            removed_lines=["x", "y"],
         )
-        fc = FileChange(
-            file_path="test.bsl",
-            change_type="modified",
-            hunks=[hunk]
-        )
+        fc = FileChange(file_path="test.bsl", change_type="modified", hunks=[hunk])
         assert fc.additions == 3
         assert fc.deletions == 2
 
@@ -179,7 +162,7 @@ class TestReviewIssue:
             title="SQL инъекция",
             description="Обнаружена конкатенация строк",
             severity=IssueSeverity.CRITICAL,
-            category=IssueCategory.SECURITY
+            category=IssueCategory.SECURITY,
         )
         assert issue.id == "CR-001"
         assert issue.severity == IssueSeverity.CRITICAL
@@ -187,23 +170,29 @@ class TestReviewIssue:
     def test_severity_icon(self):
         """Test severity icons."""
         critical = ReviewIssue(
-            id="", title="", description="",
+            id="",
+            title="",
+            description="",
             severity=IssueSeverity.CRITICAL,
-            category=IssueCategory.SECURITY
+            category=IssueCategory.SECURITY,
         )
         assert critical.severity_icon == "🔴"
 
         warning = ReviewIssue(
-            id="", title="", description="",
+            id="",
+            title="",
+            description="",
             severity=IssueSeverity.WARNING,
-            category=IssueCategory.STYLE
+            category=IssueCategory.STYLE,
         )
         assert warning.severity_icon == "🟡"
 
         rec = ReviewIssue(
-            id="", title="", description="",
+            id="",
+            title="",
+            description="",
             severity=IssueSeverity.RECOMMENDATION,
-            category=IssueCategory.OPTIMIZATION
+            category=IssueCategory.OPTIMIZATION,
         )
         assert rec.severity_icon == "🔵"
 
@@ -214,7 +203,7 @@ class TestReviewIssue:
             title="Test",
             description="Test",
             severity=IssueSeverity.WARNING,
-            category=IssueCategory.STYLE
+            category=IssueCategory.STYLE,
         )
         assert issue.id == "WRN-001"
 
@@ -229,7 +218,7 @@ class TestReviewIssue:
             file_path="Module.bsl",
             line_number=42,
             code_snippet="Опасный код",
-            recommendation="Исправить"
+            recommendation="Исправить",
         )
         md = issue.to_markdown()
         assert "CR-001" in md
@@ -250,7 +239,7 @@ class TestStyleViolation:
             rule_name="Неинформативное имя",
             file_path="test.bsl",
             line_number=10,
-            message="Короткое имя переменной"
+            message="Короткое имя переменной",
         )
         assert v.rule_id == "N001"
         assert v.line_number == 10
@@ -263,7 +252,7 @@ class TestStyleViolation:
             file_path="test.bsl",
             line_number=25,
             message="Конкатенация строк",
-            severity=IssueSeverity.CRITICAL
+            severity=IssueSeverity.CRITICAL,
         )
         issue = v.to_review_issue()
         assert issue.title == "SQL инъекция"
@@ -277,9 +266,7 @@ class TestArchIssue:
     def test_creation(self):
         """Test architecture issue creation."""
         ai = ArchIssue(
-            component="МодульОбработки",
-            issue_type="missing",
-            description="Компонент не реализован"
+            component="МодульОбработки", issue_type="missing", description="Компонент не реализован"
         )
         assert ai.component == "МодульОбработки"
         assert ai.issue_type == "missing"
@@ -291,7 +278,7 @@ class TestArchIssue:
             issue_type="wrong_structure",
             description="Нарушение структуры",
             severity=IssueSeverity.WARNING,
-            related_files=["form.bsl", "module.bsl"]
+            related_files=["form.bsl", "module.bsl"],
         )
         issue = ai.to_review_issue()
         assert "БизнесЛогика" in issue.title
@@ -308,7 +295,7 @@ class TestStandardCheck:
             standard_name="Именование переменных",
             passed=True,
             status="✅",
-            comment="Все имена корректны"
+            comment="Все имена корректны",
         )
         assert sc.passed is True
         assert sc.status == "✅"
@@ -319,7 +306,7 @@ class TestStandardCheck:
             standard_name="Транзакции",
             passed=False,
             status="❌",
-            comment="Несбалансированные транзакции"
+            comment="Несбалансированные транзакции",
         )
         d = sc.to_dict()
         assert d["standard_name"] == "Транзакции"
@@ -331,10 +318,7 @@ class TestReviewReport:
 
     def test_creation(self):
         """Test report creation."""
-        report = ReviewReport(
-            project_id="PROJECT",
-            task_id="TASK-123"
-        )
+        report = ReviewReport(project_id="PROJECT", task_id="TASK-123")
         assert report.project_id == "PROJECT"
         assert report.verdict == ReviewVerdict.APPROVED
 
@@ -345,26 +329,34 @@ class TestReviewReport:
             task_id="T",
             issues=[
                 ReviewIssue(
-                    id="CR-001", title="", description="",
+                    id="CR-001",
+                    title="",
+                    description="",
                     severity=IssueSeverity.CRITICAL,
-                    category=IssueCategory.SECURITY
+                    category=IssueCategory.SECURITY,
                 ),
                 ReviewIssue(
-                    id="WRN-001", title="", description="",
+                    id="WRN-001",
+                    title="",
+                    description="",
                     severity=IssueSeverity.WARNING,
-                    category=IssueCategory.STYLE
+                    category=IssueCategory.STYLE,
                 ),
                 ReviewIssue(
-                    id="WRN-002", title="", description="",
+                    id="WRN-002",
+                    title="",
+                    description="",
                     severity=IssueSeverity.WARNING,
-                    category=IssueCategory.NAMING
+                    category=IssueCategory.NAMING,
                 ),
                 ReviewIssue(
-                    id="REC-001", title="", description="",
+                    id="REC-001",
+                    title="",
+                    description="",
                     severity=IssueSeverity.RECOMMENDATION,
-                    category=IssueCategory.OPTIMIZATION
+                    category=IssueCategory.OPTIMIZATION,
                 ),
-            ]
+            ],
         )
         assert len(report.critical_issues) == 1
         assert len(report.warnings) == 2
@@ -373,14 +365,17 @@ class TestReviewReport:
     def test_determine_verdict_blocked(self):
         """Test verdict determination - blocked."""
         report = ReviewReport(
-            project_id="P", task_id="T",
+            project_id="P",
+            task_id="T",
             issues=[
                 ReviewIssue(
-                    id="CR-001", title="", description="",
+                    id="CR-001",
+                    title="",
+                    description="",
                     severity=IssueSeverity.CRITICAL,
-                    category=IssueCategory.SECURITY
+                    category=IssueCategory.SECURITY,
                 )
-            ]
+            ],
         )
         assert report.determine_verdict() == ReviewVerdict.BLOCKED
 
@@ -388,29 +383,31 @@ class TestReviewReport:
         """Test verdict determination - changes requested."""
         warnings = [
             ReviewIssue(
-                id=f"WRN-{i}", title="", description="",
+                id=f"WRN-{i}",
+                title="",
+                description="",
                 severity=IssueSeverity.WARNING,
-                category=IssueCategory.STYLE
+                category=IssueCategory.STYLE,
             )
             for i in range(5)
         ]
-        report = ReviewReport(
-            project_id="P", task_id="T",
-            issues=warnings
-        )
+        report = ReviewReport(project_id="P", task_id="T", issues=warnings)
         assert report.determine_verdict() == ReviewVerdict.CHANGES_REQUESTED
 
     def test_determine_verdict_approved(self):
         """Test verdict determination - approved."""
         report = ReviewReport(
-            project_id="P", task_id="T",
+            project_id="P",
+            task_id="T",
             issues=[
                 ReviewIssue(
-                    id="REC-001", title="", description="",
+                    id="REC-001",
+                    title="",
+                    description="",
                     severity=IssueSeverity.RECOMMENDATION,
-                    category=IssueCategory.OPTIMIZATION
+                    category=IssueCategory.OPTIMIZATION,
                 )
-            ]
+            ],
         )
         assert report.determine_verdict() == ReviewVerdict.APPROVED
 
@@ -419,18 +416,26 @@ class TestReviewReport:
         report = ReviewReport(project_id="P", task_id="T")
         assert report.calculate_quality_score() == 10.0
 
-        report.issues.append(ReviewIssue(
-            id="CR-001", title="", description="",
-            severity=IssueSeverity.CRITICAL,
-            category=IssueCategory.SECURITY
-        ))
+        report.issues.append(
+            ReviewIssue(
+                id="CR-001",
+                title="",
+                description="",
+                severity=IssueSeverity.CRITICAL,
+                category=IssueCategory.SECURITY,
+            )
+        )
         assert report.calculate_quality_score() == 7.0  # 10 - 3
 
-        report.issues.append(ReviewIssue(
-            id="WRN-001", title="", description="",
-            severity=IssueSeverity.WARNING,
-            category=IssueCategory.STYLE
-        ))
+        report.issues.append(
+            ReviewIssue(
+                id="WRN-001",
+                title="",
+                description="",
+                severity=IssueSeverity.WARNING,
+                category=IssueCategory.STYLE,
+            )
+        )
         assert report.calculate_quality_score() == 6.5  # 10 - 3 - 0.5
 
     def test_verdict_icon(self):
@@ -457,19 +462,11 @@ class TestReviewReport:
                     title="Критическая ошибка",
                     description="Описание",
                     severity=IssueSeverity.CRITICAL,
-                    category=IssueCategory.SECURITY
+                    category=IssueCategory.SECURITY,
                 )
             ],
-            standard_checks=[
-                StandardCheck(
-                    standard_name="Транзакции",
-                    passed=True,
-                    status="✅"
-                )
-            ],
-            files_reviewed=[
-                FileChange(file_path="test.bsl", change_type="modified")
-            ]
+            standard_checks=[StandardCheck(standard_name="Транзакции", passed=True, status="✅")],
+            files_reviewed=[FileChange(file_path="test.bsl", change_type="modified")],
         )
         report.verdict = report.determine_verdict()
         report.quality_score = report.calculate_quality_score()
@@ -485,12 +482,13 @@ class TestReviewReport:
     def test_file_counts(self):
         """Test file count properties."""
         report = ReviewReport(
-            project_id="P", task_id="T",
+            project_id="P",
+            task_id="T",
             files_reviewed=[
                 FileChange(file_path="a.bsl", change_type="modified"),
                 FileChange(file_path="b.bsl", change_type="added"),
                 FileChange(file_path="c.py", change_type="modified"),
-            ]
+            ],
         )
         assert report.total_files == 3
         assert report.bsl_files == 2

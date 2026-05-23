@@ -24,6 +24,8 @@ description: "Используй этот скилл для понимания �
 | `decision-to-triad.py` | Детекция РЕШЕНИЙ/ИДЕЙ → Фабрика (`triad-factory`, Q1-Q5) |
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
+| `implement-1c-task-preflight.py` | Content-фильтр на `/implement-1c-task` → запуск `scripts/smoke_test_implement_1c_task.py --json` → systemMessage с pipeline mode (Full / **Full (no-BP)** / Code-only / Read-only verify / Read-only research / unusable) + строка «Debug environment: ready/not-ready» по полю `mcp_health.debug_hmr` (2026-05-11 — roadmap 260510 Phase 1 §3.1). Не блокирует. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>`. |
+| `analyze-1c-task-preflight.py` | Content-фильтр на `/analyze-1c-task` (с/без `--trace`) → probe debug-hmr через shared `shared/debug_hmr_health.probe_debug_hmr_ready()` → systemMessage с readiness Phase 2.5 Runtime Trace (2026-05-11 — roadmap 260510 Phase 3 §5.1). Не блокирует — Phase 2.5 opt-in. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>;trace_flag=<0\|1>`. |
 
 #### PreToolUse (4)
 
@@ -48,7 +50,7 @@ description: "Используй этот скилл для понимания �
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
-| `code-verify-reminder.py` | Write\|Edit | Advisory напоминание запустить code-verify (15 мин cooldown) |
+| `code-verify-reminder.py` | Write\|Edit, Skill, Task, Stop | Mandatory task на code-verify; tri-registered (PreToolUse:Write\|Edit + PostToolUse:Write\|Edit\|Skill\|Task + Stop). PostToolUse:Task закрывает задачу при `[CODE-VERIFY-PASS]`; Stop fallback (v2.4.0) — читает `transcript_path` JSONL и закрывает по rfind-сравнению PASS/FAIL маркеров (workaround #6305 regression на Windows, см. claude-code-hooks-bugs SKILL 2026-04-26) |
 | `posttooluse-quality-feedback.py` | Write\|Edit | ruff check *.py → hookSpecificOutput feedback (Phase 2.1) |
 | `posttooluse-delegation-tracker.py` | mcp__llm-rotation__llm_complete | Z.AI delegation outcomes → delegation-outcomes.jsonl (Phase 1.4) |
 | `posttooluse-web-cache.py` | WebSearch\|WebFetch | Кеширование результатов веб-поиска 24h TTL |
@@ -60,10 +62,16 @@ description: "Используй этот скилл для понимания �
 |------|-----------|
 | `task-enforcer.py` | Блокировка без выполнения mandatory задач (incl. code-skill-enforcer) |
 | `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
-| `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `src/projects/`, `src/bsl/`, `openspec/`. При добавлении нового типа инфра-файла его путь/имя нужно добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. |
+| `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `configuration/`, `ИБTransportManagementDevelop/` (EDT проект), `src/bsl/`, `openspec/`, `.pre-commit-config.yaml`, `.kblintrc.yml` (kb-lint config; living in `docs/wiki/.kblintrc.yml` per `kb_lint/config.py:60-78`), `codecov.yml`, `data/eval/`. При добавлении нового EDT-проекта в корень — добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. (Roadmap: динамическое обнаружение через `.bsl-language-server.json` маркер — см. `src/bsl/project_discovery.py`.) |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
 
-### Skills (65 шт.) — КАК / ЧТО
+#### SessionStart (1)
+
+| Hook | Назначение |
+|------|-----------|
+| `ensure-docker-qdrant.py` | Проверка Docker engine + контейнера `pdf-rag-qdrant` при старте сессии; фоновый авто-старт Docker Desktop и `docker compose up -d qdrant` при необходимости. Не блокирует сессию (SessionStart advisory); graceful degradation на Linux/Mac/отсутствие Docker. Timeout 10s. |
+
+### Skills (66 шт.) — КАК / ЧТО
 
 #### Доменные (5)
 
@@ -75,7 +83,7 @@ description: "Используй этот скилл для понимания �
 | `pdf-knowledge` | PDF | MCP-инструменты PDF search, indexing |
 | `task-evaluation` | Классификатор | Research vs Brainstorm vs Hybrid маршрутизация |
 
-#### Инфраструктурные (8)
+#### Инфраструктурные (9)
 
 | Skill | Назначение |
 |-------|-----------|
@@ -87,6 +95,8 @@ description: "Используй этот скилл для понимания �
 | `learning-loop` | Цикл обучения: SEARCH → FETCH → EXECUTE → CREATE skill |
 | `code-verify` | Верификация кода: 3 уровня, 4 режима (knowledge/behavior/bugfix/quality) |
 | `tenacity-retry` | Retry с tenacity: декораторы, backoff, jitter, async |
+| `obsidian-vault` | Obsidian vault навигация: wiki-links, templates, MCP obsidian-mcp |
+| `wiki-pipeline` | PDF → Structured Wiki Pages: WikiExporter, IncrementalWikiSync, ReverseSync (Hermes Phase 4) |
 
 #### Операционные фреймворка (17)
 
@@ -109,6 +119,7 @@ description: "Используй этот скилл для понимания �
 | `deployment` | Docker, health checks, monitoring |
 | `agent-orchestration` | 6 типов RAG-агентов |
 | `graph-operations` | LightRAG, GraphRAG, entity extraction |
+| `sandbox-execution` | Изолированное исполнение agent-generated кода (DryRun/LangSmith/E2B backends) |
 
 #### LangChain / LangGraph (10)
 
@@ -143,11 +154,12 @@ description: "Используй этот скилл для понимания �
 
 | Skill | Назначение |
 |-------|-----------|
-| `analyze-1c-task-v2` | 5-фазный анализ задачи 1С (требования → объекты → алгоритм → план → верификация), SDD delta-specs |
+| `analyze-1c-task-v2` | 5-фазный анализ задачи 1С (требования → объекты → алгоритм → план → верификация), SDD delta-specs. **v4.2.0 (2026-05-11)**: опциональная **Фаза 2.5 Runtime Trace** между «Объекты» и «Алгоритм» — live BP-trace через `1c-debug-hmr` для алгоритмов с ≥3 ветвлений по runtime-данным. Триггер: флаг `--trace` или self-decision. Output: секция «3.Y Runtime Trace» в ANALYSIS-REPORT с Discrepancies (static vs runtime). Roadmap: [260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 2 |
 | `analyze-1c-research` | 3-агентный анализ (Executor + Reviewer + Comparator) с итеративным скорингом |
-| `implement-1c-task` | 8-этапная реализация задачи: EDT-MCP + 1c-mcp-toolkit + bsl-debug-server, обязательные циклы валидации |
-| `bsl-development` | Разработка BSL: процедуры, обработка проведения, модули, 3 стратегии reasoner |
-| `1c-mcp-toolkit` | MCP доступ к живой базе 1С: execute_query, execute_code, get_metadata, event_log |
+| `implement-1c-task` | 8-этапная реализация задачи: EDT-MCP + 1c-mcp-crud + bsl-debug-server + **1c-debug-hmr** (BP-verification). v2.7.0 (2026-05-11): Этап 0 `debug_health_check`, Этап 5.x Live BP-verification (8-шаговый протокол для каждой `[MODIFIED]` точки), Этап 5.y `debug_session_diff` regression, footer `<!-- debug_session_id: <UUID> -->`. Режимы: Full / **Full (no-BP)** / Code-only / Read-only verify / Read-only research. Roadmap: [260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 |
+| `bsl-development` | Разработка BSL: процедуры, обработка проведения, модули, 3 стратегии reasoner. **Update 2026-05-18:** добавлен раздел «Индексация BSL — варианты и decision flowchart» (qwen3-st+Late vs qwen3-tei, 7 типичных ошибок, pre-flight checklist). Полная справка: [chapter 31.6](../../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) |
+| `1c-mcp-crud` | MCP доступ к живой базе 1С: execute_query, execute_code, get_metadata, event_log |
+| `1c-debug-hmr` | MCP отладка BSL с HMR: **25 tools** (BP/stack/locals/eval/step/coverage/replay/exception_bp + warm-pool arming), persistent RDBG session через `.active.json`, unified `ping()` dispatch. **Шаблон 6 (2026-05-12):** JOB-based BP-verification через `гкс_ОтладкаВыполненияКода.ВыполнитьКод` закрывает RC2 warm-pool gap (HTTP IIS rphost невидим → JOB rphost свежий, auto-attach). 213+ tests passed |
 | `va-bdd-testing` | VA BDD тестирование: калиброванные step-паттерны, Stage 4a pre-scenario TestDB check, post-verification |
 | `auto-test-after-write` | Автопроверка BSL после Write через MCP (syntax + тесты) |
 | `brownfield-validate` | Валидация реализации vs OpenSpec (Gap/Design/Impl валидаторы) |
@@ -343,6 +355,46 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 ОТВЕТ ПОЛЬЗОВАТЕЛЮ
 ```
 
+### Pipeline 5: Langfuse Observability (roadmap §5c.4 + §5c.5, full closure 2026-05-15)
+
+Standalone хуки (без LangChain) эмитят Langfuse spans через
+`emit_observation()` helper для production observability:
+
+```
+session-memory-save.py / memory-first-hook.py / memory-sync.py
+            │
+            ▼
+_emit_langfuse_span(ctx, status)  ← try/except, never raises
+            │
+            ▼
+src/pdf_framework/observability/langfuse_setup.py
+    ├─ _get_langfuse_client()  ← module-level singleton (perf)
+    └─ emit_observation(name, input, output, session_id, metadata, flush)
+            │
+            ▼
+langfuse.start_observation() → optional flush()
+            │
+            ▼
+cloud.langfuse.com / self-host
+```
+
+**Pattern:** прямой Langfuse SDK API (НЕ LangChain callback handler — хуки
+не используют LangChain runtime). Opt-out: env `MEMORY_HOOK_NO_LANGFUSE=1`.
+
+**Fully wired call sites (§5c.4 + §5c.5 DONE 2026-05-15):**
+
+| Файл | Event | Status enum |
+|---|---|---|
+| `session-memory-save.py` | Stop | skipped-trivial / skipped-duplicate / saved |
+| `memory-first-hook.py` | UserPromptSubmit | skipped-trivial / skipped-cooldown / skipped-no-tokens / no-results / injected |
+| `memory-sync.py` | Stop | changes-detected / clean |
+| `src/pdf_framework/search/manager.py` `SearchManager.search` | async | cache-hit / ok (`flush=False`) |
+| `src/pdf_framework/tools/retrieval/search_tool.py` | @tool | ok / error (`flush=False`) |
+| `src/pdf_framework/tools/graph_query/graph_tool.py` | @tool | ok / error / no-results (`flush=False`) |
+| `src/pdf_framework/tools/document/index_tool.py` | @tool | ok / error (`flush=False`) |
+
+Hooks → `flush=True` (default; one-shot Stop/UPS event'ы). Hot-path framework callers → `flush=False` (SDK background thread обрабатывает queue, не блокирует event loop). Подробности — [09.4 Мониторинг "Wired call sites"](../../../docs/framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md). Cost extraction pipeline (§5c.7 PLANNED) — [260515 roadmap](../../../docs/roadmap/260515_ROADMAP_LANGFUSE_COST_BASELINE.md).
+
 ### Pipeline 4: Stop Enforcement
 
 ```
@@ -435,3 +487,31 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 | Блокировка без причины | Claude не понимает что делать | Всегда указывать `reason` в `block()` |
 | Относительные пути в settings.json | Не находит python.exe | Абсолютные: `D:\\1С-Framework\\.venv\\Scripts\\python.exe` |
 | Тяжёлые вычисления в хуке | Timeout (3-5s) | Хуки должны быть лёгкими (keyword matching, file read) |
+
+
+## Незадокументированные hook
+
+- `audit-coverage-check` (.claude\hooks\audit-coverage-check.py)
+- `auto-git-save-prompt` (.claude\hooks\auto-git-save-prompt.py)
+- `bsl-tool-router` (.claude\hooks\bsl-tool-router.py)
+- `code-review-enforcer` (.claude\hooks\code-review-enforcer.py)
+- `delegation-outcome-stop` (.claude\hooks\delegation-outcome-stop.py)
+- `delegation-outcome-tracker` (.claude\hooks\delegation-outcome-tracker.py)
+- `implement-1c-task-smoke-stop-alert` (.claude\hooks\implement-1c-task-smoke-stop-alert.py)
+- `logging-status-banner` (.claude\hooks\logging-status-banner.py)
+- `mcp-invocation-logger` (.claude\hooks\mcp-invocation-logger.py)
+- `posttooluse-auto-git-save` (.claude\hooks\posttooluse-auto-git-save.py)
+- `posttooluse-bash-errors` (.claude\hooks\posttooluse-bash-errors.py)
+- `posttooluse-skill-metrics` (.claude\hooks\posttooluse-skill-metrics.py)
+- `session-context-enforcer` (.claude\hooks\session-context-enforcer.py)
+- `session-mypy-banner` (.claude\hooks\session-mypy-banner.py)
+- `skill-eval-enforcer-shell` (.claude\hooks\skill-eval-enforcer-shell.py)
+- `skill-eval-enforcer` (.claude\hooks\skill-eval-enforcer.py)
+- `skill-quality-monitor` (.claude\hooks\skill-quality-monitor.py)
+- `slash-command-tracker` (.claude\hooks\slash-command-tracker.py)
+- `submodule-status-check` (.claude\hooks\submodule-status-check.py)
+- `task-protocol-enforcer` (.claude\hooks\task-protocol-enforcer.py)
+- `task-protocol-observer` (.claude\hooks\task-protocol-observer.py)
+- `todo-sync` (.claude\hooks\todo-sync.py)
+- `z-ai-delegation-enforcer` (.claude\hooks\z-ai-delegation-enforcer.py)
+- `z-ai-write-guard` (.claude\hooks\z-ai-write-guard.py)

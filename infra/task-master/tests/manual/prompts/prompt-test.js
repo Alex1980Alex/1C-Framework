@@ -1351,7 +1351,7 @@ Options:
 
 Interactive Mode:
   Run without arguments to start the interactive menu system.
-  
+
 Examples:
   node prompt-test.js              # Interactive menu
   node prompt-test.js --batch      # Run all tests
@@ -1587,7 +1587,7 @@ function generateHTMLReport(testResults, templateResults = []) {
         function togglePrompts(buttonId) {
             const button = document.getElementById(buttonId);
             const content = document.getElementById(buttonId + '-content');
-            
+
             if (content.classList.contains('expanded')) {
                 content.classList.remove('expanded');
                 button.textContent = 'Show Prompts';
@@ -1606,7 +1606,7 @@ function generateHTMLReport(testResults, templateResults = []) {
             <h1 class="title">Task Master Prompt Template Test Report</h1>
             <p class="subtitle">Generated on ${timestamp}</p>
         </div>
-        
+
         <div class="summary">
             <div class="stat total">
                 <p class="stat-number">${total}</p>
@@ -1689,7 +1689,7 @@ function generateHTMLReport(testResults, templateResults = []) {
 		if (errorConditionResults.length > 0) {
 			html += `
         </div>
-        
+
         <div class="error-tests-section">
             <h3 class="error-section-title">Error Condition Tests</h3>
             <div class="error-group">`;
@@ -1743,7 +1743,7 @@ function generateHTMLReport(testResults, templateResults = []) {
 		}
 
 		html += `
-        
+
         <div class="divider"></div>`;
 
 		// Detailed Prompts Section

@@ -5,13 +5,13 @@ library models;
 class User {
   /// User's unique identifier
   final int id;
-  
+
   /// User's name
   final String name;
-  
+
   /// User's email address
   final String email;
-  
+
   /// User's age
   int _age;
 
@@ -19,7 +19,7 @@ class User {
   User(this.id, this.name, this.email, this._age);
 
   /// Named constructor for creating a user with default values
-  User.withDefaults(this.id, this.name) 
+  User.withDefaults(this.id, this.name)
     : email = '$name@example.com',
       _age = 0;
 

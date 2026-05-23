@@ -69,7 +69,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
     const baseResponse = await super.processThought(request);
 
     const nodeId = uuidv4();
-    const parentNode = request.parentId ? 
+    const parentNode = request.parentId ?
       await this.getNode(request.parentId) as PolicyGuidedNode : undefined;
 
     const node: PolicyGuidedNode = {
@@ -86,7 +86,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
       policyScore: 0,
       valueEstimate: 0,
       priorActionProbs: new Map(),
-      actionHistory: parentNode ? 
+      actionHistory: parentNode ?
         [...(parentNode.actionHistory || []), this.extractAction(request.thought)] :
         [this.extractAction(request.thought)]
     };
@@ -98,7 +98,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
     node.policyScore = this.calculatePolicyScore(node, parentNode);
     node.valueEstimate = this.estimateValue(node);
     node.noveltyScore = this.calculateNovelty(node);
-    
+
     await this.saveNode(node);
 
     // Update parent if exists
@@ -132,10 +132,10 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
   private calculatePolicyScore(node: PolicyGuidedNode, parent?: PolicyGuidedNode): number {
     // Combine multiple policy factors
     const depthFactor = Math.exp(-0.1 * node.depth);
-    const parentAlignment = parent ? 
+    const parentAlignment = parent ?
       this.thoughtCoherence(node.thought, parent.thought) : 1;
     const noveltyBonus = node.noveltyScore || 0;
-    
+
     return (
       0.4 * depthFactor +
       0.4 * parentAlignment +
@@ -148,7 +148,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
     const immediateValue = node.score;
     const depthPotential = 1 - (node.depth / CONFIG.maxDepth);
     const noveltyValue = node.noveltyScore || 0;
-    
+
     return (
       0.5 * immediateValue +
       0.3 * depthPotential +
@@ -164,7 +164,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
 
     // Combine with linguistic novelty
     const complexityScore = (node.thought.match(/[.!?;]|therefore|because|if|then/g) || []).length / 10;
-    
+
     return (0.7 * uniquenessRatio + 0.3 * complexityScore);
   }
 
@@ -182,7 +182,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
       const expandedNode = await this.expandWithPolicy(selectedNode);
       const reward = await this.simulateWithValueGuidance(expandedNode);
       await this.backpropagateWithPolicyUpdate(expandedNode, reward);
-      
+
       // Adapt exploration rate
       this.adaptExplorationRate(expandedNode);
     }
@@ -190,31 +190,31 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
 
   private async selectWithPUCT(root: PolicyGuidedNode): Promise<PolicyGuidedNode> {
     let node = root;
-    
+
     while (node.children.length > 0) {
       const children = await Promise.all(
         node.children.map(id => this.getNode(id))
       ) as PolicyGuidedNode[];
-      
+
       node = this.selectBestPUCTChild(children);
     }
-    
+
     return node;
   }
 
   private selectBestPUCTChild(nodes: PolicyGuidedNode[]): PolicyGuidedNode {
     const totalVisits = nodes.reduce((sum, node) => sum + node.visits, 0);
-    
+
     return nodes.reduce((best, node) => {
       const exploitation = node.valueEstimate;
       const exploration = Math.sqrt(Math.log(totalVisits) / node.visits);
       const policyTerm = node.policyScore * this.explorationRate;
       const noveltyBonus = (node.noveltyScore || 0) * this.noveltyBonus;
-      
-      const puct = exploitation + 
+
+      const puct = exploitation +
                   exploration * policyTerm +
                   noveltyBonus;
-      
+
       node.puct = puct;
       return puct > (best.puct || 0) ? node : best;
     });
@@ -250,16 +250,16 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
     let current = node;
     let totalReward = 0;
     let depth = 0;
-    
+
     while (!current.isComplete && depth < CONFIG.maxDepth) {
       const reward = current.valueEstimate;
       totalReward += reward;
-      
+
       const expanded = await this.expandWithPolicy(current);
       current = expanded;
       depth++;
     }
-    
+
     return totalReward / depth;
   }
 
@@ -268,11 +268,11 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
     reward: number
   ): Promise<void> {
     let current: PolicyGuidedNode | undefined = node;
-    
+
     while (current) {
       current.visits++;
       current.totalReward += reward;
-      
+
       // Update value estimate with temporal difference
       const newValue = (1 - this.learningRate) * current.valueEstimate +
                       this.learningRate * reward;
@@ -289,9 +289,9 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
       }
 
       await this.saveNode(current);
-      
-      current = current.parentId ? 
-        await this.getNode(current.parentId) as PolicyGuidedNode : 
+
+      current = current.parentId ?
+        await this.getNode(current.parentId) as PolicyGuidedNode :
         undefined;
     }
   }
@@ -299,7 +299,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
   private adaptExplorationRate(node: PolicyGuidedNode): void {
     const successRate = node.totalReward / node.visits;
     const targetRate = 0.6;
-    
+
     if (successRate > targetRate) {
       // Reduce exploration when doing well
       this.explorationRate = Math.max(0.5, this.explorationRate * 0.95);
@@ -311,14 +311,14 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
 
   private async updatePolicyMetrics(node: PolicyGuidedNode, parent: PolicyGuidedNode): Promise<void> {
     // Update running averages
-    this.policyMetrics.averagePolicyScore = 
+    this.policyMetrics.averagePolicyScore =
       (this.policyMetrics.averagePolicyScore + node.policyScore) / 2;
-    this.policyMetrics.averageValueEstimate = 
+    this.policyMetrics.averageValueEstimate =
       (this.policyMetrics.averageValueEstimate + node.valueEstimate) / 2;
 
     // Update action distribution
     const action = this.extractAction(node.thought);
-    this.policyMetrics.actionDistribution[action] = 
+    this.policyMetrics.actionDistribution[action] =
       (this.policyMetrics.actionDistribution[action] || 0) + 1;
 
     // Update exploration stats
@@ -346,14 +346,14 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
 
   private calculatePolicyEnhancedScore(path: ThoughtNode[]): number {
     if (path.length === 0) return 0;
-    
+
     return path.reduce((acc, node) => {
       const policyNode = node as PolicyGuidedNode;
       const baseScore = node.score;
       const policyBonus = policyNode.policyScore || 0;
       const valueBonus = policyNode.valueEstimate || 0;
       const noveltyBonus = (policyNode.noveltyScore || 0) * this.noveltyBonus;
-      
+
       return acc + (baseScore + policyBonus + valueBonus + noveltyBonus) / 4;
     }, 0) / path.length;
   }
@@ -361,7 +361,7 @@ export class MCTS002AlphaStrategy extends MonteCarloTreeSearchStrategy {
   public async getMetrics(): Promise<any> {
     const baseMetrics = await super.getMetrics();
     const nodes = await this.stateManager.getAllNodes() as PolicyGuidedNode[];
-    
+
     // Calculate additional policy-specific metrics
     const currentNode = nodes[nodes.length - 1];
     const policyStats = {

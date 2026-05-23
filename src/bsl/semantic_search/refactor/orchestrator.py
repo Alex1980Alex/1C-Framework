@@ -40,6 +40,8 @@ class OrchestratorResult:
     confidence: float = 0.0
     reason: str | None = None
     manual_instruction: ManualFallbackInstruction | None = None
+    prefilter_used: bool = False
+    prefilter_dropped: int = 0
 
     @property
     def ok(self) -> bool:
@@ -126,6 +128,9 @@ class RefactorOrchestrator:
         ctx["classifier_confidence"] = _classifier_confidence(kind, content)
         ctx["matrix_confidence"] = decision.confidence
 
+        old_name = ctx.get("old_name")
+        name_denied = RoutingMatrix.is_denied(old_name)
+
         primary_name = decision.primary
         primary_backend = self._backends.get(primary_name)
         if primary_backend is None:
@@ -136,16 +141,27 @@ class RefactorOrchestrator:
 
         edit: WorkspaceEdit | None = None
         backend_used: str | None = None
+        active_backend = None
 
-        try:
-            if primary_backend.can_handle(uri):
-                edit = primary_backend.plan_rename(uri, line, character, new_name)
-                backend_used = primary_name
-        except BackendError:
-            edit = None
+        # Skip ast-grep entirely when name is denylisted (over-match risk).
+        # Multilspy is scope-aware and stays in play.
+        primary_skipped_by_denylist = name_denied and primary_name == "ast-grep"
+        if not primary_skipped_by_denylist:
+            try:
+                if primary_backend.can_handle(uri):
+                    edit = primary_backend.plan_rename(uri, line, character, new_name)
+                    backend_used = primary_name
+                    active_backend = primary_backend
+            except BackendError:
+                edit = None
 
         fallback_used = False
-        if (edit is None or not edit.file_edits) and decision.fallback is not None:
+        fallback_skipped_by_denylist = name_denied and decision.fallback == "ast-grep"
+        if (
+            (edit is None or not edit.file_edits)
+            and decision.fallback is not None
+            and not fallback_skipped_by_denylist
+        ):
             fallback_name = decision.fallback
             fallback_backend = self._backends.get(fallback_name)
             if fallback_backend is not None:
@@ -156,11 +172,16 @@ class RefactorOrchestrator:
                             edit = fallback_edit
                             backend_used = fallback_name
                             fallback_used = True
+                            active_backend = fallback_backend
                 except BackendError:
                     pass
 
+        ctx["prefilter_used"] = bool(getattr(active_backend, "last_prefilter_used", False))
+        ctx["prefilter_dropped"] = int(getattr(active_backend, "last_prefilter_dropped", 0))
+
         if edit is None or not edit.file_edits:
-            if decision.manual_fallback:
+            denied_chain = primary_skipped_by_denylist or fallback_skipped_by_denylist
+            if decision.manual_fallback or denied_chain:
                 return OrchestratorResult(
                     applied=False,
                     rolled_back=False,
@@ -183,6 +204,9 @@ class RefactorOrchestrator:
         token = RenameDriver._compute_token(edit)
         files_affected, total_edits = RenameDriver._summarize(edit)
 
+        prefilter_used = ctx.get("prefilter_used", False)
+        prefilter_dropped = ctx.get("prefilter_dropped", 0)
+
         if dry_run:
             return OrchestratorResult(
                 applied=False,
@@ -196,6 +220,8 @@ class RefactorOrchestrator:
                 fallback_used=fallback_used,
                 confidence=decision.confidence,
                 reason=decision.reason,
+                prefilter_used=prefilter_used,
+                prefilter_dropped=prefilter_dropped,
             )
 
         if confirm_token != token:
@@ -206,6 +232,7 @@ class RefactorOrchestrator:
             )
 
         vr = self._verifier.verify_and_apply(edit)
+        vr.prefilter_dropped = prefilter_dropped
         return OrchestratorResult(
             applied=vr.applied,
             rolled_back=vr.rolled_back,
@@ -218,6 +245,8 @@ class RefactorOrchestrator:
             fallback_used=fallback_used,
             confidence=decision.confidence,
             reason=vr.reason,
+            prefilter_used=prefilter_used,
+            prefilter_dropped=prefilter_dropped,
         )
 
     @staticmethod
@@ -226,6 +255,9 @@ class RefactorOrchestrator:
         kind: SymbolKind,
         new_name: str,
         decision: RouteDecision,
+        *,
+        old_name: str | None = None,
+        denied: bool = False,
     ) -> ManualFallbackInstruction:
         approach_map: dict[SymbolKind, str] = {
             SymbolKind.FORM_HANDLER: "Grep+Edit or EDT GUI refactor F2",
@@ -241,14 +273,32 @@ class RefactorOrchestrator:
                 "Verify with Grep after manual rename",
             ],
         }
+        approach = approach_map.get(kind, "Grep+Edit")
+        warnings = list(warnings_map.get(kind, []))
+        if denied:
+            warnings.insert(
+                0,
+                f"Name {old_name!r} is in the over-match denylist "
+                "(too common for ast-grep). Use EDT GUI F2 or scope-aware Edit.",
+            )
+            rationale = (
+                f"ast-grep skipped: {old_name!r} appears in many unrelated "
+                f"files (over-match risk). No scope-aware backend available "
+                f"for {kind.value}."
+            )
+        else:
+            rationale = (
+                f"Primary={decision.primary}, fallback={decision.fallback} "
+                f"both failed for {kind.value}"
+            )
         return ManualFallbackInstruction(
             uri=uri,
             symbol_kind=kind,
-            old_name="<unknown>",
+            old_name=old_name or "<unknown>",
             new_name=new_name,
-            suggested_approach=approach_map.get(kind, "Grep+Edit"),
-            warnings=warnings_map.get(kind, []),
-            rationale=f"Primary={decision.primary}, fallback={decision.fallback} both failed for {kind.value}",
+            suggested_approach=approach,
+            warnings=warnings,
+            rationale=rationale,
         )
 
     @staticmethod
@@ -277,6 +327,8 @@ class RefactorOrchestrator:
             classifier_confidence=ctx.get("classifier_confidence", 0.0),
             matrix_confidence=ctx.get("matrix_confidence", 0.0),
             token_matched=None if dry_run else (result is not None and result.ok),
+            prefilter_used=ctx.get("prefilter_used", False),
+            prefilter_dropped=ctx.get("prefilter_dropped", 0),
         )
 
 

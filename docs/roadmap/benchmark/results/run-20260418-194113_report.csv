@@ -1,0 +1,21 @@
+task_id,category,backend,applied,rolled_back,duration_ms_plan,duration_ms_apply,files_match_expected,error_code
+T01,CAT-1-local-variable,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: e6643f2
+T02,CAT-1-local-variable,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: e6643f2
+T03,CAT-1-local-variable,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: e6643f2
+T04,CAT-1-local-variable,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: e6643f2
+T05,CAT-2-module-local-proc,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 97de8a6
+T06,CAT-2-module-local-proc,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: b40eb80
+T07,CAT-2-module-local-proc,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: b40eb80
+T08,CAT-2-module-local-proc,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: b40eb80
+T09,CAT-3-cross-file-export,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 478049a
+T10,CAT-3-cross-file-export,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 478049a
+T11,CAT-3-cross-file-export,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 7e2b3c2
+T12,CAT-3-cross-file-export,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 7e2b3c2
+T13,CAT-4-form-handler,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 0454f9e
+T14,CAT-4-form-handler,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 0454f9e
+T15,CAT-4-form-handler,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 0454f9e
+T16,CAT-4-form-handler,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: f9a701e
+T17,CAT-5-edge-case,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 5eb22fd
+T18,CAT-5-edge-case,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 7a8f0b8
+T19,CAT-5-edge-case,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 695b982
+T20,CAT-5-edge-case,ast-grep,False,False,0,0,False,RUNNER_ERROR:git worktree add failed: fatal: invalid reference: 695b982

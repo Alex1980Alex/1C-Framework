@@ -31,14 +31,20 @@
       },
       {
         "pattern": "Skill\\s*\\(|skill:\\s*\\w+",
-        "skill": "create-skill",
+        "skill": "doc-to-skill",
         "label": "Skill Creation",
         "domain": "framework"
       },
       {
         "pattern": "mcp__\\w+__|@mcp_server|class\\s+\\w+MCP",
-        "skill": "mcp-development",
+        "skill": "claude-code-plugins",
         "label": "MCP Server Development",
+        "domain": "framework"
+      },
+      {
+        "pattern": "openspec/changes/.+\\.(md|yaml)$|## ADDED REQ-|## MODIFIED REQ-|## ADDED Requirements|delta-spec",
+        "skill": "openspec-explore",
+        "label": "OpenSpec change artifact",
         "domain": "framework"
       },
       {
@@ -73,7 +79,7 @@
       },
       {
         "pattern": "КонструкторОписанияТипов|КвалификаторыЧисла|КвалификаторыДаты",
-        "skill": "bsl-type-system",
+        "skill": "bsl-development",
         "label": "BSL Type System",
         "domain": "1c"
       },
@@ -102,7 +108,7 @@
       },
       {
         "directory_prefix": ".claude/commands/",
-        "skill": "create-slash-command",
+        "skill": "claude-code-plugins",
         "label": "Slash Command Creation",
         "domain": "framework"
       },
@@ -120,7 +126,7 @@
       },
       {
         "directory_prefix": "src/graph_store/",
-        "skill": "graph-databases",
+        "skill": "graph-operations",
         "label": "Graph Database Operations",
         "domain": "tech"
       },
@@ -141,12 +147,6 @@
         "skill": "evaluation-benchmark",
         "label": "Testing & Test Infrastructure",
         "domain": "testing"
-      },
-      {
-        "directory_prefix": "docs/adr/",
-        "skill": "adr",
-        "label": "Architecture Decision Records",
-        "domain": "documentation"
       }
     ]
   },
@@ -160,34 +160,10 @@
         "domain": "devops"
       },
       {
-        "pattern": "kubectl|helm|kubectx",
-        "skill": "kubernetes",
-        "label": "Kubernetes Operations",
-        "domain": "devops"
-      },
-      {
         "pattern": "pytest|coverage\\.py|tox",
         "skill": "evaluation-benchmark",
         "label": "Python Testing",
         "domain": "testing"
-      },
-      {
-        "pattern": "npm\\s+(publish|version|audit)|yarn\\s+(publish|version)",
-        "skill": "npm-publishing",
-        "label": "NPM Package Publishing",
-        "domain": "devops"
-      },
-      {
-        "pattern": "eslint|prettier|black\\s+\\.|\\bruff\\b\\s+(check|format)",
-        "skill": "code-quality",
-        "label": "Code Quality Tools",
-        "domain": "quality"
-      },
-      {
-        "pattern": "mypy|pyright|pylint|pylint",
-        "skill": "type-checking",
-        "label": "Type Checking & Linting",
-        "domain": "quality"
       }
     ]
   },

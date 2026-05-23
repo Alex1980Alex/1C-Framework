@@ -27,7 +27,7 @@ class MathHelper {
     if (number < 0) {
       throw ArgumentError('Cannot calculate square root of negative number');
     }
-    
+
     double guess = number / 2;
     for (int i = 0; i < 10; i++) {
       guess = (guess + number / guess) / 2;

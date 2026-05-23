@@ -526,12 +526,12 @@ Roo Code and Cline are AI assistants that support the Model Context Protocol (MC
    ```
    Please generate documentation for my project at /path/to/my/project
    ```
-   
+
    Or for test plans:
    ```
    Please create a test plan for my project at /path/to/my/project
    ```
-   
+
    Or for code reviews:
    ```
    Please review the code in my project at /path/to/my/project
@@ -542,7 +542,7 @@ Roo Code and Cline are AI assistants that support the Model Context Protocol (MC
 The autodocument server works using a bottom-up approach:
 
 1. **Discovery**: Scans the target directory recursively, respecting `.gitignore` rules
-2. **Smart Directory Processing**: 
+2. **Smart Directory Processing**:
    - Identifies directories with multiple code files or subdirectories
    - Skips single-file directories but includes their content in parent documentation
 3. **File Analysis**: Analyzes code files, filtering by extension and size

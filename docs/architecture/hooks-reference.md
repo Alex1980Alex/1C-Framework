@@ -1,3 +1,9 @@
+---
+status: active
+tags: [architecture, hooks, reference]
+related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[skills-reference]]", "[[PATTERNS]]", "[[bsl-integration]]", "[[core-framework-separation]]"]
+---
+
 # Hooks Reference
 
 ## Обзор
@@ -313,6 +319,6 @@ if __name__ == "__main__":
 
 ## См. также
 
-- [Triad Architecture](triad-architecture.md)
-- [Skills Reference](skills-reference.md)
-- [Ralph Wiggum](ralph-wiggum.md)
+- [[triad-architecture]]
+- [[skills-reference]]
+- [[ralph-wiggum]]

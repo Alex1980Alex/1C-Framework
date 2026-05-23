@@ -35,7 +35,7 @@ export class ContextManager {
 	 */
 	async extractFileContext(filePaths, options = {}) {
 		const files = Array.isArray(filePaths) ? filePaths : [filePaths];
-		
+
 		if (this.verbose) {
 			log('info', `Extracting context from ${files.length} file(s)`);
 		}
@@ -124,7 +124,7 @@ export class ContextManager {
 			processedContent = truncateContext(contextText, this.maxContextLength, {
 				strategy: 'end'
 			});
-			
+
 			if (this.verbose) {
 				log('warn', `Context truncated from ${contextText.length} to ${processedContent.length} characters`);
 			}
@@ -203,7 +203,7 @@ export class ContextManager {
 				strategy: 'end',
 				marker: '\n\n[... context truncated due to length limits ...]\n\n'
 			});
-			
+
 			if (this.verbose) {
 				log('warn', `Combined context truncated from ${combinedContent.length} to ${finalContent.length} characters`);
 			}
@@ -255,13 +255,13 @@ export class ContextManager {
 		}
 
 		let formatted = '';
-		
+
 		if (includeHeader) {
 			formatted += `\n\n## ${sectionTitle}\n\n`;
 		}
-		
+
 		formatted += contextContent.trim();
-		
+
 		return formatted;
 	}
 
@@ -283,7 +283,7 @@ export class ContextManager {
 		}
 
 		if (stats.totalCharacters > 0) {
-			const size = stats.totalCharacters > 1000 
+			const size = stats.totalCharacters > 1000
 				? `${Math.round(stats.totalCharacters / 1000)}k chars`
 				: `${stats.totalCharacters} chars`;
 			summary.push(size);
@@ -307,8 +307,8 @@ export function parseContextOptions(options) {
 
 	// Parse --context-file option
 	if (options.contextFile) {
-		contextSources.files = Array.isArray(options.contextFile) 
-			? options.contextFile 
+		contextSources.files = Array.isArray(options.contextFile)
+			? options.contextFile
 			: [options.contextFile];
 	}
 

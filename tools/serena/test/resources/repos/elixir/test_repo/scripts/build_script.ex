@@ -23,4 +23,4 @@ defmodule TestRepo.Scripts.BuildScript do
     # This would reference User in a real scenario
     IO.puts("Cleaning up users...")
   end
-end 
+end

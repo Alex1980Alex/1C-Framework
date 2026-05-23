@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Any
 
 
 class ProjectStatus(Enum):
@@ -53,10 +53,10 @@ class ProjectStatus(Enum):
 class TaskPriority(Enum):
     """Priority levels for tasks."""
 
-    CRITICAL = "critical"    # P0 - Must be done immediately
-    HIGH = "high"            # P1 - Important
-    MEDIUM = "medium"        # P2 - Nice to have
-    LOW = "low"              # P3 - Can wait
+    CRITICAL = "critical"  # P0 - Must be done immediately
+    HIGH = "high"  # P1 - Important
+    MEDIUM = "medium"  # P2 - Nice to have
+    LOW = "low"  # P3 - Can wait
 
     @property
     def weight(self) -> int:
@@ -100,10 +100,10 @@ class TaskStatus(Enum):
 class DependencyType(Enum):
     """Types of dependencies between tasks."""
 
-    FINISH_TO_START = "finish_to_start"   # B starts after A finishes
-    START_TO_START = "start_to_start"     # B starts when A starts
-    FINISH_TO_FINISH = "finish_to_finish" # B finishes when A finishes
-    BLOCKING = "blocking"                  # A blocks B completely
+    FINISH_TO_START = "finish_to_start"  # B starts after A finishes
+    START_TO_START = "start_to_start"  # B starts when A starts
+    FINISH_TO_FINISH = "finish_to_finish"  # B finishes when A finishes
+    BLOCKING = "blocking"  # A blocks B completely
 
 
 @dataclass
@@ -113,7 +113,7 @@ class TaskDependency:
     source_task_id: str
     target_task_id: str
     dependency_type: DependencyType = DependencyType.FINISH_TO_START
-    description: Optional[str] = None
+    description: str | None = None
 
     def is_satisfied(self, source_status: TaskStatus) -> bool:
         """Check if dependency is satisfied based on source task status."""
@@ -137,27 +137,27 @@ class Task:
     description: str = ""
     priority: TaskPriority = TaskPriority.MEDIUM
     status: TaskStatus = TaskStatus.PENDING
-    assigned_agent: Optional[str] = None  # PM-SPEC, ARCHITECT, IMPLEMENTER, etc.
+    assigned_agent: str | None = None  # PM-SPEC, ARCHITECT, IMPLEMENTER, etc.
 
     # Timing
     created_at: datetime = field(default_factory=datetime.now)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    estimated_hours: Optional[float] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    estimated_hours: float | None = None
 
     # Dependencies
-    dependencies: List[str] = field(default_factory=list)  # List of task_ids
+    dependencies: list[str] = field(default_factory=list)  # List of task_ids
 
     # Artifacts
-    input_artifacts: List[str] = field(default_factory=list)
-    output_artifacts: List[str] = field(default_factory=list)
+    input_artifacts: list[str] = field(default_factory=list)
+    output_artifacts: list[str] = field(default_factory=list)
 
     # Metadata
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def duration_hours(self) -> Optional[float]:
+    def duration_hours(self) -> float | None:
         """Calculate actual duration in hours."""
         if self.started_at and self.completed_at:
             delta = self.completed_at - self.started_at
@@ -169,7 +169,7 @@ class Task:
         """Check if task has unresolved dependencies."""
         return self.status == TaskStatus.WAITING_DEPENDENCY
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "task_id": self.task_id,
@@ -200,24 +200,24 @@ class Project:
     status: ProjectStatus = ProjectStatus.NOT_STARTED
 
     # Path information
-    project_path: Optional[Path] = None
-    config_path: Optional[Path] = None
+    project_path: Path | None = None
+    config_path: Path | None = None
 
     # Tasks
-    tasks: List[Task] = field(default_factory=list)
+    tasks: list[Task] = field(default_factory=list)
 
     # Timing
     created_at: datetime = field(default_factory=datetime.now)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
     # Pipeline runs
-    current_run_id: Optional[str] = None
-    run_history: List[str] = field(default_factory=list)
+    current_run_id: str | None = None
+    run_history: list[str] = field(default_factory=list)
 
     # Metadata
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def task_count(self) -> int:
@@ -237,19 +237,16 @@ class Project:
         return (self.completed_task_count / self.task_count) * 100
 
     @property
-    def blocked_tasks(self) -> List[Task]:
+    def blocked_tasks(self) -> list[Task]:
         """Get list of blocked tasks."""
         return [t for t in self.tasks if t.is_blocked]
 
     @property
-    def next_tasks(self) -> List[Task]:
+    def next_tasks(self) -> list[Task]:
         """Get tasks that are ready to be worked on."""
-        return [
-            t for t in self.tasks
-            if t.status == TaskStatus.PENDING and not t.dependencies
-        ]
+        return [t for t in self.tasks if t.status == TaskStatus.PENDING and not t.dependencies]
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str) -> Task | None:
         """Get task by ID."""
         for task in self.tasks:
             if task.task_id == task_id:
@@ -260,7 +257,7 @@ class Project:
         """Add task to project."""
         self.tasks.append(task)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "project_id": self.project_id,
@@ -295,7 +292,7 @@ class ProjectManagerConfig:
 
     # Timeouts (seconds)
     project_timeout: int = 3600  # 1 hour
-    task_timeout: int = 600      # 10 minutes
+    task_timeout: int = 600  # 10 minutes
 
     # Auto-save
     auto_save_interval: int = 60  # seconds
@@ -314,16 +311,16 @@ class ProjectManagerInput:
     """Input for PROJECT-MANAGER Agent."""
 
     action: str  # create, start, pause, resume, cancel, status, list
-    project_id: Optional[str] = None
-    task_id: Optional[str] = None
+    project_id: str | None = None
+    task_id: str | None = None
 
     # For create action
-    project_name: Optional[str] = None
-    project_path: Optional[Path] = None
-    tasks: Optional[List[Dict[str, Any]]] = None
+    project_name: str | None = None
+    project_path: Path | None = None
+    tasks: list[dict[str, Any]] | None = None
 
     # Additional options
-    options: Dict[str, Any] = field(default_factory=dict)
+    options: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -335,19 +332,19 @@ class ProjectManagerOutput:
     message: str
 
     # Data
-    project: Optional[Project] = None
-    projects: Optional[List[Project]] = None
-    task: Optional[Task] = None
+    project: Project | None = None
+    projects: list[Project] | None = None
+    task: Task | None = None
 
     # Errors
-    error_code: Optional[str] = None
-    error_details: Optional[str] = None
+    error_code: str | None = None
+    error_details: str | None = None
 
     # Metadata
     execution_time_ms: float = 0
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "success": self.success,

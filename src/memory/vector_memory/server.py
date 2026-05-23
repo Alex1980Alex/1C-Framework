@@ -16,6 +16,7 @@ import math
 import os
 import sys
 import uuid
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -46,12 +47,14 @@ DECAY_RATE = float(os.getenv("LEARNING_DECAY_RATE", "0.05"))
 MIN_CONFIDENCE = float(os.getenv("LEARNING_MIN_CONFIDENCE", "0.3"))
 
 # Lazy-initialized clients
-_qdrant_client = None
-_embedding_fn = None
-_embedding_provider = None  # async E5 engine (if available)
+_qdrant_client: Any | None = None
+# `_embedding_fn` is either the sentinel string "async" (use _embedding_provider)
+# or a callable producing pseudo-embeddings (offline opt-in hash fallback).
+_embedding_fn: str | Callable[[list[str]], list[list[float]]] | None = None
+_embedding_provider: Any | None = None  # async E5 engine (if available)
 
 
-def _get_qdrant():
+def _get_qdrant() -> Any:
     """Lazy-init Qdrant client. Uses shared Qdrant at localhost:6333."""
     global _qdrant_client
     if _qdrant_client is None:
@@ -66,11 +69,12 @@ def _get_qdrant():
     return _qdrant_client
 
 
-def _ensure_collection():
+def _ensure_collection() -> None:
     """Ensure learned_patterns collection exists with cosine 1024d vectors."""
     from qdrant_client.http import models as qmodels
 
     client = _qdrant_client
+    assert client is not None, "_ensure_collection called before _get_qdrant init"
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
         client.create_collection(
@@ -94,7 +98,17 @@ def _ensure_collection():
 
 
 async def _get_embedding(text: str) -> list[float]:
-    """Get embedding using project's embedding provider or hash fallback."""
+    """Get embedding using project's embedding provider.
+
+    On provider init failure: raises RuntimeError by default — silent
+    hash-based fallback was producing semantically-meaningless vectors
+    which made pattern search effectively random (roadmap 260509 §4.3
+    fix, 2026-05-16). To opt into the legacy fallback (e.g. for offline
+    smoke testing where Qdrant + embedding model are both unavailable),
+    set env `MEMORY_VECTOR_ALLOW_HASH_FALLBACK=1`. When opt-in is active,
+    every embedding call emits a WARNING log line so the degraded mode
+    is visible in operational logs.
+    """
     global _embedding_fn, _embedding_provider
     if _embedding_fn is None:
         try:
@@ -107,10 +121,40 @@ async def _get_embedding(text: str) -> list[float]:
             _embedding_fn = "async"  # marker: use _embedding_provider
             logger.info("Using project embedding provider (E5 1024d)")
         except Exception as exc:
-            logger.warning(f"Embedding provider init failed: {exc}")
+            allow_fallback = os.environ.get(
+                "MEMORY_VECTOR_ALLOW_HASH_FALLBACK", ""
+            ).strip().lower() in ("1", "true", "yes")
+            if not allow_fallback:
+                logger.error(
+                    "Embedding provider init failed: %s. "
+                    "Silent hash-based fallback would corrupt pattern search "
+                    "(roadmap 260509 §4.3). Set env "
+                    "MEMORY_VECTOR_ALLOW_HASH_FALLBACK=1 to opt in for "
+                    "offline/test environments.",
+                    exc,
+                )
+                raise RuntimeError(
+                    "Vector memory embedding provider unavailable and "
+                    "MEMORY_VECTOR_ALLOW_HASH_FALLBACK is not set"
+                ) from exc
+
+            logger.warning(
+                "Embedding provider init failed (%s) — falling back to "
+                "hash-based pseudo-embeddings. Pattern search results will "
+                "be semantically meaningless. Opt-in via "
+                "MEMORY_VECTOR_ALLOW_HASH_FALLBACK=1 acknowledged.",
+                exc,
+            )
             import hashlib
 
             def _hash_embed(texts: list[str]) -> list[list[float]]:
+                # Emit per-call WARN so degraded mode stays visible in
+                # operational logs (not just init-time once).
+                logger.warning(
+                    "[HASH-FALLBACK] computing pseudo-embeddings for "
+                    "%d text(s); results are NOT semantic",
+                    len(texts),
+                )
                 results = []
                 for t in texts:
                     h = hashlib.sha512(t.encode()).digest()
@@ -122,13 +166,13 @@ async def _get_embedding(text: str) -> list[float]:
                 return results
 
             _embedding_fn = _hash_embed
-            logger.warning("Using hash-based fallback embeddings")
 
     if _embedding_fn == "async" and _embedding_provider is not None:
         result = await _embedding_provider.embed_batch([text])
-        return result[0]
+        return result[0]  # type: ignore[no-any-return]
+    assert callable(_embedding_fn), "embedding fn invariant violated"
     result = await asyncio.to_thread(_embedding_fn, [text])
-    return result[0]
+    return result[0]  # type: ignore[no-any-return]
 
 
 def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPattern:
@@ -185,7 +229,7 @@ def _pattern_to_payload(pattern: LearnedPattern) -> dict[str, Any]:
 app = Server("vector-memory")
 
 
-@app.list_tools()
+@app.list_tools()  # type: ignore  # MCP decorator codes differ across mypy versions
 async def list_tools() -> list[Tool]:
     return [
         Tool(
@@ -263,8 +307,8 @@ async def list_tools() -> list[Tool]:
     ]
 
 
-@app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+@app.call_tool()  # type: ignore  # MCP decorator codes differ across mypy versions
+async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     try:
         handlers = {
             "save_pattern": handle_save_pattern,
@@ -284,7 +328,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         return [TextContent(type="text", text=f"Error: {str(e)}")]
 
 
-async def handle_save_pattern(args: dict) -> list[TextContent]:
+async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     from qdrant_client.http import models as qmodels
 
     client = _get_qdrant()
@@ -335,7 +379,7 @@ async def handle_save_pattern(args: dict) -> list[TextContent]:
     ]
 
 
-async def handle_search_patterns(args: dict) -> list[TextContent]:
+async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
     from qdrant_client.http import models as qmodels
 
     client = _get_qdrant()
@@ -390,7 +434,7 @@ async def handle_search_patterns(args: dict) -> list[TextContent]:
     ]
 
 
-async def handle_apply_pattern(args: dict) -> list[TextContent]:
+async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
     client = _get_qdrant()
     pattern_id = args["pattern_id"]
     success = args.get("success", True)
@@ -438,7 +482,7 @@ async def handle_apply_pattern(args: dict) -> list[TextContent]:
     ]
 
 
-async def handle_get_pattern(args: dict) -> list[TextContent]:
+async def handle_get_pattern(args: dict[str, Any]) -> list[TextContent]:
     client = _get_qdrant()
     pattern_id = args["pattern_id"]
     points = client.retrieve(collection_name=COLLECTION_NAME, ids=[pattern_id], with_payload=True)
@@ -459,7 +503,7 @@ async def handle_get_pattern(args: dict) -> list[TextContent]:
     ]
 
 
-async def handle_delete_pattern(args: dict) -> list[TextContent]:
+async def handle_delete_pattern(args: dict[str, Any]) -> list[TextContent]:
     client = _get_qdrant()
     pattern_id = args["pattern_id"]
     client.delete(collection_name=COLLECTION_NAME, points_selector=[pattern_id])
@@ -467,7 +511,7 @@ async def handle_delete_pattern(args: dict) -> list[TextContent]:
     return [TextContent(type="text", text=json.dumps({"success": True, "pattern_id": pattern_id}))]
 
 
-async def handle_decay_confidence(args: dict) -> list[TextContent]:
+async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
     """Apply temporal decay: confidence * exp(-decay_rate * days/30).
     Patterns below MIN_CONFIDENCE threshold are deleted.
     """
@@ -532,8 +576,8 @@ async def handle_decay_confidence(args: dict) -> list[TextContent]:
     ]
 
 
-async def handle_health_check(args: dict) -> list[TextContent]:
-    health = {"qdrant": False, "collection": False, "count": 0}
+async def handle_health_check(args: dict[str, Any]) -> list[TextContent]:
+    health: dict[str, Any] = {"qdrant": False, "collection": False, "count": 0}
     try:
         client = _get_qdrant()
         collections = [c.name for c in client.get_collections().collections]
@@ -548,7 +592,7 @@ async def handle_health_check(args: dict) -> list[TextContent]:
     return [TextContent(type="text", text=json.dumps(health, indent=2))]
 
 
-async def main():
+async def main() -> None:
     logger.info("Starting Vector-Memory MCP Server...")
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())

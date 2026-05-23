@@ -4,22 +4,20 @@ Codebase Scanner for INITIALIZER Agent.
 Scans 1C project directory structure and collects file information.
 """
 
-import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from agents.initializer.models import (
-    FileType,
-    ProjectType,
-    ObjectType,
-    FileInfo,
     DirectoryInfo,
+    FileInfo,
+    FileType,
+    InitializerConfig,
     ModuleInfo,
+    ObjectType,
     PatternInfo,
     ProjectStructure,
-    InitializerConfig,
+    ProjectType,
 )
 
 
@@ -84,7 +82,7 @@ class CodebaseScanner:
         ".vscode",
     }
 
-    def __init__(self, config: Optional[InitializerConfig] = None) -> None:
+    def __init__(self, config: InitializerConfig | None = None) -> None:
         """Initialize scanner with config."""
         self.config = config or InitializerConfig()
         self._file_count = 0
@@ -164,11 +162,7 @@ class CodebaseScanner:
 
         return ProjectType.UNKNOWN
 
-    def _scan_directory(
-        self,
-        path: Path,
-        depth: int = 0
-    ) -> list[DirectoryInfo]:
+    def _scan_directory(self, path: Path, depth: int = 0) -> list[DirectoryInfo]:
         """Recursively scan directory."""
         if depth > self.config.max_depth:
             return []
@@ -222,7 +216,7 @@ class CodebaseScanner:
 
         return directories
 
-    def _get_file_info(self, path: Path) -> Optional[FileInfo]:
+    def _get_file_info(self, path: Path) -> FileInfo | None:
         """Get information about a file."""
         try:
             stat = path.stat()
@@ -232,12 +226,12 @@ class CodebaseScanner:
             line_count = 0
             if file_type == FileType.BSL:
                 try:
-                    with open(path, "r", encoding="utf-8-sig") as f:
+                    with open(path, encoding="utf-8-sig") as f:
                         line_count = sum(1 for _ in f)
-                except (UnicodeDecodeError, IOError):
+                except (OSError, UnicodeDecodeError):
                     # Try different encoding
                     try:
-                        with open(path, "r", encoding="cp1251") as f:
+                        with open(path, encoding="cp1251") as f:
                             line_count = sum(1 for _ in f)
                     except Exception:
                         pass
@@ -253,10 +247,7 @@ class CodebaseScanner:
         except Exception:
             return None
 
-    def _extract_modules(
-        self,
-        directories: list[DirectoryInfo]
-    ) -> list[ModuleInfo]:
+    def _extract_modules(self, directories: list[DirectoryInfo]) -> list[ModuleInfo]:
         """Extract 1C modules from directory structure."""
         modules = []
 
@@ -277,10 +268,8 @@ class CodebaseScanner:
         return modules
 
     def _create_module_info(
-        self,
-        dir_info: DirectoryInfo,
-        object_type: ObjectType
-    ) -> Optional[ModuleInfo]:
+        self, dir_info: DirectoryInfo, object_type: ObjectType
+    ) -> ModuleInfo | None:
         """Create ModuleInfo from directory."""
         # Collect all BSL files from module directory
         all_files = self._collect_all_files(dir_info)
@@ -312,11 +301,11 @@ class CodebaseScanner:
     def _count_exports(self, bsl_path: Path) -> int:
         """Count exported functions/procedures in BSL file."""
         try:
-            with open(bsl_path, "r", encoding="utf-8-sig") as f:
+            with open(bsl_path, encoding="utf-8-sig") as f:
                 content = f.read()
-        except (UnicodeDecodeError, IOError):
+        except (OSError, UnicodeDecodeError):
             try:
-                with open(bsl_path, "r", encoding="cp1251") as f:
+                with open(bsl_path, encoding="cp1251") as f:
                     content = f.read()
             except Exception:
                 return 0
@@ -334,38 +323,46 @@ class CodebaseScanner:
         prefixes = self._detect_naming_prefix(modules)
         if prefixes:
             most_common = max(prefixes.items(), key=lambda x: x[1])
-            patterns.append(PatternInfo(
-                name="Naming Prefix",
-                description=f"Используется префикс '{most_common[0]}' для объектов",
-                examples=[m.name for m in modules if m.name.startswith(most_common[0])][:5],
-                occurrences=most_common[1],
-            ))
+            patterns.append(
+                PatternInfo(
+                    name="Naming Prefix",
+                    description=f"Используется префикс '{most_common[0]}' для объектов",
+                    examples=[m.name for m in modules if m.name.startswith(most_common[0])][:5],
+                    occurrences=most_common[1],
+                )
+            )
 
         # Detect common module usage
         common_modules = [m for m in modules if m.object_type == ObjectType.COMMON_MODULE]
         if common_modules:
-            patterns.append(PatternInfo(
-                name="Common Modules",
-                description=f"Используется {len(common_modules)} общих модулей",
-                examples=[m.name for m in common_modules][:5],
-                occurrences=len(common_modules),
-            ))
+            patterns.append(
+                PatternInfo(
+                    name="Common Modules",
+                    description=f"Используется {len(common_modules)} общих модулей",
+                    examples=[m.name for m in common_modules][:5],
+                    occurrences=len(common_modules),
+                )
+            )
 
         # Detect register usage
         registers = [
-            m for m in modules
-            if m.object_type in (
+            m
+            for m in modules
+            if m.object_type
+            in (
                 ObjectType.ACCUMULATION_REGISTER,
                 ObjectType.INFORMATION_REGISTER,
             )
         ]
         if registers:
-            patterns.append(PatternInfo(
-                name="Registers",
-                description=f"Используется {len(registers)} регистров",
-                examples=[m.name for m in registers][:5],
-                occurrences=len(registers),
-            ))
+            patterns.append(
+                PatternInfo(
+                    name="Registers",
+                    description=f"Используется {len(registers)} регистров",
+                    examples=[m.name for m in registers][:5],
+                    occurrences=len(registers),
+                )
+            )
 
         return patterns
 
@@ -390,7 +387,8 @@ class CodebaseScanner:
 
 # Convenience functions
 
-def scan_directory(path: str | Path, config: Optional[InitializerConfig] = None) -> ProjectStructure:
+
+def scan_directory(path: str | Path, config: InitializerConfig | None = None) -> ProjectStructure:
     """Scan directory and return project structure."""
     scanner = CodebaseScanner(config)
     return scanner.scan(path)

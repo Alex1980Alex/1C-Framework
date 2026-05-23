@@ -5,35 +5,33 @@ Sprint 3.2.2: Параллельный запуск агентов
 """
 
 import asyncio
-import pytest
 from datetime import datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from constants import AgentMode, AgentRole
 from models import (
-    TaskNode,
-    TaskGraph,
-    TaskStatus,
     ExecutionPriority,
+    TaskGraph,
+    TaskNode,
 )
+
 from .parallel_executor import (
-    ExecutionState,
-    TaskResult,
     ExecutionProgress,
     ExecutionReport,
-    TaskExecutorInterface,
+    ExecutionState,
     MockTaskExecutor,
     ParallelExecutor,
+    TaskExecutorInterface,
+    TaskResult,
     execute_graph,
     execute_tasks,
     run_graph_sync,
 )
-from constants import AgentRole, AgentMode
-
 
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_task() -> TaskNode:
@@ -135,6 +133,7 @@ def dependent_graph() -> TaskGraph:
 # Test TaskResult
 # =============================================================================
 
+
 class TestTaskResult:
     """Tests for TaskResult dataclass."""
 
@@ -200,6 +199,7 @@ class TestTaskResult:
 # Test ExecutionProgress
 # =============================================================================
 
+
 class TestExecutionProgress:
     """Tests for ExecutionProgress dataclass."""
 
@@ -250,6 +250,7 @@ class TestExecutionProgress:
 # Test ExecutionReport
 # =============================================================================
 
+
 class TestExecutionReport:
     """Tests for ExecutionReport dataclass."""
 
@@ -291,6 +292,7 @@ class TestExecutionReport:
 # =============================================================================
 # Test MockTaskExecutor
 # =============================================================================
+
 
 class TestMockTaskExecutor:
     """Tests for MockTaskExecutor."""
@@ -342,6 +344,7 @@ class TestMockTaskExecutor:
 # =============================================================================
 # Test ParallelExecutor
 # =============================================================================
+
 
 class TestParallelExecutor:
     """Tests for ParallelExecutor."""
@@ -482,13 +485,15 @@ class TestParallelExecutor:
         # Create 10 independent tasks
         graph = TaskGraph(id="concurrency-test", name="Concurrency Test")
         for i in range(10):
-            graph.add_task(TaskNode(
-                id=f"task-{i}",
-                name=f"Task {i}",
-                description=f"Task {i}",
-                agent_role=AgentRole.IMPLEMENTER.value,
-                agent_mode=AgentMode.BUILD.value,
-            ))
+            graph.add_task(
+                TaskNode(
+                    id=f"task-{i}",
+                    name=f"Task {i}",
+                    description=f"Task {i}",
+                    agent_role=AgentRole.IMPLEMENTER.value,
+                    agent_mode=AgentMode.BUILD.value,
+                )
+            )
 
         parallel = ParallelExecutor(
             executor=ConcurrencyTracker(),
@@ -502,6 +507,7 @@ class TestParallelExecutor:
     @pytest.mark.asyncio
     async def test_cancel_execution(self, sample_graph):
         """Test cancellation of execution."""
+
         class SlowExecutor(TaskExecutorInterface):
             async def execute(self, task: TaskNode, context: dict) -> TaskResult:
                 await asyncio.sleep(1.0)  # Long execution
@@ -573,6 +579,7 @@ class TestParallelExecutor:
     @pytest.mark.asyncio
     async def test_context_propagation(self, dependent_graph):
         """Test that context is propagated between waves."""
+
         class ContextAwareExecutor(TaskExecutorInterface):
             async def execute(self, task: TaskNode, context: dict) -> TaskResult:
                 # Task 4 depends on task 2 and 3
@@ -608,6 +615,7 @@ class TestParallelExecutor:
 # =============================================================================
 # Test Convenience Functions
 # =============================================================================
+
 
 class TestConvenienceFunctions:
     """Tests for convenience functions."""
@@ -679,12 +687,14 @@ class TestConvenienceFunctions:
 # Test Exception Handling
 # =============================================================================
 
+
 class TestExceptionHandling:
     """Tests for exception handling."""
 
     @pytest.mark.asyncio
     async def test_executor_exception_caught(self, sample_task):
         """Test that executor exceptions are caught."""
+
         class ExceptionExecutor(TaskExecutorInterface):
             async def execute(self, task: TaskNode, context: dict) -> TaskResult:
                 raise RuntimeError("Executor crashed")
@@ -708,6 +718,7 @@ class TestExceptionHandling:
     @pytest.mark.asyncio
     async def test_progress_callback_exception_ignored(self, sample_graph):
         """Test that progress callback exceptions don't stop execution."""
+
         def bad_callback(progress: ExecutionProgress):
             raise ValueError("Callback error")
 
@@ -728,6 +739,7 @@ class TestExceptionHandling:
 # Test ExecutionState
 # =============================================================================
 
+
 class TestExecutionState:
     """Tests for ExecutionState enum."""
 
@@ -745,6 +757,7 @@ class TestExecutionState:
 # Test Integration
 # =============================================================================
 
+
 class TestIntegration:
     """Integration tests for parallel execution."""
 
@@ -756,13 +769,15 @@ class TestIntegration:
 
         # Wave 1: 3 parallel tasks
         for i in range(3):
-            graph.add_task(TaskNode(
-                id=f"wave1-task-{i}",
-                name=f"Wave 1 Task {i}",
-                description=f"Wave 1 Task {i}",
-                agent_role=AgentRole.PM_SPEC.value,
-                agent_mode=AgentMode.INIT.value,
-            ))
+            graph.add_task(
+                TaskNode(
+                    id=f"wave1-task-{i}",
+                    name=f"Wave 1 Task {i}",
+                    description=f"Wave 1 Task {i}",
+                    agent_role=AgentRole.PM_SPEC.value,
+                    agent_mode=AgentMode.INIT.value,
+                )
+            )
 
         # Wave 2: 2 tasks depending on wave 1
         for i in range(2):
@@ -809,13 +824,15 @@ class TestIntegration:
         # Create 4 tasks that each take 100ms
         graph = TaskGraph(id="timing-test", name="Timing Test")
         for i in range(4):
-            graph.add_task(TaskNode(
-                id=f"task-{i}",
-                name=f"Task {i}",
-                description=f"Task {i}",
-                agent_role=AgentRole.IMPLEMENTER.value,
-                agent_mode=AgentMode.BUILD.value,
-            ))
+            graph.add_task(
+                TaskNode(
+                    id=f"task-{i}",
+                    name=f"Task {i}",
+                    description=f"Task {i}",
+                    agent_role=AgentRole.IMPLEMENTER.value,
+                    agent_mode=AgentMode.BUILD.value,
+                )
+            )
 
         class TimedExecutor(TaskExecutorInterface):
             async def execute(self, task: TaskNode, context: dict) -> TaskResult:

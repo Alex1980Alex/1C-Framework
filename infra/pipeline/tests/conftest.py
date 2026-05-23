@@ -3,9 +3,7 @@ Pytest fixtures for Development Pipeline tests.
 """
 
 import pytest
-from datetime import datetime
-
-from constants import AgentRole, ArtifactType, VerificationStatus
+from constants import AgentRole, ArtifactType
 from models import Artifact, ArtifactMetadata
 
 

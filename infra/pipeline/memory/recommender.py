@@ -10,36 +10,32 @@ This module provides functionality for:
 """
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any, Tuple, Set
 from enum import Enum
-from collections import defaultdict
+from typing import Any
 
 from models import (
+    LearningContext,
+    MemoryType,
     Recommendation,
     RecommendationType,
-    Pattern,
-    PatternType,
-    ErrorRecord,
-    MemoryType,
-    LearningContext,
 )
-from .unified_memory_client import (
-    UnifiedMemoryClient,
-    SearchResult,
-    SaveResult,
-    SearchMode,
-)
-from .pattern_saver import PatternMatcher, MatchResult
-from .error_learner import ErrorLearner, ErrorCategory
 
+from .error_learner import ErrorLearner
+from .pattern_saver import PatternMatcher
+from .unified_memory_client import (
+    SaveResult,
+    UnifiedMemoryClient,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class RecommendationSource(Enum):
     """Source of a recommendation."""
+
     PATTERN = "pattern"  # From successful patterns
     ERROR = "error"  # From error prevention
     HISTORY = "history"  # From execution history
@@ -51,12 +47,12 @@ class RecommendationSource(Enum):
 class RecommendationContext:
     """Context for generating recommendations."""
 
-    current_task: Optional[str] = None
-    current_agent: Optional[str] = None
-    current_file: Optional[str] = None
-    code_snippet: Optional[str] = None
-    error_context: Optional[str] = None
-    keywords: List[str] = field(default_factory=list)
+    current_task: str | None = None
+    current_agent: str | None = None
+    current_file: str | None = None
+    code_snippet: str | None = None
+    error_context: str | None = None
+    keywords: list[str] = field(default_factory=list)
 
     def to_query(self) -> str:
         """Convert context to search query."""
@@ -89,10 +85,10 @@ class ScoredRecommendation:
     def final_score(self) -> float:
         """Calculate final recommendation score."""
         return (
-            self.base_score * 0.4 +
-            self.context_bonus * 0.3 +
-            self.recency_bonus * 0.15 +
-            self.feedback_bonus * 0.15
+            self.base_score * 0.4
+            + self.context_bonus * 0.3
+            + self.recency_bonus * 0.15
+            + self.feedback_bonus * 0.15
         )
 
 
@@ -102,9 +98,9 @@ class FeedbackRecord:
 
     recommendation_id: str
     accepted: bool
-    helpful: Optional[bool] = None
+    helpful: bool | None = None
     timestamp: datetime = field(default_factory=datetime.now)
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 class RecommendationEngine:
@@ -121,8 +117,8 @@ class RecommendationEngine:
     def __init__(
         self,
         memory_client: UnifiedMemoryClient,
-        pattern_matcher: Optional[PatternMatcher] = None,
-        error_learner: Optional[ErrorLearner] = None,
+        pattern_matcher: PatternMatcher | None = None,
+        error_learner: ErrorLearner | None = None,
         max_recommendations: int = 10,
     ):
         self.memory_client = memory_client
@@ -131,15 +127,15 @@ class RecommendationEngine:
         self.max_recommendations = max_recommendations
 
         # Feedback tracking
-        self._feedback: Dict[str, List[FeedbackRecord]] = defaultdict(list)
-        self._acceptance_rates: Dict[str, float] = {}
+        self._feedback: dict[str, list[FeedbackRecord]] = defaultdict(list)
+        self._acceptance_rates: dict[str, float] = {}
 
     async def generate_recommendations(
         self,
         context: RecommendationContext,
-        learning_context: Optional[LearningContext] = None,
-        recommendation_types: Optional[List[RecommendationType]] = None,
-    ) -> List[ScoredRecommendation]:
+        learning_context: LearningContext | None = None,
+        recommendation_types: list[RecommendationType] | None = None,
+    ) -> list[ScoredRecommendation]:
         """
         Generate recommendations based on context.
 
@@ -151,38 +147,30 @@ class RecommendationEngine:
         Returns:
             List of scored recommendations
         """
-        all_recommendations: List[ScoredRecommendation] = []
+        all_recommendations: list[ScoredRecommendation] = []
 
         # Gather recommendations from all sources
         if not recommendation_types or RecommendationType.PATTERN_MATCH in recommendation_types:
-            pattern_recs = await self._get_pattern_recommendations(
-                context, learning_context
-            )
+            pattern_recs = await self._get_pattern_recommendations(context, learning_context)
             all_recommendations.extend(pattern_recs)
 
         if not recommendation_types or RecommendationType.ERROR_PREVENTION in recommendation_types:
-            error_recs = await self._get_error_recommendations(
-                context, learning_context
-            )
+            error_recs = await self._get_error_recommendations(context, learning_context)
             all_recommendations.extend(error_recs)
 
         if not recommendation_types or RecommendationType.BEST_PRACTICE in recommendation_types:
-            history_recs = await self._get_history_recommendations(
-                context, learning_context
-            )
+            history_recs = await self._get_history_recommendations(context, learning_context)
             all_recommendations.extend(history_recs)
 
         if not recommendation_types or RecommendationType.OPTIMIZATION in recommendation_types:
-            context_recs = await self._get_context_recommendations(
-                context, learning_context
-            )
+            context_recs = await self._get_context_recommendations(context, learning_context)
             all_recommendations.extend(context_recs)
 
         # Sort by final score
         all_recommendations.sort(key=lambda r: r.final_score, reverse=True)
 
         # Deduplicate and limit
-        seen_titles: Set[str] = set()
+        seen_titles: set[str] = set()
         unique_recommendations = []
 
         for rec in all_recommendations:
@@ -198,8 +186,8 @@ class RecommendationEngine:
     async def _get_pattern_recommendations(
         self,
         context: RecommendationContext,
-        learning_context: Optional[LearningContext] = None,
-    ) -> List[ScoredRecommendation]:
+        learning_context: LearningContext | None = None,
+    ) -> list[ScoredRecommendation]:
         """Get recommendations from successful patterns."""
         recommendations = []
 
@@ -244,8 +232,8 @@ class RecommendationEngine:
     async def _get_error_recommendations(
         self,
         context: RecommendationContext,
-        learning_context: Optional[LearningContext] = None,
-    ) -> List[ScoredRecommendation]:
+        learning_context: LearningContext | None = None,
+    ) -> list[ScoredRecommendation]:
         """Get recommendations from error prevention."""
         recommendations = []
 
@@ -296,9 +284,7 @@ class RecommendationEngine:
                             source=RecommendationSource.ERROR,
                             base_score=result.score,
                             context_bonus=0.6,
-                            recency_bonus=self._calculate_recency_bonus(
-                                result.created_at
-                            ),
+                            recency_bonus=self._calculate_recency_bonus(result.created_at),
                             feedback_bonus=self._get_feedback_bonus(rec.id),
                         )
                         recommendations.append(scored)
@@ -308,8 +294,8 @@ class RecommendationEngine:
     async def _get_history_recommendations(
         self,
         context: RecommendationContext,
-        learning_context: Optional[LearningContext] = None,
-    ) -> List[ScoredRecommendation]:
+        learning_context: LearningContext | None = None,
+    ) -> list[ScoredRecommendation]:
         """Get recommendations from execution history."""
         recommendations = []
 
@@ -358,8 +344,8 @@ class RecommendationEngine:
     async def _get_context_recommendations(
         self,
         context: RecommendationContext,
-        learning_context: Optional[LearningContext] = None,
-    ) -> List[ScoredRecommendation]:
+        learning_context: LearningContext | None = None,
+    ) -> list[ScoredRecommendation]:
         """Get context-aware recommendations."""
         recommendations = []
 
@@ -396,7 +382,7 @@ class RecommendationEngine:
     def _get_agent_recommendations(
         self,
         agent: str,
-    ) -> List[Recommendation]:
+    ) -> list[Recommendation]:
         """Get recommendations specific to an agent."""
         agent_lower = agent.lower()
 
@@ -464,35 +450,39 @@ class RecommendationEngine:
     def _get_file_recommendations(
         self,
         file_path: str,
-    ) -> List[Recommendation]:
+    ) -> list[Recommendation]:
         """Get recommendations based on file type."""
         recommendations = []
 
-        if file_path.endswith('.bsl'):
-            recommendations.append(Recommendation(
-                id="rec_ctx_bsl_1",
-                recommendation_type=RecommendationType.BEST_PRACTICE,
-                title="BSL Best Practices",
-                description="Рекомендации по обработке ошибок в BSL коде",
-                action="Используйте Попытка/Исключение для обработки ошибок",
-                rationale="Стандартная практика для BSL кода",
-                expected_benefit="Надежная обработка исключительных ситуаций",
-                confidence=0.6,
-                priority=3,
-            ))
+        if file_path.endswith(".bsl"):
+            recommendations.append(
+                Recommendation(
+                    id="rec_ctx_bsl_1",
+                    recommendation_type=RecommendationType.BEST_PRACTICE,
+                    title="BSL Best Practices",
+                    description="Рекомендации по обработке ошибок в BSL коде",
+                    action="Используйте Попытка/Исключение для обработки ошибок",
+                    rationale="Стандартная практика для BSL кода",
+                    expected_benefit="Надежная обработка исключительных ситуаций",
+                    confidence=0.6,
+                    priority=3,
+                )
+            )
 
-        if 'Module.bsl' in file_path:
-            recommendations.append(Recommendation(
-                id="rec_ctx_module_1",
-                recommendation_type=RecommendationType.BEST_PRACTICE,
-                title="Модульная структура",
-                description="Организация кода модуля с использованием регионов",
-                action="Группируйте связанные процедуры в регионы",
-                rationale="Улучшает читаемость модуля",
-                expected_benefit="Повышенная читаемость и поддерживаемость",
-                confidence=0.5,
-                priority=4,
-            ))
+        if "Module.bsl" in file_path:
+            recommendations.append(
+                Recommendation(
+                    id="rec_ctx_module_1",
+                    recommendation_type=RecommendationType.BEST_PRACTICE,
+                    title="Модульная структура",
+                    description="Организация кода модуля с использованием регионов",
+                    action="Группируйте связанные процедуры в регионы",
+                    rationale="Улучшает читаемость модуля",
+                    expected_benefit="Повышенная читаемость и поддерживаемость",
+                    confidence=0.5,
+                    priority=4,
+                )
+            )
 
         return recommendations
 
@@ -509,14 +499,14 @@ class RecommendationEngine:
 
     def _calculate_recency_bonus(
         self,
-        created_at: Optional[str],
+        created_at: str | None,
     ) -> float:
         """Calculate recency bonus for a recommendation."""
         if not created_at:
             return 0.5
 
         try:
-            created = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            created = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
             age = datetime.now(created.tzinfo) - created
 
             if age < timedelta(days=1):
@@ -544,9 +534,11 @@ class RecommendationEngine:
         helpful = sum(1 for f in feedback_list if f.helpful)
 
         acceptance_rate = accepted / len(feedback_list)
-        helpfulness_rate = helpful / len(feedback_list) if any(
-            f.helpful is not None for f in feedback_list
-        ) else 0.5
+        helpfulness_rate = (
+            helpful / len(feedback_list)
+            if any(f.helpful is not None for f in feedback_list)
+            else 0.5
+        )
 
         bonus = acceptance_rate * 0.6 + helpfulness_rate * 0.4
         self._acceptance_rates[recommendation_id] = bonus
@@ -557,8 +549,8 @@ class RecommendationEngine:
         self,
         recommendation_id: str,
         accepted: bool,
-        helpful: Optional[bool] = None,
-        comment: Optional[str] = None,
+        helpful: bool | None = None,
+        comment: str | None = None,
     ) -> None:
         """
         Record user feedback on a recommendation.
@@ -582,8 +574,7 @@ class RecommendationEngine:
         self._acceptance_rates.pop(recommendation_id, None)
 
         logger.info(
-            f"Recorded feedback for {recommendation_id}: "
-            f"accepted={accepted}, helpful={helpful}"
+            f"Recorded feedback for {recommendation_id}: " f"accepted={accepted}, helpful={helpful}"
         )
 
 
@@ -600,22 +591,22 @@ class Recommender:
     def __init__(
         self,
         memory_client: UnifiedMemoryClient,
-        engine: Optional[RecommendationEngine] = None,
+        engine: RecommendationEngine | None = None,
     ):
         self.memory_client = memory_client
         self.engine = engine or RecommendationEngine(memory_client)
 
     async def get_recommendations(
         self,
-        task: Optional[str] = None,
-        agent: Optional[str] = None,
-        file_path: Optional[str] = None,
-        code: Optional[str] = None,
-        error: Optional[str] = None,
-        keywords: Optional[List[str]] = None,
-        learning_context: Optional[LearningContext] = None,
+        task: str | None = None,
+        agent: str | None = None,
+        file_path: str | None = None,
+        code: str | None = None,
+        error: str | None = None,
+        keywords: list[str] | None = None,
+        learning_context: LearningContext | None = None,
         limit: int = 5,
-    ) -> List[Recommendation]:
+    ) -> list[Recommendation]:
         """
         Get recommendations for current context.
 
@@ -655,7 +646,7 @@ class Recommender:
     def accept_recommendation(
         self,
         recommendation_id: str,
-        helpful: Optional[bool] = None,
+        helpful: bool | None = None,
     ) -> None:
         """Record that a recommendation was accepted."""
         self.engine.record_feedback(
@@ -667,7 +658,7 @@ class Recommender:
     def reject_recommendation(
         self,
         recommendation_id: str,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> None:
         """Record that a recommendation was rejected."""
         self.engine.record_feedback(
@@ -684,16 +675,14 @@ class Recommender:
         """Save a recommendation to memory."""
         return await self.memory_client.save_recommendation(recommendation)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get recommender statistics."""
         return {
-            "feedback_count": sum(
-                len(f) for f in self.engine._feedback.values()
-            ),
+            "feedback_count": sum(len(f) for f in self.engine._feedback.values()),
             "recommendations_with_feedback": len(self.engine._feedback),
             "average_acceptance_rate": (
-                sum(self.engine._acceptance_rates.values()) /
-                len(self.engine._acceptance_rates)
-                if self.engine._acceptance_rates else 0.5
+                sum(self.engine._acceptance_rates.values()) / len(self.engine._acceptance_rates)
+                if self.engine._acceptance_rates
+                else 0.5
             ),
         }

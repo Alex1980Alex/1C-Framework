@@ -57,6 +57,7 @@ logging.basicConfig(
 log = logging.getLogger("auto-git-save")
 
 from base import BaseHook, HookInput, HookOutput
+
 from shared.circuit_breaker import with_circuit_breaker
 from shared.task_master import (
     add_task,
@@ -82,6 +83,16 @@ SYNC_COMMIT_TIMEOUT_PER_FILE = int(os.environ.get("CLAUDE_COMMIT_TIMEOUT_PER_FIL
 
 # Cooldown: minutes after completion before creating new task
 COOLDOWN_BASE_MINUTES = int(os.environ.get("CLAUDE_COMMIT_COOLDOWN_BASE", "2"))
+
+# Pause sentinel: when this file exists, threshold-triggered sync commits are skipped.
+# Files still get tracked (and task created) so user can do structured commit manually.
+# Content formats:
+#   empty         → TTL = PAUSE_DEFAULT_TTL_MIN from file mtime
+#   "<N>"         → TTL = N minutes from file mtime
+#   "forever"     → no expiry, manual resume required (also: "manual", "infinite")
+#   ISO datetime  → explicit expiry timestamp
+PAUSE_FILE = _LOG_DIR / "auto-git-save.paused"
+PAUSE_DEFAULT_TTL_MIN = int(os.environ.get("CLAUDE_COMMIT_PAUSE_TTL", "30"))
 
 # Gitignore-first approach: git status --porcelain already respects .gitignore.
 # Only these patterns are additionally excluded (hook internal state files
@@ -163,6 +174,66 @@ def calculate_timeout(file_count: int) -> int:
     return max(15, min(base, 120))  # 15s min, 120s max
 
 
+def get_pause_status() -> tuple[bool, str]:
+    """Check if auto-commit is paused via sentinel file.
+
+    Returns (paused, human_info). When paused=True, threshold sync commit
+    is skipped but file tracking continues. Auto-resumes (deletes sentinel)
+    when TTL/expiry elapses.
+    """
+    if not PAUSE_FILE.exists():
+        return False, ""
+
+    from datetime import timedelta
+
+    try:
+        # utf-8-sig strips UTF-8 BOM. UTF-16 LE BOM (PS 5.1 `Set-Content` default
+        # without -Encoding utf8) trips UnicodeDecodeError → caught, falls back to
+        # default TTL (still treated as paused).
+        content = PAUSE_FILE.read_text(encoding="utf-8-sig").strip()
+    except (OSError, UnicodeDecodeError):
+        content = ""
+
+    try:
+        mtime = _dt.fromtimestamp(PAUSE_FILE.stat().st_mtime)
+    except OSError:
+        mtime = _dt.now()
+
+    expiry = None
+    manual = False
+
+    lowered = content.lower()
+    if lowered in ("forever", "infinite", "manual"):
+        manual = True
+    elif content:
+        try:
+            ttl_min = int(content)
+            expiry = mtime + timedelta(minutes=ttl_min)
+        except ValueError:
+            try:
+                expiry = _dt.fromisoformat(content)
+            except ValueError:
+                expiry = None
+
+    if not manual and expiry is None:
+        expiry = mtime + timedelta(minutes=PAUSE_DEFAULT_TTL_MIN)
+
+    now = _dt.now()
+    if not manual and now >= expiry:
+        try:
+            PAUSE_FILE.unlink()
+            log.info(f"pause expired (was: {content or 'default'}), auto-resumed")
+        except OSError as e:
+            log.debug(f"pause sentinel unlink failed: {e}")
+        return False, ""
+
+    if manual:
+        return True, "paused (manual resume required)"
+
+    remaining_min = max(1, int((expiry - now).total_seconds() / 60) + 1)
+    return True, f"paused {remaining_min}m left"
+
+
 def load_modified_files() -> dict:
     """Load tracked files from task metadata (primary) or empty."""
     task = get_task_with_metadata(HOOK_ID)
@@ -230,9 +301,58 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
             log.warning("step2: TIMEOUT git add batch")
             return {"success": False, "error": "git add timeout"}
 
+        # Step 2.5: GUARD — block auto-commit when .claude/settings.json shrinks
+        # substantially. Prevents regressions like commit 910a3a1f (2026-03-20)
+        # where auto-save silently dropped 127 lines from PostToolUse section.
+        # Threshold: 30 net removed lines (added vs removed via git diff --numstat).
+        settings_path = ".claude/settings.json"
+        shrink_threshold = 30
+        if any(settings_path in f.replace(os.sep, "/") for f in modified_files):
+            try:
+                diff = subprocess.run(
+                    ["git", "diff", "--cached", "--numstat", "--", settings_path],
+                    timeout=3,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    cwd=str(PROJECT_ROOT),
+                )
+                for line in diff.stdout.splitlines():
+                    parts = line.split("\t")
+                    if len(parts) < 2:
+                        continue
+                    try:
+                        added, removed = int(parts[0]), int(parts[1])
+                    except ValueError:
+                        continue
+                    net_removed = removed - added
+                    if net_removed >= shrink_threshold:
+                        log.warning(
+                            f"GUARD: settings.json shrinks by {net_removed} net lines "
+                            f"(added={added} removed={removed}) — auto-commit blocked"
+                        )
+                        subprocess.run(
+                            ["git", "reset", "HEAD", "--", settings_path],
+                            timeout=3,
+                            capture_output=True,
+                            cwd=str(PROJECT_ROOT),
+                        )
+                        return {
+                            "success": False,
+                            "error": (
+                                f"GUARD: settings.json bulk-removal blocked "
+                                f"({net_removed} net lines removed, threshold={shrink_threshold}). "
+                                f"Review changes manually before committing."
+                            ),
+                        }
+            except (subprocess.TimeoutExpired, OSError) as guard_err:
+                log.debug(f"settings guard check skipped: {guard_err}")
+
         # Step 3: Commit
         count = len(modified_files)
-        commit_msg = f"chore: auto-save {count} file(s)"
+        from shared.auto_save_core import format_commit_message
+
+        commit_msg = format_commit_message(modified_files, prefix="chore: auto-save")
 
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
@@ -468,6 +588,19 @@ class AutoGitSave(BaseHook):
             modified_data["files"].append(rel_path)
 
         file_count = len(modified_data["files"])
+
+        # --- Pause check: skip threshold sync commit but still track files ---
+        paused, pause_info = get_pause_status()
+        log.debug(f"pause check: paused={paused} info={pause_info!r}")
+        if paused and file_count >= SYNC_COMMIT_THRESHOLD:
+            save_modified_files(modified_data)
+            self._ensure_task(modified_data)
+            return HookOutput().system_message(
+                f"[AUTO-GIT-SAVE PAUSED] {pause_info}. "
+                f"Tracked: {file_count} file(s). "
+                f"Make a structured commit manually, or resume: "
+                f"`rm .claude/cache/auto-git-save.paused`"
+            )
 
         # --- Threshold reached: SYNC COMMIT ---
         log.debug(f"file_count={file_count} threshold={SYNC_COMMIT_THRESHOLD}")

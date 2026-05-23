@@ -53,6 +53,21 @@ class ModuleType(Enum):
     @classmethod
     def from_path(cls, file_path: str) -> ModuleType:
         path_lower = file_path.lower().replace("\\", "/")
+        # Извлекаем basename (последний сегмент пути) для exact-match проверки
+        basename = path_lower.rsplit("/", 1)[-1]
+        # 1) Точное совпадение по имени файла (EDT-PROJECT layout без /Ext/)
+        basename_map = {
+            "objectmodule.bsl": cls.OBJECT_MODULE,
+            "managermodule.bsl": cls.MANAGER_MODULE,
+            "recordsetmodule.bsl": cls.RECORDSET_MODULE,
+            "valuemanagermodule.bsl": cls.VALUE_MANAGER_MODULE,
+            "sessionmodule.bsl": cls.SESSION_MODULE,
+            "externalconnectionmodule.bsl": cls.EXTERNAL_CONNECTION,
+            "commandmodule.bsl": cls.COMMAND_MODULE,
+        }
+        if basename in basename_map:
+            return basename_map[basename]
+        # 2) Fallback на substring-карту (EDT-EXPORT legacy с /Ext/ + общие случаи)
         mapping = {
             "commonmodules/": cls.COMMON_MODULE,
             "общиемодули/": cls.COMMON_MODULE,
@@ -60,6 +75,7 @@ class ModuleType(Enum):
             "/ext/managermodule": cls.MANAGER_MODULE,
             "/ext/module": cls.FORM_MODULE,
             "/forms/": cls.FORM_MODULE,
+            "commonforms/": cls.FORM_MODULE,
             "/commands/": cls.COMMAND_MODULE,
             "sessionmodule": cls.SESSION_MODULE,
             "externalconnectionmodule": cls.EXTERNAL_CONNECTION,

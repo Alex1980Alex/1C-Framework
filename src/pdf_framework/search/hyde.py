@@ -221,7 +221,7 @@ class QueryExpander:
     async def expand(
         self,
         query: str,
-        method: Literal["llm", "hyde", "synonyms"] = "hyde",
+        method: Literal["llm", "hyde", "synonyms", "multi_query", "zero_shot"] = "hyde",
         embedding_engine=None,
         **kwargs,
     ) -> tuple[str, list[float] | None]:
@@ -251,9 +251,64 @@ class QueryExpander:
                 llm_cache=kwargs.get("llm_cache"),
             )
 
-        # TODO: Implement other methods
-        logger.warning(f"[QueryExpander] Method '{method}' not yet implemented")
-        return None, None
+        elif method == "multi_query":
+            if embedding_engine is None:
+                raise ValueError("embedding_engine required for multi_query HyDE expansion")
+
+            import asyncio
+
+            import numpy as np
+
+            n = kwargs.get("n", 5)
+            hyde_gen = HyDEGenerator(
+                api_key=kwargs.get("api_key", ""),
+                base_url=kwargs.get("base_url", ""),
+            )
+            hypotheticals = await asyncio.gather(
+                *[hyde_gen.generate_hypothetical(query) for _ in range(n)],
+                return_exceptions=True,
+            )
+            valid = [h for h in hypotheticals if isinstance(h, str) and len(h) >= 20]
+
+            if not valid:
+                logger.warning(
+                    "[QueryExpander] multi_query: all generations failed, using raw query"
+                )
+                return query, await embedding_engine.embed_text(query)
+
+            embeddings = await asyncio.gather(*[embedding_engine.embed_text(h) for h in valid])
+            avg = np.mean(np.array(embeddings), axis=0)
+            norm = np.linalg.norm(avg)
+            if norm > 0:
+                avg = avg / norm
+
+            logger.info("[QueryExpander] multi_query: averaged %d/%d hypotheticals", len(valid), n)
+            return f"[multi_query:{len(valid)}] {query}", avg.tolist()
+
+        elif method == "zero_shot":
+            if embedding_engine is None:
+                raise ValueError("embedding_engine required for zero_shot HyDE expansion")
+
+            zero_shot_config = HyDEConfig(
+                prompt_template=(
+                    "Without any examples, write a brief factual passage that directly "
+                    "answers: {query}\n\nPassage:"
+                )
+            )
+            hyde_gen = HyDEGenerator(
+                api_key=kwargs.get("api_key", ""),
+                config=zero_shot_config,
+                base_url=kwargs.get("base_url", ""),
+            )
+            return await hyde_gen.expand_query(
+                query=query,
+                embedding_engine=embedding_engine,
+                llm_cache=kwargs.get("llm_cache"),
+            )
+
+        else:
+            logger.warning(f"[QueryExpander] Method '{method}' not yet implemented")
+            return None, None
 
 
 # Global HyDE generator instance

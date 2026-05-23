@@ -344,7 +344,7 @@ Based on Jest configuration analysis:
 ```
 tests/
 ├── unit/                    # Manual unit tests
-├── integration/             # Manual integration tests  
+├── integration/             # Manual integration tests
 ├── generated/               # AI-generated tests
 │   ├── tasks/              # Generated task tests
 │   │   ├── task_024.test.js
@@ -600,4 +600,3 @@ This makes the generate-test command truly framework-agnostic and sets up the fo
 - Integration tests for config file generation
 - Validation tests for each supported framework
 </info added on 2025-05-23T21:22:02.048Z>
-

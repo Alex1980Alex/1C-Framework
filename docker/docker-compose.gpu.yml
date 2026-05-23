@@ -22,3 +22,85 @@ services:
       - CUDA_VISIBLE_DEVICES=0
       - EMBEDDING__PROVIDER=local
       - EMBEDDING__DEVICE=cuda
+
+  # text-embeddings-inference — Qwen3-Embedding-8B HTTP backend (Phase 8.12.6 A3).
+  # Rust-native runtime: continuous batching + token-based dynamic batching +
+  # FlashAttention 2 builtin. Expected ×3-5 vs sentence-transformers Python path
+  # (roadmap §21.4). Use this service instead of building flash-attn under MSVC.
+  #
+  # Activate (opt-in via profile):
+  #   docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml \
+  #     --profile tei up -d tei
+  #
+  # Smoke:
+  #   curl -s http://localhost:8080/health
+  #   curl -s http://localhost:8080/info | jq .model_id
+  #   python scripts/reindex_bsl_qwen3.py --embedder qwen3-tei \
+  #     --project /path/to/1c --collection bsl_code_v4 --recreate
+  tei:
+    # IMPORTANT: image tag `1.7.2` targets Ampere (RTX 3090, sm_86). DO NOT use
+    # `turing-1.5` — that's for sm_75 (T4, RTX 2080) and falls back to a slow
+    # code-path on Ampere. See roadmap §21.4 (TEI image tag note).
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7.2
+    container_name: pdf-rag-tei
+    ports:
+      - "8080:80"
+    volumes:
+      # HF cache fallback — kept for ONNX exports / sibling-model pulls.
+      - tei_data:/data
+      # Phase 8.12.3: pre-downloaded Qwen3-Embedding-8B safetensors. Mounted
+      # read-only at a fixed path; MODEL_ID below points here so TEI skips
+      # the HF Hub network pull (~16 GB) on cold-start. Override the host
+      # path with QWEN3_MODEL_DIR env var if the model lives elsewhere.
+      - ${QWEN3_MODEL_DIR:-D:/hf-manual/Qwen3-Embedding-8B}:/models/Qwen3-Embedding-8B:ro
+    environment:
+      # MODEL_ID: local path (mounted above). TEI 1.7.x accepts absolute
+      # paths as `--model-id` and bypasses the HF Hub when given one.
+      # To switch back to HF pull, set MODEL_ID=Qwen/Qwen3-Embedding-8B and
+      # remove the bind-mount line.
+      - MODEL_ID=/models/Qwen3-Embedding-8B
+      # MAX_INPUT_LENGTH=4096: matches Qwen3STEmbedder.max_seq_length (Phase 8.12 C5)
+      # so retrieval queries get the same forward-pass token cap on either backend.
+      - MAX_INPUT_LENGTH=4096
+      # MAX_BATCH_TOKENS: total tokens per server-side batch. Tune for 24 GB
+      # VRAM after baseline (8.12.3) measures. Conservative default targets
+      # ~50% utilization, leaves headroom for KV-cache fragmentation.
+      - MAX_BATCH_TOKENS=16384
+      # DTYPE: TEI 1.7.x CLI accepts ONLY `float16` or `float32` — `bfloat16` is
+      # rejected at startup (see https://github.com/huggingface/text-embeddings-inference
+      # `--dtype` enum). Qwen3-Embedding-8B weights are bf16 on disk; TEI converts
+      # to fp16 on load, which is lossless-enough for retrieval (cosine similarity
+      # tolerates the rounding) and fits comfortably in 24 GB VRAM. Switch to
+      # float32 ONLY as workaround for TEI issue #675 (Qwen3 + ORT FP16 backend
+      # bug) — ~2× slower but unambiguous numerics.
+      - DTYPE=float16
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 24g
+          cpus: "4.0"
+    healthcheck:
+      # TEI exposes /health on the same port; ready only after model is loaded.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m  # cold-load Qwen3-Embedding-8B from HF can take minutes
+    logging:
+      driver: json-file
+      options:
+        max-size: "30m"
+        max-file: "3"
+    networks:
+      - pdf-rag-network
+    profiles:
+      - tei  # opt-in; not started by default `docker compose up`
+
+volumes:
+  tei_data:

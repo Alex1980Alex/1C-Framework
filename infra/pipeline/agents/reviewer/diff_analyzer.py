@@ -4,23 +4,23 @@ Diff Analyzer for REVIEWER Agent.
 Parses and analyzes code changes (diffs).
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
 import re
-from pathlib import Path
+from dataclasses import dataclass, field
+from typing import Any
 
 from agents.reviewer.models import (
-    FileChange,
     DiffHunk,
-    ReviewIssue,
-    IssueSeverity,
+    FileChange,
     IssueCategory,
+    IssueSeverity,
+    ReviewIssue,
 )
 
 
 @dataclass
 class DiffStats:
     """Statistics about a diff."""
+
     total_files: int = 0
     bsl_files: int = 0
     additions: int = 0
@@ -35,7 +35,7 @@ class DiffStats:
         """Total lines changed."""
         return self.additions + self.deletions
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "total_files": self.total_files,
@@ -49,11 +49,12 @@ class DiffStats:
 @dataclass
 class AnalysisResult:
     """Result of diff analysis."""
-    files: List[FileChange] = field(default_factory=list)
-    stats: DiffStats = field(default_factory=DiffStats)
-    issues: List[ReviewIssue] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    files: list[FileChange] = field(default_factory=list)
+    stats: DiffStats = field(default_factory=DiffStats)
+    issues: list[ReviewIssue] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             "files_count": len(self.files),
@@ -87,23 +88,23 @@ class DiffAnalyzer:
         # Hardcoded passwords
         (r'(?i)(пароль|password)\s*=\s*["\'][^"\']+["\']', "Захардкоженный пароль"),
         # Eval-like execution
-        (r'Выполнить\s*\(', "Использование Выполнить() - потенциальная уязвимость"),
+        (r"Выполнить\s*\(", "Использование Выполнить() - потенциальная уязвимость"),
     ]
 
     PERFORMANCE_PATTERNS = [
         # Query in loop
-        (r'(?:Для|Пока).*Цикл[\s\S]*?Запрос\.Выполнить', "Запрос внутри цикла"),
+        (r"(?:Для|Пока).*Цикл[\s\S]*?Запрос\.Выполнить", "Запрос внутри цикла"),
         # Select all
-        (r'ВЫБРАТЬ\s+\*\s+ИЗ', "SELECT * - выбор всех полей"),
+        (r"ВЫБРАТЬ\s+\*\s+ИЗ", "SELECT * - выбор всех полей"),
     ]
 
     STYLE_PATTERNS = [
         # Short variable names
-        (r'\bПерем\s+[а-яa-z]{1,2}\s*[,;]', "Неинформативное имя переменной"),
+        (r"\bПерем\s+[а-яa-z]{1,2}\s*[,;]", "Неинформативное имя переменной"),
         # Magic numbers
-        (r'(?<!\.)\b\d{4,}\b(?!\.)', "Магическое число в коде"),
+        (r"(?<!\.)\b\d{4,}\b(?!\.)", "Магическое число в коде"),
         # Empty exception handler
-        (r'Исключение\s*[\r\n]+\s*КонецПопытки', "Пустой обработчик исключения"),
+        (r"Исключение\s*[\r\n]+\s*КонецПопытки", "Пустой обработчик исключения"),
     ]
 
     def __init__(self) -> None:
@@ -141,7 +142,7 @@ class DiffAnalyzer:
 
         return result
 
-    def parse_diff(self, diff_text: str) -> List[FileChange]:
+    def parse_diff(self, diff_text: str) -> list[FileChange]:
         """
         Parse unified diff format.
 
@@ -155,14 +156,14 @@ class DiffAnalyzer:
         current_file = None
         current_hunk = None
 
-        lines = diff_text.split('\n')
+        lines = diff_text.split("\n")
         i = 0
 
         while i < len(lines):
             line = lines[i]
 
             # New file header
-            if line.startswith('diff --git'):
+            if line.startswith("diff --git"):
                 if current_file:
                     files.append(current_file)
                 current_file = self._parse_file_header(line, lines, i)
@@ -170,27 +171,27 @@ class DiffAnalyzer:
                 continue
 
             # File mode/type info
-            if line.startswith('new file mode'):
+            if line.startswith("new file mode"):
                 if current_file:
-                    current_file.change_type = 'added'
+                    current_file.change_type = "added"
                 i += 1
                 continue
 
-            if line.startswith('deleted file mode'):
+            if line.startswith("deleted file mode"):
                 if current_file:
-                    current_file.change_type = 'deleted'
+                    current_file.change_type = "deleted"
                 i += 1
                 continue
 
-            if line.startswith('rename from'):
+            if line.startswith("rename from"):
                 if current_file:
-                    current_file.change_type = 'renamed'
+                    current_file.change_type = "renamed"
                     current_file.old_path = line[12:].strip()
                 i += 1
                 continue
 
             # Hunk header
-            if line.startswith('@@'):
+            if line.startswith("@@"):
                 current_hunk = self._parse_hunk_header(line)
                 if current_file and current_hunk:
                     current_file.hunks.append(current_hunk)
@@ -199,11 +200,11 @@ class DiffAnalyzer:
 
             # Hunk content
             if current_hunk:
-                if line.startswith('+') and not line.startswith('+++'):
+                if line.startswith("+") and not line.startswith("+++"):
                     current_hunk.added_lines.append(line[1:])
-                elif line.startswith('-') and not line.startswith('---'):
+                elif line.startswith("-") and not line.startswith("---"):
                     current_hunk.removed_lines.append(line[1:])
-                elif line.startswith(' '):
+                elif line.startswith(" "):
                     current_hunk.context_lines.append(line[1:])
 
             i += 1
@@ -214,15 +215,10 @@ class DiffAnalyzer:
 
         return files
 
-    def _parse_file_header(
-        self,
-        header_line: str,
-        lines: List[str],
-        index: int
-    ) -> FileChange:
+    def _parse_file_header(self, header_line: str, lines: list[str], index: int) -> FileChange:
         """Parse file header from diff."""
         # Extract path from "diff --git a/path b/path"
-        match = re.search(r'diff --git a/(.*) b/(.*)', header_line)
+        match = re.search(r"diff --git a/(.*) b/(.*)", header_line)
         if match:
             old_path = match.group(1)
             new_path = match.group(2)
@@ -231,16 +227,16 @@ class DiffAnalyzer:
             old_path = new_path = "unknown"
 
         # Check subsequent lines for more info
-        change_type = 'modified'
+        change_type = "modified"
         for j in range(index + 1, min(index + 5, len(lines))):
-            if lines[j].startswith('new file'):
-                change_type = 'added'
+            if lines[j].startswith("new file"):
+                change_type = "added"
                 break
-            elif lines[j].startswith('deleted file'):
-                change_type = 'deleted'
+            elif lines[j].startswith("deleted file"):
+                change_type = "deleted"
                 break
-            elif lines[j].startswith('rename'):
-                change_type = 'renamed'
+            elif lines[j].startswith("rename"):
+                change_type = "renamed"
                 break
 
         return FileChange(
@@ -249,9 +245,9 @@ class DiffAnalyzer:
             old_path=old_path if old_path != new_path else None,
         )
 
-    def _parse_hunk_header(self, line: str) -> Optional[DiffHunk]:
+    def _parse_hunk_header(self, line: str) -> DiffHunk | None:
         """Parse hunk header like @@ -1,5 +1,7 @@."""
-        match = re.search(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@', line)
+        match = re.search(r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@", line)
         if not match:
             return None
 
@@ -263,7 +259,7 @@ class DiffAnalyzer:
             content="",
         )
 
-    def _calculate_stats(self, files: List[FileChange]) -> DiffStats:
+    def _calculate_stats(self, files: list[FileChange]) -> DiffStats:
         """Calculate statistics from files."""
         stats = DiffStats()
         stats.total_files = len(files)
@@ -275,27 +271,23 @@ class DiffAnalyzer:
             stats.additions += f.additions
             stats.deletions += f.deletions
 
-            if f.change_type == 'added':
+            if f.change_type == "added":
                 stats.files_added += 1
-            elif f.change_type == 'deleted':
+            elif f.change_type == "deleted":
                 stats.files_deleted += 1
-            elif f.change_type == 'renamed':
+            elif f.change_type == "renamed":
                 stats.files_renamed += 1
             else:
                 stats.files_modified += 1
 
         return stats
 
-    def _analyze_bsl_changes(self, file_change: FileChange) -> List[ReviewIssue]:
+    def _analyze_bsl_changes(self, file_change: FileChange) -> list[ReviewIssue]:
         """Analyze BSL file changes for issues."""
         issues = []
 
         # Combine all added lines for analysis
-        added_content = "\n".join(
-            line
-            for hunk in file_change.hunks
-            for line in hunk.added_lines
-        )
+        added_content = "\n".join(line for hunk in file_change.hunks for line in hunk.added_lines)
 
         # Check security patterns
         for pattern, message in self.SECURITY_PATTERNS:
@@ -347,9 +339,9 @@ class DiffAnalyzer:
         description: str,
         severity: IssueSeverity,
         category: IssueCategory,
-        file_path: Optional[str] = None,
-        line_number: Optional[int] = None,
-        code_snippet: Optional[str] = None,
+        file_path: str | None = None,
+        line_number: int | None = None,
+        code_snippet: str | None = None,
     ) -> ReviewIssue:
         """Create and number a review issue."""
         self._issue_counters[severity] += 1
@@ -373,7 +365,7 @@ class DiffAnalyzer:
             code_snippet=code_snippet,
         )
 
-    def get_changed_functions(self, file_change: FileChange) -> List[str]:
+    def get_changed_functions(self, file_change: FileChange) -> list[str]:
         """
         Extract function/procedure names from changes.
 
@@ -389,9 +381,9 @@ class DiffAnalyzer:
             for line in hunk.added_lines:
                 # Match function definitions
                 match = re.search(
-                    r'(?:Функция|Процедура)\s+([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)',
+                    r"(?:Функция|Процедура)\s+([А-Яа-яA-Za-z_][А-Яа-яA-Za-z0-9_]*)",
                     line,
-                    re.IGNORECASE
+                    re.IGNORECASE,
                 )
                 if match:
                     functions.append(match.group(1))
@@ -408,7 +400,7 @@ class DiffAnalyzer:
 
 
 # Convenience functions
-def parse_diff(diff_text: str) -> List[FileChange]:
+def parse_diff(diff_text: str) -> list[FileChange]:
     """
     Parse diff text into file changes.
 

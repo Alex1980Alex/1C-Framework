@@ -133,6 +133,8 @@ class RAPTORTreeBuilder:
         self._summarization_model = summarization_model
         self._api_key = api_key
         self._base_url = base_url
+        # Lazy-init shared TEI embedder; one HTTP client across many cluster summaries.
+        self._embedder: FrameworkTEIEmbedder | None = None
 
     async def build(
         self,
@@ -346,18 +348,31 @@ Summary:"""
             return ""
 
     async def _embed_text(self, text: str) -> list[float]:
-        """Generate embedding for text."""
-        # This would use the embedding engine from components
-        # For now, return dummy embedding with correct dimensions
-        import hashlib
+        """Generate 4096d Qwen3 embedding via TEI for clustering summaries.
 
-        # Repeat hash to reach target dimensions (384)
-        target_dim = 384
-        hash_val = hashlib.sha256(text.encode()).hexdigest()
-        # Each hex char → one float; sha256 gives 64 chars, repeat as needed
-        hex_chars = (hash_val * (target_dim // len(hash_val) + 1))[:target_dim]
-        embedding = [float(int(h, 16)) / 15.0 for h in hex_chars]
-        return embedding
+        Fixed 2026-05-17 §4.2: previously SHA256 hash stub (384d random vector
+        → KMeans clusters were noise). Now uses real semantic space.
+        Embedder is cached on the builder to avoid per-call HTTP client setup.
+        """
+        import asyncio
+
+        from src.framework_search.embedder import FrameworkTEIEmbedder
+
+        if self._embedder is None:
+            self._embedder = FrameworkTEIEmbedder()
+
+        embedder = self._embedder
+
+        def _embed_sync() -> list[float]:
+            return embedder.embed_batch([text], is_query=False)[0]
+
+        return await asyncio.to_thread(_embed_sync)
+
+    def close(self) -> None:
+        """Release cached embedder's HTTP client. Safe to call multiple times."""
+        if self._embedder is not None:
+            self._embedder.close()
+            self._embedder = None
 
 
 # Global RAPTOR tree builder instance

@@ -24,6 +24,17 @@ _DEBOUNCE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "git-save-deb
 _DEBOUNCE_SECONDS = 5.0
 _MAX_PENDING = 20
 
+
+def _is_paused() -> bool:
+    """Mirror of auto-git-save.py pause logic — checks sentinel file presence.
+
+    Same sentinel as auto-git-save.py so user has one switch for both hooks.
+    Treats any-existing sentinel as paused (TTL parsing happens in the other
+    hook; here we conservatively pause whenever the file exists).
+    """
+    return os.path.isfile(_PAUSE_FILE)
+
+
 # Paths that should NOT trigger auto-git-save
 SKIP_PATTERNS = [
     ".claude/cache/",
