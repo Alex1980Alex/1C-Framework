@@ -80,3 +80,51 @@ User набирает сообщение, нажимает Enter. 14 хуков 
 **Stage exit:** Claude получил obогащённый prompt (memory context + skill recommendations + delegation hint + task classification).
 
 **State touched:** `.claude/cache/session-skills.json`, `memory-first-cooldown.json`, `data/skill-router.log`, `data/skill-accuracy.jsonl`
+
+### Stage 2 — Skill activation (`Skill()` tool call)
+
+Claude видит `[SKILL-ROUTER] ACTIVATE SKILLS [HIGH]: Skill('xyz')` → вызывает `Skill('xyz')`. Это:
+
+1. Загружает skill SKILL.md в context (knowledge injection)
+2. PostToolUse:Skill хуки фиксируют activation:
+   - `posttooluse-skill-metrics.py` → metrics
+   - `code-verify-reminder.py` → schedule verify if code change pending
+3. PreToolUse:Skill хуки enforce:
+   - `approval-gate.py` → require pre-approval from SKILL.yaml
+   - `task-protocol-observer.py` → mark phase=`skill_checked`
+   - `skill-usage-metrics.py` → frequency/latency/error rate
+
+**Phase transition:** `idle/classified` → `skill_checked` (unblocks Write/Edit).
+
+### Stage 3 — Tool execution (Write/Edit/Bash/Read/Grep/MCP)
+
+Claude вызывает любой tool. PreToolUse hooks по matcher:
+
+| Matcher | Guards | Purpose |
+|---|---|---|
+| `Read\|Grep\|Glob` | bsl-tool-router.py | Route BSL searches |
+| `Write\|Edit` | task-protocol-enforcer, code-review-enforcer, code-verify-reminder, docs-change-tracker, root-clutter-guard, z-ai-write-guard, factory-enforcer, delegation-outcome-tracker | **Blocking layer** — phase check, skill check, root path check, delegation gating |
+| `Write\|Edit\|Bash` | code-skill-enforcer | Sequence enforcement (Code → Review → Verify) |
+| `Bash` | search-optimizer, bulk-action-guard | Optimize queries, warn on bulk ops |
+| `Skill` | approval-gate, task-protocol-observer, skill-usage-metrics | Approval + state recording |
+| `TaskCreate` | task-protocol-observer | Mark phase=`decomposed` |
+| `mcp__.*` | mcp-invocation-logger | Audit all MCP calls |
+| `mcp__llm-rotation__llm_complete` | task-protocol-observer | Mark delegation event |
+
+**If blocked (exit 2):** tool call cancelled, Claude видит блокировку в output, корректирует подход.
+
+### Stage 4 — PostToolUse (cleanup + tracking, 18 hooks across 6 matchers)
+
+⚠️ **Windows bug #6305:** PostToolUse hooks ненадёжны на Windows. Fallback patterns documented в §5.
+
+| Matcher | Hooks | Role |
+|---|---|---|
+| `TaskUpdate` | **post-task-push-pr** (timeout 1320s) | **PR automation P0-P3** — branch+push+PR+merge (см. §8.2) |
+| `Skill` | posttooluse-skill-metrics, code-verify-reminder | Metrics + schedule verify |
+| `Task` | code-verify-reminder | Check if Task closed verify task |
+| `WebSearch\|WebFetch` | posttooluse-web-cache, knowledge-cache-reminder | Cache web results |
+| `Write\|Edit` | posttooluse-docs-tracker, posttooluse-quality-feedback, **posttooluse-auto-git-save**, code-verify-reminder, openspec-change-coverage | **Auto-git-save sync commit** + docs tracking + OpenSpec coverage |
+| `mcp__llm-rotation__llm_complete` | posttooluse-delegation-tracker | Delegation outcome corpus |
+| `Bash` | posttooluse-bash-errors | Parse errors → suggest fixes |
+
+**Stage exit:** State persisted, tasks scheduled, metrics logged.
