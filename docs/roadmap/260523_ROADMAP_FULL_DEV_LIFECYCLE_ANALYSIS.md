@@ -325,6 +325,23 @@ Claude интерпретирует tool result, продолжает работ
 | **Circuit breaker** | shared/circuit_breaker.py | OPEN/CLOSED/HALF_OPEN state per hook |
 | **Auto-reports** | scripts/analyze_run.py + post-indexing-analyzer.py | Deep reports после indexing + graph runs |
 
+### 3.8 Best practices from GitHub — Pattern catalog
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | faif/python-patterns (42k stars) — canonical Python design patterns | github.com/faif/python-patterns | Partial | Canonical-link из §3 как reference index |
+| 2 | Cosmic Python (cosmic-fastapi template) — ports/adapters с FastAPI | github.com/tomasanchez/cosmic-fastapi | Partial | Документировать src/pdf_framework как "hybrid Cosmic" |
+| 3 | Hexagonal/Ports&Adapters | github.com/marcosvs98/hexagonal-architecture-with-python | Partial | vector_store/base.py уже hexagonal port — explicitly label |
+| 4 | Clean Architecture 4 layers | glukhov.org python-design-patterns | Partial | Add explicit UseCases layer between schemas/ и agents/ |
+| 5 | Strategy Pattern (refactoring.guru) | refactoring.guru/strategy/python | Have | search strategies — document как Strategy в §3 |
+| 6 | Adapter Pattern | refactoring.guru/adapter/python | Have | qdrant/chroma/faiss adapters |
+| 7 | Factory via Dependency Injector | python-dependency-injector.ets-labs.org | Missing | Заменить manual wiring в api/dependencies/ на DI framework |
+| 8 | Repository Pattern (Kmuhsinn medium) | medium.com/@kmuhsinn/the-repository-pattern-in-python | Partial | vector_store IS repo — explicitly label |
+| 9 | Async SQLAlchemy 2.0 AsyncAdaptedQueuePool | docs.sqlalchemy.org/en/20/orm/extensions/asyncio | N/A | No SQL persistence (SQLite only) |
+| 10 | Explicit asyncio.timeout вместо driver defaults | docs.python.org/3/library/asyncio-task | Partial | MCP clients используют, internal ops — нет |
+| 11 | Bounded concurrency через semaphore + pool sizes | dev.to/humzakt AlloyDB pool | Missing | TEI HTTP client может насытить пул на parallel queries |
+| 12 | "Architecture Patterns with Python" (Percival/Gregory) book | O'Reilly | Citation | Cite в §3 как canonical reference |
+
 ### 3.7 Tech stack underlying patterns
 
 | Pattern category | Technology enablers |
