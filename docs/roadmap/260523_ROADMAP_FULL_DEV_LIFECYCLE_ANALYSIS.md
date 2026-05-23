@@ -41,3 +41,42 @@
 ## §2 Full Lifecycle Map (Stage-by-Stage)
 
 Каждая стадия от user prompt до cleanup. На каждой стадии: trigger, что происходит, какие хуки/паттерны срабатывают, какие state-файлы touched.
+
+### Stage 0 — Session bootstrap (`SessionStart` event, 5 hooks)
+
+Перед первым промптом фреймворк готовит environment:
+
+| # | Hook | Purpose | State touched |
+|---|---|---|---|
+| 1 | `ensure-docker-qdrant.py` | Запустить Qdrant Docker если не running | docker ps |
+| 2 | `logging-status-banner.py` | Показать MCP logging status | systemMessage |
+| 3 | `submodule-status-check.py` | Verify git submodule sync | hook output |
+| 4 | `session-mypy-banner.py` | Show mypy baseline compliance | `mypy-baseline.txt` |
+| 5 | `audit-coverage-check.py` | Verify hook audit coverage % | systemMessage |
+
+**Stage exit:** Claude получает initial systemMessages, инфраструктура готова.
+
+### Stage 1 — User prompt arrives (`UserPromptSubmit`, 14 hooks)
+
+User набирает сообщение, нажимает Enter. 14 хуков запускаются в порядке регистрации в `settings.json`:
+
+| Order | Hook | Critical role |
+|---|---|---|
+| 1 | `memory-first-hook.py` | **4-layer federated recall** — top-K context injection (см. §7) |
+| 2 | `session-context-enforcer.py` | Enforce active task constraints |
+| 3 | `skill-router.py` | **Skill routing** через 4-layer matching (phrase/fuzzy/TF-IDF/semantic) — см. §6.1 |
+| 4 | `skill-eval-enforcer-shell.py` | **Auto-classification** trivial/medium/complex + block invalid skills |
+| 5 | `ralph_activator.py` | Активация Ralph Wiggum autonomous loop если detect signal |
+| 6 | `decision-to-triad.py` | Convert decisions → triad artifacts |
+| 7 | `document-persistence.py` | Save plans/roadmaps to session state |
+| 8 | `todo-sync.py` | Sync hook-todos.json ↔ TodoWrite |
+| 9 | `auto-git-save-prompt.py` | **Workaround #6305** — async git commit (см. §8.1) |
+| 10 | `z-ai-delegation-enforcer.py` | **Token economy** — classify Soft/Medium/Hard/Never (см. §7.2) |
+| 11 | `skill-quality-monitor.py` | RAGAS metrics check before routing |
+| 12 | `slash-command-tracker.py` | Detect `/cmd`, dedup |
+| 13 | `implement-1c-task-preflight.py` | Pre-validate 1С task structure |
+| 14 | `analyze-1c-task-preflight.py` | Pre-validate 1С analysis task |
+
+**Stage exit:** Claude получил obогащённый prompt (memory context + skill recommendations + delegation hint + task classification).
+
+**State touched:** `.claude/cache/session-skills.json`, `memory-first-cooldown.json`, `data/skill-router.log`, `data/skill-accuracy.jsonl`
