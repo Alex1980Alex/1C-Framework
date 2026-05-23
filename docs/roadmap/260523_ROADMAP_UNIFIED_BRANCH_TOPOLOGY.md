@@ -160,22 +160,28 @@ git push --force-with-lease=master:ae3a59534311ade93c07ba15283e280db53799c0 orig
 ### Phase 4 — Cleanup (✅ DONE 2026-05-23, 10 мин)
 
 ```bash
-# Переключить PR #2 на canonical master
+# Переключить PR #2 на canonical master — executed ✓
 gh pr edit 2 --base master
 
-# Закрыть PR #3 (demo)
-gh pr close 3 --comment "Superseded by PR #4 + reconciliation 260523"
+# PR #3 уже была закрыта ранее (cherry-pick fallback demo) — verified ✓
+gh pr view 3 --json state  # → CLOSED
 
-# Удалить dev-master
+# Удалить dev-master (remote + local) — executed ✓
 git push origin :dev-master
-git branch -d dev-master
+git branch -D dev-master  # was b9cba8cb1
 ```
 
-**Update memory:** [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md) → пометить RESOLVED.
+**Update memory:** [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md) → **RESOLVED 2026-05-23** ✓
 
-**Update mypy baseline:** `python -m mypy_baseline sync && git commit -am "chore(mypy): re-sync after reconciliation"`.
+**Skipped (not applicable):**
+- `mypy_baseline sync` — на master нет baseline-файла (создавался на feat-branch per roadmap 260514)
+- CLAUDE.md `dev-master` references — единственное упоминание оказалось историческим (описание PR #3 cherry-pick теста), не active config
+- `AUTO_PR_BASE=master` в settings.json — env-блок не существует на feat-branch (был на dev-master через PR #4, теперь на master); придёт через PR #2 merge
 
-**Update CLAUDE.md:** убрать упоминания `dev-master` как working area, заменить на `master`.
+**Post-Phase 4 remote topology (3 branches):**
+- `origin/master` = `25ab2de39` (canonical)
+- `origin/feat/serena-audit-hybrid-refactor` = PR #2 head
+- `origin/archive/master-pre-reconciliation-2026-05-19` = legacy backup
 
 ### Phase 5 — Verify + standardize (~30-60 минут)
 
