@@ -401,7 +401,7 @@ Claude интерпретирует tool result, продолжает работ
   - `transcript` fallback (legacy)
 - **HookOutput** — builds JSON для stdout: `systemMessage` (advisory), `hookSpecificOutput` (structured), `decision: block`+`reason` (для exit 2)
 - **Settings.json hook chain** — `event → matcher (regex) → [{command, timeout}]`; multiple hooks per matcher выполняются последовательно
-- **Hook discovery** — 73 .py файла в `.claude/hooks/` + 24 shared modules в `.claude/hooks/shared/`
+- **Hook discovery** — 59 .py файла в `.claude/hooks/` (66 registrations в settings.json) + 20 shared modules в `.claude/hooks/shared/`
 
 ---
 
@@ -468,7 +468,7 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 | **C: TF-IDF** | Precomputed route-tfidf/ semantic | Low keyword score |
 | **D: Qdrant fallback** | Semantic search (0.5s) | TF-IDF too low + enabled |
 
-**Config:** `skill-router-config.json` v9 — 98 skills, 50+ bundles, 4500+ weighted keywords.
+**Config:** `skill-router-config.json` v9 — 87 skills, 50+ bundles, 4500+ weighted keywords.
 
 **Output:** `[SKILL-ROUTER] Bundles: X\nACTIVATE SKILLS [LEVEL]: Skill('y')` через stdout (100% injection rate).
 
@@ -530,7 +530,7 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
   - Layer B (Fuzzy): `rapidfuzz>=3.14` (Rust-backed C extension, 100x faster чем Python-only `fuzzywuzzy`); 78% threshold
   - Layer C (TF-IDF): `scikit-learn` sklearn.feature_extraction.text precomputed `route-tfidf/*.pkl` arrays
   - Layer D (Semantic fallback): `qdrant-client>=1.12` query на `skill_library` collection (TEI Qwen3 embeddings)
-- **Config files:** `skill-router-config.json` v9 (98 skills, 50+ bundles, 4500+ keywords), `code-skill-patterns.json` (regex patterns → skill mappings)
+- **Config files:** `skill-router-config.json` v9 (87 skills, 50+ bundles, 4500+ keywords), `code-skill-patterns.json` (regex patterns → skill mappings)
 - **Task Protocol state:** `~/.claude/cache/session-skills.json` (per-session phase) — atomic JSON writes
 - **Code-verify subagent dispatch:** Claude Code `Task` tool с `subagent_type="general-purpose"` (built-in) — отдельный Anthropic API call
 - **Marker regex:** simple `rfind("[CODE-VERIFY-PASS]")` vs `rfind("[CODE-VERIFY-FAIL]")` — last-occurrence wins для Ralph Wiggum iteration tracking
