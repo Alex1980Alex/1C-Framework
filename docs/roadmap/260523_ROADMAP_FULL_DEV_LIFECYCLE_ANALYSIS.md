@@ -338,3 +338,37 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 | Cyrillic path encoding | `git status --porcelain` octal escapes (`\320\236`) | `git -c core.quotepath=false` + `line[2:].lstrip()` | Mitigated 2026-02-22 |
 | `line[3:]` baghunting | Loses leading `.` in paths | Switch to `line[2:].lstrip()` | Mitigated 2026-02-20 |
 | Hook regressions from -X theirs merge | Silent NameError + ValueError | Mandatory post-merge importlib sweep | Active (memory `feedback_post_merge_smoke_required`) |
+
+---
+
+## §6 Skills System + Task Protocol
+
+### 6.1 skill-router 4-layer matching
+
+| Layer | Mechanism | Trigger |
+|---|---|---|
+| **A: Phrase** | Exact weighted keyword (1-6) | Always |
+| **B: Fuzzy** | 78% threshold typo tolerance | Single-word miss |
+| **C: TF-IDF** | Precomputed route-tfidf/ semantic | Low keyword score |
+| **D: Qdrant fallback** | Semantic search (0.5s) | TF-IDF too low + enabled |
+
+**Config:** `skill-router-config.json` v9 — 98 skills, 50+ bundles, 4500+ weighted keywords.
+
+**Output:** `[SKILL-ROUTER] Bundles: X\nACTIVATE SKILLS [LEVEL]: Skill('y')` через stdout (100% injection rate).
+
+**Tracking:** `data/skill-router.log` + `data/skill-accuracy.jsonl` (recommend→activate corr).
+
+### 6.2 Task Protocol Phase Machine
+
+`idle → classified → (decomposed) → skill_checked → ALLOW Write/Edit`
+
+| Phase | Что произошло | Write/Edit |
+|---|---|---|
+| idle | Ничего | BLOCKED |
+| classified | skill-eval-enforcer auto-classified trivial/medium/complex | BLOCKED |
+| decomposed | TaskCreate вызван (только non-trivial) | BLOCKED |
+| skill_checked | Skill() вызван | **ALLOWED** |
+
+**State:** `~/.claude/cache/session-skills.json` (per-session).
+
+**Exempt:** `.claude/`, `docs/`, `data/`, config files.
