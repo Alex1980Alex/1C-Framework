@@ -652,6 +652,15 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 См. memory [`feedback_post_merge_smoke_required`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_post_merge_smoke_required.md).
 
+### 9.3 Tech enablers для recovery
+
+- **`importlib.util.spec_from_file_location` + `module_from_spec`** — для post-merge sweep всех hooks без `sys.path` тампания
+- **`ast.parse`** — syntax-check без exec (используется в `python -m py_compile`)
+- **`subprocess.run(text=True, encoding='utf-8', errors='replace')`** — Cyrillic + emoji safe в Bash output parsing (fix lesson PR #4 round-3 + #2 round-7)
+- **`sys.stdout.reconfigure(encoding="utf-8", errors="replace")`** — Windows cp1251 stdout fix (Python 3.7+ feature, graceful try/except OSError)
+- **`from typing import Any`** — explicit import + type annotation для `dict[str, Any]` (PEP 585 generics требуют `from __future__ import annotations` ИЛИ Python 3.9+, но `Any` всё равно нужен из `typing`)
+- **`git tag pre-master-force-push-<date>` + `archive/master-pre-reconciliation-<date>`** — 3 safety refs перед force-push (tag + branch + push tag → triple backup)
+
 ---
 
 ## §10 Observability + State Files
