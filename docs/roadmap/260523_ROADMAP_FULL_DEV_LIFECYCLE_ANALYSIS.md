@@ -1299,6 +1299,30 @@ P2 — §15 Process Caching P0 (2 days, crypto-shred CRITICAL)
 P3 — §15 cold-tier + remaining §14 (4-6 days)
 ```
 
+### 16.5 Verdict
+
+**FIX BLOCKERS first (~3 hours total):**
+1. Recount inventory (§0/§4/§14.7) — 0.5h
+2. Fix env var names (§8.5: AUTO_PR_AUTO_MERGE) — 0.25h
+3. Decide §14 parallel-UPS (build OR rewrite) — 1h decision
+4. Resolve §14 token budget conflict (criteria #1 vs #3) — 0.5h
+5. Add §15.4 LGTM decision gate criteria — 0.5h
+6. Reorder §X.7/§X.8 subsections — 0.5h
+
+**После blocker-fix → GO для P0a-P0c sequencing per §16.4.**
+
+**Roadmap quality:** strong on tech-stack capture + BP surveys; weak on internal consistency (counts, env names, ordering) и dependency analysis между §11/§14/§15.
+
+### 16.6 Validation checklist для следующего review
+
+- [ ] Все cited file paths существуют в repo (verify via `Glob`/`ls`)
+- [ ] Все cited env vars существуют в actual hooks code (verify via `grep`)
+- [ ] Все cited counts match `find/wc/ls` output
+- [ ] Subsection numbering monotonically increasing per chapter
+- [ ] Cross-references (§X → §Y) check existence
+- [ ] Effort estimates summable в top-level total
+- [ ] Each "Missing" gap имеет prerequisite chain документирован
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
