@@ -290,3 +290,41 @@ git branch -d dev-master
 ---
 
 ## §9 Связанные артефакты
+
+### Git refs
+
+- `origin/master` — legacy frozen, 2 236 unique коммитов pending Phase 2-3
+- `origin/dev-master` — current canonical, contains PR #4 merge (`25ab2de39`)
+- `origin/feat/serena-audit-hybrid-refactor` — active dev, 2 233 ahead
+- `origin/archive/master-pre-reconciliation-2026-05-19` — backup origin/master pre-Phase 1
+- tag `origin-master-archive-2026-05-19` — same archive as branch
+- tag `pre-squash-backup-2026-05-19` (local) — feat-branch backup
+
+### PR'ы
+
+- **[#2](https://github.com/Alex1980Alex/1C-Framework/pull/2)** OPEN, base=dev-master, head=feat — retarget на master в Phase 4
+- **[#3](https://github.com/Alex1980Alex/1C-Framework/pull/3)** open demo — закрыть в Phase 4
+- **[#4](https://github.com/Alex1980Alex/1C-Framework/pull/4)** MERGED 2026-05-23, merge commit `25ab2de39`
+
+### Roadmap'ы и docs
+
+- [260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md) — SUPERSEDED (Phase 1 only)
+- [260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md) — SUPERSEDED (DONE via PR #4)
+- [40_PR_AUTOMATION/40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) §«Rounds 3-6» + §«Round-6 fixes» — round-by-round PR #4 chronicle
+- CLAUDE.md — раздел про PR-automation hook `post-task-push-pr.py` P0-P3 batch (2026-05-22)
+
+### Memory
+
+- [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md) — обновится RESOLVED в Phase 4
+- [feedback_precommit_vendor_excludes](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_precommit_vendor_excludes.md) — lesson из PR #4 round-6
+- [feedback_repo_full_permission](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_repo_full_permission.md)
+
+---
+
+## §10 Когда обновлять этот roadmap
+
+- Когда Phase 1 cleanup сделан → пометить ✅, добавить дату
+- Когда Phase 2-3 решено делать → детализировать audit под актуальное состояние origin/master
+- Когда новая migration PR-ка появляется → добавить в §4 как ещё один example, обновить anti-patterns §5
+- Когда reconciliation DONE → переименовать в `260XXX_ROADMAP_UNIFIED_BRANCH_TOPOLOGY_RESOLVED.md`, обновить memory `project_disjoint_master_topology` на RESOLVED
+- Когда workaround dev-master remove'нут → удалить §4 Pattern B, оставить только Pattern A как стандарт
