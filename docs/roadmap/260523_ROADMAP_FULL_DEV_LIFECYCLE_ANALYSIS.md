@@ -433,3 +433,33 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 **Threshold:** default 1, `CLAUDE_COMMIT_THRESHOLD` env.
 **Pause:** `.claude/cache/auto-git-save.paused` (TTL "30m"/"forever").
 **Settings guard:** blocks if `.claude/settings.json` shrinks >30 lines.
+
+### 8.2 PR Automation P0-P3 (post-task-push-pr)
+
+PostToolUse:TaskUpdate, **timeout 1320s** (22 минуты для wait-for-checks).
+
+**11-stage pipeline:** P2.1 record start_sha → P0.1 label gating → scope check (AUTO_PR_MIN_COMMITS) → P0.4 pre-push pre-commit → P1.3 auto-rebase → P3.2 cherry-pick worktree → P0.2 conflict-aware push → P0.3 existing PR reuse → P2.3 CODEOWNERS reviewers → P2.5 blocked-by labels → P1.2 wait-for-checks + merge.
+
+**Env keys:** AUTO_PR_ENABLED, AUTO_PR_BASE (default master), AUTO_PR_MIN_COMMITS=3, AUTO_PR_DRY_RUN, AUTO_PR_AUTO_MERGE, AUTO_PR_MERGE_QUEUE, AUTO_PR_CHECKS_TIMEOUT=300.
+
+**State:** `.claude/cache/post-task-push-pr-state.json` (per-task: start_sha, branch, pr_url, blockedBy).
+
+**Helpers:** `shared/pr_helpers.py` (cherry_pick_range_to_branch worktree-based), `shared/pr_notifier.py` (SMTP), `scripts/pr_check_post_merge.py` (P3.4 auto-revert), `scripts/pr_automation_dashboard.py` (P1.5), `.mergify.yml` (P3.3 free template).
+
+### 8.3 Docs-change-enforcer (Stop)
+
+**Session-bounded git window:** reads `data/hook-invocations.jsonl` tail, finds session's earliest invocation → `git log --since=`.
+
+**Excludes auto-format commits:** `^chore: auto-save`, `^chore: rollup auto-format`.
+
+**Mapping:** 70+ `CODE_TO_DOMAIN` entries [prefix, chapter, skill]. First-match-wins, specific ДО general.
+
+**Skip patterns:** 140 exclusions (vendor, generated, 3rd-party).
+
+**3-phase check:** stale_domains → stale_infra → unmapped_changes (suggests /audit-docs).
+
+**Cooldown:** 30 минут.
+
+### 8.4 Factory-enforcer (PostToolUse:Write)
+
+Hook/skill file created → mandatory tasks для registration + verification (Step 4 + Step 5 в settings.json + MEMORY.md + triggers test).
