@@ -502,6 +502,27 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 
 **Marker contract:** subagent ends with `[CODE-VERIFY-PASS]` / `[CODE-VERIFY-FAIL]`.
 
+### 6.5 Best practices from GitHub — Skills + Workflow + Task Protocol
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | Temporal.io durable workflows (auto-state-persist + replay) | temporal.io | Missing | Slash-command chain ad-hoc; Temporal даст durable saga для `/analyze→/implement→/write-tests→/run-tests` |
+| 2 | Prefect Python-native (dynamic loops + conditional, AI-ideal) | docs.prefect.io | Missing | Lighter alternative |
+| 3 | Choose by gap: Temporal=state+failure, Prefect=Python, Airflow=ETL | medium.com/datumlabs orchestration showdown | Reference | Decision matrix для future selection |
+| 4 | pytransitions/transitions FSM (declarative, dict edges, auto-method gen) | github.com/pytransitions/transitions | Missing | Formalize phase machine `idle→classified→skill_checked` через library |
+| 5 | python-statemachine 3.0 (sync+async same API, compound states) | pypi.org/project/python-statemachine | Missing | Modern alternative — newer, async-first |
+| 6 | Run-to-completion model (process event fully before next) | (SCXML standard) | Have | Hooks обрабатываются последовательно per event |
+| 7 | Enum-based states для type safety | (Python idiom) | Partial | task_master MANDATORY_HOOKS использует strings — Enum cleaner |
+| 8 | Casbin (pycasbin) — ACL/RBAC/ABAC/ReBAC enforcement | github.com/casbin/pycasbin | Missing | Centralize skill permissions; eliminates phantom-skill class через policy file |
+| 9 | Open Policy Agent (OPA) Rego sidecar | openpolicyagent.org | Missing | Cross-service centralized альтернатива (OPA vs Casbin tradeoffs) |
+| 10 | LangGraph ToolNode + ReAct (state→dispatch tool→enriched state) | docs.langchain.com/oss/python/langgraph/workflows-agents | Have | Used в src/pdf_framework/agents/ |
+| 11 | Saga orchestration (central coordinator + compensating txn) | microservices.io/patterns/data/saga | Missing | slash-command-tracker пишет start/end, но нет orchestration или rollback |
+| 12 | Idempotency-key header (UUID; server stores key→response, TTL=retry window) | newsletter.masteringbackend.com/p/idempotency | Missing | `/implement-1c-task` re-runs дублируют writes |
+| 13 | Two-phase reservation (intent → commit separation) | aloknecessary.github.io/blogs/idempotency-distributed-systems | Missing | Atomic slash-run protection |
+| 14 | Per-step saga keys (каждый step own idempotency key) | (microservices pattern) | Missing | Step-level granular idempotency |
+| 15 | Pre/post conditions в business logic (Eiffel-style invariants) | (Design by Contract) | Missing | Preflight имеет некоторые checks, не formal contracts |
+| 16 | Discord/Slack slash command perms (per-guild role lists, OAuth scopes) | api.slack.com/interactivity/slash-commands | Reference | Pattern для будущей permission system |
+
 ### 6.4 Tech stack для Skills system
 
 - **skill-router 4-layer matching:**
