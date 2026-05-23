@@ -325,6 +325,18 @@ Claude интерпретирует tool result, продолжает работ
 | **Circuit breaker** | shared/circuit_breaker.py | OPEN/CLOSED/HALF_OPEN state per hook |
 | **Auto-reports** | scripts/analyze_run.py + post-indexing-analyzer.py | Deep reports после indexing + graph runs |
 
+### 3.7 Tech stack underlying patterns
+
+| Pattern category | Technology enablers |
+|---|---|
+| Hook patterns | Python `subprocess` + `threading` + `BaseHook` ABC + `HookInput.detected_event` (hook_event_name priority) |
+| Skill matching | `rapidfuzz` 3.14+ (Layer B), pre-computed TF-IDF arrays (Layer C), `qdrant-client>=1.12` semantic fallback (Layer D, optional) |
+| Memory retrieval | TEI HTTP (`httpx` async) → Qwen3-Embedding-8B safetensors → Qdrant 4096d named vectors (dense+bm25 sparse) + SQLite (`sqlite3` builtin) + plain MD scan |
+| Delegation routing | Custom `DelegationBandit` (LinUCB) + optional `TrainedRouter` (cosine via `numpy`/`scipy`) + sha256-seeded RNG для A/B determinism |
+| Git/PR | `gh` CLI (subprocess) + `git worktree` (atomic cherry-pick isolation) + GitHub Actions YAML + Mergify template (P3.3 fallback) |
+| Observability | `data/hook-invocations.jsonl` (atomic append via `FileLock`) + `prometheus-client>=0.21` + optional `langfuse>=2.0` extra + Grafana dashboards |
+| Test/lint gating | `pre-commit>=4.0` + `ruff>=0.15` + `mypy>=1.13` + `mypy-baseline>=0.7.4` (ratchet) + `gitleaks v8.21.2` + `interrogate>=1.7` (docstring ≥60%) + `pytest>=8.0` с `pytest-asyncio>=0.24` (mode=auto) + `pytest-cov>=6.0` |
+
 ---
 
 ## §4 Hook Chain Matrix
