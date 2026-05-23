@@ -395,6 +395,14 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 | `line[3:]` baghunting | Loses leading `.` in paths | Switch to `line[2:].lstrip()` | Mitigated 2026-02-20 |
 | Hook regressions from -X theirs merge | Silent NameError + ValueError | Mandatory post-merge importlib sweep | Active (memory `feedback_post_merge_smoke_required`) |
 
+### 5.3 Tech enablers для defense-in-depth
+
+- **`shared/circuit_breaker.py`** — OPEN/CLOSED/HALF_OPEN state machine per hook (fail_threshold=5, reset_timeout=300s) → graceful degradation
+- **`shared/hook_lock.py`** — `FileLock` cross-platform (used by hook-todos.json + session-skills.json для race-free updates)
+- **`shared/invocation_logger.py`** — `InvocationTimer` context manager + atomic JSONL append (выживает kill -9)
+- **`shared/run_context.py`** — UUID `run_id` storage в `data/.current-runs.json` для correlation между UPS/PreToolUse/PostToolUse/Stop фазами одной slash-команды
+- **Cyrillic safety:** `git -c core.quotepath=false status --porcelain` + `line[2:].lstrip()` parsing (вместо `line[3:]`) + UTF-8 stdout (`sys.stdout.reconfigure(encoding="utf-8", errors="replace")` per Windows cp1251 mitigation)
+
 ---
 
 ## §6 Skills System + Task Protocol
