@@ -1080,6 +1080,17 @@ Claude видит обогащённый context → начинает работ
 
 **Hooks added:** 4 new UPS + 1 PostToolUse extension.
 
+### 14.6 Implementation phases (P0-P3)
+
+| Phase | Items | Effort | Status |
+|---|---|---|---|
+| **P0 Foundation (1 day)** | (1) `shared/prework_aggregator.py` (relevance scoring + top-K) <br>(2) `/skip-prework` slash command + state | 8h | PENDING |
+| **P1 Architecture + Code (1-2 days)** | (3) `prework-architecture.py` (rapidfuzz on `_index.json`) <br>(4) `prework-similar-code.py` (Qdrant `framework_code_v1`) <br>(5) Smoke tests | 12-16h | PENDING |
+| **P2 GitHub + SO (1-2 days)** | (6) `prework-github-bp.py` (cache-first WebSearch) <br>(7) `prework-stackoverflow.py` (UPS + PostToolUse reactive) <br>(8) Background batch dispatcher для cache warming | 12-16h | PENDING |
+| **P3 Escalation + Tuning (2-3 days)** | (9) Subagent dispatch для complex prompts (`decision-to-triad` integration) <br>(10) RAGAS-like accuracy benchmark <br>(11) Token cost telemetry (Langfuse spans `prework.*`) <br>(12) Adaptive threshold tuning per domain | 16-24h | PENDING |
+
+**Total:** 5-8 days focused work.
+
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
 - При появлении нового failure class
