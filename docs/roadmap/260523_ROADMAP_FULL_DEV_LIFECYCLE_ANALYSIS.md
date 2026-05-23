@@ -672,6 +672,26 @@ PostToolUse:TaskUpdate, **timeout 1320s** (22 минуты для wait-for-check
 
 Hook/skill file created → mandatory tasks для registration + verification (Step 4 + Step 5 в settings.json + MEMORY.md + triggers test).
 
+### 8.6 Best practices from GitHub — Git/PR/CI Automation
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | Worktree cherry-pick (atomic isolated branch для cherry-pick) | внутренний (pr_helpers.py P3.2) | Have | cherry_pick_range_to_branch + abort cleanup в finally |
+| 2 | `_run_pre_push_tests` gap-close (encoding='utf-8', errors='replace') | внутренний (2026-05-22 v3 fix) | Have | UTF-8 stability на kb-lint ↔ output |
+| 3 | GitHub native merge queue (P3.3 free Mergify alternative) | docs.github.com/en/repositories/configuring-branches | Have | `AUTO_PR_MERGE_QUEUE=1` |
+| 4 | CODEOWNERS reviewer assignment | docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners | Have | shared/pr_helpers.py codeowners_for_paths |
+| 5 | `wait_for_checks` polling pattern | gh CLI documentation | Have | `gh pr checks --watch` или `gh pr merge --auto` |
+| 6 | Two-step CI split (PR-CI lite + queue-CI full) | mergify.com/blog/two-step-ci | Missing | 50 PR/week → 50 lite + 30 full вместо 50 full = 30%+ CI minutes saved |
+| 7 | `merge_group` event в workflow `on:` для merge-queue branches | docs.github.com/en/actions/using-workflows/events-that-trigger-workflows | Missing | Без него CI не запускается на queue-branch (Mergify documented pitfall) |
+| 8 | Renovate `group:monorepos` preset (снижает PR volume 3-5×) | docs.renovatebot.com/presets-group | Missing | Team saves ~15h/month на dep PRs review |
+| 9 | Python Semantic Release (PSR auto-version-bump по conventional commits) | python-semantic-release.readthedocs.io | Missing | `[tool.semantic_release]` в pyproject.toml + changelog auto |
+| 10 | `.github/PULL_REQUEST_TEMPLATE.md` | docs.github.com/en/communities/using-templates | Missing | Standardize PR description format |
+| 11 | `.github/CODEOWNERS` для critical paths (.github/workflows/ + .claude/hooks/ + scripts/ + infra/) | (best practice) | Partial | Some paths covered, не все critical |
+| 12 | Pin reusable workflows к SHA (не `@main`) — supply-chain risk | docs.github.com/en/actions/learn-github-actions/security-hardening | Missing | Audit needed на existing workflow refs |
+| 13 | conventional-pre-commit для enforcement | github.com/compilerla/conventional-pre-commit | Missing | git-commit-message skill есть, automated gate отсутствует |
+| 14 | Release-please (googleapis/release-please) для automated releases | github.com/googleapis/release-please | Reference | Alternative semantic-release |
+| 15 | semantic-release JS (canonical) | github.com/semantic-release/semantic-release | Reference | Python ports — PSR |
+
 ### 8.5 Tech stack для Git/PR Automation
 
 **Git operations:**
