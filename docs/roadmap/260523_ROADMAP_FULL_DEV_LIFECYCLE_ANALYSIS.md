@@ -948,7 +948,30 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 ---
 
-## §13 Когда обновлять
+## §14 Pre-Work Analysis Pipeline (100% automated proposal)
+
+**Цель:** код-changing prompt автоматически проходит 5 стадий pre-work анализа БЕЗ ручного user trigger перед тем как Claude начнёт писать код.
+
+**5 mandatory pre-work checks:**
+1. **Architecture analysis** — есть ли relevant ADR, какие архитектурные паттерны затрагиваются
+2. **Code analysis** — какие файлы будут изменены, dependencies graph, similar patterns в codebase
+3. **Memory recall** — что мы уже знаем (предыдущие решения, баги, lessons)
+4. **GitHub best practices** — как другие repos решают эту задачу
+5. **Stack Overflow** — known errors/solutions для конкретной technology
+
+### 14.1 Audit текущего state (что есть AUTO vs manual)
+
+| # | Check | Hook/Skill | Auto trigger? | Status | Gap |
+|---|---|---|---|---|---|
+| 1 | Architecture analysis | `architecture-research` skill | **NO** (manual `Skill()` call) | **Partial** | Skill exists, не invoked automatically |
+| 1a | — Architecture decision detection | `decision-to-triad.py` UPS hook | YES (detects in prompt) | Partial | Detects only, не запускает research |
+| 2 | Code analysis | `code-skill-enforcer.py` PreToolUse:Write\|Edit | YES (blocks без skill) | **Partial** | Blocking enforcement only, no semantic code analysis |
+| 2a | — Similar code search | `framework-search` skill (Qdrant `framework_code_v1`) | NO (manual) | Missing | Semantic search есть, не invoked pre-work |
+| 2b | — File dependency graph | `bsl-tool-router.py` Read\|Grep\|Glob | YES (BSL only) | Partial | Только для BSL |
+| 3 | Memory recall (4-layer) | `memory-first-hook.py` UPS | **YES (every prompt)** | **Have** | Fully automated ✓ |
+| 4 | GitHub best practices | `research-task-detector.py` UPS | **NO** (detects only, не fires WebSearch) | **Missing** | Detection без execution |
+| 4a | — Cache reminder post-fetch | `knowledge-cache-reminder.py` PostToolUse:WebSearch\|WebFetch | YES | Have (reactive only) | Reminds to cache, не запускает search |
+| 5 | Stack Overflow search | (none) | NO | **Missing** | No hook exists |
 
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
