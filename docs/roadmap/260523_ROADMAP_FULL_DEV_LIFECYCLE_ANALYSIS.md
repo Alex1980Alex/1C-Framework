@@ -1387,6 +1387,23 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 - MMR via `langchain.vectorstores.utils.maximal_marginal_relevance` для diversification
 - Cache breakpoints: prompt structure `[stable: memory + skills] + [volatile: RAG retrievals] + [user query]` — 3 of 4 breakpoints used
 
+### 17.3 ADR-D3: Langfuse → LGTM migration gate
+
+**Decision:** **Option C — OpenTelemetry-first NOW, Langfuse primary backend, hard numeric migration gate.**
+
+**Tradeoff matrix:**
+
+| Option | Effectiveness | Maintainability | Longevity | Risk |
+|---|---|---|---|---|
+| A. Migrate now к LGTM | Premature | Low | Med | High (burns eng time на infra не features) |
+| B. Stay on Langfuse forever | High today | High | Low (would hit 2024 scaling wall) | Med (single-vendor lock-in) |
+| C. OTel-first NOW, Langfuse primary, explicit migration gate | High today + low switching cost | Med (+Collector container) | High (vendor-neutral) | Low (48h cutover precedent) |
+
+**Rationale (3 sentences):**
+1. "Wait for pain" применимо к *backend choice*, не к *instrumentation layer* — emit OTLP from day one, backend становится config flag (precedent: Deductive AI migrated Datadog → Grafana за 48ч в Dec 2025 because OTel-based, [Grafana blog](https://grafana.com/blog/opentelemetry-and-vendor-neutrality-how-to-build-an-observability-strategy-with-maximum-flexibility/)).
+2. Langfuse purpose-built для LLM-trace mutability (scores added post-ingest) — Grafana Tempo struggles здесь — нет reason swap пока этот fit holds.
+3. Без numeric gates "если LGTM выбрано" остаётся non-decision indefinitely; Charity Majors philosophy "never impose more complexity than absolutely needed" поддерживает conservative approach.
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
