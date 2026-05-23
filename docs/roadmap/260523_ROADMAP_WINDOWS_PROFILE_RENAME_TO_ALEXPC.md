@@ -18,15 +18,15 @@
 - Project: `.mcp.json`, `.claude/settings.local.json`, `.venv\` (recreate!), `external/1c_mcp/venv\` (recreate!), `.claude/skills/*/SKILL.md`, `docs/**/*.md`
 
 ## Phases (high-level)
-0. Pre-audit (read-only inventory)
-1. Backup (mandatory)
-2. Create Admin2 account
-3. Rename folder + registry SID
-4. Recreate Python venvs
-5. Sed-replace hardcoded paths
-6. Reinstall user-scope apps
-7. Verification
-8. Cleanup
+0. **Pre-audit** (~15 мин, read-only): scan `C:\1С-Framework` + `~/.claude*` → `data/reports/profile-rename-inventory.json`
+1. **Backup** (~30 мин): `git commit --allow-empty`, copy `.claude*` + `.claude.json` + `Documents\WindowsPowerShell\` → `E:\backup\`, `reg export ProfileList`, `winget export`
+2. **Create Admin2** (~5 мин): `New-LocalUser Admin2 + Add-LocalGroupMember Administrators`. Нужен чтобы переименовать активный профиль.
+3. **Rename + registry** (~10 мин): logout → Admin2 → `Rename-Item "Tech. Boutique" "AlexPC"` → registry `ProfileImagePath` → (опц.) `Rename-LocalUser` → relogin AlexPC.
+4. **Recreate venvs** (~10 мин): venv shebangs hardcoded → broken. Recreate `.venv` + `external/1c_mcp/venv`, `pip install -e .`
+5. **Sed-replace** (~20 мин): `scripts/replace_user_profile_path.py --apply`. Patterns: `C:\Users\Tech. Boutique` (3 quote forms). Exclude vendor/cache/git.
+6. **Reinstall apps** (~15 мин): `winget uninstall + install GitKraken.cli` (per-user package path). Обновить `.claude/settings.local.json`.
+7. **Verification** (~15 мин): `claude mcp list` 23+, real MCP tool call, hook chain, 1С debug <2s, pre-commit pass.
+8. **Cleanup** (~5 мин): `Remove-LocalUser Admin2`, clear debug logs, retain backup 30 дней.
 
 ## §18 Progress log
 | Дата | Phase | Event | Ref |
