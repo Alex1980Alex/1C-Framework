@@ -559,3 +559,16 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 ---
 
 ## §11 Next Improvements
+
+| Pri | Item | Effort | Rationale |
+|---|---|---|---|
+| P1 | Document 1С pipelines (`/analyze-1c-task`, `/implement-1c-task`, VA BDD) | 1 day | Большой surface area, отсутствует в этом roadmap |
+| P1 | mypy-baseline.txt ratchet (roadmap 260514) — return mypy to pre-commit | 1-2 days | 1616 pre-existing errors блокируют strict сейчас |
+| P2 | Implement Layer 4 wiki search (memory-first-hook) | 0.5 day | Currently STUB returns [] |
+| P2 | RAGAS skill-router precision/recall benchmark | 1 day | Need ground truth для tuning |
+| P2 | Migrate hardcoded `D:\1С-Framework` paths → `C:/1С-Framework` | 0.5 day | Phase 5 path migration follow-up |
+| P3 | Skill bundle expansion (bsl-dev 22→35 keywords) | 0.5 day | Better routing precision |
+| P3 | Dead skill detection cron | 1 day | Recommended-never-activated cleanup |
+| P3 | GitHub App migration vs `gh` CLI | 1-2 days | Multi-developer scale |
+| P4 | OpenSpec live JIRA sync (currently stub) | 2-3 days | Bidirectional sync |
+| P4 | Sandbox-execution LangSmith/E2B backends | 1 week | Currently DryRun only |
