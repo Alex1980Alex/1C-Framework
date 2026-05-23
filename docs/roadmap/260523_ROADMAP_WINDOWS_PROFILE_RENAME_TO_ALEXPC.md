@@ -28,6 +28,33 @@
 7. **Verification** (~15 мин): `claude mcp list` 23+, real MCP tool call, hook chain, 1С debug <2s, pre-commit pass.
 8. **Cleanup** (~5 мин): `Remove-LocalUser Admin2`, clear debug logs, retain backup 30 дней.
 
+## Risk matrix
+| Риск | P | Impact | Mitigation |
+|---|---|---|---|
+| Apps зависают на старом пути | High | High | Phase 5 sed + Phase 6 reinstall |
+| Python venv broken | High | Medium | Phase 4 recreate |
+| Registry SID mismatch — login broken | Low | Critical | Phase 1 reg export → rollback |
+| `1c-mcp-crud` venv broken | High | High | Phase 4 recreate |
+| Pre-commit ломается | Medium | Low | `pre-commit install --install-hooks` |
+
+## Rollback
+1. Admin2 → `Rename-Item AlexPC "Tech. Boutique"` → `reg import profilelist.reg`
+2. Restore `~/.claude*` из E:\backup
+3. `git reset --hard <pre-rename SHA>` (если коммитили правки)
+4. venv recreate с правильным путём
+
+## Open questions / Acceptance / Progress log
+
+**Open:**
+- Переименовывать Windows account name? Reco: да (Phase 3.6)
+- Когда выполнять? Окно 1-2ч, не сейчас
+
+**Acceptance criteria:**
+- [ ] `Test-Path C:\Users\AlexPC` = True
+- [ ] `claude mcp list` 23+ Connected
+- [ ] `grep -r "Tech\. Boutique" .` в configs = 0 hits
+- [ ] 1С debug <2s, pre-commit pass, smoke-test exit 0
+
 ## §18 Progress log
 | Дата | Phase | Event | Ref |
 |---|---|---|---|
