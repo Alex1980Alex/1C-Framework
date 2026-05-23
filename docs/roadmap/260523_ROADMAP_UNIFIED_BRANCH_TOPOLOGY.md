@@ -257,3 +257,36 @@ git branch -d dev-master
 ---
 
 ## §7 Что заменяет / superseded
+
+Этот roadmap **заменяет** оба исходных. Не удаляй их (исторический контекст), но обнови frontmatter:
+
+**[260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md):**
+```diff
+- **Статус:** Phase 1 DONE, Phases 2–6 PENDING
++ **Статус:** SUPERSEDED by [260523](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md). Phase 1 DONE, остальные в §3 Phase 2-5 unified.
+```
+
+**[260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md):**
+```diff
+- > **Статус:** discovery DONE, миграция NOT STARTED.
++ > **Статус:** SUPERSEDED — миграция выполнена через **PR #4 merged 2026-05-23**. Generalized pattern → [260523 §4 Pattern B](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md#§4-standardized-workflow-pattern-lessons-из-pr-4).
+```
+
+---
+
+## §8 Risk Register
+
+| Риск | Mitigation | Phase |
+|---|---|---|
+| Phase 1 fast-forward конфликтует с uncommitted submodule | Сначала commit submodule pointer ИЛИ stash | 1 |
+| Phase 3 cherry-pick конфликтует с PR #4 файлами | Manual resolve через union (origin/master legitimate + PR #4 inventory) | 3 |
+| Phase 4 `gh pr edit --base master` ломает PR #2 review state | Сделать когда PR #2 не в активном review | 4 |
+| `dev-master` удалённая ветка имеет attached automation | Phase 5 update settings.json env ДО Phase 4 delete | 5→4 |
+| Backup branches понадобятся | Не удалять автоматически в Phase 1, держать ещё месяц | 1 |
+| feat 2 233 ahead станет painful rebase после Phase 4 | `git merge origin/master` в feat вместо rebase | post-4 |
+| Migration PR pattern становится legalised tech debt | §6 — пороги когда переходить от workaround к fix | continuous |
+| `AUTO_PR_ENABLED=1` запустит post-task-push-pr с старым AUTO_PR_BASE | Manually toggle off перед Phase 4 или env override | 4 |
+
+---
+
+## §9 Связанные артефакты
