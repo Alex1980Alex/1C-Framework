@@ -146,6 +146,13 @@ Claude вызывает любой tool. PreToolUse hooks по matcher:
 
 **Stage exit:** State persisted, tasks scheduled, metrics logged.
 
+**Tech stack (Stage 3-4):**
+- **PreToolUse blocking:** `task-protocol-enforcer` reads `~/.claude/cache/session-skills.json` для phase machine state; exit 2 cancels tool call
+- **mcp-invocation-logger.py** — regex `mcp__.*` matcher → JSON line append к `data/hook-invocations.jsonl`
+- **PostToolUse (Windows #6305 affected):** `auto-git-save.py` использует `git -c core.quotepath=false status --porcelain` (Cyrillic-safe parsing per memory `feedback_git_porcelain_parsing`), `subprocess.run(text=True, encoding='utf-8', errors='replace')` для UTF-8 stability (lesson from PR #4 round-3)
+- **post-task-push-pr.py timeout 1320s** — нужно для `gh pr checks --watch` polling (default 300s + buffer) + `git push -u` (slow для large diffs) + `gh pr merge --merge-queue` или `--squash`
+- All hooks log через `shared/invocation_logger.py` (InvocationTimer context manager → atomic JSONL append с file lock)
+
 ### Stage 5 — Tool result → Claude continues OR stops
 
 Claude интерпретирует tool result, продолжает работу (loop Stage 3-4) ИЛИ завершает ответ. Если завершает → Stage 6.
