@@ -1478,3 +1478,26 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 - **§10 Observability** → unified backend (Iceberg cold tier + optional LGTM hot)
 - **§11 Next Improvements** observability items → marked DONE
 - **§14 Pre-Work Pipeline** RAGAS benchmark → Langfuse dataset export + RAGAS replay
+
+---
+
+## §18 Implementation Progress Log (live)
+
+**Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
+
+### 2026-05-23 — Roadmap ratification + P0c-slim landed
+
+**Chapters added this session:** §14-§19 (Pre-Work + Caching + Risk Analysis + 3 ADRs + Progress Log + Auto-protocol).
+
+**§16 blockers — 5/5 RESOLVED.**
+
+**Implementation phase progress:**
+
+| Phase | Items | Status | PR |
+|---|---|---|---|
+| P0a Cleanup | Recount + env names | ✅ DONE | (mechanical) |
+| P0b Foundations | mypy ratchet + Layer 4 wiki | ⏳ PENDING | — |
+| **P0c-slim** | Dispatcher + 1 worker (ADR-D1) | ✅ DONE | **[#9](https://github.com/Alex1980Alex/1C-Framework/pull/9)** OPEN mergeable |
+| P1 | 3 remaining prework workers | ⏳ PENDING | — |
+| P2 | Process Caching P0 | ⏳ PENDING | — |
+| P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
