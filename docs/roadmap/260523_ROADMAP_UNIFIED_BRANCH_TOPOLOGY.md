@@ -23,3 +23,44 @@
 ---
 
 ## §1 Реальная картина 2026-05-23
+
+### 1.1 Branch topology
+
+| Ref | HEAD | Назначение | Состояние |
+|---|---|---|---|
+| `origin/master` | `ae3a59534` | Legacy (frozen 2026-04-11), не используется | 2 236 уникальных vs local master, **0 общих предков** |
+| `origin/dev-master` | `25ab2de39` | **De-facto canonical** — все PR сюда | 12 коммитов впереди local master (вкл. PR #4 merge) |
+| `local master` | `b9cba8cb1` | Backup snapshot pre-PR#4 | 2 677 уникальных vs origin/master, **0 общих предков** |
+| `local dev-master` | `b9cba8cb1` | Tracking branch (behind 12) | Идентичен local master, нужен fast-forward |
+| `local feat/serena-audit-hybrid-refactor` | `3ac091b49` | **Активная разработка** | 50 ahead of origin, **2 233 ahead of dev-master, 12 behind** |
+| `origin/archive/master-pre-reconciliation-2026-05-19` | `ae3a59534` | Backup origin/master | Frozen safety net |
+| `origin/migrate/pr-automation-stack` | `1afb5c64f` | Worktree-ветка PR #4 (merged) | **Cleanup pending** — удалить |
+| tag `origin-master-archive-2026-05-19` | `ae3a59534` | То же что branch archive | Frozen safety net |
+
+### 1.2 PR queue
+
+| PR | State | Base ← Head | Title |
+|---|---|---|---|
+| **#2** | OPEN (5+ дней) | `dev-master` ← `feat/serena-audit-hybrid-refactor` | feat: Serena audit — hybrid retrieval |
+| **#3** | demo open / abandoned | `dev-master` ← demo (P3.2) | используется для cherry-pick fallback тестов, удалить |
+| **#4** | **MERGED 2026-05-23 03:13 UTC** | `dev-master` ← `migrate/pr-automation-stack` | feat(pr-automation): land P0-P3 batch on dev-master |
+
+### 1.3 Что DONE vs PENDING из исходных roadmap'ов
+
+**260519 (Master Reconciliation):**
+- ✅ Phase 1: Архивация origin/master (tag + branch) — DONE 2026-05-19
+- ⏳ Phase 2: Аудит 2 236 уникальных origin/master коммитов — pending
+- ⏳ Phase 3: Cherry-pick legitimate коммитов в local master — pending
+- ⏳ Phase 4: Force-push local master → origin/master — pending
+- ⏳ Phase 5: PR #2 retarget на master + удалить dev-master + mypy-baseline sync — pending
+- ⏳ Phase 6: Verify CI green — pending
+
+**260522 (PR-automation Migration):**
+- ✅ Phase A-G: вся миграция выполнена через **PR #4 (round-6/7)** — DONE 2026-05-23
+- ✅ Bonus: discovered + memory-saved [feedback_precommit_vendor_excludes](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_precommit_vendor_excludes.md)
+- ⏳ Cleanup: `git push origin :migrate/pr-automation-stack` — remote branch ещё жив
+- ⏳ Sync feat ↔ dev-master — deferred (2 233 commits, requires merge not rebase)
+
+---
+
+## §2 Общий корень и cascade effects
