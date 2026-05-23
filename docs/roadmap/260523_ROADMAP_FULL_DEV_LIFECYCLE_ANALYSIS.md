@@ -1501,3 +1501,41 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | P1 | 3 remaining prework workers | ⏳ PENDING | — |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
+
+**Open PRs:**
+
+| PR | Branch | Status |
+|---|---|---|
+| [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) | fix/hook-regressions | OPEN mergeable — 2 hook regression fixes |
+| [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) | feat/prework-dispatcher-architecture | OPEN mergeable — P0c-slim |
+
+**Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
+
+**Next priorities:**
+1. Merge PR #8 + PR #9 когда CI green
+2. Save memory `feedback_prework_dispatcher_works` после 24h prod observation
+3. Start P0b mypy-baseline ratchet (separate roadmap [260514](260514_ROADMAP_MYPY_CLEANUP.md))
+4. Start P1 next worker: `feat/prework-similar-code`
+
+---
+
+## §19 Auto-update protocol для §18
+
+**Mandatory action после каждой phase completion / PR merge:**
+
+1. Edit §18 — добавить новую section dated `YYYY-MM-DD` на top (reverse chrono)
+2. Update phase table status (P0a/P0b/P0c/P1/P2/P3)
+3. Add PR в PRs table
+4. List new memory entries / cache artifacts
+5. Update "Next priorities" list
+6. Commit с message `docs(roadmap): progress log YYYY-MM-DD <summary>`
+
+**Trigger conditions (any of):**
+- PR merged OR phase marked DONE
+- New memory entry с framework-wide impact
+- Cache artifact с cross-roadmap relevance
+- Critical decision (new ADR) OR roadmap structural change
+
+**NOT trigger:** routine auto-save commits, WIP без deliverable, docs-only без state change.
+
+**Memory anchor:** [`feedback_roadmap_progress_log_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_roadmap_progress_log_protocol.md). Future Claude sessions ОБЯЗАНЫ проверять §18 и обновлять после каждого milestone.
