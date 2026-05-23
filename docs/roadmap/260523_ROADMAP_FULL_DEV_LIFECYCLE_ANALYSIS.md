@@ -1029,6 +1029,21 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 **Recommendation:** **C** (A + B). Pre-work covers context, post-error covers concrete failures.
 
+### 14.4 Evaluation matrix (recommended options compared)
+
+| Criterion | §14.1 Arch A+C | §14.2a Code A | §14.4 GitHub B | §14.5 SO C | Memory (Have) |
+|---|---|---|---|---|---|
+| Latency budget | 0.1s (A) + 30s (C только escalation) | 1s | 0.5s warm / 4s cold | 1s UPS + 0.5s post-error | 3s |
+| Token cost | ~500 + ~3000 (subagent) | ~800 | ~1500 | ~1500 | ~2000 |
+| Accuracy | High (semantic) | High (4096d) | Medium (web noise) | Medium (snippets only) | High (curated) |
+| Complexity | Medium (2 hooks + escalation) | Low (1 hook) | Medium (cache infra) | Medium (2 hooks) | Low (existing) |
+| Blast radius на fail | None (graceful) | None (UPS advisory) | None (cache miss → skip) | None (snippets optional) | None (silent fallback) |
+| Coverage | 100% architecture prompts | 100% code prompts | 60-80% (cache hit) | 70% proactive + 100% errors | 100% |
+
+**Aggregate latency parallel UPS:** worst-case ≈ 6.5s (memory 3s || code 1s || arch 0.1s || github 4s || SO 1s) — fits 8s budget с margin.
+
+**Aggregate token cost:** ~7800 — exceeds 5K target. Mitigation: rank by relevance, inject top-K с threshold.
+
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
 - При появлении нового failure class
