@@ -360,15 +360,15 @@ Claude интерпретирует tool result, продолжает работ
 
 73 hooks по событиям с timeout и matcher. Полный inventory — см. research данные в session log + skill `multi-level-hook-architecture` SKILL.md (~/.claude/skills/multi-level-hook-architecture/SKILL.md).
 
-| Event | Count | Critical hooks |
+| Event | Registrations | Critical hooks |
 |---|---|---|
 | SessionStart | 5 | ensure-docker-qdrant, submodule-status, session-mypy-banner |
 | UserPromptSubmit | 14 | **memory-first-hook, skill-router, skill-eval-enforcer, auto-git-save-prompt** |
 | UserPromptExpansion | 1 | slash-command-tracker (forward-compat fallback) |
-| PreToolUse | 21 (7 matchers) | task-protocol-enforcer, code-skill-enforcer, root-clutter-guard, mcp-invocation-logger |
-| PostToolUse | 18 (6 matchers) | **post-task-push-pr (TaskUpdate, 1320s timeout!), auto-git-save, code-verify-reminder** |
+| PreToolUse | 18 (7 matchers) | task-protocol-enforcer, code-skill-enforcer, root-clutter-guard, mcp-invocation-logger |
+| PostToolUse | 14 (6 matchers) | **post-task-push-pr (TaskUpdate, 1320s timeout!), auto-git-save, code-verify-reminder** |
 | Stop | 14 | **git-commit-enforcer, docs-change-enforcer, task-enforcer, session-memory-save** |
-| **Total** | **73** | — |
+| **Total registrations** | **66** | (59 unique `.py` files; некоторые dual-registered как PreToolUse + PostToolUse + Stop) |
 
 **Notable timeouts:**
 - `post-task-push-pr.py` — 1320s (22 минуты, нужен для wait-for-checks в PR-automation)
