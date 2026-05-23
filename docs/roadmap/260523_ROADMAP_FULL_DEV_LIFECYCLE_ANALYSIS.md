@@ -523,3 +523,15 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 ```
 
 См. memory [`feedback_post_merge_smoke_required`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_post_merge_smoke_required.md).
+
+---
+
+## §10 Observability + State Files
+
+### 10.1 Audit log
+
+**File:** `data/hook-invocations.jsonl`
+**Format:** `{ts, hook, event, tool, elapsed_ms, outcome, session, error, agent_id, category, run_id}`
+**Categories:** `hook`, `mcp_call`, `slash_run`, `preflight`, `delegation_decision`
+
+**Diagnostic:** `tail -500 data/hook-invocations.jsonl | jq 'select(.outcome=="error")'`
