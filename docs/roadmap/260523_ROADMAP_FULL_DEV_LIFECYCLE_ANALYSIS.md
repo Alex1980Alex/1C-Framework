@@ -9,6 +9,9 @@
 
 ## §0 TL;DR
 
+**Tech stack (one-line):** Python 3.11+ async-first | LangChain 0.3 + LangGraph + Anthropic SDK | Qdrant v1.17 (10 коллекций 4096d Qwen3 через TEI) + Neo4j 5 + NetworkX | FastAPI + Uvicorn + Pydantic v2 + pydantic-settings | MCP (12 stdio + 8 HTTP/Java servers) | LLM Rotation (claude-cli-haiku primary + Ollama qwen2.5-coder + Z.AI GLM-5 + Gemini + Mistral fallback) | pytest + ruff 0.15 + mypy 1.13 + mypy-baseline + pre-commit 4 + gitleaks + GitHub Actions | gh CLI + git worktree (PR-automation) | Docker (Qdrant, Neo4j, pgvector pg16, TimescaleDB, Redis, Nginx, Prometheus, Grafana) | rapidfuzz (skill-router fuzzy) | TEI Docker (Qwen3-Embedding-8B safetensors) + sentence-transformers fallback + ColPali (visual) + BGE-M3 (sparse+dense).
+
+
 Фреймворк PDF Vector & Graph реализует **end-to-end automated dev lifecycle** через 3-уровневую hook-архитектуру (UserPromptSubmit / PreToolUse + PostToolUse / Stop), enforced **Task Protocol** (idle→classified→skill_checked→ALLOW), **4-layer Memory injection** (SQLite + Qdrant TEI Qwen3 + .md + wiki stub), **token-economy delegation** (Z.AI/Gemini via LinUCB bandit) и **PR-automation P0-P3 batch** (label-driven, cherry-pick, merge-queue).
 
 **Сильные стороны:** defense-in-depth (критичные проверки на 3 уровнях), graceful degradation (хуки не блокируют exit), observability (`data/hook-invocations.jsonl` audit log + Langfuse spans).
