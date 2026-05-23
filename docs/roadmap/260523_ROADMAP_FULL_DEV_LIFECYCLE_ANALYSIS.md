@@ -372,3 +372,20 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 **State:** `~/.claude/cache/session-skills.json` (per-session).
 
 **Exempt:** `.claude/`, `docs/`, `data/`, config files.
+
+### 6.3 Code-verify 4 modes × 3 levels
+
+| Mode | When | Reference input |
+|---|---|---|
+| **knowledge-compliance** | Learning Loop FETCH→EXECUTE | knowledge_block from FETCH |
+| **behavior-preservation** | Refactoring | original + refactored code |
+| **bug-fix-validation** | Bug fix | bug desc + fix + tests |
+| **quality-review** | New code / general | code only |
+
+**3 levels:** Structural (grep) → Subagent (Task dispatch) → Decision (PASS/PARTIAL/FAIL → Ralph Wiggum max 3 iter).
+
+**Marker contract:** subagent ends with `[CODE-VERIFY-PASS]` / `[CODE-VERIFY-FAIL]`.
+
+---
+
+## §7 Memory + Delegation
