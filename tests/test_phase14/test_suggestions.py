@@ -19,6 +19,7 @@ PATCH_CHAT = "langchain_anthropic.ChatAnthropic"
 # SuggestionConfig
 # ---------------------------------------------------------------------------
 
+
 class TestSuggestionConfig:
     def test_defaults(self):
         config = SuggestionConfig()
@@ -47,6 +48,7 @@ class TestSuggestionConfig:
 # QuerySuggester — Init
 # ---------------------------------------------------------------------------
 
+
 class TestQuerySuggesterInit:
     def test_defaults(self):
         s = QuerySuggester()
@@ -69,6 +71,7 @@ class TestQuerySuggesterInit:
 # ---------------------------------------------------------------------------
 # QuerySuggester — Entity suggestions
 # ---------------------------------------------------------------------------
+
 
 class TestEntitySuggestions:
     @pytest.mark.asyncio
@@ -100,6 +103,7 @@ class TestEntitySuggestions:
 # ---------------------------------------------------------------------------
 # QuerySuggester — Frequency suggestions
 # ---------------------------------------------------------------------------
+
 
 class TestFrequencySuggestions:
     def test_empty_log(self):
@@ -134,6 +138,7 @@ class TestFrequencySuggestions:
 # QuerySuggester — LLM suggestions
 # ---------------------------------------------------------------------------
 
+
 class TestLLMSuggestions:
     @pytest.mark.asyncio
     async def test_empty_context_returns_empty(self):
@@ -144,7 +149,9 @@ class TestLLMSuggestions:
     @pytest.mark.asyncio
     async def test_llm_string_response(self):
         mock_response = MagicMock()
-        mock_response.content = "1. What is RAPTOR?\n2. How does HyDE work?\n3. Explain vector search"
+        mock_response.content = (
+            "1. What is RAPTOR?\n2. How does HyDE work?\n3. Explain vector search"
+        )
 
         mock_llm = AsyncMock()
         mock_llm.ainvoke.return_value = mock_response
@@ -219,6 +226,7 @@ class TestLLMSuggestions:
 # QuerySuggester — Related suggestions (delegates to LLM)
 # ---------------------------------------------------------------------------
 
+
 class TestRelatedSuggestions:
     @pytest.mark.asyncio
     async def test_related_delegates_to_llm(self):
@@ -238,6 +246,7 @@ class TestRelatedSuggestions:
 # ---------------------------------------------------------------------------
 # QuerySuggester — suggest() main method
 # ---------------------------------------------------------------------------
+
 
 class TestSuggestMain:
     @pytest.mark.asyncio
@@ -285,6 +294,7 @@ class TestSuggestMain:
 # QuerySuggester — Caching
 # ---------------------------------------------------------------------------
 
+
 class TestSuggesterCache:
     @pytest.mark.asyncio
     async def test_cache_hit(self):
@@ -321,6 +331,7 @@ class TestSuggesterCache:
 # QuerySuggester — log_query
 # ---------------------------------------------------------------------------
 
+
 class TestLogQuery:
     def test_log_new_query(self):
         s = QuerySuggester()
@@ -339,9 +350,11 @@ class TestLogQuery:
 # Singleton
 # ---------------------------------------------------------------------------
 
+
 class TestSuggesterSingleton:
     def test_get_query_suggester(self):
         import src.pdf_framework.search.suggestions as mod
+
         mod._query_suggester = None
 
         s1 = get_query_suggester(api_key="key1")

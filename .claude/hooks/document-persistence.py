@@ -15,8 +15,8 @@ Pattern: "Auto-Save Structured Documents"
 Timeout: 3s
 """
 
-import sys
 import os
+import sys
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
@@ -34,16 +34,21 @@ class DocumentPersistence(BaseHook):
     DOCUMENT_TYPES = {
         "roadmap": {
             "keywords": [
-                "дорожная карта", "дорожную карту", "roadmap",
-                "план развития", "план улучшений",
+                "дорожная карта",
+                "дорожную карту",
+                "roadmap",
+                "план развития",
+                "план улучшений",
             ],
             "path": "docs/roadmap/",
             "label": "дорожная карта",
         },
         "plan": {
             "keywords": [
-                "план реализации", "план внедрения",
-                "implementation plan", "план работ",
+                "план реализации",
+                "план внедрения",
+                "implementation plan",
+                "план работ",
                 "план миграции",
             ],
             "path": "docs/plans/",
@@ -51,18 +56,23 @@ class DocumentPersistence(BaseHook):
         },
         "analysis": {
             "keywords": [
-                "глубокий анализ", "детальный анализ",
-                "deep analysis", "gap analysis",
-                "сравнительный анализ", "аудит",
+                "глубокий анализ",
+                "детальный анализ",
+                "deep analysis",
+                "gap analysis",
+                "сравнительный анализ",
+                "аудит",
             ],
             "path": "docs/analysis/",
             "label": "анализ",
         },
         "decomposition": {
             "keywords": [
-                "декомпозиция", "decomposition",
+                "декомпозиция",
+                "decomposition",
                 "максимальная декомпозиция",
-                "разбей на задачи", "разбить на шаги",
+                "разбей на задачи",
+                "разбить на шаги",
             ],
             "path": "docs/roadmap/",
             "label": "декомпозиция",
@@ -71,9 +81,17 @@ class DocumentPersistence(BaseHook):
 
     # Amplifiers: if these appear with document keywords, increase confidence
     AMPLIFIERS = [
-        "создай", "сделай", "подготовь", "составь",
-        "напиши", "сформируй", "разработай",
-        "create", "make", "prepare", "write",
+        "создай",
+        "сделай",
+        "подготовь",
+        "составь",
+        "напиши",
+        "сформируй",
+        "разработай",
+        "create",
+        "make",
+        "prepare",
+        "write",
     ]
 
     def execute(self, inp: HookInput) -> HookOutput | None:
@@ -100,24 +118,18 @@ class DocumentPersistence(BaseHook):
         # Build save instructions
         save_instructions = []
         for doc_type, config in matched_types:
-            save_instructions.append(
-                f"- {config['label']} → `{config['path']}<имя>.md`"
-            )
+            save_instructions.append(f"- {config['label']} → `{config['path']}<имя>.md`")
 
-        paths = " или ".join(
-            f"`{c['path']}`" for _, c in matched_types
-        )
+        paths = " или ".join(f"`{c['path']}`" for _, c in matched_types)
 
         msg = (
-            f"[DOC-PERSISTENCE] Обнаружен запрос на создание структурированного документа.\n"
-            f"ОБЯЗАТЕЛЬНО сохрани результат в файл:\n"
-            + "\n".join(save_instructions)
-            + "\n\n"
+            "[DOC-PERSISTENCE] Обнаружен запрос на создание структурированного документа.\n"
+            "ОБЯЗАТЕЛЬНО сохрани результат в файл:\n" + "\n".join(save_instructions) + "\n\n"
             "Правила:\n"
             "1. НЕ только отображай в чате — ВСЕГДА сохраняй в файл\n"
             "2. Имя файла: SCREAMING_SNAKE_CASE (например SKILL_ROUTER_ROADMAP.md)\n"
             "3. Включи заголовок с датой и статусом\n"
-            "4. Файл должен быть самодостаточным (без ссылок на \"см. чат выше\")"
+            '4. Файл должен быть самодостаточным (без ссылок на "см. чат выше")'
         )
 
         return HookOutput().system_message(msg)

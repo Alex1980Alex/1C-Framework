@@ -18,8 +18,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.bsl.parser import BSLASTParser
 from src.bsl.call_graph.store import CallGraphStore
+from src.bsl.parser import BSLASTParser
 
 SKIP_PATTERNS = ["node_modules", "bin/", "build/"]
 DEFAULT_DB = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
@@ -46,7 +46,8 @@ def main() -> None:
         print("Cleared existing call graph")
 
     bsl_files = sorted(
-        f for f in project.rglob("*.bsl")
+        f
+        for f in project.rglob("*.bsl")
         if not any(p in str(f).replace("\\", "/") for p in SKIP_PATTERNS)
     )
     print(f"Found {len(bsl_files)} BSL files")
@@ -67,9 +68,9 @@ def main() -> None:
     elapsed = time.time() - t0
     stats = store.stats()
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("CALL GRAPH BUILD COMPLETE")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"  Files:      {len(bsl_files)}")
     print(f"  Symbols:    {stats['symbols']}")
     print(f"  Calls:      {stats['calls']}")
@@ -80,7 +81,7 @@ def main() -> None:
     print(f"  Errors:     {errors}")
     print(f"  Time:       {elapsed:.1f}s")
     print(f"  DB:         {args.db}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
 
 if __name__ == "__main__":

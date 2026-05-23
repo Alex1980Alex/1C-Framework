@@ -26,7 +26,9 @@ def _log_skill_usage(skill_name: str, session_id: str) -> None:
         log_path = os.path.join(project_dir, "data", "skill-usage.log")
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        line = f"{ts} | skill={skill_name} | session={session_id[:16] if session_id else 'unknown'}\n"
+        line = (
+            f"{ts} | skill={skill_name} | session={session_id[:16] if session_id else 'unknown'}\n"
+        )
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(line)
     except Exception:
@@ -77,6 +79,7 @@ class SkillUsageMetrics(BaseHook):
             # Accuracy tracking: correlate activation with prompt_id
             try:
                 from shared.session_state import get_prompt_id
+
                 prompt_id = get_prompt_id()
                 if prompt_id:
                     _log_accuracy_activate(prompt_id, skill_name)

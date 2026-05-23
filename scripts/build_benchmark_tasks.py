@@ -26,8 +26,12 @@ CATEGORY_MAP = {"Перем": "CAT-1-local-variable", "Var": "CAT-1-local-variab
 
 def _git(*args: str, cwd: Path | None = None) -> str:
     r = subprocess.run(
-        ["git", *args], capture_output=True, text=True,
-        cwd=cwd, env=_ENV, encoding="utf-8",
+        ["git", *args],
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+        env=_ENV,
+        encoding="utf-8",
     )
     if r.returncode != 0:
         raise RuntimeError(f"git {args[0]} failed: {r.stderr.strip()}")
@@ -45,10 +49,14 @@ def _extract_renames(diff: str) -> list[dict]:
             if new_m:
                 keyword = lines[i].lstrip("- \t").split()[0]
                 cat = CATEGORY_MAP.get(keyword, "CAT-5-edge-case")
-                results.append({
-                    "old_name": old_m.group(1), "new_name": new_m.group(1),
-                    "keyword": keyword, "category": cat,
-                })
+                results.append(
+                    {
+                        "old_name": old_m.group(1),
+                        "new_name": new_m.group(1),
+                        "keyword": keyword,
+                        "category": cat,
+                    }
+                )
                 i += 2
                 continue
         i += 1
@@ -57,8 +65,14 @@ def _extract_renames(diff: str) -> list[dict]:
 
 def find_rename_commits(repo_root: Path, limit: int = 100) -> list[dict]:
     out = _git(
-        "log", "--diff-filter=M", "--format=%H %P",
-        "-n", str(limit), "--", "*.bsl", cwd=repo_root,
+        "log",
+        "--diff-filter=M",
+        "--format=%H %P",
+        "-n",
+        str(limit),
+        "--",
+        "*.bsl",
+        cwd=repo_root,
     )
     commits: list[dict] = []
     for line in out.splitlines():
@@ -74,10 +88,14 @@ def find_rename_commits(repo_root: Path, limit: int = 100) -> list[dict]:
                 if dl.startswith("+++ b/"):
                     file_uri = dl[6:]
                     break
-            commits.append({
-                "sha": sha, "parent": parent,
-                "renames": renames, "file_uri": file_uri,
-            })
+            commits.append(
+                {
+                    "sha": sha,
+                    "parent": parent,
+                    "renames": renames,
+                    "file_uri": file_uri,
+                }
+            )
     return commits
 
 
@@ -88,16 +106,23 @@ def build_tasks(repo_root: Path, output: Path, limit: int) -> None:
     for commit in commits:
         for rn in commit["renames"]:
             n += 1
-            tasks.append({
-                "id": f"T{n:02d}", "category": rn["category"],
-                "commit_sha": commit["sha"], "parent_sha": commit["parent"],
-                "old_name": rn["old_name"], "new_name": rn["new_name"],
-                "file_uri": commit.get("file_uri", ""),
-                "line": 0, "character": 0,
-                "expected_files_affected": 1, "expected_edits": 1,
-                "expected_files": [],
-                "notes": f"Auto-detected: {rn['old_name']} -> {rn['new_name']} ({rn['keyword']})",
-            })
+            tasks.append(
+                {
+                    "id": f"T{n:02d}",
+                    "category": rn["category"],
+                    "commit_sha": commit["sha"],
+                    "parent_sha": commit["parent"],
+                    "old_name": rn["old_name"],
+                    "new_name": rn["new_name"],
+                    "file_uri": commit.get("file_uri", ""),
+                    "line": 0,
+                    "character": 0,
+                    "expected_files_affected": 1,
+                    "expected_edits": 1,
+                    "expected_files": [],
+                    "notes": f"Auto-detected: {rn['old_name']} -> {rn['new_name']} ({rn['keyword']})",
+                }
+            )
     payload = {
         "version": 1,
         "created_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),  # noqa: UP017

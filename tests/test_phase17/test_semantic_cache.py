@@ -26,7 +26,9 @@ def _make_response(query: str = "test", n_results: int = 2, doc_id: str = "d1") 
     results = [
         SearchResult(
             chunk=DocumentChunk(
-                id=f"chunk_{i}", content=f"Content {i}", document_id=doc_id,
+                id=f"chunk_{i}",
+                content=f"Content {i}",
+                document_id=doc_id,
             ),
             score=1.0 - i * 0.1,
             source="vector",
@@ -34,7 +36,10 @@ def _make_response(query: str = "test", n_results: int = 2, doc_id: str = "d1") 
         for i in range(n_results)
     ]
     return SearchResponse(
-        query=query, results=results, total_found=n_results, search_type="vector",
+        query=query,
+        results=results,
+        total_found=n_results,
+        search_type="vector",
     )
 
 
@@ -51,6 +56,7 @@ def cache(tmp_path):
 # ---------------------------------------------------------------------------
 # Initialization
 # ---------------------------------------------------------------------------
+
 
 class TestSemanticCacheInit:
     @pytest.mark.asyncio
@@ -71,6 +77,7 @@ class TestSemanticCacheInit:
 # ---------------------------------------------------------------------------
 # Set and Get
 # ---------------------------------------------------------------------------
+
 
 class TestSetAndGet:
     @pytest.mark.asyncio
@@ -127,6 +134,7 @@ class TestSetAndGet:
 # ---------------------------------------------------------------------------
 # Parameter matching
 # ---------------------------------------------------------------------------
+
 
 class TestParameterMatching:
     @pytest.mark.asyncio
@@ -187,6 +195,7 @@ class TestParameterMatching:
 # Filter hashing
 # ---------------------------------------------------------------------------
 
+
 class TestFilterHash:
     def test_none_filter(self):
         assert SemanticSearchCache._hash_filter(None) == "none"
@@ -208,6 +217,7 @@ class TestFilterHash:
 # ---------------------------------------------------------------------------
 # Eviction
 # ---------------------------------------------------------------------------
+
 
 class TestEviction:
     @pytest.mark.asyncio
@@ -231,6 +241,7 @@ class TestEviction:
 # ---------------------------------------------------------------------------
 # Invalidation
 # ---------------------------------------------------------------------------
+
 
 class TestInvalidation:
     @pytest.mark.asyncio
@@ -277,6 +288,7 @@ class TestInvalidation:
 # Stats
 # ---------------------------------------------------------------------------
 
+
 class TestStats:
     @pytest.mark.asyncio
     async def test_stats_tracking(self, cache):
@@ -310,6 +322,7 @@ class TestStats:
 # Persistence
 # ---------------------------------------------------------------------------
 
+
 class TestPersistence:
     @pytest.mark.asyncio
     async def test_reload_from_sqlite(self, tmp_path):
@@ -336,6 +349,7 @@ class TestPersistence:
 # ---------------------------------------------------------------------------
 # SearchManager integration with semantic cache
 # ---------------------------------------------------------------------------
+
 
 class TestSearchManagerCacheIntegration:
     @pytest.mark.asyncio

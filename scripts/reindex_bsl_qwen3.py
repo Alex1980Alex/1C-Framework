@@ -40,7 +40,9 @@ def should_skip(path: Path) -> bool:
     return any(p in path_str for p in SKIP_PATTERNS)
 
 
-def create_collection(client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False) -> None:
+def create_collection(
+    client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False
+) -> None:
     if recreate:
         try:
             client.delete_collection(collection_name=name)
@@ -106,6 +108,7 @@ class E5Embedder:
 
     def __init__(self) -> None:
         from sentence_transformers import SentenceTransformer
+
         self.model = SentenceTransformer("intfloat/multilingual-e5-large")
         self.dims = 1024
 
@@ -125,6 +128,7 @@ def make_embedder(name: str) -> E5Embedder:
         return E5Embedder()
     elif name == "qwen3":
         from src.bsl.semantic_search.services.qwen3_embedding import Qwen3EmbeddingService
+
         return Qwen3EmbeddingService()  # type: ignore[return-value]
     else:
         raise ValueError(f"Unknown embedder: {name}. Use 'e5' or 'qwen3'")
@@ -175,13 +179,17 @@ def flush_batch(
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
     ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
-    ap.add_argument("--embedder", choices=["e5", "qwen3"], default="e5", help="Embedding model (default: e5)")
+    ap.add_argument(
+        "--embedder", choices=["e5", "qwen3"], default="e5", help="Embedding model (default: e5)"
+    )
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument("--collection", default="bsl_code_v3")
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
-    ap.add_argument("--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)")
+    ap.add_argument(
+        "--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)"
+    )
     args = ap.parse_args()
 
     project = args.project.resolve()
@@ -200,22 +208,26 @@ def main() -> None:
     enricher = None
     if not args.no_context:
         try:
-            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
             from src.bsl.call_graph.store import CallGraphStore
+            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
 
             extractor = MetadataExtractor(project)
             cg_db = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
             cg = CallGraphStore(cg_db) if cg_db.exists() else None
             enricher = BSLContextEnricher(metadata_extractor=extractor, call_graph=cg)
             obj_stats = extractor.stats()
-            print(f"Context enrichment ON: {obj_stats['total']} objects"
-                  f"{', call graph loaded' if cg else ''}")
+            print(
+                f"Context enrichment ON: {obj_stats['total']} objects"
+                f"{', call graph loaded' if cg else ''}"
+            )
         except Exception as e:
             print(f"Context enrichment unavailable: {e}")
             enricher = None
 
     qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
-    create_collection(qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector)
+    create_collection(
+        qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector
+    )
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
 
@@ -238,7 +250,9 @@ def main() -> None:
             for chunk in chunks:
                 batch.append(chunk)
                 if len(batch) >= args.batch_size:
-                    n = flush_batch(qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector)
+                    n = flush_batch(
+                        qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector
+                    )
                     total_chunks += n
                     batch.clear()
                     if args.limit and total_chunks >= args.limit:
@@ -254,7 +268,9 @@ def main() -> None:
 
         if i % 100 == 0:
             elapsed = time.time() - t0
-            print(f"[{i}/{len(bsl_files)}] {total_symbols} symbols, {total_chunks} chunks, {elapsed:.0f}s")
+            print(
+                f"[{i}/{len(bsl_files)}] {total_symbols} symbols, {total_chunks} chunks, {elapsed:.0f}s"
+            )
 
     # Flush remaining
     if batch:
@@ -262,16 +278,16 @@ def main() -> None:
         total_chunks += n
 
     elapsed = time.time() - t0
-    print(f"\n{'='*50}")
-    print(f"REINDEX COMPLETE")
-    print(f"{'='*50}")
+    print(f"\n{'=' * 50}")
+    print("REINDEX COMPLETE")
+    print(f"{'=' * 50}")
     print(f"  Files:    {len(bsl_files)}")
     print(f"  Symbols:  {total_symbols}")
     print(f"  Chunks:   {total_chunks}")
     print(f"  Errors:   {errors}")
-    print(f"  Time:     {elapsed:.1f}s ({elapsed/max(len(bsl_files),1):.2f}s/file)")
+    print(f"  Time:     {elapsed:.1f}s ({elapsed / max(len(bsl_files), 1):.2f}s/file)")
     print(f"  Collection: {args.collection}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     embedder.close()
 

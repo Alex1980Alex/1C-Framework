@@ -9,12 +9,9 @@ Unit tests for LLM Rotation modules:
 import json
 import time
 
-import pytest
-
 from src.shared.llm_rotation.backoff import BackoffStrategy, RateLimitError
 from src.shared.llm_rotation.circuit_breaker import CircuitBreaker, CircuitState
 from src.shared.llm_rotation.rate_limiter import ProviderRateLimiter, TokenBucket
-
 
 # ============================================================
 # CircuitBreaker Tests
@@ -180,6 +177,7 @@ class TestRateLimitError:
 class TestAdaptiveScorer:
     def _make_scorer(self):
         from src.shared.llm_rotation.adaptive import AdaptiveScorer
+
         return AdaptiveScorer(min_samples=3, window_size=5)
 
     def test_insufficient_samples_returns_default(self):
@@ -273,6 +271,7 @@ class TestAdaptiveScorer:
 class TestBudgetTracker:
     def _make_tracker(self, budget=1.0):
         from src.shared.llm_rotation.adaptive import BudgetTracker
+
         return BudgetTracker(daily_budget=budget, alert_threshold=0.8)
 
     def test_initial_state(self):

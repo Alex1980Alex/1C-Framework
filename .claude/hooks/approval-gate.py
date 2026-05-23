@@ -17,8 +17,8 @@ import sys
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
+
 from base.protocol import BaseHook, HookInput, HookOutput  # noqa: E402
-from typing import Optional  # noqa: E402
 
 # Skills that require approval before execution
 _IMPLEMENTATION_SKILLS = {
@@ -53,7 +53,7 @@ def _get_active_changes():
 def _read_approval_status(yaml_path):
     """Read approval.status from .openspec.yaml (no pyyaml dependency)."""
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             content = f.read()
         in_approval = False
         for line in content.splitlines():
@@ -87,13 +87,16 @@ def _read_profile(yaml_path):
     when the field is absent (backward-compat for existing BSL changes).
     """
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             content = f.read()
         for line in content.splitlines():
             stripped = line.strip()
             # Top-level field only (no leading indent)
-            if (not line.startswith(" ") and not line.startswith("\t")
-                    and stripped.startswith("profile:")):
+            if (
+                not line.startswith(" ")
+                and not line.startswith("\t")
+                and stripped.startswith("profile:")
+            ):
                 value = stripped.split(":", 1)[1].strip().strip("'\"")
                 if value:
                     return value
@@ -105,7 +108,7 @@ def _read_profile(yaml_path):
 class ApprovalGate(BaseHook):
     """PreToolUse:Skill - blocks implementation skills without approved design."""
 
-    def execute(self, inp: HookInput) -> Optional[HookOutput]:
+    def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.tool_name != "Skill":
             return None
 
@@ -136,7 +139,7 @@ class ApprovalGate(BaseHook):
             f"APPROVAL GATE: Design must be approved before implementation.\n\n"
             f"Unapproved changes:\n{change_list}\n\n"
             f"To approve: /opsx:approve {first_name}\n"
-            f"To reject:  /opsx:approve {first_name} --reject --comment \"reason\"\n\n"
+            f'To reject:  /opsx:approve {first_name} --reject --comment "reason"\n\n'
             f"Review design.md and specs/ before approving.\n"
             f"Profile rules: openspec/profiles/<profile>.yaml"
         )

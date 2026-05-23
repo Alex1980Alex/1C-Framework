@@ -310,7 +310,11 @@ class EventStore:
 
     @staticmethod
     def _serialize_event(event: Event) -> str:
-        ts_str = event.timestamp.isoformat() if isinstance(event.timestamp, datetime) else str(event.timestamp)
+        ts_str = (
+            event.timestamp.isoformat()
+            if isinstance(event.timestamp, datetime)
+            else str(event.timestamp)
+        )
         return json.dumps(
             {
                 "event_id": event.event_id,

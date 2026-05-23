@@ -99,19 +99,35 @@ class ConflictResolver:
         incoming_src: str = incoming.get("_source", "")
 
         if effective == ConflictStrategy.LAST_WRITE_WINS:
-            return self._resolve_last_write_wins(current, incoming, current_ts, incoming_ts, entity_id)
+            return self._resolve_last_write_wins(
+                current, incoming, current_ts, incoming_ts, entity_id
+            )
 
         if effective == ConflictStrategy.SOURCE_PRIORITY:
-            return self._resolve_source_priority(current, incoming, current_src, incoming_src, entity_id)
+            return self._resolve_source_priority(
+                current, incoming, current_src, incoming_src, entity_id
+            )
 
         if effective == ConflictStrategy.MERGE_FIELDS:
             return self._resolve_merge_fields(
-                current, incoming, current_ts, incoming_ts, current_src, incoming_src, entity_id,
+                current,
+                incoming,
+                current_ts,
+                incoming_ts,
+                current_src,
+                incoming_src,
+                entity_id,
             )
 
         if effective == ConflictStrategy.MANUAL:
             return self._resolve_manual(
-                current, incoming, current_ts, incoming_ts, current_src, incoming_src, entity_id,
+                current,
+                incoming,
+                current_ts,
+                incoming_ts,
+                current_src,
+                incoming_src,
+                entity_id,
             )
 
         return ConflictResult(resolved=False, strategy_used=effective, resolved_value=None)
@@ -139,7 +155,9 @@ class ConflictResolver:
             return winner, True
 
         if strategy == ConflictStrategy.SOURCE_PRIORITY:
-            winner = self._pick_by_source_priority(current_val, incoming_val, current_src, incoming_src)
+            winner = self._pick_by_source_priority(
+                current_val, incoming_val, current_src, incoming_src
+            )
             return winner, True
 
         return incoming_val, True
@@ -187,8 +205,12 @@ class ConflictResolver:
     # -- Strategy implementations --------------------------------------------
 
     def _resolve_last_write_wins(
-        self, current: dict, incoming: dict,
-        current_ts: datetime, incoming_ts: datetime, entity_id: str,
+        self,
+        current: dict,
+        incoming: dict,
+        current_ts: datetime,
+        incoming_ts: datetime,
+        entity_id: str,
     ) -> ConflictResult:
         winner = incoming if incoming_ts >= current_ts else current
         return ConflictResult(
@@ -199,8 +221,12 @@ class ConflictResolver:
         )
 
     def _resolve_source_priority(
-        self, current: dict, incoming: dict,
-        current_src: str, incoming_src: str, entity_id: str,
+        self,
+        current: dict,
+        incoming: dict,
+        current_src: str,
+        incoming_src: str,
+        entity_id: str,
     ) -> ConflictResult:
         winner = self._pick_by_source_priority(current, incoming, current_src, incoming_src)
         winning_src = current_src if winner is current else incoming_src
@@ -212,9 +238,14 @@ class ConflictResolver:
         )
 
     def _resolve_merge_fields(
-        self, current: dict, incoming: dict,
-        current_ts: datetime, incoming_ts: datetime,
-        current_src: str, incoming_src: str, entity_id: str,
+        self,
+        current: dict,
+        incoming: dict,
+        current_ts: datetime,
+        incoming_ts: datetime,
+        current_src: str,
+        incoming_src: str,
+        entity_id: str,
     ) -> ConflictResult:
         merged, conflicts = self.merge_dicts(current, incoming)
         return ConflictResult(
@@ -226,9 +257,14 @@ class ConflictResolver:
         )
 
     def _resolve_manual(
-        self, current: dict, incoming: dict,
-        current_ts: datetime, incoming_ts: datetime,
-        current_src: str, incoming_src: str, entity_id: str,
+        self,
+        current: dict,
+        incoming: dict,
+        current_ts: datetime,
+        incoming_ts: datetime,
+        current_src: str,
+        incoming_src: str,
+        entity_id: str,
     ) -> ConflictResult:
         conflicts: list[ConflictRecord] = []
         all_keys = set(current.keys()) | set(incoming.keys())
@@ -261,8 +297,11 @@ class ConflictResolver:
     # -- Helpers -------------------------------------------------------------
 
     def _pick_by_source_priority(
-        self, current_val: Any, incoming_val: Any,
-        current_src: str, incoming_src: str,
+        self,
+        current_val: Any,
+        incoming_val: Any,
+        current_src: str,
+        incoming_src: str,
     ) -> Any:
         """Return the value whose source has higher priority. Ties favor current."""
         current_rank = self._source_priority_map.get(current_src, len(self._source_priorities))

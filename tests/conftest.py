@@ -1,8 +1,8 @@
 """Shared test fixtures for PDF Vector & Graph Framework."""
 
 import os
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -79,7 +79,9 @@ def mock_qdrant_client() -> Generator[MagicMock, None, None]:
     # Mock scroll operations
     mock_client.scroll.return_value = ([], None)
 
-    with patch("src.pdf_framework.vector_store.providers.qdrant.QdrantClient", return_value=mock_client):
+    with patch(
+        "src.pdf_framework.vector_store.providers.qdrant.QdrantClient", return_value=mock_client
+    ):
         yield mock_client
 
 
@@ -194,18 +196,20 @@ def test_settings(temp_data_dir: Path) -> Generator[None, None, None]:
     original_env = os.environ.copy()
 
     # Set test environment variables
-    os.environ.update({
-        "DATA_DIR": str(temp_data_dir),
-        "VECTOR_STORE__PROVIDER": "qdrant",
-        "VECTOR_STORE__QDRANT_URL": "http://localhost:6333",
-        "EMBEDDING__MODEL": "intfloat/multilingual-e5-large",
-        "EMBEDDING__DIMENSIONS": "1024",
-        "EMBEDDING__DEVICE": "cpu",
-        "SEARCH__BM25_WEIGHT": "0.3",
-        "CACHE__ENABLED": "true",
-        "CACHE__TYPE": "memory",
-        "LOG_LEVEL": "DEBUG",
-    })
+    os.environ.update(
+        {
+            "DATA_DIR": str(temp_data_dir),
+            "VECTOR_STORE__PROVIDER": "qdrant",
+            "VECTOR_STORE__QDRANT_URL": "http://localhost:6333",
+            "EMBEDDING__MODEL": "intfloat/multilingual-e5-large",
+            "EMBEDDING__DIMENSIONS": "1024",
+            "EMBEDDING__DEVICE": "cpu",
+            "SEARCH__BM25_WEIGHT": "0.3",
+            "CACHE__ENABLED": "true",
+            "CACHE__TYPE": "memory",
+            "LOG_LEVEL": "DEBUG",
+        }
+    )
 
     yield
 

@@ -124,8 +124,11 @@ def log_hook_event(
     """Log a generic hook execution event."""
     ts = datetime.now().isoformat()
     entry = {
-        "ts": ts, "hook": hook_name, "tool": tool_name,
-        "latency_ms": round(latency_ms, 1), "status": status,
+        "ts": ts,
+        "hook": hook_name,
+        "tool": tool_name,
+        "latency_ms": round(latency_ms, 1),
+        "status": status,
         "metadata": metadata,
     }
     try:
@@ -134,8 +137,14 @@ def log_hook_event(
             conn.execute(
                 "INSERT INTO hook_events (ts, hook, tool, latency_ms, status, metadata) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (ts, hook_name, tool_name, round(latency_ms, 1), status,
-                 json.dumps(metadata) if metadata else None),
+                (
+                    ts,
+                    hook_name,
+                    tool_name,
+                    round(latency_ms, 1),
+                    status,
+                    json.dumps(metadata) if metadata else None,
+                ),
             )
     except Exception:
         _fallback_jsonl("hook-events-fallback.jsonl", entry)
@@ -150,8 +159,11 @@ def log_skill_usage(
     """Log a skill activation event."""
     ts = datetime.now().isoformat()
     entry = {
-        "ts": ts, "skill": skill_name, "session_id": session_id,
-        "loaded": loaded, "prompt_id": prompt_id,
+        "ts": ts,
+        "skill": skill_name,
+        "session_id": session_id,
+        "loaded": loaded,
+        "prompt_id": prompt_id,
     }
     try:
         with get_connection() as conn:
@@ -159,8 +171,13 @@ def log_skill_usage(
             conn.execute(
                 "INSERT INTO skill_usage (ts, skill, session_id, loaded, prompt_id) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (ts, skill_name, session_id[:16] if session_id else "",
-                 1 if loaded else 0, prompt_id),
+                (
+                    ts,
+                    skill_name,
+                    session_id[:16] if session_id else "",
+                    1 if loaded else 0,
+                    prompt_id,
+                ),
             )
     except Exception:
         _fallback_jsonl("skill-usage-fallback.jsonl", entry)
@@ -182,10 +199,15 @@ def log_delegation(
     """Log a Z.AI delegation outcome."""
     ts = datetime.now().isoformat()
     entry = {
-        "ts": ts, "provider": provider, "model": model,
-        "content_type": content_type, "response_time": response_time,
-        "text_length": text_length, "quality_score": quality_score,
-        "attempt": attempt, "session_id": session_id,
+        "ts": ts,
+        "provider": provider,
+        "model": model,
+        "content_type": content_type,
+        "response_time": response_time,
+        "text_length": text_length,
+        "quality_score": quality_score,
+        "attempt": attempt,
+        "session_id": session_id,
     }
     try:
         with get_connection() as conn:
@@ -196,11 +218,20 @@ def log_delegation(
                 "quality_score, attempt, prompt_tokens, completion_tokens, "
                 "session_id, quality_details) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (ts, provider, model, content_type, round(response_time, 2),
-                 text_length, round(quality_score, 2), attempt,
-                 prompt_tokens, completion_tokens,
-                 session_id[:16] if session_id else "",
-                 json.dumps(quality_details) if quality_details else None),
+                (
+                    ts,
+                    provider,
+                    model,
+                    content_type,
+                    round(response_time, 2),
+                    text_length,
+                    round(quality_score, 2),
+                    attempt,
+                    prompt_tokens,
+                    completion_tokens,
+                    session_id[:16] if session_id else "",
+                    json.dumps(quality_details) if quality_details else None,
+                ),
             )
     except Exception:
         _fallback_jsonl("delegation-outcomes-fallback.jsonl", entry)
@@ -215,8 +246,11 @@ def log_quality_issue(
     """Log quality check results (ruff issues)."""
     ts = datetime.now().isoformat()
     entry = {
-        "ts": ts, "file_path": file_path, "tool": tool,
-        "issue_count": issue_count, "issues": issues,
+        "ts": ts,
+        "file_path": file_path,
+        "tool": tool,
+        "issue_count": issue_count,
+        "issues": issues,
     }
     try:
         with get_connection() as conn:
@@ -224,8 +258,7 @@ def log_quality_issue(
             conn.execute(
                 "INSERT INTO quality_issues (ts, file_path, tool, issue_count, issues) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (ts, file_path, tool, issue_count,
-                 json.dumps(issues) if issues else None),
+                (ts, file_path, tool, issue_count, json.dumps(issues) if issues else None),
             )
     except Exception:
         _fallback_jsonl("quality-issues-fallback.jsonl", entry)
@@ -240,8 +273,11 @@ def log_latency(
     """Log hook latency measurement."""
     ts = datetime.now().isoformat()
     entry = {
-        "ts": ts, "hook": hook_name, "tool": tool_name,
-        "latency_ms": round(latency_ms, 1), "over_budget": over_budget,
+        "ts": ts,
+        "hook": hook_name,
+        "tool": tool_name,
+        "latency_ms": round(latency_ms, 1),
+        "over_budget": over_budget,
     }
     try:
         with get_connection() as conn:
@@ -249,8 +285,7 @@ def log_latency(
             conn.execute(
                 "INSERT INTO latency (ts, hook, tool, latency_ms, over_budget) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (ts, hook_name, tool_name, round(latency_ms, 1),
-                 1 if over_budget else 0),
+                (ts, hook_name, tool_name, round(latency_ms, 1), 1 if over_budget else 0),
             )
     except Exception:
         _fallback_jsonl("hook-latency-fallback.jsonl", entry)

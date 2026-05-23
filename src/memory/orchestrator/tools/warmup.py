@@ -167,17 +167,13 @@ class WarmupTool:
             logger.debug("Important warmup failed: %s", e)
             return 0
 
-    async def _warmup_pattern(
-        self, query: str, limit: int, ttl: float | None
-    ) -> int:
+    async def _warmup_pattern(self, query: str, limit: int, ttl: float | None) -> int:
         """Warmup using a specific search pattern."""
         if not self._search or not query:
             return 0
 
         try:
-            result = await self._search.search(
-                query=query, limit=limit, include_links=False
-            )
+            result = await self._search.search(query=query, limit=limit, include_links=False)
             loaded = 0
             for item in result.results:
                 cache_key = f"warmup:{item.unified_id}"

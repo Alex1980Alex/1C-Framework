@@ -135,9 +135,7 @@ class IDManagementTool:
             "found": True,
         }
 
-    def _reverse_lookup(
-        self, source: str = "", original_id: str = "", **_: Any
-    ) -> dict[str, Any]:
+    def _reverse_lookup(self, source: str = "", original_id: str = "", **_: Any) -> dict[str, Any]:
         """Look up unified ID from source + original ID."""
         src = SourceServer.from_string(source)
         unified = self._registry.lookup(src, original_id)

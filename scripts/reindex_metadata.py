@@ -54,14 +54,18 @@ class MetadataRecord:
         return ". ".join(parts)
 
     def compute_hash(self) -> str:
-        serialized = json.dumps({
-            "full_path": self.full_path,
-            "object_type": self.object_type,
-            "object_name": self.object_name,
-            "synonym": self.synonym,
-            "attributes": sorted(self.attributes),
-            "table_parts": sorted(self.table_parts),
-        }, sort_keys=True, ensure_ascii=False)
+        serialized = json.dumps(
+            {
+                "full_path": self.full_path,
+                "object_type": self.object_type,
+                "object_name": self.object_name,
+                "synonym": self.synonym,
+                "attributes": sorted(self.attributes),
+                "table_parts": sorted(self.table_parts),
+            },
+            sort_keys=True,
+            ensure_ascii=False,
+        )
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
@@ -91,10 +95,16 @@ class MetadataIndexer:
     def export_metadata(self, path: str = "/") -> dict:
         logger.info("Exporting metadata from %s via %s", path, self.mcp_url)
         try:
-            resp = requests.post(self.mcp_url, json={
-                "jsonrpc": "2.0", "method": "tools/call", "id": 1,
-                "params": {"name": "get_metadata", "arguments": {"path": path}},
-            }, timeout=30)
+            resp = requests.post(
+                self.mcp_url,
+                json={
+                    "jsonrpc": "2.0",
+                    "method": "tools/call",
+                    "id": 1,
+                    "params": {"name": "get_metadata", "arguments": {"path": path}},
+                },
+                timeout=30,
+            )
             resp.raise_for_status()
             data = resp.json()
             if "error" in data:
@@ -147,8 +157,11 @@ class MetadataIndexer:
 
     def embed(self, text: str) -> list[float]:
         try:
-            resp = requests.post(f"{self.ollama_url}/api/embed",
-                                 json={"model": self.model, "input": text}, timeout=30)
+            resp = requests.post(
+                f"{self.ollama_url}/api/embed",
+                json={"model": self.model, "input": text},
+                timeout=30,
+            )
             resp.raise_for_status()
             vecs = resp.json().get("embeddings", [[]])
             return vecs[0] if vecs and len(vecs[0]) == self.dim else [0.0] * self.dim
@@ -163,7 +176,9 @@ class MetadataIndexer:
             self.qdrant.get_collection(self.collection)
         except Exception:
             self.qdrant.create_collection(
-                self.collection, vectors_config=VectorParams(size=self.dim, distance=Distance.COSINE))
+                self.collection,
+                vectors_config=VectorParams(size=self.dim, distance=Distance.COSINE),
+            )
             logger.info("Created collection %s", self.collection)
 
     def upsert(self, records: list[MetadataRecord], dry_run: bool = False) -> tuple[int, int, int]:
@@ -183,11 +198,16 @@ class MetadataIndexer:
 
             logger.info("[%d/%d] %s %s", i + 1, len(records), action, rec.full_path)
             vec = self.embed(rec.description)
-            self.qdrant.upsert(self.collection, [PointStruct(
-                id=hash(rec.full_path) & 0x7FFFFFFF,
-                vector=vec,
-                payload=asdict(rec),
-            )])
+            self.qdrant.upsert(
+                self.collection,
+                [
+                    PointStruct(
+                        id=hash(rec.full_path) & 0x7FFFFFFF,
+                        vector=vec,
+                        payload=asdict(rec),
+                    )
+                ],
+            )
             if action == "UPDATE":
                 updated += 1
             else:
@@ -235,13 +255,24 @@ class MetadataIndexer:
     def export_csv(self, records: list[MetadataRecord], output_path: Path) -> None:
         """Export metadata records to CSV."""
         import csv
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w", encoding="utf-8", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["full_path", "object_type", "object_name", "synonym", "attributes", "table_parts"])
+            w.writerow(
+                ["full_path", "object_type", "object_name", "synonym", "attributes", "table_parts"]
+            )
             for rec in sorted(records, key=lambda r: r.full_path):
-                w.writerow([rec.full_path, rec.object_type, rec.object_name,
-                            rec.synonym, ";".join(rec.attributes), ";".join(rec.table_parts)])
+                w.writerow(
+                    [
+                        rec.full_path,
+                        rec.object_type,
+                        rec.object_name,
+                        rec.synonym,
+                        ";".join(rec.attributes),
+                        ";".join(rec.table_parts),
+                    ]
+                )
         logger.info("Exported CSV: %d records -> %s", len(records), output_path)
 
     # --- Run ---
@@ -266,15 +297,22 @@ class MetadataIndexer:
             return
 
         ins, upd, dlt = self.upsert(records, dry_run)
-        logger.info("Done: %d inserted, %d updated, %d deleted%s",
-                     ins, upd, dlt, " [DRY-RUN]" if dry_run else "")
+        logger.info(
+            "Done: %d inserted, %d updated, %d deleted%s",
+            ins,
+            upd,
+            dlt,
+            " [DRY-RUN]" if dry_run else "",
+        )
 
 
 def main():
     p = argparse.ArgumentParser(description="Reindex 1C metadata to Qdrant")
     p.add_argument("--full", action="store_true", help="Full reindex (clear hash cache)")
     p.add_argument("--dry-run", action="store_true", help="Preview changes only")
-    p.add_argument("--format", choices=["qdrant", "md", "csv"], default="qdrant", help="Output format")
+    p.add_argument(
+        "--format", choices=["qdrant", "md", "csv"], default="qdrant", help="Output format"
+    )
     p.add_argument("--mcp-url", default="http://localhost:6003/mcp")
     p.add_argument("--qdrant-host", default="localhost")
     p.add_argument("--qdrant-port", type=int, default=6333)
@@ -283,8 +321,12 @@ def main():
     args = p.parse_args()
 
     indexer = MetadataIndexer(
-        mcp_url=args.mcp_url, qdrant_host=args.qdrant_host, qdrant_port=args.qdrant_port,
-        ollama_url=args.ollama_url, cache_dir=args.cache_dir)
+        mcp_url=args.mcp_url,
+        qdrant_host=args.qdrant_host,
+        qdrant_port=args.qdrant_port,
+        ollama_url=args.ollama_url,
+        cache_dir=args.cache_dir,
+    )
 
     try:
         indexer.run(full=args.full, dry_run=args.dry_run, fmt=args.format)

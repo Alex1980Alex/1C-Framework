@@ -14,42 +14,48 @@ Tests:
 """
 
 import asyncio
-import math
 import time
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytest
 
-# --- Search ---
-from src.memory.orchestrator.search.config import (
-    DEFAULT_SEARCH_CONFIG,
-    FusionMethod,
-    SearchConfig,
-    SparseConfig,
-    VectorType,
+from src.memory.ai_memory.services.ttl_service import (
+    TTLPolicy,
+    TTLService,
 )
-from src.memory.orchestrator.search.hybrid_search import (
-    BM25Index,
-    HybridSearchService,
-    SearchResult,
+
+# --- Services ---
+from src.memory.ai_memory.services.versioning_service import (
+    ChangeType,
+    VersioningService,
 )
+
+# --- Infrastructure ---
+from src.memory.infrastructure.cache import LRUCache
+from src.memory.infrastructure.metrics import MetricsCollector, get_metrics_collector, reset_metrics
 from src.memory.orchestrator.search.bsl_scorer import (
     BSLObjectType,
     BSLScorer,
     BSLSymbolType,
 )
 
-# --- Services ---
-from src.memory.ai_memory.services.versioning_service import (
-    ChangeType,
-    EntityVersion,
-    VersioningService,
+# --- Search ---
+from src.memory.orchestrator.search.config import (
+    SearchConfig,
+    VectorType,
 )
-from src.memory.ai_memory.services.ttl_service import (
-    TTLEntry,
-    TTLPolicy,
-    TTLService,
+from src.memory.orchestrator.search.hybrid_search import (
+    BM25Index,
+    HybridSearchService,
+)
+from src.memory.vector_memory.graph.algorithms import GraphAlgorithms
+
+# --- Graph ---
+from src.memory.vector_memory.graph.relation_types import (
+    Relation,
+    RelationDirection,
+    RelationRegistry,
+    RelationType,
 )
 from src.memory.vector_memory.services.forgetgate_service import (
     ForgetAction,
@@ -60,24 +66,10 @@ from src.memory.vector_memory.services.forgetgate_service import (
     SurpriseCalculator,
 )
 
-# --- Graph ---
-from src.memory.vector_memory.graph.relation_types import (
-    Relation,
-    RelationDirection,
-    RelationRegistry,
-    RelationType,
-)
-from src.memory.vector_memory.graph.algorithms import GraphAlgorithms, PathResult
-
-# --- Infrastructure ---
-from src.memory.infrastructure.cache import LRUCache
-from src.memory.infrastructure.metrics import MetricsCollector, get_metrics_collector, reset_metrics
-
-
 # ========== BM25Index Tests ==========
 
-class TestBM25Index:
 
+class TestBM25Index:
     def test_add_and_search(self):
         idx = BM25Index()
         idx.add_document("d1", "Процедура ОбработкаПроведения документ")
@@ -114,11 +106,13 @@ class TestBM25Index:
 
     def test_batch_add(self):
         idx = BM25Index()
-        idx.add_documents_batch([
-            ("d1", "first document"),
-            ("d2", "second document"),
-            ("d3", "third document"),
-        ])
+        idx.add_documents_batch(
+            [
+                ("d1", "first document"),
+                ("d2", "second document"),
+                ("d3", "third document"),
+            ]
+        )
         assert idx.total_docs == 3
 
     def test_stats(self):
@@ -131,8 +125,8 @@ class TestBM25Index:
 
 # ========== HybridSearchService Tests ==========
 
-class TestHybridSearchService:
 
+class TestHybridSearchService:
     @pytest.fixture
     def svc(self):
         config = SearchConfig(default_vector_type=VectorType.SPARSE)
@@ -142,9 +136,7 @@ class TestHybridSearchService:
         svc.index_document("d1", "Процедура ОбработкаПроведения")
         svc.index_document("d2", "Функция ПолучитьДанные")
 
-        result = asyncio.get_event_loop().run_until_complete(
-            svc.search("ОбработкаПроведения")
-        )
+        result = asyncio.get_event_loop().run_until_complete(svc.search("ОбработкаПроведения"))
         assert result.sparse_count > 0
         assert len(result.results) > 0
         assert result.results[0].id == "d1"
@@ -163,6 +155,7 @@ class TestHybridSearchService:
     @pytest.mark.asyncio
     async def test_hybrid_with_dense_fn(self):
         """Test hybrid mode with injected dense search."""
+
         async def mock_dense(query: str, top_k: int):
             return [("d1", 0.9), ("d2", 0.5)]
 
@@ -178,20 +171,29 @@ class TestHybridSearchService:
 
 # ========== BSLScorer Tests ==========
 
-class TestBSLScorer:
 
+class TestBSLScorer:
     @pytest.fixture
     def scorer(self):
         return BSLScorer()
 
     def test_detect_common_module(self, scorer):
-        assert scorer.detect_object_type("CommonModules/MyModule/Ext/Module.bsl") == BSLObjectType.COMMON_MODULE
+        assert (
+            scorer.detect_object_type("CommonModules/MyModule/Ext/Module.bsl")
+            == BSLObjectType.COMMON_MODULE
+        )
 
     def test_detect_document(self, scorer):
-        assert scorer.detect_object_type("Documents/Invoice/Ext/ObjectModule.bsl") == BSLObjectType.DOCUMENT
+        assert (
+            scorer.detect_object_type("Documents/Invoice/Ext/ObjectModule.bsl")
+            == BSLObjectType.DOCUMENT
+        )
 
     def test_detect_catalog_russian(self, scorer):
-        assert scorer.detect_object_type("Справочники/Номенклатура/Ext/Module.bsl") == BSLObjectType.CATALOG
+        assert (
+            scorer.detect_object_type("Справочники/Номенклатура/Ext/Module.bsl")
+            == BSLObjectType.CATALOG
+        )
 
     def test_detect_unknown(self, scorer):
         assert scorer.detect_object_type("some/random/path.bsl") == BSLObjectType.UNKNOWN
@@ -217,7 +219,7 @@ class TestBSLScorer:
         assert by_name["ПолучитьДанные"].symbol_type == BSLSymbolType.FUNCTION
 
     def test_analyze_content_with_queries(self, scorer):
-        code = "Запрос = Новый Запрос; Запрос.Текст = \"ВЫБРАТЬ\";"
+        code = 'Запрос = Новый Запрос; Запрос.Текст = "ВЫБРАТЬ";'
         result = scorer.analyze_content(code)
         assert result.has_queries is True
 
@@ -240,8 +242,8 @@ class TestBSLScorer:
 
 # ========== VersioningService Tests ==========
 
-class TestVersioningService:
 
+class TestVersioningService:
     @pytest.fixture
     def svc(self, tmp_path):
         return VersioningService(storage_path=tmp_path / "versions.jsonl")
@@ -304,8 +306,8 @@ class TestVersioningService:
 
 # ========== TTLService Tests ==========
 
-class TestTTLService:
 
+class TestTTLService:
     @pytest.fixture
     def svc(self, tmp_path):
         return TTLService(
@@ -371,9 +373,11 @@ class TestTTLService:
 
 # ========== ForgetGateService Tests ==========
 
-class TestForgetGateService:
 
-    def _make_candidate(self, entity_id="e1", confidence=0.8, days_old=10, access_count=5, tags=None):
+class TestForgetGateService:
+    def _make_candidate(
+        self, entity_id="e1", confidence=0.8, days_old=10, access_count=5, tags=None
+    ):
         now = datetime.now()
         return ForgetCandidate(
             entity_id=entity_id,
@@ -398,10 +402,12 @@ class TestForgetGateService:
         assert decisions[0].action == ForgetAction.KEEP
 
     def test_access_based_penalty(self):
-        gate = ForgetGateService(ForgetGateConfig(
-            strategy=ForgetStrategy.ACCESS_BASED,
-            access_decay_days=7,
-        ))
+        gate = ForgetGateService(
+            ForgetGateConfig(
+                strategy=ForgetStrategy.ACCESS_BASED,
+                access_decay_days=7,
+            )
+        )
         c = self._make_candidate(days_old=60, access_count=0)
         c.last_accessed = datetime.now() - timedelta(days=60)
         decisions = gate.evaluate([c])
@@ -437,14 +443,17 @@ class TestForgetGateService:
 
     def test_apply_with_callback(self):
         applied = []
+
         def apply_fn(decision):
             applied.append(decision.entity_id)
             return True
 
-        gate = ForgetGateService(ForgetGateConfig(
-            strategy=ForgetStrategy.CONFIDENCE_DECAY,
-            min_confidence=0.9,  # high threshold
-        ))
+        gate = ForgetGateService(
+            ForgetGateConfig(
+                strategy=ForgetStrategy.CONFIDENCE_DECAY,
+                min_confidence=0.9,  # high threshold
+            )
+        )
         candidates = [self._make_candidate(confidence=0.5, days_old=30)]
         decisions = gate.evaluate(candidates)
         stats = gate.apply(decisions, apply_fn=apply_fn)
@@ -459,8 +468,8 @@ class TestForgetGateService:
 
 # ========== SurpriseCalculator Tests ==========
 
-class TestSurpriseCalculator:
 
+class TestSurpriseCalculator:
     def test_rare_tags_high_surprise(self):
         calc = SurpriseCalculator()
         candidates = [
@@ -483,14 +492,22 @@ class TestSurpriseCalculator:
 
 # ========== GraphAlgorithms Tests ==========
 
-class TestGraphAlgorithms:
 
+class TestGraphAlgorithms:
     def _make_graph(self):
         """Create a simple test graph: A -> B -> C, A -> C."""
         registry = RelationRegistry()
-        registry.add(Relation("A", "B", RelationType.CALLS, weight=1.0, direction=RelationDirection.OUTGOING))
-        registry.add(Relation("B", "C", RelationType.CALLS, weight=2.0, direction=RelationDirection.OUTGOING))
-        registry.add(Relation("A", "C", RelationType.REFERENCES, weight=5.0, direction=RelationDirection.OUTGOING))
+        registry.add(
+            Relation("A", "B", RelationType.CALLS, weight=1.0, direction=RelationDirection.OUTGOING)
+        )
+        registry.add(
+            Relation("B", "C", RelationType.CALLS, weight=2.0, direction=RelationDirection.OUTGOING)
+        )
+        registry.add(
+            Relation(
+                "A", "C", RelationType.REFERENCES, weight=5.0, direction=RelationDirection.OUTGOING
+            )
+        )
         return GraphAlgorithms(registry)
 
     def test_shortest_path(self):
@@ -509,7 +526,9 @@ class TestGraphAlgorithms:
 
     def test_shortest_path_no_connection(self):
         registry = RelationRegistry()
-        registry.add(Relation("A", "B", RelationType.CALLS, weight=1.0, direction=RelationDirection.OUTGOING))
+        registry.add(
+            Relation("A", "B", RelationType.CALLS, weight=1.0, direction=RelationDirection.OUTGOING)
+        )
         # D is isolated
         ga = GraphAlgorithms(registry)
         path = ga.shortest_path("A", "D")
@@ -554,8 +573,8 @@ class TestGraphAlgorithms:
 
 # ========== RelationRegistry Tests ==========
 
-class TestRelationRegistry:
 
+class TestRelationRegistry:
     def test_add_and_get_by_source(self):
         reg = RelationRegistry()
         reg.add(Relation("A", "B", RelationType.CALLS, weight=1.0))
@@ -584,8 +603,8 @@ class TestRelationRegistry:
 
 # ========== LRUCache Tests ==========
 
-class TestLRUCache:
 
+class TestLRUCache:
     def test_put_and_get(self):
         cache = LRUCache(max_size=10)
         cache.put("k1", "v1")
@@ -652,8 +671,8 @@ class TestLRUCache:
 
 # ========== MetricsCollector Tests ==========
 
-class TestMetricsCollector:
 
+class TestMetricsCollector:
     def test_counter(self):
         m = MetricsCollector()
         assert m.counter("req") == 1

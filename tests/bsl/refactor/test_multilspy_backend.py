@@ -12,9 +12,7 @@ from src.bsl.semantic_search.refactor.types import BackendError, WorkspaceEdit
 
 
 class _FakeClient:
-    def __init__(
-        self, response: Any = None, raise_exc: Exception | None = None
-    ) -> None:
+    def __init__(self, response: Any = None, raise_exc: Exception | None = None) -> None:
         self._response = response
         self._raise = raise_exc
         self.received_params: dict | None = None

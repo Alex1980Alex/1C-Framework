@@ -19,6 +19,7 @@ PATCH_CHAT = "langchain_anthropic.ChatAnthropic"
 # HyDEConfig
 # ---------------------------------------------------------------------------
 
+
 class TestHyDEConfig:
     def test_defaults(self):
         config = HyDEConfig()
@@ -36,6 +37,7 @@ class TestHyDEConfig:
 # ---------------------------------------------------------------------------
 # HyDEGenerator
 # ---------------------------------------------------------------------------
+
 
 class TestHyDEGenerator:
     def test_init_defaults(self):
@@ -163,7 +165,9 @@ class TestHyDEGenerator:
         mock_engine.embed_text = AsyncMock(return_value=[0.3] * 384)
 
         text, embedding = await gen.expand_query(
-            "query", mock_engine, llm_cache=mock_cache,
+            "query",
+            mock_engine,
+            llm_cache=mock_cache,
         )
 
         assert text == "cached hypothetical"
@@ -189,7 +193,9 @@ class TestHyDEGenerator:
             mock_cls.return_value = mock_llm
 
             text, embedding = await gen.expand_query(
-                "query", mock_engine, llm_cache=mock_cache,
+                "query",
+                mock_engine,
+                llm_cache=mock_cache,
             )
 
         assert text == "Generated hypothetical"
@@ -215,6 +221,7 @@ class TestHyDEGenerator:
 # QueryExpander
 # ---------------------------------------------------------------------------
 
+
 class TestQueryExpander:
     @pytest.mark.asyncio
     async def test_expand_hyde_method(self):
@@ -232,7 +239,8 @@ class TestQueryExpander:
             mock_cls.return_value = mock_llm
 
             text, embedding = await expander.expand(
-                "query", method="hyde",
+                "query",
+                method="hyde",
                 embedding_engine=mock_engine,
                 api_key="key",
             )
@@ -261,9 +269,11 @@ class TestQueryExpander:
 # get_hyde_generator singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetHydeGenerator:
     def test_returns_instance(self):
         import src.pdf_framework.search.hyde as mod
+
         mod._hyde_generator = None
 
         gen = get_hyde_generator()
@@ -272,6 +282,7 @@ class TestGetHydeGenerator:
 
     def test_returns_same_instance(self):
         import src.pdf_framework.search.hyde as mod
+
         mod._hyde_generator = None
 
         g1 = get_hyde_generator()
@@ -281,6 +292,7 @@ class TestGetHydeGenerator:
 
     def test_accepts_kwargs(self):
         import src.pdf_framework.search.hyde as mod
+
         mod._hyde_generator = None
 
         gen = get_hyde_generator(api_key="my-key")

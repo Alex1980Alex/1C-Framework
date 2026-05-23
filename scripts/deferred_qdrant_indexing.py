@@ -34,11 +34,11 @@ Qdrant point IDs are derived via uuid5 from the original row id, so
 re-upserting the same row simply overwrites the previous vector.
 """
 
-from pathlib import Path
-import sqlite3
 import argparse
+import sqlite3
 import sys
 import time
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
@@ -78,6 +78,7 @@ def fetch_unindexed(conn, limit):
 def get_embedder():
     """Lazy-load E5 model."""
     from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(EMBED_MODEL)
 
 
@@ -91,24 +92,27 @@ def embed_texts(model, texts):
 def upsert_to_qdrant(client, rows, vectors):
     """Upsert rows to learned_patterns with payload."""
     import uuid
+
     from qdrant_client.models import PointStruct
 
     points = []
     for row, vec in zip(rows, vectors):
         pid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"session:{row['id']}"))
-        points.append(PointStruct(
-            id=pid,
-            vector=vec,
-            payload={
-                "original_id": row["id"],
-                "content": row["content"],
-                "category": row["category"],
-                "importance": row["importance"],
-                "tags": row.get("tags"),
-                "created_at": row["created_at"],
-                "source": "memory_ai_session",
-            },
-        ))
+        points.append(
+            PointStruct(
+                id=pid,
+                vector=vec,
+                payload={
+                    "original_id": row["id"],
+                    "content": row["content"],
+                    "category": row["category"],
+                    "importance": row["importance"],
+                    "tags": row.get("tags"),
+                    "created_at": row["created_at"],
+                    "source": "memory_ai_session",
+                },
+            )
+        )
     client.upsert(collection_name=COLLECTION, points=points)
 
 
@@ -141,6 +145,7 @@ def main():
 
     try:
         from qdrant_client import QdrantClient
+
         client = QdrantClient(QDRANT_HOST, port=QDRANT_PORT, timeout=5)
         collections = [c.name for c in client.get_collections().collections]
         if COLLECTION not in collections:

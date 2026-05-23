@@ -1,7 +1,5 @@
 """Unit tests for PII Detector (Phase 53.1)."""
 
-import pytest
-
 from src.pdf_framework.guardrails.pii_detector import PIIDetector, PIIType
 
 

@@ -3,11 +3,12 @@
 Tests Message model, MemoryBackend, and ConversationMemory without SQLite.
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
-from src.pdf_framework.agents.memory.conversation import Message, ConversationMemory
+import pytest
+
 from src.pdf_framework.agents.memory.backends import MemoryBackend
+from src.pdf_framework.agents.memory.conversation import ConversationMemory, Message
 
 
 class TestMessage:
@@ -135,7 +136,7 @@ class TestMemoryBackend:
         old_msg = Message(
             role="user",
             content="Old",
-            timestamp=datetime.now(timezone.utc) - timedelta(days=60),
+            timestamp=datetime.now(UTC) - timedelta(days=60),
         )
         await backend.add_message("old_thread", old_msg)
 

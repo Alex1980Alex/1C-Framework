@@ -77,9 +77,7 @@ class TestCrossDocumentSynthesizer:
                 confidence=0.85,
             ),
         ]
-        answer, citations = await synthesizer.synthesize(
-            "Сравните регистры", sub_results, ""
-        )
+        answer, citations = await synthesizer.synthesize("Сравните регистры", sub_results, "")
         assert len(answer) > 0
         assert len(citations) > 0
 

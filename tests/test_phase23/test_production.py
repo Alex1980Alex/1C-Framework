@@ -9,8 +9,9 @@ Tests for:
   - Auth/RBAC: role-based access control
 """
 
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestQdrantVectorStore:
@@ -195,7 +196,7 @@ class TestHealthChecks:
             "components": {
                 "vector_store": "ok",
                 "embedding_engine": "ok",
-            }
+            },
         }
         assert response["status"] == "ready"
         assert "vector_store" in response["components"]
@@ -207,7 +208,7 @@ class TestHealthChecks:
             "components": {
                 "vector_store": "error",
                 "embedding_engine": "ok",
-            }
+            },
         }
         assert response["status"] in ("ready", "degraded")
 

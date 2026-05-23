@@ -20,11 +20,11 @@ Created: 2026-02-23
 
 import json
 import os
-import sys
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 # Add hooks to path
 _HOOK_DIR = Path(__file__).parent.parent / "hooks"
@@ -37,6 +37,7 @@ sys.path.insert(0, str(_HOOK_DIR / "shared"))
 # Session Simulator (mocks SessionState)
 # ============================================================================
 
+
 class SessionSimulator:
     """Simulates SessionState for testing."""
 
@@ -48,7 +49,7 @@ class SessionSimulator:
             "pending_learn": None,
             "session_id": "test-session",
             "created_at": "2026-02-23T00:00:00",
-            "last_updated": "2026-02-23T00:00:00"
+            "last_updated": "2026-02-23T00:00:00",
         }
         self._save_state()
 
@@ -64,7 +65,7 @@ class SessionSimulator:
             self._state["last_updated"] = "2026-02-23T00:00:00"
             self._save_state()
 
-    def get_activated(self) -> List[str]:
+    def get_activated(self) -> list[str]:
         """Get activated skills."""
         return self._state["activated_skills"]
 
@@ -73,12 +74,12 @@ class SessionSimulator:
         self._state["pending_learn"] = None
         self._save_state()
 
-    def set_pending_learn(self, data: Dict[str, Any]):
+    def set_pending_learn(self, data: dict[str, Any]):
         """Set pending learn."""
         self._state["pending_learn"] = data
         self._save_state()
 
-    def get_pending_learn(self) -> Dict[str, Any]:
+    def get_pending_learn(self) -> dict[str, Any]:
         """Get pending learn (re-reads from disk to pick up hook changes)."""
         self._reload_state()
         return self._state.get("pending_learn")
@@ -86,7 +87,7 @@ class SessionSimulator:
     def _reload_state(self):
         """Reload state from disk."""
         if self.state_file.exists():
-            with open(self.state_file, "r", encoding="utf-8") as f:
+            with open(self.state_file, encoding="utf-8") as f:
                 self._state = json.load(f)
 
     def cleanup(self):
@@ -99,6 +100,7 @@ class SessionSimulator:
 # Test Runner with Session Control
 # ============================================================================
 
+
 class IntegrationTestRunner:
     """Integration test runner with session simulation."""
 
@@ -107,7 +109,7 @@ class IntegrationTestRunner:
         self.python_exe = sys.executable
         self.session = session
 
-    def run_hook(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    def run_hook(self, input_data: dict[str, Any]) -> dict[str, Any]:
         """Run hook with input data."""
         input_json = json.dumps(input_data)
 
@@ -123,13 +125,13 @@ class IntegrationTestRunner:
                 text=True,
                 timeout=10,
                 cwd=str(self.hook_path.parent),
-                env=env
+                env=env,
             )
 
             return {
                 "exit_code": result.returncode,
                 "stdout": result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
         except subprocess.TimeoutExpired:
             return {"exit_code": -1, "stdout": "", "stderr": "Timeout"}
@@ -140,6 +142,7 @@ class IntegrationTestRunner:
 # ============================================================================
 # Integration Test Scenarios
 # ============================================================================
+
 
 def test_pre_a_flow():
     """
@@ -164,21 +167,23 @@ def test_pre_a_flow():
 
         # Step 1: Write StateGraph without skill -> BLOCK
         print("\n[Step 1] Write StateGraph without skill...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "agent.py",
-                "content": "from langgraph.graph import StateGraph\ngraph = StateGraph(AgentState)"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "agent.py",
+                    "content": "from langgraph.graph import StateGraph\ngraph = StateGraph(AgentState)",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 2:
             print(f"[FAIL] Step 1 failed: Expected exit 2, got {result['exit_code']}")
             return False
 
         if "langgraph-core" not in result["stdout"]:
-            print(f"[FAIL] Step 1 failed: Expected 'langgraph-core' in output")
+            print("[FAIL] Step 1 failed: Expected 'langgraph-core' in output")
             return False
 
         print("[PASS] Step 1: BLOCKED as expected")
@@ -190,21 +195,23 @@ def test_pre_a_flow():
 
         # Step 3: Retry same Write -> ALLOW
         print("\n[Step 3] Retry Write with activated skill...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "agent.py",
-                "content": "from langgraph.graph import StateGraph\ngraph = StateGraph(AgentState)"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "agent.py",
+                    "content": "from langgraph.graph import StateGraph\ngraph = StateGraph(AgentState)",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         if "SKILL REQUIRED" in result["stdout"]:
-            print(f"[FAIL] Step 3 failed: Should not require skill after activation")
+            print("[FAIL] Step 3 failed: Should not require skill after activation")
             return False
 
         print("[PASS] Step 3: ALLOWED as expected")
@@ -237,21 +244,23 @@ def test_pre_b_flow():
 
         # Step 1: Write to hooks/ without skill -> BLOCK
         print("\n[Step 1] Write to .claude/hooks/ without skill...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "D:/1С-Framework/.claude/hooks/test-hook.py",
-                "content": "def run(): pass"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "D:/1С-Framework/.claude/hooks/test-hook.py",
+                    "content": "def run(): pass",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 2:
             print(f"[FAIL] Step 1 failed: Expected exit 2, got {result['exit_code']}")
             return False
 
         if "create-hook" not in result["stdout"]:
-            print(f"[FAIL] Step 1 failed: Expected 'create-hook' in output")
+            print("[FAIL] Step 1 failed: Expected 'create-hook' in output")
             return False
 
         print("[PASS] Step 1: BLOCKED as expected")
@@ -263,14 +272,16 @@ def test_pre_b_flow():
 
         # Step 3: Retry same Write -> ALLOW
         print("\n[Step 3] Retry Write with activated skill...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "D:/1С-Framework/.claude/hooks/test-hook.py",
-                "content": "def run(): pass"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "D:/1С-Framework/.claude/hooks/test-hook.py",
+                    "content": "def run(): pass",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
@@ -306,20 +317,20 @@ def test_pre_c_flow():
 
         # Step 1: Bash docker compose without skill -> BLOCK
         print("\n[Step 1] Bash docker compose without skill...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Bash",
-            "tool_input": {
-                "command": "docker compose up -d"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "docker compose up -d"},
             }
-        })
+        )
 
         if result["exit_code"] != 2:
             print(f"[FAIL] Step 1 failed: Expected exit 2, got {result['exit_code']}")
             return False
 
         if "deployment" not in result["stdout"]:
-            print(f"[FAIL] Step 1 failed: Expected 'deployment' in output")
+            print("[FAIL] Step 1 failed: Expected 'deployment' in output")
             return False
 
         print("[PASS] Step 1: BLOCKED as expected")
@@ -331,13 +342,13 @@ def test_pre_c_flow():
 
         # Step 3: Retry same Bash -> ALLOW
         print("\n[Step 3] Retry Bash with activated skill...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Bash",
-            "tool_input": {
-                "command": "docker compose up -d"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "docker compose up -d"},
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Step 3 failed: Expected exit 0, got {result['exit_code']}")
@@ -373,21 +384,23 @@ def test_research_flow():
 
         # Step 1: Write FastAPI -> ADVISE
         print("\n[Step 1] Write FastAPI code (triggers research protocol)...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "api.py",
-                "content": "from fastapi import APIRouter\n\nrouter = APIRouter(prefix='/api')"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "api.py",
+                    "content": "from fastapi import APIRouter\n\nrouter = APIRouter(prefix='/api')",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Step 1 failed: Expected exit 0 (ADVISE), got {result['exit_code']}")
             return False
 
         if "Research Protocol" not in result["stdout"]:
-            print(f"[FAIL] Step 1 failed: Expected research protocol message")
+            print("[FAIL] Step 1 failed: Expected research protocol message")
             return False
 
         print("[PASS] Step 1: ADVISE shown as expected")
@@ -395,7 +408,7 @@ def test_research_flow():
         # Check pending_learn was set
         pending = session.get_pending_learn()
         if not pending or pending.get("label") != "FastAPI Framework":
-            print(f"[FAIL] Step 1 failed: pending_learn not set correctly")
+            print("[FAIL] Step 1 failed: pending_learn not set correctly")
             return False
 
         print(f"[PASS] Step 1: pending_learn set: {pending['label']}")
@@ -433,14 +446,16 @@ def test_learn_flow():
 
         # Step 1: PRE - Write FastAPI -> sets pending_learn
         print("\n[Step 1] PRE: Write FastAPI (sets pending_learn)...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "api.py",
-                "content": "from fastapi import FastAPI\napp = FastAPI()"
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "api.py",
+                    "content": "from fastapi import FastAPI\napp = FastAPI()",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Step 1 failed: Expected exit 0, got {result['exit_code']}")
@@ -448,28 +463,30 @@ def test_learn_flow():
 
         pending = session.get_pending_learn()
         if not pending:
-            print(f"[FAIL] Step 1 failed: pending_learn not set")
+            print("[FAIL] Step 1 failed: pending_learn not set")
             return False
 
         print(f"[PASS] Step 1: pending_learn set for '{pending['label']}'")
 
         # Step 2: POST - Same Write -> should create LEARN tasks
         print("\n[Step 2] POST: Write completed (should create LEARN tasks)...")
-        result = runner.run_hook({
-            "detected_event": "PostToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "api.py",
-                "content": "from fastapi import FastAPI\napp = FastAPI()"
+        result = runner.run_hook(
+            {
+                "detected_event": "PostToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "api.py",
+                    "content": "from fastapi import FastAPI\napp = FastAPI()",
+                },
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Step 2 failed: Expected exit 0, got {result['exit_code']}")
             return False
 
         if "LEARN PHASE" not in result["stdout"]:
-            print(f"[FAIL] Step 2 failed: Expected LEARN PHASE message")
+            print("[FAIL] Step 2 failed: Expected LEARN PHASE message")
             print(f"   stdout: {result['stdout']}")
             return False
 
@@ -479,7 +496,7 @@ def test_learn_flow():
         print("\n[Step 3] Verify pending_learn cleared...")
         pending = session.get_pending_learn()
         if pending is not None:
-            print(f"[FAIL] Step 3 failed: pending_learn should be cleared")
+            print("[FAIL] Step 3 failed: pending_learn should be cleared")
             return False
 
         print("[PASS] Step 3: pending_learn cleared")
@@ -492,6 +509,7 @@ def test_learn_flow():
 # ============================================================================
 # Main Test Runner
 # ============================================================================
+
 
 def run_integration_tests():
     """Run all integration tests."""
@@ -519,6 +537,7 @@ def run_integration_tests():
         except Exception as e:
             print(f"\n[FAIL] {name} failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

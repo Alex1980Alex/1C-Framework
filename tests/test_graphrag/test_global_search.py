@@ -5,10 +5,8 @@ Tests utility functions without LLM calls.
 
 import time
 
-import pytest
-
 from src.pdf_framework.config import GraphRAGSettings
-from src.pdf_framework.schemas.documents import DocumentChunk, SearchResponse, SearchResult
+from src.pdf_framework.schemas.documents import SearchResponse
 
 
 class TestExtractCommunityId:

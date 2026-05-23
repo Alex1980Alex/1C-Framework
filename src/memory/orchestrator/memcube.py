@@ -23,11 +23,11 @@ from .unified_id import MemoryType, SourceServer
 class ContentType(str, Enum):
     """Auto-classified content type (Memori pattern)."""
 
-    FACT = "fact"                # Episodic fact, decision, conclusion
-    PREFERENCE = "preference"    # User preference, style choice
-    RULE = "rule"               # Coding rule, convention, standard
-    SKILL = "skill"             # Confirmed workflow, practice
-    CODE = "code"               # Code snippet, function, pattern
+    FACT = "fact"  # Episodic fact, decision, conclusion
+    PREFERENCE = "preference"  # User preference, style choice
+    RULE = "rule"  # Coding rule, convention, standard
+    SKILL = "skill"  # Confirmed workflow, practice
+    CODE = "code"  # Code snippet, function, pattern
     OBSERVATION = "observation"  # General observation, note
 
 
@@ -136,8 +136,12 @@ class MemoryCube:
         cube = cls(
             cube_id=data.get("cube_id", str(uuid4())),
             content=data.get("content", ""),
-            content_type=ContentType(data["content_type"]) if "content_type" in data else ContentType.OBSERVATION,
-            memory_type=MemoryType(data["memory_type"]) if "memory_type" in data else MemoryType.EPISODIC,
+            content_type=ContentType(data["content_type"])
+            if "content_type" in data
+            else ContentType.OBSERVATION,
+            memory_type=MemoryType(data["memory_type"])
+            if "memory_type" in data
+            else MemoryType.EPISODIC,
             source=SourceServer(data["source"]) if "source" in data else SourceServer.MEMORY_AI,
             title=data.get("title"),
             confidence=data.get("confidence", 0.7),

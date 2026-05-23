@@ -19,16 +19,20 @@ try:
     from src.shared.llm_rotation.adaptive import PRICE_PER_1K_TOKENS
 except ImportError:
     PRICE_PER_1K_TOKENS = {
-        "zai-glm5": 0.002, "zhipu": 0.001, "gemini": 0.0,
-        "openrouter": 0.0, "mistral": 0.001,
-        "ollama-local": 0.0, "ollama-cloud": 0.0,
+        "zai-glm5": 0.002,
+        "zhipu": 0.001,
+        "gemini": 0.0,
+        "openrouter": 0.0,
+        "mistral": 0.001,
+        "ollama-local": 0.0,
+        "ollama-cloud": 0.0,
     }
 
 
 def parse_entries(file_path: Path, last_n: int | None = None) -> list[dict]:
     """Parse JSONL file, filter out health checks and 'none' provider."""
     entries = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -64,14 +68,14 @@ def compute_stats(entries: list[dict]) -> dict:
     p95_time = p95(times)
 
     tokens = [
-        (e.get("prompt_tokens", 0) or 0) + (e.get("completion_tokens", 0) or 0)
-        for e in entries
+        (e.get("prompt_tokens", 0) or 0) + (e.get("completion_tokens", 0) or 0) for e in entries
     ]
     avg_tokens = mean(tokens) if tokens else 0.0
 
     total_cost = sum(
         ((e.get("prompt_tokens", 0) or 0) + (e.get("completion_tokens", 0) or 0))
-        * PRICE_PER_1K_TOKENS.get(e.get("provider", ""), 0.0) / 1000.0
+        * PRICE_PER_1K_TOKENS.get(e.get("provider", ""), 0.0)
+        / 1000.0
         for e in entries
     )
 

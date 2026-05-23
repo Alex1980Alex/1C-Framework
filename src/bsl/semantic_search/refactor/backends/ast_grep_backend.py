@@ -63,9 +63,7 @@ class AstGrepBackend:
         """Return confidence for renaming a symbol of the given kind."""
         return self._CONFIDENCE.get(symbol_kind, 0.0)
 
-    def plan_rename(
-        self, uri: str, line: int, character: int, new_name: str
-    ) -> WorkspaceEdit:
+    def plan_rename(self, uri: str, line: int, character: int, new_name: str) -> WorkspaceEdit:
         """Extract identifier at (line, character), run ast-grep, build WorkspaceEdit."""
         path = self._uri_to_path(uri)
         if not path.exists():
@@ -73,9 +71,7 @@ class AstGrepBackend:
         try:
             text = path.read_text(encoding="utf-8")
         except OSError as exc:
-            raise BackendError(
-                f"cannot read file: {exc!r}", code="read_failed"
-            ) from exc
+            raise BackendError(f"cannot read file: {exc!r}", code="read_failed") from exc
 
         lines = text.splitlines()
         if line < 0 or line >= len(lines):
@@ -91,15 +87,11 @@ class AstGrepBackend:
             )
 
         try:
-            matches = self._runner.run_rename(
-                self._workspace_root, old_name, new_name
-            )
+            matches = self._runner.run_rename(self._workspace_root, old_name, new_name)
         except BackendError:
             raise
         except Exception as exc:
-            raise BackendError(
-                f"ast-grep runner failed: {exc!r}", code="runner_error"
-            ) from exc
+            raise BackendError(f"ast-grep runner failed: {exc!r}", code="runner_error") from exc
 
         return self._matches_to_edit(matches, new_name, self._workspace_root)
 
@@ -147,7 +139,6 @@ class AstGrepBackend:
             )
             by_file.setdefault(path, []).append(edit)
         file_edits = [
-            FileEdit(uri=p.resolve().as_uri(), edits=edits)
-            for p, edits in by_file.items()
+            FileEdit(uri=p.resolve().as_uri(), edits=edits) for p, edits in by_file.items()
         ]
         return WorkspaceEdit(file_edits=file_edits)

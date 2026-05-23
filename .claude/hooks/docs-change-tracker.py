@@ -12,11 +12,10 @@ Purpose: When source code files change, remind Claude to update
 Timeout: 5s
 """
 
-import sys
 import os
 import subprocess
+import sys
 from datetime import datetime
-from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
@@ -27,11 +26,10 @@ sys.path.insert(0, _HOOK_DIR)
 from base import BaseHook, HookInput, HookOutput
 from shared.task_master import (
     add_task,
-    get_pending_tasks,
     complete_task,
+    get_pending_tasks,
     has_recent_completion,
     update_task_metadata,
-    get_task_with_metadata,
 )
 
 HOOK_ID = "docs-change-tracker-hook"
@@ -66,29 +64,25 @@ _CODE_TO_DOCS_SKILLS = [
         "src/pdf_framework/search/reranking/",
         [f"{_FD}/04_ПОИСК/04.6_Фильтрация_и_Reranking.md"],
         ["search-pipeline-debug"],
-        "- Обнови таблицу reranker-ов\n"
-        "- Проверь конфиг reranking в скилле",
+        "- Обнови таблицу reranker-ов\n- Проверь конфиг reranking в скилле",
     ),
     (
         "src/pdf_framework/search/bm25",
         [f"{_FD}/04_ПОИСК/04.4_BM25.md"],
         ["search-pipeline-debug"],
-        "- Обнови описание BM25 (FTS5, lemmatization)\n"
-        "- Проверь .env переменные BM25",
+        "- Обнови описание BM25 (FTS5, lemmatization)\n- Проверь .env переменные BM25",
     ),
     (
         "src/pdf_framework/search/semantic_cache",
         [f"{_FD}/07_КЭШИРОВАНИЕ/07.1_Семантический_кэш.md"],
         ["framework-caching"],
-        "- Обнови API/параметры семантического кеша\n"
-        "- Проверь threshold, TTL",
+        "- Обнови API/параметры семантического кеша\n- Проверь threshold, TTL",
     ),
     (
         "src/pdf_framework/search/manager",
         [f"{_FD}/04_ПОИСК/04.1_Обзор_стратегий.md"],
         ["search-pipeline-debug"],
-        "- Search manager изменён — проверь routing стратегий\n"
-        "- Обнови flow поиска если изменился",
+        "- Search manager изменён — проверь routing стратегий\n- Обнови flow поиска если изменился",
     ),
     # ─── AGENTS ───────────────────────────────────────────────────────
     (
@@ -105,22 +99,19 @@ _CODE_TO_DOCS_SKILLS = [
         "src/pdf_framework/agents/routing/",
         [f"{_FD}/05_RAG_АГЕНТЫ/05.2_Adaptive_RAG.md"],
         ["agent-orchestration"],
-        "- Обнови описание Adaptive RAG / routing\n"
-        "- Проверь классификатор запросов",
+        "- Обнови описание Adaptive RAG / routing\n- Проверь классификатор запросов",
     ),
     (
         "src/pdf_framework/agents/research",
         [f"{_FD}/05_RAG_АГЕНТЫ/05.3_Deep_Research.md"],
         ["agent-orchestration"],
-        "- Обнови описание Deep Research агента\n"
-        "- Проверь planner, synthesizer",
+        "- Обнови описание Deep Research агента\n- Проверь planner, synthesizer",
     ),
     (
         "src/pdf_framework/agents/plan_execute/",
         [f"{_FD}/05_RAG_АГЕНТЫ/05.5_Специализированные_агенты.md"],
         ["agent-orchestration"],
-        "- Обнови описание Plan-Execute агента\n"
-        "- Проверь steps, tools, execution flow",
+        "- Обнови описание Plan-Execute агента\n- Проверь steps, tools, execution flow",
     ),
     (
         "src/pdf_framework/agents/multi/",
@@ -138,72 +129,62 @@ _CODE_TO_DOCS_SKILLS = [
         "src/pdf_framework/agents/memory/",
         [f"{_FD}/05_RAG_АГЕНТЫ/05.4_Conversational_RAG.md"],
         ["agent-orchestration"],
-        "- Обнови описание Chat Mode / ConversationMemory\n"
-        "- Проверь backends (SQLite, Memory)",
+        "- Обнови описание Chat Mode / ConversationMemory\n- Проверь backends (SQLite, Memory)",
     ),
     # ─── INDEXING / PROCESSING ────────────────────────────────────────
     (
         "src/pdf_framework/loaders/",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.1_Загрузка_PDF.md"],
         ["indexing-pipeline"],
-        "- Обнови описание Hybrid Loader (4 уровня)\n"
-        "- Проверь fallback strategy",
+        "- Обнови описание Hybrid Loader (4 уровня)\n- Проверь fallback strategy",
     ),
     (
         "src/pdf_framework/processing/splitters/",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.2_Опции_индексации.md"],
         ["indexing-pipeline"],
-        "- Обнови описание сплиттеров\n"
-        "- Проверь chunk_size, overlap параметры",
+        "- Обнови описание сплиттеров\n- Проверь chunk_size, overlap параметры",
     ),
     (
         "src/pdf_framework/processing/extractors/",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.3_Граф_знаний.md"],
         ["graph-operations"],
-        "- Обнови описание entity extraction\n"
-        "- Проверь LLM prompt, entity types",
+        "- Обнови описание entity extraction\n- Проверь LLM prompt, entity types",
     ),
     (
         "src/pdf_framework/indexing/delta_indexer",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.4_Инкрементальная_индексация.md"],
         ["indexing-pipeline"],
-        "- Обнови описание Delta Indexing (SHA-256)\n"
-        "- Проверь API endpoints delta",
+        "- Обнови описание Delta Indexing (SHA-256)\n- Проверь API endpoints delta",
     ),
     (
         "src/pdf_framework/indexing/visual_indexer",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.5_Изображения_и_таблицы.md"],
         ["indexing-pipeline", "embedding-models"],
-        "- Обнови описание Visual Indexing (ColPali)\n"
-        "- Проверь DPI, модели, pipeline",
+        "- Обнови описание Visual Indexing (ColPali)\n- Проверь DPI, модели, pipeline",
     ),
     (
         "src/pdf_framework/processing/versioning",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.4_Инкрементальная_индексация.md"],
         ["indexing-pipeline"],
-        "- Обнови описание Document Versioning\n"
-        "- Проверь rollback, checkpoint",
+        "- Обнови описание Document Versioning\n- Проверь rollback, checkpoint",
     ),
     (
         "src/pdf_framework/processing/image_",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.5_Изображения_и_таблицы.md"],
         ["indexing-pipeline"],
-        "- Обнови описание Image Extraction\n"
-        "- Проверь Vision API описатель",
+        "- Обнови описание Image Extraction\n- Проверь Vision API описатель",
     ),
     (
         "src/pdf_framework/processing/page_renderer",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.5_Изображения_и_таблицы.md"],
         ["indexing-pipeline"],
-        "- Обнови описание Page Renderer (PDF → Image)\n"
-        "- Проверь DPI параметры",
+        "- Обнови описание Page Renderer (PDF → Image)\n- Проверь DPI параметры",
     ),
     (
         "src/pdf_framework/processing/context_generator",
         [f"{_FD}/07_КЭШИРОВАНИЕ/07.3_LLM_кэш.md"],
         ["framework-caching"],
-        "- Обнови описание Contextual Retrieval Cache\n"
-        "- Проверь SQLite cache, hash-based",
+        "- Обнови описание Contextual Retrieval Cache\n- Проверь SQLite cache, hash-based",
     ),
     # ─── GRAPH STORE ──────────────────────────────────────────────────
     (
@@ -248,30 +229,26 @@ _CODE_TO_DOCS_SKILLS = [
             f"{_FD}/10_УСТРАНЕНИЕ_НЕПОЛАДОК/10.1_Частые_ошибки.md",
         ],
         ["deployment", "framework-troubleshooting"],
-        "- Обнови описание middleware (rate limit, guardrails)\n"
-        "- Проверь .env параметры",
+        "- Обнови описание middleware (rate limit, guardrails)\n- Проверь .env параметры",
     ),
     (
         "src/api/dependencies/auth",
         [f"{_FD}/09_АДМИНИСТРИРОВАНИЕ/09.2_Авторизация.md"],
         ["deployment"],
-        "- Обнови описание авторизации (JWT, RBAC)\n"
-        "- Проверь roles, permissions",
+        "- Обнови описание авторизации (JWT, RBAC)\n- Проверь roles, permissions",
     ),
     (
         "src/api/app.py",
         [f"{_FD}/06_ИНТЕРФЕЙСЫ/06.2_REST_API.md"],
         ["framework-api", "deployment"],
-        "- Проверь подключённые роутеры\n"
-        "- Обнови middleware/CORS если изменились",
+        "- Проверь подключённые роутеры\n- Обнови middleware/CORS если изменились",
     ),
     # ─── INTERFACES: CLI ──────────────────────────────────────────────
     (
         "src/cli/",
         [f"{_FD}/06_ИНТЕРФЕЙСЫ/06.3_CLI.md"],
         ["framework-cli"],
-        "- Обнови таблицу CLI команд\n"
-        "- Проверь аргументы, флаги, примеры",
+        "- Обнови таблицу CLI команд\n- Проверь аргументы, флаги, примеры",
     ),
     # ─── INTERFACES: MCP ──────────────────────────────────────────────
     (
@@ -287,16 +264,14 @@ _CODE_TO_DOCS_SKILLS = [
         "src/ui/",
         [f"{_FD}/06_ИНТЕРФЕЙСЫ/06.1_Web_UI.md"],
         ["framework-mcp-ui"],
-        "- Обнови описание Web UI (Gradio)\n"
-        "- Проверь вкладки, функционал страниц",
+        "- Обнови описание Web UI (Gradio)\n- Проверь вкладки, функционал страниц",
     ),
     # ─── CACHING ──────────────────────────────────────────────────────
     (
         "src/pdf_framework/callbacks/",
         [f"{_FD}/07_КЭШИРОВАНИЕ/07.3_LLM_кэш.md"],
         ["framework-caching"],
-        "- Обнови описание LLM кеша\n"
-        "- Проверь hash-based key generation",
+        "- Обнови описание LLM кеша\n- Проверь hash-based key generation",
     ),
     # ─── EVALUATION ───────────────────────────────────────────────────
     (
@@ -306,37 +281,32 @@ _CODE_TO_DOCS_SKILLS = [
             f"{_FD}/08_ОЦЕНКА_КАЧЕСТВА/08.2_RAGAS.md",
         ],
         ["evaluation-benchmark"],
-        "- Обнови метрики, конфиг оценки\n"
-        "- Проверь API endpoints eval",
+        "- Обнови метрики, конфиг оценки\n- Проверь API endpoints eval",
     ),
     (
         "src/pdf_framework/feedback/",
         [f"{_FD}/08_ОЦЕНКА_КАЧЕСТВА/08.4_Обратная_связь.md"],
         ["evaluation-benchmark"],
-        "- Обнови описание Feedback Loop\n"
-        "- Проверь FeedbackCollector, StrategyTuner",
+        "- Обнови описание Feedback Loop\n- Проверь FeedbackCollector, StrategyTuner",
     ),
     (
         "src/pdf_framework/optimization/",
         [f"{_FD}/08_ОЦЕНКА_КАЧЕСТВА/08.3_AutoRAG.md"],
         ["evaluation-benchmark", "prompt-engineering"],
-        "- Обнови описание AutoRAG / DSPy MIPROv2\n"
-        "- Проверь параметры оптимизации",
+        "- Обнови описание AutoRAG / DSPy MIPROv2\n- Проверь параметры оптимизации",
     ),
     # ─── ADMINISTRATION ───────────────────────────────────────────────
     (
         "src/pdf_framework/multitenancy/",
         [f"{_FD}/09_АДМИНИСТРИРОВАНИЕ/09.1_Мультитенантность.md"],
         ["deployment"],
-        "- Обнови описание мультитенантности\n"
-        "- Проверь tenant isolation, quotas",
+        "- Обнови описание мультитенантности\n- Проверь tenant isolation, quotas",
     ),
     (
         "src/pdf_framework/observability/",
         [f"{_FD}/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md"],
         ["deployment"],
-        "- Обнови описание мониторинга (Langfuse, Prometheus)\n"
-        "- Проверь трейсы, метрики",
+        "- Обнови описание мониторинга (Langfuse, Prometheus)\n- Проверь трейсы, метрики",
     ),
     (
         "src/pdf_framework/guardrails/",
@@ -350,32 +320,28 @@ _CODE_TO_DOCS_SKILLS = [
         "src/workers/",
         [f"{_FD}/09_АДМИНИСТРИРОВАНИЕ/09.5_Docker.md"],
         ["deployment"],
-        "- Обнови описание Workers/ARQ Queue\n"
-        "- Проверь task types, Redis config",
+        "- Обнови описание Workers/ARQ Queue\n- Проверь task types, Redis config",
     ),
     # ─── DOCKER ───────────────────────────────────────────────────────
     (
         "docker/",
         [f"{_FD}/09_АДМИНИСТРИРОВАНИЕ/09.5_Docker.md"],
         ["deployment"],
-        "- Обнови описание Docker Compose\n"
-        "- Проверь сервисы, порты, volumes",
+        "- Обнови описание Docker Compose\n- Проверь сервисы, порты, volumes",
     ),
     # ─── VECTOR STORE ─────────────────────────────────────────────────
     (
         "src/pdf_framework/vector_store/",
         [f"{_FD}/04_ПОИСК/04.2_Hybrid_Search.md"],
         ["qdrant-operations"],
-        "- Обнови описание vector store (Qdrant)\n"
-        "- Проверь named vectors, sparse, collections",
+        "- Обнови описание vector store (Qdrant)\n- Проверь named vectors, sparse, collections",
     ),
     # ─── HOOKS & SKILLS (meta) ────────────────────────────────────────
     (
         ".claude/hooks/",
         [f"{_FD}/01_ОБЗОР/01.2_Архитектура.md"],
         ["hooks-skills-mcp-triad"],
-        "- Обнови описание hook в архитектуре\n"
-        "- Проверь event/matcher/назначение",
+        "- Обнови описание hook в архитектуре\n- Проверь event/matcher/назначение",
     ),
     (
         ".claude/skills/",
@@ -400,8 +366,7 @@ _CODE_TO_DOCS_SKILLS = [
             f"{_FD}/01_ОБЗОР/01.3_Технологический_стек.md",
         ],
         ["framework-quickstart"],
-        "- Обнови зависимости в документации\n"
-        "- Проверь версии, новые пакеты",
+        "- Обнови зависимости в документации\n- Проверь версии, новые пакеты",
     ),
 ]
 
@@ -562,7 +527,10 @@ class DocsChangeTracker(BaseHook):
                 try:
                     result = subprocess.run(
                         ["git", "log", "-1", "--format=%cI", "--", target],
-                        capture_output=True, text=True, encoding="utf-8", timeout=5,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        timeout=5,
                         cwd=os.environ.get("CLAUDE_PROJECT_DIR", "."),
                     )
                     if result.returncode != 0 or not result.stdout.strip():
@@ -594,7 +562,7 @@ class DocsChangeTracker(BaseHook):
         # Try to make path relative
         for prefix in ["d:/1С-Framework/", "D:/1С-Framework/"]:
             if rel_path.lower().startswith(prefix.lower()):
-                rel_path = rel_path[len(prefix):]
+                rel_path = rel_path[len(prefix) :]
                 break
 
         # Collect unique docs and skills
@@ -612,9 +580,7 @@ class DocsChangeTracker(BaseHook):
 
         # Build message parts
         docs_str = "\n".join(f"  📄 {d}" for d in all_docs)
-        skills_str = "\n".join(
-            f"  🔧 .claude/skills/{s}/SKILL.md" for s in all_skills
-        )
+        skills_str = "\n".join(f"  🔧 .claude/skills/{s}/SKILL.md" for s in all_skills)
         hints_str = "\n".join(all_hints)
 
         add_task(
@@ -630,12 +596,16 @@ class DocsChangeTracker(BaseHook):
         )
 
         # Store structured metadata for zombie prevention and smart completion
-        update_task_metadata(HOOK_ID, {
-            "source_file": rel_path,
-            "target_docs": all_docs,
-            "target_skills": all_skills,
-            "code_changed_at": datetime.now().isoformat(),
-        }, merge=False)
+        update_task_metadata(
+            HOOK_ID,
+            {
+                "source_file": rel_path,
+                "target_docs": all_docs,
+                "target_skills": all_skills,
+                "code_changed_at": datetime.now().isoformat(),
+            },
+            merge=False,
+        )
 
         msg = (
             f"[DOCS-TRACKER] Изменён файл: {basename}\n\n"

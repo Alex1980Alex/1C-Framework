@@ -20,9 +20,7 @@ def classifier() -> HeuristicClassifier:
 
 def test_form_path_classifies_as_form_handler(classifier: HeuristicClassifier) -> None:
     assert (
-        classifier.classify(
-            "file:///proj/Forms/MyForm/Ext/Form/Module.bsl", 0, 0, None
-        )
+        classifier.classify("file:///proj/Forms/MyForm/Ext/Form/Module.bsl", 0, 0, None)
         == SymbolKind.FORM_HANDLER
     )
     assert (
@@ -42,9 +40,7 @@ def test_form_path_wins_over_content(classifier: HeuristicClassifier) -> None:
 def test_export_procedure(classifier: HeuristicClassifier) -> None:
     content = "Процедура ПолучитьДанные() Экспорт\nКонецПроцедуры\n"
     assert (
-        classifier.classify(
-            "file:///proj/CommonModules/X/Module.bsl", 0, 10, content
-        )
+        classifier.classify("file:///proj/CommonModules/X/Module.bsl", 0, 10, content)
         == SymbolKind.MODULE_EXPORT_PROC
     )
 
@@ -52,9 +48,7 @@ def test_export_procedure(classifier: HeuristicClassifier) -> None:
 def test_local_procedure(classifier: HeuristicClassifier) -> None:
     content = "Процедура ВнутренняяОбработка()\nКонецПроцедуры\n"
     assert (
-        classifier.classify(
-            "file:///proj/CommonModules/X/Module.bsl", 0, 10, content
-        )
+        classifier.classify("file:///proj/CommonModules/X/Module.bsl", 0, 10, content)
         == SymbolKind.MODULE_LOCAL_PROC
     )
 
@@ -62,9 +56,7 @@ def test_local_procedure(classifier: HeuristicClassifier) -> None:
 def test_export_function(classifier: HeuristicClassifier) -> None:
     content = "Функция Вычислить() Экспорт\nКонецФункции\n"
     assert (
-        classifier.classify(
-            "file:///proj/CommonModules/X/Module.bsl", 0, 10, content
-        )
+        classifier.classify("file:///proj/CommonModules/X/Module.bsl", 0, 10, content)
         == SymbolKind.MODULE_EXPORT_FUNC
     )
 
@@ -72,9 +64,7 @@ def test_export_function(classifier: HeuristicClassifier) -> None:
 def test_local_function(classifier: HeuristicClassifier) -> None:
     content = "Функция Хелпер()\nКонецФункции\n"
     assert (
-        classifier.classify(
-            "file:///proj/CommonModules/X/Module.bsl", 0, 10, content
-        )
+        classifier.classify("file:///proj/CommonModules/X/Module.bsl", 0, 10, content)
         == SymbolKind.MODULE_LOCAL_FUNC
     )
 
@@ -82,24 +72,18 @@ def test_local_function(classifier: HeuristicClassifier) -> None:
 def test_local_variable(classifier: HeuristicClassifier) -> None:
     content = "Перем МояПеременная;\nПроцедура A()\n"
     assert (
-        classifier.classify(
-            "file:///proj/CommonModules/X/Module.bsl", 0, 5, content
-        )
+        classifier.classify("file:///proj/CommonModules/X/Module.bsl", 0, 5, content)
         == SymbolKind.LOCAL_VARIABLE
     )
 
 
 def test_english_keywords(classifier: HeuristicClassifier) -> None:
     assert (
-        classifier.classify(
-            "file:///x/Module.bsl", 0, 0, "Procedure Foo() Export\nEndProcedure\n"
-        )
+        classifier.classify("file:///x/Module.bsl", 0, 0, "Procedure Foo() Export\nEndProcedure\n")
         == SymbolKind.MODULE_EXPORT_PROC
     )
     assert (
-        classifier.classify(
-            "file:///x/Module.bsl", 0, 0, "Function Bar()\nEndFunction\n"
-        )
+        classifier.classify("file:///x/Module.bsl", 0, 0, "Function Bar()\nEndFunction\n")
         == SymbolKind.MODULE_LOCAL_FUNC
     )
 
@@ -110,18 +94,14 @@ def test_trailing_comment_with_export_not_misclassified(
     """`// TODO: сделать Экспорт` must NOT flip a local proc to export."""
     content = "Процедура X() // TODO: сделать Экспорт\nКонецПроцедуры\n"
     assert (
-        classifier.classify("file:///x/Module.bsl", 0, 10, content)
-        == SymbolKind.MODULE_LOCAL_PROC
+        classifier.classify("file:///x/Module.bsl", 0, 10, content) == SymbolKind.MODULE_LOCAL_PROC
     )
 
 
 def test_perem_with_tab_separator(classifier: HeuristicClassifier) -> None:
     """`Перем\\tX;` must still classify as LOCAL_VARIABLE (tab, not space)."""
     content = "Перем\tТабуляцияX;\n"
-    assert (
-        classifier.classify("file:///x/Module.bsl", 0, 5, content)
-        == SymbolKind.LOCAL_VARIABLE
-    )
+    assert classifier.classify("file:///x/Module.bsl", 0, 5, content) == SymbolKind.LOCAL_VARIABLE
 
 
 def test_no_content_returns_unknown(classifier: HeuristicClassifier) -> None:
@@ -133,22 +113,14 @@ def test_no_content_returns_unknown(classifier: HeuristicClassifier) -> None:
 
 def test_out_of_range_line_returns_unknown(classifier: HeuristicClassifier) -> None:
     content = "Процедура A()\nКонецПроцедуры\n"
-    assert (
-        classifier.classify("file:///x/Module.bsl", 99, 0, content)
-        == SymbolKind.UNKNOWN
-    )
-    assert (
-        classifier.classify("file:///x/Module.bsl", -1, 0, content)
-        == SymbolKind.UNKNOWN
-    )
+    assert classifier.classify("file:///x/Module.bsl", 99, 0, content) == SymbolKind.UNKNOWN
+    assert classifier.classify("file:///x/Module.bsl", -1, 0, content) == SymbolKind.UNKNOWN
 
 
 def test_routing_matrix_has_all_symbol_kinds() -> None:
     matrix_kinds = set(RoutingMatrix.all_kinds())
     enum_kinds = set(SymbolKind)
-    assert matrix_kinds == enum_kinds, (
-        f"RoutingMatrix missing kinds: {enum_kinds - matrix_kinds}"
-    )
+    assert matrix_kinds == enum_kinds, f"RoutingMatrix missing kinds: {enum_kinds - matrix_kinds}"
 
 
 def test_route_for_export_procs_prefers_multilspy() -> None:

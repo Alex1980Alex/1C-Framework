@@ -16,9 +16,9 @@ Purpose: Auto-activate Ralph Wiggum autonomous loop when detecting
 Timeout: 5s
 """
 
+import os
 import re
 import sys
-import os
 
 # Core path resolution: find base/ + shared/ in user-level or project-level
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,11 +39,17 @@ def _get_fuzzy_complex():
     if _fuzzy_complex is None:
         try:
             from shared.fuzzy_match import FuzzyMatcher
+
             _fuzzy_complex = FuzzyMatcher(
                 keywords=[
-                    "исследовать", "проанализировать", "реализовать",
-                    "автоматизировать", "интегрировать", "рефакторить",
-                    "мигрировать", "оптимизировать",
+                    "исследовать",
+                    "проанализировать",
+                    "реализовать",
+                    "автоматизировать",
+                    "интегрировать",
+                    "рефакторить",
+                    "мигрировать",
+                    "оптимизировать",
                 ],
                 fuzzy_threshold=78,
             )
@@ -57,24 +63,53 @@ class RalphActivator(BaseHook):
 
     # --- Tier 0: Simple task signals (NEVER activate Ralph) ---
     SIMPLE_SIGNALS = [
-        "исправь", "поправь", "fix", "typo",
-        "покажи", "прочитай", "открой", "выведи",
-        "git status", "git log", "git diff", "git stash",
-        "коммит", "commit", "push",
-        "запусти", "run", "test", "тест",
-        "удали строку", "переименуй", "замени слово",
-        "одну строку", "add comment", "добавь комментарий",
-        "что это", "where is", "как называется",
-        "объясни", "расскажи",
+        "исправь",
+        "поправь",
+        "fix",
+        "typo",
+        "покажи",
+        "прочитай",
+        "открой",
+        "выведи",
+        "git status",
+        "git log",
+        "git diff",
+        "git stash",
+        "коммит",
+        "commit",
+        "push",
+        "запусти",
+        "run",
+        "test",
+        "тест",
+        "удали строку",
+        "переименуй",
+        "замени слово",
+        "одну строку",
+        "add comment",
+        "добавь комментарий",
+        "что это",
+        "where is",
+        "как называется",
+        "объясни",
+        "расскажи",
     ]
 
     # --- Tier 1.5: AutoResearch signals (max 20 iterations) ---
     AUTORESEARCH_SIGNALS = [
-        "autoresearch", "автоисследование", "автономный цикл",
-        "улучши метрику", "improve metric", "reduce errors",
-        "уменьши ошибки", "повысь покрытие", "increase coverage",
-        "optimize", "оптимизируй итеративно",
-        "measure and improve", "keep/revert",
+        "autoresearch",
+        "автоисследование",
+        "автономный цикл",
+        "улучши метрику",
+        "improve metric",
+        "reduce errors",
+        "уменьши ошибки",
+        "повысь покрытие",
+        "increase coverage",
+        "optimize",
+        "оптимизируй итеративно",
+        "measure and improve",
+        "keep/revert",
         "автономное улучшение",
     ]
     AUTORESEARCH_CRITERIA = [
@@ -85,11 +120,17 @@ class RalphActivator(BaseHook):
 
     # --- Tier 2.5: Brainstorm signals (max 10 iterations) ---
     BRAINSTORM_SIGNALS = [
-        "придумай", "предложи", "спроектируй",
-        "какой подход выбрать", "давай обсудим",
-        "предложи архитектуру", "предложи решение",
-        "как лучше сделать", "какой вариант лучше",
-        "как улучшить", "как оптимизировать",
+        "придумай",
+        "предложи",
+        "спроектируй",
+        "какой подход выбрать",
+        "давай обсудим",
+        "предложи архитектуру",
+        "предложи решение",
+        "как лучше сделать",
+        "какой вариант лучше",
+        "как улучшить",
+        "как оптимизировать",
     ]
     BRAINSTORM_CRITERIA = [
         "comparison table created",
@@ -99,25 +140,46 @@ class RalphActivator(BaseHook):
 
     # --- Tier 2: Research signals (5-7 steps, max 8 iterations) ---
     RESEARCH_SIGNALS = [
-        "исследуй", "сделай обзор", "проанализируй",
-        "сравни подходы", "compare approaches",
-        "best practices", "лучшие практики",
-        "какие есть варианты", "what options",
-        "overview of", "обзор по",
+        "исследуй",
+        "сделай обзор",
+        "проанализируй",
+        "сравни подходы",
+        "compare approaches",
+        "best practices",
+        "лучшие практики",
+        "какие есть варианты",
+        "what options",
+        "overview of",
+        "обзор по",
     ]
     RESEARCH_CRITERIA = ["cache saved", "_index.json updated"]
     RESEARCH_MAX = 8
 
     # --- Tier 3: Factory signals (6-8 steps, max 12 iterations) ---
     FACTORY_SIGNALS = [
-        "новый хук", "new hook", "создай hook", "создай хук",
-        "хук для", "hook for",
-        "новый скилл", "new skill", "скилл для", "skill for",
-        "mcp tool", "mcp сервер", "mcp server",
-        "автоматизировать событие", "автоматизировать процесс",
-        "нужен enforcer", "нужен guard",
-        "триада", "triad", "фабрика", "factory",
-        "новый домен", "new domain",
+        "новый хук",
+        "new hook",
+        "создай hook",
+        "создай хук",
+        "хук для",
+        "hook for",
+        "новый скилл",
+        "new skill",
+        "скилл для",
+        "skill for",
+        "mcp tool",
+        "mcp сервер",
+        "mcp server",
+        "автоматизировать событие",
+        "автоматизировать процесс",
+        "нужен enforcer",
+        "нужен guard",
+        "триада",
+        "triad",
+        "фабрика",
+        "factory",
+        "новый домен",
+        "new domain",
     ]
     FACTORY_CRITERIA = [
         "settings.json updated",
@@ -128,16 +190,27 @@ class RalphActivator(BaseHook):
 
     # --- Tier 4: Phase/architecture signals (5-15 steps, max 15) ---
     PHASE_SIGNALS = [
-        "новая фаза", "новую фазу", "new phase",
-        "следующая фаза", "следующую фазу",
-        "реализуй phase", "implement phase",
-        "новый pipeline", "новый пайплайн",
-        "новая стратегия", "новую стратегию",
-        "новый агент", "нового агента",
-        "новый провайдер", "нового провайдера",
-        "новый loader", "новый обработчик",
-        "расширить фреймворк", "extend framework",
-        "новый компонент", "новый модуль",
+        "новая фаза",
+        "новую фазу",
+        "new phase",
+        "следующая фаза",
+        "следующую фазу",
+        "реализуй phase",
+        "implement phase",
+        "новый pipeline",
+        "новый пайплайн",
+        "новая стратегия",
+        "новую стратегию",
+        "новый агент",
+        "нового агента",
+        "новый провайдер",
+        "нового провайдера",
+        "новый loader",
+        "новый обработчик",
+        "расширить фреймворк",
+        "extend framework",
+        "новый компонент",
+        "новый модуль",
     ]
     PHASE_CRITERIA = [
         "all files created",
@@ -148,9 +221,16 @@ class RalphActivator(BaseHook):
 
     # --- Tier 5: Multi-step markers ---
     MULTI_STEP_PHRASES = [
-        "а также", "и ещё", "and also", "additionally",
-        "после этого", "затем", "потом", "then",
-        "во-первых", "во-вторых",
+        "а также",
+        "и ещё",
+        "and also",
+        "additionally",
+        "после этого",
+        "затем",
+        "потом",
+        "then",
+        "во-первых",
+        "во-вторых",
     ]
     MULTI_STEP_MAX = 10
 
@@ -169,7 +249,8 @@ class RalphActivator(BaseHook):
             return None
 
         # Don't re-activate if already active (but auto-deactivate if stale)
-        from shared.ralph_state import is_active, is_stale, deactivate
+        from shared.ralph_state import deactivate, is_active, is_stale
+
         if is_active():
             if is_stale():
                 deactivate()  # Stale from crashed/timed-out session
@@ -179,67 +260,52 @@ class RalphActivator(BaseHook):
         prompt_lower = prompt.lower()
 
         # --- Negative filter: simple tasks ---
-        simple_score = sum(
-            1 for kw in self.SIMPLE_SIGNALS if kw in prompt_lower
-        )
+        simple_score = sum(1 for kw in self.SIMPLE_SIGNALS if kw in prompt_lower)
         if simple_score >= 2:
             return None
 
         # --- Tier 3: Factory (highest priority after simple filter) ---
-        factory_score = sum(
-            1 for kw in self.FACTORY_SIGNALS if kw in prompt_lower
-        )
+        factory_score = sum(1 for kw in self.FACTORY_SIGNALS if kw in prompt_lower)
         if factory_score >= 1:
-            return self._activate(
-                "factory", prompt, self.FACTORY_CRITERIA, self.FACTORY_MAX
-            )
+            return self._activate("factory", prompt, self.FACTORY_CRITERIA, self.FACTORY_MAX)
 
         # --- Tier 1.5: AutoResearch ---
-        ar_score = sum(
-            1 for kw in self.AUTORESEARCH_SIGNALS if kw in prompt_lower
-        )
+        ar_score = sum(1 for kw in self.AUTORESEARCH_SIGNALS if kw in prompt_lower)
         if ar_score >= 1:
             return self._activate(
-                "autoresearch", prompt,
-                self.AUTORESEARCH_CRITERIA, self.AUTORESEARCH_MAX,
+                "autoresearch",
+                prompt,
+                self.AUTORESEARCH_CRITERIA,
+                self.AUTORESEARCH_MAX,
             )
 
         # --- Tier 4: Phase/architecture ---
-        phase_score = sum(
-            1 for kw in self.PHASE_SIGNALS if kw in prompt_lower
-        )
+        phase_score = sum(1 for kw in self.PHASE_SIGNALS if kw in prompt_lower)
         if phase_score >= 1:
-            return self._activate(
-                "phase", prompt, self.PHASE_CRITERIA, self.PHASE_MAX
-            )
+            return self._activate("phase", prompt, self.PHASE_CRITERIA, self.PHASE_MAX)
 
         # --- Tier 2.5: Brainstorm ---
-        brainstorm_score = sum(
-            1 for kw in self.BRAINSTORM_SIGNALS if kw in prompt_lower
-        )
+        brainstorm_score = sum(1 for kw in self.BRAINSTORM_SIGNALS if kw in prompt_lower)
         if brainstorm_score >= 1:
             return self._activate(
-                "brainstorm", prompt,
-                self.BRAINSTORM_CRITERIA, self.BRAINSTORM_MAX,
+                "brainstorm",
+                prompt,
+                self.BRAINSTORM_CRITERIA,
+                self.BRAINSTORM_MAX,
             )
 
         # --- Tier 2: Research ---
-        research_score = sum(
-            1 for kw in self.RESEARCH_SIGNALS if kw in prompt_lower
-        )
+        research_score = sum(1 for kw in self.RESEARCH_SIGNALS if kw in prompt_lower)
         if research_score >= 1:
-            return self._activate(
-                "research", prompt, self.RESEARCH_CRITERIA, self.RESEARCH_MAX
-            )
+            return self._activate("research", prompt, self.RESEARCH_CRITERIA, self.RESEARCH_MAX)
 
         # --- Tier 5: Multi-step (numbered lists, sequential markers) ---
-        multi_score = sum(
-            1 for kw in self.MULTI_STEP_PHRASES if kw in prompt_lower
-        )
+        multi_score = sum(1 for kw in self.MULTI_STEP_PHRASES if kw in prompt_lower)
         numbered_items = len(self._NUMBERED_LIST_RE.findall(prompt))
         if numbered_items >= 3 or multi_score >= 2:
             return self._activate(
-                "multi_step", prompt,
+                "multi_step",
+                prompt,
                 ["all listed items completed"],
                 self.MULTI_STEP_MAX,
             )
@@ -248,7 +314,8 @@ class RalphActivator(BaseHook):
         fuzzy = _get_fuzzy_complex()
         if fuzzy is not None and fuzzy.match_count(prompt) >= 2:
             return self._activate(
-                "multi_step", prompt,
+                "multi_step",
+                prompt,
                 ["all tasks completed"],
                 self.MULTI_STEP_MAX,
             )
@@ -264,6 +331,7 @@ class RalphActivator(BaseHook):
     ) -> HookOutput:
         """Activate Ralph mode and inject system message."""
         from shared.ralph_state import activate
+
         activate(task_type, prompt, criteria, max_iterations)
 
         criteria_text = "\n".join(f"  - {c}" for c in criteria)

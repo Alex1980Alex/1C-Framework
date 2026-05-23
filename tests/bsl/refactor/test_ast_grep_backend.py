@@ -22,9 +22,7 @@ class _FakeRunner:
         self._raise = raise_exc
         self.received: tuple[Path, str, str] | None = None
 
-    def run_rename(
-        self, workspace_root: Path, old_name: str, new_name: str
-    ) -> list[AstGrepMatch]:
+    def run_rename(self, workspace_root: Path, old_name: str, new_name: str) -> list[AstGrepMatch]:
         self.received = (workspace_root, old_name, new_name)
         if self._raise is not None:
             raise self._raise
@@ -62,14 +60,8 @@ def test_confidence_known_kinds(workspace: Path) -> None:
 
 
 def test_word_at_extracts_cyrillic_identifier() -> None:
-    assert (
-        AstGrepBackend._word_at("Процедура ОбработатьДанные()", 11)
-        == "ОбработатьДанные"
-    )
-    assert (
-        AstGrepBackend._word_at("Процедура ОбработатьДанные()", 10)
-        == "ОбработатьДанные"
-    )
+    assert AstGrepBackend._word_at("Процедура ОбработатьДанные()", 11) == "ОбработатьДанные"
+    assert AstGrepBackend._word_at("Процедура ОбработатьДанные()", 10) == "ОбработатьДанные"
     assert AstGrepBackend._word_at("Процедура X()", 13) == ""
 
 
@@ -103,9 +95,7 @@ def test_plan_rename_builds_workspace_edit(workspace: Path) -> None:
     ]
     runner = _FakeRunner(matches=matches)
     backend = AstGrepBackend(runner, workspace)
-    result = backend.plan_rename(
-        file_a.resolve().as_uri(), 0, 10, "НоваяФункция"
-    )
+    result = backend.plan_rename(file_a.resolve().as_uri(), 0, 10, "НоваяФункция")
     assert isinstance(result, WorkspaceEdit)
     assert len(result.file_edits) == 2
     assert runner.received is not None
@@ -151,9 +141,7 @@ def test_plan_rename_empty_matches_returns_empty_edit(workspace: Path) -> None:
 def test_plan_rename_file_not_found(workspace: Path) -> None:
     backend = AstGrepBackend(_FakeRunner(), workspace)
     with pytest.raises(BackendError) as exc:
-        backend.plan_rename(
-            (workspace / "nope.bsl").resolve().as_uri(), 0, 0, "X"
-        )
+        backend.plan_rename((workspace / "nope.bsl").resolve().as_uri(), 0, 0, "X")
     assert exc.value.code == "file_not_found"
 
 
@@ -178,9 +166,7 @@ def test_plan_rename_no_identifier_at_position(workspace: Path) -> None:
 def test_plan_rename_runner_generic_exception_wrapped(workspace: Path) -> None:
     file_a = workspace / "a.bsl"
     _write(file_a, "Процедура X()\n")
-    backend = AstGrepBackend(
-        _FakeRunner(raise_exc=RuntimeError("boom")), workspace
-    )
+    backend = AstGrepBackend(_FakeRunner(raise_exc=RuntimeError("boom")), workspace)
     with pytest.raises(BackendError) as exc:
         backend.plan_rename(file_a.resolve().as_uri(), 0, 10, "Y")
     assert exc.value.code == "runner_error"

@@ -3,8 +3,6 @@
 Tests ObservabilitySettings and CacheSettings in config.py.
 """
 
-import pytest
-
 from src.pdf_framework.config import (
     CacheSettings,
     ObservabilitySettings,

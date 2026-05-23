@@ -9,10 +9,8 @@ Tests:
 
 import os
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
 
 from src.pdf_framework.config import (
     EmbeddingSettings,
@@ -21,7 +19,6 @@ from src.pdf_framework.config import (
     VectorStoreSettings,
     get_settings,
 )
-
 
 # =============================================================================
 # F2.2.1: Settings loading from .env

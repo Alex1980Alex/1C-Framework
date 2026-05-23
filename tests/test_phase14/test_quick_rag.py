@@ -1,7 +1,6 @@
 """Tests for QuickRAG High-Level API (Phase 14.4)."""
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,10 +10,10 @@ from src.pdf_framework.quick import (
     get_quick_rag,
 )
 
-
 # ---------------------------------------------------------------------------
 # IndexResult
 # ---------------------------------------------------------------------------
+
 
 class TestIndexResult:
     def test_create(self):
@@ -59,6 +58,7 @@ class TestIndexResult:
 # ---------------------------------------------------------------------------
 # QuickRAG — Init
 # ---------------------------------------------------------------------------
+
 
 class TestQuickRAGInit:
     def test_default_state(self):
@@ -130,6 +130,7 @@ class TestQuickRAGInit:
 # QuickRAG — Sync methods (with mocked components)
 # ---------------------------------------------------------------------------
 
+
 class TestQuickRAGSync:
     def _make_initialized_rag(self):
         """Create a QuickRAG with mocked components."""
@@ -142,7 +143,9 @@ class TestQuickRAGSync:
     def test_add_calls_loop(self):
         rag = self._make_initialized_rag()
         rag._loop.run_until_complete.return_value = IndexResult(
-            document_id="d1", chunks_stored=5, embeddings_computed=5,
+            document_id="d1",
+            chunks_stored=5,
+            embeddings_computed=5,
         )
 
         result = rag.add("test.pdf")
@@ -169,7 +172,9 @@ class TestQuickRAGSync:
     def test_stats_calls_loop(self):
         rag = self._make_initialized_rag()
         rag._loop.run_until_complete.return_value = {
-            "chunks": 100, "entities": 50, "relations": 25,
+            "chunks": 100,
+            "entities": 50,
+            "relations": 25,
         }
 
         result = rag.stats()
@@ -180,6 +185,7 @@ class TestQuickRAGSync:
 # ---------------------------------------------------------------------------
 # QuickRAG — Async methods
 # ---------------------------------------------------------------------------
+
 
 class TestQuickRAGAsync:
     def _make_initialized_rag(self):
@@ -204,7 +210,9 @@ class TestQuickRAGAsync:
         rag._components.pipeline = mock_pipeline
 
         index_result = IndexResult(
-            document_id="doc-1", chunks_stored=2, embeddings_computed=2,
+            document_id="doc-1",
+            chunks_stored=2,
+            embeddings_computed=2,
         )
         rag._components.indexer = AsyncMock()
         rag._components.indexer.index_chunks.return_value = index_result
@@ -283,9 +291,11 @@ class TestQuickRAGAsync:
 # Singleton
 # ---------------------------------------------------------------------------
 
+
 class TestQuickRAGSingleton:
     def test_get_quick_rag(self):
         import src.pdf_framework.quick as mod
+
         mod._quick_rag = None
 
         r1 = get_quick_rag(strategy="vector")

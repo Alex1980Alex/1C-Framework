@@ -81,21 +81,25 @@ def scan_skills(max_age_days: int) -> tuple[list, list, list]:
         # Check date fields (priority: last_verified > updated > none)
         date_str = fields.get("last_verified") or fields.get("updated")
         if not date_str:
-            no_date.append({
-                "name": skill_name,
-                "path": str(skill_md.relative_to(PROJECT_ROOT)),
-                "fields": fields,
-            })
+            no_date.append(
+                {
+                    "name": skill_name,
+                    "path": str(skill_md.relative_to(PROJECT_ROOT)),
+                    "fields": fields,
+                }
+            )
             continue
 
         dt = parse_date(date_str)
         if dt is None:
-            no_date.append({
-                "name": skill_name,
-                "path": str(skill_md.relative_to(PROJECT_ROOT)),
-                "fields": fields,
-                "date_str": date_str,
-            })
+            no_date.append(
+                {
+                    "name": skill_name,
+                    "path": str(skill_md.relative_to(PROJECT_ROOT)),
+                    "fields": fields,
+                    "date_str": date_str,
+                }
+            )
             continue
 
         entry = {
@@ -146,10 +150,7 @@ def format_report(fresh, stale, no_date, max_age_days) -> str:
         lines.append("\n| Skill | Age (days) | Last verified |")
         lines.append("|-------|-----------|---------------|")
         for s in sorted(fresh, key=lambda x: x["age_days"]):
-            lines.append(
-                f"| {s['name']} | {s['age_days']} | "
-                f"{s['date'].strftime('%Y-%m-%d')} |"
-            )
+            lines.append(f"| {s['name']} | {s['age_days']} | {s['date'].strftime('%Y-%m-%d')} |")
 
     return "\n".join(lines) + "\n"
 

@@ -3,9 +3,10 @@
 Tests layout element model and loader behavior with mocked dependencies.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from src.pdf_framework.loaders.providers.layout_parser import (
     LayoutAwareLoader,
@@ -76,8 +77,15 @@ class TestLayoutElement:
 
     def test_all_element_types(self):
         valid_types = [
-            "title", "paragraph", "table", "image", "list",
-            "header", "footer", "page_number", "section_header",
+            "title",
+            "paragraph",
+            "table",
+            "image",
+            "list",
+            "header",
+            "footer",
+            "page_number",
+            "section_header",
         ]
         for t in valid_types:
             el = LayoutElement(type=t, content="x", page_number=1)

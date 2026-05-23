@@ -13,13 +13,10 @@ Run: python -m pytest tests/test_skill_routing.py -v
 """
 
 import json
-import os
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -77,6 +74,7 @@ def clean_session():
     """Reset session state before test."""
     try:
         from shared.session_state import reset_session
+
         reset_session()
     except Exception:
         # If session file doesn't exist, that's fine
@@ -87,6 +85,7 @@ def clean_session():
     # Cleanup after test
     try:
         from shared.session_state import reset_session
+
         reset_session()
     except Exception:
         pass
@@ -118,7 +117,9 @@ class TestSkillRouterIDEFilter:
         assert parse_hook_output(stdout) is None
 
     def test_04_ide_inside_text_not_filtered(self, clean_session):
-        stdout, code = run_hook(self.HOOK, {"prompt": "Помоги с ide_selection переменной langchain agent"})
+        stdout, code = run_hook(
+            self.HOOK, {"prompt": "Помоги с ide_selection переменной langchain agent"}
+        )
         assert code == 0
         # Should produce output because "langchain" and "agent" are keywords
         out = parse_hook_output(stdout)
@@ -136,33 +137,31 @@ class TestSkillRouterPathStripping:
     HOOK = HOOKS_DIR / "skill-router.py"
 
     def test_06_windows_path_only(self, clean_session):
-        stdout, code = run_hook(self.HOOK, {
-            "prompt": r"d:\1с-framework\.claude\hooks\skill-router.py"
-        })
+        stdout, code = run_hook(
+            self.HOOK, {"prompt": r"d:\1с-framework\.claude\hooks\skill-router.py"}
+        )
         assert code == 0
         # Path stripped → no keywords remain → no match
         assert parse_hook_output(stdout) is None
 
     def test_07_windows_path_with_keyword(self, clean_session):
-        stdout, code = run_hook(self.HOOK, {
-            "prompt": r"Как работает StateGraph в d:\project\graph.py"
-        })
+        stdout, code = run_hook(
+            self.HOOK, {"prompt": r"Как работает StateGraph в d:\project\graph.py"}
+        )
         out = parse_hook_output(stdout)
         assert out is not None
         msg = out.get("systemMessage", "")
         assert "langgraph" in msg.lower() or "SKILL-ROUTER" in msg
 
     def test_08_unix_path_with_keyword(self, clean_session):
-        stdout, code = run_hook(self.HOOK, {
-            "prompt": "/home/user/src/langchain/core.py langchain agent"
-        })
+        stdout, code = run_hook(
+            self.HOOK, {"prompt": "/home/user/src/langchain/core.py langchain agent"}
+        )
         out = parse_hook_output(stdout)
         assert out is not None
 
     def test_09_no_paths_normal_matching(self, clean_session):
-        stdout, code = run_hook(self.HOOK, {
-            "prompt": "1С табличная часть справочник"
-        })
+        stdout, code = run_hook(self.HOOK, {"prompt": "1С табличная часть справочник"})
         out = parse_hook_output(stdout)
         assert out is not None
         msg = out.get("systemMessage", "")
@@ -331,6 +330,7 @@ class TestSkillRouterSessionDedup:
         run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
         # Reset session
         from shared.session_state import reset_session
+
         reset_session()
         # Same call again
         stdout, _ = run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
@@ -346,6 +346,7 @@ class TestSkillRouterSessionDedup:
         if session_file.exists():
             data = json.loads(session_file.read_text("utf-8"))
             from datetime import datetime, timedelta
+
             old_time = (datetime.now() - timedelta(hours=2)).isoformat()
             data["started_at"] = old_time
             session_file.write_text(json.dumps(data), encoding="utf-8")
@@ -529,12 +530,11 @@ class TestSkillEvalEnforcerInteraction:
     def test_52_both_hooks_produce_output(self, clean_session):
         """skill-router and enforcer both produce systemMessage."""
         router_out, _ = run_hook(
-            HOOKS_DIR / "skill-router.py",
-            {"prompt": "langchain agent create_agent tool decorator"}
+            HOOKS_DIR / "skill-router.py", {"prompt": "langchain agent create_agent tool decorator"}
         )
         enforcer_out, _ = run_hook(
             HOOKS_DIR / "skill-eval-enforcer.py",
-            {"prompt": "langchain agent create_agent tool decorator"}
+            {"prompt": "langchain agent create_agent tool decorator"},
         )
         assert parse_hook_output(router_out) is not None
         assert parse_hook_output(enforcer_out) is not None
@@ -543,7 +543,7 @@ class TestSkillEvalEnforcerInteraction:
         """Enforcer fires even when router has no recommendations."""
         enforcer_out, _ = run_hook(
             HOOKS_DIR / "skill-eval-enforcer.py",
-            {"prompt": "Обычный текст без ключевых слов для скиллов"}
+            {"prompt": "Обычный текст без ключевых слов для скиллов"},
         )
         out = parse_hook_output(enforcer_out)
         assert out is not None
@@ -559,22 +559,27 @@ class TestSessionStateCRUD:
     """3.1 Basic CRUD — tests 54-57."""
 
     def test_54_record_and_get_recommendations(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["skill-a", "skill-b"])
         result = get_already_recommended()
         assert "skill-a" in result
         assert "skill-b" in result
 
     def test_55_record_and_get_activation(self, clean_session):
-        from shared.session_state import record_activation, get_already_activated
+        from shared.session_state import get_already_activated, record_activation
+
         record_activation("skill-a")
         result = get_already_activated()
         assert "skill-a" in result
 
     def test_56_activation_rate_half(self, clean_session):
         from shared.session_state import (
-            record_recommendation, record_activation, get_activation_rate
+            get_activation_rate,
+            record_activation,
+            record_recommendation,
         )
+
         record_recommendation(["a", "b"])
         record_activation("a")
         rate = get_activation_rate()
@@ -582,6 +587,7 @@ class TestSessionStateCRUD:
 
     def test_57_activation_rate_zero_recommendations(self, clean_session):
         from shared.session_state import get_activation_rate
+
         rate = get_activation_rate()
         assert rate == 0.0
 
@@ -590,28 +596,33 @@ class TestSessionStateTimeout:
     """3.2 Session Timeout — tests 58-60."""
 
     def test_58_current_session_returns_data(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["x"])
         assert "x" in get_already_recommended()
 
     def test_59_expired_session_returns_empty(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["x"])
         # Manually expire session
         session_file = CACHE_DIR / "session-skills.json"
         data = json.loads(session_file.read_text("utf-8"))
         from datetime import datetime, timedelta
+
         data["started_at"] = (datetime.now() - timedelta(hours=2)).isoformat()
         session_file.write_text(json.dumps(data), encoding="utf-8")
         result = get_already_recommended()
         assert len(result) == 0
 
     def test_60_boundary_timeout(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["x"])
         session_file = CACHE_DIR / "session-skills.json"
         data = json.loads(session_file.read_text("utf-8"))
         from datetime import datetime, timedelta
+
         # Exactly 3601 seconds ago (just past 1-hour timeout)
         data["started_at"] = (datetime.now() - timedelta(seconds=3601)).isoformat()
         session_file.write_text(json.dumps(data), encoding="utf-8")
@@ -623,7 +634,8 @@ class TestSessionStateConcurrent:
     """3.3 Concurrent Access — tests 61-62."""
 
     def test_61_sequential_writes_preserve_data(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["a"])
         record_recommendation(["b"])
         result = get_already_recommended()
@@ -633,6 +645,7 @@ class TestSessionStateConcurrent:
     def test_62_lock_timeout_graceful(self, clean_session):
         """FileLock timeout should not crash."""
         from shared.session_state import record_recommendation
+
         # Just ensure it doesn't raise
         record_recommendation(["test-skill"])
         assert True
@@ -643,6 +656,7 @@ class TestSessionStateErrorRecovery:
 
     def test_63_corrupt_json(self, clean_session):
         from shared.session_state import get_already_recommended
+
         session_file = CACHE_DIR / "session-skills.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("INVALID JSON {{{{", encoding="utf-8")
@@ -652,6 +666,7 @@ class TestSessionStateErrorRecovery:
 
     def test_64_missing_file(self, clean_session):
         from shared.session_state import get_already_recommended
+
         session_file = CACHE_DIR / "session-skills.json"
         if session_file.exists():
             session_file.unlink()
@@ -662,6 +677,7 @@ class TestSessionStateErrorRecovery:
     def test_65_read_only_file(self, clean_session):
         """Write attempt to read-only file should not crash."""
         from shared.session_state import record_recommendation
+
         # This test is platform-dependent; on Windows read-only is different
         # Just verify no exception propagates
         try:
@@ -674,7 +690,8 @@ class TestSessionStateIntegrity:
     """3.5 Data Integrity — tests 66-68."""
 
     def test_66_duplicate_recommendation_no_duplicate(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["a"])
         record_recommendation(["a"])
         record_recommendation(["a"])
@@ -682,7 +699,8 @@ class TestSessionStateIntegrity:
         assert result == {"a"}
 
     def test_67_multiple_recommendations_preserved(self, clean_session):
-        from shared.session_state import record_recommendation, get_already_recommended
+        from shared.session_state import get_already_recommended, record_recommendation
+
         record_recommendation(["a"])
         record_recommendation(["b"])
         result = get_already_recommended()
@@ -691,12 +709,14 @@ class TestSessionStateIntegrity:
 
     def test_68_timestamps_are_iso(self, clean_session):
         from shared.session_state import record_recommendation
+
         record_recommendation(["test"])
         session_file = CACHE_DIR / "session-skills.json"
         data = json.loads(session_file.read_text("utf-8"))
         ts = data["recommended"]["test"]
         # Should be parseable as ISO datetime
         from datetime import datetime
+
         datetime.fromisoformat(ts)  # Should not raise
 
 
@@ -705,8 +725,11 @@ class TestSessionStateReset:
 
     def test_69_reset_clears_data(self, clean_session):
         from shared.session_state import (
-            record_recommendation, get_already_recommended, reset_session
+            get_already_recommended,
+            record_recommendation,
+            reset_session,
         )
+
         record_recommendation(["a", "b"])
         reset_session()
         result = get_already_recommended()
@@ -714,6 +737,7 @@ class TestSessionStateReset:
 
     def test_70_reset_without_file(self, clean_session):
         from shared.session_state import reset_session
+
         session_file = CACHE_DIR / "session-skills.json"
         if session_file.exists():
             session_file.unlink()
@@ -733,8 +757,11 @@ class TestAutoGitSaveIgnorePatterns:
         """Test _should_track from auto-git-save-prompt."""
         name = Path(filepath).name
         ignore = [
-            "hook-todos.json", "hook-todos.lock", "active-todos.json",
-            "auto-git-save-state.json", "auto-git-save-debug.log",
+            "hook-todos.json",
+            "hook-todos.lock",
+            "active-todos.json",
+            "auto-git-save-state.json",
+            "auto-git-save-debug.log",
         ]
         return name not in ignore
 
@@ -777,7 +804,8 @@ class TestAutoGitSaveGitignore:
         try:
             r = subprocess.run(
                 ["git", "check-ignore", "-q", path],
-                capture_output=True, timeout=3,
+                capture_output=True,
+                timeout=3,
                 cwd=str(PROJECT_ROOT),
             )
             return r.returncode == 0
@@ -809,10 +837,14 @@ class TestAutoGitSavePromptCooldown:
         """If last commit was < 30s ago, should skip."""
         state_file = CACHE_DIR / "auto-git-save-prompt-state.json"
         state_file.parent.mkdir(parents=True, exist_ok=True)
-        state_file.write_text(json.dumps({
-            "last_commit_time": time.time(),  # just now
-            "last_hash": "test123"
-        }))
+        state_file.write_text(
+            json.dumps(
+                {
+                    "last_commit_time": time.time(),  # just now
+                    "last_hash": "test123",
+                }
+            )
+        )
         stdout, code = run_hook(self.HOOK, {"prompt": "test"})
         assert code == 0
         # In cooldown — no commit output
@@ -823,10 +855,14 @@ class TestAutoGitSavePromptCooldown:
         """If last commit was > 30s ago, should commit (if files exist)."""
         state_file = CACHE_DIR / "auto-git-save-prompt-state.json"
         state_file.parent.mkdir(parents=True, exist_ok=True)
-        state_file.write_text(json.dumps({
-            "last_commit_time": time.time() - 60,  # 60s ago
-            "last_hash": "test123"
-        }))
+        state_file.write_text(
+            json.dumps(
+                {
+                    "last_commit_time": time.time() - 60,  # 60s ago
+                    "last_hash": "test123",
+                }
+            )
+        )
         # This will try to commit real files; result depends on git status
         stdout, code = run_hook(self.HOOK, {"prompt": "test"})
         assert code == 0  # Should never crash
@@ -850,11 +886,16 @@ class TestAutoGitSaveThreshold:
         """Default SYNC_COMMIT_THRESHOLD is 1."""
         # Read the module constant
         result = subprocess.run(
-            [PYTHON, "-c",
-             "import sys; sys.path.insert(0, '.claude/hooks'); "
-             "from auto_git_save_config import SYNC_COMMIT_THRESHOLD; "  # won't work directly
-             "print('ok')"],
-            capture_output=True, text=True, timeout=5,
+            [
+                PYTHON,
+                "-c",
+                "import sys; sys.path.insert(0, '.claude/hooks'); "
+                "from auto_git_save_config import SYNC_COMMIT_THRESHOLD; "  # won't work directly
+                "print('ok')",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
             cwd=str(PROJECT_ROOT),
         )
         # Just verify the hook module doesn't crash on import
@@ -864,11 +905,12 @@ class TestAutoGitSaveThreshold:
         """CLAUDE_COMMIT_THRESHOLD env var should be respected."""
         # Test by reading the code
         hook_code = (HOOKS_DIR / "auto-git-save.py").read_text("utf-8")
-        assert 'CLAUDE_COMMIT_THRESHOLD' in hook_code
-        assert 'os.environ.get' in hook_code
+        assert "CLAUDE_COMMIT_THRESHOLD" in hook_code
+        assert "os.environ.get" in hook_code
 
     def test_91_threshold_calculation(self):
         """Timeout calculation: base 5 + 1 per file, min 15, max 120."""
+
         # Simulate
         def calc(count):
             base = 5 + (count * 1)
@@ -910,7 +952,8 @@ class TestAutoGitSaveEdgeCases:
         result = subprocess.run(
             [PYTHON, str(self.HOOK_PROMPT)],
             input=b"NOT JSON AT ALL",
-            capture_output=True, timeout=10,
+            capture_output=True,
+            timeout=10,
             cwd=str(PROJECT_ROOT),
         )
         assert result.returncode == 0
@@ -930,7 +973,6 @@ class TestDocsEnforcerCodeToDomain:
 
     def setup_method(self):
         """Import the module."""
-        import importlib
         # Force reimport
         if "docs_change_enforcer" in sys.modules:
             del sys.modules["docs_change_enforcer"]
@@ -1020,10 +1062,22 @@ class TestDocsEnforcerSkipPatterns:
     """5.3 SKIP_PATTERNS — tests 108-116."""
 
     SKIP_PATTERNS = [
-        "docs/", "claude.md", "memory.md", "skill.md", "readme.md",
-        "changelog.md", "/cache/", "/__pycache__/", "hook-todos",
-        "active-todos", "auto-git-save", "_index.json", ".lock",
-        ".gitignore", ".git/", ".env",
+        "docs/",
+        "claude.md",
+        "memory.md",
+        "skill.md",
+        "readme.md",
+        "changelog.md",
+        "/cache/",
+        "/__pycache__/",
+        "hook-todos",
+        "active-todos",
+        "auto-git-save",
+        "_index.json",
+        ".lock",
+        ".gitignore",
+        ".git/",
+        ".env",
     ]
 
     def _should_skip(self, filepath: str) -> bool:
@@ -1091,7 +1145,9 @@ class TestDocsEnforcerFindStaleInfra:
                 if fp_norm.endswith((".json", ".py")):
                     infra_changes.append(fp)
         if infra_changes and not claude_md_updated:
-            return [{"subdir": "CLAUDE.md", "skill": "hooks-skills-mcp-triad", "files": infra_changes}]
+            return [
+                {"subdir": "CLAUDE.md", "skill": "hooks-skills-mcp-triad", "files": infra_changes}
+            ]
         return []
 
     def test_117_hook_change_is_stale(self):
@@ -1123,23 +1179,48 @@ class TestDocsEnforcerFindUnmapped:
     """5.5 find_unmapped_changes — tests 123-128."""
 
     CODE_TO_DOMAIN_PREFIXES = [
-        "src/pdf_framework/search/", "src/pdf_framework/agents/",
-        "src/pdf_framework/loaders/", "src/pdf_framework/processing/",
-        "src/pdf_framework/indexing/", "src/pdf_framework/graph_store/",
-        "src/pdf_framework/embeddings/", "src/pdf_framework/vector_store/",
-        "src/pdf_framework/config/", "src/pdf_framework/evaluation/",
-        "src/pdf_framework/feedback/", "src/pdf_framework/optimization/",
-        "src/pdf_framework/callbacks/", "src/pdf_framework/multitenancy/",
-        "src/pdf_framework/observability/", "src/pdf_framework/guardrails/",
-        "src/api/routes/", "src/api/middleware/", "src/api/app.py",
-        "src/cli/", "src/mcp_server/", "src/ui/", "src/workers/",
+        "src/pdf_framework/search/",
+        "src/pdf_framework/agents/",
+        "src/pdf_framework/loaders/",
+        "src/pdf_framework/processing/",
+        "src/pdf_framework/indexing/",
+        "src/pdf_framework/graph_store/",
+        "src/pdf_framework/embeddings/",
+        "src/pdf_framework/vector_store/",
+        "src/pdf_framework/config/",
+        "src/pdf_framework/evaluation/",
+        "src/pdf_framework/feedback/",
+        "src/pdf_framework/optimization/",
+        "src/pdf_framework/callbacks/",
+        "src/pdf_framework/multitenancy/",
+        "src/pdf_framework/observability/",
+        "src/pdf_framework/guardrails/",
+        "src/api/routes/",
+        "src/api/middleware/",
+        "src/api/app.py",
+        "src/cli/",
+        "src/mcp_server/",
+        "src/ui/",
+        "src/workers/",
     ]
 
     SKIP_PATTERNS = [
-        "docs/", "claude.md", "memory.md", "skill.md", "readme.md",
-        "changelog.md", "/cache/", "/__pycache__/", "hook-todos",
-        "active-todos", "auto-git-save", "_index.json", ".lock",
-        ".gitignore", ".git/", ".env",
+        "docs/",
+        "claude.md",
+        "memory.md",
+        "skill.md",
+        "readme.md",
+        "changelog.md",
+        "/cache/",
+        "/__pycache__/",
+        "hook-todos",
+        "active-todos",
+        "auto-git-save",
+        "_index.json",
+        ".lock",
+        ".gitignore",
+        ".git/",
+        ".env",
     ]
 
     def _is_unmapped(self, filepath: str) -> bool:
@@ -1282,7 +1363,8 @@ class TestE2EIntegration:
         """Verify .gitignore properly excludes .claude/cache/."""
         result = subprocess.run(
             ["git", "check-ignore", "-q", ".claude/cache/test.json"],
-            capture_output=True, timeout=3,
+            capture_output=True,
+            timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         assert result.returncode == 0, ".claude/cache/ should be gitignored"

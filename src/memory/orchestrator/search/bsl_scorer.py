@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from .config import BSLScorerConfig, DEFAULT_SEARCH_CONFIG
+from .config import DEFAULT_SEARCH_CONFIG, BSLScorerConfig
 
 logger = logging.getLogger(__name__)
 
@@ -104,14 +104,21 @@ class BSLScorer:
         )
 
         self._prefix_patterns = [
-            re.compile(f"^{re.escape(p)}", re.IGNORECASE)
-            for p in self.config.prefix_patterns
+            re.compile(f"^{re.escape(p)}", re.IGNORECASE) for p in self.config.prefix_patterns
         ]
 
         self._event_handlers = {
-            "ПередЗаписью", "ПриЗаписи", "ПослеЗаписи",
-            "ОбработкаПроведения", "ПриОткрытии", "ПриСозданииНаСервере",
-            "BeforeWrite", "OnWrite", "AfterWrite", "Posting", "OnOpen",
+            "ПередЗаписью",
+            "ПриЗаписи",
+            "ПослеЗаписи",
+            "ОбработкаПроведения",
+            "ПриОткрытии",
+            "ПриСозданииНаСервере",
+            "BeforeWrite",
+            "OnWrite",
+            "AfterWrite",
+            "Posting",
+            "OnOpen",
         }
 
     def detect_object_type(self, file_path: str) -> BSLObjectType:
@@ -170,13 +177,15 @@ class BSLScorer:
                 if name in self._event_handlers:
                     symbol_type = BSLSymbolType.EVENT_HANDLER
 
-                symbols.append(BSLSymbol(
-                    name=name,
-                    symbol_type=symbol_type,
-                    is_export=is_export,
-                    parameters=params,
-                    line_number=content[: match.start()].count("\n") + 1,
-                ))
+                symbols.append(
+                    BSLSymbol(
+                        name=name,
+                        symbol_type=symbol_type,
+                        is_export=is_export,
+                        parameters=params,
+                        line_number=content[: match.start()].count("\n") + 1,
+                    )
+                )
 
         return symbols
 
@@ -189,7 +198,9 @@ class BSLScorer:
         has_queries = bool(self._query_pattern.search(content))
         has_transactions = bool(self._transaction_pattern.search(content))
 
-        complexity = len(symbols) * 0.1 + (1.0 if has_queries else 0.0) + (0.5 if has_transactions else 0.0)
+        complexity = (
+            len(symbols) * 0.1 + (1.0 if has_queries else 0.0) + (0.5 if has_transactions else 0.0)
+        )
 
         return BSLAnalysisResult(
             object_type=object_type,

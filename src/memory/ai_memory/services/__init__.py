@@ -1,8 +1,8 @@
 """Services for ai_memory subsystem."""
 
 from .audit_service import AuditAction, AuditLogEntry, AuditQuery, AuditService
-from .versioning_service import ChangeType, EntityVersion, VersioningService
 from .ttl_service import CleanupResult, TTLEntry, TTLPolicy, TTLService
+from .versioning_service import ChangeType, EntityVersion, VersioningService
 
 __all__ = [
     # Audit (P1)

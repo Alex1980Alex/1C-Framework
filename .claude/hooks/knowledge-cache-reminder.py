@@ -14,8 +14,8 @@ Purpose: After web search/fetch, remind Claude to save research findings
 Timeout: 5s
 """
 
-import sys
 import os
+import sys
 
 # Core path resolution: find base/ + shared/ in user-level or project-level
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +25,7 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
-from shared.task_master import add_task, has_recent_completion, get_pending_tasks
+from shared.task_master import add_task, get_pending_tasks, has_recent_completion
 
 HOOK_ID = "knowledge-cache-reminder-hook"
 
@@ -40,34 +40,77 @@ class KnowledgeCacheReminder(BaseHook):
 
     # Signals that 1C/documentation research was performed
     C1_SIGNALS = [
-        "1с", "1c", "платформа", "конфигуратор",
-        "справочник", "документ", "регистр",
-        "перечисление", "обработка", "модуль",
-        "табличная часть", "реквизит", "проведение",
-        "its.1c.ru", "infostart.ru", "bsl",
+        "1с",
+        "1c",
+        "платформа",
+        "конфигуратор",
+        "справочник",
+        "документ",
+        "регистр",
+        "перечисление",
+        "обработка",
+        "модуль",
+        "табличная часть",
+        "реквизит",
+        "проведение",
+        "its.1c.ru",
+        "infostart.ru",
+        "bsl",
     ]
 
     # Signals that architecture research was performed
     ARCHITECTURE_SIGNALS = [
-        "best practice", "best practices",
-        "pattern", "architecture", "approach",
-        "паттерн", "архитектура", "подход",
-        "production", "scalab", "benchmark",
-        "comparison", "tradeoff", "trade-off",
-        "implementation", "design pattern",
-        "github.com", "awesome-", "stars",
+        "best practice",
+        "best practices",
+        "pattern",
+        "architecture",
+        "approach",
+        "паттерн",
+        "архитектура",
+        "подход",
+        "production",
+        "scalab",
+        "benchmark",
+        "comparison",
+        "tradeoff",
+        "trade-off",
+        "implementation",
+        "design pattern",
+        "github.com",
+        "awesome-",
+        "stars",
     ]
 
     # Signals that tech/RAG/ML research was performed
     TECH_SIGNALS = [
-        "rag", "retrieval", "embedding", "vector",
-        "reranking", "reranker", "chunking", "bm25",
-        "langchain", "langgraph", "qdrant", "chromadb",
-        "sentence-transformers", "colbert", "faiss",
-        "transformer", "llm", "claude", "anthropic",
-        "huggingface", "arxiv", "benchmark",
-        "fastapi", "pydantic", "pip install",
-        "github.com", "readthedocs", "pypi.org",
+        "rag",
+        "retrieval",
+        "embedding",
+        "vector",
+        "reranking",
+        "reranker",
+        "chunking",
+        "bm25",
+        "langchain",
+        "langgraph",
+        "qdrant",
+        "chromadb",
+        "sentence-transformers",
+        "colbert",
+        "faiss",
+        "transformer",
+        "llm",
+        "claude",
+        "anthropic",
+        "huggingface",
+        "arxiv",
+        "benchmark",
+        "fastapi",
+        "pydantic",
+        "pip install",
+        "github.com",
+        "readthedocs",
+        "pypi.org",
     ]
 
     def execute(self, inp: HookInput) -> HookOutput | None:

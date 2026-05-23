@@ -20,12 +20,17 @@ Version: 2.0 (2026-04-04) — P1 migration
 import asyncio
 import logging
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Set
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from ..infrastructure.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerError
+from ..infrastructure.circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerConfig,
+    CircuitBreakerError,
+)
 from .link_registry import LinkType
 from .unified_id import SourceServer, UnifiedID
 
@@ -86,7 +91,7 @@ class PropagationEvent:
     base_delta: float
     success: bool  # True = boost, False = penalty
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __hash__(self) -> int:
         return hash(self.event_id)
@@ -103,15 +108,15 @@ class PropagationResult:
 
     event_id: str
     source_entity_id: str
-    entities_updated: List[str]
-    updates_applied: Dict[str, float]
+    entities_updated: list[str]
+    updates_applied: dict[str, float]
     cascades_prevented: int
     final_depth: int
     processing_time_ms: float
     reason: str = ""
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "event_id": self.event_id,
             "source_entity_id": self.source_entity_id,
@@ -194,7 +199,7 @@ class PropagationEngine:
         self,
         link_registry: "LinkRegistry",  # type: ignore[name-defined]
         config: PropagationConfig | None = None,
-        update_handlers: Dict[SourceServer, Callable] | None = None,
+        update_handlers: dict[SourceServer, Callable] | None = None,
     ):
         self.link_registry = link_registry
         self.config = config or PropagationConfig()
@@ -213,10 +218,10 @@ class PropagationEngine:
 
         # Event queue
         self._event_queue: asyncio.Queue[PropagationEvent] | None = None
-        self._recent_events: Set[str] = set()
+        self._recent_events: set[str] = set()
 
         # Background tasks
-        self._worker_tasks: List[asyncio.Task] = []
+        self._worker_tasks: list[asyncio.Task] = []
         self._running = False
 
         # Statistics
@@ -227,8 +232,11 @@ class PropagationEngine:
             "total_processing_time_ms": 0.0,
         }
 
-        logger.info("PropagationEngine initialized (depth=%d, workers=%d)",
-                     self.config.max_depth, self.config.background_workers)
+        logger.info(
+            "PropagationEngine initialized (depth=%d, workers=%d)",
+            self.config.max_depth,
+            self.config.background_workers,
+        )
 
     async def start(self):
         """Start background event processing."""
@@ -242,8 +250,7 @@ class PropagationEngine:
             for i in range(self.config.background_workers):
                 task = asyncio.create_task(self._worker(f"worker-{i}"))
                 self._worker_tasks.append(task)
-            logger.info("PropagationEngine started with %d workers",
-                        self.config.background_workers)
+            logger.info("PropagationEngine started with %d workers", self.config.background_workers)
 
     async def stop(self):
         """Stop background event processing."""
@@ -262,7 +269,7 @@ class PropagationEngine:
         entity_id: str,
         base_delta: float,
         success: bool = True,
-        metadata: Dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PropagationResult:
         """
         Propagate confidence/importance change through graph.
@@ -307,7 +314,7 @@ class PropagationEngine:
                     processing_time_ms=0,
                     reason="queued_for_background_processing",
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("Event queue full, processing synchronously")
 
         # Process with circuit breaker protection
@@ -335,9 +342,7 @@ class PropagationEngine:
         logger.debug("Worker %s started", worker_name)
         while self._running:
             try:
-                event = await asyncio.wait_for(
-                    self._event_queue.get(), timeout=1.0
-                )
+                event = await asyncio.wait_for(self._event_queue.get(), timeout=1.0)
                 result = await self._process_propagation(event)
                 if self._event_queue is not None:
                     self._event_queue.task_done()
@@ -346,7 +351,7 @@ class PropagationEngine:
                 self._stats["entities_updated"] += len(result.entities_updated)
                 self._stats["cascades_prevented"] += result.cascades_prevented
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except asyncio.CancelledError:
                 break
@@ -365,15 +370,13 @@ class PropagationEngine:
                 return self._error_result(event, "invalid_entity_id")
 
             # BFS traversal
-            entities_updated: List[str] = []
-            updates_applied: Dict[str, float] = {}
+            entities_updated: list[str] = []
+            updates_applied: dict[str, float] = {}
             cascades_prevented = 0
             max_depth_seen = 0
 
-            queue: deque[tuple[str, float, int]] = deque(
-                [(event.entity_id, event.base_delta, 0)]
-            )
-            visited: Set[str] = {event.entity_id}
+            queue: deque[tuple[str, float, int]] = deque([(event.entity_id, event.base_delta, 0)])
+            visited: set[str] = {event.entity_id}
 
             while queue:
                 current_id, current_delta, depth = queue.popleft()
@@ -466,7 +469,7 @@ class PropagationEngine:
         if self.config.enable_distance_decay:
             distance_decay = max(
                 self.config.min_distance_decay,
-                self.config.distance_decay_per_level ** depth,
+                self.config.distance_decay_per_level**depth,
             )
             delta *= distance_decay
 
@@ -511,7 +514,7 @@ class PropagationEngine:
             reason=reason,
         )
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get propagation statistics."""
         stats = self._stats.copy()
         if self._circuit_breaker:

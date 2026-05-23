@@ -19,11 +19,25 @@ from base import BaseHook, HookInput, HookOutput
 
 # Code file extensions that require review
 _CODE_EXTENSIONS = {
-    ".py", ".js", ".ts", ".jsx", ".tsx",
-    ".bsl", ".os",
-    ".java", ".go", ".rs", ".rb", ".php",
-    ".c", ".cpp", ".h", ".hpp",
-    ".sh", ".bash", ".ps1",
+    ".py",
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".bsl",
+    ".os",
+    ".java",
+    ".go",
+    ".rs",
+    ".rb",
+    ".php",
+    ".c",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".sh",
+    ".bash",
+    ".ps1",
 }
 
 # Skip patterns (not real code changes)
@@ -49,7 +63,6 @@ _HARD_PATH_PATTERNS = [
 
 
 class CodeReviewEnforcer(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         file_path = inp.tool_input.get("file_path", "")
         if not file_path:

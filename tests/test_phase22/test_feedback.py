@@ -48,12 +48,18 @@ class TestFeedbackStore:
         await store.initialize()
 
         for i, score in enumerate([1, 1, -1, 0]):
-            await store.add(FeedbackEntry(
-                feedback_id=f"f{i}",
-                question=f"Q{i}?", answer=f"A{i}.",
-                score=score, strategy="hybrid",
-                chunk_ids=[], chunk_scores=[], timestamp=float(i),
-            ))
+            await store.add(
+                FeedbackEntry(
+                    feedback_id=f"f{i}",
+                    question=f"Q{i}?",
+                    answer=f"A{i}.",
+                    score=score,
+                    strategy="hybrid",
+                    chunk_ids=[],
+                    chunk_scores=[],
+                    timestamp=float(i),
+                )
+            )
 
         stats = await store.get_stats()
         assert stats["total"] == 4
@@ -68,12 +74,19 @@ class TestFeedbackStore:
         store = FeedbackStore(db_path=tmp_path / "feedback.db")
         await store.initialize()
 
-        await store.add(FeedbackEntry(
-            feedback_id="f1", question="Q?", answer="Bad A.",
-            score=-1, comment="Неправильный ответ",
-            strategy="vector", chunk_ids=[], chunk_scores=[],
-            timestamp=1.0,
-        ))
+        await store.add(
+            FeedbackEntry(
+                feedback_id="f1",
+                question="Q?",
+                answer="Bad A.",
+                score=-1,
+                comment="Неправильный ответ",
+                strategy="vector",
+                chunk_ids=[],
+                chunk_scores=[],
+                timestamp=1.0,
+            )
+        )
         negative = await store.get_negative(limit=10)
         assert len(negative) == 1
         assert negative[0].score == -1
@@ -98,7 +111,8 @@ class TestFewShotProvider:
         from src.pdf_framework.feedback.few_shot import FewShotExample, FewShotProvider
 
         provider = FewShotProvider(
-            feedback_store=None, embedding_engine=None,
+            feedback_store=None,
+            embedding_engine=None,
         )
         examples = [
             FewShotExample(question="Q?", answer="A.", similarity=0.9),
@@ -125,14 +139,20 @@ class TestContentBooster:
         from src.pdf_framework.feedback.store import FeedbackEntry
 
         mock_store = MagicMock()
-        mock_store.get_positive = AsyncMock(return_value=[
-            FeedbackEntry(
-                feedback_id=f"f{i}", question="Q?", answer="A.",
-                score=1, chunk_ids=["popular_chunk"], chunk_scores=[0.9],
-                timestamp=float(i),
-            )
-            for i in range(5)
-        ])
+        mock_store.get_positive = AsyncMock(
+            return_value=[
+                FeedbackEntry(
+                    feedback_id=f"f{i}",
+                    question="Q?",
+                    answer="A.",
+                    score=1,
+                    chunk_ids=["popular_chunk"],
+                    chunk_scores=[0.9],
+                    timestamp=float(i),
+                )
+                for i in range(5)
+            ]
+        )
 
         booster = ContentBooster(feedback_store=mock_store, min_positive_count=3)
         factor = await booster.get_boost("popular_chunk")

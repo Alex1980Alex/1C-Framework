@@ -11,7 +11,6 @@ from src.pdf_framework.agents.rag.nodes.hallucination_checker import (
     _parse_hallucination_result,
 )
 
-
 # ============================================================
 # _parse_relevance
 # ============================================================

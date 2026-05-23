@@ -6,7 +6,7 @@ Tests:
 - F2.5.3: coverage verification
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -91,7 +91,7 @@ class TestHybridLoader:
 
         coverage = loader._verify_coverage(chunks, total_pages=3)
 
-        assert coverage == 2/3
+        assert coverage == 2 / 3
 
     def test_coverage_threshold_warning(self):
         """F2.5.3: Coverage below threshold should warn."""

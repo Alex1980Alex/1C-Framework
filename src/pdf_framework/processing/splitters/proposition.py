@@ -10,8 +10,8 @@ Version: 1.0.0 - Phase 58: Proposition Chunking
 import logging
 from typing import Any
 
-from langchain.text_splitter import TextSplitter
 from langchain_anthropic import ChatAnthropic
+from langchain_text_splitters import TextSplitter
 
 from src.pdf_framework.schemas.documents import DocumentChunk
 

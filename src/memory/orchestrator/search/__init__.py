@@ -4,9 +4,10 @@ Provides BM25 sparse search, BSL-aware scoring, and hybrid RRF fusion.
 No external dependencies -- pure Python.
 """
 
+from .bsl_scorer import BSLAnalysisResult, BSLObjectType, BSLScorer, BSLScoreResult
 from .config import (
-    BSLScorerConfig,
     DEFAULT_SEARCH_CONFIG,
+    BSLScorerConfig,
     FusionMethod,
     HybridSearchConfig,
     SearchConfig,
@@ -14,7 +15,6 @@ from .config import (
     VectorType,
 )
 from .hybrid_search import BM25Index, HybridSearchResult, HybridSearchService, SearchResult
-from .bsl_scorer import BSLScorer, BSLScoreResult, BSLAnalysisResult, BSLObjectType
 
 __all__ = [
     # Config

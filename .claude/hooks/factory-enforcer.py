@@ -17,8 +17,8 @@ Purpose: After Claude writes files to .claude/hooks/ or .claude/skills/,
 Timeout: 5s
 """
 
-import sys
 import os
+import sys
 
 # Core path resolution: find base/ + shared/ in user-level or project-level
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +28,7 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
-from shared.task_master import add_task, has_recent_completion, get_pending_tasks
+from shared.task_master import add_task, get_pending_tasks, has_recent_completion
 
 HOOK_ID = "factory-enforcer-hook"
 
@@ -119,7 +119,7 @@ class FactoryEnforcer(BaseHook):
             ".claude/skills/hooks-skills-mcp-triad/SKILL.md\n"
             "3. Обнови MEMORY.md\n\n"
             "ОБЯЗАТЕЛЬНО выполни ШАГ 5 (Верификация):\n"
-            f"  echo '{{\"tool_name\":\"Write\"}}' | python {filename}\n"
+            f'  echo \'{{"tool_name":"Write"}}\' | python {filename}\n'
         )
 
     def _enforce_skill_creation(self, file_path: str) -> HookOutput | None:

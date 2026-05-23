@@ -23,6 +23,7 @@ if str(_SRC_ROOT) not in sys.path:
 
 def _lazy_import_types():  # noqa: ANN202
     from bsl.semantic_search.refactor.types import BackendError, WorkspaceEdit
+
     return BackendError, WorkspaceEdit
 
 
@@ -66,12 +67,17 @@ class WorktreeManager:
         self._base_tmp = (base_tmp or Path(tempfile.gettempdir())).resolve()
         self._active_worktrees: list[Path] = []
         import atexit
+
         atexit.register(self._cleanup_all)
 
     def _run_git(self, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["git", *args], cwd=cwd or self._repo_root,
-            capture_output=True, text=True, encoding="utf-8", env=_git_env(),
+            ["git", *args],
+            cwd=cwd or self._repo_root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=_git_env(),
         )
 
     def create(self, parent_sha: str, task_id: str, backend: str) -> Path:
@@ -89,7 +95,7 @@ class WorktreeManager:
             res = self._run_git("worktree", "remove", "--force", str(worktree_path))
             if res.returncode == 0 or not worktree_path.exists():
                 break
-            time.sleep(0.5 * (2 ** attempt))
+            time.sleep(0.5 * (2**attempt))
 
         if worktree_path.exists():
             for attempt in range(3):
@@ -99,7 +105,7 @@ class WorktreeManager:
                 except PermissionError:
                     if attempt == 2:
                         raise
-                    time.sleep(0.5 * (2 ** attempt))
+                    time.sleep(0.5 * (2**attempt))
 
         if worktree_path in self._active_worktrees:
             self._active_worktrees.remove(worktree_path)
@@ -153,7 +159,7 @@ class TaskExecutor:
                 uri_norm = fe.uri.replace("\\", "/")
                 wt_prefix = worktree_path.as_posix()
                 if uri_norm.startswith(wt_prefix):
-                    uri_norm = uri_norm[len(wt_prefix):].lstrip("/")
+                    uri_norm = uri_norm[len(wt_prefix) :].lstrip("/")
                 if uri_norm.startswith("file:///"):
                     uri_norm = uri_norm[8:]
                 actual_files.append(uri_norm)
@@ -172,16 +178,22 @@ class TaskExecutor:
             error_code = "UNHANDLED"
 
         return TaskResult(
-            task_id=task_id, backend=type(backend).__name__,
-            applied=applied, rolled_back=False,
+            task_id=task_id,
+            backend=type(backend).__name__,
+            applied=applied,
+            rolled_back=False,
             files_affected=files_affected,
             files_match_expected=files_match_expected,
             edits_match_expected=edits_match_expected,
-            duration_ms_plan=duration_ms_plan, duration_ms_apply=0,
-            error_code=error_code, fallback_used=False,
+            duration_ms_plan=duration_ms_plan,
+            duration_ms_apply=0,
+            error_code=error_code,
+            fallback_used=False,
             manual_required=not applied and bool(error_code),
-            classifier_confidence=0.0, matrix_confidence=0.0,
-            actual_files=actual_files, expected_files=expected_files,
+            classifier_confidence=0.0,
+            matrix_confidence=0.0,
+            actual_files=actual_files,
+            expected_files=expected_files,
         )
 
 
@@ -252,9 +264,12 @@ class ReportBuilder:
     def render_markdown(self, results: list[TaskResult], tasks: list[dict], run_id: str) -> str:
         agg = self.aggregate(results, tasks)
         lines: list[str] = [
-            f"# Benchmark Report - {run_id}", "",
-            f"**Tasks:** {len(tasks)} | **Results:** {len(results)}", "",
-            "## Per-Backend Summary", "",
+            f"# Benchmark Report - {run_id}",
+            "",
+            f"**Tasks:** {len(tasks)} | **Results:** {len(results)}",
+            "",
+            "## Per-Backend Summary",
+            "",
             "| Backend | Success | Rollback | p50 ms | p95 ms | p99 ms |",
             "|---------|---------|----------|--------|--------|--------|",
         ]
@@ -292,12 +307,33 @@ class ReportBuilder:
         cat_map = {t["id"]: t.get("category", "") for t in tasks}
         buf = io.StringIO()
         w = csv.writer(buf)
-        w.writerow(["task_id", "category", "backend", "applied", "rolled_back",
-                     "duration_ms_plan", "duration_ms_apply", "files_match_expected", "error_code"])
+        w.writerow(
+            [
+                "task_id",
+                "category",
+                "backend",
+                "applied",
+                "rolled_back",
+                "duration_ms_plan",
+                "duration_ms_apply",
+                "files_match_expected",
+                "error_code",
+            ]
+        )
         for r in results:
-            w.writerow([r.task_id, cat_map.get(r.task_id, ""), r.backend,
-                        r.applied, r.rolled_back, r.duration_ms_plan, r.duration_ms_apply,
-                        r.files_match_expected, r.error_code or ""])
+            w.writerow(
+                [
+                    r.task_id,
+                    cat_map.get(r.task_id, ""),
+                    r.backend,
+                    r.applied,
+                    r.rolled_back,
+                    r.duration_ms_plan,
+                    r.duration_ms_apply,
+                    r.files_match_expected,
+                    r.error_code or "",
+                ]
+            )
         return buf.getvalue()
 
 
@@ -371,13 +407,21 @@ class BenchmarkRunner:
 
                     except Exception as exc:  # noqa: BLE001
                         tr = TaskResult(
-                            task_id=tid, backend=backend_name, applied=False,
-                            rolled_back=False, files_affected=0,
-                            files_match_expected=False, edits_match_expected=False,
-                            duration_ms_plan=0, duration_ms_apply=0,
-                            error_code=f"RUNNER_ERROR:{exc}", fallback_used=False,
-                            manual_required=True, classifier_confidence=0.0,
-                            matrix_confidence=0.0, actual_files=[],
+                            task_id=tid,
+                            backend=backend_name,
+                            applied=False,
+                            rolled_back=False,
+                            files_affected=0,
+                            files_match_expected=False,
+                            edits_match_expected=False,
+                            duration_ms_plan=0,
+                            duration_ms_apply=0,
+                            error_code=f"RUNNER_ERROR:{exc}",
+                            fallback_used=False,
+                            manual_required=True,
+                            classifier_confidence=0.0,
+                            matrix_confidence=0.0,
+                            actual_files=[],
                             expected_files=task.get("expected_files", []),
                         )
                     finally:

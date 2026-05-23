@@ -22,6 +22,7 @@ def _is_docling_available() -> bool:
     """Check if Docling is installed."""
     try:
         import docling
+
         return True
     except ImportError:
         return False
@@ -31,6 +32,7 @@ def _is_pymupdf4llm_available() -> bool:
     """Check if PyMuPDF4LLM is installed."""
     try:
         import pymupdf4llm
+
         return True
     except ImportError:
         return False
@@ -38,7 +40,7 @@ def _is_pymupdf4llm_available() -> bool:
 
 @pytest.mark.skipif(
     not _is_docling_available(),
-    reason="Docling not installed. Run: pip install pdf-vector-graph-framework[docling]"
+    reason="Docling not installed. Run: pip install pdf-vector-graph-framework[docling]",
 )
 def test_docling_loader_basic():
     """Test basic Docling loader functionality."""
@@ -46,10 +48,7 @@ def test_docling_loader_basic():
     assert loader.supported_extensions() == [".pdf", ".docx", ".pptx", ".xlsx", ".html"]
 
 
-@pytest.mark.skipif(
-    not _is_docling_available(),
-    reason="Docling not installed"
-)
+@pytest.mark.skipif(not _is_docling_available(), reason="Docling not installed")
 @pytest.mark.slow
 @pytest.mark.asyncio
 async def test_docling_loader_load():
@@ -72,7 +71,7 @@ async def test_docling_loader_load():
 
 @pytest.mark.skipif(
     not _is_pymupdf4llm_available(),
-    reason="PyMuPDF4LLM not installed. Run: pip install pymupdf4llm"
+    reason="PyMuPDF4LLM not installed. Run: pip install pymupdf4llm",
 )
 def test_pymupdf4llm_loader_basic():
     """Test basic PyMuPDF4LLM loader functionality."""
@@ -80,10 +79,7 @@ def test_pymupdf4llm_loader_basic():
     assert loader.supported_extensions() == [".pdf"]
 
 
-@pytest.mark.skipif(
-    not _is_pymupdf4llm_available(),
-    reason="PyMuPDF4LLM not installed"
-)
+@pytest.mark.skipif(not _is_pymupdf4llm_available(), reason="PyMuPDF4LLM not installed")
 @pytest.mark.asyncio
 async def test_pymupdf4llm_loader_load():
     """Test PyMuPDF4LLM loader with a sample PDF."""

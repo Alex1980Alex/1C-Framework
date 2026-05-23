@@ -7,17 +7,18 @@ Version: 1.0.0
 Created: 2026-02-23
 """
 
-from dataclasses import dataclass
-from typing import Dict, Any, List, Optional
 import re
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class TrustRubric:
     """Trust evaluation rubric for a source"""
+
     source: str
-    criteria: Dict[str, float]  # criterion_name -> weight
-    thresholds: Dict[str, Any]  # criterion_name -> threshold value
+    criteria: dict[str, float]  # criterion_name -> weight
+    thresholds: dict[str, Any]  # criterion_name -> threshold value
     description: str
 
 
@@ -34,56 +35,56 @@ class TrustScorer:
             source="context7",
             criteria={},
             thresholds={},
-            description="Context7 official documentation (always trusted)"
+            description="Context7 official documentation (always trusted)",
         ),
         "github": TrustRubric(
             source="github",
             criteria={
-                "stars": 0.30,          # Repository popularity
+                "stars": 0.30,  # Repository popularity
                 "last_commit_days": 0.25,  # Recency of updates
-                "has_docs": 0.25,       # README/docs existence
-                "has_license": 0.20     # Open source license
+                "has_docs": 0.25,  # README/docs existence
+                "has_license": 0.20,  # Open source license
             },
             thresholds={
-                "stars": 100,           # >= 100 stars = good
-                "last_commit_days": 90, # <= 90 days = good
-                "has_docs": "yes",      # yes/no
-                "has_license": ["MIT", "Apache", "BSD", "ISC"]  # Preferred licenses
+                "stars": 100,  # >= 100 stars = good
+                "last_commit_days": 90,  # <= 90 days = good
+                "has_docs": "yes",  # yes/no
+                "has_license": ["MIT", "Apache", "BSD", "ISC"],  # Preferred licenses
             },
-            description="GitHub repository evaluation"
+            description="GitHub repository evaluation",
         ),
         "stackoverflow": TrustRubric(
             source="stackoverflow",
             criteria={
-                "is_accepted": 0.40,    # Answer marked as accepted
-                "score": 0.30,          # Upvotes - downvotes
-                "recency_days": 0.30    # How recent the answer is
+                "is_accepted": 0.40,  # Answer marked as accepted
+                "score": 0.30,  # Upvotes - downvotes
+                "recency_days": 0.30,  # How recent the answer is
             },
             thresholds={
                 "is_accepted": True,
-                "score": 3,             # >= 3 upvotes
-                "recency_days": 365     # <= 1 year old
+                "score": 3,  # >= 3 upvotes
+                "recency_days": 365,  # <= 1 year old
             },
-            description="StackOverflow answer evaluation"
+            description="StackOverflow answer evaluation",
         ),
         "infostart": TrustRubric(
             source="infostart",
             criteria={
-                "rating": 0.35,         # User rating (1-5 scale)
-                "downloads": 0.35,      # Number of downloads
-                "recency_days": 0.30    # Last update date
+                "rating": 0.35,  # User rating (1-5 scale)
+                "downloads": 0.35,  # Number of downloads
+                "recency_days": 0.30,  # Last update date
             },
             thresholds={
-                "rating": 4.0,          # >= 4.0 stars
-                "downloads": 100,       # >= 100 downloads
-                "recency_days": 730     # <= 2 years old
+                "rating": 4.0,  # >= 4.0 stars
+                "downloads": 100,  # >= 100 downloads
+                "recency_days": 730,  # <= 2 years old
             },
-            description="Infostart.ru publication evaluation"
-        )
+            description="Infostart.ru publication evaluation",
+        ),
     }
 
     @classmethod
-    def compute_score(cls, source: str, data: Dict[str, Any]) -> float:
+    def compute_score(cls, source: str, data: dict[str, Any]) -> float:
         """
         Compute trust score for a source based on provided data.
 
@@ -187,16 +188,20 @@ class TrustScorer:
         # Handle string expressions
         if isinstance(threshold, str):
             # Numeric comparison: ">100", "<=365"
-            match = re.match(r'^([<>]=?)(\d+(?:\.\d+)?)$', threshold)
+            match = re.match(r"^([<>]=?)(\d+(?:\.\d+)?)$", threshold)
             if match:
                 op = match.group(1)
                 threshold_val = float(match.group(2))
                 try:
                     val = float(value)
-                    if op == ">": return val > threshold_val
-                    if op == ">=": return val >= threshold_val
-                    if op == "<": return val < threshold_val
-                    if op == "<=": return val <= threshold_val
+                    if op == ">":
+                        return val > threshold_val
+                    if op == ">=":
+                        return val >= threshold_val
+                    if op == "<":
+                        return val < threshold_val
+                    if op == "<=":
+                        return val <= threshold_val
                 except (ValueError, TypeError):
                     return False
 
@@ -207,8 +212,11 @@ class TrustScorer:
             # Yes/No
             if threshold.lower() in ("yes", "no"):
                 expected = threshold.lower() == "yes"
-                return str(value).lower() in ("yes", "true", "1") if expected else \
-                       str(value).lower() in ("no", "false", "0")
+                return (
+                    str(value).lower() in ("yes", "true", "1")
+                    if expected
+                    else str(value).lower() in ("no", "false", "0")
+                )
 
         # Direct comparison
         return value == threshold
@@ -231,10 +239,7 @@ class TrustScorer:
         else:
             sources = ["github", "stackoverflow"]
 
-        lines = [
-            "## Trust Scale for Information Sources",
-            ""
-        ]
+        lines = ["## Trust Scale for Information Sources", ""]
 
         for source in sources:
             rubric = cls.RUBRICS.get(source)
@@ -246,7 +251,9 @@ class TrustScorer:
                     lines.append("**Criteria:**")
                     for criterion, weight in rubric.criteria.items():
                         threshold = rubric.thresholds.get(criterion)
-                        lines.append(f"- {criterion} (weight: {weight:.0%}): threshold = {threshold}")
+                        lines.append(
+                            f"- {criterion} (weight: {weight:.0%}): threshold = {threshold}"
+                        )
 
                 lines.append("")
 
@@ -281,7 +288,7 @@ Before writing any code, consult sources in this order:
 
         protocol += "\n" + cls.format_trust_rubric(domain)
 
-        protocol += f"""
+        protocol += """
 
 ### Expected Outcome
 After consulting sources, write code that follows:

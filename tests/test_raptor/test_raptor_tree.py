@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.pdf_framework.processing.raptor import (
-    TreeNode,
     RAPTORTree,
     RAPTORTreeBuilder,
+    TreeNode,
     get_raptor_builder,
 )
 
@@ -18,6 +18,7 @@ PATCH_CHAT = "langchain_anthropic.ChatAnthropic"
 # ---------------------------------------------------------------------------
 # TreeNode model
 # ---------------------------------------------------------------------------
+
 
 class TestTreeNode:
     def test_defaults(self):
@@ -68,6 +69,7 @@ class TestTreeNode:
 # RAPTORTree model
 # ---------------------------------------------------------------------------
 
+
 class TestRAPTORTree:
     def _make_tree(self):
         leaves = [
@@ -77,11 +79,15 @@ class TestRAPTORTree:
         ]
         summaries = [
             TreeNode(
-                id="L1_c0", content="summary0", level=1,
+                id="L1_c0",
+                content="summary0",
+                level=1,
                 children_ids=["L0_0", "L0_1"],
             ),
             TreeNode(
-                id="L1_c1", content="summary1", level=1,
+                id="L1_c1",
+                content="summary1",
+                level=1,
                 children_ids=["L0_2"],
             ),
         ]
@@ -142,6 +148,7 @@ class TestRAPTORTree:
 # RAPTORTreeBuilder
 # ---------------------------------------------------------------------------
 
+
 class TestRAPTORTreeBuilder:
     def test_init_defaults(self):
         builder = RAPTORTreeBuilder()
@@ -150,7 +157,8 @@ class TestRAPTORTreeBuilder:
 
     def test_init_custom(self):
         builder = RAPTORTreeBuilder(
-            max_levels=2, min_clusters=3,
+            max_levels=2,
+            min_clusters=3,
             summarization_model="custom-model",
             api_key="key123",
         )
@@ -259,7 +267,9 @@ class TestRAPTORTreeBuilder:
             mock_llm.ainvoke = AsyncMock(return_value=mock_response)
             mock_cls.return_value = mock_llm
 
-            result = await builder._summarize_cluster(nodes, level=1, cluster_id=0, document_id="doc")
+            result = await builder._summarize_cluster(
+                nodes, level=1, cluster_id=0, document_id="doc"
+            )
 
         assert result is not None
         assert result.content == "Summary of AI and ML passages."
@@ -294,9 +304,11 @@ class TestRAPTORTreeBuilder:
 # get_raptor_builder singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetRaptorBuilder:
     def test_returns_instance(self):
         import src.pdf_framework.processing.raptor as mod
+
         mod._raptor_builder = None
 
         builder = get_raptor_builder()
@@ -305,6 +317,7 @@ class TestGetRaptorBuilder:
 
     def test_returns_same_instance(self):
         import src.pdf_framework.processing.raptor as mod
+
         mod._raptor_builder = None
 
         b1 = get_raptor_builder()
@@ -314,6 +327,7 @@ class TestGetRaptorBuilder:
 
     def test_accepts_kwargs(self):
         import src.pdf_framework.processing.raptor as mod
+
         mod._raptor_builder = None
 
         builder = get_raptor_builder(max_levels=2, api_key="key")

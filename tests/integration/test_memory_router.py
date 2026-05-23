@@ -11,22 +11,14 @@ Tests:
 - Statistics tracking
 """
 
-import asyncio
-
 import pytest
 
 from src.memory.orchestrator.memory_router import (
-    CATEGORY_KEYWORDS,
-    CATEGORY_TARGETS,
-    EXPLICIT_KEYWORDS,
-    INTENT_PATTERNS,
     MemoryRouter,
     RouterConfig,
     RoutingDecision,
-    RoutingStats,
     route_memory,
 )
-
 
 # ===== Fixtures =====
 

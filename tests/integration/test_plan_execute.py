@@ -8,7 +8,7 @@ from src.pdf_framework.agents.plan_execute.agent import (
     create_plan_execute_agent,
     run_plan_execute,
 )
-from src.pdf_framework.agents.plan_execute.state import PlanExecuteState, PlanStep
+from src.pdf_framework.agents.plan_execute.state import PlanExecuteState
 
 
 @pytest.fixture
@@ -23,10 +23,10 @@ def mock_llm():
         # Check if this is a planning prompt
         content = str(messages)
         if "planning" in content.lower() or "break down" in content.lower():
-            response.content = '''{"steps": [
+            response.content = """{"steps": [
                 {"step_id": "1", "description": "Search for information", "tool": "search", "query": "test query"},
                 {"step_id": "2", "description": "Synthesize results", "tool": "search", "query": "combined query"}
-            ]}'''
+            ]}"""
         elif "synthesize" in content.lower() or "combine" in content.lower():
             response.content = "Based on the search results, here is the comprehensive answer."
         else:
@@ -45,9 +45,7 @@ def mock_search_manager():
 
     async def mock_search(query, **kwargs):
         response = MagicMock()
-        response.results = [
-            MagicMock(content=f"Result for {query}", score=0.9)
-        ]
+        response.results = [MagicMock(content=f"Result for {query}", score=0.9)]
         response.answer = f"Answer for {query}"
         return response
 
@@ -95,9 +93,7 @@ class TestPlanExecuteAgent:
     @pytest.mark.asyncio
     async def test_agent_multi_step_execution(self, plan_execute_agent):
         """Test agent with multi-step plan execution."""
-        initial_state = PlanExecuteState(
-            query="Compare documents and catalogs in 1C"
-        )
+        initial_state = PlanExecuteState(query="Compare documents and catalogs in 1C")
 
         result = await plan_execute_agent.ainvoke(initial_state)
 
@@ -123,9 +119,7 @@ class TestPlanExecuteAgent:
     @pytest.mark.asyncio
     async def test_agent_with_search_tool(self, plan_execute_agent, mock_tools):
         """Test agent using search tool."""
-        initial_state = PlanExecuteState(
-            query="Find information about registers"
-        )
+        initial_state = PlanExecuteState(query="Find information about registers")
 
         result = await plan_execute_agent.ainvoke(initial_state)
 
@@ -140,9 +134,9 @@ class TestPlanExecuteAgent:
         llm = MagicMock()
         llm.ainvoke = AsyncMock(
             return_value=MagicMock(
-                content='''{"steps": [
+                content="""{"steps": [
                     {"step_id": "1", "description": "Query graph", "tool": "graph_query", "query": "entity:Document"}
-                ]}'''
+                ]}"""
             )
         )
 
@@ -197,9 +191,7 @@ class TestRunPlanExecute:
         """Test run function handles agent errors."""
         # Create an agent that will fail
         failing_llm = MagicMock()
-        failing_llm.ainvoke = AsyncMock(
-            side_effect=Exception("LLM error")
-        )
+        failing_llm.ainvoke = AsyncMock(side_effect=Exception("LLM error"))
 
         agent = create_plan_execute_agent(
             llm=failing_llm,
@@ -312,9 +304,7 @@ class TestPlanExecuteStreaming:
     @pytest.mark.asyncio
     async def test_streaming_events(self, plan_execute_agent):
         """Test that agent can stream intermediate results."""
-        initial_state = PlanExecuteState(
-            query="Test streaming query"
-        )
+        initial_state = PlanExecuteState(query="Test streaming query")
 
         # Collect events
         events = []

@@ -3,7 +3,6 @@
 Tests table data model and extraction with mocked pdfplumber.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 from src.pdf_framework.processing.table_extractor import TableData, TableExtractor

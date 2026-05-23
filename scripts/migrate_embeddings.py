@@ -36,13 +36,19 @@ logger = logging.getLogger(__name__)
 
 async def main():
     parser = argparse.ArgumentParser(description="Embedding Migration (Phase 47)")
-    parser.add_argument("--provider", required=True, help="Target embedding provider (local/jina/giga)")
+    parser.add_argument(
+        "--provider", required=True, help="Target embedding provider (local/jina/giga)"
+    )
     parser.add_argument("--model", default=None, help="Model name override")
     parser.add_argument("--jina-key", default="", help="Jina API key")
     parser.add_argument("--jina-truncate-dim", type=int, default=None, help="Jina Matryoshka dim")
     parser.add_argument("--batch-size", type=int, default=256, help="Embedding batch size")
-    parser.add_argument("--skip-graph", action="store_true", help="Skip graph entity embeddings rebuild")
-    parser.add_argument("--skip-bm25-sparse", action="store_true", help="Skip BM25 sparse vectors rebuild")
+    parser.add_argument(
+        "--skip-graph", action="store_true", help="Skip graph entity embeddings rebuild"
+    )
+    parser.add_argument(
+        "--skip-bm25-sparse", action="store_true", help="Skip BM25 sparse vectors rebuild"
+    )
     parser.add_argument("--dry-run", action="store_true", help="Show plan without executing")
     args = parser.parse_args()
 
@@ -71,15 +77,20 @@ async def main():
     current_dims = current_settings.embedding.dimensions
 
     logger.info("=== Migration Plan ===")
-    logger.info("From: %s (%s, %dd)", current_settings.embedding.provider,
-                current_settings.embedding.model, current_dims)
-    logger.info("To:   %s (%s, %dd)", args.provider,
-                new_engine.get_model_name(), new_dims)
+    logger.info(
+        "From: %s (%s, %dd)",
+        current_settings.embedding.provider,
+        current_settings.embedding.model,
+        current_dims,
+    )
+    logger.info("To:   %s (%s, %dd)", args.provider, new_engine.get_model_name(), new_dims)
     logger.info("Batch size: %d", args.batch_size)
 
     dims_changed = new_dims != current_dims
     if dims_changed:
-        logger.info("Dimensions changed: %d → %d (collection WILL be recreated)", current_dims, new_dims)
+        logger.info(
+            "Dimensions changed: %d → %d (collection WILL be recreated)", current_dims, new_dims
+        )
     else:
         logger.info("Dimensions unchanged: %d (in-place update)", current_dims)
 
@@ -109,6 +120,8 @@ async def main():
         PointStruct,
         SparseVectorParams,
         VectorParams,
+    )
+    from qdrant_client.models import (
         models as qmodels,
     )
 
@@ -174,23 +187,28 @@ async def main():
     t0 = time.perf_counter()
     new_embeddings = await new_engine.embed_batch(texts)
     embed_time = time.perf_counter() - t0
-    logger.info("  Embedded in %.1fs (%.0f texts/sec)",
-                embed_time, len(texts) / embed_time if embed_time > 0 else 0)
+    logger.info(
+        "  Embedded in %.1fs (%.0f texts/sec)",
+        embed_time,
+        len(texts) / embed_time if embed_time > 0 else 0,
+    )
 
     # Step 4: Upsert with new embeddings
     logger.info("[Step 4] Upserting %d points to Qdrant...", len(all_points))
     batch_size = 256
     for i in range(0, len(all_points), batch_size):
-        batch_points = all_points[i:i + batch_size]
-        batch_embeddings = new_embeddings[i:i + batch_size]
+        batch_points = all_points[i : i + batch_size]
+        batch_embeddings = new_embeddings[i : i + batch_size]
 
         points_to_upsert = []
         for point, embedding in zip(batch_points, batch_embeddings):
-            points_to_upsert.append(PointStruct(
-                id=point.id,
-                vector={"dense": embedding},
-                payload=point.payload,
-            ))
+            points_to_upsert.append(
+                PointStruct(
+                    id=point.id,
+                    vector={"dense": embedding},
+                    payload=point.payload,
+                )
+            )
 
         await client.upsert(
             collection_name=collection_name,
@@ -212,8 +230,9 @@ async def main():
     if not args.skip_graph:
         logger.info("[Step 6] Rebuilding graph entity embeddings...")
         try:
-            from src.pdf_framework.graph_store.entity_embeddings import EntityEmbeddingBuilder
             from src.pdf_framework.graph_store.providers.networkx import NetworkXGraphStore
+
+            from src.pdf_framework.graph_store.entity_embeddings import EntityEmbeddingBuilder
 
             graph_store = NetworkXGraphStore(current_settings.graphrag)
             builder = EntityEmbeddingBuilder(

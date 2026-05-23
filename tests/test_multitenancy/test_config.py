@@ -1,13 +1,11 @@
 """Tests for Phase 12 configuration (AuthSettings)."""
 
-import pytest
-
 from src.pdf_framework.config import AuthSettings, Settings
-
 
 # ---------------------------------------------------------------------------
 # AuthSettings
 # ---------------------------------------------------------------------------
+
 
 class TestAuthSettings:
     def test_defaults(self):
@@ -42,6 +40,7 @@ class TestAuthSettings:
 # ---------------------------------------------------------------------------
 # Settings integration
 # ---------------------------------------------------------------------------
+
 
 class TestSettingsIntegration:
     def test_auth_in_settings(self):

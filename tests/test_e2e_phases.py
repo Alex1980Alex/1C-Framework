@@ -91,7 +91,7 @@ class TestRunner:
         print(f"Time:    {total_ms / 1000:.1f}s")
 
         if failed:
-            print(f"\nFailed tests:")
+            print("\nFailed tests:")
             for r in self.results:
                 if not r.passed:
                     print(f"  - {r.name}: {r.message}")
@@ -176,9 +176,16 @@ def test_documents_files(client: httpx.Client, ctx: dict):
 
 
 def _search(client, query, strategy, k=5, rerank=False, **extra):
-    r = client.post("/search/", json={
-        "query": query, "strategy": strategy, "k": k, "rerank": rerank, **extra,
-    })
+    r = client.post(
+        "/search/",
+        json={
+            "query": query,
+            "strategy": strategy,
+            "k": k,
+            "rerank": rerank,
+            **extra,
+        },
+    )
     assert r.status_code == 200, f"status={r.status_code}: {r.text[:200]}"
     d = r.json()
     return d
@@ -237,9 +244,15 @@ def test_search_adaptive(client: httpx.Client, ctx: dict):
 
 
 def test_search_two_stage(client: httpx.Client, ctx: dict):
-    r = client.post("/search/", json={
-        "query": QUERIES["simple"], "strategy": "two_stage", "k": 5, "rerank": False,
-    })
+    r = client.post(
+        "/search/",
+        json={
+            "query": QUERIES["simple"],
+            "strategy": "two_stage",
+            "k": 5,
+            "rerank": False,
+        },
+    )
     if r.status_code == 500:
         # two_stage is disabled by default (settings.two_stage.enabled=False)
         return True, "SKIP: two_stage disabled (enabled=False in config)"
@@ -254,11 +267,14 @@ def test_search_two_stage(client: httpx.Client, ctx: dict):
 
 
 def test_ask(client: httpx.Client, ctx: dict):
-    r = client.post("/search/ask", json={
-        "question": "Что такое справочники в 1С?",
-        "strategy": "hybrid",
-        "k": 5,
-    })
+    r = client.post(
+        "/search/ask",
+        json={
+            "question": "Что такое справочники в 1С?",
+            "strategy": "hybrid",
+            "k": 5,
+        },
+    )
     assert r.status_code == 200
     d = r.json()
     answer = d.get("answer", "")
@@ -266,11 +282,14 @@ def test_ask(client: httpx.Client, ctx: dict):
 
 
 def test_chat_message(client: httpx.Client, ctx: dict):
-    r = client.post("/chat/message", json={
-        "message": "Объясни что такое регистры в 1С",
-        "stream": False,
-        "strategy": "hybrid",
-    })
+    r = client.post(
+        "/chat/message",
+        json={
+            "message": "Объясни что такое регистры в 1С",
+            "stream": False,
+            "strategy": "hybrid",
+        },
+    )
     assert r.status_code == 200
     d = r.json()
     ctx["thread_id"] = d.get("thread_id", "")
@@ -282,12 +301,15 @@ def test_chat_followup(client: httpx.Client, ctx: dict):
     tid = ctx.get("thread_id")
     if not tid:
         return False, "no thread_id from previous test"
-    r = client.post("/chat/message", json={
-        "message": "А чем они отличаются от справочников?",
-        "thread_id": tid,
-        "stream": False,
-        "strategy": "hybrid",
-    })
+    r = client.post(
+        "/chat/message",
+        json={
+            "message": "А чем они отличаются от справочников?",
+            "thread_id": tid,
+            "stream": False,
+            "strategy": "hybrid",
+        },
+    )
     assert r.status_code == 200
     d = r.json()
     answer = d.get("answer", "")
@@ -300,10 +322,13 @@ def test_chat_followup(client: httpx.Client, ctx: dict):
 
 
 def test_analyze(client: httpx.Client, ctx: dict):
-    r = client.post("/search/analyze", json={
-        "question": QUERIES["comparison"],
-        "max_rounds": 2,
-    })
+    r = client.post(
+        "/search/analyze",
+        json={
+            "question": QUERIES["comparison"],
+            "max_rounds": 2,
+        },
+    )
     assert r.status_code == 200
     d = r.json()
     answer = d.get("answer", "")
@@ -318,10 +343,13 @@ def test_analyze(client: httpx.Client, ctx: dict):
 
 
 def test_research(client: httpx.Client, ctx: dict):
-    r = client.post("/search/research", json={
-        "question": QUERIES["overview"],
-        "max_rounds": 2,
-    })
+    r = client.post(
+        "/search/research",
+        json={
+            "question": QUERIES["overview"],
+            "max_rounds": 2,
+        },
+    )
     assert r.status_code == 200
     d = r.json()
     answer = d.get("answer", "")
@@ -329,8 +357,7 @@ def test_research(client: httpx.Client, ctx: dict):
     evidence = d.get("evidence_count", 0)
     sid = d.get("session_id", "")
     return len(answer) > 100, (
-        f"answer={len(answer)} chars, sections={sections}, "
-        f"evidence={evidence}, session={sid[:8]}"
+        f"answer={len(answer)} chars, sections={sections}, evidence={evidence}, session={sid[:8]}"
     )
 
 
@@ -340,10 +367,13 @@ def test_research(client: httpx.Client, ctx: dict):
 
 
 def test_multi_agent(client: httpx.Client, ctx: dict):
-    r = client.post("/search/multi-agent", json={
-        "question": "Подробно опиши план счетов в 1С",
-        "max_iterations": 1,
-    })
+    r = client.post(
+        "/search/multi-agent",
+        json={
+            "question": "Подробно опиши план счетов в 1С",
+            "max_iterations": 1,
+        },
+    )
     assert r.status_code == 200
     d = r.json()
     answer = d.get("answer", "")
@@ -443,11 +473,14 @@ def test_toc_section_detail(client: httpx.Client, ctx: dict):
 
 
 def test_collections_create(client: httpx.Client, ctx: dict):
-    r = client.post("/collections/", json={
-        "name": "E2E Test Collection",
-        "description": "Automated test",
-        "tags": ["test", "e2e"],
-    })
+    r = client.post(
+        "/collections/",
+        json={
+            "name": "E2E Test Collection",
+            "description": "Automated test",
+            "tags": ["test", "e2e"],
+        },
+    )
     assert r.status_code == 200, f"status={r.status_code}: {r.text[:200]}"
     d = r.json()
     ctx["collection_id"] = d.get("id") or d.get("collection_id", "")
@@ -467,9 +500,12 @@ def test_collections_add_document(client: httpx.Client, ctx: dict):
     doc_id = ctx.get("document_id")
     if not cid or not doc_id:
         return False, "no collection_id or document_id"
-    r = client.post(f"/collections/{cid}/documents", json={
-        "document_ids": [doc_id],
-    })
+    r = client.post(
+        f"/collections/{cid}/documents",
+        json={
+            "document_ids": [doc_id],
+        },
+    )
     return r.status_code == 200, f"status={r.status_code}"
 
 
@@ -507,14 +543,17 @@ def test_collections_delete(client: httpx.Client, ctx: dict):
 
 
 def test_feedback_submit(client: httpx.Client, ctx: dict):
-    r = client.post("/feedback/submit", json={
-        "query": "справочники в 1С",
-        "answer": "Справочники — это объекты конфигурации для хранения условно-постоянной информации.",
-        "feedback": "positive",
-        "strategy": "hybrid",
-        "score": 0.9,
-        "sources": ["chapter5.pdf"],
-    })
+    r = client.post(
+        "/feedback/submit",
+        json={
+            "query": "справочники в 1С",
+            "answer": "Справочники — это объекты конфигурации для хранения условно-постоянной информации.",
+            "feedback": "positive",
+            "strategy": "hybrid",
+            "score": 0.9,
+            "sources": ["chapter5.pdf"],
+        },
+    )
     if r.status_code == 200:
         d = r.json()
         return d.get("success", False), f"id={d.get('feedback_id', 0)}"
@@ -622,57 +661,135 @@ def main():
 
     groups = [
         # (name, timeout, tests)
-        ("1. System Health", TIMEOUT_SHORT, [
-            test_health, test_health_ready, test_health_live,
-        ]),
-        ("2. Documents (read-only)", TIMEOUT_SHORT, [
-            test_documents_list, test_documents_stats,
-            test_documents_registry, test_documents_files,
-        ]),
-        ("3. Search Core (5 strategies)", TIMEOUT_MEDIUM, [
-            test_search_vector, test_search_hybrid, test_search_bm25,
-            test_search_mmr, test_search_section_first,
-        ]),
-        ("4. Search Advanced (5 strategies)", TIMEOUT_MEDIUM, [
-            test_search_graphrag_local, test_search_graphrag_light,
-            test_search_graphrag_auto, test_search_adaptive,
-            test_search_two_stage,
-        ]),
-        ("5. RAG Agent (Phases 5, 9)", TIMEOUT_LONG, [
-            test_ask, test_chat_message, test_chat_followup,
-        ]),
-        ("6. Analytical Agent (Phase 33)", TIMEOUT_LONG, [
-            test_analyze,
-        ]),
-        ("7. Research Agent (Phase 36)", TIMEOUT_LONG, [
-            test_research,
-        ]),
-        ("8. Multi-Agent (Phase 39)", TIMEOUT_LONG, [
-            test_multi_agent,
-        ]),
-        ("9. Knowledge Graph (Phases 6, 38)", TIMEOUT_SHORT, [
-            test_graph_stats, test_graph_entities,
-            test_graph_neighbors, test_graph_entity_embeddings_stats,
-        ]),
-        ("10. ToC Navigation (Phase 30)", TIMEOUT_SHORT, [
-            test_toc_tree, test_toc_section_detail,
-        ]),
-        ("11. Collections (Phase 32)", TIMEOUT_MEDIUM, [
-            test_collections_create, test_collections_list,
-            test_collections_add_document, test_collections_search_scoped,
-            test_collections_list_documents, test_collections_delete,
-        ]),
-        ("12. Feedback (Phase 22)", TIMEOUT_SHORT, [
-            test_feedback_submit, test_feedback_stats,
-        ]),
-        ("13. Cache & Metrics (Phases 11, 17)", TIMEOUT_SHORT, [
-            test_cache_stats, test_metrics_json, test_metrics_html,
-        ]),
-        ("14. Analytics (Phase 40)", TIMEOUT_SHORT, [
-            test_analytics_summary, test_analytics_queries,
-            test_analytics_recent, test_analytics_costs,
-            test_analytics_audit,
-        ]),
+        (
+            "1. System Health",
+            TIMEOUT_SHORT,
+            [
+                test_health,
+                test_health_ready,
+                test_health_live,
+            ],
+        ),
+        (
+            "2. Documents (read-only)",
+            TIMEOUT_SHORT,
+            [
+                test_documents_list,
+                test_documents_stats,
+                test_documents_registry,
+                test_documents_files,
+            ],
+        ),
+        (
+            "3. Search Core (5 strategies)",
+            TIMEOUT_MEDIUM,
+            [
+                test_search_vector,
+                test_search_hybrid,
+                test_search_bm25,
+                test_search_mmr,
+                test_search_section_first,
+            ],
+        ),
+        (
+            "4. Search Advanced (5 strategies)",
+            TIMEOUT_MEDIUM,
+            [
+                test_search_graphrag_local,
+                test_search_graphrag_light,
+                test_search_graphrag_auto,
+                test_search_adaptive,
+                test_search_two_stage,
+            ],
+        ),
+        (
+            "5. RAG Agent (Phases 5, 9)",
+            TIMEOUT_LONG,
+            [
+                test_ask,
+                test_chat_message,
+                test_chat_followup,
+            ],
+        ),
+        (
+            "6. Analytical Agent (Phase 33)",
+            TIMEOUT_LONG,
+            [
+                test_analyze,
+            ],
+        ),
+        (
+            "7. Research Agent (Phase 36)",
+            TIMEOUT_LONG,
+            [
+                test_research,
+            ],
+        ),
+        (
+            "8. Multi-Agent (Phase 39)",
+            TIMEOUT_LONG,
+            [
+                test_multi_agent,
+            ],
+        ),
+        (
+            "9. Knowledge Graph (Phases 6, 38)",
+            TIMEOUT_SHORT,
+            [
+                test_graph_stats,
+                test_graph_entities,
+                test_graph_neighbors,
+                test_graph_entity_embeddings_stats,
+            ],
+        ),
+        (
+            "10. ToC Navigation (Phase 30)",
+            TIMEOUT_SHORT,
+            [
+                test_toc_tree,
+                test_toc_section_detail,
+            ],
+        ),
+        (
+            "11. Collections (Phase 32)",
+            TIMEOUT_MEDIUM,
+            [
+                test_collections_create,
+                test_collections_list,
+                test_collections_add_document,
+                test_collections_search_scoped,
+                test_collections_list_documents,
+                test_collections_delete,
+            ],
+        ),
+        (
+            "12. Feedback (Phase 22)",
+            TIMEOUT_SHORT,
+            [
+                test_feedback_submit,
+                test_feedback_stats,
+            ],
+        ),
+        (
+            "13. Cache & Metrics (Phases 11, 17)",
+            TIMEOUT_SHORT,
+            [
+                test_cache_stats,
+                test_metrics_json,
+                test_metrics_html,
+            ],
+        ),
+        (
+            "14. Analytics (Phase 40)",
+            TIMEOUT_SHORT,
+            [
+                test_analytics_summary,
+                test_analytics_queries,
+                test_analytics_recent,
+                test_analytics_costs,
+                test_analytics_audit,
+            ],
+        ),
     ]
 
     for name, timeout, tests in groups:

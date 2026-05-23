@@ -34,8 +34,9 @@ def _make_cache_key(query: str) -> str:
     return hashlib.sha256(query.lower().strip().encode("utf-8")).hexdigest()[:16]
 
 
-def _save_to_cache(cache_dir: str, key: str, query: str,
-                   tool_name: str, response: str, ttl: int = 86400) -> None:
+def _save_to_cache(
+    cache_dir: str, key: str, query: str, tool_name: str, response: str, ttl: int = 86400
+) -> None:
     """Save search result to cache file."""
     entry = {
         "query": query,
@@ -59,7 +60,7 @@ def _cleanup_expired(cache_dir: str) -> int:
                 continue
             fpath = os.path.join(cache_dir, fname)
             try:
-                with open(fpath, "r", encoding="utf-8") as f:
+                with open(fpath, encoding="utf-8") as f:
                     entry = json.load(f)
                 if now - entry.get("timestamp", 0) > entry.get("ttl", 86400):
                     os.remove(fpath)

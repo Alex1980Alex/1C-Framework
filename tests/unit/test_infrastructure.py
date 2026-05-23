@@ -7,13 +7,12 @@ import pytest
 from src.memory.infrastructure.retry import (
     MemoryError,
     PermanentError,
-    RetryConfig,
     RetryableError,
+    RetryConfig,
     async_retry,
     classify_exception,
 )
 from src.memory.infrastructure.timeout import TimeoutConfig, get_timeout_config
-
 
 # ===== RetryConfig Tests =====
 

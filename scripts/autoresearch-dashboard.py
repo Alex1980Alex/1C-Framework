@@ -20,7 +20,7 @@ def load_jsonl(path: str) -> list[dict]:
     entries = []
     if not os.path.exists(path):
         return entries
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -36,9 +36,17 @@ def load_state(md_path: str) -> dict:
     state = {}
     if not os.path.exists(md_path):
         return state
-    with open(md_path, "r", encoding="utf-8") as f:
+    with open(md_path, encoding="utf-8") as f:
         for line in f:
-            for key in ("Domain", "Iteration", "BestMetric", "Plateau", "Target", "BaselineCommit", "Updated"):
+            for key in (
+                "Domain",
+                "Iteration",
+                "BestMetric",
+                "Plateau",
+                "Target",
+                "BaselineCommit",
+                "Updated",
+            ):
                 if line.startswith(f"{key}:"):
                     val = line.split(":", 1)[1].strip()
                     state[key.lower()] = val
@@ -67,20 +75,37 @@ def render_dashboard(session_dir: str, as_json: bool = False):
 
     # Compute stats from entries
     kept = sum(1 for e in entries if e.get("verdict") == "KEEP" or e.get("action") == "keep")
-    reverted = sum(1 for e in entries if e.get("verdict") == "REVERT" or e.get("action") == "revert")
+    reverted = sum(
+        1 for e in entries if e.get("verdict") == "REVERT" or e.get("action") == "revert"
+    )
     skipped = sum(1 for e in entries if e.get("verdict") == "SKIP" or e.get("action") == "skip")
     unknown = len(entries) - kept - reverted - skipped
 
     # Metric progression
-    metrics = [e.get("metric_after") or e.get("metric") for e in entries if (e.get("metric_after") or e.get("metric")) is not None]
+    metrics = [
+        e.get("metric_after") or e.get("metric")
+        for e in entries
+        if (e.get("metric_after") or e.get("metric")) is not None
+    ]
 
     if as_json:
-        print(json.dumps({
-            "domain": domain, "iteration": iteration, "best_metric": best,
-            "target": target, "plateau": plateau, "total_entries": len(entries),
-            "kept": kept, "reverted": reverted, "skipped": skipped,
-            "metric_history": metrics,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "domain": domain,
+                    "iteration": iteration,
+                    "best_metric": best,
+                    "target": target,
+                    "plateau": plateau,
+                    "total_entries": len(entries),
+                    "kept": kept,
+                    "reverted": reverted,
+                    "skipped": skipped,
+                    "metric_history": metrics,
+                },
+                indent=2,
+            )
+        )
         return
 
     # --- ASCII Dashboard ---
@@ -113,7 +138,7 @@ def render_dashboard(session_dir: str, as_json: bool = False):
                 bar_len = int((val - mn) / (mx - mn + 0.001) * width) if mx > mn else width // 2
                 bar = "#" * max(bar_len, 1)
                 marker = " <-- best" if val == max(nums) else ""
-                print(f"  {idx+1:3d} | {val:8.4f} {bar}{marker}")
+                print(f"  {idx + 1:3d} | {val:8.4f} {bar}{marker}")
 
     # Top improvements
     improvements = []
@@ -121,11 +146,13 @@ def render_dashboard(session_dir: str, as_json: bool = False):
         delta = e.get("delta", 0)
         verdict = e.get("verdict", e.get("action", ""))
         if verdict in ("KEEP", "keep") and delta and abs(float(delta)) > 0:
-            improvements.append((float(delta), e.get("change", e.get("desc", "?")), e.get("iter", "?")))
+            improvements.append(
+                (float(delta), e.get("change", e.get("desc", "?")), e.get("iter", "?"))
+            )
 
     if improvements:
         improvements.sort(key=lambda x: abs(x[0]), reverse=True)
-        print(f"\nTop improvements:")
+        print("\nTop improvements:")
         for delta, change, it in improvements[:5]:
             sign = "+" if delta > 0 else ""
             print(f"  {sign}{delta:.4f}  iter {it}: {change[:50]}")
@@ -143,7 +170,9 @@ def main():
         session_dir = "data"
 
     # Check if the directory itself has autoresearch files (flat layout)
-    if os.path.isdir(session_dir) and os.path.exists(os.path.join(session_dir, "autoresearch.jsonl")):
+    if os.path.isdir(session_dir) and os.path.exists(
+        os.path.join(session_dir, "autoresearch.jsonl")
+    ):
         render_dashboard(session_dir, as_json)
         return
 

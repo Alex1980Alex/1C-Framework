@@ -3,9 +3,6 @@
 Tests file-hash based document cache with pickle storage.
 """
 
-import pickle
-from pathlib import Path
-
 import pytest
 
 from src.pdf_framework.processing.cache import (
@@ -14,7 +11,6 @@ from src.pdf_framework.processing.cache import (
     _hash_file,
     get_document_cache,
 )
-
 
 # ── _hash_file Tests ───────────────────────────────────────────
 

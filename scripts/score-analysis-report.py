@@ -17,9 +17,7 @@ from pathlib import Path
 
 # Section heading patterns (## N. or ### N.N)
 _SECTION_RE = re.compile(r"^#{1,3}\s+(\d+(?:\.\d+)?)\.?\s")
-_MOD_POINT_RE = re.compile(
-    r"^###\s+Точка\s+(?:модификации\s+)?(\d+)\s*:", re.IGNORECASE
-)
+_MOD_POINT_RE = re.compile(r"^###\s+Точка\s+(?:модификации\s+)?(\d+)\s*:", re.IGNORECASE)
 _REQ_REF_RE = re.compile(r"\[REQ-(\d+)\]")
 _SQL_OPEN_RE = re.compile(r"^```sql\b")
 _SQL_CLOSE_RE = re.compile(r"^```\s*$")
@@ -38,9 +36,7 @@ _QUESTIONS_HEADING_KW = re.compile(
     re.IGNORECASE,
 )
 # Bug/requirement as heading: ### Баг N: or ### BUG #N
-_BUG_HEADING_RE = re.compile(
-    r"^###\s+(?:Баг|BUG)\s*#?\s*(\d+)", re.IGNORECASE
-)
+_BUG_HEADING_RE = re.compile(r"^###\s+(?:Баг|BUG)\s*#?\s*(\d+)", re.IGNORECASE)
 # Modification table row: | N | file | line | action |
 _MOD_TABLE_RE = re.compile(r"^\|\s*(\d+)\s*\|.*\|.*\|.*\|")
 
@@ -61,7 +57,11 @@ def _current_section(line: str, prev: str) -> str:
         return "6"
     # Sub-heading resets (new ## section that doesn't match keywords)
     if re.match(r"^#{1,2}\s+", stripped) and not re.match(r"^###", stripped):
-        if prev in ("1.1", "6") and not _REQ_HEADING_KW.match(stripped) and not _QUESTIONS_HEADING_KW.match(stripped):
+        if (
+            prev in ("1.1", "6")
+            and not _REQ_HEADING_KW.match(stripped)
+            and not _QUESTIONS_HEADING_KW.match(stripped)
+        ):
             return ""  # reset
     return prev
 
@@ -141,9 +141,7 @@ def parse_report(text: str) -> dict:
             all_req_refs.add(int(m.group(1)))
 
     # Count how many requirements (by 1-based index) are referenced
-    requirements_with_refs = sum(
-        1 for i in range(1, len(requirements) + 1) if i in all_req_refs
-    )
+    requirements_with_refs = sum(1 for i in range(1, len(requirements) + 1) if i in all_req_refs)
 
     return {
         "total_requirements": len(requirements),
@@ -170,10 +168,12 @@ def compute_score(parsed: dict) -> dict:
         req_score = min((req_refs / total_req) * 30, 30)
         missing = total_req - req_refs
         if missing > 0:
-            gaps.append({
-                "type": "requirement_gap",
-                "detail": f"{missing} requirement(s) missing [REQ-N] reference in plan",
-            })
+            gaps.append(
+                {
+                    "type": "requirement_gap",
+                    "detail": f"{missing} requirement(s) missing [REQ-N] reference in plan",
+                }
+            )
     else:
         req_score = 0
 
@@ -184,10 +184,12 @@ def compute_score(parsed: dict) -> dict:
     if total_fields > 0:
         fields_score = min((verified / total_fields) * 25, 25)
         if unverified > 0:
-            gaps.append({
-                "type": "field_unverified",
-                "detail": f"{unverified} field(s) not verified via get_metadata",
-            })
+            gaps.append(
+                {
+                    "type": "field_unverified",
+                    "detail": f"{unverified} field(s) not verified via get_metadata",
+                }
+            )
     else:
         fields_score = 25  # no fields to check = full score
 
@@ -198,10 +200,12 @@ def compute_score(parsed: dict) -> dict:
         patterns_score = min((pat / mod_pts) * 20, 20)
         missing_pat = mod_pts - pat
         if missing_pat > 0:
-            gaps.append({
-                "type": "pattern_missing",
-                "detail": f"{missing_pat} modification point(s) without pattern from config",
-            })
+            gaps.append(
+                {
+                    "type": "pattern_missing",
+                    "detail": f"{missing_pat} modification point(s) without pattern from config",
+                }
+            )
     else:
         patterns_score = 20
 
@@ -212,10 +216,12 @@ def compute_score(parsed: dict) -> dict:
         sql_score = min((sql_valid / sql_total) * 15, 15)
         invalid = sql_total - sql_valid
         if invalid > 0:
-            gaps.append({
-                "type": "query_invalid",
-                "detail": f"{invalid} SQL query(ies) not validated via execute_query",
-            })
+            gaps.append(
+                {
+                    "type": "query_invalid",
+                    "detail": f"{invalid} SQL query(ies) not validated via execute_query",
+                }
+            )
     else:
         sql_score = 15
 
@@ -223,10 +229,12 @@ def compute_score(parsed: dict) -> dict:
     oq = parsed["open_questions"]
     questions_score = min((1 - oq / max(oq + 3, 1)) * 10, 10)
     if oq > 0:
-        gaps.append({
-            "type": "open_question",
-            "detail": f"{oq} open question(s) remaining",
-        })
+        gaps.append(
+            {
+                "type": "open_question",
+                "detail": f"{oq} open question(s) remaining",
+            }
+        )
 
     total = round(req_score + fields_score + patterns_score + sql_score + questions_score)
 

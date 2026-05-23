@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Multi-Language Smart Indexer - индексация файлов разных языков
 Поддержка: BSL, JavaScript, TypeScript, Python, Markdown
@@ -14,12 +13,12 @@ Multi-Language Smart Indexer - индексация файлов разных я
 Migrated from D:\\1C-Enterprise_Framework to D:\\1С-Framework
 """
 
+import argparse
 import sys
 import time
-import argparse
 import traceback
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
 # Force UTF-8 stdout/stderr (bat вызывает chcp 65001, но Python наследует cp1251)
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
@@ -34,15 +33,30 @@ sys.path.insert(0, str(Path(__file__).parent))
 # CONFIGURATION
 # ============================================================================
 
-SUPPORTED_EXTENSIONS: Dict[str, Dict[str, str]] = {
+SUPPORTED_EXTENSIONS: dict[str, dict[str, str]] = {
     ".bsl": {"type": "bsl", "doc_type": "bsl", "name": "BSL", "method": "index_bsl_file"},
-    ".js": {"type": "javascript", "doc_type": "javascript", "name": "JavaScript", "method": "index_javascript_file"},
-    ".ts": {"type": "typescript", "doc_type": "typescript", "name": "TypeScript", "method": "index_javascript_file"},
+    ".js": {
+        "type": "javascript",
+        "doc_type": "javascript",
+        "name": "JavaScript",
+        "method": "index_javascript_file",
+    },
+    ".ts": {
+        "type": "typescript",
+        "doc_type": "typescript",
+        "name": "TypeScript",
+        "method": "index_javascript_file",
+    },
     ".py": {"type": "python", "doc_type": "python", "name": "Python", "method": "index_document"},
-    ".md": {"type": "markdown", "doc_type": "markdown", "name": "Markdown", "method": "index_document"},
+    ".md": {
+        "type": "markdown",
+        "doc_type": "markdown",
+        "name": "Markdown",
+        "method": "index_document",
+    },
 }
 
-LANGUAGE_TO_EXTENSION: Dict[str, str] = {
+LANGUAGE_TO_EXTENSION: dict[str, str] = {
     "bsl": ".bsl",
     "javascript": ".js",
     "typescript": ".ts",
@@ -50,7 +64,7 @@ LANGUAGE_TO_EXTENSION: Dict[str, str] = {
     "markdown": ".md",
 }
 
-GLOBAL_SKIP_PATTERNS: List[str] = [
+GLOBAL_SKIP_PATTERNS: list[str] = [
     "src\\projects\\configuration",
     "src/projects/configuration",
     "node_modules",
@@ -62,7 +76,7 @@ GLOBAL_SKIP_PATTERNS: List[str] = [
     "build",
 ]
 
-SKIP_PATTERNS_BY_TYPE: Dict[str, List[str]] = {
+SKIP_PATTERNS_BY_TYPE: dict[str, list[str]] = {
     "bsl": [
         "CommonModules/БСП",
         "CommonModules/СтандартныеПодсистемы",
@@ -99,7 +113,7 @@ SKIP_PATTERNS_BY_TYPE: Dict[str, List[str]] = {
     "markdown": [],
 }
 
-DEFAULT_LANGUAGES: List[str] = ["bsl", "javascript", "python", "markdown"]
+DEFAULT_LANGUAGES: list[str] = ["bsl", "javascript", "python", "markdown"]
 
 # Auto-detect framework root from script location
 FRAMEWORK_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -121,17 +135,17 @@ def find_all_projects():
 
 from hybrid_search_engine import HybridSearchEngine
 
-
 # ============================================================================
 # MULTI-LANGUAGE FILE DISCOVERY
 # ============================================================================
 
+
 def get_all_source_files(
     project_root: Path,
-    languages: List[str] = None,
-    skip_patterns: Dict[str, List[str]] = None,
-    filter_global: bool = True
-) -> List[Dict[str, Any]]:
+    languages: list[str] = None,
+    skip_patterns: dict[str, list[str]] = None,
+    filter_global: bool = True,
+) -> list[dict[str, Any]]:
     """Получить все исходные файлы поддерживаемых типов"""
     if languages is None:
         languages = DEFAULT_LANGUAGES
@@ -142,10 +156,7 @@ def get_all_source_files(
     all_files = []
 
     for lang in languages:
-        extensions = [
-            ext for ext, config in SUPPORTED_EXTENSIONS.items()
-            if config["type"] == lang
-        ]
+        extensions = [ext for ext, config in SUPPORTED_EXTENSIONS.items() if config["type"] == lang]
 
         for ext in extensions:
             print(f"  [SCAN] Поиск *{ext} файлов...", end=" ", flush=True)
@@ -170,17 +181,21 @@ def get_all_source_files(
                     "doc_type": config["doc_type"],
                     "lang_name": config["name"],
                     "method": config["method"],
-                    "extension": ext
+                    "extension": ext,
                 }
                 all_files.append(file_info)
                 found_count += 1
 
-            print(f"найдено {found_count} (всего {len(files)}, пропущено {len(files) - found_count})")
+            print(
+                f"найдено {found_count} (всего {len(files)}, пропущено {len(files) - found_count})"
+            )
 
     return all_files
 
 
-def should_skip_file(file_path: Path, file_type: str, skip_patterns: Dict[str, List[str]], check_global: bool = True) -> bool:
+def should_skip_file(
+    file_path: Path, file_type: str, skip_patterns: dict[str, list[str]], check_global: bool = True
+) -> bool:
     """Проверить, нужно ли пропустить файл"""
     path_str = str(file_path)
 
@@ -199,11 +214,11 @@ def should_skip_file(file_path: Path, file_type: str, skip_patterns: Dict[str, L
 
 def smart_index_multi_language(
     project_path: str,
-    languages: List[str] = None,
+    languages: list[str] = None,
     chunk_mode: str = "smart",
     delay_seconds: float = 0.5,
     full_index: bool = False,
-    force: bool = False
+    force: bool = False,
 ):
     """Индексирует файлы проекта разных языков"""
     if languages is None:
@@ -216,34 +231,41 @@ def smart_index_multi_language(
         print(f"[ERROR] Проект не найден: {project_path}")
         return
 
-    lang_names = ", ".join([
-        SUPPORTED_EXTENSIONS[LANGUAGE_TO_EXTENSION[l]]["name"]
-        for l in languages if l in LANGUAGE_TO_EXTENSION
-    ])
+    lang_names = ", ".join(
+        [
+            SUPPORTED_EXTENSIONS[LANGUAGE_TO_EXTENSION[l]]["name"]
+            for l in languages
+            if l in LANGUAGE_TO_EXTENSION
+        ]
+    )
 
     if full_index:
         print(f"[INFO] ПОЛНАЯ индексация: все файлы ({lang_names})")
     else:
         print(f"[INFO] Оптимизированная индексация: только важные модули ({lang_names})")
-        print(f"[SKIP] Пропускаем: БСП, node_modules, тесты и т.д.")
+        print("[SKIP] Пропускаем: БСП, node_modules, тесты и т.д.")
 
     if force:
-        print(f"[FORCE] Принудительная переиндексация (игнорируем hash)")
+        print("[FORCE] Принудительная переиндексация (игнорируем hash)")
 
-    is_configuration_project = "projects" in str(project_root) and "configuration" in str(project_root)
+    is_configuration_project = "projects" in str(project_root) and "configuration" in str(
+        project_root
+    )
     filter_global = not is_configuration_project
 
     if is_configuration_project:
-        print(f"[INFO] Индексация проекта из configuration - глобальный фильтр ОТКЛЮЧЕН")
+        print("[INFO] Индексация проекта из configuration - глобальный фильтр ОТКЛЮЧЕН")
 
     print(f"[SCAN] Сканирование файлов в {project_root}...", flush=True)
     all_files = get_all_source_files(project_root, languages, filter_global=filter_global)
     total_files = len(all_files)
     print(f"[SCAN] Найдено {total_files} файлов для обработки")
 
-    stats_by_lang = {lang: {"files": 0, "documents": 0, "errors": 0, "skipped": 0} for lang in languages}
+    stats_by_lang = {
+        lang: {"files": 0, "documents": 0, "errors": 0, "skipped": 0} for lang in languages
+    }
     total_stats = {"files": 0, "documents": 0, "errors": 0, "skipped": 0}
-    error_types: Dict[str, int] = {}
+    error_types: dict[str, int] = {}
 
     print(f"[INFO] Найдено файлов: {total_files}")
 
@@ -286,9 +308,13 @@ def smart_index_multi_language(
             total_stats["files"] += 1
             total_stats["documents"] += docs
 
-            if total_stats["files"] % 50 == 0 or (total_files > 0 and (i * 100 // total_files) % 10 == 0):
+            if total_stats["files"] % 50 == 0 or (
+                total_files > 0 and (i * 100 // total_files) % 10 == 0
+            ):
                 pct = i * 100 // total_files
-                print(f"[{pct:3d}%] {total_stats['files']} файлов, {total_stats['documents']} док. обработано")
+                print(
+                    f"[{pct:3d}%] {total_stats['files']} файлов, {total_stats['documents']} док. обработано"
+                )
 
             time.sleep(delay_seconds)
 
@@ -299,7 +325,7 @@ def smart_index_multi_language(
             print(f"        Type: {error_type}")
             print(f"        Message: {error_msg[:200]}...")
             print(f"        Path: {file_path}")
-            tb_lines = traceback.format_exc().strip().split('\n')
+            tb_lines = traceback.format_exc().strip().split("\n")
             if len(tb_lines) > 3:
                 for line in tb_lines[-3:]:
                     print(f"        {line}")
@@ -321,7 +347,9 @@ def smart_index_multi_language(
         if lang_stat["files"] > 0 or lang_stat["skipped"] > 0:
             ext_names = [k for k, v in SUPPORTED_EXTENSIONS.items() if v["type"] == lang]
             lang_display = SUPPORTED_EXTENSIONS[ext_names[0]]["name"]
-            print(f"  {lang_display}: {lang_stat['files']} файлов, {lang_stat['documents']} док., {lang_stat['errors']} ошибок, {lang_stat['skipped']} пропущено")
+            print(
+                f"  {lang_display}: {lang_stat['files']} файлов, {lang_stat['documents']} док., {lang_stat['errors']} ошибок, {lang_stat['skipped']} пропущено"
+            )
 
     if error_types:
         print("\nСводка по типам ошибок:")
@@ -343,6 +371,7 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
     """
     import hashlib
     from datetime import datetime
+
     from src.bsl.parser.bsl_ast_parser import BSLASTParser
     from src.bsl.parser.bsl_chunker import BSLChunker
 
@@ -358,6 +387,7 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
     print(f"[AST] Found {len(bsl_files)} BSL files for symbol-level indexing")
 
     import sqlite3
+
     total_chunks = 0
     total_symbols = 0
     errors = 0
@@ -410,7 +440,9 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
             if i % 100 == 0:
                 conn.commit()
                 pct = i * 100 // len(bsl_files)
-                print(f"[{pct:3d}%] {i}/{len(bsl_files)} files, {total_symbols} symbols, {total_chunks} chunks")
+                print(
+                    f"[{pct:3d}%] {i}/{len(bsl_files)} files, {total_symbols} symbols, {total_chunks} chunks"
+                )
 
         except Exception as e:
             errors += 1
@@ -418,12 +450,17 @@ def ast_index_bsl(project_path: str, delay_seconds: float = 0.1, full_index: boo
                 print(f"[ERROR] {bsl_file.name}: {e}")
 
     conn.commit()
-    print(f"\n[AST-DONE] Symbol-level indexing complete")
+    print("\n[AST-DONE] Symbol-level indexing complete")
     print(f"  Files: {len(bsl_files)}")
     print(f"  Symbols: {total_symbols}")
     print(f"  Chunks: {total_chunks}")
     print(f"  Errors: {errors}")
-    return {"files": len(bsl_files), "symbols": total_symbols, "chunks": total_chunks, "errors": errors}
+    return {
+        "files": len(bsl_files),
+        "symbols": total_symbols,
+        "chunks": total_chunks,
+        "errors": errors,
+    }
 
 
 def main():
@@ -437,19 +474,25 @@ def main():
   %(prog)s --project 260304_GKSTCPLK-2182   # Индексировать проект
   %(prog)s --path "полный/путь/к/проекту"   # Индексировать по полному пути
   %(prog)s --framework --languages js,ts    # Индексировать фреймворк
-        """
+        """,
     )
 
     parser.add_argument("--list", "-l", action="store_true", help="Список проектов")
     parser.add_argument("--project", "-p", type=str, help="Имя проекта")
     parser.add_argument("--path", type=str, help="Полный путь к проекту")
     parser.add_argument("--framework", action="store_true", help="Индексировать фреймворк")
-    parser.add_argument("--languages", type=str, help="Языки (bsl,javascript,python,markdown,typescript)")
-    parser.add_argument("--chunk-mode", type=str, choices=["full", "procedures", "smart"], default="smart")
+    parser.add_argument(
+        "--languages", type=str, help="Языки (bsl,javascript,python,markdown,typescript)"
+    )
+    parser.add_argument(
+        "--chunk-mode", type=str, choices=["full", "procedures", "smart"], default="smart"
+    )
     parser.add_argument("--delay", type=float, default=0.5, help="Задержка между файлами (сек)")
     parser.add_argument("--full", "-f", action="store_true", help="Полная индексация")
     parser.add_argument("--force", action="store_true", help="Принудительная переиндексация")
-    parser.add_argument("--ast", action="store_true", help="AST-based symbol-level indexing for BSL (Phase 59)")
+    parser.add_argument(
+        "--ast", action="store_true", help="AST-based symbol-level indexing for BSL (Phase 59)"
+    )
 
     args = parser.parse_args()
 
@@ -501,7 +544,7 @@ def main():
     print(f"[INFO] Путь: {project_path}")
 
     if args.ast:
-        print(f"[INFO] Режим: AST symbol-level indexing (Phase 59)\n")
+        print("[INFO] Режим: AST symbol-level indexing (Phase 59)\n")
         ast_index_bsl(
             project_path=project_path,
             delay_seconds=args.delay,
@@ -510,7 +553,13 @@ def main():
         return
 
     mode_info = "ПОЛНАЯ" if args.full else "smart (только важные)"
-    lang_names = ", ".join([SUPPORTED_EXTENSIONS[LANGUAGE_TO_EXTENSION[l]]["name"] for l in languages if l in LANGUAGE_TO_EXTENSION])
+    lang_names = ", ".join(
+        [
+            SUPPORTED_EXTENSIONS[LANGUAGE_TO_EXTENSION[l]]["name"]
+            for l in languages
+            if l in LANGUAGE_TO_EXTENSION
+        ]
+    )
     print(f"[INFO] Языки: {lang_names}")
     print(f"[INFO] Режим: {mode_info}, chunk: {args.chunk_mode}, Задержка: {args.delay} сек\n")
 
@@ -520,7 +569,7 @@ def main():
         chunk_mode=args.chunk_mode,
         delay_seconds=args.delay,
         full_index=args.full,
-        force=args.force
+        force=args.force,
     )
 
 

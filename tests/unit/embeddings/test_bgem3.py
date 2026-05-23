@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
 import torch
 
@@ -34,14 +33,10 @@ def mock_bgem3_model():
             result["dense_vecs"] = torch.randn(n, 1024)
         if return_sparse:
             # Mock sparse: dict with token_id -> weight
-            result["lexical_weights"] = [
-                {i: 0.1 + (i * 0.01) for i in range(10)} for _ in range(n)
-            ]
+            result["lexical_weights"] = [{i: 0.1 + (i * 0.01) for i in range(10)} for _ in range(n)]
         if return_colbert_vecs:
             # Mock ColBERT: variable token count per text
-            result["colbert_vecs"] = [
-                torch.randn(len(text.split()) + 2, 1024) for text in texts
-            ]
+            result["colbert_vecs"] = [torch.randn(len(text.split()) + 2, 1024) for text in texts]
 
         return result
 

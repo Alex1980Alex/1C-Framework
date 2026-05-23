@@ -46,8 +46,11 @@ def _run_git(args, timeout=2):
     try:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false"] + args,
-            capture_output=True, text=True, encoding="utf-8",
-            timeout=timeout, cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=timeout,
+            cwd=str(PROJECT_ROOT),
         )
         if result.returncode != 0:
             return []
@@ -59,7 +62,7 @@ def _run_git(args, timeout=2):
 def _read_json_file(path):
     """Read JSON file, return dict or empty dict on error."""
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -84,9 +87,14 @@ def collect_context():
     all_files = sorted(set(diff_lines + staged_lines + untracked_files))
 
     # 3. Git: recent commits (last 8 hours)
-    log_lines = _run_git([
-        "log", "--oneline", "--since=8 hours ago", "--format=%s",
-    ])
+    log_lines = _run_git(
+        [
+            "log",
+            "--oneline",
+            "--since=8 hours ago",
+            "--format=%s",
+        ]
+    )
     commits = log_lines[:5]
 
     # 4. Completed tasks from hook-todos
@@ -127,16 +135,14 @@ def already_saved(session_id):
         # Primary dedup: by session_id (if available)
         if session_id:
             row = conn.execute(
-                "SELECT 1 FROM important_messages "
-                "WHERE category = ? AND metadata LIKE ?",
+                "SELECT 1 FROM important_messages WHERE category = ? AND metadata LIKE ?",
                 (CATEGORY, f'%"session_id": "{session_id}"%'),
             ).fetchone()
         else:
             # Fallback dedup: by today's date (max 1 session summary per day)
             today = date.today().isoformat()
             row = conn.execute(
-                "SELECT 1 FROM important_messages "
-                "WHERE category = ? AND metadata LIKE ?",
+                "SELECT 1 FROM important_messages WHERE category = ? AND metadata LIKE ?",
                 (CATEGORY, f'%"session_date": "{today}"%'),
             ).fetchone()
         conn.close()
@@ -254,7 +260,6 @@ def save_to_sqlite(ctx):
 
 
 class SessionMemorySave(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         ctx = collect_context()
 

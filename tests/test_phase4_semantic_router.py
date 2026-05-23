@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, ".claude", "hooks"))
 
 # ── _log_match tests ─────────────────────────────────────────────────
 
+
 class TestLogMatchWithMatchedBy:
     """Tests for the updated _log_match function with matched_by parameter."""
 
@@ -29,11 +30,14 @@ class TestLogMatchWithMatchedBy:
         log_file = tmp_path / "data" / "skill-router.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
         with patch.object(self.mod, "_HOOK_DIR", str(tmp_path / ".claude" / "hooks")):
-            with patch("os.path.dirname", side_effect=[
-                str(tmp_path / ".claude" / "hooks"),
-                str(tmp_path / ".claude"),
-                str(tmp_path),
-            ]):
+            with patch(
+                "os.path.dirname",
+                side_effect=[
+                    str(tmp_path / ".claude" / "hooks"),
+                    str(tmp_path / ".claude"),
+                    str(tmp_path),
+                ],
+            ):
                 self.mod._log_match("test prompt", ["bundle1"], ["skill1"])
         # Should not crash — graceful if dir doesn't exist
 
@@ -47,7 +51,9 @@ class TestLogMatchWithMatchedBy:
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         matched_by = {"bsl-dev": "semantic", "research-1c": "keyword"}
         mb_str = ",".join(f"{k}:{v}" for k, v in matched_by.items())
-        line = f"{ts} | bundles=bsl-dev,research-1c | skills=s1 | matched_by={mb_str} | prompt=test\n"
+        line = (
+            f"{ts} | bundles=bsl-dev,research-1c | skills=s1 | matched_by={mb_str} | prompt=test\n"
+        )
         log_file.write_text(line, encoding="utf-8")
 
         content = log_file.read_text(encoding="utf-8")
@@ -64,8 +70,8 @@ class TestLogMatchWithMatchedBy:
 
 # ── _get_semantic_searcher tests ─────────────────────────────────────
 
-class TestGetSemanticSearcher:
 
+class TestGetSemanticSearcher:
     def setup_method(self):
         spec = importlib.util.spec_from_file_location(
             "skill_router",
@@ -89,11 +95,16 @@ class TestGetSemanticSearcher:
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("SKILL_ROUTER_NO_SEMANTIC", None)
             with patch.dict("sys.modules", {"shared.semantic_search": mock_module}):
-                with patch("builtins.__import__", side_effect=lambda name, *a, **kw: (
-                    mock_module if "semantic_search" in name
-                    else __builtins__.__import__(name, *a, **kw) if hasattr(__builtins__, '__import__')
-                    else importlib.import_module(name)
-                )):
+                with patch(
+                    "builtins.__import__",
+                    side_effect=lambda name, *a, **kw: (
+                        mock_module
+                        if "semantic_search" in name
+                        else __builtins__.__import__(name, *a, **kw)
+                        if hasattr(__builtins__, "__import__")
+                        else importlib.import_module(name)
+                    ),
+                ):
                     # Reset and import fresh
                     self.mod._semantic_searcher = None
                     self.mod._get_semantic_searcher()
@@ -112,6 +123,7 @@ class TestGetSemanticSearcher:
 
 
 # ── Layer D scoring logic tests ──────────────────────────────────────
+
 
 class TestLayerDScoring:
     """Tests for the Layer D semantic scoring logic (score fusion, thresholds)."""
@@ -189,7 +201,11 @@ class TestLayerDScoring:
         # Simulate hybrid boost logic
         if sem_result["score"] >= 0.7:
             for bname, bundle in {"bsl-dev": {"skills": ["bsl-development"]}}.items():
-                if sem_result["skill_name"] in bundle["skills"] and bname in scores and scores[bname] > 0:
+                if (
+                    sem_result["skill_name"] in bundle["skills"]
+                    and bname in scores
+                    and scores[bname] > 0
+                ):
                     scores[bname] += 1
                     matched_by[bname] = "hybrid"
         assert scores["bsl-dev"] == 4
@@ -239,8 +255,8 @@ class TestLayerDScoring:
 
 # ── Config tests ─────────────────────────────────────────────────────
 
-class TestSemanticConfig:
 
+class TestSemanticConfig:
     def test_config_has_semantic_thresholds(self):
         """skill-router-config.json contains semantic_thresholds section."""
         config_path = os.path.join(PROJECT_ROOT, ".claude", "skills", "skill-router-config.json")
@@ -270,8 +286,8 @@ class TestSemanticConfig:
 
 # ── Schema tests ─────────────────────────────────────────────────────
 
-class TestExperienceBankSchema:
 
+class TestExperienceBankSchema:
     def test_schema_is_valid_json(self):
         """cache/experience-bank/schema.json is valid JSON."""
         schema_path = os.path.join(PROJECT_ROOT, "cache", "experience-bank", "schema.json")
@@ -289,5 +305,11 @@ class TestExperienceBankSchema:
         with open(schema_path, encoding="utf-8") as f:
             schema = json.load(f)
         categories = schema["properties"]["insight"]["properties"]["category"]["enum"]
-        expected = ["tool_selection", "parameter_tuning", "workflow_order", "error_avoidance", "prompt_pattern"]
+        expected = [
+            "tool_selection",
+            "parameter_tuning",
+            "workflow_order",
+            "error_avoidance",
+            "prompt_pattern",
+        ]
         assert set(categories) == set(expected)

@@ -3,7 +3,6 @@
 Tests the full middleware pipeline with a FastAPI test client.
 """
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -97,4 +96,7 @@ class TestGuardrailsMiddleware:
         client = TestClient(app2)
         resp = client.post("/echo", json={"query": "x" * 100})
         assert resp.status_code == 400
-        assert "too long" in resp.json().get("detail", "").lower() or resp.json().get("error") == "content_filter"
+        assert (
+            "too long" in resp.json().get("detail", "").lower()
+            or resp.json().get("error") == "content_filter"
+        )

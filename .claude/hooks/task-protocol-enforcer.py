@@ -24,9 +24,8 @@ import sys
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
-from base.protocol import BaseHook, HookInput, HookOutput  # noqa: E402
-from typing import Optional  # noqa: E402
 
+from base.protocol import BaseHook, HookInput, HookOutput  # noqa: E402
 
 # Directories exempt from protocol enforcement
 _EXEMPT_DIRS = (
@@ -42,9 +41,20 @@ _EXEMPT_DIRS = (
 
 # File extensions exempt from protocol enforcement
 _EXEMPT_EXTENSIONS = (
-    ".json", ".toml", ".yml", ".yaml", ".env", ".cfg", ".ini",  # config
-    ".md", ".txt", ".csv", ".log", ".rst",  # non-code
-    ".gitignore", ".dockerignore",  # dotfiles
+    ".json",
+    ".toml",
+    ".yml",
+    ".yaml",
+    ".env",
+    ".cfg",
+    ".ini",  # config
+    ".md",
+    ".txt",
+    ".csv",
+    ".log",
+    ".rst",  # non-code
+    ".gitignore",
+    ".dockerignore",  # dotfiles
 )
 
 
@@ -59,7 +69,7 @@ def _is_exempt(file_path: str) -> bool:
     # Strip project root prefix if present
     for prefix in ("D:/1С-Framework/", "D:\\1С-Framework\\"):
         if normalized.startswith(prefix.replace("\\", "/")):
-            normalized = normalized[len(prefix):]
+            normalized = normalized[len(prefix) :]
             break
 
     # Check exempt directories
@@ -94,7 +104,7 @@ def _extract_file_path(tool_input: dict) -> str:
 class TaskProtocolEnforcer(BaseHook):
     """PreToolUse:Write|Edit → blocks unless phase is 'skill_checked'."""
 
-    def execute(self, inp: HookInput) -> Optional[HookOutput]:
+    def execute(self, inp: HookInput) -> HookOutput | None:
         # Only act on Write/Edit
         if inp.tool_name not in ("Write", "Edit"):
             return None
@@ -107,6 +117,7 @@ class TaskProtocolEnforcer(BaseHook):
         # Check task protocol state
         try:
             from shared.session_state import SessionState
+
             protocol = SessionState.get_task_protocol()
         except Exception:
             return None  # Graceful degradation: allow on error

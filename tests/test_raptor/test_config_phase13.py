@@ -1,11 +1,9 @@
 """Tests for Phase 13 configuration (RAPTORSettings, SummaryIndexSettings)."""
 
-import pytest
-
 from src.pdf_framework.config import (
     RAPTORSettings,
-    SummaryIndexSettings,
     Settings,
+    SummaryIndexSettings,
 )
 
 

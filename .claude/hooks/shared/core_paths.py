@@ -20,6 +20,7 @@ from pathlib import Path
 
 # --- Discovery ---
 
+
 def _find_project_claude_dir() -> Path | None:
     """Find project-level .claude/ directory.
 
@@ -45,6 +46,7 @@ def _user_claude_dir() -> Path:
 
 
 # --- Public API: resolved paths ---
+
 
 def get_project_dir() -> Path:
     """Project-level .claude/ (for state, cache, project hooks).

@@ -15,16 +15,14 @@ Usage:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
-    VectorParams,
     PointStruct,
-    Prefetch,
+    VectorParams,
 )
 
 from .hybrid_search import BSLSearchResult
@@ -95,14 +93,18 @@ def migrate_collection(
         for pt in points:
             try:
                 module_path = (pt.payload or {}).get("module_path", "")
-                content_vec = pt.vector if isinstance(pt.vector, list) else list(pt.vector.values())[0]
+                content_vec = (
+                    pt.vector if isinstance(pt.vector, list) else list(pt.vector.values())[0]
+                )
                 mp_vec = generate_module_path_embedding(embedder, module_path)
 
-                new_points.append(PointStruct(
-                    id=pt.id,
-                    vector={"content": content_vec, "module_path": mp_vec},
-                    payload=pt.payload,
-                ))
+                new_points.append(
+                    PointStruct(
+                        id=pt.id,
+                        vector={"content": content_vec, "module_path": mp_vec},
+                        payload=pt.payload,
+                    )
+                )
             except Exception as e:
                 logger.warning("Failed to migrate point %s: %s", pt.id, e)
                 stats["failed"] += 1
@@ -177,6 +179,7 @@ class DualVectorPipeline:
             return []
         try:
             import sqlite3
+
             conn = sqlite3.connect(str(self._sqlite_db))
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
@@ -234,21 +237,23 @@ class DualVectorPipeline:
                 results = []
                 for rank, hit in enumerate(hits):
                     p = hit.payload or {}
-                    results.append(BSLSearchResult(
-                        chunk_id=p.get("chunk_id", str(hit.id)),
-                        name=p.get("name", ""),
-                        module_path=p.get("module_path", ""),
-                        content=p.get("content", "")[:500],
-                        score=0.0,
-                        source=source_tag,
-                        metadata={
-                            "symbol_type": p.get("symbol_type", ""),
-                            "object_type": p.get("object_type", ""),
-                            "is_export": p.get("is_export", False),
-                            "vector_score": hit.score,
-                            "vector_rank": rank,
-                        },
-                    ))
+                    results.append(
+                        BSLSearchResult(
+                            chunk_id=p.get("chunk_id", str(hit.id)),
+                            name=p.get("name", ""),
+                            module_path=p.get("module_path", ""),
+                            content=p.get("content", "")[:500],
+                            score=0.0,
+                            source=source_tag,
+                            metadata={
+                                "symbol_type": p.get("symbol_type", ""),
+                                "object_type": p.get("object_type", ""),
+                                "is_export": p.get("is_export", False),
+                                "vector_score": hit.score,
+                                "vector_rank": rank,
+                            },
+                        )
+                    )
                 return results
 
             content_hits = content_resp.points if hasattr(content_resp, "points") else []
@@ -313,7 +318,9 @@ class DualVectorPipeline:
                 try:
                     callers = store.callers_of(r.name)
                     if len(callers) > 0:
-                        boost += min(len(callers) * self._cg_boost_callers, self._cg_boost_max - 1.0)
+                        boost += min(
+                            len(callers) * self._cg_boost_callers, self._cg_boost_max - 1.0
+                        )
                         r.metadata["caller_count"] = len(callers)
                 except Exception:
                     pass

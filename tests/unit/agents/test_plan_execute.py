@@ -1,6 +1,6 @@
 """Unit tests for Plan-Execute Agent (Phase 57)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -9,12 +9,11 @@ from src.pdf_framework.agents.plan_execute.agent import (
     run_plan_execute,
     should_continue,
 )
-from src.pdf_framework.agents.plan_execute.nodes.planner import create_plan
 from src.pdf_framework.agents.plan_execute.nodes.executor import execute_step
+from src.pdf_framework.agents.plan_execute.nodes.planner import create_plan
 from src.pdf_framework.agents.plan_execute.nodes.replanner import replan
 from src.pdf_framework.agents.plan_execute.nodes.synthesizer import synthesize_answer
 from src.pdf_framework.agents.plan_execute.state import PlanExecuteState, PlanStep
-
 
 # ============================================================================
 # State & PlanStep Tests
@@ -199,10 +198,10 @@ class TestPlannerNode:
     async def test_create_plan_multiple_steps(self, mock_llm):
         """Should create plan with multiple steps."""
         mock_llm.ainvoke.return_value = MagicMock(
-            content='''{"steps": [
+            content="""{"steps": [
                 {"step_id": "1", "description": "Step 1", "tool": "search", "query": "q1"},
                 {"step_id": "2", "description": "Step 2", "tool": "calculate", "query": "q2"}
-            ]}'''
+            ]}"""
         )
 
         planner = create_plan(mock_llm)
@@ -217,9 +216,7 @@ class TestPlannerNode:
     @pytest.mark.asyncio
     async def test_create_plan_json_error_fallback(self, mock_llm):
         """Should fallback to single step on JSON error."""
-        mock_llm.ainvoke.return_value = MagicMock(
-            content="This is not valid JSON"
-        )
+        mock_llm.ainvoke.return_value = MagicMock(content="This is not valid JSON")
 
         planner = create_plan(mock_llm)
         state = PlanExecuteState(query="test query")
@@ -256,10 +253,9 @@ class TestExecutorNode:
     def mock_search_manager(self):
         """Mock search manager."""
         manager = AsyncMock()
-        manager.search = AsyncMock(return_value=MagicMock(
-            results=[MagicMock(content="Result 1")],
-            answer="Search answer"
-        ))
+        manager.search = AsyncMock(
+            return_value=MagicMock(results=[MagicMock(content="Result 1")], answer="Search answer")
+        )
         return manager
 
     @pytest.fixture
@@ -279,9 +275,7 @@ class TestExecutorNode:
 
         state = PlanExecuteState(
             query="test",
-            plan=[
-                PlanStep("1", "Search", "search", "search query", status="pending")
-            ],
+            plan=[PlanStep("1", "Search", "search", "search query", status="pending")],
         )
 
         result = await executor(state)
@@ -297,9 +291,7 @@ class TestExecutorNode:
 
         state = PlanExecuteState(
             query="test",
-            plan=[
-                PlanStep("1", "Calc", "calculate", "2 + 2", status="pending")
-            ],
+            plan=[PlanStep("1", "Calc", "calculate", "2 + 2", status="pending")],
         )
 
         result = await executor(state)
@@ -314,9 +306,7 @@ class TestExecutorNode:
 
         state = PlanExecuteState(
             query="test",
-            plan=[
-                PlanStep("1", "Graph", "graph_query", "entity:Document", status="pending")
-            ],
+            plan=[PlanStep("1", "Graph", "graph_query", "entity:Document", status="pending")],
         )
 
         result = await executor(state)
@@ -357,9 +347,7 @@ class TestReplannerNode:
     def mock_llm(self):
         """Mock LLM for replanning."""
         llm = AsyncMock()
-        llm.ainvoke.return_value = MagicMock(
-            content='{"action": "continue"}'
-        )
+        llm.ainvoke.return_value = MagicMock(content='{"action": "continue"}')
         return llm
 
     @pytest.mark.asyncio
@@ -417,9 +405,7 @@ class TestSynthesizerNode:
     def mock_llm(self):
         """Mock LLM for synthesis."""
         llm = AsyncMock()
-        llm.ainvoke.return_value = MagicMock(
-            content="Final synthesized answer based on all steps."
-        )
+        llm.ainvoke.return_value = MagicMock(content="Final synthesized answer based on all steps.")
         return llm
 
     @pytest.mark.asyncio
@@ -501,7 +487,9 @@ class TestAgentCreation:
         # Compiled agent should have invoke methods
         assert hasattr(agent, "ainvoke")
 
-    def test_create_agent_with_custom_max_iterations(self, mock_llm, mock_search_manager, mock_tools):
+    def test_create_agent_with_custom_max_iterations(
+        self, mock_llm, mock_search_manager, mock_tools
+    ):
         """Should respect custom max_iterations."""
         agent = create_plan_execute_agent(
             llm=mock_llm,

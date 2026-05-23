@@ -17,12 +17,11 @@ Created: 2026-02-23
 
 import json
 import os
-import sys
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, List
-import time
+from typing import Any
 
 # Add hooks to path
 _HOOK_DIR = Path(__file__).parent.parent / "hooks"
@@ -34,6 +33,7 @@ sys.path.insert(0, str(_HOOK_DIR / "shared"))
 # ============================================================================
 # E2E Test Framework
 # ============================================================================
+
 
 class E2ETestFramework:
     """Framework for E2E testing with simulated Claude session."""
@@ -51,7 +51,7 @@ class E2ETestFramework:
             "pending_learn": None,
             "session_id": "e2e-test",
             "created_at": "2026-02-23T00:00:00",
-            "last_updated": "2026-02-23T00:00:00"
+            "last_updated": "2026-02-23T00:00:00",
         }
         self.hook_todos = []
         self._save_session()
@@ -70,22 +70,24 @@ class E2ETestFramework:
             self.session_state["activated_skills"].append(skill_name)
             self._save_session()
 
-    def get_activated_skills(self) -> List[str]:
+    def get_activated_skills(self) -> list[str]:
         """Get activated skills."""
         return self.session_state["activated_skills"]
 
     def add_todo(self, content: str, created_by: str, priority: str = "mandatory"):
         """Add a todo item."""
-        self.hook_todos.append({
-            "content": content,
-            "created_by": created_by,
-            "priority": priority,
-            "status": "pending",
-            "created_at": "2026-02-23T00:00:00"
-        })
+        self.hook_todos.append(
+            {
+                "content": content,
+                "created_by": created_by,
+                "priority": priority,
+                "status": "pending",
+                "created_at": "2026-02-23T00:00:00",
+            }
+        )
         self._save_session()
 
-    def get_todos(self) -> List[Dict[str, Any]]:
+    def get_todos(self) -> list[dict[str, Any]]:
         """Get todos."""
         return self.hook_todos
 
@@ -110,7 +112,7 @@ class E2ETestRunner:
         self.hook_path = _HOOK_DIR / "code-skill-enforcer.py"
         self.python_exe = sys.executable
 
-    def run_hook(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    def run_hook(self, input_data: dict[str, Any]) -> dict[str, Any]:
         """Run hook with input data."""
         input_json = json.dumps(input_data)
 
@@ -125,13 +127,13 @@ class E2ETestRunner:
                 text=True,
                 timeout=10,
                 cwd=str(self.hook_path.parent),
-                env=env
+                env=env,
             )
 
             return {
                 "exit_code": result.returncode,
                 "stdout": result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
         except subprocess.TimeoutExpired:
             return {"exit_code": -1, "stdout": "", "stderr": "Timeout"}
@@ -142,6 +144,7 @@ class E2ETestRunner:
 # ============================================================================
 # E2E Scenario 1: Full PRE Cycle
 # ============================================================================
+
 
 def test_e2e_full_pre_cycle():
     """
@@ -169,7 +172,7 @@ def test_e2e_full_pre_cycle():
             return False
 
         # Step 1: User prompts "Create a LangGraph agent"
-        print("\n[User Prompt] \"Create a LangGraph agent for document processing\"")
+        print('\n[User Prompt] "Create a LangGraph agent for document processing"')
 
         # Step 2: Claude reads existing file
         print("\n[Claude] Read existing code structure...")
@@ -193,14 +196,13 @@ def create_agent():
     return graph
 '''
 
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "agent.py",
-                "content": agent_code
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {"file_path": "agent.py", "content": agent_code},
             }
-        })
+        )
 
         # Step 4: Hook BLOCKS
         if result["exit_code"] != 2:
@@ -209,7 +211,7 @@ def create_agent():
             return False
 
         if "langgraph-core" not in result["stdout"]:
-            print(f"[FAIL] Expected 'langgraph-core' in block message")
+            print("[FAIL] Expected 'langgraph-core' in block message")
             framework.cleanup()
             return False
 
@@ -222,14 +224,13 @@ def create_agent():
 
         # Step 6: Claude retries Write
         print("\n[Claude] Retrying Write with skill activated...")
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "agent.py",
-                "content": agent_code
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {"file_path": "agent.py", "content": agent_code},
             }
-        })
+        )
 
         # Step 7: Hook ALLOWS
         if result["exit_code"] != 0:
@@ -247,6 +248,7 @@ def create_agent():
 # ============================================================================
 # E2E Scenario 2: Full LEARN Cycle
 # ============================================================================
+
 
 def test_e2e_full_learn_cycle():
     """
@@ -274,7 +276,7 @@ def test_e2e_full_learn_cycle():
             return False
 
         # Step 1: User prompts
-        print("\n[User Prompt] \"Add WebSocket support with FastAPI\"")
+        print('\n[User Prompt] "Add WebSocket support with FastAPI"')
 
         # Step 2: Claude writes FastAPI code
         print("\n[Claude] Write websocket.py with FastAPI...")
@@ -299,14 +301,13 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 '''
 
         # Step 3: Hook ADVISE (PRE)
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "websocket.py",
-                "content": ws_code
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {"file_path": "websocket.py", "content": ws_code},
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Expected ADVISE (exit 0), got {result['exit_code']}")
@@ -314,7 +315,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             return False
 
         if "Research Protocol" not in result["stdout"]:
-            print(f"[FAIL] Expected research protocol message")
+            print("[FAIL] Expected research protocol message")
             framework.cleanup()
             return False
 
@@ -330,14 +331,13 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         print("\n[Claude] Write improved code...")
 
         # Step 6: Hook creates LEARN tasks (POST)
-        result = runner.run_hook({
-            "detected_event": "PostToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "websocket.py",
-                "content": ws_code
+        result = runner.run_hook(
+            {
+                "detected_event": "PostToolUse",
+                "tool_name": "Write",
+                "tool_input": {"file_path": "websocket.py", "content": ws_code},
             }
-        })
+        )
 
         if result["exit_code"] != 0:
             print(f"[FAIL] Expected exit 0, got {result['exit_code']}")
@@ -345,7 +345,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             return False
 
         if "LEARN PHASE" not in result["stdout"]:
-            print(f"[FAIL] Expected LEARN PHASE message")
+            print("[FAIL] Expected LEARN PHASE message")
             print(f"   stdout: {result['stdout'][:200]}")
             framework.cleanup()
             return False
@@ -366,6 +366,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 # ============================================================================
 # E2E Scenario 3: Cross-Session Learning
 # ============================================================================
+
 
 def test_e2e_cross_session():
     """
@@ -409,26 +410,24 @@ class UserCreate(BaseModel):
         return v
 '''
 
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "model.py",
-                "content": pydantic_code
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {"file_path": "model.py", "content": pydantic_code},
             }
-        })
+        )
 
-        print(f"[PASS] [Hook] ADVISE: Research protocol (Pydantic is new)")
+        print("[PASS] [Hook] ADVISE: Research protocol (Pydantic is new)")
 
         # Step 2: LEARN phase creates skill
-        result = runner.run_hook({
-            "detected_event": "PostToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "model.py",
-                "content": pydantic_code
+        result = runner.run_hook(
+            {
+                "detected_event": "PostToolUse",
+                "tool_name": "Write",
+                "tool_input": {"file_path": "model.py", "content": pydantic_code},
             }
-        })
+        )
 
         # Simulate skill creation in config
         print("\n[System] Creating skill 'pydantic-core'...")
@@ -451,19 +450,21 @@ class UserCreate(BaseModel):
         # Step 3: Same pattern in Session 2
         print("\n[Claude] Write another Pydantic model...")
 
-        result = runner.run_hook({
-            "detected_event": "PreToolUse",
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "order_model.py",
-                "content": '''from pydantic import BaseModel
+        result = runner.run_hook(
+            {
+                "detected_event": "PreToolUse",
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "order_model.py",
+                    "content": """from pydantic import BaseModel
 
 class Order(BaseModel):
     id: int
     total: float
-'''
+""",
+                },
             }
-        })
+        )
 
         # If pattern was migrated to patterns, would BLOCK here
         # For now, just demonstrate the flow
@@ -477,6 +478,7 @@ class Order(BaseModel):
 # ============================================================================
 # Main E2E Runner
 # ============================================================================
+
 
 def run_e2e_tests():
     """Run all E2E scenarios."""
@@ -502,6 +504,7 @@ def run_e2e_tests():
         except Exception as e:
             print(f"\n[FAIL] {name} failed with exception: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

@@ -16,9 +16,9 @@ Purpose: Detect bulk/destructive operations (rm multiple files, drop tables, etc
 Timeout: 3s
 """
 
+import os
 import re
 import sys
-import os
 
 # Core path resolution: find base/ + shared/ in user-level or project-level
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -33,16 +33,16 @@ from base import BaseHook, HookInput, HookOutput
 _BULK_RM_PATTERN = re.compile(
     r"rm\s+(-[rfv]+\s+)*"  # rm with flags
     r"("
-    r'("[^"]+"\s*){3,}'    # 3+ quoted paths
+    r'("[^"]+"\s*){3,}'  # 3+ quoted paths
     r"|"
-    r"(\S+\s+){3,}"        # 3+ unquoted paths
+    r"(\S+\s+){3,}"  # 3+ unquoted paths
     r"|"
-    r"\S+\*"               # glob pattern (e.g., test_*.py)
+    r"\S+\*"  # glob pattern (e.g., test_*.py)
     r")"
 )
 
 _DESTRUCTIVE_PATTERNS = [
-    r"rm\s+-rf?\s+",         # rm -r, rm -rf
+    r"rm\s+-rf?\s+",  # rm -r, rm -rf
     r"git\s+push\s+--force",
     r"git\s+reset\s+--hard",
     r"drop\s+table",

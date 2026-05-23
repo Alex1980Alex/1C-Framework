@@ -30,10 +30,8 @@ ERROR_PATTERNS = [
     ("fatal: not a git repository", "git_error", "path"),
     ("error: failed to push", "git_push_error", "remote"),
     # pip/uv
-    ("ERROR: Could not find a version",
-     "pip_version_error", "package"),
-    ("ERROR: No matching distribution",
-     "pip_dist_error", "package"),
+    ("ERROR: Could not find a version", "pip_version_error", "package"),
+    ("ERROR: No matching distribution", "pip_dist_error", "package"),
     ("ResolutionImpossible", "pip_resolve_error", "deps"),
     # ruff/linting
     ("Found ", " errors", "lint_errors", "code"),
@@ -41,11 +39,9 @@ ERROR_PATTERNS = [
     ("error:", "type_error", "type"),
     # general
     ("Permission denied", "permission_error", "perms"),
-    ("No such file or directory",
-     "file_not_found", "path"),
+    ("No such file or directory", "file_not_found", "path"),
     ("CommandNotFoundException", "command_not_found", "install"),
-    ("is not recognized as an internal",
-     "command_not_found_win", "path"),
+    ("is not recognized as an internal", "command_not_found_win", "path"),
 ]
 
 # Patterns that should NOT trigger (false positives)

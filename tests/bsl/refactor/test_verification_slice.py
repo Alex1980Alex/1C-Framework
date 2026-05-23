@@ -28,9 +28,7 @@ def _simple_edit(
                 uri=_file_uri(path),
                 edits=[
                     TextEdit(
-                        range=Range(
-                            Position(line, start_char), Position(line, end_char)
-                        ),
+                        range=Range(Position(line, start_char), Position(line, end_char)),
                         new_text=new_text,
                     )
                 ],

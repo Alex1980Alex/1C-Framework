@@ -1,7 +1,5 @@
 """Unit tests for Injection Defense (Phase 53.2)."""
 
-import pytest
-
 from src.pdf_framework.guardrails.injection_defense import InjectionDefense
 
 
@@ -69,7 +67,9 @@ class TestBenignQueries:
 
     def test_code_snippet(self):
         defense = InjectionDefense(mode="block", threshold=0.7)
-        result = defense.scan("Процедура ОбработкаПроведения(Отказ)\n  // Код модуля\nКонецПроцедуры")
+        result = defense.scan(
+            "Процедура ОбработкаПроведения(Отказ)\n  // Код модуля\nКонецПроцедуры"
+        )
         assert not result.is_injection
 
     def test_technical_text(self):
