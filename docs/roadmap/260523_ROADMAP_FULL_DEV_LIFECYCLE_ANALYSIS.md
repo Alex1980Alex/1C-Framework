@@ -693,6 +693,22 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 - `delegation.routing.decision` (z-ai-delegation A/B) — router_choice, score, exemplar_id
 - `wiki.promote` (session-memory-save L5) — promoted_count, draft_path
 
+### 10.4 Tech stack для observability
+
+**Production stack (docker-compose):**
+- **Prometheus** (`prom/prometheus:latest`, port 9090) — scrape `/metrics` endpoint (FastAPI `prometheus-client>=0.21` exposes counters/histograms)
+- **Grafana** (`grafana/grafana:latest`, port 3000) — dashboards в `./grafana/dashboards/`
+- **Langfuse** (`langfuse>=2.0` optional extra) — LLM observability (traces, cost tracking, prompt versioning), spans emitted из memory-first/delegation/wiki promote hooks
+- **OpenTelemetry** (planned via `otel_exporter.py`, future) — distributed tracing, metrics export
+
+**Hook-level observability:**
+- **`data/hook-invocations.jsonl`** — atomic JSONL append через `FileLock` (no truncation на kill -9)
+- **`InvocationTimer` context manager** (`shared/invocation_logger.py`) — elapsed_ms + outcome auto-recording
+- **Run correlation:** UUID `run_id` в `data/.current-runs.json` connects slash-command → all child tool/MCP calls
+- **MCP universal logging:** `mcp-invocation-logger.py` regex matcher `mcp__.*` — ловит все MCP servers без per-server config
+- **Skill accuracy correlation:** `data/skill-accuracy.jsonl` — recommend→activate pairs для RAGAS-like precision/recall measurement
+- **Auto-reports:** `scripts/analyze_run.py --mode {indexing|graph}` — deep reports post-run в `data/reports/{indexing,graph}/`
+
 ---
 
 ## §11 Next Improvements
