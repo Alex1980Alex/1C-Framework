@@ -44,8 +44,12 @@ repos:
         args: ['--branch', 'main']
 
   # Ruff - Python linter and formatter
+  # v0.8.0 was the original pin but it diverges from local dev ruff (0.15+):
+  # 741 false-positive errors on src/ (UP005/006/007 transitions etc) that
+  # newer ruff handles correctly. Bumped to v0.15.0 to align with `ruff>=0.15`
+  # in pyproject dev deps.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.15.0
     hooks:
       - id: ruff
         name: Ruff Lint
@@ -61,6 +65,7 @@ repos:
         name: Type Check (mypy)
         additional_dependencies:
           - pydantic>=2.10
+          - pydantic-settings>=2.6
           - fastapi>=0.115
           - types-requests
         args: [--ignore-missing-imports, --warn-return-any]
