@@ -360,3 +360,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: bsl-development, code-verify, 1c-doc-research
 - Files changed: 2
 - Summary: Session 2026-05-22. Skills: bsl-development, code-verify, 1c-doc-research. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация
+
+## 2026-05-23 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: code-verify, task-protocol, evaluation-benchmark, learn:fastapi-framework
+- Files changed: 2
+- Summary: Session 2026-05-23. Skills: code-verify, task-protocol, evaluation-benchmark, learn:fastapi-framework. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260522 PR-automation migration to dev-master discovery. Commit: docs(CLAUDE.md): document P3.2 gap-close + encoding fix + live PR #3 test
