@@ -358,6 +358,17 @@ Claude интерпретирует tool result, продолжает работ
 - `auto-git-save.py` — 30s
 - Большинство — 3-5s
 
+### 4.1 Hook framework internals
+
+- **BaseHook ABC** ([base/base.py](.claude/hooks/base/base.py)) — single `execute(self, inp: HookInput) -> HookOutput | None` contract
+- **HookInput** ([base/protocol.py](.claude/hooks/base/protocol.py)) — stdin JSON parsing с modernization 2026-05-22:
+  - `hook_event_name` priority (Claude Code 2.x payload)
+  - `transcript_path` fallback (modern snake_case)
+  - `transcript` fallback (legacy)
+- **HookOutput** — builds JSON для stdout: `systemMessage` (advisory), `hookSpecificOutput` (structured), `decision: block`+`reason` (для exit 2)
+- **Settings.json hook chain** — `event → matcher (regex) → [{command, timeout}]`; multiple hooks per matcher выполняются последовательно
+- **Hook discovery** — 73 .py файла в `.claude/hooks/` + 24 shared modules в `.claude/hooks/shared/`
+
 ---
 
 ## §5 3-Level Hook Architecture (deep dive)
