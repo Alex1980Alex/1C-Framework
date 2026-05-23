@@ -272,7 +272,7 @@ def main() -> int:
             continue
         if status == "success":
             entry["post_merge_status"] = "success"
-            entry["post_merge_checked_at"] = datetime.now().isoformat(timespec="seconds")
+            entry["post_merge_checked_at"] = datetime.now(UTC).isoformat(timespec="seconds")
             print(f"{line} ({detail})")
             continue
         if status == "none":
@@ -291,7 +291,7 @@ def main() -> int:
         if ok:
             entry["post_merge_status"] = "reverted"
             entry["post_merge_revert_pr"] = new_url
-            entry["post_merge_checked_at"] = datetime.now().isoformat(timespec="seconds")
+            entry["post_merge_checked_at"] = datetime.now(UTC).isoformat(timespec="seconds")
             summary["reverted"] += 1
             notify.notify_pr_failed(tid, "post_merge_revert", detail, new_url)
             print(f"    -> revert PR: {new_url}")
