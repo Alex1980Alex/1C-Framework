@@ -463,3 +463,23 @@ PostToolUse:TaskUpdate, **timeout 1320s** (22 минуты для wait-for-check
 ### 8.4 Factory-enforcer (PostToolUse:Write)
 
 Hook/skill file created → mandatory tasks для registration + verification (Step 4 + Step 5 в settings.json + MEMORY.md + triggers test).
+
+---
+
+## §9 Failure Modes + Recovery
+
+### 9.1 Known failure classes
+
+| Class | Symptom | Detection | Recovery |
+|---|---|---|---|
+| **PostToolUse no-fire (#6305)** | auto-commit/code-verify не работает | hook-invocations.jsonl absence | UPS/Stop fallback patterns |
+| **Hook ImportError after merge** | UserPromptSubmit/PreToolUse errors в UI | tail hook-invocations.jsonl outcome=error | importlib sweep всех hooks |
+| **Hook NameError** (typing import lost) | Module loads fail | grep for `: Any/dict[str, Any]` without `from typing` | Restore import |
+| **Hook UnicodeEncodeError** | print() с → arrows crashes Windows cp1251 | "charmap codec" в error trace | sys.stdout.reconfigure utf-8 errors='replace' |
+| **Pre-commit вендор spillover** | autofix touches 1300+ vendor files | git status --short после autofix | Add to exclude regex (tools/, jre/, etc.) |
+| **Disjoint master histories** | gh pr create rejects "no history in common" | git merge-base пусто | Force-push reconciliation with archive ref |
+| **Auto-save preempt** | Auto-git-save коммитит до meaningful commit | git log shows chore: auto-save | Use git commit --amend (если parent не запушен) |
+| **Submodule stale snapshot** | EDT write_module_source затирает чужие правки | git diff submodule | git checkout + Edit re-apply |
+| **Cherry-pick conflict (PR-automation)** | cherry-pick fails если file отсутствует на base | post-task-push-pr fallback log | Use mode=head-ref instead of cherry-pick |
+| **Z.AI write guard false-positive** | Blocks docs/markdown | guard fires на .md > 15 lines | Chunk Write/Edit ≤14 lines |
+| **Skill router phantom blocking** | Recommends non-existent skill | code-skill-patterns.json validation | Audit script: `re.findall(r'"skill":\s*"([^"]+)"',text)` exists check |
