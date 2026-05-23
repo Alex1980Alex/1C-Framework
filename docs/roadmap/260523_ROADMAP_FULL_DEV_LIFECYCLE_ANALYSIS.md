@@ -59,6 +59,13 @@
 
 **Stage exit:** Claude получает initial systemMessages, инфраструктура готова.
 
+**Tech stack (Stage 0):**
+- `ensure-docker-qdrant.py` — subprocess вызов `docker ps` + `docker compose up -d qdrant` (Qdrant v1.17.1 distroless image, **no curl/wget** в healthcheck → `/dev/tcp/localhost/6333` probe)
+- `session-mypy-banner.py` — читает `mypy-baseline.txt` (snapshot для CI ratchet gate, `python -m mypy_baseline sync`)
+- `submodule-status-check.py` — `git submodule status` для embedded repos (`ИБTransportManagementDevelop/Конфигурация` + per-JIRA `configuration/<JIRA>/`)
+- `audit-coverage-check.py` — Python loop по `.claude/hooks/` + `data/hook-invocations.jsonl` audit
+- Docker services normally up: qdrant:6333/6334 + neo4j:7687/17474 + pgvector:5432 + redis:6379 + nginx:80/443 + prometheus:9090 + grafana:3000
+
 ### Stage 1 — User prompt arrives (`UserPromptSubmit`, 14 hooks)
 
 User набирает сообщение, нажимает Enter. 14 хуков запускаются в порядке регистрации в `settings.json`:
