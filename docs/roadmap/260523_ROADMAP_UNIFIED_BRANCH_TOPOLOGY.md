@@ -96,3 +96,32 @@ SYMPTOM #3: каждая фича = новый mini-260522 (повторяющи
 ---
 
 ## §3 Unified Phase Plan
+
+### Phase 0 — PR #4 (DONE 2026-05-23)
+
+Migration PR-automation подсистемы на dev-master. Closed 260522. Lessons → §4, §5.
+
+### Phase 1 — Immediate cleanup (~15 минут)
+
+**Цель:** обнулить остаточные ref'ы от PR #4.
+
+```bash
+# Удалить remote migration-ветку (PR merged, ветка не нужна)
+git push origin :migrate/pr-automation-stack
+
+# Fast-forward local master + local dev-master к origin/dev-master
+git checkout master
+git merge --ff-only origin/dev-master
+git push origin master
+git checkout dev-master 2>/dev/null && git merge --ff-only origin/dev-master
+```
+
+**Verification:** `gh pr list --state open` показывает только PR #2; `git log master..origin/dev-master` пусто.
+
+### Phase 2 — Audit unique origin/master commits (~30-60 минут)
+
+**Цель:** идентифицировать 20-50 legitimate коммитов из 2 236 уникальных origin/master, которые нужно cherry-pick'нуть в master перед force-push.
+
+Идентично §3 (Phase 2) исходного 260519. Эвристики, prefix-stats, категоризация по noise/duplicate/legitimate — без изменений.
+
+**Output:** `/tmp/selected-hashes.txt` — отсортированный список hash'ей в хронологическом порядке.
