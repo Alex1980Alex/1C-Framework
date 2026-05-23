@@ -18,7 +18,7 @@ import json
 import statistics
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -31,7 +31,7 @@ HOOK_NAME = "PostTaskPushPR"
 def _parse_jsonl(days: int) -> list[dict]:
     if not LOG_FILE.exists():
         return []
-    cutoff = datetime.now() - timedelta(days=days)
+    cutoff = datetime.now(UTC) - timedelta(days=days)
     out: list[dict] = []
     try:
         with LOG_FILE.open(encoding="utf-8") as f:
@@ -49,6 +49,10 @@ def _parse_jsonl(days: int) -> list[dict]:
                     ts = datetime.fromisoformat(e.get("ts", ""))
                 except ValueError:
                     continue
+                # Tolerate legacy naive timestamps from pre-UTC state-file
+                # writers: normalize to aware UTC before comparing with cutoff.
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=UTC)
                 if ts < cutoff:
                     continue
                 e["_ts"] = ts
@@ -85,7 +89,7 @@ def _safe_median(values: list[int]) -> float:
 def build_report(days: int) -> dict:
     entries = _parse_jsonl(days)
     state = _load_state().get("processed", {})
-    today = datetime.now().date().isoformat()
+    today = datetime.now(UTC).date().isoformat()
 
     prs_tracked = sum(1 for v in state.values() if v.get("pr_url"))
     prs_today = sum(1 for v in state.values() if str(v.get("completed_ts", "")).startswith(today))
@@ -111,7 +115,7 @@ def build_report(days: int) -> dict:
         d["median_ms"] = _safe_median(ms_list)
         daily.append(d)
 
-    stale_cut = datetime.now() - timedelta(days=7)
+    stale_cut = datetime.now(UTC) - timedelta(days=7)
     stale: list[dict] = []
     for tid, v in state.items():
         url = v.get("pr_url")
@@ -122,6 +126,9 @@ def build_report(days: int) -> dict:
             ts = datetime.fromisoformat(ts_str)
         except ValueError:
             continue
+        # Legacy naive timestamps → assume UTC (matches today's writers).
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=UTC)
         if ts < stale_cut:
             stale.append(
                 {
@@ -133,7 +140,7 @@ def build_report(days: int) -> dict:
             )
 
     return {
-        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "window_days": days,
         "total_invocations": len(entries),
         "total_prs_tracked": prs_tracked,
@@ -225,7 +232,7 @@ def main() -> int:
                 json.dumps(report, ensure_ascii=False, indent=2, default=str),
                 encoding="utf-8",
             )
-        dated = REPORT_DIR / f"{datetime.now().strftime('%Y-%m-%d')}.md"
+        dated = REPORT_DIR / f"{datetime.now(UTC).strftime('%Y-%m-%d')}.md"
         if not dated.exists():
             dated.write_text(md, encoding="utf-8")
     except OSError:
