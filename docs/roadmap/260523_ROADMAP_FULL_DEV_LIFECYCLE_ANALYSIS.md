@@ -1423,6 +1423,48 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 - Langfuse primary backend, OTel sidecar для future flexibility
 - Migration gate dashboard: monthly check 4 triggers
 
+### 17.4 Cross-cutting insights
+
+1. **All 3 decisions favor "decouple now, decide later":**
+   - D1: dispatcher hook preserves option для native parallel
+   - D2: OTel instrumentation preserves option swap backends
+   - D3: adaptive routing preserves option scale checks up/down
+   - **Meta-principle:** decouple instrumentation layer от backend choice → low-cost reversal
+
+2. **Latency budgets compose multiplicatively:**
+   - D1 saves ~10s на UPS chain
+   - D2 adaptive routing saves ~500ms на simple prompts
+   - Combined: simple-prompt TTFT drops baseline+12s → **baseline+2.5s**, под Nielsen's 1s flow threshold для warm queries
+
+3. **D2 ↔ D3 cache coupling:**
+   - Prompt cache shows как Langfuse `cache_read_input_tokens`
+   - Если MMR reshuffling tanks cache hit → Langfuse есть canary
+   - **DO NOT migrate observability пока D2 cache discipline stabilizes** (≥1 month baseline)
+
+### 17.5 §16 blockers re-status (post-decisions)
+
+| # | Blocker (§16.3) | Status after §17 | Remaining work |
+|---|---|---|---|
+| 1 | Inventory baseline wrong | **PENDING** | 0.5h recount (not affected by decisions) |
+| 2 | §14 parallel-UPS unimplemented | **RESOLVED → ADR-D1** | Build `shared/prework_dispatcher.py` (1d in P0c) |
+| 3 | `AUTO_PR_MERGE_ENABLED` doc error | **PENDING** | 0.25h fix §8.5 env table |
+| 4 | §14 token budget conflict | **RESOLVED → ADR-D2** | Implement adaptive routing + MMR (0.5d added to P1) |
+| 5 | §10 vs §15 observability path | **RESOLVED → ADR-D3** | OTel Collector container в docker-compose + 4-trigger dashboard (1d) |
+
+**Remaining mechanical fix:** ~0.75h (blockers #1 + #3).
+
+### 17.6 Final GO criteria
+
+После 17.5 mechanical fix (0.75h) — **GO for P0a-P0c sequencing per §16.4** с обновлёнными ADR-D1/D2/D3.
+
+**Total realistic trajectory:** unchanged 11-15 days (decisions made within P0a budget).
+
+### 17.7 Cache artifacts (this analysis)
+
+- `.claude/skills/architecture-research/cache/roadmap-260523-3-decisions-2026.md` — full decision record (D1+D2+D3, tradeoff matrices, reversibility, 24 source URLs)
+- `.claude/skills/tech-research/cache/rag-token-budget-adaptive-injection-2026.md` — RAG-specific deep-dive для D2 (7-category template)
+- Both `_index.json` updated and JSON-validated
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
