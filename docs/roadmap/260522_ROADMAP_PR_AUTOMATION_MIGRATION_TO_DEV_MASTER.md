@@ -1,7 +1,8 @@
 # Roadmap 260522 — Миграция PR-automation стека на `dev-master`
 
-> **Статус:** discovery DONE, миграция NOT STARTED.
+> **Статус:** **SUPERSEDED 2026-05-23** — миграция выполнена через **PR #4 merged 2026-05-23 03:13 UTC** (merge commit `25ab2de39`). Этот roadmap сохранён как historical reference для discovery+inventory методологии. Generalized pattern → [260523 §4 Pattern B](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md). Lessons из round-6/7 cleanup arc → [260523 §5 Anti-patterns](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md).
 > **Дата discovery:** 2026-05-22 evening.
+> **Дата implementation:** 2026-05-22 night → 2026-05-23 morning (rounds 2-7).
 > **Источник:** артефакт сессии task#1 (P3.2 gap-close).
 
 ## 0. TL;DR
