@@ -215,3 +215,34 @@ Claude интерпретирует tool result, продолжает работ
 | **Stop fallback (transcript scan)** | code-verify-reminder Stop entry | Читает transcript JSONL, scans markers |
 | **Canary log** | auto-git-save-prompt-canary.log | Diagnose hook invocation independently of logic |
 | **Cooldown** | memory-first-hook (30s), docs-enforcer (30m), auto-git-save (adaptive 2-6m) | Prevent spam/loop |
+
+### 3.2 Skills system patterns
+
+| Pattern | Файл | Назначение |
+|---|---|---|
+| **4-Layer skill matching** | skill-router.py | Phrase (exact) → Fuzzy (typo) → TF-IDF (semantic) → Qdrant fallback |
+| **Bundle classification** | skill-router-config.json | 50+ domain groups (research-1c, bsl-dev, langchain-core) |
+| **Affinity injection** | skill-router-config.json | Cross-bundle deps (langchain-streaming → langgraph-core) |
+| **Workflow detection** | skill-router.py | research/brainstorm/hybrid mode hints |
+| **Min-score threshold** | skill-router-config.json | 2 base, 6 для informational intent (precision lever) |
+| **Session dedup** | SessionState.get_already_recommended() | Avoid re-showing same skills |
+| **Task Protocol phase machine** | task_master.py + protocol-enforcer + observer | idle→classified→decomposed→skill_checked→ALLOW |
+| **Auto-classification** | skill-eval-enforcer-shell.py | trivial/medium/complex по word count + multi-file markers |
+| **Code-verify 3-Level** | code-verify SKILL.md | Structural → Subagent → Decision |
+| **Code-verify 4-Mode** | code-verify SKILL.md | knowledge-compliance / behavior-preservation / bug-fix-validation / quality-review |
+| **PASS/FAIL marker** | code-verify subagent | `[CODE-VERIFY-PASS]` / `[CODE-VERIFY-FAIL]` regex closure |
+| **Ralph Wiggum Loop** | code-verify FAIL handler | Max 3 iterations, then escalate manual |
+
+### 3.3 Memory patterns
+
+| Pattern | Файл | Назначение |
+|---|---|---|
+| **4-Layer Federated Recall** | memory-first-hook.py | SQLite (200ms) + Qdrant TEI (2s) + .md (500ms) + wiki (stub) |
+| **RRF merge** | memory-first-hook.py | Reciprocal Rank Fusion по content hash, top-K injection |
+| **Russian stemming** | memory-first-hook.py:75-127 | 29 suffixes for Cyrillic morphology |
+| **TEI Qwen3-Embedding-8B** | Phase 9.1 alignment | 4096d embeddings, 3 collections (skill_library, experience, conversation) |
+| **Token overlap fallback** | memory-first-hook.py | If TEI unavailable → query learned_patterns |
+| **MEMORY.md index** | ~/.claude/projects/.../MEMORY.md | 45 entries, one-line pointers to detail files |
+| **Frontmatter parsing** | memory-first-hook.py:130-157 | YAML frontmatter (name, description, type, body) |
+| **L5 wiki promote** | session-memory-save.py + scripts/export_graph_to_wiki | Promote patterns after session save |
+| **NTFS recovery awareness** | MEMORY.md note | Original 18 entries lost 2026-04-26, recovered via index pointers |
