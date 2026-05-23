@@ -1226,6 +1226,30 @@ graceful degradation на failure. Escalation для complex через subagent
 
 ### 15.8 Closing the loop
 
+---
+
+## §16 Pre-Implementation Risk Analysis (critical review)
+
+**Goal:** ВЫЯВИТЬ inconsistencies, потенциальные ошибки, missing dependencies ПЕРЕД implementation §11/§14/§15.
+
+**Methodology:** systematic chapter-by-chapter review + cross-chapter consistency check + per-claim verification against filesystem.
+
+### 16.1 Cross-chapter inconsistencies (10 issues found)
+
+| # | Severity | Issue | Evidence |
+|---|---|---|---|
+| 1 | **HIGH** | Inventory counts wrong across all chapters | §0 claims `73 hooks, 24 shared, 98 skills, 45 memory`; actual: **59 .py / 21 shared / 89 skills / 40 memory**. settings.json registrations sum to 66. ADR §14.7 `73→77` anchored to wrong baseline |
+| 2 | Medium | §X subsection ordering bug (X.8 ДО X.7) | Systematic across §3/§4/§5/§6/§7/§8/§9/§10 — best-practices appended без renumbering tech-stack |
+| 3 | Medium | §14 token budget self-contradicts | Success criterion (§14.2): `<5K tokens`. Evaluation matrix (§14.4): `~7800 → exceeds`. Mitigation handwaves "top-K ranking" без threshold spec |
+| 4 | Medium | §14 latency assumes parallel UPS — infra не существует | §14.5 diagram + §14.4 (≈6.5s) assume parallel. Actual settings.json — **sequential** (per §4.1). Sequential sum: 9.1s + existing 14 UPS ~3s = >12s — нарушает UPS UX |
+| 5 | **HIGH** | §8.5 env var documentation errors | `AUTO_PR_MERGE_ENABLED` — **не существует** в коде (актуально `AUTO_PR_AUTO_MERGE`). `AUTO_PR_TIMEOUT=600` — не существует. Operator following §8.5 силently получит no-op |
+| 6 | Medium | §10.2 cache file list — wrong filename + missing files | Claims `auto-git-save.json`; actual `auto-git-save-state.json`. Missing 5+ state files. Real cache count ~16 vs claimed "12" |
+| 7 | Low-Med | §3.1 file location | `auto-git-save-prompt-canary.log` лежит в `.claude/cache/`, не в `.claude/hooks/` |
+| 8 | Medium | §7.1 Layer 4 STUB vs §11 P2 effort vs §14.5 latency | Layer 4 = STUB returns []. §11 estimate 0.5 day. §14.5 budget 3s memory-first уже full. После Layer 4 implementation budget shrinks — un-modeled |
+| 9 | **HIGH** | §10 (Langfuse) vs §15.4 (LGTM Tempo) — no migration gate | §10 marks Langfuse `Have`. §15.4 P3 "если LGTM выбрано" — non-decision. Risk: dual-write infra 6 months without retirement criteria |
+| 10 | Medium | §14 + §15 cost double-count + no joint budget | §14: +5K tokens, 4 new hooks (66→70). §15: CloudEvents envelope (+200B/event), DuckDB infra, crypto-shred. §11 mypy ratchet BLOCKS §14/§15 typed hooks. Combined 8-15 days но unsequenced |
+| 11 | Low | §9.2 smoke command hardcoded "59" | Coincidentally correct today. Drift moment any hook added |
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
