@@ -3,6 +3,29 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "gitkraken-mcp-server-2026.md",
+      "title": "GitKraken MCP Server — обзор, установка для Claude Code, сравнение с git/gh, decision (не интегрировать сейчас)",
+      "keywords": [
+        "gitkraken",
+        "gk-cli",
+        "gk mcp",
+        "mcp-server",
+        "model-context-protocol",
+        "git-mcp",
+        "github-mcp",
+        "gitlab-mcp",
+        "jira-mcp",
+        "azure-devops-mcp",
+        "gitlens",
+        "claude-mcp-add",
+        "workflow-prompts",
+        "stdio-mcp",
+        "pr-automation",
+        "git-integration"
+      ],
+      "last_verified": "2026-05-23"
+    },
+    {
       "file": "process-caching-observability-100-percent-2026.md",
       "title": "Process Caching & Observability — 100% lifecycle capture best practices для roadmap 260523 (Event Sourcing, CloudEvents, W3C Trace Context, LGTM, ClickHouse, DuckDB+JSONL, Iceberg time-travel, RocksDB checkpoints, Tempo+S3, crypto-shredding GDPR, Kafka/Redpanda replay, Langfuse RAGAS replay)",
       "keywords": [
