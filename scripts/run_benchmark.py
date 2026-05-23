@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """CLI for running BSL rename benchmarks."""
+
 from __future__ import annotations
 
 import argparse
@@ -19,6 +20,7 @@ class _StubBackend:
 
     def plan_rename(self, uri: str, line: int, character: int, new_name: str):
         from bsl.semantic_search.refactor.types import WorkspaceEdit
+
         return WorkspaceEdit()
 
 
@@ -38,7 +40,8 @@ def _append_trend(run_id: str, backends: list[str], results: list, trend_path: P
     try:
         commit = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"],
-            stderr=subprocess.DEVNULL, encoding="utf-8",
+            stderr=subprocess.DEVNULL,
+            encoding="utf-8",
         ).strip()
     except Exception:
         commit = "unknown"
@@ -104,7 +107,9 @@ def main() -> None:
 
     if args.append_trend:
         _append_trend(
-            args.run_id, backend_names, results,
+            args.run_id,
+            backend_names,
+            results,
             REPO_ROOT / "docs" / "roadmap" / "benchmark" / "trend.md",
         )
 

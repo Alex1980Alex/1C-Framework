@@ -39,10 +39,12 @@ from base import BaseHook, HookInput, HookOutput
 # Project paths
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MEMORY_DIR = Path(os.environ.get(
-    "CLAUDE_MEMORY_DIR",
-    Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
-))
+MEMORY_DIR = Path(
+    os.environ.get(
+        "CLAUDE_MEMORY_DIR",
+        Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
+    )
+)
 COOLDOWN_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-cooldown.json"
 SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 
@@ -72,13 +74,37 @@ TOTAL_BUDGET = 4.0  # Hook timeout 5s, budget 4s
 
 # Russian suffix stemming (29 suffixes, ordered by length desc)
 _RU_SUFFIXES_3 = [
-    "ами", "ями", "ого", "его", "ому", "ему",
-    "ыми", "ими", "ать", "ять", "ить", "ует",
-    "ных", "ной", "ную", "ном",
+    "ами",
+    "ями",
+    "ого",
+    "его",
+    "ому",
+    "ему",
+    "ыми",
+    "ими",
+    "ать",
+    "ять",
+    "ить",
+    "ует",
+    "ных",
+    "ной",
+    "ную",
+    "ном",
 ]
 _RU_SUFFIXES_2 = [
-    "ов", "ев", "ам", "ям", "ом", "ем",
-    "ах", "ях", "ий", "ый", "ой", "ие", "ые",
+    "ов",
+    "ев",
+    "ам",
+    "ям",
+    "ом",
+    "ем",
+    "ах",
+    "ях",
+    "ий",
+    "ый",
+    "ой",
+    "ие",
+    "ые",
 ]
 _RU_SUFFIXES_1 = ["ы", "и", "а", "я", "е", "у", "ю", "о"]
 
@@ -209,14 +235,16 @@ def search_sqlite(query_tokens: set, limit: int = 10) -> list:
                     break
 
             if score >= SCORE_THRESHOLD:
-                results.append({
-                    "source": "sqlite",
-                    "id": row_id,
-                    "content": content[:200],
-                    "category": category,
-                    "score": round(score, 4),
-                    "importance": importance,
-                })
+                results.append(
+                    {
+                        "source": "sqlite",
+                        "id": row_id,
+                        "content": content[:200],
+                        "category": category,
+                        "score": round(score, 4),
+                        "importance": importance,
+                    }
+                )
 
         results.sort(key=lambda x: -x["score"])
         return results[:limit]
@@ -280,20 +308,25 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                     break
                 remaining = QDRANT_TIMEOUT - (time.monotonic() - start)
                 hits = search_qdrant_semantic(
-                    collection, embedding, limit=5, timeout=max(0.2, remaining),
+                    collection,
+                    embedding,
+                    limit=5,
+                    timeout=max(0.2, remaining),
                 )
                 for hit in hits:
                     payload = hit.get("payload", {})
                     content = _extract_content(payload, ctype)
                     if not content:
                         continue
-                    results.append({
-                        "source": "qdrant",
-                        "id": hit.get("id", ""),
-                        "content": content[:200],
-                        "category": _extract_category(payload, ctype),
-                        "score": round(hit.get("score", 0.0), 4),
-                    })
+                    results.append(
+                        {
+                            "source": "qdrant",
+                            "id": hit.get("id", ""),
+                            "content": content[:200],
+                            "category": _extract_category(payload, ctype),
+                            "score": round(hit.get("score", 0.0), 4),
+                        }
+                    )
             if results:
                 results.sort(key=lambda x: -x["score"])
                 return results[:limit]
@@ -327,13 +360,15 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                 continue
             score = len(overlap) / max(len(query_tokens), 1)
             if score >= SCORE_THRESHOLD:
-                results.append({
-                    "source": "qdrant",
-                    "id": str(point.id),
-                    "content": content[:200],
-                    "category": payload.get("category", "pattern"),
-                    "score": round(score, 4),
-                })
+                results.append(
+                    {
+                        "source": "qdrant",
+                        "id": str(point.id),
+                        "content": content[:200],
+                        "category": payload.get("category", "pattern"),
+                        "score": round(score, 4),
+                    }
+                )
 
         results.sort(key=lambda x: -x["score"])
         return results[:limit]
@@ -398,13 +433,15 @@ def search_md(query_tokens: set, limit: int = 10) -> list:
                 body = mem.get("body", "")
                 title = mem.get("name") or mem.get("file", "?")
                 snippet = (title + ": " + body[:150]) if title else body[:200]
-                results.append({
-                    "source": "md",
-                    "id": mem["file"],
-                    "content": snippet[:200],
-                    "category": mem.get("type", "note"),
-                    "score": round(sc, 4),
-                })
+                results.append(
+                    {
+                        "source": "md",
+                        "id": mem["file"],
+                        "content": snippet[:200],
+                        "category": mem.get("type", "note"),
+                        "score": round(sc, 4),
+                    }
+                )
         results.sort(key=lambda x: -x["score"])
         return results[:limit]
     except Exception:
@@ -420,9 +457,7 @@ def rrf_merge(layers: dict, weights: dict, k: int = 60) -> list:
     for source, items in layers.items():
         w = weights.get(source, 0.0)
         for rank, item in enumerate(items, start=1):
-            chash = hashlib.sha1(
-                item["content"].encode("utf-8", errors="replace")
-            ).hexdigest()[:16]
+            chash = hashlib.sha1(item["content"].encode("utf-8", errors="replace")).hexdigest()[:16]
             rrf = w * (1.0 / (k + rank))
             if chash in scores:
                 scores[chash]["fused_score"] += rrf
@@ -449,9 +484,7 @@ def format_federated_context(merged: list) -> str:
         display = content[:100].replace("\n", " ").strip()
         if len(content) > 100:
             display += "..."
-        lines.append(
-            f'{i}. [{label}|{confidence:.3f}] {category}: "{display}"'
-        )
+        lines.append(f'{i}. [{label}|{confidence:.3f}] {category}: "{display}"')
     lines.append(
         "Use this context to inform your response. "
         "If memory conflicts with current code, trust current code."
@@ -478,8 +511,14 @@ class MemoryFirstHook(BaseHook):
 
         deadline = time.monotonic() + TOTAL_BUDGET
 
-        sqlite_results = search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
-        qdrant_results = search_qdrant(query_tokens, limit=10, prompt=prompt) if time.monotonic() < deadline else []
+        sqlite_results = (
+            search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
+        )
+        qdrant_results = (
+            search_qdrant(query_tokens, limit=10, prompt=prompt)
+            if time.monotonic() < deadline
+            else []
+        )
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
 
         merged = rrf_merge(

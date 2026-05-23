@@ -50,7 +50,7 @@ class DelegationOutcomeStop(BaseHook):
         # Read outcomes for this session
         outcomes = []
         try:
-            with open(OUTCOMES_FILE, "r", encoding="utf-8") as f:
+            with open(OUTCOMES_FILE, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:

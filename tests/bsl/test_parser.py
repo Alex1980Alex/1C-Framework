@@ -1,19 +1,29 @@
 """Tests for BSL parser, chunker, and evaluation metrics (Phase 58-59)."""
 
-from src.bsl.parser.models import (
-    SymbolType, CompilationDirective, ModuleType,
-    BSLParam, BSLCall, BSLSymbol, BSLVariable, BSLRegion, BSLModule,
+from src.bsl.evaluation.metrics import (
+    EvalResult,
+    aggregate_results,
+    evaluate_single,
+    format_report,
+    mrr,
+    ndcg,
+    precision_at_k,
+    recall_at_k,
 )
 from src.bsl.parser.bsl_ast_parser import BSLASTParser
-from src.bsl.parser.bsl_chunker import BSLChunker, BSLChunk
-from src.bsl.evaluation.metrics import (
-    EvalResult, recall_at_k, precision_at_k, mrr, ndcg,
-    evaluate_single, aggregate_results, format_report,
+from src.bsl.parser.bsl_chunker import BSLChunk, BSLChunker
+from src.bsl.parser.models import (
+    BSLCall,
+    BSLModule,
+    BSLParam,
+    BSLSymbol,
+    CompilationDirective,
+    ModuleType,
+    SymbolType,
 )
 
 
 class TestModels:
-
     def test_symbol_type_values(self):
         assert SymbolType.PROCEDURE.value == "Procedure"
         assert SymbolType.FUNCTION.value == "Function"
@@ -47,7 +57,9 @@ class TestModels:
             name="TestProc",
             symbol_type=SymbolType.PROCEDURE,
             params=params,
-            line_start=1, line_end=5, body="",
+            line_start=1,
+            line_end=5,
+            body="",
         )
         sig = sym.signature
         assert "TestProc" in sig
@@ -57,38 +69,65 @@ class TestModels:
     def test_bsl_symbol_params_str(self):
         params = [BSLParam(name="X", by_val=True)]
         sym = BSLSymbol(
-            name="Fn", symbol_type=SymbolType.FUNCTION,
-            params=params, line_start=1, line_end=3, body="",
+            name="Fn",
+            symbol_type=SymbolType.FUNCTION,
+            params=params,
+            line_start=1,
+            line_end=3,
+            body="",
         )
         ps = sym.params_str
         assert "X" in ps
 
     def test_bsl_module_properties(self):
-        mod = BSLModule(file_path="test.bsl", module_type=ModuleType.UNKNOWN, symbols=[], variables=[])
+        mod = BSLModule(
+            file_path="test.bsl", module_type=ModuleType.UNKNOWN, symbols=[], variables=[]
+        )
         assert len(mod.procedures) == 0
         assert len(mod.functions) == 0
 
     def test_bsl_module_with_symbols(self):
-        sym1 = BSLSymbol(name="P1", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="")
-        sym2 = BSLSymbol(name="F1", symbol_type=SymbolType.FUNCTION, line_start=5, line_end=8, body="")
-        mod = BSLModule(file_path="m.bsl", module_type=ModuleType.UNKNOWN, symbols=[sym1, sym2], variables=[])
+        sym1 = BSLSymbol(
+            name="P1", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body=""
+        )
+        sym2 = BSLSymbol(
+            name="F1", symbol_type=SymbolType.FUNCTION, line_start=5, line_end=8, body=""
+        )
+        mod = BSLModule(
+            file_path="m.bsl", module_type=ModuleType.UNKNOWN, symbols=[sym1, sym2], variables=[]
+        )
         assert len(mod.procedures) == 1
         assert len(mod.functions) == 1
 
     def test_bsl_module_exports(self):
-        sym1 = BSLSymbol(name="ExportProc", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="", is_export=True)
-        sym2 = BSLSymbol(name="LocalProc", symbol_type=SymbolType.PROCEDURE, line_start=5, line_end=7, body="", is_export=False)
+        sym1 = BSLSymbol(
+            name="ExportProc",
+            symbol_type=SymbolType.PROCEDURE,
+            line_start=1,
+            line_end=3,
+            body="",
+            is_export=True,
+        )
+        sym2 = BSLSymbol(
+            name="LocalProc",
+            symbol_type=SymbolType.PROCEDURE,
+            line_start=5,
+            line_end=7,
+            body="",
+            is_export=False,
+        )
         mod = BSLModule(file_path="m.bsl", module_type=ModuleType.UNKNOWN, symbols=[sym1, sym2])
         assert len(mod.exports) == 1
         assert mod.exports[0].name == "ExportProc"
 
     def test_bsl_module_name(self):
-        mod = BSLModule(file_path="CommonModules/MyModule/Ext/Module.bsl", module_type=ModuleType.COMMON_MODULE)
+        mod = BSLModule(
+            file_path="CommonModules/MyModule/Ext/Module.bsl", module_type=ModuleType.COMMON_MODULE
+        )
         assert mod.module_name == "MyModule"
 
 
 class TestParser:
-
     def _make_parser(self):
         return BSLASTParser()
 
@@ -163,7 +202,6 @@ class TestParser:
 
 
 class TestChunker:
-
     def _make_chunker(self):
         return BSLChunker()
 
@@ -172,9 +210,14 @@ class TestChunker:
             name="Calculate",
             symbol_type=SymbolType.FUNCTION,
             params=[BSLParam(name="Value")],
-            line_start=1, line_end=5,
+            line_start=1,
+            line_end=5,
             body="Return Value * 2;",
-            calls=[BSLCall(caller_name="Calculate", callee_module=None, callee_method="Multiply", line=3)],
+            calls=[
+                BSLCall(
+                    caller_name="Calculate", callee_module=None, callee_method="Multiply", line=3
+                )
+            ],
             comment="Doubles the value",
         )
         return BSLModule(
@@ -209,15 +252,31 @@ class TestChunker:
 
     def test_empty_module(self):
         chunker = self._make_chunker()
-        mod = BSLModule(file_path="empty.bsl", module_type=ModuleType.UNKNOWN, raw_content="", symbols=[], variables=[])
+        mod = BSLModule(
+            file_path="empty.bsl",
+            module_type=ModuleType.UNKNOWN,
+            raw_content="",
+            symbols=[],
+            variables=[],
+        )
         chunks = chunker.chunk_module(mod)
         assert isinstance(chunks, list)
 
     def test_multiple_symbols(self):
         chunker = self._make_chunker()
-        sym1 = BSLSymbol(name="A", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="// a")
-        sym2 = BSLSymbol(name="B", symbol_type=SymbolType.FUNCTION, line_start=5, line_end=8, body="Return 1;")
-        mod = BSLModule(file_path="multi.bsl", module_type=ModuleType.UNKNOWN, raw_content="code", symbols=[sym1, sym2], line_count=8)
+        sym1 = BSLSymbol(
+            name="A", symbol_type=SymbolType.PROCEDURE, line_start=1, line_end=3, body="// a"
+        )
+        sym2 = BSLSymbol(
+            name="B", symbol_type=SymbolType.FUNCTION, line_start=5, line_end=8, body="Return 1;"
+        )
+        mod = BSLModule(
+            file_path="multi.bsl",
+            module_type=ModuleType.UNKNOWN,
+            raw_content="code",
+            symbols=[sym1, sym2],
+            line_count=8,
+        )
         chunks = chunker.chunk_module(mod)
         # 1 summary + 2 symbols = 3
         assert len(chunks) >= 2
@@ -232,7 +291,6 @@ class TestChunker:
 
 
 class TestMetrics:
-
     def test_recall_at_k_full(self):
         retrieved = ["a", "b", "c", "d", "e"]
         expected = {"a", "c"}
@@ -287,8 +345,30 @@ class TestMetrics:
         assert result.recall_5 > 0
 
     def test_aggregate_results(self):
-        r1 = EvalResult(query_id="1", query="q1", category="c1", expected=["a"], retrieved=["a"], recall_5=1.0, recall_10=1.0, precision_5=0.2, mrr_val=1.0, ndcg_val=1.0)
-        r2 = EvalResult(query_id="2", query="q2", category="c1", expected=["b"], retrieved=["x"], recall_5=0.0, recall_10=0.0, precision_5=0.0, mrr_val=0.0, ndcg_val=0.0)
+        r1 = EvalResult(
+            query_id="1",
+            query="q1",
+            category="c1",
+            expected=["a"],
+            retrieved=["a"],
+            recall_5=1.0,
+            recall_10=1.0,
+            precision_5=0.2,
+            mrr_val=1.0,
+            ndcg_val=1.0,
+        )
+        r2 = EvalResult(
+            query_id="2",
+            query="q2",
+            category="c1",
+            expected=["b"],
+            retrieved=["x"],
+            recall_5=0.0,
+            recall_10=0.0,
+            precision_5=0.0,
+            mrr_val=0.0,
+            ndcg_val=0.0,
+        )
         summary = aggregate_results([r1, r2])
         assert summary["total_queries"] == 2
         assert summary["recall_5"] == 0.5

@@ -4,8 +4,6 @@ Tests should_rewrite_or_generate and should_regenerate_or_end logic
 without requiring LLM or SearchManager.
 """
 
-import pytest
-
 from src.pdf_framework.config import SelfRAGSettings
 
 

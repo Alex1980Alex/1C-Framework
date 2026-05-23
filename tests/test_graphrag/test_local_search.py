@@ -100,8 +100,9 @@ class TestExtractEntitiesFromChunks:
     @pytest.mark.asyncio
     async def test_graph_aware_matching(self):
         """Test that known entity names from graph are matched in content."""
-        import networkx as nx
         from unittest.mock import MagicMock
+
+        import networkx as nx
 
         from src.pdf_framework.search.strategies.graphrag_local import GraphRAGLocalStrategy
 
@@ -133,7 +134,9 @@ class TestFormatGraphContext:
         s = _make_strategy()
         context = {
             "entity": Entity(
-                id="e1", name="Microsoft", entity_type="ORG",
+                id="e1",
+                name="Microsoft",
+                entity_type="ORG",
                 source_document_id="d1",
             ),
             "neighbors": [],
@@ -149,7 +152,9 @@ class TestFormatGraphContext:
         s = _make_strategy()
         context = {
             "entity": Entity(
-                id="e1", name="Microsoft", entity_type="ORG",
+                id="e1",
+                name="Microsoft",
+                entity_type="ORG",
                 source_document_id="d1",
             ),
             "neighbors": [
@@ -169,13 +174,17 @@ class TestFormatGraphContext:
         s = _make_strategy()
         context = {
             "entity": Entity(
-                id="e1", name="Microsoft", entity_type="ORG",
+                id="e1",
+                name="Microsoft",
+                entity_type="ORG",
                 source_document_id="d1",
             ),
             "neighbors": [],
             "relations": [
                 Relation(
-                    id="r1", source_entity_id="e1", target_entity_id="e2",
+                    id="r1",
+                    source_entity_id="e1",
+                    target_entity_id="e2",
                     relation_type="OWNS",
                 ),
             ],

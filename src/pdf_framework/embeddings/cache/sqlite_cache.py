@@ -6,14 +6,13 @@ Author: Claude Code
 Version: 1.2.0 - Phase 11.2: Embedding Cache
 """
 
-import aiosqlite
 import hashlib
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
 
+import aiosqlite
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -119,12 +118,15 @@ class EmbeddingCache:
             async with aiosqlite.connect(self._db_path) as db:
                 db.row_factory = aiosqlite.Row
 
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     SELECT embedding, expires_at
                     FROM embedding_cache
                     WHERE text_hash = ? AND model = ?
                     AND expires_at > datetime('now', 'utc')
-                """, (key, model))
+                """,
+                    (key, model),
+                )
 
                 row = await cursor.fetchone()
 
@@ -162,15 +164,18 @@ class EmbeddingCache:
         embedding_json = json.dumps(embedding)
 
         # Calculate expiration (TTL)
-        expires_at = datetime.now(timezone.utc) + timedelta(days=self._ttl_days)
+        expires_at = datetime.now(UTC) + timedelta(days=self._ttl_days)
 
         try:
             async with aiosqlite.connect(self._db_path) as db:
-                await db.execute("""
+                await db.execute(
+                    """
                     INSERT OR REPLACE INTO embedding_cache
                     (text_hash, model, embedding, created_at, expires_at)
                     VALUES (?, ?, ?, datetime('now', 'utc'), ?)
-                """, (key, model, embedding_json, expires_at.isoformat()))
+                """,
+                    (key, model, embedding_json, expires_at.isoformat()),
+                )
 
                 await db.commit()
 
@@ -193,10 +198,13 @@ class EmbeddingCache:
 
         try:
             async with aiosqlite.connect(self._db_path) as db:
-                cursor = await db.execute("""
+                cursor = await db.execute(
+                    """
                     DELETE FROM embedding_cache
                     WHERE model = ?
-                """, (model,))
+                """,
+                    (model,),
+                )
 
                 await db.commit()
                 count = cursor.rowcount

@@ -9,22 +9,24 @@ from scripts.aggregate_refactor_telemetry import aggregate
 def _make_events(n: int, kind: str = "module_export_proc", success: bool = True) -> list[dict]:
     events = []
     for i in range(n):
-        events.append({
-            "timestamp": f"2026-04-17T10:{i % 60:02d}:00+00:00",
-            "uri": "file:///test.bsl",
-            "symbol_kind": kind,
-            "old_name": None,
-            "new_name": f"Name{i}",
-            "primary_backend": "multilspy",
-            "fallback_used": False,
-            "applied": True,
-            "rolled_back": not success if i % 4 == 0 else False,
-            "duration_ms": 100 + i * 10,
-            "error_code": None,
-            "classifier_confidence": 0.95,
-            "matrix_confidence": 0.95,
-            "token_matched": True,
-        })
+        events.append(
+            {
+                "timestamp": f"2026-04-17T10:{i % 60:02d}:00+00:00",
+                "uri": "file:///test.bsl",
+                "symbol_kind": kind,
+                "old_name": None,
+                "new_name": f"Name{i}",
+                "primary_backend": "multilspy",
+                "fallback_used": False,
+                "applied": True,
+                "rolled_back": not success if i % 4 == 0 else False,
+                "duration_ms": 100 + i * 10,
+                "error_code": None,
+                "classifier_confidence": 0.95,
+                "matrix_confidence": 0.95,
+                "token_matched": True,
+            }
+        )
     return events
 
 
@@ -56,8 +58,7 @@ def test_aggregator_synthetic_dataset():
         "R4.4 requires this artefact to validate the aggregator end-to-end."
     )
     events = [
-        json.loads(line)
-        for line in synthetic.read_text(encoding="utf-8").strip().splitlines()
+        json.loads(line) for line in synthetic.read_text(encoding="utf-8").strip().splitlines()
     ]
     assert len(events) == 20
     summary, proposals = aggregate(

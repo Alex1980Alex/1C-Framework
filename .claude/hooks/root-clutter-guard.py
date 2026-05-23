@@ -16,7 +16,7 @@ Allowed root files (whitelist):
 import os
 import re
 import sys
-from pathlib import PurePosixPath, PureWindowsPath
+from pathlib import PureWindowsPath
 
 # Core path resolution: find base/ + shared/ in user-level or project-level
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))

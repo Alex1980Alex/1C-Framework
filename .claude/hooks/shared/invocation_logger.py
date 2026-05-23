@@ -24,11 +24,10 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # --- Path resolution (cached) ---
 
-_LOG_FILE: Optional[Path] = None
+_LOG_FILE: Path | None = None
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
 
 
@@ -40,6 +39,7 @@ def _get_log_file() -> Path:
 
     try:
         from shared.core_paths import get_project_dir
+
         project_root = get_project_dir().parent
     except ImportError:
         # Fallback: hooks/ -> .claude/ -> project/
@@ -63,14 +63,15 @@ def _rotate_if_needed(filepath: Path) -> None:
 
 # --- Public API ---
 
+
 def log_invocation(
     hook: str,
-    event: Optional[str] = None,
-    tool: Optional[str] = None,
+    event: str | None = None,
+    tool: str | None = None,
     elapsed_ms: int = 0,
     outcome: str = "allow",
     session_id: str = "",
-    error: Optional[str] = None,
+    error: str | None = None,
     agent_id: str = "",  # Phase 7: Subagent monitoring
 ) -> None:
     """Log a single hook invocation to JSONL file.
@@ -121,10 +122,10 @@ class InvocationTimer:
     Phase 7: Added agent_id for subagent monitoring.
     """
 
-    def __init__(self, hook: str, event: Optional[str] = None):
+    def __init__(self, hook: str, event: str | None = None):
         self.hook = hook
         self.event = event
-        self.tool: Optional[str] = None
+        self.tool: str | None = None
         self.session_id: str = ""
         self.agent_id: str = ""  # Phase 7
         self._start: float = 0.0
@@ -136,7 +137,7 @@ class InvocationTimer:
     def elapsed_ms(self) -> int:
         return int((time.time() - self._start) * 1000)
 
-    def log(self, outcome: str = "allow", error: Optional[str] = None) -> None:
+    def log(self, outcome: str = "allow", error: str | None = None) -> None:
         log_invocation(
             hook=self.hook,
             event=self.event,

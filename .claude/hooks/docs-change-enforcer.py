@@ -58,35 +58,35 @@ DOCS_BASE = "docs/framework documentation"
 
 CODE_TO_DOMAIN = [
     # code_prefix                           docs_subdir              skill_name
-    ("src/pdf_framework/search/",           "04_ПОИСК",              "search-pipeline-debug"),
-    ("src/pdf_framework/agents/",           "05_RAG_АГЕНТЫ",         "agent-orchestration"),
-    ("src/pdf_framework/loaders/",          "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
-    ("src/pdf_framework/processing/",       "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
-    ("src/pdf_framework/indexing/",         "03_ИНДЕКСАЦИЯ",         "indexing-pipeline"),
-    ("src/pdf_framework/graph_store/",      "03_ИНДЕКСАЦИЯ",         "graph-operations"),
-    ("src/pdf_framework/embeddings/",       "02_БЫСТРЫЙ_СТАРТ",     "embedding-models"),
-    ("src/pdf_framework/vector_store/",     "04_ПОИСК",              "qdrant-operations"),
-    ("src/pdf_framework/config/",           "02_БЫСТРЫЙ_СТАРТ",     "framework-config"),
-    ("src/pdf_framework/evaluation/",       "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
-    ("src/pdf_framework/feedback/",         "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
-    ("src/pdf_framework/optimization/",     "08_ОЦЕНКА_КАЧЕСТВА",   "evaluation-benchmark"),
-    ("src/pdf_framework/callbacks/",        "07_КЭШИРОВАНИЕ",       "framework-caching"),
-    ("src/pdf_framework/multitenancy/",     "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/observability/",    "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/guardrails/",       "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
-    ("src/api/routes/",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
-    ("src/api/middleware/",                 "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/api/app.py",                     "06_ИНТЕРФЕЙСЫ",         "framework-api"),
-    ("src/cli/",                           "06_ИНТЕРФЕЙСЫ",         "framework-cli"),
-    ("src/mcp_server/",                    "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
-    ("src/ui/",                            "06_ИНТЕРФЕЙСЫ",         "pdf-knowledge"),
-    ("src/workers/",                       "09_АДМИНИСТРИРОВАНИЕ",  "deployment"),
-    ("src/pdf_framework/utils/",           "01_ОБЗОР",              "pdf-knowledge"),
+    ("src/pdf_framework/search/", "04_ПОИСК", "search-pipeline-debug"),
+    ("src/pdf_framework/agents/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
+    ("src/pdf_framework/loaders/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/processing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/graph_store/", "03_ИНДЕКСАЦИЯ", "graph-operations"),
+    ("src/pdf_framework/embeddings/", "02_БЫСТРЫЙ_СТАРТ", "embedding-models"),
+    ("src/pdf_framework/vector_store/", "04_ПОИСК", "qdrant-operations"),
+    ("src/pdf_framework/config/", "02_БЫСТРЫЙ_СТАРТ", "framework-config"),
+    ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/optimization/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/callbacks/", "07_КЭШИРОВАНИЕ", "framework-caching"),
+    ("src/pdf_framework/multitenancy/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/guardrails/", "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
+    ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
+    ("src/mcp_server/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
+    ("src/ui/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
+    ("src/workers/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/utils/", "01_ОБЗОР", "pdf-knowledge"),
     # BSL (1C Enterprise) modules
-    ("src/bsl/",                           "06_ИНТЕРФЕЙСЫ",         "bsl-development"),
-    ("src/shared/llm_rotation/",           None,                    "llm-rotation"),
-    ("src/shared/",                        "01_ОБЗОР",              "pdf-knowledge"),
-    ("src/memory/",                        "01_ОБЗОР",              "pdf-knowledge"),
+    ("src/bsl/", "06_ИНТЕРФЕЙСЫ", "bsl-development"),
+    ("src/shared/llm_rotation/", None, "llm-rotation"),
+    ("src/shared/", "01_ОБЗОР", "pdf-knowledge"),
+    ("src/memory/", "01_ОБЗОР", "pdf-knowledge"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -223,7 +223,10 @@ def get_session_files() -> set:
     try:
         r = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, encoding="utf-8", timeout=3,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:
@@ -240,7 +243,10 @@ def get_session_files() -> set:
     try:
         r = subprocess.run(
             ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
-            capture_output=True, text=True, encoding="utf-8", timeout=5,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:
@@ -286,11 +292,13 @@ def find_stale_infra(session_files: set) -> list:
             infra_changes.append(fp)
 
     if infra_changes and not claude_md_updated:
-        return [{
-            "subdir": "CLAUDE.md (инфраструктура)",
-            "skill": "hooks-skills-mcp-triad",
-            "files": infra_changes,
-        }]
+        return [
+            {
+                "subdir": "CLAUDE.md (инфраструктура)",
+                "skill": "hooks-skills-mcp-triad",
+                "files": infra_changes,
+            }
+        ]
     return []
 
 
@@ -309,19 +317,18 @@ def find_unmapped_changes(session_files: set) -> list:
         if _is_infra_file(fp):
             continue
         fp_lower = fp.replace("\\", "/").lower()
-        matched = any(
-            fp_lower.startswith(prefix.lower())
-            for prefix, _, _ in CODE_TO_DOMAIN
-        )
+        matched = any(fp_lower.startswith(prefix.lower()) for prefix, _, _ in CODE_TO_DOMAIN)
         if not matched:
             unmapped.append(fp)
 
     if unmapped:
-        return [{
-            "subdir": "UNMAPPED (используй /audit-docs)",
-            "skill": "audit-docs",
-            "files": unmapped,
-        }]
+        return [
+            {
+                "subdir": "UNMAPPED (используй /audit-docs)",
+                "skill": "audit-docs",
+                "files": unmapped,
+            }
+        ]
     return []
 
 
@@ -354,8 +361,7 @@ def find_stale_domains(session_files: set) -> list:
                 if doc_subdir is not None:
                     doc_dir_prefix = f"{DOCS_BASE}/{doc_subdir}/".lower()
                     has_doc_update = any(
-                        d.replace("\\", "/").lower().startswith(doc_dir_prefix)
-                        for d in doc_files
+                        d.replace("\\", "/").lower().startswith(doc_dir_prefix) for d in doc_files
                     )
                 else:
                     has_doc_update = True  # No docs required for this domain
@@ -363,8 +369,7 @@ def find_stale_domains(session_files: set) -> list:
                 # Also check if the matching skill was updated
                 skill_prefix = f".claude/skills/{skill}/".lower()
                 has_skill_update = any(
-                    s.replace("\\", "/").lower().startswith(skill_prefix)
-                    for s in skill_files
+                    s.replace("\\", "/").lower().startswith(skill_prefix) for s in skill_files
                 )
 
                 if not has_doc_update and not has_skill_update:
@@ -386,6 +391,7 @@ def main():
     # Invocation timer
     try:
         from shared.invocation_logger import InvocationTimer
+
         timer = InvocationTimer("docs-change-enforcer", event="Stop").start()
     except Exception:
         timer = None
@@ -401,6 +407,7 @@ def main():
         if COOLDOWN_FILE.exists():
             try:
                 import time
+
                 mtime = COOLDOWN_FILE.stat().st_mtime
                 age_min = (time.time() - mtime) / 60
                 if age_min < COOLDOWN_MINUTES:
@@ -446,9 +453,7 @@ def main():
                 cf_names += f" (+{len(code_files) - 3})"
 
             items.append(
-                f"  📄 {DOCS_BASE}/{doc_subdir}/\n"
-                f"     Skill: {skill}\n"
-                f"     Код: {cf_names}"
+                f"  📄 {DOCS_BASE}/{doc_subdir}/\n     Skill: {skill}\n     Код: {cf_names}"
             )
 
         items_str = "\n".join(items)

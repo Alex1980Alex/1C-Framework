@@ -5,12 +5,12 @@ Tests persistent storage with real SQLite database (temp file).
 
 import os
 import tempfile
+from datetime import UTC, datetime, timedelta
 
 import pytest
-from datetime import datetime, timezone, timedelta
 
-from src.pdf_framework.agents.memory.conversation import Message
 from src.pdf_framework.agents.memory.backends import SQLiteBackend
+from src.pdf_framework.agents.memory.conversation import Message
 
 
 @pytest.fixture
@@ -122,7 +122,7 @@ class TestSQLiteBackend:
     @pytest.mark.asyncio
     async def test_timestamp_preserved(self, db_path):
         backend = SQLiteBackend(db_path)
-        ts = datetime(2025, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+        ts = datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC)
         msg = Message(role="user", content="Test", timestamp=ts)
         await backend.add_message("t1", msg)
 
@@ -140,7 +140,8 @@ class TestSQLiteBackend:
 
         # Manually set updated_at to old date
         import aiosqlite
-        old_date = (datetime.now(timezone.utc) - timedelta(days=60)).isoformat()
+
+        old_date = (datetime.now(UTC) - timedelta(days=60)).isoformat()
         async with aiosqlite.connect(db_path) as db:
             await db.execute(
                 "UPDATE threads SET updated_at = ? WHERE thread_id = ?",

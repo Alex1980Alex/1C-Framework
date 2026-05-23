@@ -546,8 +546,8 @@ Claude Code
 | Go (или бинарник) | Фаза 3   | Для сборки odata_mcp_go                              |
 | Node.js 16+       | Фаза 4   | Для vanessa-app-mcp                                  |
 | Qdrant            | Фаза 3.5 | Уже работает (localhost:6333)                        |
-                                                                                                                                            
-  
+
+
 ### Фаза 6: Runtime-отладка 1С через прямой RDBG протокол ⏳ IN PROGRESS
 > Claude программно ставит breakpoints, читает переменные и управляет выполнением BSL в реальной 1С
 

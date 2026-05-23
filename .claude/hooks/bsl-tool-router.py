@@ -5,8 +5,8 @@ BSL Tool Router — направляет BSL-задачи к правильны�
 Phase 44: Infrastructure migration from 1C-Enterprise_Framework
 """
 
-import sys
 import json
+import sys
 
 
 def main() -> None:

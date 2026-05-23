@@ -50,7 +50,7 @@ def load_accuracy_events(days: int = 0) -> list[dict]:
     if not ACCURACY_LOG.exists():
         return events
     cutoff = (datetime.now() - timedelta(days=days)).isoformat() if days > 0 else ""
-    with open(ACCURACY_LOG, "r", encoding="utf-8") as f:
+    with open(ACCURACY_LOG, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -137,7 +137,9 @@ def compute_daily_trend(events: list[dict], days: int = 14) -> list[dict]:
         rec = len(d["recommended"])
         act = len(d["activated"] & d["recommended"])
         rate = (act / rec * 100) if rec > 0 else 0
-        trend.append({"date": day, "recommended": rec, "activated": act, "rate_pct": round(rate, 1)})
+        trend.append(
+            {"date": day, "recommended": rec, "activated": act, "rate_pct": round(rate, 1)}
+        )
     return trend
 
 
@@ -151,9 +153,12 @@ def run_eval() -> dict | None:
     try:
         result = subprocess.run(
             [str(python), str(EVAL_SCRIPT), "--json"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True,
+            text=True,
+            timeout=120,
             cwd=str(PROJECT_DIR),
-            encoding="utf-8", errors="replace",
+            encoding="utf-8",
+            errors="replace",
         )
         if result.returncode == 0 and result.stdout.strip():
             return json.loads(result.stdout.strip())
@@ -196,7 +201,9 @@ def print_dashboard(args):
         print(f"\n{'DAILY TREND (last 14 days)':=^70}")
         for day in trend[-10:]:
             bar = render_bar(day["rate_pct"])
-            print(f"  {day['date']}  {day['rate_pct']:5.1f}% {bar}  ({day['activated']}/{day['recommended']})")
+            print(
+                f"  {day['date']}  {day['rate_pct']:5.1f}% {bar}  ({day['activated']}/{day['recommended']})"
+            )
 
     # --- Skill Frequency ---
     freq = compute_skill_frequency(events)
@@ -214,17 +221,25 @@ def print_dashboard(args):
         sm = eval_result.get("skill_metrics", {})
         bm = eval_result.get("bundle_metrics", {})
         print(f"  Samples: {eval_result.get('total_samples', '?')}")
-        print(f"  Skill  - P: {sm.get('precision', 0):.4f}  R: {sm.get('recall', 0):.4f}  F1: {sm.get('f1', 0):.4f}")
-        print(f"  Bundle - P: {bm.get('precision', 0):.4f}  R: {bm.get('recall', 0):.4f}  F1: {bm.get('f1', 0):.4f}")
-        print(f"  TP={sm.get('total_tp', 0)}  FP={sm.get('total_fp', 0)}  FN={sm.get('total_fn', 0)}")
+        print(
+            f"  Skill  - P: {sm.get('precision', 0):.4f}  R: {sm.get('recall', 0):.4f}  F1: {sm.get('f1', 0):.4f}"
+        )
+        print(
+            f"  Bundle - P: {bm.get('precision', 0):.4f}  R: {bm.get('recall', 0):.4f}  F1: {bm.get('f1', 0):.4f}"
+        )
+        print(
+            f"  TP={sm.get('total_tp', 0)}  FP={sm.get('total_fp', 0)}  FN={sm.get('total_fn', 0)}"
+        )
 
         # Intent accuracy
         intent_acc = eval_result.get("intent_accuracy", {})
         if intent_acc:
-            print(f"\n  Intent Accuracy:")
+            print("\n  Intent Accuracy:")
             for intent, data in intent_acc.items():
                 acc = data.get("accuracy", 0) * 100
-                print(f"    {intent:15s}: {acc:5.1f}% ({data.get('correct', 0)}/{data.get('total', 0)})")
+                print(
+                    f"    {intent:15s}: {acc:5.1f}% ({data.get('correct', 0)}/{data.get('total', 0)})"
+                )
 
         # FP/FN analysis
         fp_count = eval_result.get("fp_count", 0)
@@ -244,7 +259,7 @@ def print_dashboard(args):
     config_path = PROJECT_DIR / ".claude" / "skills" / "skill-router-config.json"
     if config_path.exists():
         try:
-            with open(config_path, "r", encoding="utf-8") as f:
+            with open(config_path, encoding="utf-8") as f:
                 config = json.load(f)
             bundle_count = len(config.get("bundles", {}))
             print(f"\n{'CONFIG STATS':=^70}")

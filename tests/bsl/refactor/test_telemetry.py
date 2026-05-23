@@ -117,7 +117,11 @@ def test_telemetry_emits_on_fallback_success(tmp_path):
 
     lsp = _StubLspClient(raise_exc=RuntimeError("lsp dead"))
     runner = _FakeRunner(
-        matches=[AstGrepMatch(file=file_a, start_line=0, start_character=10, end_line=0, end_character=16)]
+        matches=[
+            AstGrepMatch(
+                file=file_a, start_line=0, start_character=10, end_line=0, end_character=16
+            )
+        ]
     )
     orch = _make_orchestrator(tmp_path, lsp_client=lsp, runner=runner, telemetry=tw)
     orch.rename(uri, 0, 10, "Новая", dry_run=True, content=content)
@@ -161,7 +165,9 @@ def test_telemetry_emits_on_applied(tmp_path):
 
     plan = orch.rename(uri, 0, 10, "Новая", dry_run=True, content=original)
     lsp._response = _lsp_edit(uri, 0, 10, 16, "Новая")
-    orch.rename(uri, 0, 10, "Новая", dry_run=False, confirm_token=plan.confirm_token, content=original)
+    orch.rename(
+        uri, 0, 10, "Новая", dry_run=False, confirm_token=plan.confirm_token, content=original
+    )
 
     events = _read_events(log_file)
     apply_event = events[1]
@@ -180,16 +186,18 @@ def test_telemetry_emits_on_rolled_back(tmp_path):
 
     lsp = _StubLspClient(_lsp_edit(uri, 0, 10, 16, "Новая"))
     call_count = [0]
+
     def growing_errors():
         call_count[0] += 1
         return ["err"] * call_count[0]
-    orch = _make_orchestrator(
-        tmp_path, lsp_client=lsp, error_provider=growing_errors, telemetry=tw
-    )
+
+    orch = _make_orchestrator(tmp_path, lsp_client=lsp, error_provider=growing_errors, telemetry=tw)
 
     plan = orch.rename(uri, 0, 10, "Новая", dry_run=True, content=original)
     lsp._response = _lsp_edit(uri, 0, 10, 16, "Новая")
-    orch.rename(uri, 0, 10, "Новая", dry_run=False, confirm_token=plan.confirm_token, content=original)
+    orch.rename(
+        uri, 0, 10, "Новая", dry_run=False, confirm_token=plan.confirm_token, content=original
+    )
 
     events = _read_events(log_file)
     apply_event = events[1]
@@ -259,6 +267,7 @@ def test_telemetry_gzips_old_rotated_files(tmp_path):
 
 def _today_utc() -> str:
     from datetime import datetime, timezone
+
     return datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")  # noqa: UP017
 
 

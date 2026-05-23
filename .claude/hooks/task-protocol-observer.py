@@ -18,14 +18,14 @@ import sys
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
+
 from base.protocol import BaseHook, HookInput, HookOutput  # noqa: E402
-from typing import Optional  # noqa: E402
 
 
 class TaskProtocolObserver(BaseHook):
     """PostToolUse observer for TaskCreate and Skill events."""
 
-    def execute(self, inp: HookInput) -> Optional[HookOutput]:
+    def execute(self, inp: HookInput) -> HookOutput | None:
         try:
             from shared.session_state import SessionState
 

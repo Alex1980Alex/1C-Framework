@@ -62,11 +62,12 @@ STATE_FILE = Path(_HOOK_DIR).parent / "cache" / "auto-git-save-prompt-state.json
 
 # --- Helpers ---
 
+
 def _load_state() -> dict:
     """Load last commit timestamp from state file."""
     try:
         if STATE_FILE.exists():
-            with open(STATE_FILE, "r", encoding="utf-8") as f:
+            with open(STATE_FILE, encoding="utf-8") as f:
                 return json.load(f)
     except Exception:
         pass
@@ -105,7 +106,10 @@ def _get_uncommitted_tracked_files() -> list[str]:
     try:
         result = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, encoding="utf-8", timeout=3,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if result.returncode != 0:
@@ -137,7 +141,10 @@ def _auto_commit(files: list[str]) -> dict:
             try:
                 r = subprocess.run(
                     ["git", "add", "--", fp],
-                    timeout=3, capture_output=True, text=True, encoding="utf-8",
+                    timeout=3,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
                     cwd=str(PROJECT_ROOT),
                 )
                 if r.returncode == 0:
@@ -152,7 +159,10 @@ def _auto_commit(files: list[str]) -> dict:
         msg = f"chore: auto-commit {staged} file(s) changed"
         commit = subprocess.run(
             ["git", "commit", "-m", msg],
-            timeout=10, capture_output=True, text=True, encoding="utf-8",
+            timeout=10,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
             cwd=str(PROJECT_ROOT),
         )
 
@@ -186,6 +196,7 @@ def _auto_commit(files: list[str]) -> dict:
 
 # --- Main ---
 
+
 def _canary_log(msg: str) -> None:
     """Write canary log to diagnose if hook is invoked at all."""
     try:
@@ -202,6 +213,7 @@ def main():
     # Invocation timer
     try:
         from shared.invocation_logger import InvocationTimer
+
         timer = InvocationTimer("auto-git-save-prompt", event="UserPromptSubmit").start()
     except Exception:
         timer = None

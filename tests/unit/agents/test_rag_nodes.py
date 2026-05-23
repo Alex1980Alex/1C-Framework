@@ -6,7 +6,7 @@ Tests:
 - F2.9.3: Test StreamingRAGRunner event types
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -121,6 +121,7 @@ class TestStreamingRAGRunner:
         runner = StreamingRAGRunner()
 
         events = []
+
         async def collect_events():
             async for event in runner.stream("test query"):
                 events.append(event)
@@ -132,11 +133,12 @@ class TestStreamingRAGRunner:
 
     async def test_event_types(self):
         """F2.9.3: Should emit correct event types."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner, EventType
+        from src.pdf_framework.agents.rag.streaming import EventType, StreamingRAGRunner
 
         runner = StreamingRAGRunner()
 
         event_types = []
+
         async def collect_types():
             async for event in runner.stream("test"):
                 event_types.append(event.type)
@@ -154,6 +156,7 @@ class TestStreamingRAGRunner:
         runner = StreamingRAGRunner()
 
         progress_values = []
+
         async def collect_progress():
             async for event in runner.stream("test"):
                 if hasattr(event, "progress"):
@@ -162,8 +165,9 @@ class TestStreamingRAGRunner:
         await collect_progress()
 
         # Progress should increase
-        assert all(progress_values[i] <= progress_values[i+1]
-                   for i in range(len(progress_values) - 1))
+        assert all(
+            progress_values[i] <= progress_values[i + 1] for i in range(len(progress_values) - 1)
+        )
 
     async def test_event_chunk_delivery(self):
         """F2.9.3: Should deliver response chunks."""
@@ -172,6 +176,7 @@ class TestStreamingRAGRunner:
         runner = StreamingRAGRunner()
 
         chunks = []
+
         async def collect_chunks():
             async for event in runner.stream("test"):
                 if event.type == "chunk":

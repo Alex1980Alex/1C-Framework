@@ -26,7 +26,6 @@ from src.memory.infrastructure.event_bus import (
 )
 from src.memory.infrastructure.event_store import EventStore, EventStoreConfig
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -44,12 +43,14 @@ async def bus():
 @pytest.fixture
 async def store(tmp_path):
     """Provide a started EventStore with temp paths."""
-    es = EventStore(EventStoreConfig(
-        hot_buffer_path=str(tmp_path / "events.jsonl"),
-        cold_db_path=str(tmp_path / "events.db"),
-        auto_flush_threshold=500,
-        flush_interval=3600.0,
-    ))
+    es = EventStore(
+        EventStoreConfig(
+            hot_buffer_path=str(tmp_path / "events.jsonl"),
+            cold_db_path=str(tmp_path / "events.db"),
+            auto_flush_threshold=500,
+            flush_interval=3600.0,
+        )
+    )
     await es.start()
     yield es
     await es.stop()
@@ -81,7 +82,6 @@ def _make_event(event_type: str = "test.event", **data) -> Event:
 
 
 class TestEventBus:
-
     @pytest.mark.asyncio
     async def test_publish_subscribe(self, bus):
         sub = await bus.subscribe("memory.save")
@@ -182,7 +182,6 @@ class TestEventBus:
 
 
 class TestEventStore:
-
     @pytest.mark.asyncio
     async def test_append_and_query(self, store):
         await store.append(_make_event("a.b", i=1))
@@ -226,12 +225,14 @@ class TestEventStore:
 
     @pytest.mark.asyncio
     async def test_auto_flush(self, tmp_path):
-        es = EventStore(EventStoreConfig(
-            hot_buffer_path=str(tmp_path / "af.jsonl"),
-            cold_db_path=str(tmp_path / "af.db"),
-            auto_flush_threshold=3,
-            flush_interval=3600.0,
-        ))
+        es = EventStore(
+            EventStoreConfig(
+                hot_buffer_path=str(tmp_path / "af.jsonl"),
+                cold_db_path=str(tmp_path / "af.db"),
+                auto_flush_threshold=3,
+                flush_interval=3600.0,
+            )
+        )
         await es.start()
         for i in range(4):
             await es.append(_make_event("auto", i=i))
@@ -258,10 +259,12 @@ class TestEventStore:
 
     @pytest.mark.asyncio
     async def test_start_stop(self, tmp_path):
-        es = EventStore(EventStoreConfig(
-            hot_buffer_path=str(tmp_path / "lc.jsonl"),
-            cold_db_path=str(tmp_path / "lc.db"),
-        ))
+        es = EventStore(
+            EventStoreConfig(
+                hot_buffer_path=str(tmp_path / "lc.jsonl"),
+                cold_db_path=str(tmp_path / "lc.db"),
+            )
+        )
         await es.start()
         await es.stop()
 
@@ -272,12 +275,16 @@ class TestEventStore:
 
 
 class TestConflictResolver:
-
     def test_last_write_wins_incoming(self, resolver):
         now = datetime.now(tz=UTC)
         result = resolver.resolve(
             current={"_entity_id": "e1", "_timestamp": now, "_source": "a", "val": 1},
-            incoming={"_entity_id": "e1", "_timestamp": now + timedelta(seconds=10), "_source": "b", "val": 2},
+            incoming={
+                "_entity_id": "e1",
+                "_timestamp": now + timedelta(seconds=10),
+                "_source": "b",
+                "val": 2,
+            },
             strategy=ConflictStrategy.LAST_WRITE_WINS,
         )
         assert result.resolved is True
@@ -286,7 +293,12 @@ class TestConflictResolver:
     def test_last_write_wins_current(self, resolver):
         now = datetime.now(tz=UTC)
         result = resolver.resolve(
-            current={"_entity_id": "e1", "_timestamp": now + timedelta(seconds=10), "_source": "a", "val": 1},
+            current={
+                "_entity_id": "e1",
+                "_timestamp": now + timedelta(seconds=10),
+                "_source": "a",
+                "val": 1,
+            },
             incoming={"_entity_id": "e1", "_timestamp": now, "_source": "b", "val": 2},
             strategy=ConflictStrategy.LAST_WRITE_WINS,
         )
@@ -357,8 +369,13 @@ class TestConflictResolver:
     def test_resolve_field_different(self, resolver):
         now = datetime.now(tz=UTC)
         val, was_conflict = resolver.resolve_field(
-            "status", "active", "inactive",
-            now, now + timedelta(seconds=1), "a", "b",
+            "status",
+            "active",
+            "inactive",
+            now,
+            now + timedelta(seconds=1),
+            "a",
+            "b",
         )
         assert was_conflict is True
         assert val == "inactive"

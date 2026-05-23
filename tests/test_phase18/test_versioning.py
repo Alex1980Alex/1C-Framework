@@ -164,6 +164,7 @@ class TestFileWatcher:
 
         (tmp_path / "new_doc.pdf").write_bytes(b"PDF")
         import asyncio
+
         await asyncio.sleep(6)  # debounce_seconds = 5
 
         await watcher.stop()
@@ -183,6 +184,7 @@ class TestFileWatcher:
 
         (tmp_path / "readme.txt").write_text("text")
         import asyncio
+
         await asyncio.sleep(6)
 
         await watcher.stop()

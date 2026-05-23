@@ -35,9 +35,7 @@ def _read_state() -> dict:
 def _write_state(state: dict) -> None:
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        _STATE_FILE.write_text(
-            json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        _STATE_FILE.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     except OSError:
         pass
 
@@ -45,13 +43,16 @@ def _write_state(state: dict) -> None:
 def get_state(hook_name: str) -> dict:
     """Get circuit breaker state for a hook."""
     all_state = _read_state()
-    return all_state.get(hook_name, {
-        "state": "CLOSED",
-        "failures": 0,
-        "successes": 0,
-        "last_failure": 0,
-        "last_error": "",
-    })
+    return all_state.get(
+        hook_name,
+        {
+            "state": "CLOSED",
+            "failures": 0,
+            "successes": 0,
+            "last_failure": 0,
+            "last_error": "",
+        },
+    )
 
 
 def _save_hook_state(hook_name: str, hook_state: dict) -> None:
@@ -112,6 +113,7 @@ def record_failure(hook_name: str, error: str = "") -> None:
 
 def with_circuit_breaker(hook_name: str):
     """Decorator: skip execution if circuit is OPEN, track success/failure."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -124,5 +126,7 @@ def with_circuit_breaker(hook_name: str):
             except Exception as e:
                 record_failure(hook_name, str(e))
                 return None  # graceful degradation
+
         return wrapper
+
     return decorator

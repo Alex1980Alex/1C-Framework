@@ -3,16 +3,12 @@
 Tests JSON metrics, HTML dashboard, and metrics reset.
 """
 
-import asyncio
-from unittest.mock import MagicMock, patch
-
 import pytest
 
-from src.pdf_framework.observability.tracer import MetricsCollector
-from src.pdf_framework.embeddings.cache import CacheStats, EmbeddingCache
 from src.pdf_framework.agents.cache import LLMResponseCache
+from src.pdf_framework.embeddings.cache import CacheStats
+from src.pdf_framework.observability.tracer import MetricsCollector
 from src.pdf_framework.processing.cache import DocumentProcessingCache
-
 
 # ── Mocked endpoint tests ──────────────────────────────────────
 

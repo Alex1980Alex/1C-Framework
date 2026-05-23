@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Test Context7 MCP Integration
 
@@ -15,32 +14,26 @@ Version: 1.0.0
 Created: 2026-02-23
 """
 
-import subprocess
-import json
-import sys
 import io
+import json
+import subprocess
+import sys
 
 # Fix Windows encoding
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
 def run_command(cmd: list, cwd: str = None) -> dict:
     """Run command and return result."""
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=cwd
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=cwd)
         return {
             "success": result.returncode == 0,
             "stdout": result.stdout,
             "stderr": result.stderr,
-            "returncode": result.returncode
+            "returncode": result.returncode,
         }
     except subprocess.TimeoutExpired:
         return {"success": False, "error": "Timeout"}
@@ -98,7 +91,7 @@ def test_api_key():
         print(f"[PASS] API key format valid: {api_key[:20]}...")
         return True
     else:
-        print(f"[FAIL] API key format invalid")
+        print("[FAIL] API key format invalid")
         return False
 
 
@@ -158,7 +151,7 @@ req.end();
                 print(f"[WARN] Unexpected response: {result['stdout'][:100]}")
                 return False
         except json.JSONDecodeError:
-            print(f"[WARN] Invalid JSON response")
+            print("[WARN] Invalid JSON response")
             return False
     else:
         print(f"[FAIL] Request failed: {result.get('error', result['stderr'][:100])}")
@@ -246,15 +239,15 @@ req.end();
     if result["success"] and result["stdout"]:
         try:
             response = json.loads(result["stdout"])
-            print(f"[PASS] Retrieved docs for FastAPI:")
+            print("[PASS] Retrieved docs for FastAPI:")
             print(f"       - Library ID: {response.get('library_id')}")
             print(f"       - Docs count: {response.get('docs_count')}")
             return True
         except json.JSONDecodeError:
-            print(f"[WARN] Invalid JSON response")
+            print("[WARN] Invalid JSON response")
             return False
     else:
-        print(f"[WARN] Request returned empty or error")
+        print("[WARN] Request returned empty or error")
         return False  # Don't fail - API might be different
 
 

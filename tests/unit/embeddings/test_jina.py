@@ -1,6 +1,5 @@
 """Unit tests for Jina Embeddings v3 provider (Phase 47)."""
 
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -24,10 +23,7 @@ def _make_jina_settings(**overrides) -> EmbeddingSettings:
 def _mock_api_response(n: int, dims: int = 1024) -> dict:
     """Create a mock Jina API JSON response."""
     return {
-        "data": [
-            {"index": i, "embedding": [0.1 * (i + 1)] * dims}
-            for i in range(n)
-        ],
+        "data": [{"index": i, "embedding": [0.1 * (i + 1)] * dims} for i in range(n)],
         "usage": {"total_tokens": n * 10},
     }
 
@@ -73,7 +69,9 @@ class TestJinaEmbeddingEngine:
         mock_response.json.return_value = _mock_api_response(1)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response):
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ):
             result = await engine.embed_text("test query")
 
         assert len(result) == 1024
@@ -91,7 +89,9 @@ class TestJinaEmbeddingEngine:
         mock_response.json.return_value = _mock_api_response(1)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_post:
             await engine.embed_text("test query")
 
         call_kwargs = mock_post.call_args
@@ -110,7 +110,9 @@ class TestJinaEmbeddingEngine:
         mock_response.json.return_value = _mock_api_response(3)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response):
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ):
             result = await engine.embed_batch(["text1", "text2", "text3"])
 
         assert len(result) == 3
@@ -164,7 +166,9 @@ class TestJinaEmbeddingEngine:
         mock_response.json.return_value = _mock_api_response(1)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_post:
             await engine.embed_batch(["indexing text"])
 
         body = mock_post.call_args.kwargs["json"]
@@ -182,7 +186,9 @@ class TestJinaEmbeddingEngine:
         mock_response.json.return_value = _mock_api_response(1, dims=512)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_post:
             await engine.embed_text("test")
 
         body = mock_post.call_args.kwargs["json"]
@@ -200,7 +206,9 @@ class TestJinaEmbeddingEngine:
         mock_response.json.return_value = _mock_api_response(1)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_post:
             await engine.embed_text("test")
 
         body = mock_post.call_args.kwargs["json"]
@@ -238,7 +246,9 @@ class TestJinaEmbeddingEngine:
         }
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response):
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ):
             result = await engine.embed_batch(["a", "b", "c"])
 
         # Should be sorted: index 0 first, then 1, then 2
@@ -301,7 +311,9 @@ class TestJinaLateChunking:
         mock_response.json.return_value = _mock_api_response(3)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_post:
             await engine.embed_batch(["chunk1", "chunk2", "chunk3"])
 
         body = mock_post.call_args.kwargs["json"]
@@ -319,7 +331,9 @@ class TestJinaLateChunking:
         mock_response.json.return_value = _mock_api_response(1)
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(engine._client, "post", new_callable=AsyncMock, return_value=mock_response) as mock_post:
+        with patch.object(
+            engine._client, "post", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_post:
             await engine.embed_batch(["text"])
 
         body = mock_post.call_args.kwargs["json"]

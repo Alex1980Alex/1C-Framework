@@ -57,17 +57,43 @@ _SESSION_INSTRUCTION = """[SESSION-CONTEXT-ENFORCER] Обнаружен запр
 # Mode B: Substantive task prompts → proactive memory context
 # ---------------------------------------------------------------------------
 _TASK_VERBS = [
-    "сделай", "добавь", "реализуй", "исправь", "создай", "настрой",
-    "измени", "обнови", "удали", "перепиши", "рефакторинг", "оптимизируй",
-    "implement", "fix", "add", "create", "update", "refactor", "build",
-    "migrate", "configure", "setup", "develop", "write",
-    "доработай", "допиши", "переделай", "интегрируй", "подключи",
+    "сделай",
+    "добавь",
+    "реализуй",
+    "исправь",
+    "создай",
+    "настрой",
+    "измени",
+    "обнови",
+    "удали",
+    "перепиши",
+    "рефакторинг",
+    "оптимизируй",
+    "implement",
+    "fix",
+    "add",
+    "create",
+    "update",
+    "refactor",
+    "build",
+    "migrate",
+    "configure",
+    "setup",
+    "develop",
+    "write",
+    "доработай",
+    "допиши",
+    "переделай",
+    "интегрируй",
+    "подключи",
 ]
 
 # Prompts that look like slash commands or trivial — skip
 _SKIP_PREFIXES = ("/", "!", "да", "нет", "ок", "ok", "yes", "no", "ладно")
 
-_TASK_COOLDOWN_FILE = Path(__file__).resolve().parent.parent / "cache" / "proactive-memory-cooldown.json"
+_TASK_COOLDOWN_FILE = (
+    Path(__file__).resolve().parent.parent / "cache" / "proactive-memory-cooldown.json"
+)
 _TASK_COOLDOWN_SECONDS = 300  # 5 minutes between task-mode triggers
 
 _TASK_INSTRUCTION = """[PROACTIVE-MEMORY-RECALL] Обнаружена задача. Перед началом работы расширь контекст:
@@ -122,7 +148,6 @@ def _update_task_cooldown():
 
 
 class SessionContextEnforcer(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt
         if not prompt or len(prompt.strip()) < 10:

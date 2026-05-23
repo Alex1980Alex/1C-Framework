@@ -13,8 +13,8 @@ Timeout: 5s
 Adapted from 1C-Enterprise_Framework 1c-task-detector.py.
 """
 
-import sys
 import os
+import sys
 
 # Add hooks directory to path for base/ and shared/ imports
 # Core path resolution: find base/ + shared/ in user-level or project-level
@@ -37,12 +37,21 @@ def _get_fuzzy_research():
     if _fuzzy_research is None:
         try:
             from shared.fuzzy_match import FuzzyMatcher
+
             _fuzzy_research = FuzzyMatcher(
                 keywords=[
-                    "улучшить", "оптимизировать", "ускорить",
-                    "исправить", "решить", "обойти",
-                    "исследовать", "проанализировать", "сравнить",
-                    "объяснить", "описать", "настроить",
+                    "улучшить",
+                    "оптимизировать",
+                    "ускорить",
+                    "исправить",
+                    "решить",
+                    "обойти",
+                    "исследовать",
+                    "проанализировать",
+                    "сравнить",
+                    "объяснить",
+                    "описать",
+                    "настроить",
                 ],
                 fuzzy_threshold=78,
             )
@@ -57,10 +66,15 @@ def _get_fuzzy_arch():
     if _fuzzy_arch is None:
         try:
             from shared.fuzzy_match import FuzzyMatcher
+
             _fuzzy_arch = FuzzyMatcher(
                 keywords=[
-                    "улучшить", "оптимизировать", "ускорить",
-                    "рефакторить", "масштабировать", "расширить",
+                    "улучшить",
+                    "оптимизировать",
+                    "ускорить",
+                    "рефакторить",
+                    "масштабировать",
+                    "расширить",
                 ],
                 fuzzy_threshold=78,
             )
@@ -78,10 +92,15 @@ def _get_fuzzy_brainstorm():
     if _fuzzy_brainstorm is None:
         try:
             from shared.fuzzy_match import FuzzyMatcher
+
             _fuzzy_brainstorm = FuzzyMatcher(
                 keywords=[
-                    "придумать", "предложить", "спроектировать",
-                    "разработать", "выбрать", "обсудить",
+                    "придумать",
+                    "предложить",
+                    "спроектировать",
+                    "разработать",
+                    "выбрать",
+                    "обсудить",
                 ],
                 fuzzy_threshold=78,
             )
@@ -107,103 +126,214 @@ class ResearchTaskDetector(BaseHook):
 
     # --- Research question keywords (Russian) ---
     RESEARCH_KEYWORDS_RU = [
-        "расскажи про", "как работает", "что такое",
-        "документация по", "объясни", "найди информацию",
-        "исследуй", "сделай обзор", "проанализируй", "сравни",
-        "best practices", "лучшие практики",
-        "как устроен", "для чего нужен", "зачем нужен",
-        "как создать", "как настроить",
-        "почему не работает", "в чём проблема",
+        "расскажи про",
+        "как работает",
+        "что такое",
+        "документация по",
+        "объясни",
+        "найди информацию",
+        "исследуй",
+        "сделай обзор",
+        "проанализируй",
+        "сравни",
+        "best practices",
+        "лучшие практики",
+        "как устроен",
+        "для чего нужен",
+        "зачем нужен",
+        "как создать",
+        "как настроить",
+        "почему не работает",
+        "в чём проблема",
     ]
 
     # --- Research question keywords (English) ---
     RESEARCH_KEYWORDS_EN = [
-        "how does", "what is", "explain",
-        "research", "compare", "overview of",
-        "documentation for", "describe", "tell me about",
+        "how does",
+        "what is",
+        "explain",
+        "research",
+        "compare",
+        "overview of",
+        "documentation for",
+        "describe",
+        "tell me about",
     ]
 
     # --- 1C-specific terms (strong research signal) ---
     C1_TERMS = [
-        "справочник", "документ", "регистр",
-        "перечисление", "обработка", "отчет", "отчёт",
-        "план видов", "bsl", "1с", "1c",
-        "конфигурация", "конфигуратор", "платформа",
-        "табличная часть", "реквизит", "форма",
-        "подсистема", "модуль", "проведение",
-        "ws-ссылк", "web-сервис", "http-сервис",
-        "регламентное задание", "общий модуль",
+        "справочник",
+        "документ",
+        "регистр",
+        "перечисление",
+        "обработка",
+        "отчет",
+        "отчёт",
+        "план видов",
+        "bsl",
+        "1с",
+        "1c",
+        "конфигурация",
+        "конфигуратор",
+        "платформа",
+        "табличная часть",
+        "реквизит",
+        "форма",
+        "подсистема",
+        "модуль",
+        "проведение",
+        "ws-ссылк",
+        "web-сервис",
+        "http-сервис",
+        "регламентное задание",
+        "общий модуль",
     ]
 
     # --- PDF / indexing keywords ---
     PDF_KEYWORDS = [
-        "проиндексируй", "загрузи pdf", "индексация",
-        "index pdf", "reindex", "переиндексируй",
-        "загрузи документ", "добавь в индекс",
+        "проиндексируй",
+        "загрузи pdf",
+        "индексация",
+        "index pdf",
+        "reindex",
+        "переиндексируй",
+        "загрузи документ",
+        "добавь в индекс",
     ]
 
     # --- Architecture discussion terms (route to architecture-research) ---
     ARCHITECTURE_TERMS = [
-        "архитектурное решение", "архитектурный подход",
-        "как лучше сделать", "как лучше реализовать",
-        "какой подход", "выбор подхода", "выбор архитектуры",
-        "предлагаю реализовать", "предлагаю добавить",
-        "новый функционал", "добавить функционал",
-        "как реализовать", "давай обсудим",
-        "best practices", "лучшие практики",
-        "сравни подходы", "какие есть варианты",
-        "оптимальный способ", "правильный подход",
+        "архитектурное решение",
+        "архитектурный подход",
+        "как лучше сделать",
+        "как лучше реализовать",
+        "какой подход",
+        "выбор подхода",
+        "выбор архитектуры",
+        "предлагаю реализовать",
+        "предлагаю добавить",
+        "новый функционал",
+        "добавить функционал",
+        "как реализовать",
+        "давай обсудим",
+        "best practices",
+        "лучшие практики",
+        "сравни подходы",
+        "какие есть варианты",
+        "оптимальный способ",
+        "правильный подход",
     ]
 
     # --- Tech/RAG/ML terms (route to tech-research) ---
     TECH_TERMS = [
-        "rag", "embeddings", "embedding", "vector search", "vector db",
-        "reranking", "reranker", "chunking", "bm25", "sparse vector",
-        "langchain", "langgraph", "qdrant", "chromadb", "faiss",
-        "sentence-transformers", "colbert", "raptor", "hyde",
-        "hybrid search", "semantic search", "knowledge graph",
-        "graphrag", "mcp", "tool use", "agent",
-        "llm", "claude api", "anthropic", "openai",
-        "onnx", "openvino", "transformer",
-        "fastapi", "pydantic", "asyncio",
-        "tokenizer", "fine-tuning", "few-shot",
-        "retrieval", "generation", "pipeline",
+        "rag",
+        "embeddings",
+        "embedding",
+        "vector search",
+        "vector db",
+        "reranking",
+        "reranker",
+        "chunking",
+        "bm25",
+        "sparse vector",
+        "langchain",
+        "langgraph",
+        "qdrant",
+        "chromadb",
+        "faiss",
+        "sentence-transformers",
+        "colbert",
+        "raptor",
+        "hyde",
+        "hybrid search",
+        "semantic search",
+        "knowledge graph",
+        "graphrag",
+        "mcp",
+        "tool use",
+        "agent",
+        "llm",
+        "claude api",
+        "anthropic",
+        "openai",
+        "onnx",
+        "openvino",
+        "transformer",
+        "fastapi",
+        "pydantic",
+        "asyncio",
+        "tokenizer",
+        "fine-tuning",
+        "few-shot",
+        "retrieval",
+        "generation",
+        "pipeline",
     ]
 
     # --- Small task detection (skip routing) ---
     SMALL_TASK_KEYWORDS = [
-        "исправь", "поправь", "замени слово",
-        "добавь комментарий", "fix typo", "fix line",
-        "одну строку", "переименуй", "удали строку",
+        "исправь",
+        "поправь",
+        "замени слово",
+        "добавь комментарий",
+        "fix typo",
+        "fix line",
+        "одну строку",
+        "переименуй",
+        "удали строку",
     ]
 
     # --- Brainstorm signals (generate new ideas, not find existing) ---
     BRAINSTORM_KEYWORDS_RU = [
-        "придумай", "предложи", "спроектируй", "разработай",
-        "какой подход выбрать", "как лучше сделать",
-        "какой вариант лучше", "давай обсудим варианты",
-        "давай подумаем", "что думаешь о",
-        "как бы ты", "нестандартный подход",
-        "предложи архитектуру", "предложи решение",
+        "придумай",
+        "предложи",
+        "спроектируй",
+        "разработай",
+        "какой подход выбрать",
+        "как лучше сделать",
+        "какой вариант лучше",
+        "давай обсудим варианты",
+        "давай подумаем",
+        "что думаешь о",
+        "как бы ты",
+        "нестандартный подход",
+        "предложи архитектуру",
+        "предложи решение",
     ]
 
     BRAINSTORM_KEYWORDS_EN = [
-        "suggest", "design", "propose", "come up with",
-        "which approach", "what's the best way",
-        "how should we", "let's discuss",
-        "alternative approach", "creative solution",
+        "suggest",
+        "design",
+        "propose",
+        "come up with",
+        "which approach",
+        "what's the best way",
+        "how should we",
+        "let's discuss",
+        "alternative approach",
+        "creative solution",
     ]
 
     # --- Hybrid signals (research + brainstorm combined) ---
     HYBRID_KEYWORDS = [
-        "исследуй и предложи", "найди подходы и выбери",
-        "найди и предложи", "сравни подходы и выбери",
-        "как улучшить", "как оптимизировать", "как ускорить",
-        "как исправить", "как решить", "как обойти",
-        "можно ли улучшить", "можно ли оптимизировать",
-        "как сделать лучше", "что можно улучшить",
-        "слабые места", "узкое место",
-        "research and suggest", "find and propose",
+        "исследуй и предложи",
+        "найди подходы и выбери",
+        "найди и предложи",
+        "сравни подходы и выбери",
+        "как улучшить",
+        "как оптимизировать",
+        "как ускорить",
+        "как исправить",
+        "как решить",
+        "как обойти",
+        "можно ли улучшить",
+        "можно ли оптимизировать",
+        "как сделать лучше",
+        "что можно улучшить",
+        "слабые места",
+        "узкое место",
+        "research and suggest",
+        "find and propose",
         "compare and choose",
     ]
 
@@ -236,28 +366,16 @@ class ResearchTaskDetector(BaseHook):
 
         # --- Score domains ---
         # Layer A: Phrase matching
-        research_score = sum(
-            1 for kw in self.RESEARCH_KEYWORDS_RU if kw in prompt_lower
-        )
-        research_score += sum(
-            1 for kw in self.RESEARCH_KEYWORDS_EN if kw in prompt_lower
-        )
+        research_score = sum(1 for kw in self.RESEARCH_KEYWORDS_RU if kw in prompt_lower)
+        research_score += sum(1 for kw in self.RESEARCH_KEYWORDS_EN if kw in prompt_lower)
         c1_score = sum(1 for kw in self.C1_TERMS if kw in prompt_lower)
         tech_score = sum(1 for kw in self.TECH_TERMS if kw in prompt_lower)
-        arch_score = sum(
-            1 for kw in self.ARCHITECTURE_TERMS if kw in prompt_lower
-        )
+        arch_score = sum(1 for kw in self.ARCHITECTURE_TERMS if kw in prompt_lower)
 
         # Score brainstorm and hybrid
-        brainstorm_score = sum(
-            1 for kw in self.BRAINSTORM_KEYWORDS_RU if kw in prompt_lower
-        )
-        brainstorm_score += sum(
-            1 for kw in self.BRAINSTORM_KEYWORDS_EN if kw in prompt_lower
-        )
-        hybrid_score = sum(
-            1 for kw in self.HYBRID_KEYWORDS if kw in prompt_lower
-        )
+        brainstorm_score = sum(1 for kw in self.BRAINSTORM_KEYWORDS_RU if kw in prompt_lower)
+        brainstorm_score += sum(1 for kw in self.BRAINSTORM_KEYWORDS_EN if kw in prompt_lower)
+        hybrid_score = sum(1 for kw in self.HYBRID_KEYWORDS if kw in prompt_lower)
 
         # Layer B: Fuzzy single-word matching (typos + inflections)
         fuzzy_r = _get_fuzzy_research()
@@ -283,8 +401,7 @@ class ResearchTaskDetector(BaseHook):
                 "  Фаза 2: Генерация 3-5 подходов\n"
                 "  Фаза 3: Evaluation matrix (таблица сравнения)\n"
                 "  Фаза 4: Рекомендация с обоснованием\n"
-                "  Фаза 5: Сохранить решение как ADR"
-                + _SUBAGENT_CACHE_WARNING
+                "  Фаза 5: Сохранить решение как ADR" + _SUBAGENT_CACHE_WARNING
             )
 
         # --- Route: Pure Brainstorm (no research needed) ---
@@ -310,8 +427,7 @@ class ResearchTaskDetector(BaseHook):
                 "research + brainstorm.\n"
                 "Используй skill `task-evaluation` — Hybrid Workflow:\n"
                 f"ЧАСТЬ 1 (Research): skill `{domain}` — фазы 0-5\n"
-                "ЧАСТЬ 2 (Brainstorm): task-evaluation — фазы 1-5"
-                + _SUBAGENT_CACHE_WARNING
+                "ЧАСТЬ 2 (Brainstorm): task-evaluation — фазы 1-5" + _SUBAGENT_CACHE_WARNING
             )
 
         # --- Route: Architecture discussion ---
@@ -328,8 +444,7 @@ class ResearchTaskDetector(BaseHook):
                 "Фаза 3: Синтез — предложение с обоснованием\n"
                 "Фаза 4: Атрибуция: [docs], [web], [exp]\n"
                 "Фаза 5: Сохрани в кеш "
-                "architecture-research/cache/<тема>.md"
-                + _SUBAGENT_CACHE_WARNING
+                "architecture-research/cache/<тема>.md" + _SUBAGENT_CACHE_WARNING
             )
 
         # Architecture alone (2+ keywords = confident)
@@ -352,8 +467,7 @@ class ResearchTaskDetector(BaseHook):
                 "(.claude/skills/1c-doc-research/cache/_index.json)\n"
                 "Фаза 1: POST http://127.0.0.1:8000/search/ask "
                 "strategy=hybrid k=10 rerank=true\n"
-                "Фаза 5: ОБЯЗАТЕЛЬНО сохрани результат в кеш."
-                + _SUBAGENT_CACHE_WARNING
+                "Фаза 5: ОБЯЗАТЕЛЬНО сохрани результат в кеш." + _SUBAGENT_CACHE_WARNING
             )
 
         # --- Route: Tech domain (research + tech terms) ---
@@ -366,8 +480,7 @@ class ResearchTaskDetector(BaseHook):
                 "Фаза 0: проверь кеш "
                 "(.claude/skills/tech-research/cache/_index.json)\n"
                 "Фаза 1: WebSearch по official docs библиотеки\n"
-                "Фаза 5: ОБЯЗАТЕЛЬНО сохрани результат в кеш."
-                + _SUBAGENT_CACHE_WARNING
+                "Фаза 5: ОБЯЗАТЕЛЬНО сохрани результат в кеш." + _SUBAGENT_CACHE_WARNING
             )
 
         # --- Route: Tech without research keyword (direct mention) ---
@@ -388,14 +501,16 @@ class ResearchTaskDetector(BaseHook):
                 "- Архитектура фреймворка → `architecture-research`\n"
                 "- 1С-платформа → `1c-doc-research`\n"
                 "- RAG/ML/Python → `tech-research`\n"
-                "Начни с проверки кеша соответствующего skill."
-                + _SUBAGENT_CACHE_WARNING
+                "Начни с проверки кеша соответствующего skill." + _SUBAGENT_CACHE_WARNING
             )
 
         return None  # Pass through
 
     def _detect_domain(
-        self, c1_score: int, tech_score: int, arch_score: int,
+        self,
+        c1_score: int,
+        tech_score: int,
+        arch_score: int,
     ) -> str:
         """Determine domain skill for hybrid routing."""
         if c1_score >= 1:

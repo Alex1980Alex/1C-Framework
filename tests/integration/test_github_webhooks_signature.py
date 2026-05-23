@@ -19,7 +19,6 @@ from fastapi.testclient import TestClient
 
 from src.api.routes import github_webhooks
 
-
 SECRET = "test-shared-secret-do-not-use-in-prod"
 
 

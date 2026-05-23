@@ -273,31 +273,31 @@ $iteration = 0
 while ($true) {
     $iteration++
     Write-Host "=== Iteration $iteration ==="
-    
+
     # Замер ДО
     $before = (ruff check . --output-format json | ConvertFrom-Json).Count
-    
+
     # Агент вносит изменения
     claude -p @"
     Текущее количество ruff-ошибок: $before.
-    Прочитай ruff check . --output-format concise, найди самую частую категорию ошибок 
+    Прочитай ruff check . --output-format concise, найди самую частую категорию ошибок
     и исправь её во всех файлах. Сделай git commit с описанием изменения.
 "@ --max-turns 15 --max-budget-usd 0.50
-    
+
     # Замер ПОСЛЕ
     $after = (ruff check . --output-format json | ConvertFrom-Json).Count
     $delta = $after - $before
-    
+
     if ($after -lt $before) {
         Write-Host "KEEP: $before -> $after (delta: $delta)"
     } else {
         Write-Host "REVERT: $before -> $after (delta: $delta)"
         git revert HEAD --no-edit
     }
-    
+
     # Лог
     "$iteration`t$(git rev-parse --short HEAD)`t$after`t$delta`t$(if($after -lt $before){'keep'}else{'discard'})" >> results.tsv
-    
+
     Start-Sleep -Seconds 5
 }
 ```
@@ -452,7 +452,7 @@ addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
 
 ## Code Quality Rules
 - All code must pass `ruff check .` with zero errors
-- All code must pass `mypy src/ --strict` with zero errors  
+- All code must pass `mypy src/ --strict` with zero errors
 - Formatting: always run `ruff format .` before committing
 - Import sorting: handled by ruff (I rules)
 - Minimum pylint score: 8.0/10
@@ -465,7 +465,7 @@ addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
 - Score: `pylint src/`
 - Complexity: `radon cc src/ --total-average`
 
-## Safety Rules  
+## Safety Rules
 - NEVER modify files in: migrations/, .env, config/production.py
 - ALWAYS work in a feature branch
 - ALWAYS commit before running verification

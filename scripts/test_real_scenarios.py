@@ -15,14 +15,14 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 HOOK_PATH = PROJECT_ROOT / ".claude" / "hooks" / "code-skill-enforcer.py"
 PYTHON_EXE = sys.executable
 
 
-def run_hook(input_data: Dict[str, Any]) -> Dict[str, Any]:
+def run_hook(input_data: dict[str, Any]) -> dict[str, Any]:
     """Run the hook with input and return result."""
     try:
         start = time.perf_counter()
@@ -53,124 +53,255 @@ SCENARIOS = [
     # (name, input_data, expected_exit, expected_in_stdout, level)
     (
         "Write LangGraph StateGraph",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "agent.py", "content": "from langgraph.graph import StateGraph\ngraph = StateGraph(AgentState)"}},
-        2, "SKILL REQUIRED", "A content"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "agent.py",
+                "content": "from langgraph.graph import StateGraph\ngraph = StateGraph(AgentState)",
+            },
+        },
+        2,
+        "SKILL REQUIRED",
+        "A content",
     ),
     (
         "Edit QdrantClient",
-        {"detected_event": "PreToolUse", "tool_name": "Edit",
-         "tool_input": {"file_path": "store.py", "old_string": "x", "new_string": "client = QdrantClient(url='localhost')"}},
-        2, "SKILL REQUIRED", "A content"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Edit",
+            "tool_input": {
+                "file_path": "store.py",
+                "old_string": "x",
+                "new_string": "client = QdrantClient(url='localhost')",
+            },
+        },
+        2,
+        "SKILL REQUIRED",
+        "A content",
     ),
     (
         "Write in .claude/hooks/",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": ".claude/hooks/my-hook.py", "content": "class MyHook: pass"}},
-        2, "create-hook", "B directory"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": ".claude/hooks/my-hook.py",
+                "content": "class MyHook: pass",
+            },
+        },
+        2,
+        "create-hook",
+        "B directory",
     ),
     (
         "Write in .claude/skills/",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": ".claude/skills/new/SKILL.md", "content": "# My Skill\nSome content here for the skill file"}},
-        2, "create-skill", "B directory"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": ".claude/skills/new/SKILL.md",
+                "content": "# My Skill\nSome content here for the skill file",
+            },
+        },
+        2,
+        "create-skill",
+        "B directory",
     ),
     (
         "Bash docker compose",
-        {"detected_event": "PreToolUse", "tool_name": "Bash",
-         "tool_input": {"command": "docker compose up -d"}},
-        2, "deployment", "C bash"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "docker compose up -d"},
+        },
+        2,
+        "deployment",
+        "C bash",
     ),
     (
         "Bash kubectl apply",
-        {"detected_event": "PreToolUse", "tool_name": "Bash",
-         "tool_input": {"command": "kubectl apply -f deployment.yaml"}},
-        2, "kubernetes", "C bash"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "kubectl apply -f deployment.yaml"},
+        },
+        2,
+        "kubernetes",
+        "C bash",
     ),
     (
         "Bash pytest",
-        {"detected_event": "PreToolUse", "tool_name": "Bash",
-         "tool_input": {"command": "pytest tests/ -v --cov"}},
-        2, "testing", "C bash"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "pytest tests/ -v --cov"},
+        },
+        2,
+        "testing",
+        "C bash",
     ),
     (
         "Write simple Python",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "test.py", "content": "def hello():\n    print('hello world')\n    return 42"}},
-        0, None, "none"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "test.py",
+                "content": "def hello():\n    print('hello world')\n    return 42",
+            },
+        },
+        0,
+        None,
+        "none",
     ),
     (
         "Bash ls -la",
-        {"detected_event": "PreToolUse", "tool_name": "Bash",
-         "tool_input": {"command": "ls -la"}},
-        0, None, "none"
+        {"detected_event": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "ls -la"}},
+        0,
+        None,
+        "none",
     ),
     (
         "Write FastAPI import",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "api.py", "content": "from fastapi import APIRouter\nrouter = APIRouter(prefix='/api')"}},
-        0, "Research Protocol", "D research"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "api.py",
+                "content": "from fastapi import APIRouter\nrouter = APIRouter(prefix='/api')",
+            },
+        },
+        0,
+        "Research Protocol",
+        "D research",
     ),
     (
         "Write 1C query language",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "query.bsl", "content": "Запрос = Новый Запрос;\nЗапрос.Текст = \"ВЫБРАТЬ СУММА(Количество) ИЗ РегистрНакопления\""}},
-        2, "SKILL REQUIRED", "A content"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "query.bsl",
+                "content": 'Запрос = Новый Запрос;\nЗапрос.Текст = "ВЫБРАТЬ СУММА(Количество) ИЗ РегистрНакопления"',
+            },
+        },
+        2,
+        "SKILL REQUIRED",
+        "A content",
     ),
     (
         "Write 1C document posting",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "posting.bsl", "content": "Процедура ОбработкаПроведения(Отказ, РежимПроведения)\n    Движения.Выполнить();\nКонецПроцедуры"}},
-        2, "SKILL REQUIRED", "A content"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "posting.bsl",
+                "content": "Процедура ОбработкаПроведения(Отказ, РежимПроведения)\n    Движения.Выполнить();\nКонецПроцедуры",
+            },
+        },
+        2,
+        "SKILL REQUIRED",
+        "A content",
     ),
     (
         "Write Dockerfile (M7)",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "Dockerfile", "content": "FROM python:3.11-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt"}},
-        0, "Research Protocol", "D research"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "Dockerfile",
+                "content": "FROM python:3.11-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install -r requirements.txt",
+            },
+        },
+        0,
+        "Research Protocol",
+        "D research",
     ),
     (
         "Write @pytest.fixture (M7)",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "conftest.py", "content": "import pytest\n\n@pytest.fixture\ndef db_session():\n    yield session\n    session.close()"}},
-        0, "Research Protocol", "D research"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "conftest.py",
+                "content": "import pytest\n\n@pytest.fixture\ndef db_session():\n    yield session\n    session.close()",
+            },
+        },
+        0,
+        "Research Protocol",
+        "D research",
     ),
     (
         "Write GitHub Actions (M7)",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": ".github/workflows/ci.yml", "content": "name: CI\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest"}},
-        2, "ci-cd", "B directory"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": ".github/workflows/ci.yml",
+                "content": "name: CI\non: push\njobs:\n  test:\n    runs-on: ubuntu-latest",
+            },
+        },
+        2,
+        "ci-cd",
+        "B directory",
     ),
     (
         "Write 1C managed form",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "form.bsl", "content": "Процедура ПриСозданииНаСервере(Отказ, СтандартнаяОбработка)\n    Формат(42, \"ЧДЦ=2\");\n    СтрШаблон(\"%1 - %2\", а, б);\nКонецПроцедуры"}},
-        2, "SKILL REQUIRED", "A content"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "form.bsl",
+                "content": 'Процедура ПриСозданииНаСервере(Отказ, СтандартнаяОбработка)\n    Формат(42, "ЧДЦ=2");\n    СтрШаблон("%1 - %2", а, б);\nКонецПроцедуры',
+            },
+        },
+        2,
+        "SKILL REQUIRED",
+        "A content",
     ),
     (
         "POST WebSearch",
-        {"detected_event": "PostToolUse", "tool_name": "WebSearch",
-         "tool_input": {"query": "qdrant collection create API"}},
-        0, "RESEARCH CACHE", "D cache"
+        {
+            "detected_event": "PostToolUse",
+            "tool_name": "WebSearch",
+            "tool_input": {"query": "qdrant collection create API"},
+        },
+        0,
+        "RESEARCH CACHE",
+        "D cache",
     ),
     (
         "Write enforcer itself (hooks dir -> create-hook required)",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": ".claude/hooks/code-skill-enforcer.py",
-                        "content": "class CodeSkillEnforcer(BaseHook): pass"}},
-        2, "create-hook", "B directory"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": ".claude/hooks/code-skill-enforcer.py",
+                "content": "class CodeSkillEnforcer(BaseHook): pass",
+            },
+        },
+        2,
+        "create-hook",
+        "B directory",
     ),
     (
         "Write < 20 chars",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {"file_path": "test.py", "content": "x = 1"}},
-        0, None, "short"
+        {
+            "detected_event": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {"file_path": "test.py", "content": "x = 1"},
+        },
+        0,
+        None,
+        "short",
     ),
     (
         "Empty JSON input",
-        {"detected_event": "PreToolUse", "tool_name": "Write",
-         "tool_input": {}},
-        0, None, "graceful"
+        {"detected_event": "PreToolUse", "tool_name": "Write", "tool_input": {}},
+        0,
+        None,
+        "graceful",
     ),
 ]
 
@@ -199,14 +330,16 @@ def run_scenarios(verbose: bool = False) -> tuple:
         else:
             failed += 1
 
-        results.append({
-            "name": name,
-            "level": level,
-            "success": success,
-            "exit_code": result["exit_code"],
-            "expected_exit": expected_exit,
-            "elapsed_ms": round(result["elapsed_ms"], 1),
-        })
+        results.append(
+            {
+                "name": name,
+                "level": level,
+                "success": success,
+                "exit_code": result["exit_code"],
+                "expected_exit": expected_exit,
+                "elapsed_ms": round(result["elapsed_ms"], 1),
+            }
+        )
 
         if verbose or not success:
             print(f"{status} #{len(results):2d} {name} (level={level})")
@@ -245,7 +378,9 @@ def main():
         latencies.sort()
         p95_idx = int(len(latencies) * 0.95)
         avg = sum(latencies) / len(latencies)
-        print(f"LATENCY: avg={avg:.0f}ms, p95={latencies[p95_idx]:.0f}ms, max={max(latencies):.0f}ms")
+        print(
+            f"LATENCY: avg={avg:.0f}ms, p95={latencies[p95_idx]:.0f}ms, max={max(latencies):.0f}ms"
+        )
     print("=" * 60)
 
     if args.json:

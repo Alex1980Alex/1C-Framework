@@ -19,6 +19,7 @@ _WARN_MS = int(_BUDGET_MS * 0.8)
 
 def track_latency(func):
     """Decorator: measure and log hook execution latency."""
+
     @wraps(func)
     def wrapper(self, inp, *args, **kwargs):
         start = time.monotonic()
@@ -32,6 +33,7 @@ def track_latency(func):
             _log_latency(hook_name, tool_name, elapsed_ms)
             if elapsed_ms > _WARN_MS:
                 import sys
+
                 msg = (
                     f"[LATENCY] {hook_name} took {elapsed_ms:.0f}ms "
                     f"(budget {_BUDGET_MS}ms, warn at {_WARN_MS}ms)"
@@ -45,6 +47,7 @@ def _log_latency(hook_name: str, tool_name: str, elapsed_ms: float):
     """Log latency to SQLite (fallback: JSONL)."""
     try:
         from shared.db_writer import log_latency as db_log_latency
+
         db_log_latency(
             hook_name=hook_name,
             tool_name=tool_name,
@@ -73,6 +76,7 @@ def get_latency_stats(last_n: int = 100) -> dict:
     # Try SQLite first
     try:
         from shared.db_writer import get_latency_stats as db_get_stats
+
         result = db_get_stats(last_n)
         if result.get("count", 0) > 0:
             return result
@@ -84,7 +88,7 @@ def get_latency_stats(last_n: int = 100) -> dict:
         entries = []
         if not os.path.isfile(_LATENCY_LOG):
             return {"count": 0}
-        with open(_LATENCY_LOG, "r", encoding="utf-8") as f:
+        with open(_LATENCY_LOG, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:

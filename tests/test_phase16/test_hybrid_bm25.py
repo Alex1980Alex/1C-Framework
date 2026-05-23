@@ -3,7 +3,7 @@
 Tests RRF merge with vector + graph + BM25 (three-way fusion).
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -26,7 +26,10 @@ def _make_result(chunk_id: str, score: float, source: str = "vector") -> SearchR
 
 def _make_response(results: list[SearchResult], search_type: str = "vector") -> SearchResponse:
     return SearchResponse(
-        query="test", results=results, total_found=len(results), search_type=search_type,
+        query="test",
+        results=results,
+        total_found=len(results),
+        search_type=search_type,
     )
 
 
@@ -51,7 +54,10 @@ class TestHybridWithBM25:
         )
 
         hybrid = HybridSearchStrategy(
-            vector, graph, search_settings=settings, bm25_strategy=bm25,
+            vector,
+            graph,
+            search_settings=settings,
+            bm25_strategy=bm25,
         )
 
         response = await hybrid.search("test", k=5)
@@ -86,11 +92,13 @@ class TestHybridWithBM25:
 
     @pytest.mark.asyncio
     async def test_rrf_scores_decrease_by_rank(self):
-        vector = _make_strategy([
-            _make_result("v1", 0.9),
-            _make_result("v2", 0.7),
-            _make_result("v3", 0.5),
-        ])
+        vector = _make_strategy(
+            [
+                _make_result("v1", 0.9),
+                _make_result("v2", 0.7),
+                _make_result("v3", 0.5),
+            ]
+        )
         graph = _make_strategy([])
         hybrid = HybridSearchStrategy(vector, graph, bm25_strategy=None)
 
@@ -123,7 +131,9 @@ class TestRRFMerge:
             bm25_weight=0.3,
         )
         hybrid = HybridSearchStrategy(
-            AsyncMock(), AsyncMock(), search_settings=settings,
+            AsyncMock(),
+            AsyncMock(),
+            search_settings=settings,
         )
         merged = hybrid._rrf_merge(vector, graph, bm25, k=5)
 
@@ -147,7 +157,9 @@ class TestRRFMerge:
             bm25_weight=0.9,
         )
         hybrid = HybridSearchStrategy(
-            AsyncMock(), AsyncMock(), search_settings=settings,
+            AsyncMock(),
+            AsyncMock(),
+            search_settings=settings,
         )
         merged = hybrid._rrf_merge(vector, [], bm25, k=5)
 

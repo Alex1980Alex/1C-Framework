@@ -109,8 +109,10 @@ def main() -> None:
 
     # FastEmbed ONNX model
     import warnings
+
     warnings.filterwarnings("ignore", category=UserWarning)
     from fastembed import TextEmbedding
+
     print("Loading FastEmbed E5-large (ONNX)...")
     embedder = TextEmbedding("intfloat/multilingual-e5-large")
     print(f"Model loaded in {time.time() - t0:.1f}s")
@@ -122,15 +124,18 @@ def main() -> None:
     enricher = None
     if not args.no_context:
         try:
-            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
             from src.bsl.call_graph.store import CallGraphStore
+            from src.bsl.knowledge_graph.metadata_extractor import MetadataExtractor
+
             extractor = MetadataExtractor(project)
             cg_db = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
             cg = CallGraphStore(cg_db) if cg_db.exists() else None
             enricher = BSLContextEnricher(metadata_extractor=extractor, call_graph=cg)
             obj_stats = extractor.stats()
-            print(f"Context enrichment ON: {obj_stats['total']} objects"
-                  f"{', call graph loaded' if cg else ''}")
+            print(
+                f"Context enrichment ON: {obj_stats['total']} objects"
+                f"{', call graph loaded' if cg else ''}"
+            )
         except Exception as e:
             print(f"Context enrichment unavailable: {e}")
 
@@ -198,8 +203,10 @@ def main() -> None:
             elapsed = time.time() - t0
             speed = total_chunks / elapsed if elapsed > 0 else 0
             eta = (total_files - i) / (i / elapsed) if elapsed > 0 else 0
-            print(f"[{i}/{total_files}] {total_symbols} sym, {total_chunks} chunks, "
-                  f"{speed:.1f} ch/s, ETA ~{eta/60:.0f}min")
+            print(
+                f"[{i}/{total_files}] {total_symbols} sym, {total_chunks} chunks, "
+                f"{speed:.1f} ch/s, ETA ~{eta / 60:.0f}min"
+            )
 
     # Flush remaining
     if batch:
@@ -218,8 +225,8 @@ def main() -> None:
     print(f"  Chunks:     {total_chunks}")
     print(f"  Qdrant pts: {info.points_count}")
     print(f"  Errors:     {errors}")
-    print(f"  Time:       {elapsed:.0f}s ({elapsed/60:.1f}min)")
-    print(f"  Speed:      {total_chunks/elapsed:.1f} chunks/s")
+    print(f"  Time:       {elapsed:.0f}s ({elapsed / 60:.1f}min)")
+    print(f"  Speed:      {total_chunks / elapsed:.1f} chunks/s")
     print(f"  Collection: {args.collection}")
     print("=" * 60)
 

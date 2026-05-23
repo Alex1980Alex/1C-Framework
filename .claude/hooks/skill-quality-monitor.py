@@ -47,6 +47,7 @@ class SkillQualityMonitor(BaseHook):
 
         try:
             from shared.session_state import SessionState
+
             # Skills recommended by router this session
             recommended = SessionState.get_already_recommended()
             # Skills actually activated via Skill() tool

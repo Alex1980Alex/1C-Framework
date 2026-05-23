@@ -14,9 +14,8 @@ Usage:
 
 import argparse
 import json
-import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 # --- Path resolution ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -26,21 +25,21 @@ PATTERNS_FILE = HOOKS_DIR / "shared" / "code-skill-patterns.json"
 SKILL_ROUTER_CONFIG = HOOKS_DIR / "shared" / "skill-router-config.json"
 
 
-def load_patterns() -> Dict[str, Any]:
+def load_patterns() -> dict[str, Any]:
     """Load patterns config."""
     if not PATTERNS_FILE.exists():
         return {}
-    with open(PATTERNS_FILE, "r", encoding="utf-8") as f:
+    with open(PATTERNS_FILE, encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_patterns(config: Dict[str, Any]):
+def save_patterns(config: dict[str, Any]):
     """Save patterns config."""
     with open(PATTERNS_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, ensure_ascii=False)
 
 
-def scan_existing_skills() -> List[str]:
+def scan_existing_skills() -> list[str]:
     """Scan for existing skill directories."""
     skills = []
     if not SKILLS_DIR.exists():
@@ -53,7 +52,7 @@ def scan_existing_skills() -> List[str]:
     return skills
 
 
-def find_migration_candidates(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+def find_migration_candidates(config: dict[str, Any]) -> list[dict[str, Any]]:
     """Find research_protocol patterns that could be migrated to content patterns."""
     candidates = []
 
@@ -76,19 +75,23 @@ def find_migration_candidates(config: Dict[str, Any]) -> List[Dict[str, Any]]:
                 matching_skill = skill_name
                 break
 
-        candidates.append({
-            "label": label,
-            "domain": domain,
-            "pattern": pattern,
-            "matching_skill": matching_skill,
-            "action": "migrate" if matching_skill else "create_skill",
-            "reason": f"Skill '{matching_skill}' exists" if matching_skill else "No matching skill found",
-        })
+        candidates.append(
+            {
+                "label": label,
+                "domain": domain,
+                "pattern": pattern,
+                "matching_skill": matching_skill,
+                "action": "migrate" if matching_skill else "create_skill",
+                "reason": f"Skill '{matching_skill}' exists"
+                if matching_skill
+                else "No matching skill found",
+            }
+        )
 
     return candidates
 
 
-def find_uncovered_skills(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+def find_uncovered_skills(config: dict[str, Any]) -> list[dict[str, Any]]:
     """Find skills that exist on disk but have no content patterns."""
     pattern_skills = set()
     for section_name in ("patterns", "bash_rules", "directory_rules"):
@@ -100,16 +103,18 @@ def find_uncovered_skills(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     uncovered = []
     for skill in available_skills:
         if skill not in pattern_skills:
-            uncovered.append({
-                "skill": skill,
-                "has_pattern": False,
-                "suggestion": "Add content pattern or directory rule",
-            })
+            uncovered.append(
+                {
+                    "skill": skill,
+                    "has_pattern": False,
+                    "suggestion": "Add content pattern or directory rule",
+                }
+            )
 
     return uncovered
 
 
-def apply_migration(config: Dict[str, Any], candidate: Dict[str, Any]) -> bool:
+def apply_migration(config: dict[str, Any], candidate: dict[str, Any]) -> bool:
     """Apply a single migration: move from research_protocol to patterns."""
     skill = candidate.get("matching_skill")
     if not skill:
@@ -135,13 +140,15 @@ def apply_migration(config: Dict[str, Any], candidate: Dict[str, Any]) -> bool:
     stats = meta.get("stats", {})
     stats["total_patterns"] = len(config["patterns"]["mappings"])
     stats["total_research_protocol"] = len(config["research_protocol"]["patterns"])
-    meta.setdefault("migration_history", []).append({
-        "label": candidate["label"],
-        "from": "research_protocol",
-        "to": "patterns",
-        "skill": skill,
-        "date": __import__("datetime").datetime.now().isoformat(),
-    })
+    meta.setdefault("migration_history", []).append(
+        {
+            "label": candidate["label"],
+            "from": "research_protocol",
+            "to": "patterns",
+            "skill": skill,
+            "date": __import__("datetime").datetime.now().isoformat(),
+        }
+    )
 
     return True
 
@@ -172,7 +179,7 @@ def main():
                 "migratable": len(migratable),
                 "need_skill": len(need_skill),
                 "uncovered": len(uncovered),
-            }
+            },
         }
         print(json.dumps(output, indent=2, ensure_ascii=False))
         return
@@ -201,7 +208,7 @@ def main():
     research_count = len(config.get("research_protocol", {}).get("patterns", []))
     total = patterns_count + research_count
     coverage = f"{patterns_count / total * 100:.0f}%" if total else "N/A"
-    print(f"\n--- Coverage ---")
+    print("\n--- Coverage ---")
     print(f"  Patterns: {patterns_count}, Research Protocol: {research_count}")
     print(f"  Coverage: {coverage} (target: 90%)")
 

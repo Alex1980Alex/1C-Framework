@@ -3,10 +3,10 @@
 Tests API endpoints via TestClient
 """
 
-from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
 
 
 @pytest.mark.integration
@@ -64,11 +64,14 @@ class TestAPIEndpoints:
                 elapsed_ms=100,
             )
 
-            response = client.post("/search/", json={
-                "query": "test query",
-                "strategy": "hybrid",
-                "k": 5,
-            })
+            response = client.post(
+                "/search/",
+                json={
+                    "query": "test query",
+                    "strategy": "hybrid",
+                    "k": 5,
+                },
+            )
 
             assert response.status_code == 200
 
@@ -87,10 +90,13 @@ class TestAPIEndpoints:
                 sources=[],
             )
 
-            response = client.post("/search/ask", json={
-                "question": "What is 1С?",
-                "strategy": "hybrid",
-            })
+            response = client.post(
+                "/search/ask",
+                json={
+                    "question": "What is 1С?",
+                    "strategy": "hybrid",
+                },
+            )
 
             assert response.status_code == 200
 
@@ -103,16 +109,21 @@ class TestAPIEndpoints:
 
         client = TestClient(app)
 
-        with patch("src.pdf_framework.agents.conversation.conversation_manager.ConversationManager.message") as mock_message:
+        with patch(
+            "src.pdf_framework.agents.conversation.conversation_manager.ConversationManager.message"
+        ) as mock_message:
             mock_message.return_value = MagicMock(
                 answer="Chat response",
                 thread_id="thread_123",
             )
 
-            response = client.post("/chat/message", json={
-                "message": "Explain registers",
-                "strategy": "hybrid",
-            })
+            response = client.post(
+                "/chat/message",
+                json={
+                    "message": "Explain registers",
+                    "strategy": "hybrid",
+                },
+            )
 
             assert response.status_code == 200
 
@@ -150,7 +161,9 @@ class TestAPIEndpoints:
 
         client = TestClient(app)
 
-        with patch("src.pdf_framework.graph_store.providers.networkx_store.NetworkXGraphStore") as mock_graph:
+        with patch(
+            "src.pdf_framework.graph_store.providers.networkx_store.NetworkXGraphStore"
+        ) as mock_graph:
             mock_graph.return_value.get_stats.return_value = {
                 "node_count": 100,
                 "edge_count": 200,
@@ -170,10 +183,13 @@ class TestAPIEndpoints:
         client = TestClient(app)
 
         # Create collection
-        response = client.post("/collections/", json={
-            "name": "Test Collection",
-            "description": "Test",
-        })
+        response = client.post(
+            "/collections/",
+            json={
+                "name": "Test Collection",
+                "description": "Test",
+            },
+        )
 
         assert response.status_code == 200
 
@@ -191,12 +207,15 @@ class TestAPIEndpoints:
 
         client = TestClient(app)
 
-        response = client.post("/feedback/submit", json={
-            "query": "test query",
-            "answer": "test answer",
-            "feedback": "positive",
-            "score": 0.9,
-        })
+        response = client.post(
+            "/feedback/submit",
+            json={
+                "query": "test query",
+                "answer": "test answer",
+                "feedback": "positive",
+                "score": 0.9,
+            },
+        )
 
         assert response.status_code == 200
 
@@ -229,10 +248,13 @@ class TestAPIEndpoints:
         client = TestClient(app)
 
         # Invalid search strategy
-        response = client.post("/search/", json={
-            "query": "test",
-            "strategy": "invalid_strategy",
-        })
+        response = client.post(
+            "/search/",
+            json={
+                "query": "test",
+                "strategy": "invalid_strategy",
+            },
+        )
 
         # Should return 4xx or 200 with error
         assert response.status_code in [400, 422, 200]

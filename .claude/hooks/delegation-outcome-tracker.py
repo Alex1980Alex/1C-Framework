@@ -109,8 +109,12 @@ class DelegationOutcomeTracker(BaseHook):
         ext = os.path.splitext(file_path)[1].lower()
 
         content_lower = content[:2000].lower()
-        has_code = any(kw in content_lower for kw in ("def ", "class ", "import ", "function ", "async "))
-        has_architecture = any(kw in content_lower for kw in ("architecture", "pattern", "design", "итерац"))
+        has_code = any(
+            kw in content_lower for kw in ("def ", "class ", "import ", "function ", "async ")
+        )
+        has_architecture = any(
+            kw in content_lower for kw in ("architecture", "pattern", "design", "итерац")
+        )
 
         classification = _auto_classify(content_type, lines, domain)
 

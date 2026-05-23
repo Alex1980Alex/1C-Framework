@@ -32,9 +32,7 @@ def _file_uri(path: Path) -> str:
     return path.resolve().as_uri()
 
 
-def _lsp_rename_response(
-    uri: str, line: int, start: int, end: int, new_text: str
-) -> dict:
+def _lsp_rename_response(uri: str, line: int, start: int, end: int, new_text: str) -> dict:
     return {
         "documentChanges": [
             {
@@ -90,9 +88,7 @@ def test_dry_run_returns_plan_without_applying(workspace: Path) -> None:
 
 def test_confirm_with_matching_token_applies(workspace: Path) -> None:
     file_a = workspace / "a.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
 
     uri = _file_uri(file_a)
     driver = _make_driver(workspace, _lsp_rename_response(uri, 0, 10, 16, "Новая"))
@@ -100,9 +96,7 @@ def test_confirm_with_matching_token_applies(workspace: Path) -> None:
     plan = driver.rename(uri, 0, 10, "Новая", dry_run=True)
     assert plan.confirm_token is not None
 
-    result = driver.rename(
-        uri, 0, 10, "Новая", dry_run=False, confirm_token=plan.confirm_token
-    )
+    result = driver.rename(uri, 0, 10, "Новая", dry_run=False, confirm_token=plan.confirm_token)
 
     assert result.ok is True
     assert result.applied is True
@@ -138,9 +132,7 @@ def test_unsupported_uri_raises(workspace: Path) -> None:
     file_py = workspace / "a.py"
     file_py.write_text("x = 1\n", encoding="utf-8")
 
-    driver = _make_driver(
-        workspace, _lsp_rename_response(_file_uri(file_py), 0, 0, 1, "Y")
-    )
+    driver = _make_driver(workspace, _lsp_rename_response(_file_uri(file_py), 0, 0, 1, "Y"))
 
     with pytest.raises(BackendError) as exc:
         driver.rename(_file_uri(file_py), 0, 0, "Y", dry_run=True)
@@ -160,17 +152,13 @@ def test_verifier_rollback_propagates(workspace: Path) -> None:
         calls["n"] += 1
         return [] if calls["n"] == 1 else ["err1", "err2"]
 
-    backend = MultilspyBackend(
-        lambda: _StubLspClient(_lsp_rename_response(uri, 0, 10, 11, "Z"))
-    )
+    backend = MultilspyBackend(lambda: _StubLspClient(_lsp_rename_response(uri, 0, 10, 11, "Z")))
     applier = WorkspaceEditApplier(workspace)
     verifier = RenameVerifier(applier, regress_on_second_call)
     driver = RenameDriver(backend, verifier)
 
     plan = driver.rename(uri, 0, 10, "Z", dry_run=True)
-    result = driver.rename(
-        uri, 0, 10, "Z", dry_run=False, confirm_token=plan.confirm_token
-    )
+    result = driver.rename(uri, 0, 10, "Z", dry_run=False, confirm_token=plan.confirm_token)
 
     assert result.applied is True
     assert result.rolled_back is True
@@ -213,9 +201,7 @@ def test_token_differs_for_different_edits() -> None:
             ]
         )
 
-    assert RenameDriver._compute_token(make("A")) != RenameDriver._compute_token(
-        make("B")
-    )
+    assert RenameDriver._compute_token(make("A")) != RenameDriver._compute_token(make("B"))
 
 
 def test_backend_error_propagates_without_wrapping(workspace: Path) -> None:

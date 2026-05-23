@@ -16,22 +16,21 @@ import json
 import os
 import sys
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, PROJECT_ROOT)
 
 from src.bsl.evaluation.metrics import (
-    EvalResult,
     aggregate_results,
     evaluate_single,
     format_report,
 )
 
 
-def load_dataset(path: str) -> Dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as f:
+def load_dataset(path: str) -> dict[str, Any]:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -43,6 +42,7 @@ def _get_qdrant():
     global _qdrant_client
     if _qdrant_client is None:
         from qdrant_client import QdrantClient as QC
+
         _qdrant_client = QC(host="localhost", port=6333, timeout=10)
     return _qdrant_client
 
@@ -51,6 +51,7 @@ def _get_embed_model():
     global _embed_model
     if _embed_model is None:
         from sentence_transformers import SentenceTransformer
+
         _embed_model = SentenceTransformer("nomic-ai/nomic-embed-text-v1", trust_remote_code=True)
     return _embed_model
 
@@ -65,11 +66,11 @@ def _extract_module_name(file_path: str) -> str:
     # Pattern: .../ObjectName/Ext/ModuleType.bsl
     for i, p in enumerate(parts):
         if p == "Ext" and i > 0:
-            return f"{parts[i-1]}.{name}"
+            return f"{parts[i - 1]}.{name}"
     return name
 
 
-def search_qdrant(query: str, limit: int = 10) -> List[str]:
+def search_qdrant(query: str, limit: int = 10) -> list[str]:
     """Search Qdrant bsl_code_v2 collection via qdrant-client."""
     try:
         client = _get_qdrant()
@@ -77,7 +78,7 @@ def search_qdrant(query: str, limit: int = 10) -> List[str]:
         embedding = model.encode(f"search_query: {query}").tolist()
         response = client.query_points(collection_name="bsl_code_v2", query=embedding, limit=limit)
         names = []
-        for r in (response.points if hasattr(response, "points") else []):
+        for r in response.points if hasattr(response, "points") else []:
             payload = r.payload or {}
             fp = payload.get("file_path", "")
             if fp:
@@ -88,10 +89,11 @@ def search_qdrant(query: str, limit: int = 10) -> List[str]:
         return []
 
 
-def search_fts5(query: str, limit: int = 10) -> List[str]:
+def search_fts5(query: str, limit: int = 10) -> list[str]:
     """Search FTS5 SQLite index for BSL code."""
     try:
         import sqlite3
+
         db_path = os.path.join(PROJECT_ROOT, "cache", "docs-mcp", "hybrid_search.db")
         if not os.path.exists(db_path):
             return []
@@ -131,11 +133,12 @@ def _get_e5_model():
     global _e5_model
     if _e5_model is None:
         from sentence_transformers import SentenceTransformer
+
         _e5_model = SentenceTransformer("intfloat/multilingual-e5-large")
     return _e5_model
 
 
-def search_v3(query: str, limit: int = 10) -> List[str]:
+def search_v3(query: str, limit: int = 10) -> list[str]:
     """Search Qdrant bsl_code_v3 collection via E5-large embeddings (1024d)."""
     try:
         client = _get_qdrant()
@@ -143,7 +146,7 @@ def search_v3(query: str, limit: int = 10) -> List[str]:
         embedding = model.encode(f"query: {query}").tolist()
         response = client.query_points(collection_name="bsl_code_v3", query=embedding, limit=limit)
         names = []
-        for r in (response.points if hasattr(response, "points") else []):
+        for r in response.points if hasattr(response, "points") else []:
             payload = r.payload or {}
             name = payload.get("name", "")
             if name:
@@ -162,7 +165,7 @@ def search_v3(query: str, limit: int = 10) -> List[str]:
         return []
 
 
-def search_combined(query: str, limit: int = 10) -> List[str]:
+def search_combined(query: str, limit: int = 10) -> list[str]:
     """Combined search: Qdrant + FTS5, deduplicated."""
     qdrant_results = search_qdrant(query, limit)
     fts_results = search_fts5(query, limit)
@@ -177,7 +180,12 @@ def search_combined(query: str, limit: int = 10) -> List[str]:
 
 def run_evaluation(dataset_path, search_fn=None, search_mode="combined"):
     if search_fn is None:
-        search_fn = {"qdrant": search_qdrant, "fts5": search_fts5, "combined": search_combined, "v3": search_v3}.get(search_mode, search_combined)
+        search_fn = {
+            "qdrant": search_qdrant,
+            "fts5": search_fts5,
+            "combined": search_combined,
+            "v3": search_v3,
+        }.get(search_mode, search_combined)
     dataset = load_dataset(dataset_path)
     queries = dataset["queries"]
     print(f"Running evaluation: {len(queries)} queries, mode={search_mode}")
@@ -205,8 +213,13 @@ def run_evaluation(dataset_path, search_fn=None, search_mode="combined"):
 
 def main():
     parser = argparse.ArgumentParser(description="BSL Search Evaluation Runner")
-    parser.add_argument("--dataset", default=os.path.join(PROJECT_ROOT, "data", "eval", "bsl", "bsl_eval_dataset.json"))
-    parser.add_argument("--output", default=os.path.join(PROJECT_ROOT, "docs", "analysis", "bsl_baseline_report.md"))
+    parser.add_argument(
+        "--dataset",
+        default=os.path.join(PROJECT_ROOT, "data", "eval", "bsl", "bsl_eval_dataset.json"),
+    )
+    parser.add_argument(
+        "--output", default=os.path.join(PROJECT_ROOT, "docs", "analysis", "bsl_baseline_report.md")
+    )
     parser.add_argument("--mode", choices=["qdrant", "fts5", "combined", "v3"], default="combined")
     parser.add_argument("--json", action="store_true", help="Output raw JSON")
     args = parser.parse_args()

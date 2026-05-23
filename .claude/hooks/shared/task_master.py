@@ -23,7 +23,7 @@ import tempfile
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from shared.core_paths import get_cache_dir
 
@@ -44,6 +44,7 @@ MANDATORY_HOOKS = {
 
 # --- File Locking (cross-platform) ---
 
+
 class FileLock:
     """Cross-platform file lock using msvcrt (Windows) or fcntl (Unix)."""
 
@@ -62,13 +63,13 @@ class FileLock:
             try:
                 self._platform_lock()
                 return self
-            except (OSError, IOError):
+            except OSError:
                 time.sleep(0.1)
 
         # Timeout: force acquire (stale lock)
         try:
             self._platform_lock()
-        except (OSError, IOError):
+        except OSError:
             pass
         return self
 
@@ -76,41 +77,44 @@ class FileLock:
         if self._lock_file:
             try:
                 self._platform_unlock()
-            except (OSError, IOError):
+            except OSError:
                 pass
             try:
                 self._lock_file.close()
-            except (OSError, IOError):
+            except OSError:
                 pass
 
     def _platform_lock(self):
         if sys.platform == "win32":
             import msvcrt
+
             msvcrt.locking(self._lock_file.fileno(), msvcrt.LK_NBLCK, 1)
         else:
             import fcntl
+
             fcntl.flock(self._lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 
     def _platform_unlock(self):
         if sys.platform == "win32":
             import msvcrt
+
             try:
                 msvcrt.locking(self._lock_file.fileno(), msvcrt.LK_UNLCK, 1)
-            except (OSError, IOError):
+            except OSError:
                 pass
         else:
             import fcntl
+
             fcntl.flock(self._lock_file.fileno(), fcntl.LOCK_UN)
 
 
 # --- Atomic File Operations ---
 
-def _atomic_write_json(filepath: Path, data: Dict[str, Any]) -> None:
+
+def _atomic_write_json(filepath: Path, data: dict[str, Any]) -> None:
     """Write JSON atomically: temp file + rename."""
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=str(filepath.parent), suffix=".tmp", prefix="hook-"
-    )
+    fd, tmp_path = tempfile.mkstemp(dir=str(filepath.parent), suffix=".tmp", prefix="hook-")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -126,19 +130,19 @@ def _atomic_write_json(filepath: Path, data: Dict[str, Any]) -> None:
         raise
 
 
-def _read_todos() -> Dict[str, Any]:
+def _read_todos() -> dict[str, Any]:
     """Read hook-todos.json with validation."""
     if not TODOS_FILE.exists():
         return _empty_state()
     try:
-        with open(TODOS_FILE, "r", encoding="utf-8") as f:
+        with open(TODOS_FILE, encoding="utf-8") as f:
             data = json.load(f)
         return _validate_and_fix_stats(data)
     except (json.JSONDecodeError, OSError):
         return _empty_state()
 
 
-def _write_todos(data: Dict[str, Any]) -> None:
+def _write_todos(data: dict[str, Any]) -> None:
     """Write hook-todos.json with lock and validation."""
     data = _validate_and_fix_stats(data)
     data["timestamp"] = datetime.now().isoformat()
@@ -146,7 +150,7 @@ def _write_todos(data: Dict[str, Any]) -> None:
         _atomic_write_json(TODOS_FILE, data)
 
 
-def _empty_state() -> Dict[str, Any]:
+def _empty_state() -> dict[str, Any]:
     """Empty initial state."""
     return {
         "todos": [],
@@ -155,7 +159,7 @@ def _empty_state() -> Dict[str, Any]:
     }
 
 
-def _validate_and_fix_stats(data: Dict[str, Any]) -> Dict[str, Any]:
+def _validate_and_fix_stats(data: dict[str, Any]) -> dict[str, Any]:
     """Auto-correct stats when race condition artifacts appear."""
     todos = data.get("todos", [])
     actual = {
@@ -172,6 +176,7 @@ def _validate_and_fix_stats(data: Dict[str, Any]) -> Dict[str, Any]:
 
 # --- Public API ---
 
+
 def add_task(
     title: str,
     priority: str = "normal",
@@ -185,9 +190,11 @@ def add_task(
 
     # Duplicate check: same title + same creator + still pending
     for t in todos:
-        if (t.get("content") == title
-                and t.get("createdBy") == created_by
-                and t.get("status") == "pending"):
+        if (
+            t.get("content") == title
+            and t.get("createdBy") == created_by
+            and t.get("status") == "pending"
+        ):
             return False
 
     task = {
@@ -230,7 +237,7 @@ def complete_task(title: str, created_by: str = "") -> bool:
     return found
 
 
-def get_pending_tasks(created_by: Optional[str] = None) -> List[Dict[str, Any]]:
+def get_pending_tasks(created_by: str | None = None) -> list[dict[str, Any]]:
     """Get all pending tasks, optionally filtered by creator."""
     data = _read_todos()
     todos = data.get("todos", [])
@@ -240,18 +247,18 @@ def get_pending_tasks(created_by: Optional[str] = None) -> List[Dict[str, Any]]:
     return pending
 
 
-def has_recent_completion(
-    hook_id: str, cooldown_minutes: int = 5
-) -> bool:
+def has_recent_completion(hook_id: str, cooldown_minutes: int = 5) -> bool:
     """Check if this hook completed a task recently (anti-spam)."""
     data = _read_todos()
     todos = data.get("todos", [])
     cutoff = datetime.now() - timedelta(minutes=cooldown_minutes)
 
     for t in todos:
-        if (t.get("status") == "completed"
-                and t.get("createdBy") == hook_id
-                and t.get("completedAt")):
+        if (
+            t.get("status") == "completed"
+            and t.get("createdBy") == hook_id
+            and t.get("completedAt")
+        ):
             try:
                 completed_at = datetime.fromisoformat(t["completedAt"])
                 if completed_at > cutoff:
@@ -293,11 +300,12 @@ def cleanup_old_completed(max_age_hours: int = 24, max_count: int = 50) -> int:
 
 # --- Extended API (ported from Enterprise v3.4) ---
 
+
 def complete_task_by_hook(
     hook_id: str,
-    task_type: Optional[str] = None,
+    task_type: str | None = None,
     note: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Complete ALL pending tasks created by a specific hook.
 
     STRICT MODE: tasks are marked 'completed', NOT removed (audit trail).
@@ -340,7 +348,7 @@ def complete_task_by_hook(
 
 def update_task_metadata(
     created_by: str,
-    metadata: Dict[str, Any],
+    metadata: dict[str, Any],
     merge: bool = True,
 ) -> int:
     """Update metadata for pending task(s) by hook ID.
@@ -376,7 +384,7 @@ def update_task_metadata(
     return updated
 
 
-def get_task_with_metadata(created_by: str) -> Optional[Dict[str, Any]]:
+def get_task_with_metadata(created_by: str) -> dict[str, Any] | None:
     """Get first pending task by hook ID with its metadata.
 
     Returns:
@@ -427,8 +435,7 @@ def auto_validate_git_tasks() -> int:
     now = datetime.now().isoformat()
 
     for t in todos:
-        if (t.get("status") == "pending"
-                and t.get("createdBy") == "auto-git-save-hook"):
+        if t.get("status") == "pending" and t.get("createdBy") == "auto-git-save-hook":
             t["status"] = "completed"
             t["completedAt"] = now
             t["note"] = "Auto-validated: no uncommitted files"
@@ -460,8 +467,7 @@ def auto_validate_code_verify_tasks(
     cutoff = now - timedelta(hours=max_age_hours)
 
     for t in todos:
-        if (t.get("status") != "pending"
-                or t.get("createdBy") != "code-verify-reminder"):
+        if t.get("status") != "pending" or t.get("createdBy") != "code-verify-reminder":
             continue
 
         task_session = t.get("sessionId", "")
@@ -470,7 +476,9 @@ def auto_validate_code_verify_tasks(
         if current_session_id and task_session and task_session != current_session_id:
             t["status"] = "completed"
             t["completedAt"] = now.isoformat()
-            t["note"] = f"Session cleanup: different session ({task_session[:8]}… vs {current_session_id[:8]}…)"
+            t["note"] = (
+                f"Session cleanup: different session ({task_session[:8]}… vs {current_session_id[:8]}…)"
+            )
             completed += 1
             continue
 
@@ -496,7 +504,7 @@ def auto_validate_code_verify_tasks(
     return completed
 
 
-def session_start_cleanup(current_session_id: str = "") -> Dict[str, Any]:
+def session_start_cleanup(current_session_id: str = "") -> dict[str, Any]:
     """Perform all cleanup and validation at session start.
 
     1. cleanup_old_completed() — remove stale tasks (>24h)

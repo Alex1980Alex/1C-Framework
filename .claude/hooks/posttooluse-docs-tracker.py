@@ -16,7 +16,6 @@ sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
 
-
 # Map of code paths to documentation areas
 DOC_MAPPINGS = {
     "src/pdf_framework/": "PDF Framework core (src/pdf_framework/)",
@@ -48,8 +47,20 @@ SKIP_PATTERNS = [
 
 # Extensions that don't need docs
 SKIP_EXTENSIONS = {
-    ".log", ".tmp", ".bak", ".pyc", ".json", ".toml", ".yml", ".yaml",
-    ".env", ".cfg", ".ini", ".lock", ".db", ".sqlite",
+    ".log",
+    ".tmp",
+    ".bak",
+    ".pyc",
+    ".json",
+    ".toml",
+    ".yml",
+    ".yaml",
+    ".env",
+    ".cfg",
+    ".ini",
+    ".lock",
+    ".db",
+    ".sqlite",
 }
 
 
@@ -60,6 +71,7 @@ class PostToolUseDocsTracker(BaseHook):
         tool_input = inp.tool_input
         if isinstance(tool_input, str):
             import json
+
             try:
                 tool_input = json.loads(tool_input)
             except (json.JSONDecodeError, AttributeError):

@@ -47,16 +47,28 @@ def _make_mock_vector_store(chunks: dict[str, DocumentChunk]):
 def sample_chunks():
     return {
         "c1": DocumentChunk(
-            id="c1", content="Регистр накопления", document_id="d1",
-            page_number=1, chunk_index=0, metadata={"source": "a.pdf"},
+            id="c1",
+            content="Регистр накопления",
+            document_id="d1",
+            page_number=1,
+            chunk_index=0,
+            metadata={"source": "a.pdf"},
         ),
         "c2": DocumentChunk(
-            id="c2", content="Справочник номенклатуры", document_id="d1",
-            page_number=2, chunk_index=1, metadata={"source": "a.pdf"},
+            id="c2",
+            content="Справочник номенклатуры",
+            document_id="d1",
+            page_number=2,
+            chunk_index=1,
+            metadata={"source": "a.pdf"},
         ),
         "c3": DocumentChunk(
-            id="c3", content="Регистр сведений", document_id="d2",
-            page_number=1, chunk_index=0, metadata={"source": "b.pdf"},
+            id="c3",
+            content="Регистр сведений",
+            document_id="d2",
+            page_number=1,
+            chunk_index=0,
+            metadata={"source": "b.pdf"},
         ),
     }
 
@@ -122,7 +134,9 @@ class TestBM25SearchStrategy:
         bm25 = _make_mock_bm25([("c1", -10.0), ("missing", -5.0)])
         chunks = {
             "c1": DocumentChunk(
-                id="c1", content="Текст", document_id="d1",
+                id="c1",
+                content="Текст",
+                document_id="d1",
                 metadata={"source": "s"},
             ),
         }
@@ -145,14 +159,18 @@ class TestBM25SearchStrategy:
 class TestMatchesFilter:
     def test_matching_filter(self):
         chunk = DocumentChunk(
-            id="c1", content="x", document_id="d1",
+            id="c1",
+            content="x",
+            document_id="d1",
             metadata={"source": "a.pdf", "type": "text"},
         )
         assert BM25SearchStrategy._matches_filter(chunk, {"source": "a.pdf"})
 
     def test_non_matching_filter(self):
         chunk = DocumentChunk(
-            id="c1", content="x", document_id="d1",
+            id="c1",
+            content="x",
+            document_id="d1",
             metadata={"source": "a.pdf"},
         )
         assert not BM25SearchStrategy._matches_filter(chunk, {"source": "b.pdf"})

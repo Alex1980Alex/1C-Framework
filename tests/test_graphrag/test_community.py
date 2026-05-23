@@ -4,8 +4,8 @@ Tests Leiden community detection on real NetworkX graphs.
 No LLM mocking needed — graspologic runs locally.
 """
 
-import pytest
 import networkx as nx
+import pytest
 
 from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.graph_store.community import CommunityDetector
@@ -51,14 +51,14 @@ def two_cluster_graph():
     for i in range(5):
         g.add_node(f"a{i}", name=f"A{i}", entity_type="CONCEPT")
     for i in range(4):
-        g.add_edge(f"a{i}", f"a{i+1}", relation_type="RELATED")
+        g.add_edge(f"a{i}", f"a{i + 1}", relation_type="RELATED")
     g.add_edge("a4", "a0", relation_type="RELATED")  # Close the cycle
 
     # Cluster B
     for i in range(5):
         g.add_node(f"b{i}", name=f"B{i}", entity_type="CONCEPT")
     for i in range(4):
-        g.add_edge(f"b{i}", f"b{i+1}", relation_type="RELATED")
+        g.add_edge(f"b{i}", f"b{i + 1}", relation_type="RELATED")
     g.add_edge("b4", "b0", relation_type="RELATED")
 
     # Single weak bridge between clusters
@@ -76,7 +76,7 @@ def dense_graph():
         g.add_node(n, name=n, entity_type="CONCEPT")
     # Fully connected
     for i, src in enumerate(nodes):
-        for tgt in nodes[i + 1:]:
+        for tgt in nodes[i + 1 :]:
             g.add_edge(src, tgt, relation_type="RELATED")
     return g
 

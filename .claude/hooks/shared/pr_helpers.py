@@ -446,7 +446,7 @@ def push_branch_safe(
     return (
         False,
         "conflict",
-        (f"branch `{branch}` has divergent commits on remote; " "manual review needed"),
+        (f"branch `{branch}` has divergent commits on remote; manual review needed"),
     )
 
 

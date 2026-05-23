@@ -16,8 +16,8 @@ Version: 1.0.0
 Created: 2026-02-23
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 # Test directory
@@ -35,12 +35,10 @@ def run_test_file(test_file: str, name: str) -> bool:
     print(f"\n{'=' * 60}")
     print(f"Running: {name}")
     print(f"File: {test_file}")
-    print('=' * 60)
+    print("=" * 60)
 
     result = subprocess.run(
-        [sys.executable, str(test_path)],
-        cwd=str(test_path.parent),
-        capture_output=False
+        [sys.executable, str(test_path)], cwd=str(test_path.parent), capture_output=False
     )
 
     return result.returncode == 0

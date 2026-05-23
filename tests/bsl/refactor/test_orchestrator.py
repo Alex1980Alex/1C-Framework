@@ -21,9 +21,7 @@ from src.bsl.semantic_search.refactor.types import BackendError
 
 
 class _StubLspClient:
-    def __init__(
-        self, response: Any = None, raise_exc: Exception | None = None
-    ) -> None:
+    def __init__(self, response: Any = None, raise_exc: Exception | None = None) -> None:
         self._response = response
         self._raise = raise_exc
         self.calls = 0
@@ -46,9 +44,7 @@ class _FakeRunner:
         self._raise = raise_exc
         self.calls = 0
 
-    def run_rename(
-        self, workspace_root: Path, old_name: str, new_name: str
-    ) -> list[AstGrepMatch]:
+    def run_rename(self, workspace_root: Path, old_name: str, new_name: str) -> list[AstGrepMatch]:
         self.calls += 1
         self.last_call = (workspace_root, old_name, new_name)
         if self._raise is not None:
@@ -100,9 +96,7 @@ def _make_orchestrator(
 def test_primary_multilspy_used_for_module_export_proc(tmp_path: Path) -> None:
     """MODULE_EXPORT_PROC routes to multilspy; fallback not invoked."""
     file_a = tmp_path / "module.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
     uri = _file_uri(file_a)
 
     lsp = _StubLspClient(_lsp_edit(uri, 0, 10, 16, "Новая"))
@@ -127,9 +121,7 @@ def test_primary_multilspy_used_for_module_export_proc(tmp_path: Path) -> None:
 def test_multilspy_raises_triggers_ast_grep_fallback(tmp_path: Path) -> None:
     """DoD R2.5: primary backend unavailable → automatic switch to B."""
     file_a = tmp_path / "module.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
     uri = _file_uri(file_a)
 
     lsp = _StubLspClient(raise_exc=RuntimeError("lsp unreachable"))
@@ -161,9 +153,7 @@ def test_multilspy_raises_triggers_ast_grep_fallback(tmp_path: Path) -> None:
 def test_multilspy_empty_edit_triggers_fallback(tmp_path: Path) -> None:
     """Empty WorkspaceEdit from primary is treated as failure → fallback used."""
     file_a = tmp_path / "module.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
     uri = _file_uri(file_a)
 
     lsp = _StubLspClient(response=None)
@@ -192,9 +182,7 @@ def test_form_handler_routes_ast_grep_primary(tmp_path: Path) -> None:
     form_dir = tmp_path / "src" / "forms"
     form_dir.mkdir(parents=True)
     file_a = form_dir / "form_module.bsl"
-    file_a.write_text(
-        "Процедура ПриОткрытии() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура ПриОткрытии() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
     uri = _file_uri(file_a)
 
     lsp = _StubLspClient()

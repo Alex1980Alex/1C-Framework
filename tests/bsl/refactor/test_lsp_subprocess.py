@@ -121,9 +121,7 @@ def test_subprocess_starts_and_becomes_ready() -> None:
 
 
 def test_subprocess_send_returns_response() -> None:
-    sp = LspSubprocess(
-        process_factory=lambda: _FakeProcess(responses=[{"changes": {}}])
-    )
+    sp = LspSubprocess(process_factory=lambda: _FakeProcess(responses=[{"changes": {}}]))
     result = sp.send("textDocument/rename", {"foo": "bar"})
     assert result == {"changes": {}}
 

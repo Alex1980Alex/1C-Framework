@@ -104,7 +104,7 @@ def main() -> int:
 
     mode = "APPLY" if args.apply else "DRY-RUN"
     ts = datetime.now().isoformat(timespec="seconds")
-    print(f"[orphan-cleanup] {mode} · base={args.base} " f"· stale-days={args.stale_days} · {ts}")
+    print(f"[orphan-cleanup] {mode} · base={args.base} · stale-days={args.stale_days} · {ts}")
     print()
 
     print("Local branches:")

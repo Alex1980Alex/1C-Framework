@@ -1,8 +1,6 @@
 """Tests for tenant vector store manager (Phase 12.1)."""
 
-import asyncio
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -42,6 +40,7 @@ def manager(tmp_db, tmp_path):
 # sanitize_tenant_id
 # ---------------------------------------------------------------------------
 
+
 class TestSanitizeTenantId:
     def test_alphanumeric_passthrough(self):
         mgr = TenantVectorStoreManager.__new__(TenantVectorStoreManager)
@@ -69,6 +68,7 @@ class TestSanitizeTenantId:
 # get_collection_name
 # ---------------------------------------------------------------------------
 
+
 class TestGetCollectionName:
     def test_prefix(self):
         mgr = TenantVectorStoreManager.__new__(TenantVectorStoreManager)
@@ -82,6 +82,7 @@ class TestGetCollectionName:
 # ---------------------------------------------------------------------------
 # get_store
 # ---------------------------------------------------------------------------
+
 
 class TestGetStore:
     @pytest.mark.asyncio
@@ -122,6 +123,7 @@ class TestGetStore:
 # create_tenant / list_tenants / get_tenant_metadata
 # ---------------------------------------------------------------------------
 
+
 class TestTenantCRUD:
     @pytest.mark.asyncio
     async def test_create_tenant_returns_metadata(self, manager):
@@ -161,6 +163,7 @@ class TestTenantCRUD:
 # delete_tenant
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteTenant:
     @pytest.mark.asyncio
     async def test_delete_removes_from_cache(self, manager):
@@ -188,6 +191,7 @@ class TestDeleteTenant:
 # get_all_tenants_metadata
 # ---------------------------------------------------------------------------
 
+
 class TestGetAllTenantsMetadata:
     @pytest.mark.asyncio
     async def test_empty_returns_empty(self, manager):
@@ -209,6 +213,7 @@ class TestGetAllTenantsMetadata:
 # shutdown
 # ---------------------------------------------------------------------------
 
+
 class TestShutdown:
     @pytest.mark.asyncio
     async def test_clears_cache(self, manager):
@@ -221,6 +226,7 @@ class TestShutdown:
 # ---------------------------------------------------------------------------
 # TenantMetadata model
 # ---------------------------------------------------------------------------
+
 
 class TestTenantMetadata:
     def test_model_fields(self):
@@ -240,9 +246,11 @@ class TestTenantMetadata:
 # get_tenant_store_manager singleton
 # ---------------------------------------------------------------------------
 
+
 class TestGetTenantStoreManager:
     def test_returns_instance(self):
         import src.pdf_framework.multitenancy.tenant_store as mod
+
         mod._tenant_store_manager = None
 
         mgr = get_tenant_store_manager()
@@ -253,6 +261,7 @@ class TestGetTenantStoreManager:
 
     def test_returns_same_instance(self):
         import src.pdf_framework.multitenancy.tenant_store as mod
+
         mod._tenant_store_manager = None
 
         m1 = get_tenant_store_manager()

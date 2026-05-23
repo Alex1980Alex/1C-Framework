@@ -143,6 +143,36 @@ ignore = [
     "UP042",  # replace-str-enum — requires StrEnum (3.11+)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Tests: fixture-only imports, unused vars в test scaffolding, debug f-strings
+# и placeholder tests с TODO-ассертами — стандартный шум test-кода
+"tests/**" = [
+    "F401",  # unused imports (pytest fixtures, mocking setup)
+    "F541",  # f-string without placeholders (debug output)
+    "F821",  # undefined name (placeholder/TODO tests)
+    "F841",  # unused local variable (intermediate assertions)
+    "E741",  # ambiguous variable (test data l/I/O is fine)
+]
+# Claude Code hooks + tests: graceful fallback imports, lazy-loaded modules,
+# intentionally short-aliased deps (`_DT = datetime`, `_P = Path`)
+# для compact hook-кода
+".claude/**" = [
+    "F401",  # graceful import fallbacks (try/except import patterns)
+    "F541",  # debug f-strings в логировании
+    "F841",  # logged exception variables / intermediate assertions
+    "E741",  # ambiguous variable (l/I/O — short loop vars в hot path'ах)
+    "N812",  # lowercase import as non-lowercase alias (`_DT = datetime`)
+    "N814",  # camelcase import as constant alias (`_P = Path`)
+]
+# Scripts: utilities, ad-hoc tooling, exploratory code
+"scripts/**" = [
+    "F401",  # placeholder/exploratory imports
+    "F541",  # f-string templates без переменных
+    "F841",  # debug-only assignments
+    "E741",  # ambiguous variable name (script loop vars)
+    "N805",  # script-style funcs that look like methods
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

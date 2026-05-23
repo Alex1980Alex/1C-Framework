@@ -5,7 +5,7 @@ Tests parsing logic and caching without LLM calls.
 
 import pytest
 
-from src.pdf_framework.search.routing.classifier import QueryClassifier, QueryClassification
+from src.pdf_framework.search.routing.classifier import QueryClassification, QueryClassifier
 
 
 def _make_classifier():
@@ -108,9 +108,7 @@ class TestClassifierCache:
     @pytest.mark.asyncio
     async def test_cache_hit_returns_same_object(self):
         c = _make_classifier()
-        cached = QueryClassification(
-            complexity="simple", query_type="factual", confidence=0.9
-        )
+        cached = QueryClassification(complexity="simple", query_type="factual", confidence=0.9)
         c._cache["test query"] = cached
 
         result = await c.classify("test query")
@@ -140,9 +138,7 @@ class TestClassifierCache:
 
     def test_get_cached_classification(self):
         c = _make_classifier()
-        cached = QueryClassification(
-            complexity="complex", query_type="comparative", confidence=0.8
-        )
+        cached = QueryClassification(complexity="complex", query_type="comparative", confidence=0.8)
         c._cache["compare A and B"] = cached
         result = c.get_cached_classification("compare A and B")
         assert result is cached

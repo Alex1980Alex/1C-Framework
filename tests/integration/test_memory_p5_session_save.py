@@ -49,12 +49,15 @@ def tmp_db(tmp_path):
 
 def _ctx(**overrides):
     base = {
-        "session_id": "abc12345", "created_at": "2026-04-04T10:00:00",
+        "session_id": "abc12345",
+        "created_at": "2026-04-04T10:00:00",
         "skills": ["memory-unified", "create-hook"],
         "files_changed": [
             "src/memory/orchestrator/memory_orchestrator.py",
             ".claude/hooks/session-memory-save.py",
-            "tests/test.py", "docs/roadmap.md", "src/bsl/parser.py",
+            "tests/test.py",
+            "docs/roadmap.md",
+            "src/bsl/parser.py",
         ],
         "commits": ["feat: add hook", "docs: refresh audit"],
         "completed_tasks": ["Create hook"],
@@ -102,16 +105,23 @@ class TestFormatSummary:
 
 class TestCalculateImportance:
     def test_base(self):
-        assert calculate_importance(_ctx(files_changed=[], commits=[], skills=[], completed_tasks=[])) == 0.5
+        assert (
+            calculate_importance(_ctx(files_changed=[], commits=[], skills=[], completed_tasks=[]))
+            == 0.5
+        )
 
     def test_10_files(self):
-        ctx = _ctx(files_changed=[f"f{i}" for i in range(10)], commits=[], skills=[], completed_tasks=[])
+        ctx = _ctx(
+            files_changed=[f"f{i}" for i in range(10)], commits=[], skills=[], completed_tasks=[]
+        )
         assert calculate_importance(ctx) == pytest.approx(0.7)
 
     def test_capped(self):
         ctx = _ctx(
-            files_changed=[f"f{i}" for i in range(50)], commits=[f"c{i}" for i in range(20)],
-            skills=[f"s{i}" for i in range(20)], completed_tasks=[f"t{i}" for i in range(20)],
+            files_changed=[f"f{i}" for i in range(50)],
+            commits=[f"c{i}" for i in range(20)],
+            skills=[f"s{i}" for i in range(20)],
+            completed_tasks=[f"t{i}" for i in range(20)],
         )
         assert calculate_importance(ctx) <= 0.95
 
@@ -170,7 +180,9 @@ class TestSaveToSqlite:
         with patch.object(mod, "SQLITE_DB", tmp_db):
             assert save_to_sqlite(_ctx()) is True
             conn = sqlite3.connect(str(tmp_db))
-            count = conn.execute("SELECT COUNT(*) FROM important_messages WHERE category='session_summary'").fetchone()[0]
+            count = conn.execute(
+                "SELECT COUNT(*) FROM important_messages WHERE category='session_summary'"
+            ).fetchone()[0]
             conn.close()
             assert count == 1
 
@@ -178,7 +190,9 @@ class TestSaveToSqlite:
         with patch.object(mod, "SQLITE_DB", tmp_db):
             save_to_sqlite(_ctx())
             conn = sqlite3.connect(str(tmp_db))
-            row = conn.execute("SELECT content, importance, category, tags, metadata FROM important_messages").fetchone()
+            row = conn.execute(
+                "SELECT content, importance, category, tags, metadata FROM important_messages"
+            ).fetchone()
             conn.close()
             content, importance, category, tags_str, meta_str = row
             assert "Session" in content
@@ -206,7 +220,8 @@ class TestCollectContext:
     @patch.object(mod, "_read_json_file")
     def test_reads_session_state(self, mock_json, mock_git):
         mock_json.return_value = {
-            "session_id": "test123", "activated_skills": ["memory-unified"],
+            "session_id": "test123",
+            "activated_skills": ["memory-unified"],
             "created_at": "2026-04-04T10:00:00",
         }
         ctx = collect_context()
@@ -218,13 +233,17 @@ class TestGracefulDegradation:
     def test_bad_stdin_exit_0(self):
         result = subprocess.run(
             [sys.executable, str(HOOKS_DIR / "session-memory-save.py")],
-            input=b"invalid json", capture_output=True, timeout=10,
+            input=b"invalid json",
+            capture_output=True,
+            timeout=10,
         )
         assert result.returncode == 0
 
     def test_empty_stdin_exit_0(self):
         result = subprocess.run(
             [sys.executable, str(HOOKS_DIR / "session-memory-save.py")],
-            input=b"", capture_output=True, timeout=10,
+            input=b"",
+            capture_output=True,
+            timeout=10,
         )
         assert result.returncode == 0

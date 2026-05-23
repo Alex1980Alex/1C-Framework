@@ -50,7 +50,7 @@ def load_from_jsonl(last_n: int, hook: str = "", tool: str = "") -> list[dict]:
         return []
     entries = []
     try:
-        with open(JSONL_PATH, "r", encoding="utf-8") as f:
+        with open(JSONL_PATH, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -95,10 +95,11 @@ def print_stats(entries: list[dict], label: str = "All") -> dict:
 
     kpi_status = "PASS" if stats["p95"] <= KPI_P95_MS else "FAIL"
     print(f"  {label} (n={n}):")
-    print(f"    p50={stats['p50']:.1f}ms  p95={stats['p95']:.1f}ms  "
-          f"p99={stats['p99']:.1f}ms  max={stats['max']:.1f}ms  avg={stats['avg']:.1f}ms")
-    print(f"    KPI p95 <{KPI_P95_MS}ms: [{kpi_status}]  "
-          f"(over KPI: {stats['over_kpi']}/{n})")
+    print(
+        f"    p50={stats['p50']:.1f}ms  p95={stats['p95']:.1f}ms  "
+        f"p99={stats['p99']:.1f}ms  max={stats['max']:.1f}ms  avg={stats['avg']:.1f}ms"
+    )
+    print(f"    KPI p95 <{KPI_P95_MS}ms: [{kpi_status}]  (over KPI: {stats['over_kpi']}/{n})")
     return stats
 
 

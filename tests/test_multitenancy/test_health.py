@@ -10,10 +10,10 @@ from src.api.routes.health import (
     check_llm,
 )
 
-
 # ---------------------------------------------------------------------------
 # aggregate_status
 # ---------------------------------------------------------------------------
+
 
 class TestAggregateStatus:
     def test_all_up(self):
@@ -65,6 +65,7 @@ class TestAggregateStatus:
 # check_disk_space
 # ---------------------------------------------------------------------------
 
+
 class TestCheckDiskSpace:
     @pytest.mark.asyncio
     async def test_returns_dict(self):
@@ -95,6 +96,7 @@ class TestCheckDiskSpace:
 # check_llm
 # ---------------------------------------------------------------------------
 
+
 class TestCheckLLM:
     @pytest.mark.asyncio
     async def test_no_api_key_returns_disabled(self):
@@ -121,6 +123,7 @@ class TestCheckLLM:
 # Health endpoints (via FastAPI TestClient)
 # ---------------------------------------------------------------------------
 
+
 class TestHealthEndpoints:
     @pytest.fixture
     def mock_components(self):
@@ -134,6 +137,7 @@ class TestHealthEndpoints:
     @pytest.mark.asyncio
     async def test_liveness_always_ok(self):
         from src.api.routes.health import liveness_probe
+
         result = await liveness_probe()
         assert result["status"] == "alive"
         assert "timestamp" in result

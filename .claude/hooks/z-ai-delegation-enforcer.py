@@ -19,73 +19,140 @@ from base import BaseHook, HookInput, HookOutput
 
 # Orchestrator: complex tasks needing decompose + batch delegate
 _ORCHESTRATOR_SIGNALS = [
-    "each file", "for every", "per file", "all files",
-    "batch", "multiple files", "several files",
+    "each file",
+    "for every",
+    "per file",
+    "all files",
+    "batch",
+    "multiple files",
+    "several files",
     # Russian
-    "каждый файл", "для каждого", "все файлы",
-    "пакетно", "несколько файлов", "по файлам",
-    "каждая фаза", "каждый модуль",
-    "по фазам", "несколько фаз", "для каждой фазы",
+    "каждый файл",
+    "для каждого",
+    "все файлы",
+    "пакетно",
+    "несколько файлов",
+    "по файлам",
+    "каждая фаза",
+    "каждый модуль",
+    "по фазам",
+    "несколько фаз",
+    "для каждой фазы",
 ]
 
 # Medium: docs, decomposition, tests, boilerplate, configs
 _MEDIUM_SIGNALS = [
-    "documentation", "readme", "changelog",
-    "decompos", "split into", "break down",
-    "generate tests", "test cases", "write tests",
-    "boilerplate", "template", "scaffold",
-    "config", "setup", "migration script",
-    "checklist", "summary", "table",
-    "roadmap", "plan document",
+    "documentation",
+    "readme",
+    "changelog",
+    "decompos",
+    "split into",
+    "break down",
+    "generate tests",
+    "test cases",
+    "write tests",
+    "boilerplate",
+    "template",
+    "scaffold",
+    "config",
+    "setup",
+    "migration script",
+    "checklist",
+    "summary",
+    "table",
+    "roadmap",
+    "plan document",
     # Russian
-    "разбей", "декомпозиция", "разбить на",
-    "дорожн", "план реализаци", "план фаз",
-    "создай документ", "напиши документ",
-    "сгенерируй", "напиши тесты", "создай тесты",
-    "напиши readme", "changelog",
-    "по шаблону", "бойлерплейт",
-    "максимальн", "подробн",
-    "конфиг", "настрой", "миграц",
-    "чеклист", "таблиц", "сводк",
-    "добавь", "создай файл",
+    "разбей",
+    "декомпозиция",
+    "разбить на",
+    "дорожн",
+    "план реализаци",
+    "план фаз",
+    "создай документ",
+    "напиши документ",
+    "сгенерируй",
+    "напиши тесты",
+    "создай тесты",
+    "напиши readme",
+    "changelog",
+    "по шаблону",
+    "бойлерплейт",
+    "максимальн",
+    "подробн",
+    "конфиг",
+    "настрой",
+    "миграц",
+    "чеклист",
+    "таблиц",
+    "сводк",
+    "добавь",
+    "создай файл",
 ]
 
 # Hard: code generation, refactoring, analysis
 _HARD_SIGNALS = [
-    "write code", "implement", "create module",
-    "refactor", "rewrite", "add feature",
-    "analysis report", "generate report",
-    "new class", "new function", "new hook",
-    "write service", "write handler",
+    "write code",
+    "implement",
+    "create module",
+    "refactor",
+    "rewrite",
+    "add feature",
+    "analysis report",
+    "generate report",
+    "new class",
+    "new function",
+    "new hook",
+    "write service",
+    "write handler",
     # Russian
-    "напиши код", "реализуй", "создай модуль",
-    "рефакторинг", "перепиши",
-    "аналитический отчёт", "сгенерируй отчёт",
-    "написать функцию", "написать класс",
-    "новый класс", "новый хук", "новый сервис",
-    "добавь функционал", "добавь фичу",
+    "напиши код",
+    "реализуй",
+    "создай модуль",
+    "рефакторинг",
+    "перепиши",
+    "аналитический отчёт",
+    "сгенерируй отчёт",
+    "написать функцию",
+    "написать класс",
+    "новый класс",
+    "новый хук",
+    "новый сервис",
+    "добавь функционал",
+    "добавь фичу",
 ]
 
 # Never: architecture, security, debugging (skip delegation)
 _NEVER_SIGNALS = [
-    "architecture", "how to design", "security",
-    "debug", "investigate", "why does",
+    "architecture",
+    "how to design",
+    "security",
+    "debug",
+    "investigate",
+    "why does",
     # Russian
-    "архитектур", "как лучше сделать", "безопасност",
-    "отладка", "отладить", "почему не работает",
-    "расследовать", "причина ошибки",
+    "архитектур",
+    "как лучше сделать",
+    "безопасност",
+    "отладка",
+    "отладить",
+    "почему не работает",
+    "расследовать",
+    "причина ошибки",
 ]
 
 # Numeric patterns: "10 files", "5 modules", etc.
 import re
-_MULTI_FILE_RE = re.compile(r"\b([3-9]|[1-9]\d+)\s*(файл|file|модул|module|фаз|phase|часте|part)", re.IGNORECASE)
+
+_MULTI_FILE_RE = re.compile(
+    r"\b([3-9]|[1-9]\d+)\s*(файл|file|модул|module|фаз|phase|часте|part)", re.IGNORECASE
+)
 
 # Min prompt length to consider (skip short prompts)
 _MIN_PROMPT_LEN = 20
 
 
 class ZAIDelegationEnforcer(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         prompt = inp.prompt.strip()
         if not prompt or len(prompt) < _MIN_PROMPT_LEN:

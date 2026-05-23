@@ -27,15 +27,42 @@ from base import BaseHook, HookInput, HookOutput
 
 # Code file extensions that trigger the guard
 _CODE_EXTENSIONS = {
-    ".py", ".ts", ".js", ".tsx", ".jsx", ".bsl", ".os",
-    ".java", ".go", ".rs", ".rb", ".php", ".cs", ".swift",
+    ".py",
+    ".ts",
+    ".js",
+    ".tsx",
+    ".jsx",
+    ".bsl",
+    ".os",
+    ".java",
+    ".go",
+    ".rs",
+    ".rb",
+    ".php",
+    ".cs",
+    ".swift",
 }
 
 # Non-code extensions — always skip
 _SKIP_EXTENSIONS = {
-    ".md", ".json", ".yml", ".yaml", ".toml", ".env", ".txt",
-    ".csv", ".html", ".css", ".xml", ".ini", ".cfg", ".lock",
-    ".gitignore", ".editorconfig", ".log", ".sql",
+    ".md",
+    ".json",
+    ".yml",
+    ".yaml",
+    ".toml",
+    ".env",
+    ".txt",
+    ".csv",
+    ".html",
+    ".css",
+    ".xml",
+    ".ini",
+    ".cfg",
+    ".lock",
+    ".gitignore",
+    ".editorconfig",
+    ".log",
+    ".sql",
 }
 
 # Exempt directory prefixes — skip enforcement
@@ -55,7 +82,6 @@ _LINE_THRESHOLD = 15
 
 
 class ZAIWriteGuard(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         tool_input = inp.tool_input or {}
         tool_name = inp.tool_name or ""
@@ -82,9 +108,11 @@ class ZAIWriteGuard(BaseHook):
         # Large .md files outside .claude/ and data/ are NOT exempt (docs can be delegated)
         # Exception: specific data/ subdirs ARE enforced (see _ENFORCED_DATA_PATHS)
         _LARGE_MD_THRESHOLD = 50
-        is_large_md = (ext == ".md" and line_count > _LARGE_MD_THRESHOLD
-                       and not any(fp.startswith(p) or f"/{p}" in fp
-                                   for p in [".claude/"]))
+        is_large_md = (
+            ext == ".md"
+            and line_count > _LARGE_MD_THRESHOLD
+            and not any(fp.startswith(p) or f"/{p}" in fp for p in [".claude/"])
+        )
         # data/ is generally exempt for .md, EXCEPT enforced paths
         if is_large_md and (fp.startswith("data/") or "/data/" in fp):
             is_large_md = any(p in fp for p in _ENFORCED_DATA_PATHS)
@@ -105,6 +133,7 @@ class ZAIWriteGuard(BaseHook):
         # Check if Z.AI was used in this session
         try:
             from shared.session_state import SessionState
+
             if SessionState.has_llm_delegation():
                 return None  # Z.AI was used — allow
         except Exception:

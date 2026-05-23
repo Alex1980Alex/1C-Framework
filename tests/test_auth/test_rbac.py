@@ -1,7 +1,8 @@
 """Tests for Role-Based Access Control (Phase 12.4)."""
 
+from datetime import UTC
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 from src.api.auth.rbac import (
     ROLE_LEVELS,
@@ -13,10 +14,10 @@ from src.api.auth.rbac import (
     require_role,
 )
 
-
 # ---------------------------------------------------------------------------
 # ROLE_LEVELS
 # ---------------------------------------------------------------------------
+
 
 class TestRoleLevels:
     def test_viewer_lowest(self):
@@ -35,6 +36,7 @@ class TestRoleLevels:
 # ---------------------------------------------------------------------------
 # ROLE_PERMISSIONS
 # ---------------------------------------------------------------------------
+
 
 class TestRolePermissions:
     def test_viewer_has_read_permissions(self):
@@ -77,6 +79,7 @@ class TestRolePermissions:
 # has_permission
 # ---------------------------------------------------------------------------
 
+
 class TestHasPermission:
     def test_viewer_can_search(self):
         assert has_permission("viewer", "search:read") is True
@@ -101,6 +104,7 @@ class TestHasPermission:
 # get_role_permissions
 # ---------------------------------------------------------------------------
 
+
 class TestGetRolePermissions:
     def test_returns_list(self):
         perms = get_role_permissions("viewer")
@@ -119,6 +123,7 @@ class TestGetRolePermissions:
 # ---------------------------------------------------------------------------
 # get_all_roles
 # ---------------------------------------------------------------------------
+
 
 class TestGetAllRoles:
     def test_returns_three_roles(self):
@@ -140,17 +145,19 @@ class TestGetAllRoles:
 # require_role decorator
 # ---------------------------------------------------------------------------
 
+
 class TestRequireRole:
     @pytest.mark.asyncio
     async def test_allows_sufficient_role(self):
+        from datetime import datetime, timedelta
+
         from src.api.auth.jwt_handler import TokenPayload
-        from datetime import datetime, timezone, timedelta
 
         payload = TokenPayload(
             tenant_id="t",
             role="admin",
-            exp=datetime.now(timezone.utc) + timedelta(hours=1),
-            iat=datetime.now(timezone.utc),
+            exp=datetime.now(UTC) + timedelta(hours=1),
+            iat=datetime.now(UTC),
         )
 
         @require_role("editor")
@@ -162,15 +169,17 @@ class TestRequireRole:
 
     @pytest.mark.asyncio
     async def test_denies_insufficient_role(self):
+        from datetime import datetime, timedelta
+
         from fastapi import HTTPException
+
         from src.api.auth.jwt_handler import TokenPayload
-        from datetime import datetime, timezone, timedelta
 
         payload = TokenPayload(
             tenant_id="t",
             role="viewer",
-            exp=datetime.now(timezone.utc) + timedelta(hours=1),
-            iat=datetime.now(timezone.utc),
+            exp=datetime.now(UTC) + timedelta(hours=1),
+            iat=datetime.now(UTC),
         )
 
         @require_role("admin")
@@ -195,14 +204,15 @@ class TestRequireRole:
 
     @pytest.mark.asyncio
     async def test_same_role_level_passes(self):
+        from datetime import datetime, timedelta
+
         from src.api.auth.jwt_handler import TokenPayload
-        from datetime import datetime, timezone, timedelta
 
         payload = TokenPayload(
             tenant_id="t",
             role="editor",
-            exp=datetime.now(timezone.utc) + timedelta(hours=1),
-            iat=datetime.now(timezone.utc),
+            exp=datetime.now(UTC) + timedelta(hours=1),
+            iat=datetime.now(UTC),
         )
 
         @require_role("editor")
@@ -217,17 +227,19 @@ class TestRequireRole:
 # require_permission decorator
 # ---------------------------------------------------------------------------
 
+
 class TestRequirePermission:
     @pytest.mark.asyncio
     async def test_allows_with_permission(self):
+        from datetime import datetime, timedelta
+
         from src.api.auth.jwt_handler import TokenPayload
-        from datetime import datetime, timezone, timedelta
 
         payload = TokenPayload(
             tenant_id="t",
             role="admin",
-            exp=datetime.now(timezone.utc) + timedelta(hours=1),
-            iat=datetime.now(timezone.utc),
+            exp=datetime.now(UTC) + timedelta(hours=1),
+            iat=datetime.now(UTC),
         )
 
         @require_permission("tenants:create")
@@ -239,15 +251,17 @@ class TestRequirePermission:
 
     @pytest.mark.asyncio
     async def test_denies_without_permission(self):
+        from datetime import datetime, timedelta
+
         from fastapi import HTTPException
+
         from src.api.auth.jwt_handler import TokenPayload
-        from datetime import datetime, timezone, timedelta
 
         payload = TokenPayload(
             tenant_id="t",
             role="viewer",
-            exp=datetime.now(timezone.utc) + timedelta(hours=1),
-            iat=datetime.now(timezone.utc),
+            exp=datetime.now(UTC) + timedelta(hours=1),
+            iat=datetime.now(UTC),
         )
 
         @require_permission("tenants:create")

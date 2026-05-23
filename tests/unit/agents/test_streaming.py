@@ -1,7 +1,5 @@
 """Unit tests for StreamingRAGRunner event types (F2.9.3)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
 import pytest
 
 
@@ -28,6 +26,7 @@ class TestStreamingRAGRunner:
         runner = StreamingRAGRunner()
 
         events = []
+
         async def collect():
             async for event in runner.stream("test query"):
                 events.append(event)
@@ -38,11 +37,12 @@ class TestStreamingRAGRunner:
 
     async def test_event_ordering(self):
         """F2.9.3: Events should be ordered correctly."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner, EventType
+        from src.pdf_framework.agents.rag.streaming import EventType, StreamingRAGRunner
 
         runner = StreamingRAGRunner()
 
         event_order = []
+
         async def collect():
             async for event in runner.stream("test"):
                 event_order.append(event.type)
@@ -62,6 +62,7 @@ class TestStreamingRAGRunner:
         runner = StreamingRAGRunner()
 
         consumed = []
+
         async def partial_consume():
             async for event in runner.stream("test"):
                 consumed.append(event)
@@ -74,7 +75,7 @@ class TestStreamingRAGRunner:
 
     def test_event_metadata(self):
         """F2.9.3: Events should contain metadata."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner, Event
+        from src.pdf_framework.agents.rag.streaming import Event
 
         event = Event(
             type="test_event",
@@ -91,6 +92,7 @@ class TestStreamingRAGRunner:
         runner = StreamingRAGRunner()
 
         token_counts = []
+
         async def track_tokens():
             async for event in runner.stream("test"):
                 if hasattr(event, "tokens"):

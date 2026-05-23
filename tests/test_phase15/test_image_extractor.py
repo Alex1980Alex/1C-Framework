@@ -15,10 +15,10 @@ from src.pdf_framework.processing.image_extractor import (
 )
 from src.pdf_framework.schemas.documents import DocumentChunk
 
-
 # ---------------------------------------------------------------------------
 # ImageDescription model
 # ---------------------------------------------------------------------------
+
 
 class TestImageDescription:
     def test_create_with_required_fields(self):
@@ -78,6 +78,7 @@ class TestImageDescription:
 # ImageExtractor init and has_vision_support
 # ---------------------------------------------------------------------------
 
+
 class TestImageExtractorInit:
     def test_default_init_no_api_key(self):
         ext = ImageExtractor()
@@ -110,6 +111,7 @@ class TestImageExtractorInit:
 # Media type guessing
 # ---------------------------------------------------------------------------
 
+
 class TestGuessMediaType:
     def test_png(self):
         assert ImageExtractor()._guess_media_type(b"\x89PNG\r\n") == "image/png"
@@ -130,6 +132,7 @@ class TestGuessMediaType:
 # ---------------------------------------------------------------------------
 # describe_image
 # ---------------------------------------------------------------------------
+
 
 class TestDescribeImage:
     @pytest.mark.asyncio
@@ -187,9 +190,7 @@ class TestDescribeImage:
     async def test_cache_key_is_md5(self):
         ext = ImageExtractor(api_key="sk-test")
         ext._client = MagicMock()
-        ext._client.messages.create.return_value = MagicMock(
-            content=[MagicMock(text="desc")]
-        )
+        ext._client.messages.create.return_value = MagicMock(content=[MagicMock(text="desc")])
 
         data = b"test bytes"
         await ext.describe_image(data)
@@ -223,6 +224,7 @@ class TestDescribeImage:
 # ---------------------------------------------------------------------------
 # to_document_chunks
 # ---------------------------------------------------------------------------
+
 
 class TestToDocumentChunks:
     def test_converts_descriptions_to_chunks(self):
@@ -262,8 +264,12 @@ class TestToDocumentChunks:
         ext = ImageExtractor()
         descriptions = [
             ImageDescription(
-                image_bytes=b"x", description="d", page_number=1,
-                image_format="png", size=(100, 100), description_model="m",
+                image_bytes=b"x",
+                description="d",
+                page_number=1,
+                image_format="png",
+                size=(100, 100),
+                description_model="m",
             ),
         ]
         chunks = ext.to_document_chunks(descriptions, document_id="doc")
@@ -278,8 +284,12 @@ class TestToDocumentChunks:
         ext = ImageExtractor()
         descriptions = [
             ImageDescription(
-                image_bytes=b"x", description="d", page_number=3,
-                image_format="png", size=(100, 100), description_model="m",
+                image_bytes=b"x",
+                description="d",
+                page_number=3,
+                image_format="png",
+                size=(100, 100),
+                description_model="m",
             ),
         ]
         chunks = ext.to_document_chunks(descriptions, document_id="DOC_1")
@@ -290,6 +300,7 @@ class TestToDocumentChunks:
 # ---------------------------------------------------------------------------
 # clear_cache
 # ---------------------------------------------------------------------------
+
 
 class TestClearCache:
     def test_clear_cache_empties_dict(self):

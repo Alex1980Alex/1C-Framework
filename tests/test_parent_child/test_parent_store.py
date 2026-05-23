@@ -9,7 +9,9 @@ from src.pdf_framework.schemas.documents import DocumentChunk
 from src.pdf_framework.vector_store.parent_store import ParentDocumentStore
 
 
-def _chunk(id: str, doc_id: str = "doc1", content: str = "test content", idx: int = 0) -> DocumentChunk:
+def _chunk(
+    id: str, doc_id: str = "doc1", content: str = "test content", idx: int = 0
+) -> DocumentChunk:
     return DocumentChunk(
         id=id,
         document_id=doc_id,
@@ -113,11 +115,13 @@ class TestAddAndGet:
 class TestGetByDocument:
     @pytest.mark.asyncio
     async def test_get_by_document(self, store):
-        await store.add_parents([
-            _chunk("p1", doc_id="docA", idx=0),
-            _chunk("p2", doc_id="docA", idx=1),
-            _chunk("p3", doc_id="docB", idx=0),
-        ])
+        await store.add_parents(
+            [
+                _chunk("p1", doc_id="docA", idx=0),
+                _chunk("p2", doc_id="docA", idx=1),
+                _chunk("p3", doc_id="docB", idx=0),
+            ]
+        )
 
         results = await store.get_parents_by_document("docA")
         assert len(results) == 2
@@ -125,11 +129,13 @@ class TestGetByDocument:
 
     @pytest.mark.asyncio
     async def test_get_by_document_ordered(self, store):
-        await store.add_parents([
-            _chunk("p2", doc_id="docA", idx=2),
-            _chunk("p0", doc_id="docA", idx=0),
-            _chunk("p1", doc_id="docA", idx=1),
-        ])
+        await store.add_parents(
+            [
+                _chunk("p2", doc_id="docA", idx=2),
+                _chunk("p0", doc_id="docA", idx=0),
+                _chunk("p1", doc_id="docA", idx=1),
+            ]
+        )
 
         results = await store.get_parents_by_document("docA")
         indices = [r.chunk_index for r in results]
@@ -158,11 +164,13 @@ class TestDelete:
 
     @pytest.mark.asyncio
     async def test_delete_by_document(self, store):
-        await store.add_parents([
-            _chunk("p1", doc_id="docA"),
-            _chunk("p2", doc_id="docA"),
-            _chunk("p3", doc_id="docB"),
-        ])
+        await store.add_parents(
+            [
+                _chunk("p1", doc_id="docA"),
+                _chunk("p2", doc_id="docA"),
+                _chunk("p3", doc_id="docB"),
+            ]
+        )
 
         deleted = await store.delete_by_document("docA")
         assert deleted == 2
@@ -187,11 +195,13 @@ class TestStatistics:
 
     @pytest.mark.asyncio
     async def test_statistics_with_data(self, store):
-        await store.add_parents([
-            _chunk("p1", doc_id="docA", content="short"),
-            _chunk("p2", doc_id="docA", content="a longer content here"),
-            _chunk("p3", doc_id="docB", content="medium text"),
-        ])
+        await store.add_parents(
+            [
+                _chunk("p1", doc_id="docA", content="short"),
+                _chunk("p2", doc_id="docA", content="a longer content here"),
+                _chunk("p3", doc_id="docB", content="medium text"),
+            ]
+        )
 
         stats = await store.get_statistics()
         assert stats["total_parents"] == 3

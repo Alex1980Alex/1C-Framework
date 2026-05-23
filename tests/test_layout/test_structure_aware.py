@@ -3,11 +3,8 @@
 Tests structure-aware chunking based on layout elements.
 """
 
-import pytest
-
 from src.pdf_framework.processing.splitters.structure_aware import StructureAwareSplitter
 from src.pdf_framework.schemas.documents import (
-    DocumentChunk,
     DocumentMetadata,
     ProcessedDocument,
 )
@@ -134,7 +131,9 @@ class TestTableChunking:
     def test_table_never_split(self):
         """Even large tables should be a single chunk."""
         s = StructureAwareSplitter(max_chunk_size=50, chunk_overlap=10)
-        big_table = "| " + " | ".join(["Col"] * 20) + " |\n" + ("| " + " | ".join(["x"] * 20) + " |\n") * 50
+        big_table = (
+            "| " + " | ".join(["Col"] * 20) + " |\n" + ("| " + " | ".join(["x"] * 20) + " |\n") * 50
+        )
         elements = [
             {"type": "table", "content": big_table, "page_number": 1},
         ]

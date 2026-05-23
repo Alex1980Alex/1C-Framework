@@ -6,8 +6,7 @@ NoOpTracer, MetricsCollector, and factory functions.
 
 import json
 import time
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
@@ -23,7 +22,6 @@ from src.pdf_framework.observability.tracer import (
     get_metrics_collector,
     get_tracer,
 )
-
 
 # ── Span Tests ──────────────────────────────────────────────────
 
@@ -111,7 +109,7 @@ class TestSpan:
         timestamp = d["timestamp"]
         parsed = datetime.fromisoformat(timestamp)
         # Should be recent (within last minute)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         diff = abs((now - parsed).total_seconds())
         assert diff < 60, f"Timestamp {timestamp} is not recent (diff={diff}s)"
 
@@ -302,7 +300,7 @@ class TestJsonFileTracer:
         tracer.flush()
 
         # File should be named with today's date
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today = datetime.now(UTC).strftime("%Y-%m-%d")
         expected_file = tmp_path / f"{today}.jsonl"
         assert expected_file.exists()
 

@@ -29,9 +29,7 @@ def _file_uri(path: Path) -> str:
     return path.resolve().as_uri()
 
 
-def _lsp_rename_response(
-    uri: str, line: int, start: int, end: int, new_text: str
-) -> dict:
+def _lsp_rename_response(uri: str, line: int, start: int, end: int, new_text: str) -> dict:
     return {
         "documentChanges": [
             {
@@ -68,25 +66,19 @@ def _install_driver(workspace: Path, lsp_response: dict) -> None:
 
 
 def test_tool_returns_not_initialized_without_factory() -> None:
-    result = bsl_rename_symbol(
-        uri="file:///x.bsl", line=0, character=0, new_name="Y", dry_run=True
-    )
+    result = bsl_rename_symbol(uri="file:///x.bsl", line=0, character=0, new_name="Y", dry_run=True)
     assert result["error"] == "rename pipeline not initialized"
     assert result["code"] == "not_initialized"
 
 
 def test_tool_dry_run_returns_plan(tmp_path: Path) -> None:
     file_a = tmp_path / "a.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
 
     uri = _file_uri(file_a)
     _install_driver(tmp_path, _lsp_rename_response(uri, 0, 10, 16, "Новая"))
 
-    result = bsl_rename_symbol(
-        uri=uri, line=0, character=10, new_name="Новая", dry_run=True
-    )
+    result = bsl_rename_symbol(uri=uri, line=0, character=10, new_name="Новая", dry_run=True)
 
     assert result["ok"] is False
     assert result["applied"] is False
@@ -99,16 +91,12 @@ def test_tool_dry_run_returns_plan(tmp_path: Path) -> None:
 
 def test_tool_confirm_applies_file(tmp_path: Path) -> None:
     file_a = tmp_path / "a.bsl"
-    file_a.write_text(
-        "Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-    )
+    file_a.write_text("Процедура Старая() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
 
     uri = _file_uri(file_a)
     _install_driver(tmp_path, _lsp_rename_response(uri, 0, 10, 16, "Новая"))
 
-    plan = bsl_rename_symbol(
-        uri=uri, line=0, character=10, new_name="Новая", dry_run=True
-    )
+    plan = bsl_rename_symbol(uri=uri, line=0, character=10, new_name="Новая", dry_run=True)
     applied = bsl_rename_symbol(
         uri=uri,
         line=0,
@@ -152,9 +140,7 @@ def test_tool_unsupported_uri_returns_error_dict(tmp_path: Path) -> None:
     uri = _file_uri(file_py)
     _install_driver(tmp_path, _lsp_rename_response(uri, 0, 0, 1, "Y"))
 
-    result = bsl_rename_symbol(
-        uri=uri, line=0, character=0, new_name="Y", dry_run=True
-    )
+    result = bsl_rename_symbol(uri=uri, line=0, character=0, new_name="Y", dry_run=True)
 
     assert "error" in result
     assert result["code"] == "unsupported_uri"
@@ -173,9 +159,7 @@ def test_tool_backend_error_returns_error_dict(tmp_path: Path) -> None:
 
     register_rename_driver_factory(factory)
 
-    result = bsl_rename_symbol(
-        uri="file:///x.bsl", line=0, character=0, new_name="Y", dry_run=True
-    )
+    result = bsl_rename_symbol(uri="file:///x.bsl", line=0, character=0, new_name="Y", dry_run=True)
 
     assert "error" in result
     assert result["code"] == "lsp_error"

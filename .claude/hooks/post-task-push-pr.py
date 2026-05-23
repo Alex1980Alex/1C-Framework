@@ -314,7 +314,7 @@ class PostTaskPushPR(BaseHook):
         if not tests_ok:
             notify.notify_checks_failed(task_id, "", tests_msg)
             return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: pre-push gate FAILED. " f"{tests_msg}"
+                f"[POST-TASK-PUSH-PR] Task #{task_id}: pre-push gate FAILED. {tests_msg}"
             )
 
         slug = pr.slugify(subject or f"task-{task_id}")
@@ -362,7 +362,7 @@ class PostTaskPushPR(BaseHook):
         if not push_ok:
             notify.notify_pr_failed(task_id, "push", push_msg)
             return HookOutput().system_message(
-                f"[POST-TASK-PUSH-PR] Task #{task_id}: push failed " f"({push_mode}): {push_msg}"
+                f"[POST-TASK-PUSH-PR] Task #{task_id}: push failed ({push_mode}): {push_msg}"
             )
 
         # ---- P0.3: detect existing PR ----

@@ -1,6 +1,6 @@
 """Unit tests for API health endpoints (F2.10.1)."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient

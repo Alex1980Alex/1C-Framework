@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from src.memory.ai_memory.adapters.docs_rag import DocsRagConfig, DocsRagSearchAdapter
 from src.memory.infrastructure.cache import LRUCache
 from src.memory.infrastructure.event_bus import Event, EventBus, EventBusConfig
 from src.memory.infrastructure.event_store import EventStore, EventStoreConfig
@@ -25,12 +26,10 @@ from src.memory.infrastructure.subscription_manager import (
     SubscriptionManagerConfig,
 )
 from src.memory.orchestrator.tools.id_management import IDManagementTool, _uuid7
+from src.memory.orchestrator.tools.research import ResearchTool
 from src.memory.orchestrator.tools.surprise import SurpriseTool
 from src.memory.orchestrator.tools.warmup import WarmupTool
-from src.memory.orchestrator.tools.research import ResearchTool
 from src.memory.orchestrator.unified_id import IDRegistry
-from src.memory.ai_memory.adapters.docs_rag import DocsRagConfig, DocsRagSearchAdapter
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -63,12 +62,14 @@ async def sub_manager(bus):
 
 @pytest.fixture
 async def store(tmp_path):
-    es = EventStore(EventStoreConfig(
-        hot_buffer_path=str(tmp_path / "events.jsonl"),
-        cold_db_path=str(tmp_path / "events.db"),
-        auto_flush_threshold=500,
-        flush_interval=3600.0,
-    ))
+    es = EventStore(
+        EventStoreConfig(
+            hot_buffer_path=str(tmp_path / "events.jsonl"),
+            cold_db_path=str(tmp_path / "events.db"),
+            auto_flush_threshold=500,
+            flush_interval=3600.0,
+        )
+    )
     await es.start()
     yield es
     await es.stop()
@@ -76,10 +77,12 @@ async def store(tmp_path):
 
 @pytest.fixture
 async def docs_adapter(tmp_path):
-    adapter = DocsRagSearchAdapter(DocsRagConfig(
-        chunks_db_path=str(tmp_path / "docs_chunks.db"),
-        enable_vector_search=False,
-    ))
+    adapter = DocsRagSearchAdapter(
+        DocsRagConfig(
+            chunks_db_path=str(tmp_path / "docs_chunks.db"),
+            enable_vector_search=False,
+        )
+    )
     await adapter.initialize()
     yield adapter
     await adapter.close()
@@ -102,7 +105,6 @@ def cache():
 
 
 class TestSubscriptionManager:
-
     @pytest.mark.asyncio
     async def test_create_subscription(self, sub_manager):
         sub = await sub_manager.create("client-1", "memory.*")
@@ -173,7 +175,6 @@ class TestSubscriptionManager:
 
 
 class TestDocsRagSearchAdapter:
-
     @pytest.mark.asyncio
     async def test_ingest_document(self, docs_adapter):
         count = await docs_adapter.ingest_document(
@@ -224,7 +225,6 @@ class TestDocsRagSearchAdapter:
 
 
 class TestIDManagementTool:
-
     @pytest.mark.asyncio
     async def test_uuid7_format(self):
         uid = _uuid7()
@@ -247,7 +247,9 @@ class TestIDManagementTool:
 
     @pytest.mark.asyncio
     async def test_resolve_not_found(self, id_tool):
-        result = await id_tool.execute(operation="resolve", unified_id="episodic:memory-ai:nonexistent")
+        result = await id_tool.execute(
+            operation="resolve", unified_id="episodic:memory-ai:nonexistent"
+        )
         assert result["found"] is False
 
     @pytest.mark.asyncio
@@ -279,10 +281,8 @@ class _FakeSearchEngine:
 
     async def search(self, query, limit=10, include_links=False):
         from src.memory.orchestrator.unified_search import (
-            SearchResultItem,
             UnifiedSearchResult,
         )
-        from src.memory.orchestrator.unified_id import MemoryType, SourceServer
 
         items = self._results or []
         return UnifiedSearchResult(
@@ -295,7 +295,6 @@ class _FakeSearchEngine:
 
 
 class TestSurpriseTool:
-
     @pytest.mark.asyncio
     async def test_score_novel_content(self):
         tool = SurpriseTool(search_engine=_FakeSearchEngine(results=[]))
@@ -305,8 +304,8 @@ class TestSurpriseTool:
 
     @pytest.mark.asyncio
     async def test_score_known_content(self):
-        from src.memory.orchestrator.unified_search import SearchResultItem
         from src.memory.orchestrator.unified_id import MemoryType, SourceServer
+        from src.memory.orchestrator.unified_search import SearchResultItem
 
         existing = [
             SearchResultItem(
@@ -331,8 +330,8 @@ class TestSurpriseTool:
 
     @pytest.mark.asyncio
     async def test_score_with_detail(self):
-        from src.memory.orchestrator.unified_search import SearchResultItem
         from src.memory.orchestrator.unified_id import MemoryType, SourceServer
+        from src.memory.orchestrator.unified_search import SearchResultItem
 
         existing = [
             SearchResultItem(
@@ -362,13 +361,15 @@ class TestSurpriseTool:
 
 
 class TestWarmupTool:
-
     @pytest.mark.asyncio
     async def test_warmup_recent(self, cache, store):
         # Add some events to the store
         event = Event(
-            event_id="w1", event_type="memory.save",
-            data={"key": "val"}, timestamp=datetime.now(tz=UTC), source="test",
+            event_id="w1",
+            event_type="memory.save",
+            data={"key": "val"},
+            timestamp=datetime.now(tz=UTC),
+            source="test",
         )
         await store.append(event)
 
@@ -424,13 +425,14 @@ class _FakeRelated:
 
 
 class TestResearchTool:
-
     @pytest.mark.asyncio
     async def test_relationships(self):
-        links = _FakeLinkRegistry({
-            "e1": [_FakeRelated("e2"), _FakeRelated("e3")],
-            "e2": [_FakeRelated("e1")],
-        })
+        links = _FakeLinkRegistry(
+            {
+                "e1": [_FakeRelated("e2"), _FakeRelated("e3")],
+                "e2": [_FakeRelated("e1")],
+            }
+        )
         tool = ResearchTool(links, search_engine=None)
         result = await tool.analyze(entity_ids=["e1", "e2"], analysis_type="relationships")
         assert result["analysis_type"] == "relationships"
@@ -446,11 +448,13 @@ class TestResearchTool:
 
     @pytest.mark.asyncio
     async def test_clusters(self):
-        links = _FakeLinkRegistry({
-            "e1": [_FakeRelated("e2")],
-            "e2": [_FakeRelated("e1")],
-            "e3": [],
-        })
+        links = _FakeLinkRegistry(
+            {
+                "e1": [_FakeRelated("e2")],
+                "e2": [_FakeRelated("e1")],
+                "e3": [],
+            }
+        )
         tool = ResearchTool(links, search_engine=None)
         result = await tool.analyze(entity_ids=["e1", "e2", "e3"], analysis_type="clusters")
         assert result["total_clusters"] >= 2

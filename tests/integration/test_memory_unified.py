@@ -13,27 +13,26 @@ from datetime import datetime, timedelta
 
 import pytest
 
+from src.memory.orchestrator.link_registry import (
+    LinkRegistry,
+    LinkType,
+)
 from src.memory.orchestrator.unified_id import (
+    IDRegistry,
     MemoryType,
     SourceServer,
     UnifiedID,
-    IDRegistry,
+    create_doc_id,
     create_episodic_id,
     create_semantic_id,
-    create_doc_id,
-)
-from src.memory.orchestrator.link_registry import (
-    LinkType,
-    LinkRegistry,
 )
 from src.memory.orchestrator.unified_search import (
+    BaseSearchAdapter,
     SearchOptions,
     SearchResultItem,
-    UnifiedSearchResult,
-    BaseSearchAdapter,
     UnifiedSearchEngine,
+    UnifiedSearchResult,
 )
-
 
 # ========== UnifiedID Tests ==========
 
@@ -184,7 +183,10 @@ class TestLinkRegistry:
 
     def test_cleanup_expired(self, registry):
         registry.create_link(
-            "a:b:1", "a:b:2", LinkType.SESSION_CONTEXT, 0.5,
+            "a:b:1",
+            "a:b:2",
+            LinkType.SESSION_CONTEXT,
+            0.5,
             expires_at=datetime.now() - timedelta(hours=1),
         )
         assert registry.cleanup_expired() == 1
@@ -216,24 +218,34 @@ class TestUnifiedSearch:
     @pytest.fixture
     def engine(self):
         engine = UnifiedSearchEngine()
-        engine.register_adapter(MockSearchAdapter("memory-ai", [
-            SearchResultItem(
-                unified_id="episodic:memory-ai:id1",
-                source=SourceServer.MEMORY_AI,
-                memory_type=MemoryType.EPISODIC,
-                content="Important pattern about error handling",
-                raw_score=0.85,
-            ),
-        ]))
-        engine.register_adapter(MockSearchAdapter("vector-memory", [
-            SearchResultItem(
-                unified_id="semantic:vector-memory:id2",
-                source=SourceServer.VECTOR_MEMORY,
-                memory_type=MemoryType.SEMANTIC,
-                content="Pattern: always validate input before processing",
-                raw_score=0.75,
-            ),
-        ]))
+        engine.register_adapter(
+            MockSearchAdapter(
+                "memory-ai",
+                [
+                    SearchResultItem(
+                        unified_id="episodic:memory-ai:id1",
+                        source=SourceServer.MEMORY_AI,
+                        memory_type=MemoryType.EPISODIC,
+                        content="Important pattern about error handling",
+                        raw_score=0.85,
+                    ),
+                ],
+            )
+        )
+        engine.register_adapter(
+            MockSearchAdapter(
+                "vector-memory",
+                [
+                    SearchResultItem(
+                        unified_id="semantic:vector-memory:id2",
+                        source=SourceServer.VECTOR_MEMORY,
+                        memory_type=MemoryType.SEMANTIC,
+                        content="Pattern: always validate input before processing",
+                        raw_score=0.75,
+                    ),
+                ],
+            )
+        )
         return engine
 
     @pytest.mark.asyncio
@@ -257,7 +269,9 @@ class TestUnifiedSearch:
     @pytest.mark.asyncio
     async def test_timeout_handling(self):
         class SlowAdapter(BaseSearchAdapter):
-            def source_name(self): return "slow"
+            def source_name(self):
+                return "slow"
+
             async def search(self, query, limit=10, **kw):
                 await asyncio.sleep(10)
                 return []

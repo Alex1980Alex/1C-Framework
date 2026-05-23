@@ -13,6 +13,7 @@ import pytest
 class TestBenchmarkDataset:
     def test_load_from_json(self, tmp_path):
         import json
+
         from src.pdf_framework.evaluation.benchmark import BenchmarkLoader
 
         data = {
@@ -26,7 +27,7 @@ class TestBenchmarkDataset:
                     "keywords": ["регистр", "накопления"],
                     "difficulty": "easy",
                 }
-            ]
+            ],
         }
         path = tmp_path / "benchmarks" / "test.json"
         path.parent.mkdir(parents=True)
@@ -49,8 +50,11 @@ class TestBenchmarkDataset:
             name="test_ds",
             questions=[
                 BenchmarkQuestion(
-                    id="q001", question="Test?", category="factual",
-                    expected_answer="Answer", difficulty="easy",
+                    id="q001",
+                    question="Test?",
+                    category="factual",
+                    expected_answer="Answer",
+                    difficulty="easy",
                 ),
             ],
         )
@@ -109,6 +113,7 @@ class TestAutoRAGRunner:
 class TestAutoRAGAnalyzer:
     def _make_results(self):
         from src.pdf_framework.evaluation.autorag_runner import GridResult
+
         return [
             GridResult(config={"strategy": "vector", "k": 5}, mrr=0.6, recall=0.5, precision=0.4),
             GridResult(config={"strategy": "hybrid", "k": 5}, mrr=0.8, recall=0.7, precision=0.6),

@@ -3,8 +3,9 @@
 Tests image extraction model and Vision API interaction with mocks.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.pdf_framework.processing.image_extractor import (
     ImageDescription,

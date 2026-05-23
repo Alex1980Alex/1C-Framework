@@ -3,8 +3,8 @@
 Tests entity merging and update logic using NetworkXGraphStore.
 """
 
-import pytest
 import networkx as nx
+import pytest
 
 from src.pdf_framework.config import GraphRAGSettings, GraphStoreSettings
 from src.pdf_framework.graph_store.incremental import IncrementalGraphUpdater, UpdateResult
@@ -22,6 +22,7 @@ def graph_store(tmp_path):
     store_settings = GraphStoreSettings(persist_dir=str(tmp_path / "graph"))
     store = NetworkXGraphStore(settings=store_settings)
     import asyncio
+
     asyncio.get_event_loop().run_until_complete(store.initialize())
     return store
 
@@ -36,7 +37,9 @@ def updater(graph_store, settings):
 
 def _entity(id: str, name: str, entity_type: str = "CONCEPT", **kwargs) -> Entity:
     return Entity(
-        id=id, name=name, entity_type=entity_type,
+        id=id,
+        name=name,
+        entity_type=entity_type,
         source_document_id="doc1",
         source_chunk_ids=kwargs.get("source_chunk_ids", ["c1"]),
         confidence=kwargs.get("confidence", 0.9),
@@ -46,8 +49,11 @@ def _entity(id: str, name: str, entity_type: str = "CONCEPT", **kwargs) -> Entit
 
 def _relation(id: str, src: str, tgt: str, rel_type: str = "RELATED") -> Relation:
     return Relation(
-        id=id, source_entity_id=src, target_entity_id=tgt,
-        relation_type=rel_type, source_chunk_id="c1",
+        id=id,
+        source_entity_id=src,
+        target_entity_id=tgt,
+        relation_type=rel_type,
+        source_chunk_id="c1",
     )
 
 

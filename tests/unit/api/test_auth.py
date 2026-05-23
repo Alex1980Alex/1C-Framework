@@ -6,8 +6,8 @@ Tests:
 - F2.10.4: Test rate limiter (token bucket)
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -129,11 +129,13 @@ class TestRBAC:
         """F2.10.3: Should support custom roles."""
         from src.api.auth.rbac import RBAC
 
-        rbac = RBAC(roles={
-            "custom_role": {
-                "permissions": ["read:analytics", "write:notes"],
+        rbac = RBAC(
+            roles={
+                "custom_role": {
+                    "permissions": ["read:analytics", "write:notes"],
+                }
             }
-        })
+        )
 
         assert rbac.check_permission("custom_role", "analytics", "read") is True
         assert rbac.check_permission("custom_role", "documents", "write") is False
@@ -145,12 +147,15 @@ class TestRBAC:
         rbac = RBAC()
 
         # Owner can access their own resources
-        assert rbac.check_permission(
-            "user123",
-            "documents",
-            "write",
-            resource_owner_id="user123",
-        ) is True
+        assert (
+            rbac.check_permission(
+                "user123",
+                "documents",
+                "write",
+                resource_owner_id="user123",
+            )
+            is True
+        )
 
     def test_rbac_non_owner_denied(self):
         """F2.10.3: Non-owner should be denied."""
@@ -158,12 +163,15 @@ class TestRBAC:
 
         rbac = RBAC()
 
-        assert rbac.check_permission(
-            "user123",
-            "documents",
-            "write",
-            resource_owner_id="user456",
-        ) is False
+        assert (
+            rbac.check_permission(
+                "user123",
+                "documents",
+                "write",
+                resource_owner_id="user456",
+            )
+            is False
+        )
 
 
 @pytest.mark.unit
@@ -202,8 +210,9 @@ class TestRateLimiter:
 
     def test_rate_limiter_refill_over_time(self):
         """F2.10.4: Tokens should refill over time."""
-        from src.api.middleware.rate_limit import RateLimiter
         from unittest.mock import patch
+
+        from src.api.middleware.rate_limit import RateLimiter
 
         limiter = RateLimiter(rate=10, per=60)  # 10 per minute
 

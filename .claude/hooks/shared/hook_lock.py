@@ -16,7 +16,6 @@ import os
 import time
 from contextlib import contextmanager
 from datetime import datetime
-from pathlib import Path
 
 from shared.core_paths import get_cache_dir
 
@@ -33,7 +32,7 @@ def _read_lock() -> dict:
     if not LOCK_FILE.exists():
         return {}
     try:
-        with open(LOCK_FILE, "r", encoding="utf-8") as f:
+        with open(LOCK_FILE, encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
         return {}
@@ -71,11 +70,13 @@ def acquire_lock(hook_name: str, timeout: float = 10.0) -> bool:
 
         # Lock free or stale
         if not lock_data.get("holder") or _is_stale(lock_data):
-            _write_lock({
-                "holder": hook_name,
-                "acquired_at": datetime.now().isoformat(),
-                "pid": os.getpid(),
-            })
+            _write_lock(
+                {
+                    "holder": hook_name,
+                    "acquired_at": datetime.now().isoformat(),
+                    "pid": os.getpid(),
+                }
+            )
             return True
 
         # Already held by us

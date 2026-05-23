@@ -4,6 +4,7 @@
 Reads the latest benchmark JSONL file and compares success rate
 against a configurable threshold. Exits with code 1 on regression.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -95,10 +96,12 @@ def check(run_dir: Path, threshold: float) -> int:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Check benchmark regression")
-    ap.add_argument("--data-dir", type=Path, default=None,
-                    help="Directory with benchmark JSONL files")
-    ap.add_argument("--threshold", type=float, default=0.70,
-                    help="Minimum success rate (default: 0.70)")
+    ap.add_argument(
+        "--data-dir", type=Path, default=None, help="Directory with benchmark JSONL files"
+    )
+    ap.add_argument(
+        "--threshold", type=float, default=0.70, help="Minimum success rate (default: 0.70)"
+    )
     args = ap.parse_args()
 
     data_dir = args.data_dir or REPO_ROOT / "data"

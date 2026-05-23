@@ -70,9 +70,7 @@ def search_qdrant_semantic(
         return []
 
 
-def search_skills_semantic(
-    query: str, limit: int = 3, total_timeout: float = 0.5
-) -> list[dict]:
+def search_skills_semantic(query: str, limit: int = 3, total_timeout: float = 0.5) -> list[dict]:
     """High-level: embed query + search skill_library collection.
 
     Returns list of {skill_name, score, description, matched_by: "semantic"}.
@@ -85,9 +83,7 @@ def search_skills_semantic(
         if not embed:
             return []
 
-        results = search_qdrant_semantic(
-            "skill_library", embed, limit, timeout=total_timeout * 0.4
-        )
+        results = search_qdrant_semantic("skill_library", embed, limit, timeout=total_timeout * 0.4)
 
         formatted = []
         for result in results:

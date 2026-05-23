@@ -40,7 +40,7 @@ def extract_sections_from_chunks(chunks: list[dict[str, Any]]) -> list[tuple[str
     return result
 
 
-def extract_sections_from_search_results(results: list) -> list[tuple[str, str]]:
+def extract_sections_from_search_results(results: list[object]) -> list[tuple[str, str]]:
     """Extract sections from SearchResult objects (with .chunk attribute)."""
     chunks = []
     for r in results:

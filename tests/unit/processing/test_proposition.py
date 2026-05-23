@@ -1,6 +1,6 @@
 """Unit tests for Proposition Splitter (Phase 58)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -369,9 +369,7 @@ class TestPropositionCostTracking:
 
     def test_split_text_tracks_llm_usage(self, proposition_splitter, mock_llm):
         """Should track LLM usage for cost estimation."""
-        mock_llm.invoke.return_value = MagicMock(
-            content="1. Proposition one\n2. Proposition two"
-        )
+        mock_llm.invoke.return_value = MagicMock(content="1. Proposition one\n2. Proposition two")
 
         proposition_splitter.split_text("Test content")
 
@@ -380,9 +378,7 @@ class TestPropositionCostTracking:
 
     def test_min_propositions_threshold(self, mock_llm):
         """Should only retry if below min_propositions threshold."""
-        mock_llm.invoke.return_value = MagicMock(
-            content="1. Single proposition"
-        )
+        mock_llm.invoke.return_value = MagicMock(content="1. Single proposition")
 
         # With min_propositions=2, should retry
         splitter = PropositionSplitter(llm=mock_llm, min_propositions=2)
