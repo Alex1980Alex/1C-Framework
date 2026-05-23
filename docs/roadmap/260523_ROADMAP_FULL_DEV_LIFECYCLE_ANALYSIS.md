@@ -1044,6 +1044,42 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 **Aggregate token cost:** ~7800 — exceeds 5K target. Mitigation: rank by relevance, inject top-K с threshold.
 
+### 14.5 Recommended integrated pipeline
+
+```
+USER PROMPT arrives
+  │
+  ▼
+[UPS hooks IN PARALLEL — budget 8s]
+  ├─ memory-first-hook.py   (HAVE)   4-layer recall    3s
+  ├─ prework-architecture.py (NEW A) fuzzy + ADR       0.1s
+  ├─ prework-similar-code.py (NEW A) Qdrant fw_v1      1s
+  ├─ prework-github-bp.py    (NEW B) cache-first       0.5/4s
+  └─ prework-stackoverflow.py (NEW A) WebSearch SO     1s
+  │
+  ▼
+[Aggregator merges — top-K by relevance score]
+  - ≤5K tokens injection
+  - Sources labeled: [MEM] [ARCH] [CODE] [GH] [SO]
+  - Conflict: most recent + highest score wins
+  │
+  ▼
+[Escalation (sequential, complex only)]
+  └─ Complex prompt (>100w OR multi-file)
+      → spawn architecture-research subagent (background)
+      → results inject NEXT turn
+  │
+  ▼
+Claude видит обогащённый context → начинает работу
+  │
+  ▼
+[PostToolUse:Bash → on error]
+  └─ prework-stackoverflow.py (reactive)
+      → extract error → SO search → inject suggestion
+```
+
+**Hooks added:** 4 new UPS + 1 PostToolUse extension.
+
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
 - При появлении нового failure class
