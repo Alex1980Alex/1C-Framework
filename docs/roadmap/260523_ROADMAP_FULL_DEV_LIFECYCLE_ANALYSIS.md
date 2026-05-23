@@ -128,3 +128,30 @@ Claude вызывает любой tool. PreToolUse hooks по matcher:
 | `Bash` | posttooluse-bash-errors | Parse errors → suggest fixes |
 
 **Stage exit:** State persisted, tasks scheduled, metrics logged.
+
+### Stage 5 — Tool result → Claude continues OR stops
+
+Claude интерпретирует tool result, продолжает работу (loop Stage 3-4) ИЛИ завершает ответ. Если завершает → Stage 6.
+
+### Stage 6 — Stop event (14 hooks, last-mile validation)
+
+Перед exit Claude триггерит Stop. 14 хуков выполняются **последовательно** в порядке:
+
+| Order | Hook | Blocks? | Purpose |
+|---|---|---|---|
+| 1 | `ralph_wiggum_stop.py` | Да | Контроль autonomous loop iteration |
+| 2 | `slash-command-tracker.py` | Нет | Finalize slash-command metrics |
+| 3 | `implement-1c-task-smoke-stop-alert.py` | Нет | Alert if 1C task incomplete |
+| 4 | `post-indexing-analyzer.py` | Нет | Auto-report после indexing run |
+| 5 | `opsx-apply-postvalidate.py` | Нет | OpenSpec apply post-validation reminder |
+| 6 | `openspec-task-progress.py` | Нет | Update OpenSpec progress |
+| 7 | `git-commit-enforcer.py` | **Да (exit 2)** | Uncommitted changes? Block stop |
+| 8 | `docs-change-enforcer.py` | **Да (exit 2)** | Code changed без docs? Block (см. §8.3) |
+| 9 | `code-verify-reminder.py` (fallback) | Нет | **Stop fallback** для PostToolUse #6305 — закрыть verify task если transcript содержит `[CODE-VERIFY-PASS]` |
+| 10 | `task-enforcer.py` | **Да (exit 2)** | Mandatory hook tasks pending? Block + hint |
+| 11 | `memory-sync.py` | Нет | Persist session memory → cache |
+| 12 | `session-memory-save.py` | Нет | **Save session → SQLite** + L5 wiki promote |
+| 13 | `auto-git-save.py` | Нет | Final git push if pending |
+| 14 | `delegation-outcome-stop.py` | Нет | Delegation cost summary |
+
+**Blocking gates (если любой exit 2):** Claude получает feedback, retry Stop.
