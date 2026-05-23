@@ -1404,6 +1404,25 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 2. Langfuse purpose-built для LLM-trace mutability (scores added post-ingest) — Grafana Tempo struggles здесь — нет reason swap пока этот fit holds.
 3. Без numeric gates "если LGTM выбрано" остаётся non-decision indefinitely; Charity Majors philosophy "never impose more complexity than absolutely needed" поддерживает conservative approach.
 
+**Migration gate — trigger LGTM swap когда ЛЮБЫЕ 2 of 4 hold для ≥2 consecutive weeks:**
+
+| # | Trigger | Measurement | Threshold |
+|---|---|---|---|
+| 1 | Throughput-bound | Langfuse ingestion p95 latency from SDK | **>2s** |
+| 2 | Storage-bound | ClickHouse data volume OR jsonl audit log | **>100GB raw / >5GB jsonl** |
+| 3 | Cost-bound | Monthly cloud bill OR self-host infra | **>$200/mo sustained** |
+| 4 | Feature-bound | Need distributed tracing (multi-process spans Langfuse can't represent) | binary yes/no |
+
+**Reversibility:**
+- OTLP dual-write — config-flag reversible
+- Roll back LGTM → Langfuse если LGTM cost exceeds Langfuse cloud + 50% within 6 months
+- **3-month dual-write overlap minimum** per Honeycomb migration playbook
+
+**Implementation pointer:**
+- OTel Collector container в docker-compose (alongside Langfuse) — emits OTLP к Langfuse-OTel-exporter
+- Langfuse primary backend, OTel sidecar для future flexibility
+- Migration gate dashboard: monthly check 4 triggers
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
