@@ -1323,6 +1323,39 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 - [ ] Effort estimates summable в top-level total
 - [ ] Each "Missing" gap имеет prerequisite chain документирован
 
+---
+
+## §17 Final Architectural Decisions (3 ADRs, accepted 2026-05-23)
+
+После §16 critical analysis + deep research (cached в `architecture-research/cache/roadmap-260523-3-decisions-2026.md` + `tech-research/cache/rag-token-budget-adaptive-injection-2026.md`) принимаются 3 финальных решения. Каждое: tradeoff matrix + final + reversibility.
+
+### 17.0 Critical research finding
+
+**Claude Code hooks ALREADY run in parallel by default** ([issue #21533](https://github.com/anthropics/claude-code/issues/21533), [#4446](https://github.com/anthropics/claude-code/issues/4446), [hooks docs](https://code.claude.com/docs/en/hooks-guide)). UserPromptSubmit timeout = hard 30s; Claude waits for ALL parallel hooks before processing.
+
+**Implication для §4.1 + §14.4:** "sequential chain" claim из §4.1 — **неточная** (или относится только к event ordering, не to multiple hooks within one event matcher). §14.4 latency math (parallel ≈6.5s) — **actually correct platform-wise**, но per-hook isolation отсутствует.
+
+### 17.1 ADR-D1: UPS hook parallelism
+
+**Decision:** **Option A — Single dispatcher hook with `asyncio.gather`** wrapping subprocess fan-out для 4 prework checks.
+
+**Tradeoff matrix:**
+
+| Option | Effectiveness | Maintainability | Longevity | Risk |
+|---|---|---|---|---|
+| A. Single dispatcher (asyncio.gather + subprocess) | High (~2.5s vs 9.1s sequential) | Low (1 file owns concurrency) | High (survives platform changes) | Med (single failure point, но per-child timeout possible) |
+| B. Sequential chain в settings.json | Low (same 12s) | High | Low (fights platform default) | High long-term |
+| C. 5 separate hooks, native Claude Code parallel | Wall-time good, но... | High | High | **Critical — no per-hook timeout isolation, 5× cold-import tax, non-deterministic ordering** |
+
+**Rationale (3 sentences):**
+1. Native parallel (C) lacks per-worker isolation и forces 5× module re-import overhead — Lefthook (+300% vs pre-commit) + fan-out/fan-in (10× speedup) precedent confirms dispatcher recovers latency.
+2. `asyncio.gather` empirically faster than ThreadPoolExecutor для HTTP fan-out (28ms vs 45ms benchmark via SuperFastPython).
+3. Dispatcher сохраняет 5 prework hooks как isolated, testable CLI-callable Python modules, централизуя parallelism + timeout + result-merging в одном auditable файле.
+
+**Reversibility:**
+- Switch к native parallel (Option C) ТОЛЬКО когда Claude Code ships per-hook `timeout` setting AND shared-interpreter pool
+- Single-call abort: если dispatcher p95 >5s warm → profile cold-imports + pre-warm через SessionStart
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
