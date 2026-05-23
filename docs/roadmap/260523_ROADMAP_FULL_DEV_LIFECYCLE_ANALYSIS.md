@@ -416,3 +416,20 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 **5 providers:** Z.AI GLM-5 (primary), Gemini, OpenRouter, Ollama, Anthropic (fallback).
 
 **Guard:** `z-ai-write-guard.py` blocks >15 lines code если no `llm_delegation` в session.
+
+---
+
+## §8 Git/PR Automation
+
+### 8.1 Auto-git-save 3-layer redundancy
+
+| Layer | Hook | Event | Role |
+|---|---|---|---|
+| 1 | `auto-git-save.py` | PostToolUse Write\|Edit\|Bash | Threshold sync commit |
+| 2 | `posttooluse-auto-git-save.py` | PostToolUse | Debounced 5s fallback |
+| 3 | `auto-git-save-prompt.py` | UserPromptSubmit | #6305 workaround |
+| 4 | `auto-git-save.py` | Stop | Final push |
+
+**Threshold:** default 1, `CLAUDE_COMMIT_THRESHOLD` env.
+**Pause:** `.claude/cache/auto-git-save.paused` (TTL "30m"/"forever").
+**Settings guard:** blocks if `.claude/settings.json` shrinks >30 lines.
