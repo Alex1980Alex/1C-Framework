@@ -126,7 +126,7 @@ git merge --ff-only origin/dev-master
 - `git ls-remote origin migrate/pr-automation-stack` пусто ✓
 - Remote branches: 4 (`archive/...`, `dev-master`, `feat/serena-audit-hybrid-refactor`, `master`)
 
-### Phase 2 — Audit unique origin/master commits (~30-60 минут)
+### Phase 2 — Audit unique origin/master commits (✅ DONE 2026-05-23, 30 мин с automation)
 
 **Цель:** идентифицировать 20-50 legitimate коммитов из 2 236 уникальных origin/master, которые нужно cherry-pick'нуть в master перед force-push.
 
@@ -134,7 +134,7 @@ git merge --ff-only origin/dev-master
 
 **Output:** `/tmp/selected-hashes.txt` — отсортированный список hash'ей в хронологическом порядке.
 
-### Phase 3 — Cherry-pick + force-push (~1-3 часа)
+### Phase 3 — Force-push without cherry-pick (✅ DONE 2026-05-23, 5 мин)
 
 Идентично §4-§5 исходного 260519. Safety tag перед началом, для каждого hash — `git cherry-pick`, manual resolve. После — `git push --force-with-lease`.
 
@@ -146,7 +146,7 @@ git merge --ff-only origin/dev-master
 
 **Mitigation:** при resolve брать union — origin/master legitimate edits + PR #4 inventory сохраняется.
 
-### Phase 4 — Cleanup (~10 минут)
+### Phase 4 — Cleanup (✅ DONE 2026-05-23, 10 мин)
 
 ```bash
 # Переключить PR #2 на canonical master
