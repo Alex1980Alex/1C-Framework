@@ -450,6 +450,18 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 
 **Marker contract:** subagent ends with `[CODE-VERIFY-PASS]` / `[CODE-VERIFY-FAIL]`.
 
+### 6.4 Tech stack для Skills system
+
+- **skill-router 4-layer matching:**
+  - Layer A (Phrase): pure Python dict lookups + weighted keyword scoring
+  - Layer B (Fuzzy): `rapidfuzz>=3.14` (Rust-backed C extension, 100x faster чем Python-only `fuzzywuzzy`); 78% threshold
+  - Layer C (TF-IDF): `scikit-learn` sklearn.feature_extraction.text precomputed `route-tfidf/*.pkl` arrays
+  - Layer D (Semantic fallback): `qdrant-client>=1.12` query на `skill_library` collection (TEI Qwen3 embeddings)
+- **Config files:** `skill-router-config.json` v9 (98 skills, 50+ bundles, 4500+ keywords), `code-skill-patterns.json` (regex patterns → skill mappings)
+- **Task Protocol state:** `~/.claude/cache/session-skills.json` (per-session phase) — atomic JSON writes
+- **Code-verify subagent dispatch:** Claude Code `Task` tool с `subagent_type="general-purpose"` (built-in) — отдельный Anthropic API call
+- **Marker regex:** simple `rfind("[CODE-VERIFY-PASS]")` vs `rfind("[CODE-VERIFY-FAIL]")` — last-occurrence wins для Ralph Wiggum iteration tracking
+
 ---
 
 ## §7 Memory + Delegation
