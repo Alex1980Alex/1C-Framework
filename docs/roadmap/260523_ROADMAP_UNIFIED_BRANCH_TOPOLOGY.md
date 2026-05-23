@@ -136,15 +136,26 @@ git merge --ff-only origin/dev-master
 
 ### Phase 3 — Force-push without cherry-pick (✅ DONE 2026-05-23, 5 мин)
 
-Идентично §4-§5 исходного 260519. Safety tag перед началом, для каждого hash — `git cherry-pick`, manual resolve. После — `git push --force-with-lease`.
+**Audit finding overturned original plan.** Phase 2 показала: 1983 noise + 153 subject-DUP + 74 subject-UNIQUE; sample 4/4 UNIQUE-by-subject = content-DUP (все features re-implemented на local master с другими commit messages). Cherry-pick value = 0.
 
-**Hidden risk (new, не было в 260519):** Phase 1 fast-forward'нул local master на origin/dev-master (с PR #4 внутри). Cherry-pick'и из origin/master применяются поверх PR-automation стека, **возможны конфликты** в:
-- `.claude/hooks/shared/` (PR #4 добавил pr_helpers, pr_notifier)
-- `.claude/settings.json` (surgical patch на PostToolUse + AUTO_PR_* env)
-- `.pre-commit-config.yaml` (excludes до 14 patterns + удалил mypy)
-- `pyproject.toml` (pytest importmode + per-file-ignores)
+**Execution (без cherry-pick):**
+```bash
+# Safety tag дополнительно к existing archive
+git tag pre-master-force-push-2026-05-23 origin/master
+git push origin pre-master-force-push-2026-05-23
 
-**Mitigation:** при resolve брать union — origin/master legitimate edits + PR #4 inventory сохраняется.
+# Force-push с lease (защита от race condition)
+git push --force-with-lease=master:ae3a59534311ade93c07ba15283e280db53799c0 origin master:master
+# → "+ ae3a59534...25ab2de39 master -> master (forced update)"
+```
+
+**Verification (post-push):**
+- `origin/master` = `25ab2de39` ✓
+- `origin/archive/master-pre-reconciliation-2026-05-19` = `ae3a59534` ✓ (legacy preserved)
+- tag `origin-master-archive-2026-05-19` = `ae3a59534` ✓
+- tag `pre-master-force-push-2026-05-23` = `ae3a59534` ✓ (extra safety)
+
+**3 archive ref'а сохраняют legacy** — любой может восстановить origin/master до Phase 3.
 
 ### Phase 4 — Cleanup (✅ DONE 2026-05-23, 10 мин)
 
