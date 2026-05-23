@@ -566,6 +566,42 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 
 **Guard:** `z-ai-write-guard.py` blocks >15 lines code если no `llm_delegation` в session.
 
+### 7.4 Best practices from GitHub — Memory + RAG + Delegation
+
+**Memory layer (§7.1):**
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | Hierarchical 3-tier memory (RAM/recall/archival, self-paging) | letta.com/blog/agent-memory + Letta arxiv | Partial | Tiered есть, БЕЗ self-paging API. Add `memory.promote(layer→)` |
+| 2 | Temporal facts with validity (Graphiti/Zep `valid_from/valid_to`, +18.5% acc / -90% latency) | arxiv.org/html/2501.13956v1 (Zep) | Missing | learned_patterns без temporal supersession — schema migration `valid_from/valid_to` |
+| 3 | Hybrid retrieval per layer (semantic + BM25 + graph, no LLM at query) | arxiv 2501.13956 (Zep) | Partial | Federated есть, BM25/graph для memory — gap |
+| 4 | RRF (Cormack 2009 SIGIR) — `score = Σ 1/(60+rank_i)`, score-normalisation-free | opensearch.org/blog/introducing-reciprocal-rank-fusion | Missing | memory_orchestrator.federated_search использует weighted-merge → заменить на RRF k=60 |
+| 5 | Importance + dynamic forgetting (Mem0 `forget_score = age × access⁻¹ × importance⁻¹`) | atlan.com/know/agent-memory-architectures + Mem0 arxiv 2504.19413 | Have | confidence_decay есть, importance boost — missing |
+| 6 | Embedding cache (RedisVL EmbeddingsCache 60% latency reduction) | docs.redisvl.com/en/latest/user_guide/10_embeddings_cache | Partial | Exact-hash есть, semantic cache (similar-query reuse) — gap |
+| 7 | Selective recall per-query-type (Mem0 LOCOMO 91% latency / 90% cost win) | mem0.ai/blog/state-of-ai-agent-memory-2026 | Missing | Always queries all S1-S4 — нужен classifier query-type → routing |
+| 8 | Pattern promotion gateway L2→L5 | внутренний (wiki_promoter.py) | Have | Pipeline активен 2026-05-14 |
+| 9 | Resumable session memory (AutoGen `resume()`, message-list serialise) | microsoft.github.io/autogen | Have | session-memory-save.py + SQLite |
+| 10 | MCP-exposed memory (Mem0 + Claude Code MCP) | marktechpost.com 2026 | Have | memory-orchestrator MCP server |
+| 11 | Russian lemma normalisation (pymorphy2/snowball pre-embed; GigaEmbeddings) | github.com/PasaOpasen/Stem-Lem-Pipeline + arxiv 2510.22369 | Have для BSL, Missing для memory layer |
+| 12 | ConversationSummaryBufferMemory hybrid (recent verbatim + older summarised) | reference.langchain.com summary_buffer | Pattern | S2 working memory может adopt |
+
+**Multi-provider LLM routing (§7.2):**
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 13 | Error-type-aware fallback chain (LiteLLM `default/context_window/content_policy`) | docs.litellm.ai/docs/proxy/reliability | Partial | llm_rotation имеет 5 providers, fallback flat round-robin |
+| 14 | Weighted failover within model_group (`enable_weighted_failover`) | docs.litellm.ai/docs/routing | Missing | Конфиг плоский |
+| 15 | Circuit breaker per provider (3 states: Closed/Open/Half-open) | markaicode.com/circuit-breaker-resilient-ai-systems | Missing | fail → permanent until `llm_reset_provider`; PyBreaker patch |
+| 16 | Exponential backoff + jitter (Tenacity) | machinelearningplus.com/gen-ai/resilient-llm-client | Have | skill tenacity-retry |
+| 17 | Cost-based routing (cheapest meeting quality threshold) | docs.litellm.ai/docs/routing | Missing | Нет cost-awareness в decision |
+| 18 | Latency-based routing (track p95 per deployment) | docs.litellm.ai/docs/routing | Missing | |
+| 19 | Contextual bandit (LinUCB multi-objective performance × cost) | arxiv 2510.07429 (Learning to Route LLMs from Bandit Feedback) | Have для delegation, Missing для llm-rotation |
+| 20 | Budget-constrained bandit (PILOT — offline preferences + online bandit) | arxiv 2508.21141 | Foundation готов (Langfuse spans `delegation.routing.decision`) |
+| 21 | Redis-backed shared state HA (multi-instance cooldowns) | docs.litellm.ai/docs/proxy/configs | Missing | Single-instance now |
+| 22 | Streaming + provider routing (buffer first-token before yield → safe fallback) | deepwiki.com/BerriAI/litellm/2.3-router | Partial | Streaming Anthropic есть; fallback бросает stream |
+| 23 | Health check probes (periodic cheap completion) | fast.io/resources/ai-agent-retry-patterns | Missing | |
+| 24 | Per-provider observability dashboard (`log_success_fallback_event`) | deepwiki.com/BerriAI/litellm/7-reliability | Partial | Langfuse generic, per-provider — нет |
+
 ### 7.3 Tech stack для Memory + Delegation
 
 **Memory backends:**
