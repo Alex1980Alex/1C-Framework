@@ -1209,3 +1209,26 @@ graceful degradation на failure. Escalation для complex через subagent
 ### 15.5 Critical urgency
 
 **Crypto-shredding в первой итерации.** Immutability работает против нас — каждый день задержки = new plaintext events которые нельзя ретроактивно зашифровать.
+
+### 15.6 Implementation phases (P0-P3, 6-10 days total)
+
+| Phase | Items | Effort |
+|---|---|---|
+| **P0 — Foundation (1-2 days)** | (1) CloudEvents wrapping в `invocation_logger.py` (causation_id, correlation_id) <br>(2) W3C traceparent injection <br>(3) DuckDB `scripts/audit_query.py` (zero-migration SQL) <br>(4) Crypto-shredding per-session-key | 12-16h |
+| **P1 — Cold tier + replay (2-3 days)** | (5) Nightly `COPY TO parquet` cron job <br>(6) PyIceberg snapshot append → MinIO <br>(7) `replay-checkpoint.json` checkpoint protocol <br>(8) JSON Schema Draft 2020-12 per event_type | 16-24h |
+| **P2 — Query + analysis tooling (1-2 days)** | (9) DuckDB views (hooks per session, latency p95, error rate) <br>(10) RAGAS replay из Langfuse dataset exports <br>(11) RocksDB-style hard-link snapshots для `.claude/cache/` | 12-16h |
+| **P3 — Long-term observability (2-3 days)** | (12) Vector.dev sidecar (universal fan-out) <br>(13) Grafana Tempo (если LGTM выбрано) <br>(14) Adaptive retention (hot 7d / warm 90d / cold ∞ с crypto-shredded keys) | 16-24h |
+
+### 15.7 Cache artifacts (this analysis)
+
+- `.claude/skills/architecture-research/cache/process-caching-observability-100-percent-2026.md` (sources_count: 12, github_repos_count: 18)
+- `_index.json` updated с topic entry + 62 keywords + cross_ref to roadmap 260523
+
+### 15.8 Closing the loop
+
+После P0-P3 implementation:
+- **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
+- **§9 Failure Modes** debugging → CloudEvents causation traversal
+- **§10 Observability** → unified backend (Iceberg cold tier + optional LGTM hot)
+- **§11 Next Improvements** observability items → marked DONE
+- **§14 Pre-Work Pipeline** RAGAS benchmark → Langfuse dataset export + RAGAS replay
