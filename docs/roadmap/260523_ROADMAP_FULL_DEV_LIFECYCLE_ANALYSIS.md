@@ -291,3 +291,50 @@ Claude интерпретирует tool result, продолжает работ
 | **Skill accuracy correlation** | data/skill-accuracy.jsonl | recommend→activate corr (RAGAS-like) |
 | **Circuit breaker** | shared/circuit_breaker.py | OPEN/CLOSED/HALF_OPEN state per hook |
 | **Auto-reports** | scripts/analyze_run.py + post-indexing-analyzer.py | Deep reports после indexing + graph runs |
+
+---
+
+## §4 Hook Chain Matrix
+
+73 hooks по событиям с timeout и matcher. Полный inventory — см. research данные в session log + skill `multi-level-hook-architecture` SKILL.md (~/.claude/skills/multi-level-hook-architecture/SKILL.md).
+
+| Event | Count | Critical hooks |
+|---|---|---|
+| SessionStart | 5 | ensure-docker-qdrant, submodule-status, session-mypy-banner |
+| UserPromptSubmit | 14 | **memory-first-hook, skill-router, skill-eval-enforcer, auto-git-save-prompt** |
+| UserPromptExpansion | 1 | slash-command-tracker (forward-compat fallback) |
+| PreToolUse | 21 (7 matchers) | task-protocol-enforcer, code-skill-enforcer, root-clutter-guard, mcp-invocation-logger |
+| PostToolUse | 18 (6 matchers) | **post-task-push-pr (TaskUpdate, 1320s timeout!), auto-git-save, code-verify-reminder** |
+| Stop | 14 | **git-commit-enforcer, docs-change-enforcer, task-enforcer, session-memory-save** |
+| **Total** | **73** | — |
+
+**Notable timeouts:**
+- `post-task-push-pr.py` — 1320s (22 минуты, нужен для wait-for-checks в PR-automation)
+- `auto-git-save.py` — 30s
+- Большинство — 3-5s
+
+---
+
+## §5 3-Level Hook Architecture (deep dive)
+
+### 5.1 Зачем 3 уровня
+
+Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth pattern. Each critical concern duplicated на 2-3 уровнях:
+
+| Concern | Level 1 (UPS) | Level 2 (PostToolUse) | Level 3 (Stop) |
+|---|---|---|---|
+| **Auto-commit** | auto-git-save-prompt | auto-git-save + posttooluse-auto-git-save | auto-git-save (Stop entry) |
+| **Skill metrics** | skill-router `_detect_skill_activations` | posttooluse-skill-metrics | — |
+| **Docs update** | — | docs-change-tracker (creates task) | docs-change-enforcer (blocks Stop) |
+| **Task completion** | todo-sync | task-protocol-observer | task-enforcer (blocks Stop) |
+| **Code-verify** | — | code-verify-reminder (PostToolUse:Skill\|Task\|Write\|Edit) | code-verify-reminder (Stop fallback, transcript scan) |
+
+### 5.2 Bug history
+
+| Bug | Impact | Mitigation | Status |
+|---|---|---|---|
+| #6305 PostToolUse не fires (Windows) | auto-commit, code-verify не работают | UPS + Stop fallback patterns | Active, всё mitigated |
+| #10450 Windows stdin empty | Pytest output parse fails | text=True + encoding='utf-8', errors='replace' | Mitigated 2026-05-22 |
+| Cyrillic path encoding | `git status --porcelain` octal escapes (`\320\236`) | `git -c core.quotepath=false` + `line[2:].lstrip()` | Mitigated 2026-02-22 |
+| `line[3:]` baghunting | Loses leading `.` in paths | Switch to `line[2:].lstrip()` | Mitigated 2026-02-20 |
+| Hook regressions from -X theirs merge | Silent NameError + ValueError | Mandatory post-merge importlib sweep | Active (memory `feedback_post_merge_smoke_required`) |
