@@ -10,8 +10,36 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-17",
+  "last_updated": "2026-05-23",
   "topics": {
+    "rag-token-budget-adaptive-injection-2026": {
+      "file": "rag-token-budget-adaptive-injection-2026.md",
+      "domain": "rag",
+      "category": "pattern",
+      "created": "2026-05-23",
+      "last_verified": "2026-05-23",
+      "version": "Claude Opus 4.7 prompt-cache (min 4096) / LangChain ≥0.3 MMR / Adaptive-RAG router",
+      "keywords": [
+        "rag-token-budget",
+        "prompt-caching-4096-tokens",
+        "lost-in-the-middle",
+        "liu-2023-tacl",
+        "mmr",
+        "maximal-marginal-relevance",
+        "adaptive-rag",
+        "query-router",
+        "similarity-threshold",
+        "top-k-retrieval",
+        "context-compression",
+        "cross-encoder-reranker",
+        "bge-reranker-v2-m3",
+        "flashrank",
+        "cohere-rerank",
+        "cache-breakpoints",
+        "roadmap-260523-d2"
+      ],
+      "summary": "Связка adaptive routing + MMR + similarity threshold для удержания injected RAG context в коридоре 4-5K токенов. Окончательное решение D2 из roadmap 260523 §14. Anthropic Opus 4.5+ prompt-cache требует ≥4096 tokens (silent miss иначе); Liu 2023 'Lost in the Middle' показывает деградацию accuracy в середине длинного контекста — sweet spot 4-5K. Production-результат query-adaptive RAG: -35% P50 latency, -28% LLM cost, +8% accuracy для ~40 LoC TF-IDF+SVM router (<1ms inference). MMR (LangChain max_marginal_relevance_search, lambda_mult=0.5, fetch_k=4×k) даёт diversity без latency overhead. Cross-encoder rerank: BGE-v2-m3 50-100ms GPU / FlashRank <20ms CPU. Cache-aware split: stable zone (skill catalog + memory) ≥ volatile zone (RAG payload) — до 4 breakpoints free. Не путать с BSL коллекциями: anisotropy 0.59 → cosine threshold выше (0.65-0.70), MMR полезен на text-heavy (pdf_documents, wiki_pages_v1), не на BSL (там RRF + BM25). Verified 2026-05-23 via 9 sources."
+    },
     "mrl-cyrillic-content-alternatives-2026": {
       "file": "mrl-cyrillic-content-alternatives-2026.md",
       "domain": "tools",
