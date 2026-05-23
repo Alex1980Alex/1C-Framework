@@ -563,6 +563,35 @@ PostToolUse:TaskUpdate, **timeout 1320s** (22 минуты для wait-for-check
 
 Hook/skill file created → mandatory tasks для registration + verification (Step 4 + Step 5 в settings.json + MEMORY.md + triggers test).
 
+### 8.5 Tech stack для Git/PR Automation
+
+**Git operations:**
+- `gh CLI` (GitHub official) — все PR/issue/check ops через `subprocess.run(["gh", ...])`. Auth: `gh auth login` (token в `~/.config/gh/hosts.yml`)
+- `git worktree add` — atomic isolated branch для cherry-pick (P3.2), temp path `.tmp/cp-worktrees/<branch>-<uuid8>`, abort+remove в `finally:` block
+- `git -c core.quotepath=false status --porcelain` — Cyrillic-safe parsing (memory `git-porcelain-parsing` skill, fix 2026-02-22)
+- `git push --force-with-lease=ref:sha` — race-condition-safe force-push
+
+**CI/CD stack:**
+- **GitHub Actions** — `.github/workflows/ci.yml` (lint + typecheck + mypy-baseline + docstrings + pre-commit + test-unit + test-integration + skill-router-eval), `.github/workflows/openspec.yml` (PR validation)
+- **Mergify** template `.mergify.yml` (P3.3 free alternative для merge queue) — НЕ установлен, template only
+- **GitHub merge queue** alternative (P3.3) — `gh pr merge --merge-queue` (free, embedded в GitHub)
+
+**PR-automation env vars:**
+```
+AUTO_PR_ENABLED=0|1                  # Master switch (default 0)
+AUTO_PR_BASE=master                  # Base branch (post-reconciliation 2026-05-23)
+AUTO_PR_MIN_COMMITS=3                # Min scope threshold
+AUTO_PR_TIMEOUT=600                  # Step timeout (10min)
+AUTO_PR_MERGE_ENABLED=1              # Allow merge after checks
+AUTO_PR_MERGE_QUEUE=0|1              # Use merge queue
+AUTO_PR_LABEL_PATTERNS=P0|P1|...     # Trigger regex
+AUTO_PR_DRY_RUN=0|1                  # Dry-run for testing
+AUTO_PR_CHECKS_TIMEOUT=300           # wait-for-checks poll ceiling
+SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD  # pr_notifier.py
+```
+
+**Pre-commit framework v4.6.0** — `.pre-commit-config.yaml` с excludes (vendor: `tools/`, `infra/`, `external/`, `jre/`, `.serena/`, `.vscode-extensions/`, `*.log`, `docs/documentation/`) + ruff 0.15 + gitleaks v8.21.2 + file size check + YAML/JSON/TOML validators
+
 ---
 
 ## §9 Failure Modes + Recovery
