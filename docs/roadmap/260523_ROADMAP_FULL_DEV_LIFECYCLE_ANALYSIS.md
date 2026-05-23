@@ -20,3 +20,24 @@
 ---
 
 ## §1 Scope
+
+**Включено в анализ:**
+- Hook lifecycle: SessionStart → UserPromptSubmit → PreToolUse → tool execution → PostToolUse → Stop
+- Skills system: skill-router 4-layer matching + Task Protocol phase machine + code-verify 3-level/4-mode
+- Memory & Context: P5.2 Federated Recall (4 layers), Qdrant TEI Qwen3-Embedding-8B
+- Delegation: Z.AI/LLM Rotation, LinUCB bandit, TrainedRouter canary, outcome corpus
+- Git/CI: auto-git-save 3-layer redundancy, docs-change-enforcer, factory-enforcer
+- PR automation: post-task-push-pr P0-P3 batch (18 features), cherry-pick worktree, merge-queue
+- Observability: hook-invocations.jsonl, Langfuse spans, RAGAS skill accuracy
+
+**НЕ включено:**
+- 1С-specific pipelines (`/analyze-1c-task`, `/implement-1c-task`, VA BDD tests) — отдельный документ
+- BSL indexing, semantic search backend, embeddings details — chapter 31 Qwen3
+- OpenSpec workflow — chapter 24
+- Sandbox execution — Ф5 hermes-llm-wiki
+
+---
+
+## §2 Full Lifecycle Map (Stage-by-Stage)
+
+Каждая стадия от user prompt до cleanup. На каждой стадии: trigger, что происходит, какие хуки/паттерны срабатывают, какие state-файлы touched.
