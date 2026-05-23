@@ -1116,7 +1116,7 @@ graceful degradation на failure. Escalation для complex через subagent
 + 100% pre-work coverage automatically
 + Reduced cognitive load (context inline)
 + Reduced cycle time (no manual triggers)
-- 4 new hooks к maintain (73 → 77)
+- 4 new hooks к maintain (59 .py → 63; registrations 66 → 70)
 - ~5K tokens overhead per prompt (mitigated via ranking)
 - UPS latency +3-5s worst case (parallel mitigation)
 
