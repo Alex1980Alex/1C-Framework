@@ -97,11 +97,7 @@ class SurpriseTool:
         token_novelty = len(novel_tokens) / max(len(content_tokens), 1)
 
         # Combined surprise score (weighted)
-        surprise = (
-            0.4 * score_surprise
-            + 0.3 * avg_surprise
-            + 0.3 * token_novelty
-        )
+        surprise = 0.4 * score_surprise + 0.3 * avg_surprise + 0.3 * token_novelty
         surprise = round(min(max(surprise, 0.0), 1.0), 4)
 
         # Classify novelty level
@@ -155,11 +151,13 @@ class SurpriseTool:
         scored_items = []
         for i, content in enumerate(items):
             result = await self.score(content, context=context)
-            scored_items.append({
-                "index": i,
-                "content_preview": content[:80],
-                **result,
-            })
+            scored_items.append(
+                {
+                    "index": i,
+                    "content_preview": content[:80],
+                    **result,
+                }
+            )
 
         scored_items.sort(key=lambda x: x["surprise_score"], reverse=True)
 

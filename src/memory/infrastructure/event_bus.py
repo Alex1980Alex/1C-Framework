@@ -135,7 +135,9 @@ class EventBus:
 
     # -- Pub/Sub API ---------------------------------------------------------
 
-    async def publish(self, event_type: str, data: dict[str, Any], source: str | None = None) -> str:
+    async def publish(
+        self, event_type: str, data: dict[str, Any], source: str | None = None
+    ) -> str:
         """Publish an event to all matching subscribers.
 
         Args:

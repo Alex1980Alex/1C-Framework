@@ -43,6 +43,8 @@ class CentralityResult:
     node_id: str
     score: float
     rank: int
+
+
 @dataclass
 class PageRankResult:
     """PageRank result for a node."""
@@ -50,6 +52,8 @@ class PageRankResult:
     node_id: str
     score: float
     iterations: int
+
+
 @dataclass
 class CommunityResult:
     """Community detection result."""
@@ -57,6 +61,8 @@ class CommunityResult:
     community_id: int
     members: list[str]
     modularity: float
+
+
 class GraphAlgorithms:
     """
     Graph algorithms operating on RelationRegistry.
@@ -68,6 +74,7 @@ class GraphAlgorithms:
     - Connected components
     - Community detection (label propagation)
     """
+
     def __init__(self, registry: RelationRegistry | None = None):
         self._registry = registry or RelationRegistry()
         self._adj: dict[str, dict[str, float]] = {}  # source -> {target: weight}
@@ -89,9 +96,11 @@ class GraphAlgorithms:
             # For bidirectional, also add reverse
             if relation.direction.value in ("bidirectional", "incoming"):
                 self._adj.setdefault(target, {})[source] = weight
+
     def get_neighbors(self, node_id: str) -> dict[str, float]:
         """Get neighbors with edge weights."""
         return dict(self._adj.get(node_id, {}))
+
     def shortest_path(
         self,
         source: str,
@@ -102,7 +111,9 @@ class GraphAlgorithms:
         if source not in self._nodes or target not in self._nodes:
             return None
         if source == target:
-            return PathResult(source=source, target=target, path=[source], total_weight=0.0, hop_count=0)
+            return PathResult(
+                source=source, target=target, path=[source], total_weight=0.0, hop_count=0
+            )
 
         # Dijkstra
         distances: dict[str, float] = {source: 0.0}
@@ -144,6 +155,7 @@ class GraphAlgorithms:
                     heapq.heappush(pq, (new_dist, neighbor))
 
         return None
+
     def pagerank(
         self,
         damping: float = 0.85,
@@ -183,12 +195,14 @@ class GraphAlgorithms:
                 break
 
         return rank
+
     def degree_centrality(self) -> dict[str, int]:
         """Compute degree centrality (number of connections) for each node."""
         centrality: dict[str, int] = defaultdict(int)
         for node in self._nodes:
             centrality[node] = len(self.get_neighbors(node))
         return dict(centrality)
+
     def connected_components(self) -> list[set[str]]:
         """Find connected components using BFS."""
         visited: set[str] = set()
@@ -262,6 +276,7 @@ class GraphAlgorithms:
             for label, members in communities.items()
             if len(members) > 1
         ]
+
     def get_stats(self) -> dict[str, Any]:
         """Return graph statistics."""
         nodes = self._nodes
@@ -278,6 +293,8 @@ class GraphAlgorithms:
             "top_central_nodes": [(node, deg) for node, deg in top_central],
             "density": round(edges / (len(nodes) * (len(nodes) - 1)), 4) if len(nodes) > 1 else 0.0,
         }
+
+
 __all__ = [
     "CentralityResult",
     "CommunityResult",

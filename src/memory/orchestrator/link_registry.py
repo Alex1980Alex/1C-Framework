@@ -249,7 +249,9 @@ class LinkRegistry:
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_link ON link_history(link_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_history_action ON link_history(action)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_links_created ON entity_links(created_at)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_links_created ON entity_links(created_at)"
+            )
 
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS link_stats (

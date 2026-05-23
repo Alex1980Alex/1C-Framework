@@ -49,9 +49,7 @@ class RenameDriver:
         the verifier's error-count check is the safety net in that case.
         """
         if not self._backend.can_handle(uri):
-            raise BackendError(
-                f"backend cannot handle uri: {uri}", code="unsupported_uri"
-            )
+            raise BackendError(f"backend cannot handle uri: {uri}", code="unsupported_uri")
 
         edit = self._backend.plan_rename(uri, line, character, new_name)
         token = self._compute_token(edit)
@@ -89,9 +87,7 @@ class RenameDriver:
     @staticmethod
     def _compute_token(edit: WorkspaceEdit) -> str:
         """SHA-256 of canonical JSON of the edit; stable across dict insertion order."""
-        canonical = json.dumps(
-            _edit_to_dict(edit), sort_keys=True, ensure_ascii=False
-        )
+        canonical = json.dumps(_edit_to_dict(edit), sort_keys=True, ensure_ascii=False)
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     @staticmethod

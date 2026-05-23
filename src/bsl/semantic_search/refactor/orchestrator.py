@@ -83,7 +83,10 @@ class RefactorOrchestrator:
 
         try:
             result = self._rename_inner(
-                uri, line, character, new_name,
+                uri,
+                line,
+                character,
+                new_name,
                 dry_run=dry_run,
                 confirm_token=confirm_token,
                 content=content,
@@ -148,9 +151,7 @@ class RefactorOrchestrator:
             if fallback_backend is not None:
                 try:
                     if fallback_backend.can_handle(uri):
-                        fallback_edit = fallback_backend.plan_rename(
-                            uri, line, character, new_name
-                        )
+                        fallback_edit = fallback_backend.plan_rename(uri, line, character, new_name)
                         if fallback_edit.file_edits:
                             edit = fallback_edit
                             backend_used = fallback_name
@@ -168,7 +169,10 @@ class RefactorOrchestrator:
                     confidence=decision.confidence,
                     reason="manual_required",
                     manual_instruction=self._build_manual_instruction(
-                        uri, kind, new_name, decision,
+                        uri,
+                        kind,
+                        new_name,
+                        decision,
                     ),
                 )
             raise BackendError(

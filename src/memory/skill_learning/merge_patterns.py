@@ -16,7 +16,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -40,19 +40,19 @@ class PatternRecord:
     content: str = ""
     description: str = ""
     confidence: float = 0.7
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     application_count: int = 0
     created_at: str = ""
     updated_at: str = ""
     version: int = 1
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def normalized_content(self) -> str:
         """Lowercase, whitespace-normalized content for comparison."""
         return " ".join(self.content.lower().split())
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pattern_id": self.pattern_id,
             "pattern_type": self.pattern_type,
@@ -69,7 +69,7 @@ class PatternRecord:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PatternRecord":
+    def from_dict(cls, data: dict[str, Any]) -> "PatternRecord":
         return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
 
 
@@ -81,10 +81,10 @@ class MergeResult:
     patterns_merged: int
     patterns_kept: int
     space_saved_bytes: int = 0
-    merged_ids: List[str] = field(default_factory=list)
-    details: List[Dict[str, Any]] = field(default_factory=list)
+    merged_ids: list[str] = field(default_factory=list)
+    details: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "duplicates_found": self.duplicates_found,
             "patterns_merged": self.patterns_merged,
@@ -132,12 +132,10 @@ class PatternMerger:
         patterns = await self._load_patterns()
 
         if not patterns:
-            return MergeResult(
-                duplicates_found=0, patterns_merged=0, patterns_kept=len(patterns)
-            )
+            return MergeResult(duplicates_found=0, patterns_merged=0, patterns_kept=len(patterns))
 
         # Group by normalized content
-        groups: Dict[str, List[PatternRecord]] = {}
+        groups: dict[str, list[PatternRecord]] = {}
         for p in patterns:
             key = p.normalized_content
             if key not in groups:
@@ -145,7 +143,7 @@ class PatternMerger:
             groups[key].append(p)
 
         # Also check name-based duplicates
-        by_name: Dict[str, List[PatternRecord]] = {}
+        by_name: dict[str, list[PatternRecord]] = {}
         for p in patterns:
             name_key = p.name.lower().strip()
             if name_key:
@@ -156,9 +154,9 @@ class PatternMerger:
         # Merge groups
         duplicates_found = 0
         patterns_merged = 0
-        merged_ids: List[str] = []
-        details: List[Dict[str, Any]] = []
-        final_patterns: Dict[str, PatternRecord] = {}
+        merged_ids: list[str] = []
+        details: list[dict[str, Any]] = []
+        final_patterns: dict[str, PatternRecord] = {}
 
         for key, group in groups.items():
             if len(group) == 1:
@@ -171,16 +169,18 @@ class PatternMerger:
 
             final_patterns[merged.pattern_id] = merged
             patterns_merged += len(group) - 1
-            merged_ids.extend(
-                p.pattern_id for p in group if p.pattern_id != merged.pattern_id
-            )
+            merged_ids.extend(p.pattern_id for p in group if p.pattern_id != merged.pattern_id)
 
-            details.append({
-                "winner_id": merged.pattern_id,
-                "merged_count": len(group) - 1,
-                "merged_ids": [p.pattern_id for p in group if p.pattern_id != merged.pattern_id],
-                "confidence": merged.confidence,
-            })
+            details.append(
+                {
+                    "winner_id": merged.pattern_id,
+                    "merged_count": len(group) - 1,
+                    "merged_ids": [
+                        p.pattern_id for p in group if p.pattern_id != merged.pattern_id
+                    ],
+                    "confidence": merged.confidence,
+                }
+            )
 
         # Write if not dry run
         if not dry_run and patterns_merged > 0:
@@ -199,10 +199,10 @@ class PatternMerger:
             details=details,
         )
 
-    async def find_duplicates(self) -> List[List[PatternRecord]]:
+    async def find_duplicates(self) -> list[list[PatternRecord]]:
         """Find groups of duplicate patterns without merging."""
         patterns = await self._load_patterns()
-        groups: Dict[str, List[PatternRecord]] = {}
+        groups: dict[str, list[PatternRecord]] = {}
         for p in patterns:
             key = p.normalized_content
             if key not in groups:
@@ -211,9 +211,7 @@ class PatternMerger:
 
         return [g for g in groups.values() if len(g) > 1]
 
-    def _resolve_conflict(
-        self, group: List[PatternRecord], strategy: str
-    ) -> PatternRecord:
+    def _resolve_conflict(self, group: list[PatternRecord], strategy: str) -> PatternRecord:
         """Select the winning record from a duplicate group."""
         if strategy == ConflictStrategy.KEEP_HIGHER_CONFIDENCE:
             return max(group, key=lambda p: p.confidence)
@@ -224,11 +222,9 @@ class PatternMerger:
         else:  # MERGE_ALL — use highest confidence as base
             return max(group, key=lambda p: p.confidence)
 
-    def _merge_records(
-        self, group: List[PatternRecord], winner: PatternRecord
-    ) -> PatternRecord:
+    def _merge_records(self, group: list[PatternRecord], winner: PatternRecord) -> PatternRecord:
         """Merge metadata from all records into the winner."""
-        merged_tags: Set[str] = set(winner.tags)
+        merged_tags: set[str] = set(winner.tags)
         total_applications = winner.application_count
         max_version = winner.version
 
@@ -248,12 +244,12 @@ class PatternMerger:
 
     # ----- IO -----
 
-    async def _load_patterns(self) -> List[PatternRecord]:
+    async def _load_patterns(self) -> list[PatternRecord]:
         """Load all patterns from JSONL file."""
         if not self.patterns_file.exists():
             return []
 
-        patterns: List[PatternRecord] = []
+        patterns: list[PatternRecord] = []
 
         def _load():
             with open(self.patterns_file, encoding="utf-8") as f:
@@ -269,7 +265,7 @@ class PatternMerger:
         await asyncio.to_thread(_load)
         return patterns
 
-    async def _write_patterns(self, patterns: List[PatternRecord]) -> None:
+    async def _write_patterns(self, patterns: list[PatternRecord]) -> None:
         """Write patterns back to JSONL file."""
 
         def _write():
@@ -277,6 +273,7 @@ class PatternMerger:
             backup = self.patterns_file.with_suffix(".jsonl.bak")
             if self.patterns_file.exists():
                 import shutil
+
                 shutil.copy2(self.patterns_file, backup)
 
             with open(self.patterns_file, "w", encoding="utf-8") as f:

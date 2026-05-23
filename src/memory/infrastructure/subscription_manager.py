@@ -222,15 +222,17 @@ class SubscriptionManager:
         for _ in range(max_events):
             try:
                 event: Event = queue.get_nowait()
-                events.append({
-                    "event_id": event.event_id,
-                    "event_type": event.event_type,
-                    "data": event.data,
-                    "timestamp": event.timestamp.isoformat()
-                    if isinstance(event.timestamp, datetime)
-                    else str(event.timestamp),
-                    "source": event.source,
-                })
+                events.append(
+                    {
+                        "event_id": event.event_id,
+                        "event_type": event.event_type,
+                        "data": event.data,
+                        "timestamp": event.timestamp.isoformat()
+                        if isinstance(event.timestamp, datetime)
+                        else str(event.timestamp),
+                        "source": event.source,
+                    }
+                )
                 managed.delivered_count += 1
             except asyncio.QueueEmpty:
                 break

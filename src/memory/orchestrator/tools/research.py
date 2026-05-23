@@ -34,7 +34,9 @@ class ResearchTool:
         )
     """
 
-    def __init__(self, link_registry: LinkRegistry | None, search_engine: UnifiedSearchEngine | None) -> None:
+    def __init__(
+        self, link_registry: LinkRegistry | None, search_engine: UnifiedSearchEngine | None
+    ) -> None:
         self._links = link_registry
         self._search = search_engine
 
@@ -62,9 +64,7 @@ class ResearchTool:
         # Resolve entity IDs from query if needed
         ids = entity_ids or []
         if query and self._search:
-            search_result = await self._search.search(
-                query=query, limit=limit, include_links=False
-            )
+            search_result = await self._search.search(query=query, limit=limit, include_links=False)
             ids.extend(item.unified_id for item in search_result.results)
 
         if not ids:
@@ -105,12 +105,14 @@ class ResearchTool:
                     nodes[rel.entity_id] = {"id": rel.entity_id, "degree": 0}
                 nodes[eid]["degree"] += 1
                 nodes[rel.entity_id]["degree"] += 1
-                edges.append({
-                    "source": eid,
-                    "target": rel.entity_id,
-                    "depth": rel.depth,
-                    "strength": rel.effective_strength,
-                })
+                edges.append(
+                    {
+                        "source": eid,
+                        "target": rel.entity_id,
+                        "depth": rel.depth,
+                        "strength": rel.effective_strength,
+                    }
+                )
 
         # Find hub nodes (highest degree)
         hub_nodes = sorted(nodes.values(), key=lambda n: n["degree"], reverse=True)[:5]
@@ -135,12 +137,14 @@ class ResearchTool:
         for eid in entity_ids:
             related = self._links.get_related_entities(eid, max_depth=1)
             if not related:
-                anomalies.append({
-                    "entity_id": eid,
-                    "type": "isolated",
-                    "description": "Entity has no links to other entities",
-                    "severity": "low",
-                })
+                anomalies.append(
+                    {
+                        "entity_id": eid,
+                        "type": "isolated",
+                        "description": "Entity has no links to other entities",
+                        "severity": "low",
+                    }
+                )
 
         # Detect entities with unusually high connectivity
         degree_counts = []
@@ -152,12 +156,14 @@ class ResearchTool:
             avg_degree = sum(d for _, d in degree_counts) / len(degree_counts)
             for eid, degree in degree_counts:
                 if degree > avg_degree * 3 and degree > 5:
-                    anomalies.append({
-                        "entity_id": eid,
-                        "type": "hub_anomaly",
-                        "description": f"Unusually high connectivity: {degree} links (avg: {avg_degree:.1f})",
-                        "severity": "medium",
-                    })
+                    anomalies.append(
+                        {
+                            "entity_id": eid,
+                            "type": "hub_anomaly",
+                            "description": f"Unusually high connectivity: {degree} links (avg: {avg_degree:.1f})",
+                            "severity": "medium",
+                        }
+                    )
 
         return {
             "analysis_type": "anomalies",
@@ -167,7 +173,9 @@ class ResearchTool:
         }
 
     async def _analyze_clusters(
-        self, entity_ids: list[str], max_depth: int,  # noqa: ARG002
+        self,
+        entity_ids: list[str],
+        max_depth: int,  # noqa: ARG002
     ) -> dict[str, Any]:
         """Find clusters of related entities using connected components."""
         if not self._links:
@@ -235,9 +243,7 @@ class ResearchTool:
             },
             "anomalies": {
                 "count": anomalies.get("anomalies_found", 0),
-                "types": Counter(
-                    a["type"] for a in anomalies.get("anomalies", [])
-                ),
+                "types": Counter(a["type"] for a in anomalies.get("anomalies", [])),
             },
             "hub_nodes": relationships.get("hub_nodes", [])[:3],
         }

@@ -12,10 +12,11 @@ Version: 1.0 (2026-04-04) -- P2 migration
 import logging
 import math
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,18 +25,18 @@ class ForgetStrategy(str, Enum):
     """Strategy for deciding what to forget."""
 
     CONFIDENCE_DECAY = "confidence_decay"  # Exponential decay over time
-    ACCESS_BASED = "access_based"          # Forget rarely accessed
-    SURPRISE_BASED = "surprise_based"      # Keep surprising, forget routine
-    COMPOSITE = "composite"                # Weighted combination of all
+    ACCESS_BASED = "access_based"  # Forget rarely accessed
+    SURPRISE_BASED = "surprise_based"  # Keep surprising, forget routine
+    COMPOSITE = "composite"  # Weighted combination of all
 
 
 class ForgetAction(str, Enum):
     """Action to take on a forgettable entry."""
 
-    ARCHIVE = "archive"   # Move to cold storage
-    DECAY = "decay"       # Reduce confidence
-    DELETE = "delete"      # Remove permanently
-    KEEP = "keep"          # No action
+    ARCHIVE = "archive"  # Move to cold storage
+    DECAY = "decay"  # Reduce confidence
+    DELETE = "delete"  # Remove permanently
+    KEEP = "keep"  # No action
 
 
 @dataclass
@@ -67,17 +68,17 @@ class ForgetGateConfig:
     """Configuration for the ForgetGate."""
 
     # Decay parameters
-    decay_rate: float = 0.05         # Per-day decay rate
-    min_confidence: float = 0.1      # Below this -> archive/delete
-    delete_threshold: float = 0.05   # Below this -> delete
+    decay_rate: float = 0.05  # Per-day decay rate
+    min_confidence: float = 0.1  # Below this -> archive/delete
+    delete_threshold: float = 0.05  # Below this -> delete
 
     # Access-based parameters
-    access_decay_days: int = 30      # Days without access before penalty
-    access_weight: float = 0.3       # Weight in composite score
+    access_decay_days: int = 30  # Days without access before penalty
+    access_weight: float = 0.3  # Weight in composite score
 
     # Surprise parameters
-    surprise_weight: float = 0.2     # Weight in composite score
-    routine_threshold: float = 0.3   # Below this surprise -> routine
+    surprise_weight: float = 0.2  # Weight in composite score
+    routine_threshold: float = 0.3  # Below this surprise -> routine
 
     # General
     strategy: ForgetStrategy = ForgetStrategy.COMPOSITE
@@ -360,8 +361,12 @@ class ForgetGateService:
 
         logger.info(
             "ForgetGate: evaluated=%d kept=%d decayed=%d archived=%d deleted=%d (%.1fms%s)",
-            stats.total_evaluated, stats.kept, stats.decayed,
-            stats.archived, stats.deleted, stats.duration_ms,
+            stats.total_evaluated,
+            stats.kept,
+            stats.decayed,
+            stats.archived,
+            stats.deleted,
+            stats.duration_ms,
             " DRY-RUN" if self.config.dry_run else "",
         )
         return stats
