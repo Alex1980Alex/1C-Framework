@@ -1278,6 +1278,27 @@ graceful degradation на failure. Escalation для complex через subagent
 4. **§14 token budget self-contradicts (7800>5K).** Either relax target к ~8K или drop a check. **FIX:** decide.
 5. **§15 vs §10 observability path conflict.** §10: Langfuse `Have`. §15.6 P3: "если LGTM выбрано" non-decision. Risk: dual-write infra 6 months. **FIX:** explicit decision gate в §15.4.
 
+### 16.4 Revised implementation order
+
+```
+P0a — PREREQ (0.5 day):
+  - Recount inventory; update §0/§4/§14.7 ADR
+  - Fix §8.5 env table (AUTO_PR_AUTO_MERGE; drop AUTO_PR_TIMEOUT)
+  - §15.4 LGTM migration decision gate criteria
+
+P0b — Foundations (1.5 days):
+  - §11 P1 mypy-baseline ratchet — UNBLOCKS new typed hooks
+  - §11 P2 Layer 4 wiki search — UNBLOCKS L5 promote ROI
+
+P0c — UPS parallelism decision (1 day):
+  - Build shared/ups_parallel_dispatcher.py OR
+  - Rewrite §14 budget для sequential
+
+P1 — §14 Pre-Work (3-4 days after P0)
+P2 — §15 Process Caching P0 (2 days, crypto-shred CRITICAL)
+P3 — §15 cold-tier + remaining §14 (4-6 days)
+```
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
