@@ -1250,6 +1250,26 @@ graceful degradation на failure. Escalation для complex через subagent
 | 10 | Medium | §14 + §15 cost double-count + no joint budget | §14: +5K tokens, 4 new hooks (66→70). §15: CloudEvents envelope (+200B/event), DuckDB infra, crypto-shred. §11 mypy ratchet BLOCKS §14/§15 typed hooks. Combined 8-15 days но unsequenced |
 | 11 | Low | §9.2 smoke command hardcoded "59" | Coincidentally correct today. Drift moment any hook added |
 
+### 16.2 Per-chapter risk assessment
+
+| Chapter | Verified | Unverified | Missing deps | Errors | Effort risk |
+|---|---|---|---|---|---|
+| §0 TL;DR | Tech stack list directionally OK | Counts wrong (66/89/40 not 73/98/45) | None | Cited memory not file | Low |
+| §1 Scope | Reasonable exclusions | — | — | — | Low |
+| §2 Lifecycle | Hook order matches settings.json ✓ | — | Stage 8 PR-auto AUTO_PR_ENABLED prereq не stated | Layer 1/2/3/4 naming для auto-git-save inconsistent | Low-Med |
+| §3 Patterns | Most Have/Partial labels accurate | "3-Layer auto-git-save" actually 4 per §8.1 | §3.7 после §3.8 ordering | AUTO_PR_MERGE_ENABLED не существует | Low |
+| §4 Hook Matrix | 1320s timeout verified ✓ | "73 total" wrong | None | PreToolUse 21 vs actual 18; PostToolUse 18 vs actual 14 | **Med** |
+| §5 3-Level Arch | Bug #6305/#10450/Cyrillic mitigations verified | "4 silent breakages" narrative | None | — | Low |
+| §6 Skills | skill-router-config.json v9 ✓ | 98 skills (89 actual), 50+ bundles unverified | task-protocol skill ✓ | Marker rfind() approach not verified | Low |
+| §7 Memory | TEI/Qwen3 4096d ✓ | "5 providers" (§0) vs 7 (§7.3) mismatch | TEI HTTP up = soft dep | Layer 4 STUB ✓ | **Med** |
+| §8 Git/PR | 11-stage pipeline ✓ | "post-merge auto-revert" running unverified | gh CLI auth not gated | **AUTO_PR_MERGE_ENABLED, AUTO_PR_TIMEOUT — не существуют** | Low |
+| §9 Failure Modes | Memory feedback ✓ | "59" hardcoded — drift | — | importlib sweep не учитывает future prework-*.py | Low |
+| §10 Observability | Langfuse optional extra ✓ | Prometheus stack production claim unverified | Tempo migration deferred к §15 (when?) | — | Med (vs §15) |
+| §11 Improvements | P1-P4 list reasonable | mypy ratchet "1-2 days" — отдельный roadmap [260514] не содержит estimate | **mypy ratchet BLOCKS §14/§15** (strict breaks new typed code) | — | Med |
+| §12 Связанные | Links resolve | "45 entries" wrong (40) | — | — | Low |
+| **§14 Pre-Work** | architecture-research cache 47 entries ✓; research-task-detector exists ✓ | "100% prompts pass" criterion impossible pre-impl | **Parallel UPS infra не существует**; aggregator unspecified | Token 7800>5K (criterion violation); 4 hooks count wrong; Task tool synchronous, not background | **HIGH 5-8d underestimated → 8-15d** |
+| **§15 Process Caching** | hook-invocations.jsonl atomic FileLock ✓ | "10k events/day" unverified; PyIceberg "best" не benchmark'd | DuckDB install, MinIO/S3 cred, crypto-shred Vault — new deps | §15.5 crypto-shred per-session-key — paths не implemented | **HIGH 6-10d underestimated** |
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
