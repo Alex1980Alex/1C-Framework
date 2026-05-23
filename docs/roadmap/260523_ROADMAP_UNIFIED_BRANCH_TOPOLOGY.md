@@ -223,3 +223,37 @@ git branch -d dev-master
 ---
 
 ## §6 Decision matrix — когда что делать
+
+### Сейчас (Phase 1 immediate cleanup) — **рекомендуется**
+
+| Условие | Действие |
+|---|---|
+| PR #4 merged 2026-05-23 ✓ | Удалить `origin/migrate/pr-automation-stack` |
+| Local master behind origin/dev-master | Fast-forward (no conflict, ff-only) |
+| Tag/branch archive ещё нужны | Оставить ещё на 1-3 месяца как safety net |
+
+**Время:** 15 минут. **Риск:** нулевой.
+
+### Через 1-2 недели (Phase 2-3 reconciliation) — **opcional**
+
+Если хотя бы одно верно:
+- Появится reason работать с `origin/master` напрямую (внешний contributor PR)
+- Tooling предполагает `master` как имя (не `dev-master`)
+- Documentation/README ссылается на canonical branch для clarity
+- Накопилось ≥2 будущих migration PR'ов кандидата → ROI reconciliation становится позитивным
+
+**Время:** 2-5 часов. **Риск:** medium (cherry-pick конфликты). Mitigation: safety tag + archive ref'ы.
+
+### Через 1-3 месяца (Phase 4-5 finalization) — **only if 2-3 done**
+
+После reconciliation: PR #2 retarget, удалить dev-master, `AUTO_PR_BASE=master`, memory + docs sync.
+
+**Время:** 30-60 минут. **Риск:** низкий.
+
+### **Do-nothing валидно**
+
+Текущее состояние (post Phase 1) полностью функционально. Reconciliation **желательная чистота, не блокер**. Можно держать workaround неопределённо долго.
+
+---
+
+## §7 Что заменяет / superseded
