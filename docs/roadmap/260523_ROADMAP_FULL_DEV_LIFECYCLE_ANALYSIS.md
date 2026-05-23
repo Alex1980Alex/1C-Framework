@@ -1141,3 +1141,29 @@ graceful degradation на failure. Escalation для complex через subagent
 - При замене Memory backend / Delegation provider
 - При закрытии item из §11
 - Когда reconciliation 260523 finalizes (Phase 5 complete)
+
+---
+
+## §15 Process Caching for 100% Lifecycle Capture
+
+**Цель:** все процессы из §2-§14 (UPS, PreToolUse, PostToolUse, Stop, MCP calls, LLM rotation, PR-automation, pre-work analysis) должны быть **полностью cached** для последующего analysis: replay, debugging, audit, RAGAS evals, training data, post-incident review.
+
+### 15.1 Current state audit
+
+| Layer | Tool | Coverage | Query | Replay | Retention |
+|---|---|---|---|---|---|
+| Hook invocations | `data/hook-invocations.jsonl` | 100% (atomic FileLock append) | grep/jq only | None | Unbounded growth |
+| State files | `.claude/cache/*.json` (12 files) | 100% per-state | Direct file read | None | Latest snapshot only |
+| LLM traces | Langfuse spans (`langfuse>=2.0`) | LLM calls only | Langfuse UI | Manual dataset replay | Per Langfuse plan |
+| Memory | `data/memory_ai.db` SQLite | Saved sessions | SQL | None | Unbounded |
+| Cache entries | `architecture-research/cache/*.md` + `_index.json` | Manual save | Markdown read | None | Manual cleanup |
+| Backups | NTFS write-back | At-mercy | OS-level | None | **Failed 2026-04-26 — 18 memory files lost** |
+
+**Critical gaps:**
+- No replay infrastructure
+- No structured query interface для hook audit (only grep/jq)
+- No cold storage tiering (`hook-invocations.jsonl` grows unbounded)
+- No event correlation by **causality** (только `run_id` — нет parent_span_id)
+- No immutable backup (NTFS recovery lost 18 memory files)
+- No GDPR-compliant retention (plaintext prompts в jsonl)
+- No schema versioning для events (silent breakage возможен)
