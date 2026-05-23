@@ -180,6 +180,15 @@ Claude интерпретирует tool result, продолжает работ
 
 **Blocking gates (если любой exit 2):** Claude получает feedback, retry Stop.
 
+**Tech stack (Stage 6-9):**
+- **git-commit-enforcer.py** + **auto-git-save.py** — `git status --porcelain` (с `core.quotepath=false`) + `git add` + `git commit` через subprocess
+- **docs-change-enforcer.py** — reads `data/hook-invocations.jsonl` tail (2MB), session-bounded `git log --since=<iso>` window, excludes `^chore: auto-save` patterns; CODE_TO_DOMAIN 70+ overrides + 140 SKIP_PATTERNS
+- **task-enforcer.py** — reads `.claude/cache/hook-todos.json` (atomic via `FileLock` from `shared/hook_lock.py`)
+- **session-memory-save.py** — saves to `data/memory_ai.db` SQLite + subprocess `python -m scripts.export_graph_to_wiki promote-patterns` (L5 wiki drafts pipeline, timeout 4s, opt-out `SESSION_MEMORY_NO_PROMOTE=1`)
+- **post-task-push-pr.py** P0-P3 — `gh` CLI ops: `gh pr list`, `gh pr create`, `gh pr edit`, `gh pr merge --merge-queue`/`--squash` + `git worktree add .tmp/cp-worktrees/<uuid8>` для cherry-pick branch model (P3.2)
+- **post-indexing-analyzer.py** — Stop hook spawns `scripts/analyze_run.py --mode {indexing|graph}` background subprocess, dedup state в `.claude/cache/post-indexing-analyzer-state.json` (FIFO cap 500)
+- **pr_check_post_merge.py** (P3.4 oncall script) — poll `gh pr checks <id>` + auto-revert через `git revert` если CI fails post-merge
+
 ### Stage 7 — Auto-git-save (если threshold reached)
 
 3-layer redundancy для #6305 mitigation:
