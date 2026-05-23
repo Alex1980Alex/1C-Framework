@@ -275,7 +275,7 @@ Claude интерпретирует tool result, продолжает работ
 | **Russian stemming** | memory-first-hook.py:75-127 | 29 suffixes for Cyrillic morphology |
 | **TEI Qwen3-Embedding-8B** | Phase 9.1 alignment | 4096d embeddings, 3 collections (skill_library, experience, conversation) |
 | **Token overlap fallback** | memory-first-hook.py | If TEI unavailable → query learned_patterns |
-| **MEMORY.md index** | ~/.claude/projects/.../MEMORY.md | 45 entries, one-line pointers to detail files |
+| **MEMORY.md index** | ~/.claude/projects/.../MEMORY.md | 40 entries, one-line pointers to detail files |
 | **Frontmatter parsing** | memory-first-hook.py:130-157 | YAML frontmatter (name, description, type, body) |
 | **L5 wiki promote** | session-memory-save.py + scripts/export_graph_to_wiki | Promote patterns after session save |
 | **NTFS recovery awareness** | MEMORY.md note | Original 18 entries lost 2026-04-26, recovered via index pointers |
