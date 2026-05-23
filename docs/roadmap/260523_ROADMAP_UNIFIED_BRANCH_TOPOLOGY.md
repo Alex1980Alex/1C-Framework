@@ -64,3 +64,35 @@
 ---
 
 ## §2 Общий корень и cascade effects
+
+```
+ROOT: origin/master ↔ local master — disjoint histories (no common ancestor)
+                          │
+                          ▼
+WORKAROUND #1: dev-master как de-facto canonical (every PR → dev-master)
+                          │
+                          ▼
+SYMPTOM #1: PR #2 не может быть merged в origin/master напрямую
+                          │
+                          ▼
+WORKAROUND #2: feat-branch накапливает 2 233 commits ahead of dev-master
+                          │
+                          ▼
+SYMPTOM #2: фичи feat-branch не доставляются на dev-master малыми PR'ами
+                          │
+                          ▼
+WORKAROUND #3: migration PR'ы из feat → dev-master (как PR #4)
+                          │  Каждый требует:
+                          │  - inventory файлов
+                          │  - protocol divergence check
+                          │  - surgical settings.json patch
+                          │  - 4-7 round'ов CI cleanup
+                          ▼
+SYMPTOM #3: каждая фича = новый mini-260522 (повторяющийся cost)
+```
+
+**Ключевое наблюдение:** PR #4 closed конкретный instance, но **паттерн остаётся**. Любая следующая фича на feat-branch потребует такого же migration cycle. Этот roadmap должен либо устранить корень (260519 Phase 2-6), либо стандартизировать workaround (§4).
+
+---
+
+## §3 Unified Phase Plan
