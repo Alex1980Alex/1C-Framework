@@ -841,6 +841,26 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 - `delegation.routing.decision` (z-ai-delegation A/B) — router_choice, score, exemplar_id
 - `wiki.promote` (session-memory-save L5) — promoted_count, draft_path
 
+### 10.5 Best practices from GitHub — Observability
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | Langfuse primary observability | langfuse.com | Have | ADR-010, langfuse-llm-observability-2026.md |
+| 2 | OTel GenAI Semantic Conventions v1.37 (`gen_ai.request.model`, `gen_ai.usage.input/output_tokens`, `gen_ai.response.finish_reasons`) | github.com/open-telemetry/semantic-conventions | Missing | Emit параллельно с Langfuse для vendor portability |
+| 3 | AI Agent Observability conventions (2025) — `gen_ai.agent.*` attrs | opentelemetry.io/docs/specs/semconv/gen-ai | Missing | Instrument agents/rag.py + analytical.py + research.py для multi-step tracing |
+| 4 | 4 Golden Signals dashboards (Latency p50/p95/p99, Traffic RPS, Errors 5xx, Saturation CPU/mem) | sre.google/sre-book/monitoring-distributed-systems (Beyer 2016) | Missing | Grafana dashboard template нужен |
+| 5 | RED method middleware (`prometheus_fastapi_instrumentator` → /metrics) | github.com/trallnag/prometheus-fastapi-instrumentator | Missing | Per-route Rate/Errors/Duration auto-export |
+| 6 | USE method для infrastructure (node-exporter + cAdvisor scrape для Qdrant/Neo4j/TEI containers) | github.com/prometheus/node_exporter | Missing | Container-level metrics gap |
+| 7 | structlog с contextvars (НЕ thread-locals — async context bleed) | github.com/hynek/structlog | Missing | Replace builtin logging |
+| 8 | Tail-based sampling через OTel Collector (policies: errors→100%, latency>2s→100%, default→1%) | opentelemetry.io/docs/collector/configuration/processor/tailsampling | Missing | Head-based (current default) пропускает interesting traces |
+| 9 | Alert на `p95 > 2s` для /search (actionable percentile alerting, не averages) | sre.google/sre-book/monitoring-distributed-systems | Missing | Prometheus + Alertmanager config |
+| 10 | Audit log patterns (append-only, immutable) | (best practice) | Have | data/hook-invocations.jsonl + atomic FileLock append |
+| 11 | Sampling strategies (head-based vs tail-based comparison) | grafana.com/blog/sampling-strategies | Decision | Decide based на cost/value tradeoff |
+| 12 | Cost attribution для LLM calls (Helicone/Langfuse tags per user_id/feature) | langfuse.com/docs/observability/features | Partial | run_id correlation есть, cost-per-feature aggregation — gap |
+| 13 | Distributed tracing для multi-step agent workflows (LangGraph trace integration) | langchain.com/langsmith | Have | LangSmith integration option |
+| 14 | Alerting fatigue avoidance (PagerDuty/OpsGenie routing) | pagerduty.com/resources/learn/alert-fatigue | N/A | No on-call; relevant если scale up |
+| 15 | Helicone vs Langfuse — Mintlify acquired Helicone March 2026 → maintenance mode | mintlify.com/blog/helicone-acquisition | Decision | Langfuse preferred long-term; document как evaluated-and-rejected |
+
 ### 10.4 Tech stack для observability
 
 **Production stack (docker-compose):**
