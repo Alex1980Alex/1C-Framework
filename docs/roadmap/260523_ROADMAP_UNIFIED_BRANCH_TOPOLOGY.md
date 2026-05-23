@@ -348,8 +348,85 @@ git branch -D dev-master  # was b9cba8cb1
 
 ## §10 Когда обновлять этот roadmap
 
-- Когда Phase 1 cleanup сделан → пометить ✅, добавить дату
-- Когда Phase 2-3 решено делать → детализировать audit под актуальное состояние origin/master
-- Когда новая migration PR-ка появляется → добавить в §4 как ещё один example, обновить anti-patterns §5
-- Когда reconciliation DONE → переименовать в `260XXX_ROADMAP_UNIFIED_BRANCH_TOPOLOGY_RESOLVED.md`, обновить memory `project_disjoint_master_topology` на RESOLVED
-- Когда workaround dev-master remove'нут → удалить §4 Pattern B, оставить только Pattern A как стандарт
+- Когда Phase 1 cleanup сделан → пометить ✅, добавить дату — ✅ DONE 2026-05-23
+- Когда Phase 2-3 решено делать → детализировать audit — ✅ DONE 2026-05-23 (audit показал 100% content-DUP)
+- Когда новая migration PR-ка появляется → добавить в §4 как ещё один example
+- Когда reconciliation DONE → переименовать в `260XXX_ROADMAP_UNIFIED_BRANCH_TOPOLOGY_RESOLVED.md`, обновить memory `project_disjoint_master_topology` на RESOLVED — ✅ DONE 2026-05-23
+- Когда workaround dev-master remove'нут → удалить §4 Pattern B, оставить только Pattern A как стандарт — ✅ DONE 2026-05-23 (см. §11)
+
+---
+
+## §11 Post-Reconciliation Workflow (2026-05-23 onwards)
+
+После Phase 1-4 (DONE) workaround `dev-master` удалён, любая разработка идёт **напрямую feat-branch → master**. Этот раздел кодифицирует упрощённый workflow.
+
+### 11.1 Default Pattern: feat → master напрямую
+
+```bash
+# Развитие фичи на feat-branch
+git checkout feat/serena-audit-hybrid-refactor
+# ... develop ...
+git push origin feat/serena-audit-hybrid-refactor
+
+# Существующий PR #2 автоматически обновляется (head moves forward)
+# Если merge conflicts с master — pre-merge resolution:
+git fetch origin master
+git merge origin/master           # или -X theirs если master canonical
+# resolve, commit, push
+```
+
+### 11.2 Small focused PR (Pattern A — DEFAULT теперь)
+
+Для изолированных фич (1-5 файлов):
+
+```bash
+git checkout -b feat-name-short origin/master    # branch from master напрямую
+# ... develop semantic changes ...
+git commit -m "feat(scope): short subject"        # one squashed commit
+git push origin feat-name-short
+gh pr create --base master --head feat-name-short
+```
+
+**Преимущества vs старый workaround:**
+- Никаких dev-master indirection
+- Прямой PR feat → master
+- CI на master triggers напрямую
+- AUTO_PR_BASE=master (settings.json env уже на master post-PR #4)
+
+### 11.3 Large coherent stack PR (Pattern B — для >10 файлов)
+
+Сохраняет старый PR #4 workflow, но base=master:
+
+```bash
+git checkout -b migrate/feature-name origin/master
+# Discovery roadmap (inventory + hidden risks + protocol divergence check)
+git checkout feat -- <inventory_files>
+# Surgical settings.json patch (не копировать целиком)
+# Squash + PR
+gh pr create --base master --head migrate/feature-name
+# CI cleanup rounds (см. §4 Pattern B + §5 anti-patterns из PR #4)
+```
+
+### 11.4 Что больше НЕ делать
+
+| Anti-pattern (legacy) | Now use instead |
+|---|---|
+| PR base `dev-master` | PR base `master` |
+| `AUTO_PR_BASE=dev-master` | `AUTO_PR_BASE=master` (уже в settings.json) |
+| Push local master to `dev-master` для preserving | Push directly to `master` |
+| Migration через intermediate `dev-master` | Direct PR feat → master |
+| Worry about disjoint master histories | RESOLVED — single canonical master |
+
+### 11.5 PR #2 closure path
+
+PR #2 (`feat/serena-audit-hybrid-refactor` → `master`) теперь MERGEABLE после merge `origin/master` в feat 2026-05-23 (commit `2aae773b4` `-X theirs` strategy).
+
+**Pre-merge checklist:**
+- [x] base=master (✅ retargeted Phase 4.1)
+- [x] mergeable=true (✅ after merge resolution)
+- [ ] CI green на новом merge commit
+- [ ] Final review
+
+После merge PR #2:
+- `feat-branch` можно удалить (либо сохранить как long-running dev branch для будущих фич)
+- Все будущие фичи следуют §11.2 (small PR) или §11.3 (coherent stack)
