@@ -429,6 +429,17 @@ def score_memory(query_tokens: set, memory: dict) -> float:
     return 0.7 * query_coverage + 0.3 * memory_density
 
 
+def search_wiki(query_tokens: set, limit: int = 10) -> list:
+    """Search wiki drafts (docs/wiki/drafts/) — Layer 4.
+
+    STUB (2026-05-23): функция была вызвана в `execute()` но не реализована
+    → `NameError: name 'search_wiki' is not defined` ломал хук. Возвращает
+    [] до полной реализации — RRF merge просто не получит layer 'wiki',
+    остальные layers (sqlite/qdrant/md) работают.
+    """
+    return []
+
+
 def search_md(query_tokens: set, limit: int = 10) -> list:
     """Search .md memory files with weighted overlap scoring."""
     if not query_tokens:
