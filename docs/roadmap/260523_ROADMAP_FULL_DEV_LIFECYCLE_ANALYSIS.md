@@ -781,6 +781,25 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 См. memory [`feedback_post_merge_smoke_required`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_post_merge_smoke_required.md).
 
+### 9.4 Best practices from GitHub — Failure modes / Recovery
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | P3.4 post-merge auto-revert | внутренний (scripts/pr_check_post_merge.py) | Have | Poll merged PR CI, revert + reopen на fail |
+| 2 | Liveness vs Readiness разделение (livez pure / readyz timeout 2s на deps) | kubernetes.io/docs/reference/using-api/health-checks | Partial | /health есть, livez/readyz не разделены — restart cascades possible |
+| 3 | pytest-rerunfailures `only_rerun=ConnectionError\|TimeoutError` (НЕ AssertionError) | github.com/pytest-dev/pytest-rerunfailures | Missing | Short-term tactic для flake handling в integration tests |
+| 4 | PyBreaker для Qdrant/Neo4j/TEI (3 critical integration points) | github.com/danielfm/pybreaker | Missing | `CircuitBreaker(fail_max=5, reset_timeout=60)` per service |
+| 5 | aiobreaker / fastapi-cb middleware на upstream calls | github.com/arlyon/aiobreaker | Missing | src/api/ upstream calls protection |
+| 6 | fastapi-healthchecks library как замена custom /health | github.com/Kludex/fastapi-healthcheck | Missing | Standard endpoints вместо bespoke |
+| 7 | Chaos Toolkit experiments (Steady State + probes + rollback strategies) | chaostoolkit.org | Missing | "Qdrant down → fallback BM25", "TEI timeout → fallback ONNX" |
+| 8 | `faulthandler.enable()` в src/api/main.py + src/cli/__main__.py + src/mcp_server/__main__.py | docs.python.org/3/library/faulthandler | Missing | Segfault dumps всех threads |
+| 9 | Blameless post-mortem template (Google SRE structure: timeline + RCA + AIs + lessons) | sre.google/sre-book/postmortem-culture | Missing | docs/postmortems/TEMPLATE.md |
+| 10 | Post-mortem SLA — within days, не weeks | hyperping.com/post-mortem-best-practices | Missing | Formal policy needed |
+| 11 | Sentry SDK evaluation vs Langfuse (LLM coverage vs Python exceptions) | sentry.io | Missing | Langfuse покрывает LLM; Sentry — Python exceptions; complementary |
+| 12 | Mandatory post-merge importlib sweep после `-X theirs` (>20 conflict-diff) | внутренний memory feedback_post_merge_smoke_required | Have | Documented в memory + roadmap §9.2 |
+| 13 | tenacity retry library best practices (decorators + jitter + retry conditions) | tenacity.readthedocs.io | Partial | Skill tenacity-retry есть; broader adoption нужен |
+| 14 | Test isolation patterns (pytest fixtures + transactional rollback) | docs.pytest.org/en/stable/explanation/fixtures | Partial | Integration tests rely на shared Qdrant — flake source |
+
 ### 9.3 Tech enablers для recovery
 
 - **`importlib.util.spec_from_file_location` + `module_from_spec`** — для post-merge sweep всех hooks без `sys.path` тампания
