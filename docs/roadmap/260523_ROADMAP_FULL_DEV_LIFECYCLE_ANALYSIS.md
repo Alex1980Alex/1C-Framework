@@ -91,6 +91,13 @@ User набирает сообщение, нажимает Enter. 14 хуков 
 
 **State touched:** `.claude/cache/session-skills.json`, `memory-first-cooldown.json`, `data/skill-router.log`, `data/skill-accuracy.jsonl`
 
+**Tech stack (Stage 1):**
+- **memory-first-hook.py** — `httpx` (TEI HTTP client port 8080) + `qdrant-client>=1.12` (3 коллекций: skill_library/experience_embeddings/conversation_memory, 4096d named vectors) + `sqlite3` (builtin, `data/memory_ai.db`) + Russian stemmer (custom 29 suffixes, no NLP lib)
+- **skill-router.py** — `rapidfuzz` 3.14+ (Layer B fuzzy matching 78% threshold) + pre-computed TF-IDF (`route-tfidf/`) + Qdrant fallback (`semantic_fallback_suggest`, 0.5s timeout, opt-out env)
+- **z-ai-delegation-enforcer.py** — LinUCB bandit (custom `DelegationBandit`) + optional TrainedRouter (cosine similarity vs exemplars, `DELEGATION_ROUTER_CANARY_PCT` env)
+- **slash-command-tracker.py** — shared/slash_detect.py (двухступенчатая детекция: `<command-name>` tag для post-expansion + raw `/cmd` parsing с backtick-noise обходом)
+- All UPS hooks: `BaseHook` (base/base.py + protocol.py) + `HookInput` parsing (`hook_event_name` priority, `transcript_path` fallback per Claude Code 2.x modern)
+
 ### Stage 2 — Skill activation (`Skill()` tool call)
 
 Claude видит `[SKILL-ROUTER] ACTIVATE SKILLS [HIGH]: Skill('xyz')` → вызывает `Skill('xyz')`. Это:
