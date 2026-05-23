@@ -572,3 +572,14 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 | P3 | GitHub App migration vs `gh` CLI | 1-2 days | Multi-developer scale |
 | P4 | OpenSpec live JIRA sync (currently stub) | 2-3 days | Bidirectional sync |
 | P4 | Sandbox-execution LangSmith/E2B backends | 1 week | Currently DryRun only |
+
+---
+
+## §12 Связанные артефакты
+
+### Roadmaps
+
+- [260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md) — SUPERSEDED
+- [260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md) — DONE via PR #4
+- [260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md) — disjoint reconciliation
+- [40_PR_AUTOMATION/](../framework%20documentation/40_PR_AUTOMATION/) — chapters 40.1-40.5
