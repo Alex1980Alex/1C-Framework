@@ -155,3 +155,35 @@ Claude интерпретирует tool result, продолжает работ
 | 14 | `delegation-outcome-stop.py` | Нет | Delegation cost summary |
 
 **Blocking gates (если любой exit 2):** Claude получает feedback, retry Stop.
+
+### Stage 7 — Auto-git-save (если threshold reached)
+
+3-layer redundancy для #6305 mitigation:
+
+- **Layer 1 PostToolUse:** `auto-git-save.py` matcher Write|Edit|Bash → sync commit при threshold (default 1 file)
+- **Layer 2 PostToolUse:** `posttooluse-auto-git-save.py` — debounced 5s fallback
+- **Layer 3 UserPromptSubmit:** `auto-git-save-prompt.py` — fires at NEXT prompt если PostToolUse не сработал
+- **Layer 4 Stop:** `auto-git-save.py` (Stop entry) — final push
+
+**Commit message format:** `chore: auto-save a.py, b.py, c.py +N more` (DRY helper `shared/auto_save_core.py`)
+
+### Stage 8 — PR automation (если AUTO_PR_ENABLED + TaskUpdate completed)
+
+`post-task-push-pr.py` оркестрирует P0-P3 batch (см. §8.2). 11-stage pipeline:
+
+1. P2.1 (in_progress): record start_sha
+2. P0.1 label gating  
+3. P2.1 scope check (`AUTO_PR_MIN_COMMITS`)
+4. P0.4 pre-push pre-commit run
+5. P1.3 stale base check + auto-rebase
+6. P3.2 cherry-pick branch model
+7. P0.2 push
+8. P0.3 idempotency (reuse existing PR)
+9. P2.3 reviewers via CODEOWNERS
+10. P2.5 blockedBy labels
+11. P1.2 wait-for-checks + merge (squash / merge-queue)
+
+### Stage 9 — Post-merge
+
+`scripts/pr_check_post_merge.py` (P3.4, oncall) — polls merged PR's CI:
+- Если post-merge CI fail → auto-revert commit + reopen PR с failure context
