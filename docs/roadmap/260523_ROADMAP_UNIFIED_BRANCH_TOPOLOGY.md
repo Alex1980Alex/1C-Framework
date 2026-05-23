@@ -169,3 +169,42 @@ git branch -d dev-master
 ---
 
 ## §4 Standardized Workflow Pattern (lessons из PR #4)
+
+Пока **260519 Phase 2-5 не выполнен** (workaround dev-master остаётся), любая coherent feature delivery с feat → dev-master должна следовать паттерну выработанному в PR #4 round-6/7.
+
+### Pattern A — Small incremental PRs (preferred)
+
+Если фича изолирована (1-5 файлов):
+1. На `feat`-ветке cherry-pick semantic коммит'ы на отдельную `feat-feature-xyz` from origin/dev-master
+2. Squash в один semantic commit
+3. PR против dev-master, CI должен пройти без round-2..7 cycle
+
+### Pattern B — Coherent stack migration (PR #4 model)
+
+Если фича обширная (>10 файлов, settings.json patches, docs section):
+1. **Discovery roadmap** (по образцу 260522): inventory, hidden risks, semantic commits archaeology
+2. **migrate/feature-name** worktree branch from origin/dev-master
+3. **Inventory copy**: `git checkout feat -- <files>` для каждого identified file
+4. **Protocol/base divergence check**: diff `base/protocol.py` + shared base — port if divergent
+5. **Surgical settings.json patch**: НЕ копировать целиком, только новые hooks + env keys
+6. **Squash + PR**
+7. **CI cleanup rounds** (lessons из PR #4):
+   - **Round 1-2**: baseline excludes (vendor: `tools/`, `infra/`, `external/`, `jre/`, `docs/documentation/`, `mcp-server.log*`, `.serena/`, `.vscode-extensions/`)
+   - **Round 3-5**: dependency bumps (ruff, mypy additional_dependencies, missing test deps)
+   - **Round 6**: pytest `--import-mode=importlib`; product code surgical fixes
+   - **Round 7**: full pre-commit autofix bulk (~200-400 files); per-file-ignores в pyproject; mypy removed from pre-commit если 1000+ baseline errors
+8. **Post-merge cleanup**: remove worktree, delete remote migration-branch, optional rebase feat
+
+### Pattern decision matrix
+
+| Признак фичи | Pattern |
+|---|---|
+| 1-5 файлов, no settings.json change | **A** |
+| 6-10 файлов, minimal config | **A** with extra care |
+| >10 файлов OR settings.json patches OR new docs section | **B** |
+| Touches `base/`, `shared/`, `core/` (cross-cutting infra) | **B** (protocol divergence risk) |
+| Builds on >5 другие WIP файлы на feat-branch | **B** (transitive dep'ы) |
+
+---
+
+## §5 Anti-patterns (collected from PR #4 round-6/7)
