@@ -389,3 +389,30 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 ---
 
 ## §7 Memory + Delegation
+
+### 7.1 4-Layer Federated Recall
+
+| Layer | Source | Weight | Budget | Backend |
+|---|---|---|---|---|
+| 1 | SQLite important_messages | 0.30 | 200ms | Token overlap + RU stemming |
+| 2 | Qdrant skill_library + experience + conversation | 0.35 | 2s | TEI Qwen3-Embedding-8B (4096d) |
+| 3 | .md files (~/.claude/projects/.../memory/) | 0.15 | 500ms | Token overlap weighted |
+| 4 | Wiki drafts (docs/wiki/drafts/) | 0.20 | 200ms | **STUB** (returns []) |
+
+**RRF merge** по content hash, dedup, top-K=5 в systemMessage.
+
+**Fallback:** TEI unavailable → token-overlap на learned_patterns.
+
+**State:** cooldown 30s в `memory-first-cooldown.json`.
+
+### 7.2 Delegation (Z.AI / LLM Rotation)
+
+**Classification:** Never (architecture, debug) / Hard (code gen) / Medium (docs, tests) / Soft (3+ files, Orchestrator).
+
+**Routing:** `DELEGATION_ROUTER_CANARY_PCT` gates TrainedRouter (cosine) vs LinUCB bandit. Deterministic A/B via sha256.
+
+**Outcome corpus:** `data/delegation-outcomes.jsonl` (online bandit update).
+
+**5 providers:** Z.AI GLM-5 (primary), Gemini, OpenRouter, Ollama, Anthropic (fallback).
+
+**Guard:** `z-ai-write-guard.py` blocks >15 lines code если no `llm_delegation` в session.
