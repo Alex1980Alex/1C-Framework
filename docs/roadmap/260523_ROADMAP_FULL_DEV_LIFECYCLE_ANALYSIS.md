@@ -483,3 +483,43 @@ Hook/skill file created → mandatory tasks для registration + verification (
 | **Cherry-pick conflict (PR-automation)** | cherry-pick fails если file отсутствует на base | post-task-push-pr fallback log | Use mode=head-ref instead of cherry-pick |
 | **Z.AI write guard false-positive** | Blocks docs/markdown | guard fires на .md > 15 lines | Chunk Write/Edit ≤14 lines |
 | **Skill router phantom blocking** | Recommends non-existent skill | code-skill-patterns.json validation | Audit script: `re.findall(r'"skill":\s*"([^"]+)"',text)` exists check |
+
+### 9.2 Mandatory post-merge smoke (lesson из PR #2)
+
+После любого `git merge -X theirs` на 20+ conflict-diff:
+
+```bash
+# 1. Import sweep всех top-level хуков
+python -c "
+import sys, importlib.util
+from pathlib import Path
+sys.path.insert(0, r'C:/1С-Framework/.claude/hooks')
+fail = []
+for f in Path(r'C:/1С-Framework/.claude/hooks').glob('*.py'):
+    try:
+        spec = importlib.util.spec_from_file_location(f.stem, str(f))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+    except Exception as e:
+        fail.append((f.name, type(e).__name__, str(e)[:80]))
+print(f'Pass: {59-len(fail)}/{59} | Fail: {len(fail)}')
+for n,t,m in fail: print(f'  {n}: {t}: {m}')
+"
+
+# 2. Tail audit log на новые errors через 1-2 минуты после resume
+tail -200 data/hook-invocations.jsonl | python -c "
+import json,sys
+for line in sys.stdin:
+    try:
+        r = json.loads(line)
+        if r.get('outcome') == 'error':
+            print(r.get('hook'), r.get('error',''))
+    except: pass
+"
+
+# 3. Smoke critical hooks via stdin
+echo '{"prompt":"test"}' | python .claude/hooks/memory-first-hook.py
+echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}' | python .claude/hooks/posttooluse-bash-errors.py
+```
+
+См. memory [`feedback_post_merge_smoke_required`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_post_merge_smoke_required.md).
