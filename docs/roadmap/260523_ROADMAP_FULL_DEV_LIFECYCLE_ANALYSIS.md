@@ -493,6 +493,29 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 
 **Guard:** `z-ai-write-guard.py` blocks >15 lines code если no `llm_delegation` в session.
 
+### 7.3 Tech stack для Memory + Delegation
+
+**Memory backends:**
+- **SQLite** (`sqlite3` builtin) — `data/memory_ai.db` Layer 1 (important_messages, top-200 by importance)
+- **Qdrant** (`qdrant-client>=1.12`) — Layer 2 (3 collections × 4096d named vectors), `httpx` async transport
+- **TEI** (Text Embeddings Inference, HuggingFace Docker `INFERENCEAPI_0_20_0`) — Qwen3-Embedding-8B safetensors loaded в GPU; HTTP POST `/embed` endpoint port 8080; **fallback:** `sentence-transformers>=3.0` если TEI down (`BSL_EMBEDDER=st` env)
+- **Russian morphology:** custom 29-suffix stemmer (no NLP library — pure regex для Cyrillic `[Ѐ-ӿ]+` words). Optional `pymorphy3>=2.0` через `[morphology]` extra (для BM25 lemmatization)
+
+**RRF merge:** custom implementation в `memory-first-hook.py:rrf_merge()` — formula `score = Σ weight_i * 1/(k + rank_i)`, k=60, dedup по content hash (`hashlib.sha1`)
+
+**Delegation providers (LLM Rotation, `src/shared/llm_rotation/`):**
+| Provider | SDK | Tier |
+|---|---|---|
+| **claude-cli-haiku** | `claude-agent-sdk>=0.2,<0.3` (subprocess CLI) | 0 (primary, post-2026-05-16) |
+| **claude-cli-sonnet** | claude-agent-sdk | 1 (secondary) |
+| **Ollama local** | HTTP POST `/api/generate` (no SDK) | 2 ($0 fallback, qwen2.5-coder:7b) |
+| **Z.AI GLM-5** | HTTP API (custom) | 1.5 (deep reasoning) |
+| **Mistral** | `mistralai>=1.0` | 4 |
+| **Google Gemini** | `google-generativeai>=0.8` | 4 |
+| **OpenRouter** | OpenAI-compatible (`openai>=1.0` SDK) | 4 |
+
+**Rotation control:** `LLM_ROTATION_PRIMARY_PROVIDER` env, circuit breaker (`fail_threshold=3, reset=60s`), adaptive routing (`daily_budget=$1.0, alert at 80%`), `LLM_ROTATION_TIMEOUT=90s` (CLI startup overhead).
+
 ---
 
 ## §8 Git/PR Automation
