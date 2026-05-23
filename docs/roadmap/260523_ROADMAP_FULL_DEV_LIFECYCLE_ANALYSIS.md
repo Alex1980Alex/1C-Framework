@@ -983,6 +983,52 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 **Ограничения:** UPS hook timeout 30s; WebSearch latency 2-5s per query; token budget per 1K reduces conversation length.
 
+### 14.3 Option design per gap (3-5 alternatives each)
+
+**Gap §14.1 — Architecture analysis automation (4 options):**
+
+| Option | Trigger | Tech | Pros | Cons |
+|---|---|---|---|---|
+| A | UPS hook `prework-architecture.py` — fuzzy match on keywords → semantic search в `architecture-research/cache/_index.json` + `adr/` | Python + rapidfuzz | Zero latency (local), no API | Misses cases без obvious keywords |
+| B | PreToolUse:Write\|Edit guard — first Write на new file in src/ → query Qdrant architecture-research collection | Qdrant TEI semantic | Catches real code changes | Mid-execution, late to inform design |
+| C | Subagent dispatch via `decision-to-triad.py` — prompt classified "architecture-decision" → spawn architecture-research subagent (background) | Task tool + subagent | Most thorough | Latency 30-60s, blocks workflow |
+| D | Pre-emptive cache warmup — SessionStart loads top-N relevant ADR fragments into context | SessionStart hook | Always available | Memory bloat, irrelevant ADRs |
+
+**Recommendation:** **A** (default) + **C** (escalation for prompts >100 words). Latency budget OK.
+
+**Gap §14.2a — Similar code search automation (4 options):**
+
+| Option | Trigger | Tech | Pros | Cons |
+|---|---|---|---|---|
+| A | UPS hook `prework-similar-code.py` — extract intent terms → query `framework_code_v1` Qdrant (4096d Qwen3) → inject top-5 refs | TEI + Qdrant | Direct codebase grounding | ~1s latency, requires TEI up |
+| B | PreToolUse:Write — semantic search by file path → suggest similar | Same as A lazy | No upfront cost | Reactive, не informs design |
+| C | LangGraph subgraph: query → classify domain → route to specific collection (BSL/framework/wiki) | LangGraph state machine | Most precise routing | Complex, overkill for ~70% prompts |
+| D | Skip semantic, reuse skill-router output (points to relevant skills already) | Reuse skill-router | Zero new infra | Skills ≠ code files; suboptimal |
+
+**Recommendation:** **A** with **B** fallback if UPS budget exceeded.
+
+**Gap §14.4 — GitHub best practices automation (4 options):**
+
+| Option | Trigger | Tech | Pros | Cons |
+|---|---|---|---|---|
+| A | UPS hook `prework-github-bp.py` — WebSearch `site:github.com [topic] stars:>100` → inject top-3 repos | WebSearch tool | Direct integration | 2-5s latency, может быть irrelevant |
+| B | Cache-first: проверь `architecture-research/cache/` topic match → если recent (<7d) inject; иначе async WebSearch + cache | Cache + WebSearch hybrid | Fast warm path, complete cold path | Cache cold start slow |
+| C | Background research subagent — UPS spawn agent doing WebSearch + GitHub fetch, results inject NEXT turn | Subagent dispatch | No blocking | Delay by 1 turn, missed first response |
+| D | Pre-emptive scheduled research — daily cron pulls top trending repos per domain | CronCreate | No latency on hot path | Over-fetch, low relevance |
+
+**Recommendation:** **B** (cache-first hybrid). Tag with topic, warm cache via batch dispatcher.
+
+**Gap §14.5 — Stack Overflow automation (4 options):**
+
+| Option | Trigger | Tech | Pros | Cons |
+|---|---|---|---|---|
+| A | UPS hook `prework-stackoverflow.py` — `WebSearch "site:stackoverflow.com [error/topic] is:answer votes:10"` | WebSearch | Direct facts | WebFetch не работает с SO (blocked); search snippets only |
+| B | Reactive: PostToolUse:Bash on error → extract → WebSearch SO | WebSearch on demand | Catches real errors | Reactive, не proactive |
+| C | Combined A+B — pre-work для domain context + post-error для concrete failures | Both hooks | Coverage cold+hot | More hooks to maintain |
+| D | StackExchange API direct (requests + auth) | requests + SE API | Structured results, no scrape | API rate limits, auth complexity |
+
+**Recommendation:** **C** (A + B). Pre-work covers context, post-error covers concrete failures.
+
 - При добавлении нового event (ManualStop, PreCompact)
 - При значимом изменении hook count (>5 added/removed)
 - При появлении нового failure class
