@@ -246,3 +246,48 @@ Claude интерпретирует tool result, продолжает работ
 | **Frontmatter parsing** | memory-first-hook.py:130-157 | YAML frontmatter (name, description, type, body) |
 | **L5 wiki promote** | session-memory-save.py + scripts/export_graph_to_wiki | Promote patterns after session save |
 | **NTFS recovery awareness** | MEMORY.md note | Original 18 entries lost 2026-04-26, recovered via index pointers |
+
+### 3.4 Delegation patterns
+
+| Pattern | Файл | Назначение |
+|---|---|---|
+| **Classification (Soft/Medium/Hard/Never)** | z-ai-delegation skill | Per-task delegation decision |
+| **Orchestrator mode** | z-ai-delegation skill | 3+ files → decompose+delegate+review+assemble |
+| **LinUCB bandit** | z-ai-delegation-enforcer.py | Exploit best-known provider |
+| **TrainedRouter (similarity)** | DELEGATION_ROUTER_CANARY_PCT env | Cosine vs exemplars (A/B canary) |
+| **Outcome corpus** | data/delegation-outcomes.jsonl | Online bandit update |
+| **Langfuse span** | delegation.routing.decision | Observability foundation |
+| **Mandatory Opus review** | z-ai-delegation skill | Hard tasks: thorough review (security, edge cases, perf) |
+| **Provider fallback** | src/shared/llm_rotation/ | 5 providers (Z.AI GLM-5, Gemini, OpenRouter, Ollama, Anthropic) |
+
+### 3.5 Git/PR patterns
+
+| Pattern | Файл | Назначение |
+|---|---|---|
+| **3-layer auto-git-save** | auto-git-save (PostToolUse) + posttooluse-auto-git-save + auto-git-save-prompt (UPS) | #6305 mitigation |
+| **Threshold-based commit** | auto-git-save.py | N file changes → commit (default 1) |
+| **Pause sentinel** | .claude/cache/auto-git-save.paused | TTL/forever skip mechanism |
+| **Settings guard** | auto-git-save.py | Block if settings.json shrinks >30 lines (regression detect) |
+| **Adaptive cooldown** | auto-git-save.py | 2-6m base, -1m per file (prevent rapid recreation) |
+| **PR-automation P0-P3** | post-task-push-pr.py | Label gating + scope check + cherry-pick + merge-queue |
+| **Cherry-pick worktree** | shared/pr_helpers.py:cherry_pick_range_to_branch | Temp worktree, abort cleanup в finally |
+| **CODEOWNERS reviewer assignment** | shared/pr_helpers.py:codeowners_for_paths | Auto-assign reviewers |
+| **Blocked-by labels** | post-task-push-pr.py | Cross-PR deps via labels |
+| **Merge-queue alternative** | gh pr merge --merge-queue | Free Mergify replacement |
+| **Post-merge auto-revert** | scripts/pr_check_post_merge.py | If CI fail post-merge → revert commit + reopen |
+| **Force-with-lease** | git push --force-with-lease=ref:sha | Race condition protection |
+| **Archive ref preservation** | archive/master-pre-reconciliation-2026-05-19 | Safety net перед force-push |
+| **Per-task SHA tracking** | .claude/cache/post-task-push-pr-state.json | Scope = task's own commits, не full branch |
+| **Pre-push pre-commit gate** | post-task-push-pr.py | Run pre-commit run --all-files перед push |
+
+### 3.6 Observability patterns
+
+| Pattern | Файл | Назначение |
+|---|---|---|
+| **Universal MCP audit** | mcp-invocation-logger.py | regex `mcp__.*` ловит все MCP calls |
+| **Hook invocations JSONL** | data/hook-invocations.jsonl | Full audit trail (ts, hook, event, tool, elapsed, outcome) |
+| **Slash-command run tracking** | slash-command-tracker.py | UUID run_id, correlate Pre/Post tool calls |
+| **Langfuse spans** | memory-first / delegation / wiki promote | Distributed tracing |
+| **Skill accuracy correlation** | data/skill-accuracy.jsonl | recommend→activate corr (RAGAS-like) |
+| **Circuit breaker** | shared/circuit_breaker.py | OPEN/CLOSED/HALF_OPEN state per hook |
+| **Auto-reports** | scripts/analyze_run.py + post-indexing-analyzer.py | Deep reports после indexing + graph runs |
