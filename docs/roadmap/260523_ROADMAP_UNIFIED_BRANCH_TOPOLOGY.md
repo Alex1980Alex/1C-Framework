@@ -125,3 +125,47 @@ git checkout dev-master 2>/dev/null && git merge --ff-only origin/dev-master
 Идентично §3 (Phase 2) исходного 260519. Эвристики, prefix-stats, категоризация по noise/duplicate/legitimate — без изменений.
 
 **Output:** `/tmp/selected-hashes.txt` — отсортированный список hash'ей в хронологическом порядке.
+
+### Phase 3 — Cherry-pick + force-push (~1-3 часа)
+
+Идентично §4-§5 исходного 260519. Safety tag перед началом, для каждого hash — `git cherry-pick`, manual resolve. После — `git push --force-with-lease`.
+
+**Hidden risk (new, не было в 260519):** Phase 1 fast-forward'нул local master на origin/dev-master (с PR #4 внутри). Cherry-pick'и из origin/master применяются поверх PR-automation стека, **возможны конфликты** в:
+- `.claude/hooks/shared/` (PR #4 добавил pr_helpers, pr_notifier)
+- `.claude/settings.json` (surgical patch на PostToolUse + AUTO_PR_* env)
+- `.pre-commit-config.yaml` (excludes до 14 patterns + удалил mypy)
+- `pyproject.toml` (pytest importmode + per-file-ignores)
+
+**Mitigation:** при resolve брать union — origin/master legitimate edits + PR #4 inventory сохраняется.
+
+### Phase 4 — Cleanup (~10 минут)
+
+```bash
+# Переключить PR #2 на canonical master
+gh pr edit 2 --base master
+
+# Закрыть PR #3 (demo)
+gh pr close 3 --comment "Superseded by PR #4 + reconciliation 260523"
+
+# Удалить dev-master
+git push origin :dev-master
+git branch -d dev-master
+```
+
+**Update memory:** [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md) → пометить RESOLVED.
+
+**Update mypy baseline:** `python -m mypy_baseline sync && git commit -am "chore(mypy): re-sync after reconciliation"`.
+
+**Update CLAUDE.md:** убрать упоминания `dev-master` как working area, заменить на `master`.
+
+### Phase 5 — Verify + standardize (~30-60 минут)
+
+1. CI watch на pushed master
+2. PR #2 auto-rebase trigger от `gh pr edit --base master`
+3. Smoke на `.claude/hooks/post-task-push-pr.py` с `AUTO_PR_BASE=master`
+4. Update `.claude/settings.json` env: `"AUTO_PR_BASE": "master"`
+5. Update [40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) — `dev-master` → `master` во всех env reference
+
+---
+
+## §4 Standardized Workflow Pattern (lessons из PR #4)
