@@ -375,6 +375,23 @@ Claude интерпретирует tool result, продолжает работ
 - `auto-git-save.py` — 30s
 - Большинство — 3-5s
 
+### 4.2 Best practices from GitHub — Hook framework / lifecycle automation
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | pre-commit stock hook set (trailing-whitespace, EOF, check-yaml/json/toml, large-files) | github.com/pre-commit/pre-commit-hooks | Have | Already in .pre-commit-config.yaml |
+| 2 | Lefthook parallel execution (Go-based, vs sequential husky) | github.com/evilmartians/lefthook | Missing | 73-hook sequential chain в settings.json — Lefthook на git-level хуках мог бы ускорить |
+| 3 | Run fast in pre-commit, comprehensive in CI | gatlenculp.medium.com pre-commit guide 2025 | Partial | kb_lint split done; mypy split — pending (memory feedback_precommit_mypy_baseline_gap) |
+| 4 | pre-commit autoupdate via Dependabot (2026-03) | github.blog/changelog/2026-03-10-dependabot | Missing | Enable Dependabot pre-commit ecosystem |
+| 5 | sync-pre-commit-deps (sync additional_dependencies с rev) | github.com/pre-commit/sync-pre-commit-deps | Missing | Закроет stale-rev drift между ruff/mypy versions |
+| 6 | Auto-fix (formatters) vs report-only | (general best practice) | Have | ruff/black auto-fix enabled |
+| 7 | OTel FastAPI request/response hooks | opentelemetry-python-contrib.readthedocs.io | Partial | Langfuse span есть для delegation; OTel federation для hook duration — gap |
+| 8 | OTel semantic conventions (service.name, service.version) | opentelemetry.io/docs/specs/semconv | Missing | data/hook-invocations.jsonl использует ad-hoc field names |
+| 9 | Prometheus /metrics endpoint scrape vs Collector push | intellitect.com/blog/opentelemetry-metrics-python | Missing | Нет hook latency histogram (p95/p99) |
+| 10 | Document --no-verify escape hatch + log usage | (community pattern) | Partial | Memory feedback_precommit_mypy_baseline_gap — нет formal policy |
+| 11 | conventional-pre-commit для enforcement | github.com/compilerla/conventional-pre-commit | Missing | Skill git-commit-message есть, но automated gate отсутствует |
+| 12 | Hook telemetry histogram pattern (per-hook p95/p99) | (Prometheus best practice) | Missing | Direct gap §4 — нужно для tuning timeout decisions |
+
 ### 4.1 Hook framework internals
 
 - **BaseHook ABC** ([base/base.py](.claude/hooks/base/base.py)) — single `execute(self, inp: HookInput) -> HookOutput | None` contract
