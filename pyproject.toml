@@ -146,6 +146,18 @@ ignore = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# `--import-mode=importlib` — modern pytest discovery that does NOT require
+# every test directory to have `__init__.py`. Without it pytest builds module
+# names from the rootdir + `__init__.py` chain, which on this repo causes:
+#   1. `tests/bsl/test_parser.py` → name `bsl.test_parser` → collides with
+#      `src/bsl/` package (no `bsl.test_parser` submodule exists there).
+#   2. `tests/unit/agents/test_plan_execute.py` collides with
+#      `tests/integration/test_plan_execute.py` (same basename, different dirs,
+#      both end up as bare `test_plan_execute` → second one fails to collect).
+#   3. Same collision for `test_neo4j.py` between unit/graph_store/ and integration/.
+# `importlib` mode skips sys.modules registration and treats each test file
+# by full path, eliminating all three collisions in one knob.
+addopts = "--import-mode=importlib"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests (require external services)",

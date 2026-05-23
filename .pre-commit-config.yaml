@@ -2,22 +2,43 @@
 # See https://pre-commit.com for more information
 
 # Top-level exclude — applies to ALL hooks.
-# - tools/        vendored / third-party tooling (serena, auto-documenter,
-#                 mcp-reasoner, 1c-docs-rag etc). Most have own pyproject/
-#                 lint configs that conflict with ours; some contain
-#                 intentionally invalid Python (mock data, broken examples).
-# - infra/        vendored npm/TS workspaces (task-master) + pipeline
-#                 orchestrator with own conventions (E741 ambiguous names
-#                 in legacy code).
-# - cache/        runtime artifacts (active-todos.json, etc).
-# - src/bsl/      1С Enterprise generated BSL/XML files (CRLF/whitespace
-#                 is platform-controlled, not pre-commit business).
+# - tools/                vendored / third-party tooling (serena, auto-documenter,
+#                         mcp-reasoner, 1c-docs-rag etc). Most have own pyproject/
+#                         lint configs that conflict with ours; some contain
+#                         intentionally invalid Python (mock data, broken examples).
+# - infra/                vendored npm/TS workspaces (task-master) + pipeline
+#                         orchestrator with own conventions (E741 ambiguous names
+#                         in legacy code).
+# - external/             git submodules / vendored 3rd-party repos (1c_mcp etc).
+# - cache/                runtime artifacts (active-todos.json, etc).
+# - src/bsl/              1С Enterprise generated BSL/XML files (CRLF/whitespace
+#                         is platform-controlled, not pre-commit business).
+# - jre/                  bundled JDK distribution for EDT (legal/, lib/, conf/).
+# - .serena/              IDE extension state.
+# - .vscode-extensions/   bundled VS Code extension payloads.
+# - *.log / mcp-server.log* / setup / VerInfo.txt / ReadMe.txt /
+#   data/analyze-1c-research/  generated artifacts (no point fixing trailing
+#                         whitespace in machine-output).
+# - docs/documentation/   imported third-party documentation (LangChain/MCP/
+#                         Claude Code translated docs) — whitespace preserved
+#                         deliberately for parity with upstream.
 exclude: |
   (?x)^(
     tools/.*|
     infra/.*|
+    external/.*|
     cache/.*|
-    src/bsl/.*
+    src/bsl/.*|
+    jre/.*|
+    \.serena/.*|
+    \.vscode-extensions/.*|
+    .*\.log(\..*)?|
+    mcp-server\.log.*|
+    setup|
+    VerInfo\.txt|
+    ReadMe\.txt|
+    data/analyze-1c-research/.*|
+    docs/documentation/.*
   )$
 
 repos:
