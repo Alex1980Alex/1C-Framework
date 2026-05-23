@@ -429,6 +429,24 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 | `line[3:]` baghunting | Loses leading `.` in paths | Switch to `line[2:].lstrip()` | Mitigated 2026-02-20 |
 | Hook regressions from -X theirs merge | Silent NameError + ValueError | Mandatory post-merge importlib sweep | Active (memory `feedback_post_merge_smoke_required`) |
 
+### 5.4 Best practices from GitHub — Defense-in-depth
+
+| # | Practice | Source | Have/Partial/Missing | Improvement |
+|---|---|---|---|---|
+| 1 | FastAPI middleware stack inversion (LIFO unwind) | fastapi.tiangolo.com/tutorial/middleware | Have | UPS→PostToolUse→Stop mirrors — explicitly document |
+| 2 | Django middleware process_request → view → process_response | (Django docs) | Have | Conceptual analog |
+| 3 | BaseHTTPMiddleware (stateful) vs @app.middleware decorator (stateless) | medium.com/@connect.hashblock 10 FastAPI patterns | Have | Hooks = stateless functions = decorator-style |
+| 4 | Bleach-style frontend+backend redundancy as DiD | medium.com/@veronicakylie1 | Have | preflight + enforcer = redundant guards |
+| 5 | Python supply chain: Ruff-security + pinned hashes + pip-audit CI | lobste.rs/s/ghsneu | Partial | Ruff yes, pip-audit и hash-pinning — missing |
+| 6 | Redlock distributed mutex (majority quorum) | redis.io/docs/latest/develop/clients/patterns/distributed-locks | Missing | data/.current-runs.json — single-host file lock; multi-Claude-session race possible |
+| 7 | Lua scripts для Redis atomicity | medium.com/@nikhi.unni | N/A | No Redis в hook layer |
+| 8 | Python redlock libs: redlock-ng (sync+async), pottery, aioredlock | pypi.org/project/redlock-ng | Missing | File-lock alternative для multi-session |
+| 9 | Graceful degradation (e-commerce best-sellers fallback) | designgurus.io/answers | Have | preflight emits informational systemMessage, не block |
+| 10 | CB + Fallback + Bulkhead trio (prevent cascade / partial fn / blast radius) | medium.com/@geampiere | Partial | Circuit breaker есть (shared/circuit_breaker.py); Bulkhead — gap |
+| 11 | pyresilience unified @resilient() decorator | pypi.org/project/pyresilience | Missing | Per-hook ad-hoc try/except — Объединить через decorator |
+| 12 | Tenacity + pybreaker coordination gap (retries fire even when CB open) | discuss.python.org/t/coordinating-resilience-patterns | Caveat | If we add CB, нужно coordinate state с retry |
+| 13 | Chaos engineering / failure injection (Chaos Toolkit, chaos-monkey) | chaostoolkit.org | Missing | Нет chaos suite — validate graceful degradation paths impossible |
+
 ### 5.3 Tech enablers для defense-in-depth
 
 - **`shared/circuit_breaker.py`** — OPEN/CLOSED/HALF_OPEN state machine per hook (fail_threshold=5, reset_timeout=300s) → graceful degradation
