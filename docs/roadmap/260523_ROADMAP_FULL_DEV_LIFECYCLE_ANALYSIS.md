@@ -1452,7 +1452,7 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | # | Blocker (§16.3) | Status after §17 | Remaining work |
 |---|---|---|---|
-| 1 | Inventory baseline wrong | **PENDING** | 0.5h recount (not affected by decisions) |
+| 1 | Inventory baseline wrong | **RESOLVED 2026-05-23** | §0/§4/§14.7 recount applied (59/87/40/20/66 verified via find+wc) |
 | 2 | §14 parallel-UPS unimplemented | **RESOLVED → ADR-D1** | Build `shared/prework_dispatcher.py` (1d in P0c) |
 | 3 | `AUTO_PR_MERGE_ENABLED` doc error | **PENDING** | 0.25h fix §8.5 env table |
 | 4 | §14 token budget conflict | **RESOLVED → ADR-D2** | Implement adaptive routing + MMR (0.5d added to P1) |
