@@ -1356,6 +1356,37 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 - Switch к native parallel (Option C) ТОЛЬКО когда Claude Code ships per-hook `timeout` setting AND shared-interpreter pool
 - Single-call abort: если dispatcher p95 >5s warm → profile cold-imports + pre-warm через SessionStart
 
+**Implementation pointer:**
+- `shared/prework_dispatcher.py` — `async def dispatch_all(prompt: str) -> dict[str, Result]:` использует `asyncio.gather(*[run_subprocess(h, prompt) for h in HOOKS])`
+- Per-hook timeout = 3s (memory) / 1s (architecture/code/SO) / 4s (github)
+- Failure isolation: `return_exceptions=True` в gather, failed hook → empty result with logged error
+
+### 17.2 ADR-D2: Token budget
+
+**Decision:** **Option C — Keep all 5 checks; gate injection через adaptive routing + MMR cap at ~5K tokens.**
+
+**Tradeoff matrix:**
+
+| Option | Effectiveness | Maintainability | Longevity | Risk |
+|---|---|---|---|---|
+| A. Relax target to 8K | Med (fits 7.8K, cache OK) | High | Low (lost-in-middle hits beyond ~6K) | High (defers problem; bloat compounds) |
+| B. Drop a check | Forces compliance | High | Med | High (every check justified — accept blind spot) |
+| C. All 5 + adaptive routing + MMR cap ~5K | **Highest (token AND quality)** | Med (+40 LoC classifier) | High (industry-standard) | Low (fail-soft default) |
+
+**Rationale (3 sentences):**
+1. Anthropic prompt cache minimum = **4096 tokens** ([docs](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)) + Liu et al. 2023 "Lost in the Middle" ([arxiv 2307.03172](https://arxiv.org/abs/2307.03172)) — sweet spot 4-6K максимизирует cache hit AND retrieval signal; 5K satisfies cache, 8K invites middle-degradation.
+2. Adaptive routing — free lunch в этом regime: production reports **-35% latency / -28% cost / +8% accuracy** для ~40 LoC TF-IDF+SVM classifier (macro-F1 0.928, <1ms) ([Query-Adaptive RAG](https://ragaboutit.com/query-adaptive-rag-routing-complex-questions-to-multi-hop-retrieval-while-keeping-simple-queries-fast/)).
+3. 4 free Anthropic cache breakpoints позволяют split stable (memory + skill catalog) vs volatile (RAG retrievals) — preserves cache hit rate даже когда MMR reshuffles volatile half.
+
+**Reversibility:**
+- Bump к 8K если classifier macro-F1 <0.85 OR cache hit-rate <60% для 2 weeks
+- Drop a check ТОЛЬКО если `contribution_to_answer` (Langfuse user-thumbs) <5% для месяца
+
+**Implementation pointer:**
+- `shared/prework_aggregator.py:adaptive_inject()` — TF-IDF classifier (simple/complex prompt) → routes к full 5K injection vs minimal 2K
+- MMR via `langchain.vectorstores.utils.maximal_marginal_relevance` для diversification
+- Cache breakpoints: prompt structure `[stable: memory + skills] + [volatile: RAG retrievals] + [user query]` — 3 of 4 breakpoints used
+
 После P0-P3 implementation:
 - **§4 Hook Matrix** queries → DuckDB SQL (вместо grep/jq)
 - **§9 Failure Modes** debugging → CloudEvents causation traversal
