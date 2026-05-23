@@ -358,7 +358,7 @@ Claude интерпретирует tool result, продолжает работ
 
 ## §4 Hook Chain Matrix
 
-73 hooks по событиям с timeout и matcher. Полный inventory — см. research данные в session log + skill `multi-level-hook-architecture` SKILL.md (~/.claude/skills/multi-level-hook-architecture/SKILL.md).
+66 hook registrations (59 unique `.py`) по событиям с timeout и matcher. Полный inventory — см. research данные в session log + skill `multi-level-hook-architecture` SKILL.md (~/.claude/skills/multi-level-hook-architecture/SKILL.md).
 
 | Event | Registrations | Critical hooks |
 |---|---|---|
@@ -380,7 +380,7 @@ Claude интерпретирует tool result, продолжает работ
 | # | Practice | Source | Have/Partial/Missing | Improvement |
 |---|---|---|---|---|
 | 1 | pre-commit stock hook set (trailing-whitespace, EOF, check-yaml/json/toml, large-files) | github.com/pre-commit/pre-commit-hooks | Have | Already in .pre-commit-config.yaml |
-| 2 | Lefthook parallel execution (Go-based, vs sequential husky) | github.com/evilmartians/lefthook | Missing | 73-hook sequential chain в settings.json — Lefthook на git-level хуках мог бы ускорить |
+| 2 | Lefthook parallel execution (Go-based, vs sequential husky) | github.com/evilmartians/lefthook | Missing | 66-registration sequential chain в settings.json — Lefthook на git-level хуках мог бы ускорить |
 | 3 | Run fast in pre-commit, comprehensive in CI | gatlenculp.medium.com pre-commit guide 2025 | Partial | kb_lint split done; mypy split — pending (memory feedback_precommit_mypy_baseline_gap) |
 | 4 | pre-commit autoupdate via Dependabot (2026-03) | github.blog/changelog/2026-03-10-dependabot | Missing | Enable Dependabot pre-commit ecosystem |
 | 5 | sync-pre-commit-deps (sync additional_dependencies с rev) | github.com/pre-commit/sync-pre-commit-deps | Missing | Закроет stale-rev drift между ruff/mypy versions |
