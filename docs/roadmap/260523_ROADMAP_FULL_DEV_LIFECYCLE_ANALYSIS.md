@@ -583,3 +583,42 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 - [260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md) — DONE via PR #4
 - [260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md) — disjoint reconciliation
 - [40_PR_AUTOMATION/](../framework%20documentation/40_PR_AUTOMATION/) — chapters 40.1-40.5
+
+### Skills (most relevant)
+
+- `multi-level-hook-architecture` — Hook 3-level deep dive
+- `task-protocol` — Phase machine + enforcement
+- `code-verify` — 3-level / 4-mode verification
+- `z-ai-delegation` — Token economy + classification
+- `memory-unified` — Unified Memory System
+- `hooks-skills-mcp-triad` — Triad architecture
+- `framework-patterns` — Architectural pattern catalog
+- `hook-debugging` + `claude-code-hooks-bugs` — Diagnostics + #6305/#10450 workarounds
+- `auto-git-save` — 3-layer commit chain
+
+### Memory entries (recent)
+
+- `project_disjoint_master_topology` — RESOLVED 2026-05-23
+- `feedback_post_merge_smoke_required` — `-X theirs` checklist
+- `feedback_precommit_vendor_excludes` — PR #4 round-6 lesson
+- `feedback_repo_full_permission` — work без разрешений на dev
+
+### Key files
+
+- `.claude/settings.json` — единый registry хуков + env
+- `.claude/hooks/base/{base.py, protocol.py}` — BaseHook
+- `.claude/hooks/shared/` — 24 modules
+- `data/hook-invocations.jsonl` — audit trail
+- `~/.claude/projects/C--1--Framework/memory/MEMORY.md` — 45 entries index
+
+---
+
+## §13 Когда обновлять
+
+- При добавлении нового event (ManualStop, PreCompact)
+- При значимом изменении hook count (>5 added/removed)
+- При появлении нового failure class
+- При смене enforcement boundaries
+- При замене Memory backend / Delegation provider
+- При закрытии item из §11
+- Когда reconciliation 260523 finalizes (Phase 5 complete)
