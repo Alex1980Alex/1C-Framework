@@ -208,3 +208,18 @@ git branch -d dev-master
 ---
 
 ## §5 Anti-patterns (collected from PR #4 round-6/7)
+
+| Anti-pattern | Почему плохо | Правильный путь |
+|---|---|---|
+| `pre-commit run --all-files` без полных vendor excludes | Хватает 1300+ файлов JDK / LangChain docs / log dumps | ВСЕГДА проверить top-level `exclude:` ПЕРЕД autofix; minimum set в HEAD post-`a705e69c5` |
+| Inventory copy всего `.claude/settings.json` с feat | Тянет 50+ unrelated hooks + phantom-блокировки через `code-skill-patterns.json` | Surgical patch: только новый matcher + env keys |
+| Cherry-pick semantic коммита без проверки base/protocol.py divergence | Silent hook misclassification (DetectedEvent="Unknown"), ошибки в логах нет | Diff `base/protocol.py` + `base.py` blob hashes ПЕРЕД cherry-pick |
+| mypy в pre-commit при 1000+ baseline errors без filter wrapper | Блокирует все local commits на pre-existing tech debt | Либо `mypy_baseline filter` wrapper, либо убрать mypy (CI имеет own continue-on-error job) |
+| `pytest --import-mode=prepend` (default) с inconsistent `__init__.py` | Name collisions (`bsl.test_parser`↔`src/bsl/`, duplicate basename'ы) | `addopts = "--import-mode=importlib"` в `[tool.pytest.ini_options]` |
+| Тащить `code-skill-patterns.json` целиком с feat → dev-master | Ссылки на несуществующие skills → phantom enforcer блокировка | НЕ переносить — оставить per-branch divergent |
+| `git rebase` 2 233 commits на dev-master без merge стратегии | Часы, конфликты в каждом 10-м коммите, риск потерять работу при abort | `git merge origin/dev-master` (1 merge commit) — minutes, единая точка resolve |
+| Force-push в origin/master без archive | Безвозвратная потеря 2 236 unique origin/master коммитов | Archive tag + branch (DONE 2026-05-19) ПЕРЕД любым force-push |
+
+---
+
+## §6 Decision matrix — когда что делать
