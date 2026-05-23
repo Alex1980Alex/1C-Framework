@@ -1342,6 +1342,42 @@
       "last_verified": "2026-05-22",
       "domain": "devops-git-workflow",
       "description": "17 GitHub projects analyzed. Native auto-merge / Actions / OSS bots / SaaS comparison. 15 best practices. Mapping to PDF Framework auto-git-save + post-task-push-pr hooks."
+    },
+    {
+      "file": "roadmap-260523-3-decisions-2026.md",
+      "title": "Roadmap 260523 §14/§15 — 3 architectural decisions: UPS hook parallelism (dispatcher pattern), token budget (adaptive RAG + MMR cap at 5K), Langfuse→LGTM migration gate (4 numeric triggers + OpenTelemetry dual-write)",
+      "keywords": [
+        "ups-hook-parallelism",
+        "hook-dispatcher-pattern",
+        "fan-out-fan-in",
+        "asyncio-gather",
+        "threadpoolexecutor",
+        "claude-code-issue-21533",
+        "claude-code-issue-4446",
+        "lefthook-benchmark",
+        "rag-token-budget",
+        "prompt-caching-4096-tokens",
+        "lost-in-the-middle",
+        "liu-2023-tacl",
+        "mmr-vs-topk",
+        "maximal-marginal-relevance",
+        "adaptive-rag-routing",
+        "query-classifier",
+        "langfuse-scaling-limits",
+        "langfuse-clickhouse",
+        "lgtm-migration-gate",
+        "grafana-tempo-loki",
+        "opentelemetry-dual-write",
+        "observability-migration-triggers",
+        "charity-majors-wait-for-pain",
+        "honeycomb-migration-playbook",
+        "nielsen-100ms-1s-10s",
+        "roadmap-260523"
+      ],
+      "created": "2026-05-23",
+      "last_verified": "2026-05-23",
+      "domain": "decision-record",
+      "description": "Final architectural decisions for roadmap 260523 §14/§15 unresolved questions. D1: single dispatcher hook using asyncio.gather over subprocess workers (recovers ~10s vs sequential, isolates timeouts vs native parallel). D2: keep all 5 checks + adaptive RAG router (TF-IDF+SVM classifier <1ms) + MMR rerank cap at ~5K tokens (fits 4096 prompt-cache minimum + avoids 'lost in middle' degradation). D3: OpenTelemetry-first instrumentation NOW, Langfuse stays primary, migration gate = ANY 2 of 4 triggers for ≥2 weeks (ingestion p95 >2s OR ClickHouse >100GB raw OR $200/mo OR distributed-tracing requirement). Cross-cutting: all 3 decisions favor 'decouple now, decide later' pattern."
     }
   ]
 }
