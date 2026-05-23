@@ -101,22 +101,30 @@ SYMPTOM #3: каждая фича = новый mini-260522 (повторяющи
 
 Migration PR-automation подсистемы на dev-master. Closed 260522. Lessons → §4, §5.
 
-### Phase 1 — Immediate cleanup (~15 минут)
+### Phase 1 — Immediate cleanup (✅ DONE 2026-05-23)
 
 **Цель:** обнулить остаточные ref'ы от PR #4.
 
 ```bash
-# Удалить remote migration-ветку (PR merged, ветка не нужна)
+# Удалить remote migration-ветку (PR merged) — executed ✓
 git push origin :migrate/pr-automation-stack
 
-# Fast-forward local master + local dev-master к origin/dev-master
+# Fast-forward local master к origin/dev-master (12 commits включая PR #4) — executed ✓
 git checkout master
 git merge --ff-only origin/dev-master
-git push origin master
-git checkout dev-master 2>/dev/null && git merge --ff-only origin/dev-master
+# NB: НЕ делать git push origin master здесь — это force-push в legacy
+# origin/master (2 236 уникальных коммитов), уничтожит legacy work без
+# предшествующего cherry-pick. Push в origin/master = Phase 4 (после
+# Phase 2-3 audit + cherry-pick).
 ```
 
-**Verification:** `gh pr list --state open` показывает только PR #2; `git log master..origin/dev-master` пусто.
+**Bug fix vs первой ревизии roadmap'а:** строка `git push origin master` УБРАНА (была ошибкой). Phase 1 = только local-only sync + remote migrate cleanup. Discovered during execution 2026-05-23.
+
+**Post-execution state:**
+- `gh pr list --state open` показывает только PR #2 + PR #3 (demo) ✓
+- `git log master..origin/dev-master` пусто (master = origin/dev-master = `25ab2de39`) ✓
+- `git ls-remote origin migrate/pr-automation-stack` пусто ✓
+- Remote branches: 4 (`archive/...`, `dev-master`, `feat/serena-audit-hybrid-refactor`, `master`)
 
 ### Phase 2 — Audit unique origin/master commits (~30-60 минут)
 
