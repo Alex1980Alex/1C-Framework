@@ -1,7 +1,7 @@
 # Roadmap 260519 — Master Branch Reconciliation
 
 **Дата создания:** 2026-05-19
-**Статус:** Phase 1 DONE, Phases 2–6 PENDING (требуется 2–5 часов сосредоточенной работы)
+**Статус:** **SUPERSEDED 2026-05-23** by [260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md). Phase 1 DONE, Phases 2-6 интегрированы в §3 Phase 2-5 unified roadmap'а с обновлённым risk register (PR #4 cherry-pick конфликты).
 **Связанная память:** [project_disjoint_master_topology](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_disjoint_master_topology.md)
 **Связанный PR:** [#2](https://github.com/Alex1980Alex/1C-Framework/pull/2) (открыт против `dev-master`; будет перенаправлен на `master` в Phase 5)
 
