@@ -187,3 +187,31 @@ Claude интерпретирует tool result, продолжает работ
 
 `scripts/pr_check_post_merge.py` (P3.4, oncall) — polls merged PR's CI:
 - Если post-merge CI fail → auto-revert commit + reopen PR с failure context
+
+### Stage 10 — Cleanup + next cycle
+
+После merge:
+- `gh pr merge --delete-branch` удаляет head branch
+- session-memory-save L5 promote sees prior session patterns → adjusts future memory injection
+- При следующем session start (Stage 0) circle closes
+
+---
+
+## §3 Pattern Catalog (cross-reference)
+
+Все паттерны реализованные во фреймворке, сгруппированные по категориям. Каждый имеет ссылку на implementation.
+
+### 3.1 Hook patterns
+
+| Pattern | Файл | Назначение |
+|---|---|---|
+| **3-Level Hook Architecture** | UPS/PostToolUse/Stop | Defense-in-depth — критичное дублируется на 3 уровнях |
+| **Enforcer (Stop, blocking)** | task-enforcer, docs-change-enforcer, git-commit-enforcer | exit 2 блокирует Stop пока условие не выполнено |
+| **Reminder (PostToolUse, non-blocking)** | code-verify-reminder, knowledge-cache-reminder | Создаёт mandatory task, не блокирует |
+| **Guard (PreToolUse, blocking)** | root-clutter-guard, bulk-action-guard, z-ai-write-guard | Cancel tool call перед execution |
+| **Router (UPS, advisory)** | skill-router, bsl-tool-router, decision-to-triad | Inject context/hints в systemMessage или stdout |
+| **Observer (PostToolUse, recording)** | task-protocol-observer, mcp-invocation-logger | Just records, никогда не блокирует |
+| **Workaround #6305 (UPS fallback)** | auto-git-save-prompt | Fires на следующем prompt если PostToolUse не сработал |
+| **Stop fallback (transcript scan)** | code-verify-reminder Stop entry | Читает transcript JSONL, scans markers |
+| **Canary log** | auto-git-save-prompt-canary.log | Diagnose hook invocation independently of logic |
+| **Cooldown** | memory-first-hook (30s), docs-enforcer (30m), auto-git-save (adaptive 2-6m) | Prevent spam/loop |
