@@ -39,3 +39,19 @@ def _gh(*args: str) -> tuple[int, str, str]:
 
 def _hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()[:16]
+
+
+def _read_jsonl() -> list[dict]:
+    if not JSONL_FILE.exists():
+        return []
+    out = []
+    with JSONL_FILE.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    return out
