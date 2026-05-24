@@ -108,3 +108,16 @@ def _embed_tei(text: str) -> list[float] | None:
     except Exception:
         return None
     return _parse_embedding(data)
+
+
+def _parse_embedding(data) -> list[float] | None:
+    if not isinstance(data, list) or not data:
+        return None
+    first = data[0]
+    if isinstance(first, list):
+        vec = [float(x) for x in first]
+    elif isinstance(first, dict) and "embedding" in first:
+        vec = [float(x) for x in first["embedding"]]
+    else:
+        return None
+    return _mrl_truncate(vec, COLLECTION_DIM)
