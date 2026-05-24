@@ -172,3 +172,29 @@ def _load_issue_tags() -> dict:
 def _save_issue_tags(tags: dict) -> None:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     ISSUE_TAG_FILE.write_text(json.dumps(tags, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _maybe_create_issue(error_hash: str, error_line: str, occ: list[dict]) -> str | None:
+    if len(occ) < OCCURRENCE_THRESHOLD:
+        return None
+    tags = _load_issue_tags()
+    if error_hash in tags:
+        return tags[error_hash]
+    prs = sorted({f"#{o['pr']}" for o in occ if o.get("pr")})
+    urls = "\n".join(f"- {o.get('url', '')}" for o in occ[-5:])
+    body = (
+        f"## Recurring CI Failure\n\n**Error:** `{error_line}`\n\n"
+        f"**Hash:** `{error_hash}` · **Occurrences:** {len(occ)}\n\n"
+        f"**PRs:** {', '.join(prs) if prs else '(none)'}\n\n**Runs:**\n{urls}\n\n"
+        f"_Auto-created by `scripts/ci_failure_cache.py`._"
+    )
+    rc, out, _ = _gh("issue", "create",
+                     "--title", f"[CI] Recurring: {error_line[:60]}",
+                     "--body", body, "--label", "ci-failure,automated")
+    if rc != 0:
+        return None
+    url = out.strip().splitlines()[-1] if out.strip() else None
+    if url:
+        tags[error_hash] = url
+        _save_issue_tags(tags)
+    return url
