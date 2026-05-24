@@ -26,6 +26,7 @@ from src.pdf_framework.agents.rag.nodes import (
 from src.pdf_framework.agents.rag.state import RAGState
 from src.pdf_framework.config import PROJECT_ROOT, AgentSettings, SelfRAGSettings
 from src.pdf_framework.search.manager import SearchManager
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def create_rag_agent(
     settings: AgentSettings | None = None,
     self_rag_settings: SelfRAGSettings | None = None,
     api_key: str = "",
-) -> None:
+) -> Any:
     """Create a LangGraph RAG agent with Self-RAG support.
 
     Phase 5 (v0.6.0) Pipeline:

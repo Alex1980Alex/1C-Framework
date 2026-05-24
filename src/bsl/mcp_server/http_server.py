@@ -19,6 +19,7 @@ from starlette.types import Receive, Scope, Send
 from .auth import OAuth2Service, OAuth2Store
 from .config import Config
 from .mcp_server import MCPProxy, current_onec_credentials
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class OAuth2BearerMiddleware(BaseHTTPMiddleware):
         self.auth_mode = auth_mode
         self.protected_paths = ["/mcp/", "/sse"]
 
-    async def dispatch(self, request: Request, call_next) -> None:
+    async def dispatch(self, request: Request, call_next) -> Any:
         """Проверка авторизации для защищённых путей."""
         # Пропускаем, если auth_mode != oauth2
         if self.auth_mode != "oauth2":
@@ -203,7 +204,7 @@ class MCPHttpServer:
 
         return Starlette(routes=routes)
 
-    def _create_streamable_http_asgi(self) -> None:
+    def _create_streamable_http_asgi(self) -> Any:
         """Создание ASGI обработчика для Streamable HTTP."""
 
         async def asgi(scope: Scope, receive: Receive, send: Send) -> None:
@@ -236,7 +237,7 @@ class MCPHttpServer:
         """Регистрация основных маршрутов."""
 
         @self.app.get("/")
-        async def root() -> None:
+        async def root() -> Any:
             """Корневой маршрут - перенаправляет на info."""
             endpoints = {
                 "info": "/info",
@@ -255,7 +256,7 @@ class MCPHttpServer:
             return {"message": "1C MCP Proxy Server", "endpoints": endpoints}
 
         @self.app.get("/info")
-        async def info() -> None:
+        async def info() -> Any:
             """Информационный маршрут."""
             return {
                 "name": self.config.server_name,
@@ -275,7 +276,7 @@ class MCPHttpServer:
             }
 
         @self.app.get("/health")
-        async def health() -> None:
+        async def health() -> Any:
             """Проверка здоровья сервера."""
             try:
                 # Проверяем подключение к 1С через прокси
@@ -305,7 +306,7 @@ class MCPHttpServer:
         """Регистрация OAuth2 маршрутов."""
 
         @self.app.get("/.well-known/oauth-protected-resource")
-        async def well_known_prm(request: Request) -> None:
+        async def well_known_prm(request: Request) -> Any:
             """Protected Resource Metadata (RFC 9728)."""
             # Определяем публичный URL
             if self.config.public_url:
@@ -319,7 +320,7 @@ class MCPHttpServer:
             return self.oauth2_service.generate_prm_document(public_url)
 
         @self.app.get("/.well-known/oauth-authorization-server")
-        async def well_known_as_metadata(request: Request) -> None:
+        async def well_known_as_metadata(request: Request) -> Any:
             """Authorization Server Metadata (RFC 8414)."""
             # Определяем публичный URL
             if self.config.public_url:
@@ -349,7 +350,7 @@ class MCPHttpServer:
             }
 
         @self.app.post("/register")
-        async def register_client(request: Request) -> None:
+        async def register_client(request: Request) -> Any:
             """Dynamic Client Registration (RFC 7591) - упрощённая версия.
 
             Всегда возвращает фиксированный client_id для публичного клиента.
@@ -405,7 +406,7 @@ class MCPHttpServer:
             state: str = None,
             code_challenge: str = None,
             code_challenge_method: str = None,
-        ) -> None:
+        ) -> Any:
             """Authorization endpoint - показывает форму логина."""
             # Валидация параметров
             if not all(
@@ -480,7 +481,7 @@ class MCPHttpServer:
             redirect_uri: str = None,
             state: str = None,
             code_challenge: str = None,
-        ) -> None:
+        ) -> Any:
             """Обработка формы логина и выдача authorization code."""
             if not all([redirect_uri, code_challenge]):
                 return HTMLResponse(
@@ -555,7 +556,7 @@ class MCPHttpServer:
             refresh_token: str = Form(None),
             username: str = Form(None),
             password: str = Form(None),
-        ) -> None:
+        ) -> Any:
             """Token endpoint для обмена code на токены, refresh или password grant."""
 
             # Password Grant - самый простой вариант
