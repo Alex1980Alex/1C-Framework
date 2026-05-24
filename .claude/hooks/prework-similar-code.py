@@ -75,6 +75,17 @@ def _embed_query(text: str) -> list[float] | None:
     return None
 
 
+def _mrl_truncate(vector: list[float], target_dim: int) -> list[float]:
+    """MRL truncate + L2 re-normalize. Match indexer truncation in framework_search/indexer.py."""
+    if len(vector) <= target_dim:
+        return vector
+    truncated = vector[:target_dim]
+    norm = sum(x * x for x in truncated) ** 0.5
+    if norm < 1e-9:
+        return truncated  # zero vector safeguard
+    return [x / norm for x in truncated]
+
+
 def _query_qdrant(vector: list[float]) -> list[dict]:
     """Query Qdrant collection. Returns list of payload dicts with score."""
     try:
