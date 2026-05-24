@@ -506,7 +506,7 @@ class LLMRotationService:
             )
         except ImportError as e:
             raise RuntimeError(
-                "claude-agent-sdk not installed. " 'pip install -e ".[llm-rotation]"'
+                'claude-agent-sdk not installed. pip install -e ".[llm-rotation]"'
             ) from e
 
         # Optional error types — older SDK versions may lack them.

@@ -11,9 +11,12 @@ The actual transformer forward + mean-pool path lives behind
 `Qwen3STEmbedder.embed_late_chunked` and requires CUDA / real Qwen3 weights;
 runtime validation happens in 8.12.8 quality regression on golden set.
 """
+
 from __future__ import annotations
 
 import pytest
+
+pytest.importorskip("qdrant_client")
 
 from scripts.reindex_bsl_qwen3 import (
     _LATE_CHUNK_SEP,
@@ -21,7 +24,6 @@ from scripts.reindex_bsl_qwen3 import (
     _embed_chunks_late,
 )
 from src.bsl.parser.bsl_chunker import BSLChunk
-
 
 # ---------------------------------------------------------------------------
 # _char_span_to_token_span
@@ -161,7 +163,7 @@ def test_late_char_spans_are_contiguous_and_correct():
     e = _FakeEmbedder()
     chunks = [
         _chunk("a1", "alpha", "modA"),  # 5 chars
-        _chunk("a2", "beta", "modA"),   # 4 chars
+        _chunk("a2", "beta", "modA"),  # 4 chars
     ]
     _embed_chunks_late(e, chunks)
 
@@ -196,14 +198,14 @@ def test_late_falls_back_to_embed_batch_on_none():
     # produces a vector via embed_batch for that chunk only.
     chunks = [
         _chunk("a1", "alpha", "modA"),  # 5 chars
-        _chunk("a2", "beta", "modA"),   # 4 chars
+        _chunk("a2", "beta", "modA"),  # 4 chars
     ]
     parent_len = 5 + len(_LATE_CHUNK_SEP) + 4
     e = _FakeEmbedder(fail_indices={(parent_len, 1)})
     out = _embed_chunks_late(e, chunks)
 
-    assert out[0][0] == 5.0       # late path: span len 5
-    assert out[1][0] == -1.0      # fallback marker
+    assert out[0][0] == 5.0  # late path: span len 5
+    assert out[1][0] == -1.0  # fallback marker
     assert e.batch_calls == [["beta"]]
 
 

@@ -90,9 +90,7 @@ class RAPTORSearchStrategy:
         # Roadmap §4.2: when LLM rerank enabled, fetch a larger candidate pool
         # so the LLM judge has enough material to discriminate. Final truncation
         # to user `k` happens post-rerank.
-        rerank_active = (
-            self._config.enable_llm_rerank and self._llm_reranker is not None
-        )
+        rerank_active = self._config.enable_llm_rerank and self._llm_reranker is not None
         fetch_k = max(k, self._config.llm_rerank_fetch_k) if rerank_active else k
 
         if self._config.search_mode == "collapsed":
@@ -233,9 +231,10 @@ class RAPTORSearchStrategy:
             logger.warning("[RAPTOR] Traversal found nothing, falling back to collapsed")
             return await self._collapsed_tree_search(query, query_embedding, k, filter)
 
-        trail.sort(key=lambda r: r.score * self._level_weight(
-            r.chunk.metadata.get("traversal_level", 0)
-        ), reverse=True)
+        trail.sort(
+            key=lambda r: r.score * self._level_weight(r.chunk.metadata.get("traversal_level", 0)),
+            reverse=True,
+        )
         top_k = trail[:k]
 
         elapsed = (time.perf_counter() - start) * 1000

@@ -14,14 +14,16 @@ Coverage:
 - Late chunking raises a clear NotImplementedError (CLI guard belt + braces).
 - close() releases the underlying HTTP client.
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
 
 import pytest
 
-from scripts.reindex_bsl_qwen3 import Qwen3TEIEmbedder, make_embedder
+pytest.importorskip("qdrant_client")
 
+from scripts.reindex_bsl_qwen3 import Qwen3TEIEmbedder, make_embedder
 
 # ---------------------------------------------------------------------------
 # Test infrastructure: replace httpx.Client with a stub that records calls
@@ -163,9 +165,7 @@ def test_init_skips_health_when_verify_disabled(monkeypatch):
 
 
 def test_embed_batch_posts_correct_payload(monkeypatch):
-    mock = _install_mock(
-        monkeypatch, _MockClient(embed_payload=[[0.1] * 4096, [0.2] * 4096])
-    )
+    mock = _install_mock(monkeypatch, _MockClient(embed_payload=[[0.1] * 4096, [0.2] * 4096]))
 
     emb = Qwen3TEIEmbedder()
     out = emb.embed_batch(["text one", "text two"], is_query=False)
@@ -232,9 +232,7 @@ def test_embed_batch_empty_short_circuits(monkeypatch):
 def test_embed_batch_accepts_dict_wrapped_response(monkeypatch):
     """Forward-compat with hypothetical TEI minor that wraps response in
     {"embeddings": [...]} — both shapes should pass through cleanly."""
-    _install_mock(
-        monkeypatch, _MockClient(embed_payload={"embeddings": [[0.0] * 4096]})
-    )
+    _install_mock(monkeypatch, _MockClient(embed_payload={"embeddings": [[0.0] * 4096]}))
 
     emb = Qwen3TEIEmbedder()
     out = emb.embed_batch(["single"], is_query=False)
@@ -259,9 +257,7 @@ def test_embed_batch_propagates_server_error(monkeypatch):
     non-OOM exceptions so the user notices a misconfigured server."""
     import httpx
 
-    mock = _install_mock(
-        monkeypatch, _MockClient(embed_payload=[[0.0] * 4096])
-    )
+    mock = _install_mock(monkeypatch, _MockClient(embed_payload=[[0.0] * 4096]))
     emb = Qwen3TEIEmbedder()
     # Flip post() to return 500 after init's /health passed.
     mock.post = lambda url, *, json: _MockResponse({}, status_code=500)  # noqa: ARG005

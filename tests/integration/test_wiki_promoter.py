@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytest.importorskip("qdrant_client")
+
 from src.memory.librarian.wiki_promoter import WikiPromoter
 from src.memory.orchestrator.memcube import ContentType, MemoryCube
 

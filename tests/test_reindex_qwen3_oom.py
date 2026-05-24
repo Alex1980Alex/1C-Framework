@@ -8,12 +8,15 @@ raising `RuntimeError("CUDA out of memory")` (the message older torch uses);
 `flush_batch` catches it via `_is_cuda_oom` which matches by message text and
 exception class name.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+
+pytest.importorskip("qdrant_client")
 
 from scripts.reindex_bsl_qwen3 import _is_cuda_oom, flush_batch
 from src.bsl.parser.bsl_chunker import BSLChunk

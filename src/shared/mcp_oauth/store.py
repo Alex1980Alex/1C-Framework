@@ -131,7 +131,9 @@ class OAuth2Store:
                 if codes or access or refresh:
                     logger.debug(
                         "Cleaned expired tokens: codes=%d, access=%d, refresh=%d",
-                        codes, access, refresh,
+                        codes,
+                        access,
+                        refresh,
                     )
             except asyncio.CancelledError:
                 break

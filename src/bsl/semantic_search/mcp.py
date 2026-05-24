@@ -305,7 +305,7 @@ def bsl_similar(file_path: str, limit: int = 5) -> str:
             return f"## Похожие модули для {file_path}\n\nПохожих модулей не найдено."
 
         rows = "\n".join(
-            f"| {i+1} | `{r['path']}` | {r['name']} | {r['score']:.3f} | {r['symbol_type']} |"
+            f"| {i + 1} | `{r['path']}` | {r['name']} | {r['score']:.3f} | {r['symbol_type']} |"
             for i, r in enumerate(results)
         )
         return (

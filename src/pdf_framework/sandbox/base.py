@@ -23,7 +23,7 @@ class SandboxResult:
     """True if output exceeded ~100 KB and was cut."""
 
 
-class SandboxQuotaExceeded(Exception):
+class SandboxQuotaExceeded(Exception):  # noqa: N818  # historical name; rename deferred (8 file impact)
     """Raised when the sandbox call quota for the current instance is exceeded."""
 
 

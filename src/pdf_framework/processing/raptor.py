@@ -7,10 +7,15 @@ Author: Claude Code
 Version: 1.4.0 - Phase 13.1: RAPTOR Tree Builder
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from src.framework_search.embedder import FrameworkTEIEmbedder
 
 logger = logging.getLogger(__name__)
 

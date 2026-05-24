@@ -120,9 +120,7 @@ class OAuth2Service:
         logger.debug("Tokens issued for client %s", code_data.client_id)
         return (access_token, "Bearer", self.access_ttl, refresh_token)
 
-    async def refresh_tokens(
-        self, refresh_token: str
-    ) -> tuple[str, str, int, str] | None:
+    async def refresh_tokens(self, refresh_token: str) -> tuple[str, str, int, str] | None:
         """Rotate refresh token, issue new access + refresh pair."""
         data = await self.store.get_refresh_token(refresh_token)
         if not data:
@@ -153,7 +151,8 @@ class OAuth2Service:
 
         logger.debug(
             "Tokens refreshed for client %s (rotation #%d)",
-            data.client_id, data.rotation_counter + 1,
+            data.client_id,
+            data.rotation_counter + 1,
         )
         return (new_access, "Bearer", self.access_ttl, new_refresh)
 

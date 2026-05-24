@@ -32,14 +32,17 @@ OUTCOMES_FILE = _STATE_DIR / "delegation-outcomes.jsonl"
 def _extract_features(ctx: dict[str, object]) -> np.ndarray:
     """Convert context dict to 6-dim feature vector."""
     ext = ctx.get("file_extension", "")
-    return np.array([
-        CONTENT_TYPE_MAP.get(ctx.get("content_type", ""), 4),
-        min(ctx.get("estimated_lines", ctx.get("line_count", 0)) / 200.0, 1.0),
-        1.0 if ctx.get("has_code") else 0.0,
-        1.0 if ctx.get("has_architecture") else 0.0,
-        DOMAIN_MAP.get(ctx.get("domain", ""), 4) / 7.0,
-        1.0 if ext in (".py", ".ts", ".bsl", ".js", ".go") else 0.0,
-    ], dtype=np.float64)
+    return np.array(
+        [
+            CONTENT_TYPE_MAP.get(ctx.get("content_type", ""), 4),
+            min(ctx.get("estimated_lines", ctx.get("line_count", 0)) / 200.0, 1.0),
+            1.0 if ctx.get("has_code") else 0.0,
+            1.0 if ctx.get("has_architecture") else 0.0,
+            DOMAIN_MAP.get(ctx.get("domain", ""), 4) / 7.0,
+            1.0 if ext in (".py", ".ts", ".bsl", ".js", ".go") else 0.0,
+        ],
+        dtype=np.float64,
+    )
 
 
 class LinUCBModel:
@@ -183,12 +186,15 @@ class DelegationBandit:
         try:
             self.state_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.state_path, "wb") as f:
-                pickle.dump({
-                    "A": [a.tolist() for a in self.model.A],
-                    "b": [b.tolist() for b in self.model.b],
-                    "n_updates": self.model.n_updates,
-                    "total_updates": self.total_updates,
-                }, f)
+                pickle.dump(
+                    {
+                        "A": [a.tolist() for a in self.model.A],
+                        "b": [b.tolist() for b in self.model.b],
+                        "n_updates": self.model.n_updates,
+                        "total_updates": self.total_updates,
+                    },
+                    f,
+                )
         except Exception as e:
             logger.warning("Failed to save bandit state: %s", e)
 
@@ -247,7 +253,9 @@ if __name__ == "__main__":
     elif args.cmd == "dashboard":
         stats = bandit.get_stats()
         print("=== Delegation Learning Dashboard ===")
-        print(f"Mode: {stats['mode']} ({stats['total_outcomes']} outcomes, {stats['total_updates']} updates)")
+        print(
+            f"Mode: {stats['mode']} ({stats['total_outcomes']} outcomes, {stats['total_updates']} updates)"
+        )
         print("\n=== Arm Distribution ===")
         for arm, count in stats["arm_updates"].items():
             bar = "#" * min(count // 5, 40)

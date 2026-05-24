@@ -95,8 +95,7 @@ class QdrantVectorStore(BaseVectorStore):
                 alias_names = set()
 
             exists = (
-                self._collection_name in collection_names
-                or self._collection_name in alias_names
+                self._collection_name in collection_names or self._collection_name in alias_names
             )
 
             bm25_enabled = getattr(self._settings, "qdrant_bm25_enabled", False)
@@ -265,7 +264,12 @@ class QdrantVectorStore(BaseVectorStore):
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+                FieldCondition(
+                    key=key,
+                    match=MatchAny(any=value)
+                    if isinstance(value, list)
+                    else MatchValue(value=value),
+                )
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -303,7 +307,12 @@ class QdrantVectorStore(BaseVectorStore):
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+                FieldCondition(
+                    key=key,
+                    match=MatchAny(any=value)
+                    if isinstance(value, list)
+                    else MatchValue(value=value),
+                )
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -465,12 +474,23 @@ class QdrantVectorStore(BaseVectorStore):
         if not self._initialized:
             await self.initialize()
 
-        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue, PayloadSelectorInclude
+        from qdrant_client.models import (
+            FieldCondition,
+            Filter,
+            MatchAny,
+            MatchValue,
+            PayloadSelectorInclude,
+        )
 
         scroll_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+                FieldCondition(
+                    key=key,
+                    match=MatchAny(any=value)
+                    if isinstance(value, list)
+                    else MatchValue(value=value),
+                )
                 for key, value in filter.items()
             ]
             scroll_filter = Filter(must=conditions)
@@ -531,7 +551,10 @@ class QdrantVectorStore(BaseVectorStore):
 
         # Count before delete
         conditions = [
-            FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+            FieldCondition(
+                key=key,
+                match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value),
+            )
             for key, value in filter.items()
         ]
         qdrant_filter = Filter(must=conditions)
@@ -630,7 +653,12 @@ class QdrantVectorStore(BaseVectorStore):
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+                FieldCondition(
+                    key=key,
+                    match=MatchAny(any=value)
+                    if isinstance(value, list)
+                    else MatchValue(value=value),
+                )
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)
@@ -956,7 +984,12 @@ class QdrantVectorStore(BaseVectorStore):
         search_filter = None
         if filter:
             conditions = [
-                FieldCondition(key=key, match=MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value))
+                FieldCondition(
+                    key=key,
+                    match=MatchAny(any=value)
+                    if isinstance(value, list)
+                    else MatchValue(value=value),
+                )
                 for key, value in filter.items()
             ]
             search_filter = Filter(must=conditions)

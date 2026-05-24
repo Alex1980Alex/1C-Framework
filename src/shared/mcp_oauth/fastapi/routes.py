@@ -112,5 +112,7 @@ def _public_url(request: Request) -> str:
     Pair with FastAPI's `TrustedHostMiddleware` for defense-in-depth.
     """
     scheme = request.headers.get("x-forwarded-proto") or request.url.scheme
-    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    host = (
+        request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    )
     return f"{scheme}://{host}".rstrip("/")

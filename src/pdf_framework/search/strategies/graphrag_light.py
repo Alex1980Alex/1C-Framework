@@ -123,6 +123,7 @@ class LightRAGStrategy:
                 name = hit.get("name", "")
                 if name:
                     import re
+
                     fname = re.sub(r"[^\w\s-]", "", name.lower())
                     fname = re.sub(r"[\s_]+", "-", fname)[:80].rstrip("-")
                     wp = self._wiki_dir / f"{fname}.md"
