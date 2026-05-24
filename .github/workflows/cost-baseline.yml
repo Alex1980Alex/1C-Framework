@@ -47,7 +47,7 @@ jobs:
         run: python scripts/analyze_langfuse_cost.py
 
       - name: Open / update PR with refreshed baseline
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'chore: weekly cost baseline refresh'
           title: 'chore: weekly cost baseline refresh'
