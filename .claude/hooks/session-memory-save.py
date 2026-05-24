@@ -261,6 +261,21 @@ def save_to_sqlite(ctx):
     return True
 
 
+def save_to_wiki_log(ctx):
+    """Stub for L5 wiki log append; full impl deferred (post-PR#2 regression)."""
+    return False
+
+
+def try_promote_patterns():
+    """Stub for L2->L5 wiki promote subprocess; full impl deferred."""
+    return None
+
+
+def _emit_langfuse_span(ctx, status):
+    """Stub for Langfuse observability span; full impl deferred."""
+    return None
+
+
 class SessionMemorySave(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         ctx = collect_context()
