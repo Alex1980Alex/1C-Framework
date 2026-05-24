@@ -1390,8 +1390,6 @@ src/shared/llm_rotation/service.py:0: error: Call to untyped function "ProviderR
 src/shared/llm_rotation/service.py:0: error: Missing type arguments for generic type "Task"  [type-arg]
 src/shared/llm_rotation/service.py:0: error: Missing type arguments for generic type "tuple"  [type-arg]
 src/shared/llm_rotation/service.py:0: error: Returning Any from function declared to return "dict[str, Any]"  [no-any-return]
-src/shared/llm_rotation/service.py:0: error: Cannot assign to a type  [misc]
-src/shared/llm_rotation/service.py:0: note: Error code "misc" not covered by "type: ignore[assignment]" comment
 src/shared/llm_rotation/service.py:0: error: Incompatible types in assignment (expression has type "ProviderState | None", variable has type "ProviderState")  [assignment]
 src/shared/llm_rotation/service.py:0: error: Incompatible types in assignment (expression has type "ProviderState | None", variable has type "ProviderState")  [assignment]
 src/pdf_framework/agents/rag/middleware.py:0: error: Missing type arguments for generic type "dict"  [type-arg]

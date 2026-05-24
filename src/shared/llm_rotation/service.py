@@ -513,7 +513,12 @@ class LLMRotationService:
         try:
             from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
         except ImportError:
-            CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment]
+            # Class-based fallback (avoids platform-divergent unused-ignore — see benchmark_llm.py:102).
+            class ClaudeSDKError(Exception):  # type: ignore[no-redef]
+                pass
+
+            class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef]
+                pass
 
         target_alias = (model or state.config.default_model).lower()
         # Map short aliases to full model names; pass through if already full.
