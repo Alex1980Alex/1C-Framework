@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from src.bsl.parser.bsl_chunker import _safe_id
 
-
 CYRILLIC_LONG_PATHS = [
     r"C:\1С-Framework\ИБTransportManagementDevelop\Конфигурация\src\Catalogs\ВариантыОтчетов\Commands\Изменить\CommandModule.bsl",
     r"C:\1С-Framework\ИБTransportManagementDevelop\Конфигурация\src\Catalogs\ВариантыОтчетов\Commands\Открыть\CommandModule.bsl",

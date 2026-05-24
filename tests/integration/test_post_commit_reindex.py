@@ -67,18 +67,14 @@ class TestBslProjectRoot:
     def test_valid_path_returns_project_root(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         _make_bsl_project(tmp_path, "configuration/MyProject")
-        result = mod._bsl_project_root(
-            "configuration/MyProject/Documents/Doc.bsl"
-        )
+        result = mod._bsl_project_root("configuration/MyProject/Documents/Doc.bsl")
         assert result is not None
         assert result.name == "MyProject"
 
     def test_nested_file_still_returns_project_root(self, tmp_path, monkeypatch):
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         _make_bsl_project(tmp_path, "configuration/ProjX")
-        result = mod._bsl_project_root(
-            "configuration/ProjX/Sub/Deep/Module.bsl"
-        )
+        result = mod._bsl_project_root("configuration/ProjX/Sub/Deep/Module.bsl")
         assert result is not None
         assert result.name == "ProjX"
 
@@ -86,9 +82,7 @@ class TestBslProjectRoot:
         """EDT layout: marker at repo root level, BSL files in nested Конфигурация/src/."""
         monkeypatch.setattr(mod, "REPO_ROOT", tmp_path, raising=False)
         _make_bsl_project(tmp_path, "ИБMyEDT", configuration_root="Конфигурация/src")
-        result = mod._bsl_project_root(
-            "ИБMyEDT/Конфигурация/src/Catalogs/Foo/Module.bsl"
-        )
+        result = mod._bsl_project_root("ИБMyEDT/Конфигурация/src/Catalogs/Foo/Module.bsl")
         assert result is not None
         assert result.name == "ИБMyEDT"
 
@@ -198,14 +192,16 @@ class TestSplitBslAndFramework:
 class TestChangedFiles:
     def test_normal_output_parsed(self, monkeypatch):
         monkeypatch.setattr(
-            mod.subprocess, "check_output",
+            mod.subprocess,
+            "check_output",
             lambda *a, **kw: "src/foo.py\nsrc/bar.md\n",
         )
         assert mod._changed_files("HEAD~1") == ["src/foo.py", "src/bar.md"]
 
     def test_windows_backslash_normalised_to_posix(self, monkeypatch):
         monkeypatch.setattr(
-            mod.subprocess, "check_output",
+            mod.subprocess,
+            "check_output",
             lambda *a, **kw: "src\\framework_search\\config.py\n",
         )
         assert mod._changed_files("HEAD~1") == ["src/framework_search/config.py"]
@@ -219,14 +215,16 @@ class TestChangedFiles:
 
     def test_empty_git_output_returns_empty(self, monkeypatch):
         monkeypatch.setattr(
-            mod.subprocess, "check_output",
+            mod.subprocess,
+            "check_output",
             lambda *a, **kw: "",
         )
         assert mod._changed_files("HEAD~1") == []
 
     def test_blank_lines_stripped(self, monkeypatch):
         monkeypatch.setattr(
-            mod.subprocess, "check_output",
+            mod.subprocess,
+            "check_output",
             lambda *a, **kw: "\nsrc/foo.py\n\nsrc/bar.py\n",
         )
         assert mod._changed_files("HEAD~1") == ["src/foo.py", "src/bar.py"]
@@ -261,7 +259,8 @@ class TestMain:
         monkeypatch.setattr(mod, "LOG_PATH", tmp_path / "test.log", raising=False)
         monkeypatch.setattr(mod.subprocess, "check_output", lambda *a, **kw: "abc123\n")
         monkeypatch.setattr(
-            mod, "_changed_files",
+            mod,
+            "_changed_files",
             lambda *a, **kw: [f"file{i}.py" for i in range(10)],
         )
         assert mod.main() == 0
@@ -270,11 +269,13 @@ class TestMain:
         self._patch_argv(monkeypatch)
         monkeypatch.setattr(mod.subprocess, "check_output", lambda *a, **kw: "abc123\n")
         monkeypatch.setattr(
-            mod, "_changed_files",
+            mod,
+            "_changed_files",
             lambda *a, **kw: ["src/framework_search/utils.py"],
         )
         monkeypatch.setattr(
-            mod, "_split_bsl_and_framework",
+            mod,
+            "_split_bsl_and_framework",
             lambda paths: (["src/framework_search/utils.py"], []),
         )
         spawned: list[list[str]] = []
@@ -290,7 +291,8 @@ class TestMain:
         bsl_group = {"project": "/repo/configuration/X", "files": ["/repo/F.bsl"]}
         monkeypatch.setattr(mod, "_changed_files", lambda *a, **kw: [rel])
         monkeypatch.setattr(
-            mod, "_split_bsl_and_framework",
+            mod,
+            "_split_bsl_and_framework",
             lambda paths: ([], [bsl_group]),
         )
         monkeypatch.setattr(mod, "_spawn_framework_reindex", lambda p: None)
@@ -317,15 +319,18 @@ class TestMain:
         self._patch_argv(monkeypatch)
         monkeypatch.setattr(mod.subprocess, "check_output", lambda *a, **kw: "abc123\n")
         monkeypatch.setattr(
-            mod, "_changed_files",
+            mod,
+            "_changed_files",
             lambda *a, **kw: ["src/framework_search/utils.py"],
         )
         monkeypatch.setattr(
-            mod, "_split_bsl_and_framework",
+            mod,
+            "_split_bsl_and_framework",
             lambda paths: (["src/framework_search/utils.py"], []),
         )
         monkeypatch.setattr(
-            mod, "_spawn_framework_reindex",
+            mod,
+            "_spawn_framework_reindex",
             lambda p: (_ for _ in ()).throw(OSError("spawn failed")),
         )
         monkeypatch.setattr(mod, "_spawn_bsl_reindex", lambda p, f: None)
@@ -340,11 +345,12 @@ EXPECTED_HOOKS_PATH = "scripts/git_hooks"
 
 @pytest.mark.integration
 class TestCoreHooksPath:
-
     def _run_git_config(self, key: str) -> tuple[int, str]:
         result = subprocess.run(
             ["git", "-C", str(REPO_ROOT), "config", "--local", "--get", key],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
         return result.returncode, result.stdout.strip()
 
@@ -365,4 +371,6 @@ class TestCoreHooksPath:
 
     def test_post_commit_hook_present_in_target_dir(self):
         target = REPO_ROOT / EXPECTED_HOOKS_PATH / "post-commit"
-        assert target.exists(), f"Hook script {target} missing — core.hooksPath would point at empty dir"
+        assert target.exists(), (
+            f"Hook script {target} missing — core.hooksPath would point at empty dir"
+        )

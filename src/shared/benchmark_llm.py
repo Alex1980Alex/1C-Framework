@@ -45,15 +45,9 @@ logger = logging.getLogger(__name__)
 
 # Override via BENCHMARK_CLAUDE_MODEL env (haiku/sonnet/opus alias or full name).
 # Default Haiku for batch eval: cheaper, faster, less agentic than Opus.
-_BENCHMARK_MODEL: Final[str] = os.environ.get(
-    "BENCHMARK_CLAUDE_MODEL", "claude-haiku-4-5"
-)
-_OLLAMA_URL: Final[str] = os.environ.get(
-    "BENCHMARK_OLLAMA_URL", "http://localhost:11434"
-)
-_OLLAMA_MODEL: Final[str] = os.environ.get(
-    "BENCHMARK_OLLAMA_MODEL", "qwen2.5-coder:7b"
-)
+_BENCHMARK_MODEL: Final[str] = os.environ.get("BENCHMARK_CLAUDE_MODEL", "claude-haiku-4-5")
+_OLLAMA_URL: Final[str] = os.environ.get("BENCHMARK_OLLAMA_URL", "http://localhost:11434")
+_OLLAMA_MODEL: Final[str] = os.environ.get("BENCHMARK_OLLAMA_MODEL", "qwen2.5-coder:7b")
 
 _CLAUDE_DEFAULT_TIMEOUT: Final[int] = 120
 _OLLAMA_DEFAULT_TIMEOUT: Final[int] = 90
@@ -89,10 +83,14 @@ async def _call_claude_sdk(
     Latency ~5-15s. Returns final response text combining ResultMessage
     content (preferred) + AssistantMessage text blocks (fallback).
     """
+    # claude-agent-sdk is a mandatory dep (pyproject.toml: claude-agent-sdk>=0.2,<0.3),
+    # so all these names are guaranteed to exist. Single try/except for clean ImportError surfacing.
     try:
         from claude_agent_sdk import (
             AssistantMessage,
             ClaudeAgentOptions,
+            ClaudeSDKError,
+            CLINotFoundError,
             ResultMessage,
             query,
         )
@@ -100,12 +98,6 @@ async def _call_claude_sdk(
         raise BenchmarkLLMError(
             'claude-agent-sdk not installed. pip install -e ".[llm-rotation]"'
         ) from e
-
-    # Optional error types — older SDK versions may not export them.
-    try:
-        from claude_agent_sdk import CLINotFoundError, ClaudeSDKError
-    except ImportError:
-        CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment,misc]
 
     # max_turns=3: gives Claude room to use 1-2 tool-use turns before
     # responding (CLI is agentic by default). Empirically max_turns=1
@@ -136,10 +128,8 @@ async def _call_claude_sdk(
 
     try:
         await asyncio.wait_for(_collect(), timeout=timeout)
-    except asyncio.TimeoutError as e:
-        raise BenchmarkLLMError(
-            f"claude-agent-sdk timed out after {timeout}s"
-        ) from e
+    except TimeoutError as e:
+        raise BenchmarkLLMError(f"claude-agent-sdk timed out after {timeout}s") from e
     except CLINotFoundError as e:
         raise BenchmarkLLMError(f"claude CLI not found: {e}") from e
     except ClaudeSDKError as e:
@@ -152,7 +142,8 @@ async def _call_claude_sdk(
         if partial:
             logger.warning(
                 "[BENCHMARK-LLM] SDK exception after partial text (%d chars): %s",
-                len(partial), e,
+                len(partial),
+                e,
             )
             return partial
         raise BenchmarkLLMError(f"claude-agent-sdk error: {e}") from e

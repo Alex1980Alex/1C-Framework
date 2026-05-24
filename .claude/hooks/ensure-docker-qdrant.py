@@ -116,7 +116,7 @@ class EnsureDockerQdrant(BaseHook):
                 "memory-orchestrator, skill-learning, memory-ai работают в degraded mode."
             )
         return HookOutput().system_message(
-            "[DOCKER] Docker Desktop не запущен, авто-старт не удался. " f"Запусти вручную: {exe}"
+            f"[DOCKER] Docker Desktop не запущен, авто-старт не удался. Запусти вручную: {exe}"
         )
 
 

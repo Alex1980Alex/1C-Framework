@@ -170,7 +170,7 @@ def main() -> int:
     print(f"  Got {len(candidates)} candidate symbols")
 
     if len(candidates) < args.count:
-        print(f"  [WARN] only {len(candidates)} candidates available, " f"requested {args.count}")
+        print(f"  [WARN] only {len(candidates)} candidates available, requested {args.count}")
         args.count = len(candidates)
 
     sampled = random.sample(candidates, args.count)

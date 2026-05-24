@@ -81,11 +81,14 @@ class TestIDORGuardWiring:
     accidental removal of the guard call.
     """
 
-    @pytest.mark.parametrize("file_path", [
-        "src/api/routes/documents.py",
-        "src/api/routes/jobs.py",
-        "src/api/routes/graph.py",
-    ])
+    @pytest.mark.parametrize(
+        "file_path",
+        [
+            "src/api/routes/documents.py",
+            "src/api/routes/jobs.py",
+            "src/api/routes/graph.py",
+        ],
+    )
     def test_route_file_calls_guard(self, file_path: str):
         from pathlib import Path
 

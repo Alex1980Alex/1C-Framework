@@ -8,6 +8,8 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
+pytest.importorskip("qdrant_client")
+
 from src.framework_search.indexer import (
     _mrl_truncate,
     ensure_collection,

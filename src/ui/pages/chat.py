@@ -158,7 +158,7 @@ def create_chat_page(api_url: str):
                                 sources_data = chunk.get("sources", sources_data)
                         except Exception:
                             # Not JSON — treat as raw text token
-                            answer += line
+                            answer += line  # type: ignore[operator]  # line is str at this branch
                             history[-1] = {"role": "assistant", "content": answer}
                             yield history, "", ""
 

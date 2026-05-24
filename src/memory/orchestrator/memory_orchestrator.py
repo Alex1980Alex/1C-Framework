@@ -55,8 +55,6 @@ from ..vector_memory.services.forgetgate_service import (
     ForgetGateService,
     ForgetStrategy,
 )
-from .adapters.graph_adapter import GraphSearchAdapter
-from .adapters.wiki_adapter import WikiSearchAdapter
 from .link_registry import LinkRegistry, LinkType
 from .memory_router import (
     MemoryRouter,

@@ -195,7 +195,7 @@ def create_search_page(api_url: str):
 
                 response = requests.post(
                     f"{api_url}/search/",
-                    json={"query": q, **params},
+                    json={"query": q, **params},  # type: ignore[dict-item]
                     timeout=30,
                 )
                 response.raise_for_status()

@@ -54,6 +54,7 @@ SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+HOOK_NAME = "memory-first-hook"
 MIN_PROMPT_LEN = 20
 COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
@@ -419,6 +420,15 @@ def score_memory(query_tokens: set, memory: dict) -> float:
     query_coverage = len(all_hits) / len(query_tokens)
     memory_density = min(weighted / max_possible, 1.0) if max_possible > 0 else 0.0
     return 0.7 * query_coverage + 0.3 * memory_density
+
+
+def search_wiki(query_tokens: set, limit: int = 10) -> list:
+    """Layer 4 wiki search — stub returning [] (full impl deferred).
+
+    Called from RRF merge in execute(); empty result means layer 'wiki' simply
+    contributes nothing to the merge, other layers (sqlite/qdrant/md) still work.
+    """
+    return []
 
 
 def search_md(query_tokens: set, limit: int = 10) -> list:

@@ -256,7 +256,7 @@ def main():
                 upsert_s = time.perf_counter() - t_up
                 total += len(buf)
                 buf.clear()
-                print(f"  [{total}/{len(nodes)}] upserted, {time.time()-t0:.0f}s")
+                print(f"  [{total}/{len(nodes)}] upserted, {time.time() - t0:.0f}s")
                 tracker.event(
                     "upsert_chunk", total=total, of=len(nodes), upsert_s=round(upsert_s, 3)
                 )
@@ -272,7 +272,7 @@ def main():
     print(f"\n{'=' * 50}\nGRAPH EMBEDDINGS BUILD COMPLETE\n{'=' * 50}")
     print(f"  Nodes:   {len(nodes)}")
     print(f"  Points:  {final.points_count}")
-    print(f"  Time:    {elapsed:.1f}s ({elapsed/max(1,len(nodes)):.2f}s/node)")
+    print(f"  Time:    {elapsed:.1f}s ({elapsed / max(1, len(nodes)):.2f}s/node)")
     tracker.stop(
         summary={
             "nodes": len(nodes),

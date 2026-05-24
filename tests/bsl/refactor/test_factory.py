@@ -13,9 +13,7 @@ from src.bsl.semantic_search.refactor.backends.factory import (
 
 
 class _FakeRunner:
-    def run_rename(
-        self, workspace_root: Path, old_name: str, new_name: str
-    ) -> list[AstGrepMatch]:
+    def run_rename(self, workspace_root: Path, old_name: str, new_name: str) -> list[AstGrepMatch]:
         return []
 
 

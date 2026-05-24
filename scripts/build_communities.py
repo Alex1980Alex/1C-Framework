@@ -80,7 +80,7 @@ def run_leiden(nodes, edges, seed=42):
     nontrivial = {cid: ns for cid, ns in communities.items() if len(ns) >= MIN_COMMUNITY_SIZE}
     coverage = sum(len(ns) for ns in nontrivial.values()) / max(1, len(nodes))
     print(
-        f"  Nontrivial (>={MIN_COMMUNITY_SIZE} nodes): {len(nontrivial)} ({coverage*100:.1f}% coverage)"
+        f"  Nontrivial (>={MIN_COMMUNITY_SIZE} nodes): {len(nontrivial)} ({coverage * 100:.1f}% coverage)"
     )
     return nontrivial
 

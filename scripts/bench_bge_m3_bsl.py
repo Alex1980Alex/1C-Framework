@@ -92,7 +92,7 @@ def main():
         print("Loading BGE-M3 ...")
         t0 = time.time()
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, device="cuda")
-        print(f"  Loaded in {time.time()-t0:.1f}s")
+        print(f"  Loaded in {time.time() - t0:.1f}s")
 
         # Scroll source to find mandatory chunks first
         sampled = []

@@ -19,10 +19,43 @@ def _load_validate_toc():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
 LEGACY_PATTERNS = ["multilingual-e5-large", "Qdrant 1.15", "qdrant/qdrant:v1.15"]
-BROAD_LEGACY_PATTERNS = LEGACY_PATTERNS + ["nomic-embed-text", "all-MiniLM-L6-v2", "bsl_code_v2", "bsl_code_v3"]
-LEGACY_MARKERS = ["legacy", "до Phase 8", "до Phase 9", "не выбрано", "Legacy", "Deprecated", "deprecated", "Dropped", "dropped", "удалена", "superseded", "boundary detector", "(НЕ retrieval)", "Phase 8 note", "Phase 8 default", "Migration note", "Phase 9.1"]
-FILE_LEVEL_BANNERS = ["Migration note", "Legacy pipeline note", "Phase 8 note", "Phase 8 default", "Phase 8 + 9.1", "Phase 8 production reference", "DROPPED"]
+BROAD_LEGACY_PATTERNS = LEGACY_PATTERNS + [
+    "nomic-embed-text",
+    "all-MiniLM-L6-v2",
+    "bsl_code_v2",
+    "bsl_code_v3",
+]
+LEGACY_MARKERS = [
+    "legacy",
+    "до Phase 8",
+    "до Phase 9",
+    "не выбрано",
+    "Legacy",
+    "Deprecated",
+    "deprecated",
+    "Dropped",
+    "dropped",
+    "удалена",
+    "superseded",
+    "boundary detector",
+    "(НЕ retrieval)",
+    "Phase 8 note",
+    "Phase 8 default",
+    "Migration note",
+    "Phase 9.1",
+]
+FILE_LEVEL_BANNERS = [
+    "Migration note",
+    "Legacy pipeline note",
+    "Phase 8 note",
+    "Phase 8 default",
+    "Phase 8 + 9.1",
+    "Phase 8 production reference",
+    "DROPPED",
+]
 ALLOWLIST_DIRS = {"31_QWEN3_RETRIEVAL_PRODUCTION"}
 
 
@@ -82,10 +115,18 @@ class TestTOCConsistency:
 
         msg_parts: list[str] = []
         if declared_missing:
-            msg_parts.append("TOC declares but disk lacks:\n  - " + "\n  - ".join(str(p) for p in declared_missing))
+            msg_parts.append(
+                "TOC declares but disk lacks:\n  - "
+                + "\n  - ".join(str(p) for p in declared_missing)
+            )
         if orphan_fs:
-            msg_parts.append("Disk has but TOC omits:\n  + " + "\n  + ".join(str(p) for p in orphan_fs))
-        assert not msg_parts, "TOC ↔ filesystem desync (run `python scripts/validate_toc.py` for details):\n\n" + "\n\n".join(msg_parts)
+            msg_parts.append(
+                "Disk has but TOC omits:\n  + " + "\n  + ".join(str(p) for p in orphan_fs)
+            )
+        assert not msg_parts, (
+            "TOC ↔ filesystem desync (run `python scripts/validate_toc.py` for details):\n\n"
+            + "\n\n".join(msg_parts)
+        )
 
 
 @pytest.mark.unit

@@ -24,6 +24,7 @@ def _run(coro):
 @pytest.fixture
 def store(tmp_path):
     from src.pdf_framework.config import GraphStoreSettings
+
     settings = GraphStoreSettings(persist_dir=tmp_path / "graph")
     s = NetworkXGraphStore(settings)
     _run(s.initialize())
@@ -36,10 +37,15 @@ def store(tmp_path):
 @pytest.mark.asyncio
 async def test_get_relations_returns_outgoing(store):
     """a → b should return one Relation."""
-    await store.add_relation(Relation(
-        id="r1", source_entity_id="a", target_entity_id="b",
-        relation_type="uses", confidence=0.95,
-    ))
+    await store.add_relation(
+        Relation(
+            id="r1",
+            source_entity_id="a",
+            target_entity_id="b",
+            relation_type="uses",
+            confidence=0.95,
+        )
+    )
     rels = await store.get_relations("a")
     assert len(rels) == 1
     assert rels[0].source_entity_id == "a"
@@ -51,12 +57,22 @@ async def test_get_relations_returns_outgoing(store):
 @pytest.mark.asyncio
 async def test_get_relations_multiple_outgoing(store):
     """a → b, a → c should return 2 relations (no specific order required)."""
-    await store.add_relation(Relation(
-        id="r1", source_entity_id="a", target_entity_id="b", relation_type="uses",
-    ))
-    await store.add_relation(Relation(
-        id="r2", source_entity_id="a", target_entity_id="c", relation_type="extends",
-    ))
+    await store.add_relation(
+        Relation(
+            id="r1",
+            source_entity_id="a",
+            target_entity_id="b",
+            relation_type="uses",
+        )
+    )
+    await store.add_relation(
+        Relation(
+            id="r2",
+            source_entity_id="a",
+            target_entity_id="c",
+            relation_type="extends",
+        )
+    )
     rels = await store.get_relations("a")
     assert len(rels) == 2
     targets = {r.target_entity_id for r in rels}
@@ -73,9 +89,14 @@ async def test_get_relations_empty_for_missing_entity(store):
 @pytest.mark.asyncio
 async def test_get_relations_does_not_include_incoming(store):
     """get_relations is OUTGOING only — b's incoming edge from a is not in b's list."""
-    await store.add_relation(Relation(
-        id="r1", source_entity_id="a", target_entity_id="b", relation_type="uses",
-    ))
+    await store.add_relation(
+        Relation(
+            id="r1",
+            source_entity_id="a",
+            target_entity_id="b",
+            relation_type="uses",
+        )
+    )
     # b has no outgoing edges, only incoming from a
     rels = await store.get_relations("b")
     assert rels == []
@@ -84,12 +105,16 @@ async def test_get_relations_does_not_include_incoming(store):
 @pytest.mark.asyncio
 async def test_get_relations_preserves_properties(store):
     """Relation properties dict + source_chunk_id round-trip via edge data."""
-    await store.add_relation(Relation(
-        id="r1", source_entity_id="a", target_entity_id="b",
-        relation_type="uses",
-        properties={"weight": 1.5, "note": "primary"},
-        source_chunk_id="chunk-42",
-    ))
+    await store.add_relation(
+        Relation(
+            id="r1",
+            source_entity_id="a",
+            target_entity_id="b",
+            relation_type="uses",
+            properties={"weight": 1.5, "note": "primary"},
+            source_chunk_id="chunk-42",
+        )
+    )
     rels = await store.get_relations("a")
     assert len(rels) == 1
     assert rels[0].properties == {"weight": 1.5, "note": "primary"}

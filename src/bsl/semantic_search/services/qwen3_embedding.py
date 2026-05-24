@@ -45,8 +45,7 @@ logger = logging.getLogger(__name__)
 # distribution alignment. bsl_code_v4_late (production) was eval'd with
 # this exact prompt → 0.567 recall (+26% vs E5).
 QUERY_INSTRUCTION = (
-    "Instruct: Given a web search query, retrieve relevant passages "
-    "that answer the query\nQuery: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 # Passages indexed WITHOUT instruction (Qwen3 convention). DOCUMENT_INSTRUCTION
 # is retained empty for re-indexing path compatibility — prepending nothing

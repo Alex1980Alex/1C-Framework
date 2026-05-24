@@ -34,7 +34,16 @@ def tmp_db(tmp_path, monkeypatch):
     )
     rows = [
         ("id1", "Python testing best practices with pytest", 0.8, "dev", "[]", None, None, None),
-        ("id2", "Russian language processing and NLP techniques", 0.7, "nlp", "[]", None, None, None),
+        (
+            "id2",
+            "Russian language processing and NLP techniques",
+            0.7,
+            "nlp",
+            "[]",
+            None,
+            None,
+            None,
+        ),
         ("id3", "Database optimization and query performance", 0.6, "db", "[]", None, None, None),
     ]
     conn.executemany("INSERT INTO important_messages VALUES (?,?,?,?,?,?,?,?)", rows)
@@ -167,8 +176,18 @@ class TestRrfMerge:
 class TestFormatFederatedContext:
     def test_nonempty_output_format(self):
         merged = [
-            {"source": "sqlite", "fused_score": 0.95, "category": "dev", "content": "test content alpha"},
-            {"source": "md", "fused_score": 0.80, "category": "note", "content": "test content beta"},
+            {
+                "source": "sqlite",
+                "fused_score": 0.95,
+                "category": "dev",
+                "content": "test content alpha",
+            },
+            {
+                "source": "md",
+                "fused_score": 0.80,
+                "category": "note",
+                "content": "test content beta",
+            },
         ]
         output = mod.format_federated_context(merged)
         assert output.startswith("[MEMORY CONTEXT] Top")
@@ -204,6 +223,7 @@ class TestDimAlignment:
     @pytest.mark.integration
     def test_qdrant_collection_dims_match_expected(self) -> None:
         import httpx
+
         try:
             httpx.get("http://127.0.0.1:6333/collections", timeout=2).raise_for_status()
         except Exception:
@@ -211,16 +231,11 @@ class TestDimAlignment:
         mismatches = []
         for collection_name, _ in mod.SEMANTIC_COLLECTIONS:
             try:
-                r = httpx.get(
-                    f"http://127.0.0.1:6333/collections/{collection_name}", timeout=2
-                )
+                r = httpx.get(f"http://127.0.0.1:6333/collections/{collection_name}", timeout=2)
                 if r.status_code == 404:
                     continue
                 vectors = r.json()["result"]["config"]["params"]["vectors"]
-                actual_dim = (
-                    vectors.get("size")
-                    or next(iter(vectors.values()))["size"]
-                )
+                actual_dim = vectors.get("size") or next(iter(vectors.values()))["size"]
                 if actual_dim != self.EXPECTED_DIM:
                     mismatches.append(f"{collection_name}: actual={actual_dim}")
             except Exception:

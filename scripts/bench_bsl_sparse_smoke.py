@@ -29,8 +29,7 @@ from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient, models
 
 QWEN3_QUERY_INSTRUCT = (
-    "Instruct: Given a web search query, retrieve relevant passages "
-    "that answer the query\nQuery: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
 
@@ -228,7 +227,7 @@ def main() -> int:
 
         if (i + 1) % 5 == 0:
             print(
-                f"[bench] {i+1}/{args.num_queries} "
+                f"[bench] {i + 1}/{args.num_queries} "
                 f"dense_smoke={m_dense_smoke['rank']} "
                 f"bm25={m_bm25_smoke['rank']} "
                 f"hybrid={m_hybrid_smoke['rank']} "

@@ -163,9 +163,7 @@ class TestEmbedBatchRetry:
         assert call_count[0] == 3
         assert len(result) == 1
 
-    def test_transport_error_reraises_after_exhausting_attempts(
-        self, fast_retry: None
-    ) -> None:
+    def test_transport_error_reraises_after_exhausting_attempts(self, fast_retry: None) -> None:
         emb = FrameworkTEIEmbedder.__new__(FrameworkTEIEmbedder)
         emb.base_url = "http://localhost:8080"
         emb.client_batch_size = 32

@@ -67,7 +67,7 @@ class LangSmithBackend(SandboxBackend):
             kwargs: dict = {"template_name": self._template}
             if self._blueprint:
                 kwargs["blueprint"] = self._blueprint
-            self._sandbox = await asyncio.to_thread(self._client.create_sandbox, **kwargs)
+            self._sandbox = await asyncio.to_thread(self._client.create_sandbox, **kwargs)  # type: ignore[arg-type]
 
     async def execute(
         self,

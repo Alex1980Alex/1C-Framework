@@ -59,7 +59,7 @@ def main():
     print("=== Phase 1: Load BM25 model ===")
     t0 = time.time()
     bm25 = SparseTextEmbedding("Qdrant/bm25")
-    print(f"  Loaded BM25 in {time.time()-t0:.1f}s")
+    print(f"  Loaded BM25 in {time.time() - t0:.1f}s")
 
     print("\n=== Phase 2: Create target collection ===")
     if client.collection_exists(TARGET):
@@ -121,7 +121,7 @@ def main():
             print(f"  upserted {upserted}")
         if next_offset is None:
             break
-    print(f"  Done: {upserted} points in {time.time()-t0:.1f}s")
+    print(f"  Done: {upserted} points in {time.time() - t0:.1f}s")
 
     print("\n=== Phase 4: Bench grounded PDF queries (dense-only vs RRF) ===")
     raw = json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))

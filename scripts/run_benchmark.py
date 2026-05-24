@@ -55,7 +55,7 @@ def _build_backends(names: list[str]) -> dict:
     for name in names:
         if name == "ast-grep":
             print(f"WARNING: '{name}' backend is stub — returning empty WorkspaceEdit")
-            backends[name] = _StubBackend()
+            backends[name] = _StubBackend()  # noqa: F821
         else:
             print(f"ERROR: Unsupported backend '{name}'")
             sys.exit(1)
@@ -64,9 +64,9 @@ def _build_backends(names: list[str]) -> dict:
 
 def _append_trend(run_id: str, backends: list[str], results: list, trend_path: Path) -> None:
     try:
-        commit = subprocess.check_output(
+        commit = subprocess.check_output(  # noqa: F821
             ["git", "rev-parse", "--short", "HEAD"],
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,  # noqa: F821
             encoding="utf-8",
         ).strip()
     except Exception:
@@ -109,8 +109,8 @@ def main() -> None:
     if args.append_trend:
         _append_trend(
             args.run_id,
-            backend_names,
-            results,
+            backend_names,  # noqa: F821
+            results,  # noqa: F821
             REPO_ROOT / "docs" / "roadmap" / "benchmark" / "trend.md",
         )
 

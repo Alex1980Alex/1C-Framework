@@ -39,7 +39,8 @@ class TestLegacyDataclasses:
         from datetime import datetime, timedelta
 
         data = AuthCodeData(
-            login="alex", password="s3cret",
+            login="alex",
+            password="s3cret",
             redirect_uri="http://localhost/cb",
             code_challenge="abc123",
             exp=datetime.now() + timedelta(minutes=10),
@@ -77,7 +78,8 @@ class TestServiceFlow:
     async def test_authorize_then_exchange_returns_tokens(self, service: OAuth2Service):
         verifier, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            login="alex", password="s3cret",
+            login="alex",
+            password="s3cret",
             redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
@@ -94,11 +96,14 @@ class TestServiceFlow:
     async def test_validate_returns_login_password_tuple(self, service: OAuth2Service):
         verifier, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            login="alex", password="s3cret",
+            login="alex",
+            password="s3cret",
             redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
-        access, _, _, _ = await service.exchange_code_for_tokens(code, "http://localhost/cb", verifier)
+        access, _, _, _ = await service.exchange_code_for_tokens(
+            code, "http://localhost/cb", verifier
+        )
 
         creds = await service.validate_access_token(access)
         assert creds == ("alex", "s3cret")
@@ -111,11 +116,14 @@ class TestServiceFlow:
     async def test_refresh_rotation_preserves_credentials(self, service: OAuth2Service):
         verifier, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            login="alex", password="s3cret",
+            login="alex",
+            password="s3cret",
             redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
-        _, _, _, refresh = await service.exchange_code_for_tokens(code, "http://localhost/cb", verifier)
+        _, _, _, refresh = await service.exchange_code_for_tokens(
+            code, "http://localhost/cb", verifier
+        )
 
         rotated = await service.refresh_tokens(refresh)
         assert rotated is not None

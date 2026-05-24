@@ -228,7 +228,7 @@ async def run_scenario(scenario: dict) -> int:
     _print_section("Phase 1 — Health check")
     health_raw = await mds.debug_health_check()
     health = json.loads(health_raw)
-    print(f"ready={health['ready']}, " f"workflow={health['recommended_workflow']}")
+    print(f"ready={health['ready']}, workflow={health['recommended_workflow']}")
     if not health["ready"]:
         if health.get("auto_prepare_available"):
             print(f"auto-prepare: {health['auto_prepare_available']}")
@@ -254,8 +254,7 @@ async def run_scenario(scenario: dict) -> int:
         print(f"[FAIL] connect: {connect}")
         return EXIT_CONNECT_FAILED
     print(
-        f"session={connect['attach']['session_id'][:8]}…, "
-        f"targets={len(connect.get('targets', []))}"
+        f"session={connect['attach']['session_id'][:8]}…, targets={len(connect.get('targets', []))}"
     )
 
     _print_section("Phase 3 — Set breakpoints")
@@ -266,7 +265,7 @@ async def run_scenario(scenario: dict) -> int:
             line=bp["line"],
             module_type=bp.get("module_type", "CommonModule"),
         )
-        print(f"  BP{i}: {bp.get('module_type')} obj={bp['object_id'][:8]}… " f"line={bp['line']}")
+        print(f"  BP{i}: {bp.get('module_type')} obj={bp['object_id'][:8]}… line={bp['line']}")
 
     _print_section("Phase 4 — Trigger BSL + capture stops")
     # Pre-trigger wait: даём ragent время spawn'ить fresh rphost'ы и
@@ -318,7 +317,7 @@ async def run_scenario(scenario: dict) -> int:
         stack_raw = await mds.debug_stack_trace(target_id=target_id)
         stack = json.loads(stack_raw).get("stack", [])
         top = stack[0] if stack else {}
-        print(f"  BP{i} fired @ line={top.get('lineNo', '?')} " f"depth={len(stack)}")
+        print(f"  BP{i} fired @ line={top.get('lineNo', '?')} depth={len(stack)}")
         # Run inspections
         if bp.get("inspections"):
             ok, results = await _check_inspections(bp["inspections"], target_id)

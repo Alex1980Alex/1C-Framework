@@ -40,7 +40,7 @@ class SubprocessAstGrepRunner:
             with tempfile.NamedTemporaryFile(
                 mode="w", suffix=".yml", delete=False, encoding="utf-8"
             ) as rule_file:
-                rule_file.write(rule_content)
+                rule_file.write(inline_rule)
                 rule_path = rule_file.name
 
             args = [self._binary, "scan", "--json=compact"]

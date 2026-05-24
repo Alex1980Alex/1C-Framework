@@ -43,7 +43,7 @@ def build_graph(db_path: Path) -> nx.Graph:
     return G
 
 
-def cluster_summary(G: nx.Graph, members: list[str]) -> dict:
+def cluster_summary(G: nx.Graph, members: list[str]) -> dict:  # noqa: N803  # NetworkX convention: G = graph
     module_paths = [G.nodes[m].get("module_path", "") for m in members]
     return {
         "unique_modules": len(set(module_paths)),

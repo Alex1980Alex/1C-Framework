@@ -39,6 +39,9 @@ import os
 import subprocess
 import sys
 import time
+from datetime import (
+    datetime as _dt,  # noqa: N813  # short alias for hot path in pause-expiry checks
+)
 from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,7 +60,6 @@ logging.basicConfig(
 log = logging.getLogger("auto-git-save")
 
 from base import BaseHook, HookInput, HookOutput
-
 from shared.circuit_breaker import with_circuit_breaker
 from shared.task_master import (
     add_task,

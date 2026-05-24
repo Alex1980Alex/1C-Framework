@@ -3,7 +3,7 @@
 import base64
 import hashlib
 import secrets
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi import Depends, FastAPI

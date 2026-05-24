@@ -21,6 +21,7 @@ sys.path.insert(0, _HOOK_DIR)
 from base import BaseHook, HookInput, HookOutput
 
 _DEBOUNCE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "git-save-debounce.json")
+_PAUSE_FILE = os.path.join(os.path.dirname(_HOOK_DIR), "cache", "auto-git-save.paused")
 _DEBOUNCE_SECONDS = 5.0
 _MAX_PENDING = 20
 

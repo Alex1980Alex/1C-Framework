@@ -29,8 +29,7 @@ from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient, models
 
 QWEN3_QUERY_INSTRUCT = (
-    "Instruct: Given a web search query, retrieve relevant passages "
-    "that answer the query\nQuery: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
@@ -52,7 +51,7 @@ def _id_from_expected(e: dict[str, Any]) -> str:
 
 def _id_from_point(p: Any) -> str:
     pl = getattr(p, "payload", {}) or {}
-    return f"{pl.get('module_path','?')}:{pl.get('line_start',0)}"
+    return f"{pl.get('module_path', '?')}:{pl.get('line_start', 0)}"
 
 
 def recall_at_k(retr: list[str], exp: list[str], k: int = 10) -> float:
@@ -177,7 +176,7 @@ def main() -> int:
         try:
             dvec = embed_query_tei(query, args.tei_url)
         except Exception as e:
-            print(f"[skip] {item.get('id','?')} embed failed: {e}")
+            print(f"[skip] {item.get('id', '?')} embed failed: {e}")
             continue
         sparse = next(iter(bm25.embed([normalize_camelcase(query)])))
 
@@ -213,7 +212,7 @@ def main() -> int:
 
         if (i + 1) % 10 == 0:
             print(
-                f"[bench] {i+1}/{len(items)} "
+                f"[bench] {i + 1}/{len(items)} "
                 f"dense_mrr={qmetrics['dense']['mrr']:.2f} "
                 f"bm25_mrr={qmetrics['bm25']['mrr']:.2f} "
                 f"hybrid_mrr={qmetrics['hybrid_rrf']['mrr']:.2f}"
@@ -254,10 +253,10 @@ def main() -> int:
     d_mrr = bm25_o["mrr"] - hyb_o["mrr"]
     d_recall = bm25_o["recall@10"] - hyb_o["recall@10"]
     print("\n=== Decision support ===")
-    print(f"  BM25 vs Hybrid: dMRR={d_mrr*100:+.1f}pp, " f"dRecall@10={d_recall*100:+.1f}pp")
+    print(f"  BM25 vs Hybrid: dMRR={d_mrr * 100:+.1f}pp, dRecall@10={d_recall * 100:+.1f}pp")
     print(
-        f"  Hybrid vs Dense: dMRR={(hyb_o['mrr']-dense_o['mrr'])*100:+.1f}pp, "
-        f"dRecall@10={(hyb_o['recall@10']-dense_o['recall@10'])*100:+.1f}pp"
+        f"  Hybrid vs Dense: dMRR={(hyb_o['mrr'] - dense_o['mrr']) * 100:+.1f}pp, "
+        f"dRecall@10={(hyb_o['recall@10'] - dense_o['recall@10']) * 100:+.1f}pp"
     )
     if d_mrr >= 0.05 and (hyb_o["recall@10"] - bm25_o["recall@10"]) <= 0.03:
         recommendation = "SWITCH_DEFAULT_TO_BM25"

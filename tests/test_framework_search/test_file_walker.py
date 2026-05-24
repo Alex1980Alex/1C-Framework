@@ -100,19 +100,25 @@ class TestIterIndexableFiles:
         root_a.mkdir()
         (root_a / "shared.py").write_text("pass")
         # root_b points to same dir via alias (use the same path twice)
-        results = list(iter_indexable_files(roots=["src", "src"], extra_files=[], repo_root=tmp_path))
+        results = list(
+            iter_indexable_files(roots=["src", "src"], extra_files=[], repo_root=tmp_path)
+        )
         assert len(results) == 1
 
 
 class TestIterIndexableFilesExtras:
     def test_extra_file_yielded(self, tmp_path: Path) -> None:
         (tmp_path / "CLAUDE.md").write_text("# instructions")
-        results = list(iter_indexable_files(roots=[], extra_files=["CLAUDE.md"], repo_root=tmp_path))
+        results = list(
+            iter_indexable_files(roots=[], extra_files=["CLAUDE.md"], repo_root=tmp_path)
+        )
         assert len(results) == 1
         _, rel, lang = results[0]
         assert rel == "CLAUDE.md"
         assert lang == "markdown"
 
     def test_missing_extra_not_yielded(self, tmp_path: Path) -> None:
-        results = list(iter_indexable_files(roots=[], extra_files=["nonexistent.md"], repo_root=tmp_path))
+        results = list(
+            iter_indexable_files(roots=[], extra_files=["nonexistent.md"], repo_root=tmp_path)
+        )
         assert results == []

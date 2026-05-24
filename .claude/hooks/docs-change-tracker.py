@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
@@ -25,7 +26,6 @@ if os.path.isdir(os.path.join(_USER_HOOKS, "shared")):
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
-
 from shared.task_master import (
     add_task,
     complete_task,

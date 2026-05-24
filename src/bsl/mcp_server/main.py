@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -105,7 +106,6 @@ async def main():
     # Принудительная настройка кодировки UTF-8 для Windows
     if sys.platform == "win32":
         import locale
-        import os
 
         # Устанавливаем кодировку для Python I/O
         os.environ["PYTHONIOENCODING"] = "utf-8"

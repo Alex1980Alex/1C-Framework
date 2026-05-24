@@ -73,9 +73,7 @@ def test_content_hash_stable_and_different():
 
 
 def test_extract_tags_from_body_and_filename():
-    tags = mod.extract_tags(
-        "feedback", "my_memory_hook.md", "This has qdrant and skill references"
-    )
+    tags = mod.extract_tags("feedback", "my_memory_hook.md", "This has qdrant and skill references")
     assert "feedback" in tags
     assert "memory" in tags
     assert "hooks" in tags or "hook" in tags

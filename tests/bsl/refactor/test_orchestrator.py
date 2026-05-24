@@ -405,8 +405,11 @@ def test_denylist_blocks_ast_grep_primary_form_handler(tmp_path: Path) -> None:
         runner = _FakeRunner(
             matches=[
                 AstGrepMatch(
-                    file=file_a, start_line=0, start_character=22,
-                    end_line=0, end_character=31,
+                    file=file_a,
+                    start_line=0,
+                    start_character=22,
+                    end_line=0,
+                    end_character=31,
                 )
             ]
         )
@@ -429,17 +432,18 @@ def test_denylist_skips_ast_grep_fallback_for_module_export(tmp_path: Path) -> N
     _load_denylist_setup()
     try:
         file_a = tmp_path / "module.bsl"
-        file_a.write_text(
-            "Процедура Параметры() Экспорт\nКонецПроцедуры\n", encoding="utf-8"
-        )
+        file_a.write_text("Процедура Параметры() Экспорт\nКонецПроцедуры\n", encoding="utf-8")
         uri = _file_uri(file_a)
 
         lsp = _StubLspClient(response=None)
         runner = _FakeRunner(
             matches=[
                 AstGrepMatch(
-                    file=file_a, start_line=0, start_character=10,
-                    end_line=0, end_character=19,
+                    file=file_a,
+                    start_line=0,
+                    start_character=10,
+                    end_line=0,
+                    end_character=19,
                 )
             ]
         )
@@ -501,8 +505,11 @@ def test_denylist_unknown_name_passes_through(tmp_path: Path) -> None:
         runner = _FakeRunner(
             matches=[
                 AstGrepMatch(
-                    file=file_a, start_line=0, start_character=10,
-                    end_line=0, end_character=31,
+                    file=file_a,
+                    start_line=0,
+                    start_character=10,
+                    end_line=0,
+                    end_character=31,
                 )
             ]
         )

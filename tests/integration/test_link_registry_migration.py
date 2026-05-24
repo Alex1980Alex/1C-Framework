@@ -14,7 +14,6 @@ import pytest
 
 from src.memory.orchestrator.link_registry import LinkRegistry, LinkType
 
-
 # ===== Fixtures =====
 
 
@@ -30,12 +29,15 @@ def tmp_db(tmp_path):
 
 
 class TestNewLinkTypes:
-    @pytest.mark.parametrize("lt", [
-        LinkType.PROMOTED_TO,
-        LinkType.SUPERSEDED_BY,
-        LinkType.MIRRORS,
-        LinkType.GRAPH_NODE,
-    ])
+    @pytest.mark.parametrize(
+        "lt",
+        [
+            LinkType.PROMOTED_TO,
+            LinkType.SUPERSEDED_BY,
+            LinkType.MIRRORS,
+            LinkType.GRAPH_NODE,
+        ],
+    )
     def test_new_link_type_exists(self, lt: LinkType):
         assert lt.value in ("promoted_to", "superseded_by", "mirrors", "graph_node")
 
@@ -64,7 +66,10 @@ class TestCheckConstraint:
             conn.execute(
                 "INSERT INTO entity_links (source_id, target_id, link_type) "
                 "VALUES (?, ?, 'invalid_type')",
-                ("s", "t",),
+                (
+                    "s",
+                    "t",
+                ),
             )
         conn.close()
 

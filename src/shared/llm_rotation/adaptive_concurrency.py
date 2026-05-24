@@ -98,21 +98,23 @@ class AdaptiveConcurrencyController:
         slow_threshold_s: float | None = None,
         state_path: Path | None = None,
     ) -> None:
-        self._initial: int = initial if initial is not None else _env_int(
-            "LLM_ROTATION_BATCH_CONCURRENCY", 3
+        self._initial: int = (
+            initial if initial is not None else _env_int("LLM_ROTATION_BATCH_CONCURRENCY", 3)
         )
-        self._floor: int = floor if floor is not None else _env_int(
-            "LLM_ROTATION_BATCH_MIN_CONCURRENCY", 1
+        self._floor: int = (
+            floor if floor is not None else _env_int("LLM_ROTATION_BATCH_MIN_CONCURRENCY", 1)
         )
-        self._ceiling: int = ceiling if ceiling is not None else _env_int(
-            "LLM_ROTATION_BATCH_MAX_CONCURRENCY", 10
+        self._ceiling: int = (
+            ceiling if ceiling is not None else _env_int("LLM_ROTATION_BATCH_MAX_CONCURRENCY", 10)
         )
         self._recovery_minutes: float = (
-            recovery_minutes if recovery_minutes is not None
+            recovery_minutes
+            if recovery_minutes is not None
             else _env_float("LLM_ROTATION_BATCH_RECOVERY_MINUTES", 30.0)
         )
         self._slow_threshold_s: float = (
-            slow_threshold_s if slow_threshold_s is not None
+            slow_threshold_s
+            if slow_threshold_s is not None
             else _env_float("LLM_ROTATION_BATCH_SLOW_THRESHOLD_S", 30.0)
         )
         self._state_path: Path = state_path or _DEFAULT_STATE_PATH
@@ -149,17 +151,16 @@ class AdaptiveConcurrencyController:
         ):
             # Avoid double-bump within same recovery window
             since_recovery = (
-                (now - state.last_recovery_at)
-                if state.last_recovery_at
-                else timedelta(days=1)
+                (now - state.last_recovery_at) if state.last_recovery_at else timedelta(days=1)
             )
             if since_recovery >= timedelta(minutes=self._recovery_minutes):
                 new_cc = min(self._ceiling, state.current_concurrency + 1)
                 if new_cc > state.current_concurrency:
                     logger.info(
-                        "[ADAPTIVE] %s recovered: concurrency %d → %d "
-                        "(clean window: %.1f min)",
-                        provider, state.current_concurrency, new_cc,
+                        "[ADAPTIVE] %s recovered: concurrency %d → %d (clean window: %.1f min)",
+                        provider,
+                        state.current_concurrency,
+                        new_cc,
                         (now - last_signal).total_seconds() / 60,
                     )
                     state.current_concurrency = new_cc
@@ -181,11 +182,13 @@ class AdaptiveConcurrencyController:
 
         now = datetime.now()
         state.last_event_at = now
-        state.events.append({
-            "ts": now.isoformat(),
-            "type": event_type,
-            "concurrency_before": state.current_concurrency,
-        })
+        state.events.append(
+            {
+                "ts": now.isoformat(),
+                "type": event_type,
+                "concurrency_before": state.current_concurrency,
+            }
+        )
         # Cap diagnostic event log at 50 most-recent
         if len(state.events) > 50:
             state.events = state.events[-50:]
@@ -195,14 +198,20 @@ class AdaptiveConcurrencyController:
         if new_cc < old_cc:
             logger.warning(
                 "[ADAPTIVE] %s signal=%s → concurrency %d → %d (floor=%d)",
-                provider, event_type, old_cc, new_cc, self._floor,
+                provider,
+                event_type,
+                old_cc,
+                new_cc,
+                self._floor,
             )
             state.current_concurrency = new_cc
             state.total_reductions += 1
         else:
             logger.debug(
                 "[ADAPTIVE] %s signal=%s but already at floor=%d (no reduction)",
-                provider, event_type, self._floor,
+                provider,
+                event_type,
+                self._floor,
             )
 
         self._save()
@@ -272,7 +281,9 @@ class AdaptiveConcurrencyController:
                     "provider": s.provider,
                     "current_concurrency": s.current_concurrency,
                     "last_event_at": s.last_event_at.isoformat() if s.last_event_at else None,
-                    "last_recovery_at": s.last_recovery_at.isoformat() if s.last_recovery_at else None,
+                    "last_recovery_at": s.last_recovery_at.isoformat()
+                    if s.last_recovery_at
+                    else None,
                     "events": s.events,
                     "total_reductions": s.total_reductions,
                     "total_recoveries": s.total_recoveries,

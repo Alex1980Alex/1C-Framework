@@ -31,6 +31,7 @@ def _run(coro):
 @pytest.fixture
 def graph_store(tmp_path):
     from src.pdf_framework.config import GraphStoreSettings
+
     settings = GraphStoreSettings(persist_dir=tmp_path / "graph")
     store = NetworkXGraphStore(settings)
     _run(store.initialize())
@@ -44,9 +45,11 @@ def populated_store(graph_store):
     e3 = Entity(id="e3", name="Web Framework", entity_type="TECHNOLOGY", confidence=0.88)
     for e in [e1, e2, e3]:
         _run(graph_store.add_entity(e))
-    _run(graph_store.add_relation(
-        Relation(id="r1", source_entity_id="e1", target_entity_id="e2", relation_type="uses"),
-    ))
+    _run(
+        graph_store.add_relation(
+            Relation(id="r1", source_entity_id="e1", target_entity_id="e2", relation_type="uses"),
+        )
+    )
     return graph_store
 
 
@@ -135,10 +138,14 @@ class TestIncrementalWikiSync:
         fs = ForwardSyncService(pop_exp._graph_store, pop_exp)
         inc = IncrementalWikiSync(fs, pop_exp)
         await inc.start()
-        await inc.handle_event(GraphChangeEvent(
-            event_type=GraphEventType.ENTITY_CREATED,
-            entity_id="e1", timestamp=datetime.now(), affected_entity_ids=["e1"],
-        ))
+        await inc.handle_event(
+            GraphChangeEvent(
+                event_type=GraphEventType.ENTITY_CREATED,
+                entity_id="e1",
+                timestamp=datetime.now(),
+                affected_entity_ids=["e1"],
+            )
+        )
         assert len(list(pop_exp._config.output_dir.glob("*.md"))) >= 1
         await inc.stop()
 
@@ -147,14 +154,18 @@ class TestIncrementalWikiSync:
         fs = ForwardSyncService(pop_exp._graph_store, pop_exp)
         inc = IncrementalWikiSync(fs, pop_exp)
         noisy = GraphChangeEvent(
-            event_type=GraphEventType.ENTITY_UPDATED, entity_id="e1",
-            timestamp=datetime.now(), affected_entity_ids=["e1"],
+            event_type=GraphEventType.ENTITY_UPDATED,
+            entity_id="e1",
+            timestamp=datetime.now(),
+            affected_entity_ids=["e1"],
             metadata={"change_type": "embedding_only"},
         )
         assert inc._should_sync(noisy) is False
         real = GraphChangeEvent(
-            event_type=GraphEventType.ENTITY_UPDATED, entity_id="e1",
-            timestamp=datetime.now(), affected_entity_ids=["e1"],
+            event_type=GraphEventType.ENTITY_UPDATED,
+            entity_id="e1",
+            timestamp=datetime.now(),
+            affected_entity_ids=["e1"],
         )
         assert inc._should_sync(real) is True
 
@@ -304,7 +315,9 @@ class TestReverseSyncRuntimeWatchdog:
 
     @pytest.mark.asyncio
     async def test_real_watchdog_picks_up_file_write(self, populated_store, tmp_path):
-        pytest.importorskip("watchdog", reason="watchdog not installed; skipping runtime watchdog test")
+        pytest.importorskip(
+            "watchdog", reason="watchdog not installed; skipping runtime watchdog test"
+        )
         from watchdog.events import FileSystemEventHandler
         from watchdog.observers.polling import PollingObserver
 
@@ -361,8 +374,7 @@ class TestReverseSyncRuntimeWatchdog:
             relations = await populated_store.get_relations("e1")
             targets = {r.target_entity_id for r in relations}
             assert "e2" in targets, (
-                f"Expected relation e1->e2 from wiki edit, got {targets} "
-                f"(events: {events_seen})"
+                f"Expected relation e1->e2 from wiki edit, got {targets} (events: {events_seen})"
             )
         finally:
             observer.stop()

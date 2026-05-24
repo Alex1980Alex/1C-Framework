@@ -28,12 +28,17 @@ import pytest
 
 DATASET_PATH = Path(__file__).resolve().parents[2] / "data" / "eval" / "golden_v1.json"
 MIN_QUALITY_GATE_SIZE = 50  # below this — schema gate only
-NDCG_THRESHOLD = 0.55       # provisional; lock in via ADR after v2.0 corpus
+NDCG_THRESHOLD = 0.55  # provisional; lock in via ADR after v2.0 corpus
 TOP_K = 10
 
 REQUIRED_FIELDS = {
-    "id", "query", "expected_chunk_ids", "expected_keywords",
-    "difficulty", "category", "domain",
+    "id",
+    "query",
+    "expected_chunk_ids",
+    "expected_keywords",
+    "difficulty",
+    "category",
+    "domain",
 }
 ALLOWED_DIFFICULTY = {"easy", "medium", "hard"}
 ALLOWED_CATEGORY = {"factual", "conceptual", "procedural", "analytical", "comparative"}
@@ -155,7 +160,9 @@ class TestRetrievalQualityGate:
 
         try:
             with httpx.Client(timeout=5.0) as health:
-                health.get(f"{os.environ.get('TEI_URL', 'http://localhost:8080')}/health").raise_for_status()
+                health.get(
+                    f"{os.environ.get('TEI_URL', 'http://localhost:8080')}/health"
+                ).raise_for_status()
         except (httpx.HTTPError, OSError):
             pytest.skip(f"TEI unreachable at {tei_url}")
 

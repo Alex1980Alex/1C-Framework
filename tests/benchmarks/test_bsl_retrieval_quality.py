@@ -19,6 +19,7 @@ Outputs:
 GPU caveat: loading Qwen3 embedder needs ~17 GB VRAM. Do NOT run this test
 while `scripts/reindex_bsl_qwen3.py` is active — they will both OOM.
 """
+
 from __future__ import annotations
 
 import json
@@ -51,11 +52,11 @@ VARIANTS: dict[str, str] = {
 # Per-slice acceptance thresholds (roadmap §6.4 question e, recommended).
 # (warn_pp, fail_pp): regression in percentage points triggers warn/fail.
 PER_SLICE_THRESHOLDS: dict[str, tuple[float, float]] = {
-    "god_object":   (3.0, 5.0),
-    "small":        (1.0, 3.0),
-    "medium":       (1.0, 3.0),
+    "god_object": (3.0, 5.0),
+    "small": (1.0, 3.0),
+    "medium": (1.0, 3.0),
     "cross_region": (3.0, 5.0),
-    "overall":      (2.0, 5.0),
+    "overall": (2.0, 5.0),
 }
 
 
@@ -81,11 +82,7 @@ def mrr(retrieved: list[str], expected: list[str]) -> float:
 
 
 def ndcg_at_k(retrieved: list[str], expected: list[str], k: int = 10) -> float:
-    dcg = sum(
-        1.0 / math.log2(rank + 1)
-        for rank, r in enumerate(retrieved[:k], 1)
-        if r in expected
-    )
+    dcg = sum(1.0 / math.log2(rank + 1) for rank, r in enumerate(retrieved[:k], 1) if r in expected)
     ideal_hits = min(len(expected), k)
     idcg = sum(1.0 / math.log2(rank + 1) for rank in range(1, ideal_hits + 1))
     return dcg / idcg if idcg > 0 else 0.0
@@ -97,7 +94,7 @@ def _id_from_expected(expected_item: dict[str, Any]) -> str:
 
 def _id_from_qdrant_point(point: Any) -> str:
     payload = getattr(point, "payload", {}) or {}
-    return f"{payload.get('module_path','?')}:{payload.get('line_start',0)}"
+    return f"{payload.get('module_path', '?')}:{payload.get('line_start', 0)}"
 
 
 # Fixtures — heavy resources loaded once per pytest module.
@@ -118,6 +115,7 @@ def golden_set() -> list[dict[str, Any]]:
 @pytest.fixture(scope="module")
 def qdrant_client():
     from qdrant_client import QdrantClient
+
     return QdrantClient(host="localhost", port=6333, timeout=120)
 
 
@@ -125,6 +123,7 @@ def qdrant_client():
 def query_embedder():
     """Load Qwen3 embedder ONCE per test module. ~17 GB VRAM."""
     from reindex_bsl_qwen3 import Qwen3STEmbedder
+
     emb = Qwen3STEmbedder(dtype="bfloat16", batch_size=1, enable_fa2=True)
     yield emb
     emb.close()
@@ -150,10 +149,12 @@ def search_variant(
 
     qvec = embedder.embed_batch([query], is_query=True)[0]
     scope_filter = qm.Filter(
-        must=[qm.FieldCondition(
-            key="module_path",
-            match=qm.MatchText(text="CommonModules"),
-        )]
+        must=[
+            qm.FieldCondition(
+                key="module_path",
+                match=qm.MatchText(text="CommonModules"),
+            )
+        ]
     )
     res = qdrant_client.query_points(
         collection_name=collection,
@@ -213,9 +214,7 @@ def test_bsl_retrieval_quality_comparison(
     raw: dict[str, dict[str, dict[str, list[float]]]] = {
         v: defaultdict(lambda: defaultdict(list)) for v in VARIANTS
     }
-    overall: dict[str, dict[str, list[float]]] = {
-        v: defaultdict(list) for v in VARIANTS
-    }
+    overall: dict[str, dict[str, list[float]]] = {v: defaultdict(list) for v in VARIANTS}
 
     for item in golden_set:
         slc = item.get("slice", "overall")
@@ -224,13 +223,17 @@ def test_bsl_retrieval_quality_comparison(
             continue
         for variant_name, collection in VARIANTS.items():
             retrieved = search_variant(
-                qdrant_client, query_embedder, collection, item["query"], k=10,
+                qdrant_client,
+                query_embedder,
+                collection,
+                item["query"],
+                k=10,
             )
             metrics = {
                 "recall@10": recall_at_k(retrieved, expected_ids, 10),
-                "ndcg@10":   ndcg_at_k(retrieved, expected_ids, 10),
-                "mrr":       mrr(retrieved, expected_ids),
-                "p@5":       precision_at_k(retrieved, expected_ids, 5),
+                "ndcg@10": ndcg_at_k(retrieved, expected_ids, 10),
+                "mrr": mrr(retrieved, expected_ids),
+                "p@5": precision_at_k(retrieved, expected_ids, 5),
             }
             for metric, value in metrics.items():
                 raw[variant_name][slc][metric].append(value)
@@ -264,7 +267,4 @@ def test_bsl_retrieval_quality_comparison(
     if "phase123" in averaged and "baseline" in averaged:
         failures = _evaluate_gates(averaged["baseline"], averaged["phase123"])
         if failures:
-            pytest.fail(
-                "Phase 4 acceptance gate FAILED for phase123:\n  "
-                + "\n  ".join(failures)
-            )
+            pytest.fail("Phase 4 acceptance gate FAILED for phase123:\n  " + "\n  ".join(failures))

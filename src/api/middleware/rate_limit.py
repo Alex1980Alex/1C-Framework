@@ -270,7 +270,7 @@ class RedisRateLimiter:
         try:
             key = f"ratelimit:{client_key}"
             ttl = self._redis.ttl(key)
-            return max(0, ttl)
+            return max(0, ttl)  # type: ignore[no-any-return]
         except Exception:
             return 0.0
 

@@ -421,10 +421,7 @@ async def cmd_archive_stale(args: argparse.Namespace) -> int:
             print(f"  FAIL: {page.name}: {exc}", file=sys.stderr)
             skipped += 1
 
-    print(
-        f"Archive {'(dry-run) ' if args.dry_run else ''}— "
-        f"archived={archived}, skipped={skipped}"
-    )
+    print(f"Archive {'(dry-run) ' if args.dry_run else ''}— archived={archived}, skipped={skipped}")
     return 0 if archived >= 0 else 1
 
 

@@ -11,6 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytest.importorskip("qdrant_client")
+
 from src.framework_search.chunker_base import Chunk
 from src.framework_search.indexer import (
     _chunks_for,
@@ -135,9 +137,7 @@ class TestCollectChunks:
         d.mkdir()
         (d / "a.py").write_text("def foo():\n    return 1\n", encoding="utf-8")
         (d / "b.py").write_text("def bar():\n    return 2\n", encoding="utf-8")
-        chunks, _ = collect_chunks(
-            roots=["src"], repo_root=tmp_path, only_paths={"src/a.py"}
-        )
+        chunks, _ = collect_chunks(roots=["src"], repo_root=tmp_path, only_paths={"src/a.py"})
         paths = {c.relative_path for c in chunks}
         assert "src/b.py" not in paths
 
@@ -273,8 +273,10 @@ class TestRunIndexDryRun:
         )
         emb_cls, emb_inst = _make_embedder_mock()
         emb_inst.embed_batch.side_effect = lambda texts: [_FAKE_VEC] * len(texts)
-        with patch("src.framework_search.indexer.QdrantClient", return_value=_make_client()), \
-             patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls):
+        with (
+            patch("src.framework_search.indexer.QdrantClient", return_value=_make_client()),
+            patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls),
+        ):
             stats = run_index(limit=3)
         assert stats["chunks"] == 3
 
@@ -294,8 +296,10 @@ class TestRunIndexEndToEnd:
         )
         client = _make_client()
         emb_cls, _ = _make_embedder_mock()
-        with patch("src.framework_search.indexer.QdrantClient", return_value=client), \
-             patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls):
+        with (
+            patch("src.framework_search.indexer.QdrantClient", return_value=client),
+            patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls),
+        ):
             stats = run_index()
         assert client.upsert.call_count >= 1
         assert stats["embeddings_done"] == 1
@@ -320,8 +324,10 @@ class TestRunIndexEndToEnd:
         )
         client = _make_client()
         emb_cls, _ = _make_embedder_mock()
-        with patch("src.framework_search.indexer.QdrantClient", return_value=client), \
-             patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls):
+        with (
+            patch("src.framework_search.indexer.QdrantClient", return_value=client),
+            patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls),
+        ):
             run_index(only_paths={"src/foo.py"})
         client.delete.assert_called_once()
 
@@ -333,7 +339,9 @@ class TestRunIndexEndToEnd:
         )
         client = _make_client()
         emb_cls, _ = _make_embedder_mock()
-        with patch("src.framework_search.indexer.QdrantClient", return_value=client), \
-             patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls):
+        with (
+            patch("src.framework_search.indexer.QdrantClient", return_value=client),
+            patch("src.framework_search.indexer.FrameworkTEIEmbedder", emb_cls),
+        ):
             run_index(only_paths=None)
         client.delete.assert_not_called()

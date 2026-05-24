@@ -32,7 +32,7 @@ def _skip_if_prereqs_missing() -> None:
     if not WORKSPACE.exists():
         pytest.skip(f"test-workspace not found at {WORKSPACE}")
     # multilspy requires Python 3.10+ and has quirks on 3.13 occasionally
-    if sys.version_info < (3, 10):
+    if sys.version_info < (3, 10):  # noqa: UP036
         pytest.skip("multilspy requires Python 3.10+")
 
 

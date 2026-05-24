@@ -23,7 +23,7 @@ class SandboxResult:
     """True if output exceeded ~100 KB and was cut."""
 
 
-class SandboxQuotaExceeded(Exception):
+class SandboxQuotaExceeded(Exception):  # noqa: N818  # rename to SandboxQuotaExceededError deferred — 8 files impact (3 backends + 3 tests + __init__ + base) as breaking public-API change
     """Raised when the sandbox call quota for the current instance is exceeded."""
 
 

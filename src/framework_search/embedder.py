@@ -27,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Same QUERY_INSTRUCTION as bsl-semantic-search and HF model card.
 QUERY_INSTRUCTION = (
-    "Instruct: Given a web search query, retrieve relevant passages "
-    "that answer the query\nQuery: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
 

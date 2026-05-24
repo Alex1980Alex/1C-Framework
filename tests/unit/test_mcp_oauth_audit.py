@@ -55,7 +55,8 @@ class TestSuccessPath:
     async def test_code_issued_emitted(self, service, events):
         _, challenge = _pkce_pair()
         await service.generate_authorization_code(
-            client_id="cli", redirect_uri="http://localhost/cb",
+            client_id="cli",
+            redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
         assert any(e.event_type == "code_issued" and e.client_id == "cli" for e in events)
@@ -64,7 +65,8 @@ class TestSuccessPath:
     async def test_full_flow_emits_5_event_types(self, service, events):
         verifier, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            client_id="cli", redirect_uri="http://localhost/cb",
+            client_id="cli",
+            redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
         result = await service.exchange_code_for_tokens(code, "http://localhost/cb", verifier)
@@ -93,7 +95,8 @@ class TestFailurePath:
     async def test_invalid_pkce_emits_token_exchanged_failure(self, service, events):
         _, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            client_id="cli", redirect_uri="http://localhost/cb",
+            client_id="cli",
+            redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
         wrong_verifier = secrets.token_urlsafe(32)
@@ -122,7 +125,8 @@ class TestEmitterRobustness:
         service = AuditedOAuth2Service(store, audit_emit=bad_sink)
         _, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            client_id="cli", redirect_uri="http://localhost/cb",
+            client_id="cli",
+            redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
         assert code  # auth flow completes despite sink failure
@@ -132,7 +136,8 @@ class TestEmitterRobustness:
         service = AuditedOAuth2Service(store)  # no audit_emit
         _, challenge = _pkce_pair()
         code = await service.generate_authorization_code(
-            client_id="cli", redirect_uri="http://localhost/cb",
+            client_id="cli",
+            redirect_uri="http://localhost/cb",
             code_challenge=challenge,
         )
         assert code  # works without emitter
