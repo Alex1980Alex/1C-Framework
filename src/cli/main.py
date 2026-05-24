@@ -37,7 +37,7 @@ app = typer.Typer(
 console = Console()
 
 
-def _get_components():
+def _get_components() -> Any:
     """Lazily initialize framework components."""
     from src.api.dependencies.components import Components
 
@@ -77,7 +77,7 @@ def index(
     summarize: bool = typer.Option(
         False, "--summarize", help="Generate document summary for pre-routing (Phase 13.4)"
     ),
-):
+) -> None:
     """Index a PDF document into the vector store.
 
     Phase 10: Use --layout-aware for structure-aware parsing, --extract-images for Vision API.
@@ -85,7 +85,7 @@ def index(
     """
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         # Phase 10: Layout-aware loading
         if layout_aware or components.settings.layout.layout_detection_enabled:
             from src.pdf_framework.loaders.providers.layout_parser import LayoutAwareLoader
@@ -356,7 +356,7 @@ def search(
     force_route: str = typer.Option(
         None, "--force-route", help="Force adaptive to use specific strategy (Phase 8)"
     ),
-):
+) -> None:
     """Search indexed documents.
 
     Phase 1: Reranking, metadata filtering.
@@ -427,7 +427,7 @@ def ask(
     no_self_rag: bool = typer.Option(
         False, "--no-self-rag", help="Disable Self-RAG (use legacy chain)"
     ),
-):
+) -> None:
     """Ask a question using RAG agent (Phase 5: Self-RAG).
 
     Uses LangGraph agent with document grading, query rewriting,
@@ -444,7 +444,7 @@ def ask(
         for name in ["src.pdf_framework.agents.rag"]:
             logging.getLogger(name).setLevel(logging.DEBUG)
 
-    async def _run():
+    async def _run() -> None:
         if stream:
             # Phase 9: Streaming mode
             from src.pdf_framework.agents.rag.agent import create_rag_agent
@@ -548,7 +548,7 @@ def chat(
     ),
     strategy: str = typer.Option("adaptive", "--strategy", "-s", help="Search strategy"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show pipeline details"),
-):
+) -> None:
     """Interactive chat with conversation memory (Phase 9).
 
     Commands:
@@ -730,11 +730,11 @@ def chat(
 
 
 @app.command()
-def stats():
+def stats() -> None:
     """Show index statistics."""
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         vector_count = await components.vector_store.count()
         graph_stats = await components.graph_store.get_statistics()
 
@@ -751,7 +751,7 @@ def stats():
 def server(
     host: str = typer.Option("0.0.0.0", help="Server host"),
     port: int = typer.Option(8000, help="Server port"),
-):
+) -> None:
     """Start the REST API server."""
     import uvicorn
 
@@ -764,7 +764,7 @@ def restart(
     host: str = typer.Option("127.0.0.1", help="Server host"),
     port: int = typer.Option(8000, help="Server port"),
     force: bool = typer.Option(False, "--force", "-f", help="Kill without graceful shutdown"),
-):
+) -> None:
     """Restart the REST API server (stop + start).
 
     Finds the running server process on the given port, stops it,
@@ -931,7 +931,7 @@ def dashboard(
     page: str = typer.Option("metrics/html", help="Dashboard page to open"),
     no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser"),
     no_docker: bool = typer.Option(False, "--no-docker", help="Skip Docker/Qdrant auto-start"),
-):
+) -> None:
     """Open metrics dashboard, auto-starting Docker, Qdrant and API server as needed.
 
     Startup chain:
@@ -1112,7 +1112,7 @@ def cache(
     cache_type: str = typer.Option(
         "all", "--type", "-t", help="Cache type: all/embedding/llm/document"
     ),
-):
+) -> None:
     """Manage caches (Phase 11).
 
     Actions:
@@ -1127,7 +1127,7 @@ def cache(
     from src.pdf_framework.embeddings.cache import get_embedding_cache
     from src.pdf_framework.processing.cache import get_document_cache
 
-    async def _run():
+    async def _run() -> None:
         llm_cache = get_llm_cache()
         emb_cache = get_embedding_cache()
         doc_cache = get_document_cache()
@@ -1217,7 +1217,7 @@ def cache(
 def tenant(
     action: str = typer.Argument(..., help="Action: create, list, delete"),
     tenant_id: str = typer.Option("", "--id", "-t", help="Tenant ID (for create/delete)"),
-):
+) -> None:
     """Manage tenants (Phase 12.1).
 
     Actions:
@@ -1227,7 +1227,7 @@ def tenant(
     """
     from src.pdf_framework.multitenancy import get_tenant_graph_manager, get_tenant_store_manager
 
-    async def _run():
+    async def _run() -> None:
         store_mgr = get_tenant_store_manager()
         graph_mgr = get_tenant_graph_manager()
 
@@ -1297,7 +1297,7 @@ def auth(
     action: str = typer.Argument(..., help="Action: token"),
     tenant: str = typer.Option("default", "--tenant", "-t", help="Tenant ID"),
     role: str = typer.Option("viewer", "--role", "-r", help="User role (viewer/editor/admin)"),
-):
+) -> None:
     """Authentication utilities (Phase 12.3).
 
     Actions:
@@ -1352,11 +1352,11 @@ def evaluate(
     with_rag_triad: bool = typer.Option(
         False, "--with-rag-triad", help="Enable RAG Triad evaluation (requires LLM)"
     ),
-):
+) -> None:
     """Run evaluation benchmark on a dataset (Phase 4)."""
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         from src.pdf_framework.evaluation.dataset import EvalDataset
         from src.pdf_framework.evaluation.runner import EvalReport, EvalRunner
 
@@ -1440,7 +1440,7 @@ def ui(
     port: int = typer.Option(None, "--port", "-p", help="UI server port"),
     share: bool = typer.Option(False, "--share", help="Create public link"),
     api_url: str = typer.Option("http://localhost:8000", "--api-url", help="Backend API URL"),
-):
+) -> None:
     """Launch Gradio Web UI (Phase 14.1).
 
     Provides a browser-based interface for chat, search, document management,
@@ -1461,7 +1461,7 @@ def suggest(
     method: str = typer.Option(
         "entity", "--method", "-m", help="Suggestion method (entity/frequency/llm/related)"
     ),
-):
+) -> None:
     """Get query suggestions for exploration (Phase 14.5).
 
     Examples:
@@ -1471,7 +1471,7 @@ def suggest(
     """
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         from src.pdf_framework.search.suggestions import QuerySuggester, SuggestionConfig
 
         config = SuggestionConfig(method=method, max_suggestions=k)
@@ -1501,7 +1501,7 @@ def research(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Show sub-questions and quality scores"
     ),
-):
+) -> None:
     """Deep research across multiple documents (Phase 19).
 
     Decomposes question into sub-questions, retrieves from multiple angles,
@@ -1512,7 +1512,7 @@ def research(
     """
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         from src.pdf_framework.agents.deep.planner import ResearchPlanner
         from src.pdf_framework.agents.deep.quality import ResearchQualityChecker
         from src.pdf_framework.agents.deep.synthesizer import CrossDocumentSynthesizer, SubResult
@@ -1590,7 +1590,7 @@ def autorag(
     smart: bool = typer.Option(
         True, "--smart/--full", help="Use SmartGrid (prune redundant combos)"
     ),
-):
+) -> None:
     """Run AutoRAG grid search optimization (Phase 20).
 
     Tests combinations of strategies, k values, reranking, and query expansion
@@ -1601,7 +1601,7 @@ def autorag(
     """
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         from src.pdf_framework.evaluation.autorag import ParameterGrid, SmartGrid
         from src.pdf_framework.evaluation.autorag_analyzer import AutoRAGAnalyzer
         from src.pdf_framework.evaluation.autorag_runner import AutoRAGRunner
@@ -1651,7 +1651,7 @@ def feedback_cmd(
     output: str = typer.Option("", "--output", "-o", help="Output path for export"),
     min_samples: int = typer.Option(20, "--min-samples", help="Min samples for tuning"),
     learning_rate: float = typer.Option(0.1, "--lr", help="Learning rate for tuning"),
-):
+) -> None:
     """Manage feedback and self-learning (Phase 22).
 
     Actions:
@@ -1668,7 +1668,7 @@ def feedback_cmd(
     """
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         from src.pdf_framework.feedback.collector import FeedbackCollector
 
         collector = components.feedback_collector
