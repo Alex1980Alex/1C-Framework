@@ -41,7 +41,7 @@ def create_analytical_agent(
     settings: AgentSettings | None = None,
     api_key: str = "",
     fast_model: str = "claude-sonnet-4-5-20250929",
-):
+) -> None:
     """Create a LangGraph Analytical RAG agent.
 
     Phase 33: Evidence-gathering, comparative analysis engine.
@@ -170,7 +170,7 @@ def create_analytical_agent(
 
         all_results = []
 
-        async def _search_one(query: str, strategy: str):
+        async def _search_one(query: str, strategy: str) -> None:
             try:
                 return await search_manager.search(
                     query=query,

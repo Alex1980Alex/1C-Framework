@@ -42,7 +42,7 @@ class GraphRAGGlobalStrategy:
         settings: GraphRAGSettings | None = None,
         api_key: str = "",
         base_url: str = "",
-    ):
+    ) -> None:
         """
         Initialize GraphRAG Global Search strategy.
 

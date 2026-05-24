@@ -56,7 +56,7 @@ def create_rag_agent(
     settings: AgentSettings | None = None,
     self_rag_settings: SelfRAGSettings | None = None,
     api_key: str = "",
-):
+) -> None:
     """Create a LangGraph RAG agent with Self-RAG support.
 
     Phase 5 (v0.6.0) Pipeline:

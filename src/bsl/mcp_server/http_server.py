@@ -26,13 +26,13 @@ logger = logging.getLogger(__name__)
 class OAuth2BearerMiddleware(BaseHTTPMiddleware):
     """Middleware для проверки Bearer токенов в режиме OAuth2."""
 
-    def __init__(self, app, oauth2_service: OAuth2Service | None, auth_mode: str):
+    def __init__(self, app, oauth2_service: OAuth2Service | None, auth_mode: str) -> None:
         super().__init__(app)
         self.oauth2_service = oauth2_service
         self.auth_mode = auth_mode
         self.protected_paths = ["/mcp/", "/sse"]
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> None:
         """Проверка авторизации для защищённых путей."""
         # Пропускаем, если auth_mode != oauth2
         if self.auth_mode != "oauth2":
@@ -95,7 +95,7 @@ class OAuth2BearerMiddleware(BaseHTTPMiddleware):
 class MCPHttpServer:
     """HTTP-сервер для MCP с поддержкой SSE и Streamable HTTP."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config) -> None:
         """Инициализация HTTP-сервера.
 
         Args:
@@ -148,7 +148,7 @@ class MCPHttpServer:
         self._register_routes()
 
     @asynccontextmanager
-    async def _lifespan(self, app: FastAPI):
+    async def _lifespan(self, app: FastAPI) -> None:
         """Управление жизненным циклом приложения."""
         logger.debug("Запуск HTTP-сервера MCP")
 
@@ -171,7 +171,7 @@ class MCPHttpServer:
         # Создаем SSE транспорт для обработки сообщений
         sse_transport = SseServerTransport("/messages/")
 
-        async def handle_sse(request):
+        async def handle_sse(request) -> None:
             """Обработчик SSE подключений."""
             logger.debug("Новое SSE подключение")
 
@@ -203,7 +203,7 @@ class MCPHttpServer:
 
         return Starlette(routes=routes)
 
-    def _create_streamable_http_asgi(self):
+    def _create_streamable_http_asgi(self) -> None:
         """Создание ASGI обработчика для Streamable HTTP."""
 
         async def asgi(scope: Scope, receive: Receive, send: Send) -> None:
@@ -221,7 +221,7 @@ class MCPHttpServer:
 
         return asgi
 
-    def _mount_transports(self):
+    def _mount_transports(self) -> None:
         """Монтирование транспортов MCP."""
 
         # Монтируем SSE транспорт на /sse
@@ -232,11 +232,11 @@ class MCPHttpServer:
         streamable_app = self._create_streamable_http_asgi()
         self.app.mount("/mcp/", streamable_app)
 
-    def _register_routes(self):
+    def _register_routes(self) -> None:
         """Регистрация основных маршрутов."""
 
         @self.app.get("/")
-        async def root():
+        async def root() -> None:
             """Корневой маршрут - перенаправляет на info."""
             endpoints = {
                 "info": "/info",
@@ -255,7 +255,7 @@ class MCPHttpServer:
             return {"message": "1C MCP Proxy Server", "endpoints": endpoints}
 
         @self.app.get("/info")
-        async def info():
+        async def info() -> None:
             """Информационный маршрут."""
             return {
                 "name": self.config.server_name,
@@ -275,7 +275,7 @@ class MCPHttpServer:
             }
 
         @self.app.get("/health")
-        async def health():
+        async def health() -> None:
             """Проверка здоровья сервера."""
             try:
                 # Проверяем подключение к 1С через прокси
@@ -301,11 +301,11 @@ class MCPHttpServer:
         if self.config.auth_mode == "oauth2":
             self._register_oauth2_routes()
 
-    def _register_oauth2_routes(self):
+    def _register_oauth2_routes(self) -> None:
         """Регистрация OAuth2 маршрутов."""
 
         @self.app.get("/.well-known/oauth-protected-resource")
-        async def well_known_prm(request: Request):
+        async def well_known_prm(request: Request) -> None:
             """Protected Resource Metadata (RFC 9728)."""
             # Определяем публичный URL
             if self.config.public_url:
@@ -319,7 +319,7 @@ class MCPHttpServer:
             return self.oauth2_service.generate_prm_document(public_url)
 
         @self.app.get("/.well-known/oauth-authorization-server")
-        async def well_known_as_metadata(request: Request):
+        async def well_known_as_metadata(request: Request) -> None:
             """Authorization Server Metadata (RFC 8414)."""
             # Определяем публичный URL
             if self.config.public_url:
@@ -349,7 +349,7 @@ class MCPHttpServer:
             }
 
         @self.app.post("/register")
-        async def register_client(request: Request):
+        async def register_client(request: Request) -> None:
             """Dynamic Client Registration (RFC 7591) - упрощённая версия.
 
             Всегда возвращает фиксированный client_id для публичного клиента.
@@ -405,7 +405,7 @@ class MCPHttpServer:
             state: str = None,
             code_challenge: str = None,
             code_challenge_method: str = None,
-        ):
+        ) -> None:
             """Authorization endpoint - показывает форму логина."""
             # Валидация параметров
             if not all(
@@ -480,7 +480,7 @@ class MCPHttpServer:
             redirect_uri: str = None,
             state: str = None,
             code_challenge: str = None,
-        ):
+        ) -> None:
             """Обработка формы логина и выдача authorization code."""
             if not all([redirect_uri, code_challenge]):
                 return HTMLResponse(
@@ -555,7 +555,7 @@ class MCPHttpServer:
             refresh_token: str = Form(None),
             username: str = Form(None),
             password: str = Form(None),
-        ):
+        ) -> None:
             """Token endpoint для обмена code на токены, refresh или password grant."""
 
             # Password Grant - самый простой вариант
@@ -684,7 +684,7 @@ class MCPHttpServer:
                     },
                 )
 
-    async def start(self):
+    async def start(self) -> None:
         """Запуск HTTP-сервера."""
         config = uvicorn.Config(
             app=self.app,
@@ -699,7 +699,7 @@ class MCPHttpServer:
         await server.serve()
 
 
-async def run_http_server(config: Config):
+async def run_http_server(config: Config) -> None:
     """Запуск HTTP-сервера.
 
     Args:
