@@ -42,9 +42,11 @@ MAX_BODY_CHARS = 200
 # truncated + re-normalized to match (see _mrl_truncate).
 COLLECTION_DIM = 1024
 
-# Qwen3 query instruction prefix (parity с FrameworkTEIEmbedder.QUERY_INSTRUCTION)
+# Qwen3 query instruction prefix — MUST match production embedder verbatim.
+# See src/framework_search/embedder.py:29-31 (also bsl-semantic-search + Qwen3 HF model card).
+# Drift here = measurable recall degradation (Qwen3 is instruction-sensitive at indexing distribution).
 QUERY_INSTRUCTION = (
-    "Instruct: Given a query, retrieve relevant code snippets that solve the query\n"
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\n"
     "Query: "
 )
 
