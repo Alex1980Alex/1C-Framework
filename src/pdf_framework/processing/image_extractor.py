@@ -81,7 +81,7 @@ class ImageExtractor:
             kwargs = {"api_key": api_key}
             if base_url:
                 kwargs["base_url"] = base_url
-            self._client = Anthropic(**kwargs)
+            self._client = Anthropic(**kwargs)  # type: ignore[arg-type]
         else:
             self._client = None
         self._description_cache: dict[str, str] = {}
