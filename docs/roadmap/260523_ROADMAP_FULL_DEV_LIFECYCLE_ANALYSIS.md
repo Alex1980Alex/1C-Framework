@@ -1541,12 +1541,12 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
 
-**Next priorities (updated 2026-05-24):**
-1. ⏳ Merge **PR #10** (hotfix) когда CI green → unblocks #8 + #9
-2. ⏳ Merge PR #8 + PR #9 после #10 merge (CI rebase will pass)
-3. ⏳ Save memory `feedback_post_merge_baseline_resync_protocol` — урок: после `-X theirs`/big merges run `mypy_baseline sync` + smoke importorskip CI
-4. ⏳ Start P0b Phase 3 mypy cleanup на Pareto top 5 (cli/main.py=71, agents/analytical=55, agents/rag=51, bsl/http_server=46, graphrag_global=42 = 265/15% errors)
-5. ⏳ Start P1 next worker: `feat/prework-similar-code`
+**Next priorities (updated 2026-05-24 AM):**
+1. ✅ DONE — PR #10 hotfix merged 04:09Z
+2. ✅ DONE — PR #9 dispatcher merged 04:50Z (PR #8 superseded → CLOSED)
+3. ✅ DONE — Memory `feedback_post_merge_baseline_resync_protocol` saved
+4. ⏳ DEFERRED — Phase 3 mypy cleanup (cli/main.py=71, agents/analytical=55, agents/rag=51, bsl/http_server=46, graphrag_global=42 = 265 errors)
+5. ✅ DONE — Started P1 worker 1/3 `feat/prework-similar-code` (см. PM entry выше)
 
 ---
 
