@@ -61,3 +61,17 @@ def _read_jsonl() -> list[dict]:
             except json.JSONDecodeError:
                 pass
     return out
+
+
+def extract_first_error(log: str) -> str:
+    markers = ("##[error]", "FAIL", "Error:", "error:", "Failed:", "failure")
+    for raw in log.splitlines():
+        line = raw.strip()
+        if not line or NOISE_PATTERNS.search(line):
+            continue
+        line = re.sub(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+", "", line)
+        line = re.sub(r"^[A-Za-z0-9 ()]+\t[A-Z ]+\t", "", line)
+        for m in markers:
+            if m in line:
+                return line[:300]
+    return "(no error line extracted)"
