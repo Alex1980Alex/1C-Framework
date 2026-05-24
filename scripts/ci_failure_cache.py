@@ -198,3 +198,23 @@ def _maybe_create_issue(error_hash: str, error_line: str, occ: list[dict]) -> st
         tags[error_hash] = url
         _save_issue_tags(tags)
     return url
+
+
+def analyze_failure(pr, sha, run_id, job) -> dict:
+    if not run_id and (pr or sha):
+        ref = sha or f"refs/pull/{pr}/head"
+        rc, out, _ = _gh("run", "list", "--branch", ref, "--workflow", "Python CI",
+                         "--limit", "1", "--json", "databaseId,conclusion")
+        if rc == 0:
+            try:
+                data = json.loads(out)
+                if data:
+                    run_id = str(data[0].get("databaseId"))
+            except json.JSONDecodeError:
+                pass
+    if not run_id:
+        return {"error": "no run_id resolved"}
+    log = fetch_failure_log(run_id, job)
+    if not log:
+        return {"error": "no failure log"}
+    return _process_failure(pr, sha, run_id, job, log)
