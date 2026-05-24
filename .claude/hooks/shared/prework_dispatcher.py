@@ -34,8 +34,8 @@ PYTHON_EXE = sys.executable
 # Add new prework hooks here. Order не matters (parallel execution).
 WORKERS: list[tuple[str, float, str]] = [
     ("prework-architecture.py", 1.0, "ARCH"),
+    ("prework-similar-code.py", 2.0, "CODE"),  # P1 — Qdrant framework_code_v1 lookup (TEI + Qdrant ~150ms total)
     # Future P1 additions:
-    # ("prework-similar-code.py", 1.0, "CODE"),
     # ("prework-github-bp.py", 4.0, "GH"),
     # ("prework-stackoverflow.py", 1.0, "SO"),
 ]
