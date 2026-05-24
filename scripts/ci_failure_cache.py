@@ -275,3 +275,22 @@ def main() -> int:
     p.add_argument("--search", type=str)
     args = p.parse_args()
     return _dispatch(args)
+
+
+def _dispatch(args) -> int:
+    if args.stats:
+        print(json.dumps(stats(), indent=2, ensure_ascii=False))
+        return 0
+    if args.search:
+        print(json.dumps(search_text(args.search), indent=2, ensure_ascii=False))
+        return 0
+    if not (args.pr or args.sha or args.run_id):
+        print("error: provide --pr, --sha, --run-id, --stats, or --search", file=sys.stderr)
+        return 2
+    result = analyze_failure(args.pr, args.sha, args.run_id, args.job)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
