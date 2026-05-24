@@ -422,6 +422,15 @@ def score_memory(query_tokens: set, memory: dict) -> float:
     return 0.7 * query_coverage + 0.3 * memory_density
 
 
+def search_wiki(query_tokens: set, limit: int = 10) -> list:
+    """Layer 4 wiki search — stub returning [] (full impl deferred).
+
+    Called from RRF merge in execute(); empty result means layer 'wiki' simply
+    contributes nothing to the merge, other layers (sqlite/qdrant/md) still work.
+    """
+    return []
+
+
 def search_md(query_tokens: set, limit: int = 10) -> list:
     """Search .md memory files with weighted overlap scoring."""
     if not query_tokens:
