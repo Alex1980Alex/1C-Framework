@@ -99,7 +99,14 @@ async def _call_claude_sdk(
     try:
         from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
     except ImportError:
-        CLINotFoundError = ClaudeSDKError = Exception  # type: ignore  # noqa: PGH003
+        # Fallback when claude_agent_sdk is not installed (e.g., test environments).
+        # Use class statements to satisfy mypy on both platforms (avoids
+        # platform-divergent [unused-ignore] from bare-Exception assignment).
+        class ClaudeSDKError(Exception):  # type: ignore[no-redef]
+            pass
+
+        class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef]
+            pass
 
     # max_turns=3: gives Claude room to use 1-2 tool-use turns before
     # responding (CLI is agentic by default). Empirically max_turns=1
