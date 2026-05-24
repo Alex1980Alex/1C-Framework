@@ -134,3 +134,15 @@ def _ensure_qdrant_collection() -> bool:
             return r.status_code in (200, 201)
     except Exception:
         return False
+
+
+def _upsert_qdrant(point_id: str, vec: list[float], payload: dict) -> bool:
+    try:
+        import httpx
+        int_id = int(point_id[:15], 16)
+        with httpx.Client(base_url=QDRANT_URL, timeout=3.0) as c:
+            r = c.put(f"/collections/{COLLECTION}/points",
+                      json={"points": [{"id": int_id, "vector": vec, "payload": payload}]})
+            return r.status_code in (200, 201)
+    except Exception:
+        return False
