@@ -136,6 +136,18 @@ def _ensure_qdrant_collection() -> bool:
         return False
 
 
+def _search_qdrant(vec: list[float], top_k: int = 3) -> list[dict]:
+    try:
+        import httpx
+        with httpx.Client(base_url=QDRANT_URL, timeout=3.0) as c:
+            r = c.post(f"/collections/{COLLECTION}/points/search",
+                       json={"vector": vec, "limit": top_k, "with_payload": True,
+                             "score_threshold": 0.7})
+            return r.json().get("result", []) if r.status_code == 200 else []
+    except Exception:
+        return []
+
+
 def _upsert_qdrant(point_id: str, vec: list[float], payload: dict) -> bool:
     try:
         import httpx
