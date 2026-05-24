@@ -178,12 +178,15 @@ def main() -> int:
         print(json.dumps({"items": []}, ensure_ascii=False))
         return 0
 
-    # Step 1: embed query via TEI
+    # Step 1: embed query via TEI (returns 4096d Qwen3)
     vector = _embed_query(query_text)
     if not vector:
         # TEI down → graceful empty (dispatcher continues)
         print(json.dumps({"items": []}, ensure_ascii=False))
         return 0
+
+    # Step 1b: MRL-truncate 4096 → 1024 (collection storage dim)
+    vector = _mrl_truncate(vector, COLLECTION_DIM)
 
     # Step 2: Qdrant search
     hits = _query_qdrant(vector)
