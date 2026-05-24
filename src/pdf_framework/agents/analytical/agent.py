@@ -13,6 +13,7 @@ Produces structured output with summary, analysis, comparison tables, and source
 import asyncio
 import json
 import logging
+from typing import Any
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -29,7 +30,6 @@ from src.pdf_framework.agents.analytical.schemas import (
 )
 from src.pdf_framework.config import AgentSettings
 from src.pdf_framework.search.manager import SearchManager
-from typing import Any
 
 logger = logging.getLogger(__name__)
 

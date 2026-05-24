@@ -1485,7 +1485,19 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
-### 2026-05-24 — P0b mypy ratchet partial (sync) + CI hotfix landed
+### 2026-05-24 (PM) — P1 prework-similar-code worker landed + PR #9/#10 MERGED
+
+**Outcome:** P0b sync + P0c-slim полностью на `master` (PR #10 hotfix MERGED 04:09Z, PR #9 dispatcher+architecture MERGED 04:50Z). Стартует P1: первый из 3 remaining prework workers — `prework-similar-code` — landed на feature branch (PR #12 OPEN). PR #8 (fix/hook-regressions) CLOSED (superseded — fixes absorbed в PR #10 hotfix).
+
+**Worker:** [prework-similar-code.py](.claude/hooks/prework-similar-code.py) — TEI Qwen3 embed → MRL truncate 4096→1024d → Qdrant `framework_code_v1` top-5 hits (`MIN_SCORE=0.35`). Registered в [shared/prework_dispatcher.py](.claude/hooks/shared/prework_dispatcher.py) `WORKERS` registry с timeout 2s. Graceful degradation: TEI/Qdrant down → empty items.
+
+**Smoke verification:**
+
+`refactor the search manager to use httpx` → 5 hits: `search_tool.py:L1` (0.697), `test_plan_execute.py:L42 mock_search_manager` (0.65), `search/manager.py:L21 SearchManager` (0.648), 2 more imports. End-to-end dispatcher (ARCH+CODE in parallel) emits unified `systemMessage` с обеими секциями.
+
+**CI status (required gates):** Lint & Format (3.11/3.12) ✅ SUCCESS · Docstring Coverage ✅ · Skill Router Eval ✅ · mypy + mypy-baseline + Pre-commit IN PROGRESS at log-time. Unit + Integration Tests pre-existing red (master inherited; not blocker — PR #9 merged with same).
+
+### 2026-05-24 (AM) — P0b mypy ratchet partial (sync) + CI hotfix landed
 
 **Outcome:** разблокирована merge-готовность PR #8 + PR #9 через 3-of-4 CI gate restoration на `master`. Diagnostic finding: `master` CI был ALSO red на post-PR#2-merge state (`c3867f055`) — PR #8/#9 не вносили regression. Hotfix [PR #10](https://github.com/Alex1980Alex/1C-Framework/pull/10) — 26 файлов, 4 fix categories.
 
@@ -1507,10 +1519,12 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | Phase | Items | Status | PR |
 |---|---|---|---|
 | P0a Cleanup | Recount + env names | ✅ DONE | (mechanical) |
-| **P0b Foundations (sync only)** | mypy ratchet re-sync | ✅ **DONE 2026-05-24** | **[#10](https://github.com/Alex1980Alex/1C-Framework/pull/10)** OPEN |
+| P0b Foundations (sync only) | mypy ratchet re-sync | ✅ **MERGED 2026-05-24** | [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED |
 | P0b Foundations (full) | mypy Phase 3 cleanup + Layer 4 wiki | ⏳ DEFERRED | — |
-| **P0c-slim** | Dispatcher + 1 worker (ADR-D1) | ✅ DONE | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) OPEN mergeable |
-| P1 | 3 remaining prework workers | ⏳ PENDING | — |
+| P0c-slim | Dispatcher + 1 worker (ADR-D1) | ✅ **MERGED 2026-05-24** | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED |
+| **P1 worker 1/3** | prework-similar-code (Qdrant) | ✅ **OPEN, awaits merge** | **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** |
+| P1 worker 2/3 | prework-github-bp (cache-first WebSearch) | ⏳ PENDING | — |
+| P1 worker 3/3 | prework-stackoverflow (UPS + reactive Bash) | ⏳ PENDING | — |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
 
@@ -1518,18 +1532,21 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | PR | Branch | Status |
 |---|---|---|
-| **[#10](https://github.com/Alex1980Alex/1C-Framework/pull/10)** | **hotfix/ci-green-master** | **OPEN — CI hotfix (26 files), 2026-05-24** |
-| [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) | feat/prework-dispatcher-architecture | OPEN mergeable — P0c-slim; waits #10 merge |
-| [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) | fix/hook-regressions | OPEN mergeable — 2 hook fixes; waits #10 merge |
+| **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** | feat/prework-similar-code | **OPEN — P1 worker 1/3, awaits CI green** |
+
+**Recently closed (since prior log entry):**
+- [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) CLOSED (superseded by #10 hotfix)
+- [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED 2026-05-24T04:50Z
+- [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED 2026-05-24T04:09Z
 
 **Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
 
-**Next priorities (updated 2026-05-24):**
-1. ⏳ Merge **PR #10** (hotfix) когда CI green → unblocks #8 + #9
-2. ⏳ Merge PR #8 + PR #9 после #10 merge (CI rebase will pass)
-3. ⏳ Save memory `feedback_post_merge_baseline_resync_protocol` — урок: после `-X theirs`/big merges run `mypy_baseline sync` + smoke importorskip CI
-4. ⏳ Start P0b Phase 3 mypy cleanup на Pareto top 5 (cli/main.py=71, agents/analytical=55, agents/rag=51, bsl/http_server=46, graphrag_global=42 = 265/15% errors)
-5. ⏳ Start P1 next worker: `feat/prework-similar-code`
+**Next priorities (updated 2026-05-24 AM):**
+1. ✅ DONE — PR #10 hotfix merged 04:09Z
+2. ✅ DONE — PR #9 dispatcher merged 04:50Z (PR #8 superseded → CLOSED)
+3. ✅ DONE — Memory `feedback_post_merge_baseline_resync_protocol` saved
+4. ⏳ DEFERRED — Phase 3 mypy cleanup (cli/main.py=71, agents/analytical=55, agents/rag=51, bsl/http_server=46, graphrag_global=42 = 265 errors)
+5. ✅ DONE — Started P1 worker 1/3 `feat/prework-similar-code` (см. PM entry выше)
 
 ---
 

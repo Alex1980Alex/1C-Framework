@@ -2,6 +2,7 @@
 
 import logging
 from contextlib import asynccontextmanager
+from typing import Any
 from urllib.parse import urlencode
 
 import httpx
@@ -19,7 +20,6 @@ from starlette.types import Receive, Scope, Send
 from .auth import OAuth2Service, OAuth2Store
 from .config import Config
 from .mcp_server import MCPProxy, current_onec_credentials
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
