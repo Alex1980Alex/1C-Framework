@@ -183,13 +183,14 @@ git branch -D dev-master  # was b9cba8cb1
 - `origin/feat/serena-audit-hybrid-refactor` = PR #2 head
 - `origin/archive/master-pre-reconciliation-2026-05-19` = legacy backup
 
-### Phase 5 — Verify + standardize (~30-60 минут)
+### Phase 5 — Verify + standardize (✅ DONE 2026-05-24)
 
-1. CI watch на pushed master
-2. PR #2 auto-rebase trigger от `gh pr edit --base master`
-3. Smoke на `.claude/hooks/post-task-push-pr.py` с `AUTO_PR_BASE=master`
-4. Update `.claude/settings.json` env: `"AUTO_PR_BASE": "master"`
-5. Update [40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) — `dev-master` → `master` во всех env reference
+1. ✅ CI watch на pushed master — verified (PR #10 hotfix + PR #9 dispatcher merged)
+2. ✅ PR #2 auto-rebase trigger от `gh pr edit --base master` — PR #2 merged 2026-05-23 (commit `c3867f055`)
+3. ⏳ Smoke на `.claude/hooks/post-task-push-pr.py` с `AUTO_PR_BASE=master` — deferred (требует AUTO_PR_ENABLED=1)
+4. ✅ Update `.claude/settings.json` env: `"AUTO_PR_BASE": "master"` — 2026-05-24
+5. ✅ Update [40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) — добавлен banner "dev-master SUPERSEDED" (исторический контекст сохранён)
+6. ✅ Update CLAUDE.md — `AUTO_PR_BASE=dev-master` → `AUTO_PR_BASE=master`
 
 ---
 
