@@ -75,3 +75,12 @@ def extract_first_error(log: str) -> str:
             if m in line:
                 return line[:300]
     return "(no error line extracted)"
+
+
+def fetch_failure_log(run_id: str, job_name: str | None = None) -> str:
+    rc, out, _ = _gh("run", "view", str(run_id), "--log-failed")
+    if rc != 0 or not out.strip():
+        return ""
+    if job_name:
+        return "\n".join(ln for ln in out.splitlines() if job_name in ln)
+    return out
