@@ -1385,8 +1385,6 @@ src/api/routes/metrics.py:0: error: Function is missing a return type annotation
 src/api/routes/metrics.py:0: error: Call to untyped function "get_metrics" in typed context  [no-untyped-call]
 src/api/routes/metrics.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/api/routes/metrics.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/shared/benchmark_llm.py:0: error: Cannot assign to a type  [misc]
-src/shared/benchmark_llm.py:0: note: Error code "misc" not covered by "type: ignore[assignment]" comment
 src/shared/llm_rotation/service.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/shared/llm_rotation/service.py:0: error: Call to untyped function "ProviderRateLimiter" in typed context  [no-untyped-call]
 src/shared/llm_rotation/service.py:0: error: Missing type arguments for generic type "Task"  [type-arg]
@@ -1396,7 +1394,6 @@ src/shared/llm_rotation/service.py:0: error: Cannot assign to a type  [misc]
 src/shared/llm_rotation/service.py:0: note: Error code "misc" not covered by "type: ignore[assignment]" comment
 src/shared/llm_rotation/service.py:0: error: Incompatible types in assignment (expression has type "ProviderState | None", variable has type "ProviderState")  [assignment]
 src/shared/llm_rotation/service.py:0: error: Incompatible types in assignment (expression has type "ProviderState | None", variable has type "ProviderState")  [assignment]
-src/shared/llm_rotation/service.py:0: error: Unused "type: ignore" comment  [unused-ignore]
 src/pdf_framework/agents/rag/middleware.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/pdf_framework/agents/rag/middleware.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/shared/llm_rotation/mcp.py:0: error: Function is missing a return type annotation  [no-untyped-def]
