@@ -105,7 +105,7 @@ async def _call_claude_sdk(
         class ClaudeSDKError(Exception):  # type: ignore[no-redef]
             pass
 
-        class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef]
+        class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef,misc]
             pass
 
     # max_turns=3: gives Claude room to use 1-2 tool-use turns before
