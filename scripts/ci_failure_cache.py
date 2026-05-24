@@ -92,3 +92,19 @@ def _mrl_truncate(vec: list[float], dim: int) -> list[float]:
     vec = vec[:dim]
     norm = sum(x * x for x in vec) ** 0.5
     return [x / norm for x in vec] if norm > 1e-9 else vec
+
+
+def _embed_tei(text: str) -> list[float] | None:
+    try:
+        import httpx
+    except ImportError:
+        return None
+    prefix = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+    try:
+        with httpx.Client(base_url=TEI_URL, timeout=3.0) as c:
+            r = c.post("/embed", json={"inputs": [prefix + text], "normalize": True, "truncate": True})
+            r.raise_for_status()
+            data = r.json()
+    except Exception:
+        return None
+    return _parse_embedding(data)
