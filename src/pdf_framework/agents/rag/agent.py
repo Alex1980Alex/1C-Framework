@@ -11,6 +11,7 @@ Version: 1.3.0 - Phase 43: Framework integration (checkpointing, ONNX, middlewar
 """
 
 import logging
+from typing import Any
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -26,7 +27,6 @@ from src.pdf_framework.agents.rag.nodes import (
 from src.pdf_framework.agents.rag.state import RAGState
 from src.pdf_framework.config import PROJECT_ROOT, AgentSettings, SelfRAGSettings
 from src.pdf_framework.search.manager import SearchManager
-from typing import Any
 
 logger = logging.getLogger(__name__)
 

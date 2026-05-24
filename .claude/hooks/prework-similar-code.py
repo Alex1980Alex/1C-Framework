@@ -46,8 +46,7 @@ COLLECTION_DIM = 1024
 # See src/framework_search/embedder.py:29-31 (also bsl-semantic-search + Qwen3 HF model card).
 # Drift here = measurable recall degradation (Qwen3 is instruction-sensitive at indexing distribution).
 QUERY_INSTRUCTION = (
-    "Instruct: Given a web search query, retrieve relevant passages that answer the query\n"
-    "Query: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
 
