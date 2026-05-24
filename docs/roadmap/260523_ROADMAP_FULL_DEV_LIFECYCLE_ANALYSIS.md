@@ -1485,7 +1485,19 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
-### 2026-05-24 — P0b mypy ratchet partial (sync) + CI hotfix landed
+### 2026-05-24 (PM) — P1 prework-similar-code worker landed + PR #9/#10 MERGED
+
+**Outcome:** P0b sync + P0c-slim полностью на `master` (PR #10 hotfix MERGED 04:09Z, PR #9 dispatcher+architecture MERGED 04:50Z). Стартует P1: первый из 3 remaining prework workers — `prework-similar-code` — landed на feature branch (PR #12 OPEN). PR #8 (fix/hook-regressions) CLOSED (superseded — fixes absorbed в PR #10 hotfix).
+
+**Worker:** [prework-similar-code.py](.claude/hooks/prework-similar-code.py) — TEI Qwen3 embed → MRL truncate 4096→1024d → Qdrant `framework_code_v1` top-5 hits (`MIN_SCORE=0.35`). Registered в [shared/prework_dispatcher.py](.claude/hooks/shared/prework_dispatcher.py) `WORKERS` registry с timeout 2s. Graceful degradation: TEI/Qdrant down → empty items.
+
+**Smoke verification:**
+
+`refactor the search manager to use httpx` → 5 hits: `search_tool.py:L1` (0.697), `test_plan_execute.py:L42 mock_search_manager` (0.65), `search/manager.py:L21 SearchManager` (0.648), 2 more imports. End-to-end dispatcher (ARCH+CODE in parallel) emits unified `systemMessage` с обеими секциями.
+
+**CI status (required gates):** Lint & Format (3.11/3.12) ✅ SUCCESS · Docstring Coverage ✅ · Skill Router Eval ✅ · mypy + mypy-baseline + Pre-commit IN PROGRESS at log-time. Unit + Integration Tests pre-existing red (master inherited; not blocker — PR #9 merged with same).
+
+### 2026-05-24 (AM) — P0b mypy ratchet partial (sync) + CI hotfix landed
 
 **Outcome:** разблокирована merge-готовность PR #8 + PR #9 через 3-of-4 CI gate restoration на `master`. Diagnostic finding: `master` CI был ALSO red на post-PR#2-merge state (`c3867f055`) — PR #8/#9 не вносили regression. Hotfix [PR #10](https://github.com/Alex1980Alex/1C-Framework/pull/10) — 26 файлов, 4 fix categories.
 
