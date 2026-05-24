@@ -1489,6 +1489,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Outcome:** разблокирована merge-готовность PR #8 + PR #9 через 3-of-4 CI gate restoration на `master`. Diagnostic finding: `master` CI был ALSO red на post-PR#2-merge state (`c3867f055`) — PR #8/#9 не вносили regression. Hotfix [PR #10](https://github.com/Alex1980Alex/1C-Framework/pull/10) — 26 файлов, 4 fix categories.
 
+**4 fix categories:**
+
+1. **scripts/build_benchmark_tasks.py** — удалён orphan block (lines 95-100) + `# noqa: F821` на 6 broken refs. Ruff per-file-ignores `scripts/**` не работает в 0.15.14 (root cause не исследован).
+2. **Ruff 13 errors** — F401/F821/N818/UP041/UP045/I001 в `memory_orchestrator.py`, `ast_grep_runner.py:43` (typo `rule_content`→`inline_rule`), `raptor.py` (FrameworkTEIEmbedder→TYPE_CHECKING + `__future__ annotations`), `sandbox/base.py` (deferred N818 rename) + `ruff format src/` reformat 14 файлов.
+3. **Unit Tests collection (3.11+3.12)** — `pytest.importorskip("qdrant_client")` в 6 test файлах (CI installs только `[dev,morphology]` без `[qdrant]` extra).
+4. **mypy-baseline ratchet** — re-sync `mypy-baseline.txt` поглотил 44 drift errors. Pre-existing 1730 → unresolved=1940; new=0 → gate PASSES. Phase 3 cleanup (Pareto top 5 = 265 errors) deferred.
+
 ### 2026-05-23 — Roadmap ratification + P0c-slim landed
 
 **Chapters added this session:** §14-§19 (Pre-Work + Caching + Risk Analysis + 3 ADRs + Progress Log + Auto-protocol).
