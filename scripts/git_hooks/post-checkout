@@ -1,9 +1,0 @@
-#!/bin/sh
-# post-checkout: git-lfs pass-through only.
-# Reindex on branch switch is intentionally skipped — diff can be huge,
-# and MCP lazy mtime check will pick up stale files at next search_code.
-
-if command -v git-lfs >/dev/null 2>&1; then
-    git lfs post-checkout "$@"
-fi
-exit 0
