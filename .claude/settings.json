@@ -70,7 +70,7 @@
   },
   "env": {
     "AUTO_PR_ENABLED": "0",
-    "AUTO_PR_BASE": "dev-master",
+    "AUTO_PR_BASE": "master",
     "AUTO_PR_MIN_COMMITS": "3"
   },
   "hooks": {
