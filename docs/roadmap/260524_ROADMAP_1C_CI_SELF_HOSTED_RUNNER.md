@@ -37,3 +37,22 @@ pull_request:
     - '.github/workflows/ci-1c.yml'
 ```
 **Tradeoff:** non-BSL PR'ы больше не показывают 1С jobs (даже QUEUED) — clean. BUT: если BSL код меняется через косвенные пути (например, обновляется `pyproject.toml` влияющий на BSL toolchain) — не пойдёт. Acceptable для 99% случаев.
+
+### Option B — Self-hosted Windows runner (полное решение, 1-2 дня)
+
+Развернуть GitHub Actions runner на локальной Windows-машине пользователя с установленным:
+- 1С:Предприятие 8.3.27 (`ONEC_PATH`)
+- OneScript + vrunner (`OSCRIPT_PATH`, `VRUNNER_PATH`)
+- MS SQL Server + testdb1c infobase (`IB_CONNECTION`)
+- Vanessa Automation framework
+- YAxUnit testing framework
+- BSL Language Server + SonarQube agent
+- Self-hosted runner labels: `self-hosted`, `windows-11`, `1c`
+
+**Steps:**
+1. GitHub Settings → Actions → Runners → New self-hosted runner
+2. Установить runner на `\\SKOMPUTER` (имя машины из `IB_CONNECTION`)
+3. Configure as Windows service + autostart
+4. Test: trigger ci-1c workflow manually, verify все 3 job'а проходят
+
+**Tradeoff:** Pro — реальный CI для BSL изменений. Con — машина должна быть всегда online, требует maintenance, может стать bottleneck при множественных параллельных runs.
