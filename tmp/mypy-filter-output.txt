@@ -1,0 +1,82 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\1Ñ-Framework\.venv\Lib\site-packages\mypy_baseline\__main__.py", line 4, in <module>
+    entrypoint()
+    ~~~~~~~~~~^^
+  File "C:\1Ñ-Framework\.venv\Lib\site-packages\mypy_baseline\_cli.py", line 31, in entrypoint
+    sys.exit(main(argv=sys.argv[1:], stdin=sys.stdin, stdout=sys.stdout))
+             ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\1Ñ-Framework\.venv\Lib\site-packages\mypy_baseline\_cli.py", line 27, in main
+    return cmd.run()
+           ~~~~~~~^^
+  File "C:\1Ñ-Framework\.venv\Lib\site-packages\mypy_baseline\commands\_filter.py", line 107, in run
+    self.print(msg)
+    ~~~~~~~~~~^^^^^
+  File "C:\1Ñ-Framework\.venv\Lib\site-packages\mypy_baseline\commands\_base.py", line 27, in print
+    print(*args, file=self.stdout, end=end, sep=sep)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tech. Boutique\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1251.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 6-52: character maps to <undefined>
+src\pdf_framework\utils\section_refs.py:48: error: "object" has no attribute "chunk"  [attr-defined]
+src\pdf_framework\utils\section_refs.py:49: error: "object" has no attribute "chunk"  [attr-defined]
+src\pdf_framework\utils\section_refs.py:50: error: "object" has no attribute "chunk"  [attr-defined]
+src\memory\infrastructure\conflict_resolver.py:242: error: Missing type arguments for generic type "dict"  [type-arg]
+src\memory\infrastructure\conflict_resolver.py:243: error: Missing type arguments for generic type "dict"  [type-arg]
+src\memory\infrastructure\conflict_resolver.py:261: error: Missing type arguments for generic type "dict"  [type-arg]
+src\memory\infrastructure\conflict_resolver.py:262: error: Missing type arguments for generic type "dict"  [type-arg]
+src\api\routes\github_webhooks.py:63: error: Missing type arguments for generic type "dict"  [type-arg]
+src\api\routes\github_webhooks.py:67: error: Returning Any from function declared to return "dict[Any, Any]"  [no-any-return]
+src\api\routes\github_webhooks.py:72: error: Missing type arguments for generic type "dict"  [type-arg]
+src\bsl\semantic_search\services\search.py:393: error: Item "None" of "Any | None" has no attribute "get_collection"  [union-attr]
+src\bsl\semantic_search\services\search.py:412: error: Function is missing a return type annotation  [no-untyped-def]
+src\bsl\semantic_search\services\search.py:469: error: Call to untyped function "_get_bm25_sparse" in typed context  [no-untyped-call]
+src\bsl\semantic_search\services\search.py:583: error: Function is missing a return type annotation  [no-untyped-def]
+src\bsl\semantic_search\services\search.py:618: error: Call to untyped function "_get_neo4j_driver" in typed context  [no-untyped-call]
+src\bsl\semantic_search\services\search.py:702: error: Returning Any from function declared to return "list[dict[Any, Any]]"  [no-any-return]
+src\bsl\semantic_search\services\search.py:864: error: Missing type arguments for generic type "dict"  [type-arg]
+src\bsl\semantic_search\refactor\backends\ast_grep_runner.py:43: error: Name "rule_content" is not defined  [name-defined]
+src\pdf_framework\processing\splitters\proposition.py:75: note: "ChatAnthropic" defined in "langchain_anthropic.chat_models"
+src\pdf_framework\processing\splitters\proposition.py:184: error: Return type "list[DocumentChunk]" of "split_documents" incompatible with return type "list[Document]" in supertype "langchain_text_splitters.base.TextSplitter"  [override]
+src\pdf_framework\processing\splitters\proposition.py:184: error: Argument 1 of "split_documents" is incompatible with supertype "langchain_text_splitters.base.TextSplitter"; supertype defines the argument type as "Iterable[Document]"  [override]
+src\pdf_framework\processing\splitters\proposition.py:184: note: This violates the Liskov substitution principle
+src\pdf_framework\processing\splitters\proposition.py:184: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
+Found 1732 errors in 235 files (checked 459 source files)
+
+total errors:
+  fixed: [32m37[0m
+  new: [31m23[0m
+  unresolved: [94m1919[0m
+
+errors by error code:
+  no-untyped-def           [94m397[0m [32m -8[0m [31m +2[0m
+  arg-type                 [94m394[0m [32m -1[0m
+  type-arg                 [94m277[0m [32m -6[0m [31m +7[0m
+  note                     [94m214[0m [32m -4[0m [31m +3[0m
+  no-untyped-call          [94m160[0m [32m -2[0m [31m +2[0m
+  union-attr               [94m144[0m [32m-10[0m [31m +1[0m
+  attr-defined             [94m109[0m [31m +3[0m
+  no-any-return            [94m 73[0m [32m -3[0m [31m +2[0m
+  assignment               [94m 60[0m [32m -2[0m
+  untyped-decorator        [94m 22[0m
+  misc                     [94m 22[0m [32m -1[0m
+  index                    [94m 16[0m
+  return-value             [94m 14[0m
+  var-annotated            [94m 13[0m
+  operator                 [94m 11[0m
+  call-arg                 [94m 10[0m
+  unused-ignore            [94m  9[0m
+  override                 [94m  9[0m [31m +2[0m
+  list-item                [94m  6[0m
+  has-type                 [94m  4[0m
+  call-overload            [94m  4[0m
+  name-defined             [94m  3[0m [31m +1[0m
+  func-returns-value       [94m  2[0m
+  valid-type               [94m  1[0m
+  typeddict-item           [94m  1[0m
+  type-var                 [94m  1[0m
+  str-bytes-safe           [94m  1[0m
+  exit-return              [94m  1[0m
+  abstract                 [94m  1[0m
