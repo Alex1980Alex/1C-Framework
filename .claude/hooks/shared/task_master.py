@@ -23,7 +23,7 @@ import tempfile
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import IO, Any
 
 from shared.core_paths import get_cache_dir
 

@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 _USER_HOOKS = os.path.join(os.path.expanduser("~"), ".claude", "hooks")
