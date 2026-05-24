@@ -994,7 +994,7 @@ class LLMRotationService:
             n_fail,
             self._adaptive_concurrency.get_concurrency(resolved_provider),
         )
-        return results  # type: ignore[return-value]
+        return results
 
     def get_stats(self) -> dict[str, Any]:
         """Return statistics for all providers."""
