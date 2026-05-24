@@ -1532,9 +1532,12 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | PR | Branch | Status |
 |---|---|---|
-| **[#10](https://github.com/Alex1980Alex/1C-Framework/pull/10)** | **hotfix/ci-green-master** | **OPEN — CI hotfix (26 files), 2026-05-24** |
-| [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) | feat/prework-dispatcher-architecture | OPEN mergeable — P0c-slim; waits #10 merge |
-| [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) | fix/hook-regressions | OPEN mergeable — 2 hook fixes; waits #10 merge |
+| **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** | feat/prework-similar-code | **OPEN — P1 worker 1/3, awaits CI green** |
+
+**Recently closed (since prior log entry):**
+- [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) CLOSED (superseded by #10 hotfix)
+- [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED 2026-05-24T04:50Z
+- [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED 2026-05-24T04:09Z
 
 **Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
 
