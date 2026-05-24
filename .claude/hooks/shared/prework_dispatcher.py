@@ -69,7 +69,7 @@ async def _run_worker(script: str, timeout: float, label: str, payload: str) -> 
             }
         except json.JSONDecodeError as exc:
             return {"label": label, "items": [], "error": f"bad json: {exc}"}
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # Kill orphan subprocess (Windows zombie prevention)
         try:
             proc.kill()
@@ -131,6 +131,7 @@ def main() -> int:
     # Aggregate + emit systemMessage
     try:
         from prework_aggregator import build_system_message
+
         msg = build_system_message(results)
     except ImportError:
         # Fallback: dump raw results

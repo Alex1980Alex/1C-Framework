@@ -26,7 +26,9 @@ except ImportError:
     HAS_RAPIDFUZZ = False
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-CACHE_INDEX = PROJECT_ROOT / ".claude" / "skills" / "architecture-research" / "cache" / "_index.json"
+CACHE_INDEX = (
+    PROJECT_ROOT / ".claude" / "skills" / "architecture-research" / "cache" / "_index.json"
+)
 ADR_DIR = PROJECT_ROOT / ".claude" / "skills" / "architecture-research" / "adr"
 
 MIN_SCORE = 60  # 0-100 rapidfuzz threshold
