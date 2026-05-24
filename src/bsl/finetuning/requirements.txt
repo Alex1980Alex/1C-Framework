@@ -10,7 +10,7 @@ regex>=2023.0.0
 
 # RAG (ChromaDB + Embeddings)
 chromadb>=0.4.0
-sentence-transformers>=2.2.0
+sentence-transformers>=5.5.1
 
 # Fine-tuning (требует GPU)
 # torch>=2.0.0  # Устанавливать отдельно с CUDA
