@@ -497,10 +497,14 @@ class LLMRotationService:
         `model` accepts haiku/sonnet/opus alias OR full model name. Aliases
         are expanded to claude-haiku-4-5 / claude-sonnet-4-5 / claude-opus-4-7.
         """
+        # claude-agent-sdk is mandatory dep (pyproject.toml: claude-agent-sdk>=0.2,<0.3).
+        # Single try/except — all names guaranteed by version pin.
         try:
             from claude_agent_sdk import (
                 AssistantMessage,
                 ClaudeAgentOptions,
+                ClaudeSDKError,
+                CLINotFoundError,
                 ResultMessage,
                 query,
             )
@@ -508,17 +512,6 @@ class LLMRotationService:
             raise RuntimeError(
                 'claude-agent-sdk not installed. pip install -e ".[llm-rotation]"'
             ) from e
-
-        # Optional error types — older SDK versions may lack them.
-        try:
-            from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
-        except ImportError:
-            # Class-based fallback (avoids platform-divergent unused-ignore — see benchmark_llm.py:102).
-            class ClaudeSDKError(Exception):  # type: ignore  # noqa: PGH003
-                pass
-
-            class CLINotFoundError(ClaudeSDKError):  # type: ignore  # noqa: PGH003
-                pass
 
         target_alias = (model or state.config.default_model).lower()
         # Map short aliases to full model names; pass through if already full.
