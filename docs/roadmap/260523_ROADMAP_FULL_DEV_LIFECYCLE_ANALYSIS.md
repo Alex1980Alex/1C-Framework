@@ -1485,6 +1485,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-24 — P0b mypy ratchet partial (sync) + CI hotfix landed
+
+**Outcome:** разблокирована merge-готовность PR #8 + PR #9 через 3-of-4 CI gate restoration на `master`. Diagnostic finding: `master` CI был ALSO red на post-PR#2-merge state (`c3867f055`) — PR #8/#9 не вносили regression. Hotfix [PR #10](https://github.com/Alex1980Alex/1C-Framework/pull/10) — 26 файлов, 4 fix categories.
+
 ### 2026-05-23 — Roadmap ratification + P0c-slim landed
 
 **Chapters added this session:** §14-§19 (Pre-Work + Caching + Risk Analysis + 3 ADRs + Progress Log + Auto-protocol).
