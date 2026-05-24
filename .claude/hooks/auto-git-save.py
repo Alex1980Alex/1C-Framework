@@ -39,6 +39,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime as _dt  # noqa: N813  # short alias for hot path in pause-expiry checks
 from pathlib import Path
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
