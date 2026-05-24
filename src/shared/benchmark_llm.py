@@ -83,10 +83,14 @@ async def _call_claude_sdk(
     Latency ~5-15s. Returns final response text combining ResultMessage
     content (preferred) + AssistantMessage text blocks (fallback).
     """
+    # claude-agent-sdk is a mandatory dep (pyproject.toml: claude-agent-sdk>=0.2,<0.3),
+    # so all these names are guaranteed to exist. Single try/except for clean ImportError surfacing.
     try:
         from claude_agent_sdk import (
             AssistantMessage,
             ClaudeAgentOptions,
+            ClaudeSDKError,
+            CLINotFoundError,
             ResultMessage,
             query,
         )
@@ -94,19 +98,6 @@ async def _call_claude_sdk(
         raise BenchmarkLLMError(
             'claude-agent-sdk not installed. pip install -e ".[llm-rotation]"'
         ) from e
-
-    # Optional error types — older SDK versions may not export them.
-    try:
-        from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
-    except ImportError:
-        # Fallback when claude_agent_sdk is not installed (e.g., test environments).
-        # Use class statements to satisfy mypy on both platforms (avoids
-        # platform-divergent [unused-ignore] from bare-Exception assignment).
-        class ClaudeSDKError(Exception):  # type: ignore  # noqa: PGH003
-            pass
-
-        class CLINotFoundError(ClaudeSDKError):  # type: ignore  # noqa: PGH003
-            pass
 
     # max_turns=3: gives Claude room to use 1-2 tool-use turns before
     # responding (CLI is agentic by default). Empirically max_turns=1
