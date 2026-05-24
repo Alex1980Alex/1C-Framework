@@ -514,10 +514,10 @@ class LLMRotationService:
             from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
         except ImportError:
             # Class-based fallback (avoids platform-divergent unused-ignore — see benchmark_llm.py:102).
-            class ClaudeSDKError(Exception):  # type: ignore[no-redef]
+            class ClaudeSDKError(Exception):  # type: ignore  # noqa: PGH003
                 pass
 
-            class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef,misc]
+            class CLINotFoundError(ClaudeSDKError):  # type: ignore  # noqa: PGH003
                 pass
 
         target_alias = (model or state.config.default_model).lower()
