@@ -121,3 +121,16 @@ def _parse_embedding(data) -> list[float] | None:
     else:
         return None
     return _mrl_truncate(vec, COLLECTION_DIM)
+
+
+def _ensure_qdrant_collection() -> bool:
+    try:
+        import httpx
+        with httpx.Client(base_url=QDRANT_URL, timeout=3.0) as c:
+            if c.get(f"/collections/{COLLECTION}").status_code == 200:
+                return True
+            r = c.put(f"/collections/{COLLECTION}",
+                      json={"vectors": {"size": COLLECTION_DIM, "distance": "Cosine"}})
+            return r.status_code in (200, 201)
+    except Exception:
+        return False
