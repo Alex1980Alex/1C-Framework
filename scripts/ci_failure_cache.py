@@ -158,3 +158,17 @@ def _upsert_qdrant(point_id: str, vec: list[float], payload: dict) -> bool:
             return r.status_code in (200, 201)
     except Exception:
         return False
+
+
+def _load_issue_tags() -> dict:
+    if not ISSUE_TAG_FILE.exists():
+        return {}
+    try:
+        return json.loads(ISSUE_TAG_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
+def _save_issue_tags(tags: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    ISSUE_TAG_FILE.write_text(json.dumps(tags, indent=2, ensure_ascii=False), encoding="utf-8")
