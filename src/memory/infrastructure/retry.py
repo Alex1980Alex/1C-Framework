@@ -182,8 +182,16 @@ def async_retry(
                     else:
                         raise classified from exc
 
-            # Should not reach here, but just in case
-            raise last_exc  # type: ignore[misc]
+            # Should not reach here. If we do (e.g. cfg.max_retries < 0), the
+            # for-loop body never ran, so last_exc stayed None — raising None
+            # would TypeError. Raise an explicit RuntimeError instead so the
+            # bug is visible at the call site rather than masked by Python.
+            if last_exc is not None:
+                raise last_exc
+            raise RuntimeError(
+                "async_retry: loop exited without execution "
+                f"(cfg.max_retries={cfg.max_retries})"
+            )
 
         return wrapper
 
