@@ -218,7 +218,7 @@ def create_settings_page(api_url: str, app: gr.Blocks | None = None):
             logger.info("UI restart requested by user")
             python = sys.executable
             cwd = os.getcwd()
-            no_window = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+            no_window = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW  # type: ignore[attr-defined]  # Windows-only attrs
             restart_script = (
                 "import time, subprocess;"
                 "time.sleep(3);"

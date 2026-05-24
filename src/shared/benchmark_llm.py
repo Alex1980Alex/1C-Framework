@@ -99,7 +99,7 @@ async def _call_claude_sdk(
     try:
         from claude_agent_sdk import ClaudeSDKError, CLINotFoundError
     except ImportError:
-        CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment,misc]
+        CLINotFoundError = ClaudeSDKError = Exception  # type: ignore[assignment]
 
     # max_turns=3: gives Claude room to use 1-2 tool-use turns before
     # responding (CLI is agentic by default). Empirically max_turns=1
