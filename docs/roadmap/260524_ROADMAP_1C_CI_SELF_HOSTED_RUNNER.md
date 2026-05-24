@@ -20,3 +20,20 @@
 - `VRUNNER_PATH: 'C:\Tools\OneScript\bin\vrunner.bat'`
 - `IB_CONNECTION: '/SKOMPUTER\testdb1c'` (SQL Server 1С infobase)
 - TestDB обработка для VA BDD scenarios
+
+## §3 Решения (3 варианта)
+
+### Option A — Skip-if-not-bsl matrix (быстрый fix, 30 минут)
+
+В `ci-1c.yml` добавить `paths:` фильтр на `pull_request:` (как уже есть на `push:`):
+```yaml
+pull_request:
+  paths:
+    - 'configuration/**'
+    - 'src/bsl/**'
+    - 'features/**'
+    - 'tools/vanessa/**'
+    - 'tools/yaxunit.json'
+    - '.github/workflows/ci-1c.yml'
+```
+**Tradeoff:** non-BSL PR'ы больше не показывают 1С jobs (даже QUEUED) — clean. BUT: если BSL код меняется через косвенные пути (например, обновляется `pyproject.toml` влияющий на BSL toolchain) — не пойдёт. Acceptable для 99% случаев.
