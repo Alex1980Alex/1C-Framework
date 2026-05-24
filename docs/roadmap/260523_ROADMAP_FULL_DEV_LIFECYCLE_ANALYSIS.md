@@ -1519,10 +1519,12 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | Phase | Items | Status | PR |
 |---|---|---|---|
 | P0a Cleanup | Recount + env names | ✅ DONE | (mechanical) |
-| **P0b Foundations (sync only)** | mypy ratchet re-sync | ✅ **DONE 2026-05-24** | **[#10](https://github.com/Alex1980Alex/1C-Framework/pull/10)** OPEN |
+| P0b Foundations (sync only) | mypy ratchet re-sync | ✅ **MERGED 2026-05-24** | [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED |
 | P0b Foundations (full) | mypy Phase 3 cleanup + Layer 4 wiki | ⏳ DEFERRED | — |
-| **P0c-slim** | Dispatcher + 1 worker (ADR-D1) | ✅ DONE | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) OPEN mergeable |
-| P1 | 3 remaining prework workers | ⏳ PENDING | — |
+| P0c-slim | Dispatcher + 1 worker (ADR-D1) | ✅ **MERGED 2026-05-24** | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED |
+| **P1 worker 1/3** | prework-similar-code (Qdrant) | ✅ **OPEN, awaits merge** | **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** |
+| P1 worker 2/3 | prework-github-bp (cache-first WebSearch) | ⏳ PENDING | — |
+| P1 worker 3/3 | prework-stackoverflow (UPS + reactive Bash) | ⏳ PENDING | — |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
 
