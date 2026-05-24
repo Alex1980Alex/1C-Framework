@@ -476,8 +476,7 @@ class IndexingAnalyzer(AnalyzerBase):
         if aniso is not None:
             tag = " !" if aniso > 0.5 else ""
             lines.append(
-                f"- **anisotropy mean cos:** `{aniso:.4f}` "
-                f"(>0.5 = collapsed cone, ideal ≈ 0){tag}"
+                f"- **anisotropy mean cos:** `{aniso:.4f}` (>0.5 = collapsed cone, ideal ≈ 0){tag}"
             )
         if probes.get("error"):
             lines.append(f"- **probe error:** `{probes['error']}`")

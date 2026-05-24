@@ -237,20 +237,20 @@ def test_prefilter_counters_reset_per_call(workspace: Path) -> None:
     file_b = workspace / "b.bsl"
     _write(file_b, "F();\n")
 
-    runner = _FakeRunner(matches=[
-        AstGrepMatch(file=file_a, start_line=0, start_character=10, end_line=0, end_character=11),
-        AstGrepMatch(file=file_b, start_line=0, start_character=0, end_line=0, end_character=1),
-    ])
-    backend = AstGrepBackend(
-        runner, workspace, prefilter=_AllowFilesPrefilter({file_a.resolve()})
+    runner = _FakeRunner(
+        matches=[
+            AstGrepMatch(
+                file=file_a, start_line=0, start_character=10, end_line=0, end_character=11
+            ),
+            AstGrepMatch(file=file_b, start_line=0, start_character=0, end_line=0, end_character=1),
+        ]
     )
+    backend = AstGrepBackend(runner, workspace, prefilter=_AllowFilesPrefilter({file_a.resolve()}))
     backend.plan_rename(file_a.resolve().as_uri(), 0, 10, "G")
     assert backend.last_prefilter_dropped == 1
 
     # Second call: switch to no-filter prefilter (returns None)
-    backend2 = AstGrepBackend(
-        runner, workspace, prefilter=_AllowFilesPrefilter(None)
-    )
+    backend2 = AstGrepBackend(runner, workspace, prefilter=_AllowFilesPrefilter(None))
     backend2.plan_rename(file_a.resolve().as_uri(), 0, 10, "H")
     assert backend2.last_prefilter_used is False
     assert backend2.last_prefilter_dropped == 0

@@ -48,8 +48,7 @@ def scroll_chunks(
         )
         if not records:
             break
-        for rec in records:
-            yield rec
+        yield from records
         offset = next_offset
         if offset is None:
             break
@@ -107,12 +106,12 @@ def main() -> None:
             dropped_count += int(not kept)
             if total % 100 == 0:
                 print(
-                    f"[{total}] kept={kept_count} dropped={dropped_count} {time.time()-start:.1f}s"
+                    f"[{total}] kept={kept_count} dropped={dropped_count} {time.time() - start:.1f}s"
                 )
 
     ratio = kept_count / total if total else 0.0
     print(
-        f"Done: total={total} kept={kept_count} dropped={dropped_count} ratio={ratio:.4f} ({time.time()-start:.1f}s)"
+        f"Done: total={total} kept={kept_count} dropped={dropped_count} ratio={ratio:.4f} ({time.time() - start:.1f}s)"
     )
 
 

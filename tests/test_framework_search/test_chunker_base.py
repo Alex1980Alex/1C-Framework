@@ -82,8 +82,15 @@ class TestChunkSha1:
 
 class TestChunkPayload:
     _EXPECTED_KEYS = {
-        "relative_path", "content", "language", "chunk_type",
-        "symbol_name", "line_start", "line_end", "mtime", "sha1",
+        "relative_path",
+        "content",
+        "language",
+        "chunk_type",
+        "symbol_name",
+        "line_start",
+        "line_end",
+        "mtime",
+        "sha1",
     }
 
     def test_payload_keys(self) -> None:

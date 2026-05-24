@@ -379,7 +379,7 @@ def render_md(report: CostBaselineReport) -> str:
         add("| Strategy | Count | Total $ | Avg $ |")
         add("|---|---|---|---|")
         for r in report.by_strategy:
-            add(f"| `{r.strategy}` | {r.count} | " f"${r.total_cost:.4f} | ${r.avg_cost:.6f} |")
+            add(f"| `{r.strategy}` | {r.count} | ${r.total_cost:.4f} | ${r.avg_cost:.6f} |")
     add("")
 
     add("## Cost by model")

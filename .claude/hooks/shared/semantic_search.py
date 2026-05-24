@@ -19,8 +19,7 @@ import urllib.request
 # TEI configuration (matches src/framework_search/embedder.py defaults).
 TEI_URL = os.environ.get("TEI_URL", "http://localhost:8080") + "/embed"
 QUERY_INSTRUCTION = (
-    "Instruct: Given a web search query, retrieve relevant passages "
-    "that answer the query\nQuery: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
 

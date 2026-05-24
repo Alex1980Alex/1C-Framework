@@ -57,9 +57,7 @@ class TestDeepEvalSchema:
         """DeepEval needs at minimum `input` (query) and either `actual_output`
         or a way to compute it via retrieval_context."""
         ds = _load_dataset()
-        offenders = [
-            it.get("id", "?") for it in ds["items"] if not it.get("query")
-        ]
+        offenders = [it.get("id", "?") for it in ds["items"] if not it.get("query")]
         assert not offenders, f"items missing query (DeepEval input): {offenders}"
 
     def test_thresholds_are_strict(self):
@@ -111,7 +109,9 @@ class TestDeepEvalQualityGate:
         ds = _load_dataset()
         items_ready = _items_with_chunks(ds)
         if len(items_ready) < MIN_QUALITY_GATE_SIZE:
-            pytest.skip(f"Dataset не готов для DeepEval ({len(items_ready)} < {MIN_QUALITY_GATE_SIZE})")
+            pytest.skip(
+                f"Dataset не готов для DeepEval ({len(items_ready)} < {MIN_QUALITY_GATE_SIZE})"
+            )
 
         # Pending v2.0 (см. test_faithfulness_above_threshold выше).
         pytest.skip("DeepEval quality gate implementation deferred to v2.0 corpus + ground truth")

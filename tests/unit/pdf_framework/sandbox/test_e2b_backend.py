@@ -24,12 +24,15 @@ def fake_e2b_module(monkeypatch):
 def backend(fake_e2b_module, monkeypatch):
     monkeypatch.setenv("E2B_API_KEY", "test-key")
     from src.pdf_framework.sandbox.e2b_backend import E2BBackend
+
     b = E2BBackend()
     b._sandbox = MagicMock()
-    b._sandbox.run_code = MagicMock(return_value=SimpleNamespace(
-        logs=SimpleNamespace(stdout=["hello"], stderr=[]),
-        error=None,
-    ))
+    b._sandbox.run_code = MagicMock(
+        return_value=SimpleNamespace(
+            logs=SimpleNamespace(stdout=["hello"], stderr=[]),
+            error=None,
+        )
+    )
     return b
 
 
@@ -37,12 +40,14 @@ class TestInit:
     def test_init_without_api_key_raises(self, fake_e2b_module, monkeypatch):
         monkeypatch.delenv("E2B_API_KEY", raising=False)
         from src.pdf_framework.sandbox.e2b_backend import E2BBackend
+
         with pytest.raises(RuntimeError, match="E2B_API_KEY"):
             E2BBackend()
 
     def test_init_without_extra_raises(self, monkeypatch):
         monkeypatch.delitem(sys.modules, "e2b_code_interpreter", raising=False)
         import builtins
+
         real_import = builtins.__import__
 
         def fake_import(name, *a, **kw):
@@ -54,6 +59,7 @@ class TestInit:
             sys.modules.pop("src.pdf_framework.sandbox.e2b_backend", None)
             with pytest.raises(RuntimeError, match="E2B extra"):
                 from src.pdf_framework.sandbox.e2b_backend import E2BBackend
+
                 E2BBackend(api_key="x")
 
 
@@ -85,10 +91,12 @@ class TestExecute:
 
     @pytest.mark.asyncio
     async def test_execute_error_in_jupyter(self, backend):
-        backend._sandbox.run_code = MagicMock(return_value=SimpleNamespace(
-            logs=SimpleNamespace(stdout=[], stderr=[]),
-            error=SimpleNamespace(name="NameError", value="x not defined", traceback="..."),
-        ))
+        backend._sandbox.run_code = MagicMock(
+            return_value=SimpleNamespace(
+                logs=SimpleNamespace(stdout=[], stderr=[]),
+                error=SimpleNamespace(name="NameError", value="x not defined", traceback="..."),
+            )
+        )
         result = await backend.execute("print(x)")
         assert result.exit_code == 1
         assert "NameError" in result.stderr
@@ -98,10 +106,12 @@ class TestExecute:
     async def test_stateful_jupyter_persistence(self, backend):
         """E2B-unique: variables persist across run_code calls (single sandbox)."""
         # First call sets x=42
-        backend._sandbox.run_code = MagicMock(side_effect=[
-            SimpleNamespace(logs=SimpleNamespace(stdout=[], stderr=[]), error=None),
-            SimpleNamespace(logs=SimpleNamespace(stdout=["84"], stderr=[]), error=None),
-        ])
+        backend._sandbox.run_code = MagicMock(
+            side_effect=[
+                SimpleNamespace(logs=SimpleNamespace(stdout=[], stderr=[]), error=None),
+                SimpleNamespace(logs=SimpleNamespace(stdout=["84"], stderr=[]), error=None),
+            ]
+        )
         await backend.execute("x = 42")
         result = await backend.execute("print(x * 2)")
         assert "84" in result.stdout
@@ -111,10 +121,12 @@ class TestExecute:
     @pytest.mark.asyncio
     async def test_truncation_100kb(self, backend):
         huge = ["x" * 100_000, "y" * 50_000]
-        backend._sandbox.run_code = MagicMock(return_value=SimpleNamespace(
-            logs=SimpleNamespace(stdout=huge, stderr=[]),
-            error=None,
-        ))
+        backend._sandbox.run_code = MagicMock(
+            return_value=SimpleNamespace(
+                logs=SimpleNamespace(stdout=huge, stderr=[]),
+                error=None,
+            )
+        )
         result = await backend.execute("print(big)")
         assert result.truncated is True
         assert len(result.stdout) == 100_000
@@ -151,6 +163,7 @@ class TestSelector:
         monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
         monkeypatch.delenv("E2B_API_KEY", raising=False)
         from src.pdf_framework.sandbox import DryRunBackend, select_backend
+
         backend = select_backend("dryrun")
         assert isinstance(backend, DryRunBackend)
 
@@ -158,5 +171,6 @@ class TestSelector:
         monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
         monkeypatch.delenv("E2B_API_KEY", raising=False)
         from src.pdf_framework.sandbox import DryRunBackend, select_backend
+
         backend = select_backend("auto")
         assert isinstance(backend, DryRunBackend)

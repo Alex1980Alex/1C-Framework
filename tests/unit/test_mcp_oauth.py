@@ -41,8 +41,11 @@ class TestModels:
     def test_auth_code_data_fields(self):
         exp = datetime.now() + timedelta(minutes=10)
         data = AuthCodeData(
-            client_id="test", redirect_uri="http://localhost/cb",
-            code_challenge="abc123", user_data={"role": "admin"}, exp=exp,
+            client_id="test",
+            redirect_uri="http://localhost/cb",
+            code_challenge="abc123",
+            user_data={"role": "admin"},
+            exp=exp,
         )
         assert data.client_id == "test"
         assert data.user_data == {"role": "admin"}
@@ -63,8 +66,11 @@ class TestInMemoryBackend:
         backend = InMemoryBackend()
         exp = datetime.now() + timedelta(minutes=10)
         data = AuthCodeData(
-            client_id="c", redirect_uri="http://cb",
-            code_challenge="ch", user_data={}, exp=exp,
+            client_id="c",
+            redirect_uri="http://cb",
+            code_challenge="ch",
+            user_data={},
+            exp=exp,
         )
         await backend.save_auth_code("code1", data)
         result = await backend.get_auth_code("code1")
@@ -77,8 +83,11 @@ class TestInMemoryBackend:
         backend = InMemoryBackend()
         exp = datetime.now() - timedelta(seconds=1)
         data = AuthCodeData(
-            client_id="c", redirect_uri="http://cb",
-            code_challenge="ch", user_data={}, exp=exp,
+            client_id="c",
+            redirect_uri="http://cb",
+            code_challenge="ch",
+            user_data={},
+            exp=exp,
         )
         await backend.save_auth_code("expired", data)
         assert await backend.get_auth_code("expired") is None
@@ -97,10 +106,13 @@ class TestInMemoryBackend:
     async def test_cleanup_expired(self):
         backend = InMemoryBackend()
         past = datetime.now() - timedelta(seconds=1)
-        await backend.save_auth_code("old_code", AuthCodeData(
-            client_id="c", redirect_uri="", code_challenge="", user_data={}, exp=past))
-        await backend.save_access_token("old_tok", AccessTokenData(
-            client_id="c", user_data={}, exp=past))
+        await backend.save_auth_code(
+            "old_code",
+            AuthCodeData(client_id="c", redirect_uri="", code_challenge="", user_data={}, exp=past),
+        )
+        await backend.save_access_token(
+            "old_tok", AccessTokenData(client_id="c", user_data={}, exp=past)
+        )
         codes, access, _ = await backend.cleanup_expired()
         assert codes == 1
         assert access == 1
@@ -132,7 +144,9 @@ class TestOAuth2Service:
         assert code is not None
 
         result = await service.exchange_code_for_tokens(
-            code=code, redirect_uri="http://localhost/callback", code_verifier=verifier,
+            code=code,
+            redirect_uri="http://localhost/callback",
+            code_verifier=verifier,
         )
         assert result is not None
         access_token, token_type, expires_in, refresh_token = result

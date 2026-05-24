@@ -215,11 +215,15 @@ class TestInit:
 # Cascade flow tests — verify L3/L4 routing without invoking pymupdf4llm/fitz/Anthropic.
 # We monkeypatch _load_sync (L1+L2) and the L3/L4 helpers to track calls.
 
+
 def _make_fake_doc():
     from src.pdf_framework.schemas.documents import DocumentMetadata, ProcessedDocument
 
     meta = DocumentMetadata(
-        source="/tmp/x.pdf", title="x", author="", page_count=1,
+        source="/tmp/x.pdf",
+        title="x",
+        author="",
+        page_count=1,
         extra={"page_offsets": [(0, 1)], "tables": [], "loader_stats": {}},
     )
     return ProcessedDocument(id="d1", source_path="/tmp/x.pdf", metadata=meta, raw_text="page one")
@@ -236,7 +240,9 @@ class TestCascadeFlow:
             api_key="",
         )
         captured: list = []
-        monkeypatch.setattr(loader, "_load_sync", lambda src: (captured.append(src), _make_fake_doc())[1])
+        monkeypatch.setattr(
+            loader, "_load_sync", lambda src: (captured.append(src), _make_fake_doc())[1]
+        )
         doc = await loader.load("/tmp/x.pdf")
         assert captured == ["/tmp/x.pdf"]
         assert doc.raw_text == "page one"
@@ -254,6 +260,7 @@ class TestCascadeFlow:
         async def fake_l3(*a, **kw):
             l3_called.append(True)
             return []
+
         monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
         monkeypatch.setattr(loader, "_extract_docling_tables", fake_l3)
         await loader.load("/tmp/x.pdf")
@@ -272,6 +279,7 @@ class TestCascadeFlow:
         async def fake_l3(pdf_path, existing):
             l3_called.append(pdf_path)
             return []
+
         monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
         monkeypatch.setattr(loader, "_extract_docling_tables", fake_l3)
         await loader.load("/tmp/x.pdf")
@@ -291,6 +299,7 @@ class TestCascadeFlow:
         async def fake_l4(*a, **kw):
             l4_called.append(True)
             return []
+
         monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
         monkeypatch.setattr(loader, "_level4_vision_ocr", fake_l4)
         await loader.load("/tmp/x.pdf")
@@ -309,6 +318,7 @@ class TestCascadeFlow:
         async def fake_l4(pdf_path, doc):
             l4_called.append(pdf_path)
             return []
+
         monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
         monkeypatch.setattr(loader, "_level4_vision_ocr", fake_l4)
         await loader.load("/tmp/x.pdf")
@@ -327,6 +337,7 @@ class TestCascadeFlow:
         async def fake_l4(*a, **kw):
             l4_called.append(True)
             return []
+
         monkeypatch.setattr(loader, "_load_sync", lambda src: _make_fake_doc())
         monkeypatch.setattr(loader, "_level4_vision_ocr", fake_l4)
         await loader.load("/tmp/x.pdf")

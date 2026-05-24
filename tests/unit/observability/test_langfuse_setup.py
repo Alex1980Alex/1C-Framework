@@ -62,8 +62,10 @@ class TestBuildLangfuseCallback:
         """Enabled in settings but handler can't init (no creds in env/settings)."""
         from src.pdf_framework.observability import langfuse_setup
 
-        with patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True), \
-             patch.dict("os.environ", {}, clear=True):
+        with (
+            patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True),
+            patch.dict("os.environ", {}, clear=True),
+        ):
 
             class _ObsEmpty:
                 langfuse_enabled = True
@@ -84,8 +86,10 @@ class TestBuildLangfuseCallback:
 
         from src.pdf_framework.observability import langfuse_setup
 
-        with patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True), \
-             patch.dict(sys.modules, {"src.pdf_framework.callbacks.langfuse": None}):
+        with (
+            patch.object(langfuse_setup, "is_langfuse_enabled", return_value=True),
+            patch.dict(sys.modules, {"src.pdf_framework.callbacks.langfuse": None}),
+        ):
             # Patching sys.modules with None forces ImportError on next import
             result = langfuse_setup.build_langfuse_callback()
             assert result is None
@@ -135,4 +139,8 @@ class TestLangfuseCallbackHandlerCredentialResolution:
         # Either: handler is enabled (init succeeded with explicit creds)
         # Or: handler self-disabled (network/init error) — still valid behaviour
         assert handler._enabled in (True, False)
-        assert handler._explicit_creds == ("explicit-pub", "explicit-sec", "https://explicit.example")
+        assert handler._explicit_creds == (
+            "explicit-pub",
+            "explicit-sec",
+            "https://explicit.example",
+        )

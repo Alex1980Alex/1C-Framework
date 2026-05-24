@@ -11,7 +11,6 @@ import pytest
 from src.memory.orchestrator.memcube import ContentType, MemoryCube
 from src.memory.orchestrator.unified_id import MemoryType, SourceServer
 
-
 # ===== Fixtures =====
 
 
@@ -64,7 +63,9 @@ class TestToWikiPage:
         assert "Test content for wiki page" in page
 
     def test_minimal_cube(self):
-        cube = MemoryCube(content_type=ContentType.WIKI, memory_type=MemoryType.WIKI, content="Hello")
+        cube = MemoryCube(
+            content_type=ContentType.WIKI, memory_type=MemoryType.WIKI, content="Hello"
+        )
         page = cube.to_wiki_page()
         assert page.startswith("---\n")
         assert "## Content" in page

@@ -210,7 +210,6 @@ class TestRateLimiter:
 
     def test_rate_limiter_refill_over_time(self):
         """F2.10.4: Tokens should refill over time."""
-        from unittest.mock import patch
 
         from src.api.middleware.rate_limit import RateLimiter
 

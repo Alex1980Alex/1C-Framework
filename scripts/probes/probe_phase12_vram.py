@@ -122,7 +122,7 @@ def main() -> int:
     fallback = sum(1 for v in vectors if v is None)
     print(f"\nCompleted in {elapsed:.1f}s")
     print(f"  vectors returned: {len(vectors)} (expected {len(spans)})")
-    print(f"  fallback (None) chunks: {fallback}/{len(spans)} = {100*fallback/len(spans):.1f}%")
+    print(f"  fallback (None) chunks: {fallback}/{len(spans)} = {100 * fallback / len(spans):.1f}%")
     print(f"  Peak VRAM: alloc={peak_alloc:.2f} GB, reserved={peak_reserved:.2f} GB")
     print(
         f"  Headroom vs 24 GB: alloc={24 - peak_alloc:.2f} GB, reserved={24 - peak_reserved:.2f} GB"
@@ -137,7 +137,7 @@ def main() -> int:
     print(f"  [{'OK' if crit_vram else 'FAIL'}] Peak reserved VRAM < 22 GB: {peak_reserved:.2f} GB")
     print(f"  [{'OK' if crit_branch else 'FAIL'}] Correct branch fired: {branch}")
     print(
-        f"  [INFO] Fallback%: {100*fallback/len(spans):.1f}% "
+        f"  [INFO] Fallback%: {100 * fallback / len(spans):.1f}% "
         f"(expected <5% per roadmap §4.2 for >500K modules after Phase 2)"
     )
 

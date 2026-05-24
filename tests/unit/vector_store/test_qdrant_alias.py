@@ -60,19 +60,13 @@ def _build_mock_client(
     """Строит mock AsyncQdrantClient с заданными коллекциями и aliases."""
     client = MagicMock()
     client.get_collections = AsyncMock(
-        return_value=SimpleNamespace(
-            collections=[_make_collection(name) for name in collections]
-        )
+        return_value=SimpleNamespace(collections=[_make_collection(name) for name in collections])
     )
     if raise_on_get_aliases is not None:
         client.get_aliases = AsyncMock(side_effect=raise_on_get_aliases())
     else:
-        alias_objs = [
-            _make_alias(alias_name, target) for alias_name, target in (aliases or [])
-        ]
-        client.get_aliases = AsyncMock(
-            return_value=SimpleNamespace(aliases=alias_objs)
-        )
+        alias_objs = [_make_alias(alias_name, target) for alias_name, target in (aliases or [])]
+        client.get_aliases = AsyncMock(return_value=SimpleNamespace(aliases=alias_objs))
     client.get_collection = AsyncMock(return_value=_make_collection_info(dim=dim))
     client.create_collection = AsyncMock()
     return client

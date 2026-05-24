@@ -28,12 +28,17 @@ def fake_langsmith_module(monkeypatch):
 def backend(fake_langsmith_module, monkeypatch):
     monkeypatch.setenv("LANGSMITH_API_KEY", "test-key")
     from src.pdf_framework.sandbox.langsmith_backend import LangSmithBackend
+
     b = LangSmithBackend()
     # Stub the sandbox object
     b._sandbox = MagicMock()
-    b._sandbox.run = MagicMock(return_value=SimpleNamespace(
-        stdout="hello\n", stderr="", exit_code=0,
-    ))
+    b._sandbox.run = MagicMock(
+        return_value=SimpleNamespace(
+            stdout="hello\n",
+            stderr="",
+            exit_code=0,
+        )
+    )
     return b
 
 
@@ -41,6 +46,7 @@ class TestInit:
     def test_init_without_api_key_raises(self, fake_langsmith_module, monkeypatch):
         monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
         from src.pdf_framework.sandbox.langsmith_backend import LangSmithBackend
+
         with pytest.raises(RuntimeError, match="LANGSMITH_API_KEY"):
             LangSmithBackend()
 
@@ -50,6 +56,7 @@ class TestInit:
         monkeypatch.delitem(sys.modules, "langsmith", raising=False)
         # Also block fresh imports
         import builtins
+
         real_import = builtins.__import__
 
         def fake_import(name, *a, **kw):
@@ -62,6 +69,7 @@ class TestInit:
             sys.modules.pop("src.pdf_framework.sandbox.langsmith_backend", None)
             with pytest.raises(RuntimeError, match="LangSmith sandbox extra"):
                 from src.pdf_framework.sandbox.langsmith_backend import LangSmithBackend
+
                 LangSmithBackend(api_key="x")
 
 
@@ -103,9 +111,13 @@ class TestExecute:
     @pytest.mark.asyncio
     async def test_execute_truncation_100kb(self, backend):
         huge = "x" * 150_000
-        backend._sandbox.run = MagicMock(return_value=SimpleNamespace(
-            stdout=huge, stderr="", exit_code=0,
-        ))
+        backend._sandbox.run = MagicMock(
+            return_value=SimpleNamespace(
+                stdout=huge,
+                stderr="",
+                exit_code=0,
+            )
+        )
         result = await backend.execute("print('x' * 150000)")
         assert result.truncated is True
         assert len(result.stdout) == 100_000

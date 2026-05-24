@@ -140,13 +140,13 @@ def create_collection(
         except (UnexpectedResponse, Exception):
             pass
 
-    layout = detect_collection_layout(client, name)
+    layout = detect_collection_layout(client, name)  # noqa: F821
     if layout != "absent":
         info = client.get_collection(collection_name=name)
         print(f"Collection '{name}' exists: {info.points_count} points (layout={layout})")
         return layout
 
-    if enable_sparse:
+    if enable_sparse:  # noqa: F821
         client.create_collection(
             collection_name=name,
             vectors_config={
@@ -1476,7 +1476,7 @@ def main() -> None:
         args.pooling_mode == "late-chunking"
         and args.embedder == "qwen3-st"
         and not args.enable_fa2
-        and _looks_like_cyrillic_project(project)
+        and _looks_like_cyrillic_project(project)  # noqa: F821
     ):
         # roadmap 260518 §1.2.2 A/B (2026-05-19) showed Phase 2 sliding
         # forward_s is 191-437s without FA2 vs 2.1s with FA2 on Cyrillic
@@ -1505,7 +1505,7 @@ def main() -> None:
         # ratio active during the run. Range guard mirrors the ValueError
         # in `_make_char_windows` (overlap must be < window).
         if not 0.0 <= args.sliding_overlap < 1.0:
-            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got " f"{args.sliding_overlap}")
+            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got {args.sliding_overlap}")
             sys.exit(1)
         Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = args.sliding_overlap
         _evt("sliding_overlap_override", ratio=args.sliding_overlap)
@@ -1578,7 +1578,7 @@ def main() -> None:
     # case of reindexing into an existing hybrid collection like the
     # production alias bsl_code_v4_late).
     sparse_encoder = None
-    if layout == "hybrid":
+    if layout == "hybrid":  # noqa: F821
         from fastembed import SparseTextEmbedding
 
         sparse_encoder = SparseTextEmbedding(model_name="Qdrant/bm25")

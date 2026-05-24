@@ -20,8 +20,7 @@ import httpx
 TEI_URL: Final[str] = os.environ.get("TEI_URL", "http://localhost:8080") + "/embed"
 QDRANT_URL: Final[str] = os.environ.get("QDRANT_URL", "http://localhost:6333")
 QUERY_PREFIX: Final[str] = (
-    "Instruct: Given a web search query, retrieve relevant passages that "
-    "answer the query\nQuery: "
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
 

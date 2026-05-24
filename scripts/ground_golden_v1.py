@@ -257,7 +257,7 @@ async def _run(args: argparse.Namespace) -> int:
                 # Should not happen given _process_item's broad except, but
                 # belt-and-suspenders against future changes.
                 print(
-                    f"[FAIL] {item.get('id','?')}: " f"{type(result).__name__}: {result}",
+                    f"[FAIL] {item.get('id', '?')}: {type(result).__name__}: {result}",
                     flush=True,
                 )
                 failed += 1
@@ -270,8 +270,7 @@ async def _run(args: argparse.Namespace) -> int:
             if tag == "EMPTY":
                 no_relevant += 1
             print(
-                f"[{tag}] {iid}: {len(chunk_ids)}/{n_pts} relevant -> "
-                f"{[c[:8] for c in chunk_ids]}",
+                f"[{tag}] {iid}: {len(chunk_ids)}/{n_pts} relevant -> {[c[:8] for c in chunk_ids]}",
                 flush=True,
             )
             if not args.dry_run:

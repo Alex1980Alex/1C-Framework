@@ -42,7 +42,6 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput  # noqa: E402
-
 from shared.slash_detect import detect_slash_command  # noqa: E402
 
 TARGET_COMMAND = "implement-1c-task"

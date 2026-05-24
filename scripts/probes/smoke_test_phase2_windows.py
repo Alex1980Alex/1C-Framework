@@ -65,7 +65,7 @@ covered = set()
 for s, t in w:
     covered.update(range(s, s + len(t)))
 assert covered == set(range(250)), f"coverage gap: {set(range(250)) - covered}"
-print(f"  full coverage [0, 250) verified, offsets={[(s, len(t)) for s,t in w]}")
+print(f"  full coverage [0, 250) verified, offsets={[(s, len(t)) for s, t in w]}")
 
 # Test 4: line snapping at production-realistic scale.
 # snap_zone = window_chars // 10, so for snap to find a newline the gap

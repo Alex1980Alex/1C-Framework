@@ -8,18 +8,18 @@ Goals:
 - Pathologically large module_summary is dropped (low semantic value, high
   VRAM cost — see roadmap §21.2).
 """
+
 from __future__ import annotations
 
 import pytest
 
-from src.bsl.parser.bsl_chunker import BSLChunker, BSLChunk
+from src.bsl.parser.bsl_chunker import BSLChunk, BSLChunker
 from src.bsl.parser.models import (
     BSLModule,
     BSLSymbol,
     ModuleType,
     SymbolType,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -38,7 +38,9 @@ def _make_symbol(name: str, body: str, line_start: int = 1) -> BSLSymbol:
     )
 
 
-def _make_module(symbols: list[BSLSymbol], path: str = "src/CommonModules/Test/Ext/Module.bsl") -> BSLModule:
+def _make_module(
+    symbols: list[BSLSymbol], path: str = "src/CommonModules/Test/Ext/Module.bsl"
+) -> BSLModule:
     return BSLModule(
         file_path=path,
         module_type=ModuleType.COMMON_MODULE,
@@ -134,7 +136,7 @@ def test_split_overlap_present_between_adjacent_parts():
         common = a_lines & b_lines
         # At least 3 shared lines (overlap_chars=750 / line~80 chars ≈ 9 lines).
         assert len(common) >= 3, (
-            f"Parts {i}↔{i+1}: only {len(common)} shared lines "
+            f"Parts {i}↔{i + 1}: only {len(common)} shared lines "
             f"(expected ≥3 from overlap_chars={chunker.overlap_chars})"
         )
 
@@ -146,9 +148,7 @@ def test_split_threshold_is_respected():
     short_body = "x = 1;\n" * 700  # ~4900 chars
     short_mod = _make_module([_make_symbol("Short", short_body)])
     short_chunks = chunker.chunk_module(short_mod)
-    assert len(short_chunks) == 1, (
-        f"5K-char chunk should not split (got {len(short_chunks)})"
-    )
+    assert len(short_chunks) == 1, f"5K-char chunk should not split (got {len(short_chunks)})"
 
     long_body = "y = 2;\n" * 2000  # ~14000 chars
     long_mod = _make_module([_make_symbol("Long", long_body)])
@@ -203,16 +203,11 @@ def test_module_summary_dropped_for_pathological_module():
     chunker = BSLChunker(include_module_summary=True)
     # Each symbol contributes ~50 chars to the summary's "Symbols:" listing.
     # 5000 symbols → ~250k chars summary (well above default 30000 limit).
-    syms = [
-        _make_symbol(f"VeryLongSymbolName{i:05d}", f"Возврат {i};")
-        for i in range(5000)
-    ]
+    syms = [_make_symbol(f"VeryLongSymbolName{i:05d}", f"Возврат {i};") for i in range(5000)]
     module = _make_module(syms)
     chunks = chunker.chunk_module(module)
     summaries = [c for c in chunks if c.metadata.get("chunk_type") == "module_summary"]
-    assert len(summaries) == 0, (
-        "Pathological module_summary (>30k chars) must be dropped"
-    )
+    assert len(summaries) == 0, "Pathological module_summary (>30k chars) must be dropped"
 
     # Symbol chunks themselves should still be present (drop policy only
     # affects the summary).

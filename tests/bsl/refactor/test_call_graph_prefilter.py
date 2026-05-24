@@ -17,9 +17,7 @@ def prefilter(tmp_path):
 
 def _insert(pf, symbols, calls):
     conn = pf._store._conn
-    conn.executemany(
-        "INSERT INTO symbols VALUES(?,?,?,?,?,?,?,?,?)", symbols
-    )
+    conn.executemany("INSERT INTO symbols VALUES(?,?,?,?,?,?,?,?,?)", symbols)
     conn.executemany(
         "INSERT INTO calls(caller_id,callee_name,callee_module,line_number,call_type) VALUES(?,?,?,?,?)",
         calls,

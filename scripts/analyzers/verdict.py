@@ -95,7 +95,7 @@ _ACTION_RULES: tuple[tuple[str, str], ...] = (
     ),
     (
         "empty chunks",
-        "Empty/near-empty chunks — parser bug. Tail `event=parse_error` для " "stack trace.",
+        "Empty/near-empty chunks — parser bug. Tail `event=parse_error` для stack trace.",
     ),
 )
 

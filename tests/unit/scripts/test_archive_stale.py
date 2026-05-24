@@ -29,8 +29,9 @@ def _make_args(wiki_dir, archive_dir, *, max_age_days=365, min_confidence=0.3, d
     )
 
 
-def _make_page(wiki_dir: Path, name: str, status: str, confidence: float,
-               updated_at: datetime) -> Path:
+def _make_page(
+    wiki_dir: Path, name: str, status: str, confidence: float, updated_at: datetime
+) -> Path:
     page = wiki_dir / f"{name}.md"
     page.write_text(
         f"---\n"
@@ -64,6 +65,7 @@ async def test_archive_stale_archives_qualifying_page(wiki_dirs):
     page = _make_page(wiki_dir, "stale-1", "active", 0.2, old)
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir)
     rc = await cmd_archive_stale(args)
     assert rc == 0
@@ -80,6 +82,7 @@ async def test_archive_stale_skips_recent_page(wiki_dirs):
     page = _make_page(wiki_dir, "fresh", "active", 0.2, fresh)
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir, max_age_days=365)
     await cmd_archive_stale(args)
     assert page.exists()
@@ -93,6 +96,7 @@ async def test_archive_stale_skips_high_confidence(wiki_dirs):
     page = _make_page(wiki_dir, "high-conf", "active", 0.5, old)
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir, min_confidence=0.3)
     await cmd_archive_stale(args)
     assert page.exists()
@@ -106,6 +110,7 @@ async def test_archive_stale_skips_already_archived(wiki_dirs):
     page = _make_page(wiki_dir, "already-archived", "archived", 0.2, old)
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir)
     await cmd_archive_stale(args)
     assert page.exists()
@@ -119,6 +124,7 @@ async def test_archive_stale_skips_missing_frontmatter(wiki_dirs):
     page.write_text("Just plain content.\n", encoding="utf-8")
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir)
     await cmd_archive_stale(args)
     assert page.exists()
@@ -138,6 +144,7 @@ async def test_archive_stale_collision_uniqueness_suffix(wiki_dirs):
     page = _make_page(wiki_dir, "duplicate", "active", 0.1, old)
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir)
     await cmd_archive_stale(args)
 
@@ -155,6 +162,7 @@ async def test_archive_stale_dry_run(wiki_dirs):
     page = _make_page(wiki_dir, "dry-test", "active", 0.2, old)
 
     from scripts.export_graph_to_wiki import cmd_archive_stale
+
     args = _make_args(wiki_dir, archive_dir, dry_run=True)
     rc = await cmd_archive_stale(args)
     assert rc == 0

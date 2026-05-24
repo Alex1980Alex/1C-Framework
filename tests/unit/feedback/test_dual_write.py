@@ -225,16 +225,19 @@ class TestReplayFromBackup:
         for d in ["2026-04-01", "2026-05-05", "2026-05-09"]:
             f = backup_dir / f"backup_{d}.jsonl"
             f.write_text(
-                json.dumps({
-                    "id": 1,
-                    "written_at": f"{d}T12:00:00+00:00",
-                    "entry": {
-                        "query": f"q-{d}",
-                        "answer": "a",
-                        "feedback": "positive",
-                        "timestamp": 0.0,
-                    },
-                }) + "\n",
+                json.dumps(
+                    {
+                        "id": 1,
+                        "written_at": f"{d}T12:00:00+00:00",
+                        "entry": {
+                            "query": f"q-{d}",
+                            "answer": "a",
+                            "feedback": "positive",
+                            "timestamp": 0.0,
+                        },
+                    }
+                )
+                + "\n",
                 encoding="utf-8",
             )
 

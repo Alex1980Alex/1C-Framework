@@ -20,8 +20,8 @@ URL = "http://localhost/transport/hs/mcp/rpc"
 USER = "a.terletskiy@sodrugestvo.ru"
 PASSWORD = "Alex80Alex"
 DOC_GUID = "326d2e61-4a6f-11f1-a14d-dc567b7507dc"
-DOC_TYPE = "ДокументСсылка." "гкс_Лабораторный" "Анализ"
-KEY_UID = "УникальныйИден" "тификатор"
+DOC_TYPE = "ДокументСсылка.гкс_ЛабораторныйАнализ"
+KEY_UID = "УникальныйИдентификатор"
 KEY_TYPE = "ТипОбъекта"
 
 

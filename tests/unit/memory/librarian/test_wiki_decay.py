@@ -50,20 +50,24 @@ class TestDecayPoint:
     def test_skips_fresh_point(self, service):
         """days_idle <= 0 — skipped (point обновлён сегодня)."""
         now = datetime.now()
-        point = _make_point({
-            "confidence": 0.7,
-            "decay_rate": 0.05,
-            "created_at": now.isoformat(),
-        })
+        point = _make_point(
+            {
+                "confidence": 0.7,
+                "decay_rate": 0.05,
+                "created_at": now.isoformat(),
+            }
+        )
         result = service._decay_point(point, now, dry_run=True)
         assert result == "skipped"
 
     def test_skips_invalid_timestamp(self, service):
         """Invalid timestamp string — skipped без crash."""
-        point = _make_point({
-            "confidence": 0.7,
-            "created_at": "not-a-date",
-        })
+        point = _make_point(
+            {
+                "confidence": 0.7,
+                "created_at": "not-a-date",
+            }
+        )
         result = service._decay_point(point, datetime.now(), dry_run=True)
         assert result == "skipped"
 
@@ -82,23 +86,27 @@ class TestDecayPoint:
     def test_decay_uses_decay_applied_at_priority(self, service):
         """decay_applied_at preferred over created_at when both present."""
         now = datetime(2026, 5, 15)
-        point = _make_point({
-            "confidence": 0.9,
-            "decay_rate": 0.05,
-            "created_at": "2024-01-01T00:00:00",
-            "decay_applied_at": "2026-04-15T00:00:00",
-        })
+        point = _make_point(
+            {
+                "confidence": 0.9,
+                "decay_rate": 0.05,
+                "created_at": "2024-01-01T00:00:00",
+                "decay_applied_at": "2026-04-15T00:00:00",
+            }
+        )
         result = service._decay_point(point, now, dry_run=True)
         assert result == "decayed"
 
     def test_decay_formula_one_month(self, service):
         """0.9 - 0.05 = 0.85 over exactly 30 days."""
         now = datetime(2026, 5, 15)
-        point = _make_point({
-            "confidence": 0.9,
-            "decay_rate": 0.05,
-            "created_at": (now - timedelta(days=30)).isoformat(),
-        })
+        point = _make_point(
+            {
+                "confidence": 0.9,
+                "decay_rate": 0.05,
+                "created_at": (now - timedelta(days=30)).isoformat(),
+            }
+        )
         service.client.set_payload = MagicMock()
         result = service._decay_point(point, now, dry_run=False)
         assert result == "decayed"
@@ -110,11 +118,13 @@ class TestDecayPoint:
         """Long-idle point doesn't go below min_confidence floor."""
         service = WikiDecayService(qdrant_client=mock_client, min_confidence=0.3)
         now = datetime(2026, 5, 15)
-        point = _make_point({
-            "confidence": 0.4,
-            "decay_rate": 0.05,
-            "created_at": (now - timedelta(days=365)).isoformat(),
-        })
+        point = _make_point(
+            {
+                "confidence": 0.4,
+                "decay_rate": 0.05,
+                "created_at": (now - timedelta(days=365)).isoformat(),
+            }
+        )
         result = service._decay_point(point, now, dry_run=False)
         assert result == "decayed"
         new_conf = service.client.set_payload.call_args[1]["payload"]["confidence"]
@@ -123,11 +133,13 @@ class TestDecayPoint:
     def test_dry_run_does_not_write(self, service):
         """dry_run=True does not call set_payload but still returns 'decayed'."""
         now = datetime(2026, 5, 15)
-        point = _make_point({
-            "confidence": 0.9,
-            "decay_rate": 0.05,
-            "created_at": (now - timedelta(days=60)).isoformat(),
-        })
+        point = _make_point(
+            {
+                "confidence": 0.9,
+                "decay_rate": 0.05,
+                "created_at": (now - timedelta(days=60)).isoformat(),
+            }
+        )
         result = service._decay_point(point, now, dry_run=True)
         assert result == "decayed"
         service.client.set_payload.assert_not_called()
@@ -135,11 +147,13 @@ class TestDecayPoint:
     def test_skip_if_set_payload_raises(self, service):
         """set_payload exception is swallowed; returns 'skipped'."""
         now = datetime(2026, 5, 15)
-        point = _make_point({
-            "confidence": 0.9,
-            "decay_rate": 0.05,
-            "created_at": (now - timedelta(days=60)).isoformat(),
-        })
+        point = _make_point(
+            {
+                "confidence": 0.9,
+                "decay_rate": 0.05,
+                "created_at": (now - timedelta(days=60)).isoformat(),
+            }
+        )
         service.client.set_payload.side_effect = RuntimeError("qdrant down")
         result = service._decay_point(point, now, dry_run=False)
         assert result == "skipped"
@@ -147,11 +161,13 @@ class TestDecayPoint:
     def test_handles_utc_timezone_suffix(self, service):
         """ISO timestamp with Z suffix parsed correctly."""
         now = datetime(2026, 5, 15)
-        point = _make_point({
-            "confidence": 0.9,
-            "decay_rate": 0.05,
-            "created_at": (now - timedelta(days=30)).isoformat() + "Z",
-        })
+        point = _make_point(
+            {
+                "confidence": 0.9,
+                "decay_rate": 0.05,
+                "created_at": (now - timedelta(days=30)).isoformat() + "Z",
+            }
+        )
         service.client.set_payload = MagicMock()
         result = service._decay_point(point, now, dry_run=False)
         assert result == "decayed"
@@ -162,12 +178,16 @@ class TestDecayAll:
     async def test_aggregates_counters(self, service):
         """decay_all returns {total, decayed, skipped, dry_run}."""
         now = datetime.now()
-        p1 = _make_point({"confidence": 0.9, "created_at": (now - timedelta(days=60)).isoformat()}, "p1")
+        p1 = _make_point(
+            {"confidence": 0.9, "created_at": (now - timedelta(days=60)).isoformat()}, "p1"
+        )
         p2 = _make_point({"name": "no-conf"}, "p2")
-        service.client.scroll = MagicMock(side_effect=[
-            ([p1, p2], "next-offset"),
-            ([], None),
-        ])
+        service.client.scroll = MagicMock(
+            side_effect=[
+                ([p1, p2], "next-offset"),
+                ([], None),
+            ]
+        )
         result = await service.decay_all(dry_run=True)
         assert result == {"total": 2, "decayed": 1, "skipped": 1, "dry_run": 1}
 

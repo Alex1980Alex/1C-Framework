@@ -22,6 +22,7 @@ def _make_updater(graph_store, event_bus=None):
     from unittest.mock import MagicMock
 
     from src.pdf_framework.config import GraphRAGSettings
+
     settings = GraphRAGSettings(
         incremental_updates_enabled=False,
         community_detection_enabled=False,
@@ -47,6 +48,7 @@ def graph_store():
 
     from src.pdf_framework.config import GraphStoreSettings
     from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+
     with tempfile.TemporaryDirectory() as tmp:
         settings = GraphStoreSettings(persist_dir=tmp)
         store = NetworkXGraphStore(settings)
@@ -99,9 +101,7 @@ class TestEventBusIntegration:
         await event_bus.stop()
 
     @pytest.mark.asyncio
-    async def test_merged_entity_publishes_updated_event(
-        self, graph_store, event_bus
-    ):
+    async def test_merged_entity_publishes_updated_event(self, graph_store, event_bus):
         """Merging an existing entity should publish entity_updated, not entity_created."""
         await event_bus.start()
 
@@ -160,12 +160,15 @@ class TestEventBusIntegration:
 
         updater = _make_updater(graph_store, event_bus=event_bus)
 
-        entity = Entity(id="metrics-e1", name="MetricsEntity", entity_type="CONCEPT", confidence=0.9)
+        entity = Entity(
+            id="metrics-e1", name="MetricsEntity", entity_type="CONCEPT", confidence=0.9
+        )
         await updater.update([entity], [])
 
         await asyncio.sleep(0.5)
 
         from src.memory.infrastructure.metrics import get_metrics_collector
+
         metrics = get_metrics_collector()
         counters = metrics._counters
         assert counters.get("wiki_sync_events_total", 0) >= 1
