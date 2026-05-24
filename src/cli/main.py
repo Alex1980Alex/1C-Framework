@@ -20,6 +20,7 @@ import asyncio
 import io
 import sys
 import uuid
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -369,7 +370,7 @@ def search(
     """
     components = _get_components()
 
-    async def _run():
+    async def _run() -> None:
         # Build metadata filter (Phase 1.3)
         filter_dict = {}
         if doc_type:
@@ -641,7 +642,7 @@ def chat(
                 continue
 
             # Process user message
-            async def _process():
+            async def _process() -> None:
                 # Store user message
                 await memory.add_message(thread_id, "user", user_input)
 
