@@ -3,9 +3,21 @@
 # pip-audit (security-audit job в ci.yml) ловит активные CVE; Dependabot —
 # превентивные version bumps.
 version: 2
+# Exclude private submodules to avoid Dependency Graph 403 errors:
+# - configuration/<JIRA>/* (private per-JIRA repos)
+# - ИБTransportManagementDevelop/Конфигурация (private)
+# - tools/bsl-debug-server, external/1c_mcp (submodules without pyproject.toml)
+# See memory project_embedded_git_repos + ci-1c.yml workflow failure log 2026-05-24.
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
+    directories:
+      - "/"
+      - "/infra/lazy-mcp"
+      - "/infra/pipeline"
+      - "/src/bsl/finetuning"
+      - "/tools/1c-docs-rag"
+      - "/tools/ast-grep-mcp"
+      - "/tools/serena"
     schedule:
       interval: "weekly"
       day: "monday"
