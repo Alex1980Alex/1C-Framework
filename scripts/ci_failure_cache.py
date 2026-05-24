@@ -41,6 +41,12 @@ def _hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()[:16]
 
 
+def _append_jsonl(entry: dict) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with JSONL_FILE.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 def _read_jsonl() -> list[dict]:
     if not JSONL_FILE.exists():
         return []
