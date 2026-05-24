@@ -102,10 +102,10 @@ async def _call_claude_sdk(
         # Fallback when claude_agent_sdk is not installed (e.g., test environments).
         # Use class statements to satisfy mypy on both platforms (avoids
         # platform-divergent [unused-ignore] from bare-Exception assignment).
-        class ClaudeSDKError(Exception):  # type: ignore[no-redef]
+        class ClaudeSDKError(Exception):  # type: ignore  # noqa: PGH003
             pass
 
-        class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef,misc]
+        class CLINotFoundError(ClaudeSDKError):  # type: ignore  # noqa: PGH003
             pass
 
     # max_turns=3: gives Claude room to use 1-2 tool-use turns before

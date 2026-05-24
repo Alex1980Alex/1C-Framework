@@ -517,7 +517,7 @@ class LLMRotationService:
             class ClaudeSDKError(Exception):  # type: ignore[no-redef]
                 pass
 
-            class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef]
+            class CLINotFoundError(ClaudeSDKError):  # type: ignore[no-redef,misc]
                 pass
 
         target_alias = (model or state.config.default_model).lower()
