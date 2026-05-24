@@ -1507,8 +1507,9 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | Phase | Items | Status | PR |
 |---|---|---|---|
 | P0a Cleanup | Recount + env names | ✅ DONE | (mechanical) |
-| P0b Foundations | mypy ratchet + Layer 4 wiki | ⏳ PENDING | — |
-| **P0c-slim** | Dispatcher + 1 worker (ADR-D1) | ✅ DONE | **[#9](https://github.com/Alex1980Alex/1C-Framework/pull/9)** OPEN mergeable |
+| **P0b Foundations (sync only)** | mypy ratchet re-sync | ✅ **DONE 2026-05-24** | **[#10](https://github.com/Alex1980Alex/1C-Framework/pull/10)** OPEN |
+| P0b Foundations (full) | mypy Phase 3 cleanup + Layer 4 wiki | ⏳ DEFERRED | — |
+| **P0c-slim** | Dispatcher + 1 worker (ADR-D1) | ✅ DONE | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) OPEN mergeable |
 | P1 | 3 remaining prework workers | ⏳ PENDING | — |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
