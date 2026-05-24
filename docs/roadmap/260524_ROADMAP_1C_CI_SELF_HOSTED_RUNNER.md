@@ -11,3 +11,12 @@
 - BDD Tests (Vanessa Automation)
 
 **Impact:** на каждом PR (даже non-BSL) появляются 3 вечно-QUEUED checks → noise в `gh pr view`, false alarm в Monitor, нельзя использовать как required gate.
+
+## §2 Root cause
+
+`ci-1c.yml` `pull_request:` trigger **БЕЗ `paths:`** фильтра → запускается на каждый PR. При этом jobs зависят от среды:
+- `ONEC_PATH: 'C:\Program Files\1cv8\8.3.27.1859\bin'` (1C platform)
+- `OSCRIPT_PATH: 'C:\Tools\OneScript\bin\oscript.exe'`
+- `VRUNNER_PATH: 'C:\Tools\OneScript\bin\vrunner.bat'`
+- `IB_CONNECTION: '/SKOMPUTER\testdb1c'` (SQL Server 1С infobase)
+- TestDB обработка для VA BDD scenarios
