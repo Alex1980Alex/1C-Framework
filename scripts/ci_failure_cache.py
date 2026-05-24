@@ -84,3 +84,11 @@ def fetch_failure_log(run_id: str, job_name: str | None = None) -> str:
     if job_name:
         return "\n".join(ln for ln in out.splitlines() if job_name in ln)
     return out
+
+
+def _mrl_truncate(vec: list[float], dim: int) -> list[float]:
+    if len(vec) <= dim:
+        return vec
+    vec = vec[:dim]
+    norm = sum(x * x for x in vec) ** 0.5
+    return [x / norm for x in vec] if norm > 1e-9 else vec
