@@ -24,3 +24,18 @@ NOISE_PATTERNS = re.compile(
     r"##\[group\]|Prepare workflow|Set up Python|Install uv|Cache dependencies|"
     r"Initialize CodeQL|Post Run|safe\.directory|Cleaning up orphan|Post job cleanup",
     re.IGNORECASE)
+
+
+def _now_iso() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def _gh(*args: str) -> tuple[int, str, str]:
+    r = subprocess.run(["gh", *args], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace",
+                       cwd=str(PROJECT_ROOT), check=False)
+    return r.returncode, r.stdout, r.stderr
+
+
+def _hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()[:16]
