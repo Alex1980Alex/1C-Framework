@@ -258,3 +258,20 @@ def stats() -> dict:
             "top_recurring": [{"hash": h, "count": len(v),
                                "first": (v[0].get("error_first_line") or "")[:80],
                                "last_ts": v[-1].get("ts")} for h, v in top]}
+
+
+def search_text(query: str) -> list[dict]:
+    return [e for e in _read_jsonl()
+            if query.lower() in (e.get("error_first_line", "") or "").lower()][-10:]
+
+
+def main() -> int:
+    p = argparse.ArgumentParser()
+    p.add_argument("--pr", type=int)
+    p.add_argument("--sha", type=str)
+    p.add_argument("--run-id", type=str, dest="run_id")
+    p.add_argument("--job", type=str)
+    p.add_argument("--stats", action="store_true")
+    p.add_argument("--search", type=str)
+    args = p.parse_args()
+    return _dispatch(args)
