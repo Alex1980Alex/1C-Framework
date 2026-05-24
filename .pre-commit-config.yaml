@@ -38,7 +38,8 @@ exclude: |
     VerInfo\.txt|
     ReadMe\.txt|
     data/analyze-1c-research/.*|
-    docs/documentation/.*
+    docs/documentation/.*|
+    tmp/.*
   )$
 
 repos:
