@@ -54,6 +54,7 @@ SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+HOOK_NAME = "memory-first-hook"
 MIN_PROMPT_LEN = 20
 COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
