@@ -56,3 +56,33 @@ pull_request:
 4. Test: trigger ci-1c workflow manually, verify все 3 job'а проходят
 
 **Tradeoff:** Pro — реальный CI для BSL изменений. Con — машина должна быть всегда online, требует maintenance, может стать bottleneck при множественных параллельных runs.
+
+### Option C — Hybrid: A + B (рекомендую)
+
+Сделать A прямо сейчас (закрывает noise), B — отдельный milestone когда будет нужно.
+
+## §4 Recommended phasing
+
+| Phase | Items | Effort | Status |
+|---|---|---|---|
+| **P0** (NOW) | Option A — `paths:` filter в `pull_request:` секции `ci-1c.yml` | 30 min | PENDING |
+| P1 (1-2 days) | Option B — self-hosted runner setup + healthcheck | 1-2d | DEFERRED |
+| P2 (when needed) | Cloud-based 1С runner alternative (Vagrant/Docker image с 1С Linux server build) | 1w | DEFERRED |
+
+## §5 Acceptance criteria
+
+P0:
+- [ ] non-BSL PR'ы НЕ показывают BSL Static Analysis / YAxUnit / BDD jobs
+- [ ] BSL PR'ы (touching `configuration/`, `src/bsl/`, `features/`) — показывают (но всё равно QUEUED пока P1 не сделан)
+
+P1:
+- [ ] Self-hosted runner с labels `self-hosted, windows-11, 1c` зарегистрирован
+- [ ] `gh api repos/.../actions/runners` показывает runner online
+- [ ] PR с BSL изменениями завершает все 3 1С jobs за <10min
+
+## §6 References
+
+- `.github/workflows/ci-1c.yml` — текущий workflow
+- [17.5 КОМАНДЫ_ПАЙПЛАЙНА.md](../framework%20documentation/17_ТЕСТИРОВАНИЕ_1С/17.5_КОМАНДЫ_ПАЙПЛАЙНА.md) — VA BDD local commands
+- [40.5 Pipeline Workflow](../framework%20documentation/40_PR_AUTOMATION/40.5_Pipeline_Workflow.md)
+- Memory: `feedback_dev_infobases` — local 1С infobase setup pattern
