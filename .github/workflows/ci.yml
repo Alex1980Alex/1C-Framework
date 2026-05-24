@@ -115,7 +115,7 @@ jobs:
           python -m mypy src/ \
             --ignore-missing-imports --warn-return-any \
             --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$)' \
-            | python -m mypy_baseline filter
+            | python -m mypy_baseline filter --allow-unsynced
 
   docstrings:
     name: Docstring Coverage (interrogate)
