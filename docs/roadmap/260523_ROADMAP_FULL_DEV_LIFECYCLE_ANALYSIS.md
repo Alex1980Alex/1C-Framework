@@ -1485,6 +1485,18 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (early AM) — Maximum CI tier MERGED + Dependabot wave
+
+**Outcome:** PR #19 (Maximum autopilot tier) MERGED 21:06Z. PR #20 (python-multipart bump) MERGED follow-up. 3 stale ci-bump PRs (#5/#6/#7) cleanup-closed. PR #21-24 имеют conflict с merged #20 — Dependabot re-rebase auto.
+
+**PR #19 landed:** CodeQL workflow · claude.yml (bot review on PR open) · post-merge-revert-stop.py · dependabot.yml directories[] explicit (excluded private submodules) · 40.6/40.7/40.8 docs · chapter 42 Monitor CI · roadmap 260524 1C CI.
+
+**Monitor downgraded:** `bhm28e1ik` 60s critical-only (required FAILURE + MERGED + security + bot reviews), per-gate SUCCESS skip.
+
+**AUTO_PR re-enabled:** `AUTO_PR_ENABLED=1 + AUTO_PR_REQUIRE_LABEL="auto-pr" + AUTO_PR_AUTO_MERGE=0`. Label-gated.
+
+**Pending user actions** (40.8): rotate ANTHROPIC_API_KEY · Gmail UI filter · SMTP_PASS (ISP блок) · CODECOV_TOKEN.
+
 ### 2026-05-24 (PM) — P1 prework-similar-code worker landed + PR #9/#10 MERGED
 
 **Outcome:** P0b sync + P0c-slim полностью на `master` (PR #10 hotfix MERGED 04:09Z, PR #9 dispatcher+architecture MERGED 04:50Z). Стартует P1: первый из 3 remaining prework workers — `prework-similar-code` — landed на feature branch (PR #12 OPEN). PR #8 (fix/hook-regressions) CLOSED (superseded — fixes absorbed в PR #10 hotfix).
