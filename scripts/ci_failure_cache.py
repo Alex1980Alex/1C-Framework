@@ -218,3 +218,22 @@ def analyze_failure(pr, sha, run_id, job) -> dict:
     if not log:
         return {"error": "no failure log"}
     return _process_failure(pr, sha, run_id, job, log)
+
+
+def _process_failure(pr, sha, run_id: str, job, log: str) -> dict:
+    error_line = extract_first_error(log)
+    error_hash = _hash(error_line)
+    entry = {"ts": _now_iso(), "pr": pr, "sha": sha, "job": job, "run_id": run_id,
+             "url": f"https://github.com/Alex1980Alex/1C-Framework/actions/runs/{run_id}",
+             "error_first_line": error_line, "error_hash": error_hash}
+    _append_jsonl(entry)
+    same = [e for e in _read_jsonl() if e.get("error_hash") == error_hash]
+    similar = []
+    vec = _embed_tei(error_line)
+    if vec and _ensure_qdrant_collection():
+        _upsert_qdrant(error_hash + str(len(same)).zfill(4), vec, entry)
+        similar = _search_qdrant(vec, top_k=3)
+    issue_url = _maybe_create_issue(error_hash, error_line, same)
+    return {"logged": True, "error_hash": error_hash, "error_line": error_line,
+            "occurrences": len(same), "similar": _format_similar(similar),
+            "issue_url": issue_url}
