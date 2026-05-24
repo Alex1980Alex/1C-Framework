@@ -237,3 +237,24 @@ def _process_failure(pr, sha, run_id: str, job, log: str) -> dict:
     return {"logged": True, "error_hash": error_hash, "error_line": error_line,
             "occurrences": len(same), "similar": _format_similar(similar),
             "issue_url": issue_url}
+
+
+def _format_similar(similar: list[dict]) -> list[dict]:
+    return [
+        {"score": round(s.get("score", 0), 3),
+         "hash": s.get("payload", {}).get("error_hash"),
+         "ts": s.get("payload", {}).get("ts")}
+        for s in similar
+    ]
+
+
+def stats() -> dict:
+    entries = _read_jsonl()
+    by_hash: dict = {}
+    for e in entries:
+        by_hash.setdefault(e.get("error_hash", "?"), []).append(e)
+    top = sorted(by_hash.items(), key=lambda kv: -len(kv[1]))[:10]
+    return {"total_failures": len(entries), "unique_hashes": len(by_hash),
+            "top_recurring": [{"hash": h, "count": len(v),
+                               "first": (v[0].get("error_first_line") or "")[:80],
+                               "last_ts": v[-1].get("ts")} for h, v in top]}
