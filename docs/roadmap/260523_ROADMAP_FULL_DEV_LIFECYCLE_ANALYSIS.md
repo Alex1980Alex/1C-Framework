@@ -1466,6 +1466,8 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Total realistic trajectory:** unchanged 11-15 days (decisions made within P0a budget).
 
+**Status as of 2026-05-25:** ✅ P0a-P0c executed → §14 P1 ✅ DONE → §15 P0 ✅ **4/4 DONE** (PR [#51](https://github.com/Alex1980Alex/1C-Framework/pull/51)) → §15 P1 = 3/4 DONE (Schema + Parquet COPY TO + audit_query.py) → §15 P2 item 11 DONE (hardlink snapshots) → §20 P0+P2 ✅ DONE. Remaining: §15 P1 items 6-7 (PyIceberg + replay-checkpoint, need S3/MinIO), §15 P2 items 9-10 (DuckDB views + RAGAS replay), §15 P3, §14 P3, §20 P1, §11 backlog. See §18 for current cadence.
+
 ### 17.7 Cache artifacts (this analysis)
 
 - `.claude/skills/architecture-research/cache/roadmap-260523-3-decisions-2026.md` — full decision record (D1+D2+D3, tradeoff matrices, reversibility, 24 source URLs)
@@ -1484,6 +1486,37 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 ## §18 Implementation Progress Log (live)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
+
+### 2026-05-25 (evening) — §15 consolidated P0/P1/P2 + Gemini follow-ups
+
+**Backfilled retroactively** (entry not added at merge time, restored during status sync 2026-05-25).
+
+**Outcome:** §15 Process Caching рывком прошёл P0 (✅ 4/4) + P1 (3/4 subtasks) + P2 (item 11). Consolidates PR #48/#49/#50 которые имели cascade base-branch conflicts после #47 merge.
+
+**Landed (PR [#51](https://github.com/Alex1980Alex/1C-Framework/pull/51), merged 2026-05-25T09:17Z):**
+
+§15 P0 subtask 4 — crypto-shredding per-session-key:
+- [`.claude/hooks/shared/session_keys.py`](../../.claude/hooks/shared/session_keys.py) — per-session AES-256 key store (`get_or_create_key` / `delete_key` / `list_keys` / `gc_old_keys`). Storage `~/.claude/projects/<slug>/keys/<sid>.key`, slug matches Claude Code convention `C--1--Framework`.
+- [`.claude/hooks/shared/crypto_shred.py`](../../.claude/hooks/shared/crypto_shred.py) — AES-GCM via `cryptography.hazmat.primitives.ciphers.aead.AESGCM`. Envelope `enc::<base64(12B-nonce + ciphertext + 16B-tag)>`.
+- [`.claude/hooks/shared/invocation_logger.py`](../../.claude/hooks/shared/invocation_logger.py) — auto-encrypt `error` field когда `session_id` присутствует. Opt-out env `CLAUDE_LOG_NO_CRYPTO=1`.
+- [`scripts/shred_session.py`](../../scripts/shred_session.py) — CLI erasure: `--session-id` / `--list` / `--gc DAYS` / `--decrypt-error`.
+
+§15 P1 — JSON Schema + Parquet COPY TO:
+- [`.claude/schemas/events/hook-invocation.json`](../../.claude/schemas/events/hook-invocation.json) — JSON Schema Draft 2020-12. CloudEvents v1.0 core required + W3C traceparent regex + `additionalProperties: true` forward-compat.
+- `invocation_logger.py:_validate_entry()` — opt-in validation через env `CLAUDE_LOG_VALIDATE=1`. Lazy-singleton schema cache. Failures → stderr warning, never block.
+- [`scripts/archive_jsonl_to_parquet.py`](../../scripts/archive_jsonl_to_parquet.py) — DuckDB-powered archival. Pre-clean malformed JSON → temp jsonl → `COPY (SELECT * FROM logs) TO '...parquet' (FORMAT PARQUET, COMPRESSION ZSTD)`. Flags: `--rotate` / `--retention DAYS` / `--dry-run`. **~63× compression (48587 events → 463KB)**.
+- [`scripts/audit_query.py`](../../scripts/audit_query.py) — `--include-archive` flag globs `data/archive/*.parquet` + `UNION ALL BY NAME` через `read_parquet([...], union_by_name=true)`.
+
+§15 P2 item 11 — hard-link snapshots:
+- [`scripts/snapshot_cache.py`](../../scripts/snapshot_cache.py) — RocksDB-style snapshots via `os.link()`. CLI: `--snapshot` / `--list` / `--restore <id>` (auto rescue snapshot first) / `--gc DAYS` / `--diff <id>`. Path-traversal guarded via `_resolve_snap()`. Fallback `shutil.copy2` для cross-volume.
+
+**Follow-up (PR [#52](https://github.com/Alex1980Alex/1C-Framework/pull/52), merged 2026-05-25T09:32Z):** gemini-code-assist fixes — `cmd_decrypt` phantom key + restore purge orphans patterns в `session_keys.py` + `shred_session.py` + `snapshot_cache.py`.
+
+**§15 status update:** P0 ✅ **4/4** | P1 = 3/4 (PyIceberg + replay-checkpoint deferred — needs S3/MinIO) | P2 = item 11 DONE (items 9-10 deferred) | P3 ⏳ PENDING.
+
+**Code-verify trail (cumulative):** PR #48 subagent `a50ab54f8d9b00ed5` PASS iter 1 (3 fixes: `_project_slug` path arithmetic, Cyrillic slug normalization, temp file leak); PR #49 subagent `afb52ef6a6b3ca063` PASS iter 0 (1 cosmetic cleanup `_SCHEMA_CACHE` redeclaration); PR #50 subagent `ab2f61b57ac4317e8` PASS iter 1 (2 fixes: path traversal `cmd_restore`/`cmd_diff`, console encoding `sys.stdout.reconfigure`).
+
+**Related closed:** [#48](https://github.com/Alex1980Alex/1C-Framework/pull/48) CLOSED (cascade after #47); [#49](https://github.com/Alex1980Alex/1C-Framework/pull/49) + [#50](https://github.com/Alex1980Alex/1C-Framework/pull/50) — content consolidated в #51.
 
 ### 2026-05-25 (late PM) — §14.5 reactive SO + §20 P2 mass-dismiss + §15 P0 foundation
 
@@ -1680,15 +1713,15 @@ Alert на production file
 
 | Phase | Items | Effort | Status |
 |---|---|---|---|
-| **P0 — Bare except triage** | 10 alerts `py/catch-base-exception`. Replace `except:` → `except Exception:` или specific. Group commit `fix(bare-except): replace bare except with typed Exception across X files`. | 1-2h | PENDING |
-| **P1 — Empty-except categorization** | 19 alerts `py/empty-except`. Per alert decide: intentional graceful → dismiss; sloppy → add `logger.debug()` или fix. | 1-2h | PENDING |
-| **P2 — Mass dismiss script** | `scripts/triage_codeql_alerts.py` — semi-automated triage: load all open, classify по rule + path heuristics, bulk-dismiss safe categories, output review TODO list for ambiguous. | 2-3h | DEFERRED |
+| **P0 — Bare except triage** | 10 alerts `py/catch-base-exception`. Replace `except:` → `except Exception:` или specific. Group commit `fix(bare-except): replace bare except with typed Exception across X files`. | 1-2h | ✅ **DONE 2026-05-25** — 5 alerts addressed (4 fixed + 1 dismissed) в BSL files via PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46) |
+| **P1 — Empty-except categorization** | 19 alerts `py/empty-except`. Per alert decide: intentional graceful → dismiss; sloppy → add `logger.debug()` или fix. | 1-2h | 🟡 PARTIAL — 87 `review` category alerts остаются на manual triage по decision tree (subset of P1+P2) |
+| **P2 — Mass dismiss script** | `scripts/triage_codeql_alerts.py` — semi-automated triage: load all open, classify по rule + path heuristics, bulk-dismiss safe categories, output review TODO list for ambiguous. | 2-3h | ✅ **DONE 2026-05-25** — script landed via PR [#47](https://github.com/Alex1980Alex/1C-Framework/pull/47); **applied 174/261 dismissed** (vendored=43 + tests=6 + intentional=125); 87 review остаются manual |
 
 ### §20.4 Acceptance criteria
 
-- [ ] **P0:** 0 bare `except:` в production src/ (.claude/hooks/ allowed if intentional + commented)
-- [ ] **P1:** Каждый `except (...): pass` либо имеет comment why intentional, либо has body action
-- [ ] CodeQL re-scan на master shows 0 alerts с severity=error для `py/illegal-raise|py/catch-base-exception`
+- [x] **P0:** 0 bare `except:` в production src/ — закрыто PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46) (4 файла BSL + 1 dismissed intentional pattern)
+- [ ] **P1:** Каждый `except (...): pass` либо имеет comment why intentional, либо has body action — 87 review остаются на manual pass
+- [x] CodeQL re-scan на master shows 0 alerts с severity=error для `py/illegal-raise|py/catch-base-exception` — `py/illegal-raise` alert #1349 закрыт hotfix commit `037fe6228`; bare-except в production = 0 после PR #46
 - [ ] Memory entry `feedback_codeql_triage_pattern` saved для future sessions
 
 ### §20.5 Related
