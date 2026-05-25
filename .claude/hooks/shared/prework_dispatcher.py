@@ -39,9 +39,16 @@ WORKERS: list[tuple[str, float, str]] = [
         2.0,
         "CODE",
     ),  # P1 — Qdrant framework_code_v1 lookup (TEI + Qdrant ~150ms total)
-    # Future P1 additions:
-    # ("prework-github-bp.py", 4.0, "GH"),
-    # ("prework-stackoverflow.py", 1.0, "SO"),
+    (
+        "prework-github-bp.py",
+        4.0,
+        "GH",
+    ),  # P1 — cache-first GitHub best-practices lookup (§14.4 Option B)
+    (
+        "prework-stackoverflow.py",
+        1.0,
+        "SO",
+    ),  # P1 — cache-first SO/error-context lookup (§14.5 Option C, UPS half)
 ]
 
 

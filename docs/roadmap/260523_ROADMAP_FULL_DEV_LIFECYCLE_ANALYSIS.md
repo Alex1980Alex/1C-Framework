@@ -1485,6 +1485,29 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (PM) — P1 workers 2/3 + 3/3 + §20 P0 bare-except batch
+
+**Outcome:** §14 Pre-Work pipeline теперь имеет **все 4 prework worker'а** (ARCH + CODE + GH + SO) запущенных параллельно через dispatcher (ADR-D1). §20 P0 bare-except triage closed.
+
+**Landed (PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46) OPEN, awaits CI):**
+- [`.claude/hooks/prework-github-bp.py`](../../.claude/hooks/prework-github-bp.py) — cache-first GitHub best-practices (§14.4 Option B). Filters `architecture-research/cache/` by `github_repos_count > 0` + freshness (≤365d) + rapidfuzz score ≥60. Timeout 4s.
+- [`.claude/hooks/prework-stackoverflow.py`](../../.claude/hooks/prework-stackoverflow.py) — cache-first SO/error-context (§14.5 Option C, UPS half). Merges `tech-research` (dict schema) + `architecture-research` (list schema) caches, SO_SIGNALS keyword filter + freshness (≤540d). Timeout 1s.
+- [`.claude/hooks/shared/prework_dispatcher.py`](../../.claude/hooks/shared/prework_dispatcher.py) WORKERS registry — added GH (4s) + SO (1s) entries. End-to-end smoke: 4 sections в unified systemMessage, SO список truncated по `MAX_TOTAL_CHARS=2000` cap per ADR-D2.
+- §20 P0 — 4 BSL files: `src/bsl/mcp_server/main.py` (locale.Error specific), `src/bsl/mcp_server/http_server.py` + `src/bsl/finetuning/scripts/index_to_chroma.py` (Exception + noqa BLE001 для vendor errors). Alert #1358 (`real_bsl_client.py:274`) DISMISSED via `gh api` как intentional thread bootstrap pattern.
+
+**§14 Pre-Work pipeline status:** ALL 4 P1 workers live (architecture + similar-code + github-bp + stackoverflow). Reactive PostToolUse:Bash для SO errors — оставлен на отдельную итерацию (§14.5 Option C, PostToolUse half).
+
+**Smoke verification:**
+
+`how to set up GitHub Actions CI/CD for Python project with claude bot review` → dispatcher emits unified systemMessage с секциями ARCH (3 hits) + CODE (3 hits via Qdrant) + GH (3 hits top score 1.0 `github-pr-automation-2026.md`) + SO (truncated at cap).
+
+**Next priorities (updated 2026-05-25 PM):**
+1. ⏳ Дождаться CI на PR #46 → merge
+2. ⏳ §14 PostToolUse:Bash reactive SO worker (Option C completeness)
+3. ⏳ §20 P1 empty-except categorization (19 alerts py/empty-except)
+4. ⏳ §15 P0 Process Caching (CloudEvents wrapping + crypto-shredding)
+5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
+
 ### 2026-05-25 (AM) — Failure cache + analysis pipeline + autopilot reactions
 
 **Outcome:** Maximum CI tier теперь имеет **полный cache+analyze layer**. Все CI failures автоматически логируются, embed'ятся, дедуплицируются, и при 3+ recurrences создают GitHub issue.
@@ -1555,9 +1578,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | P0b Foundations (sync only) | mypy ratchet re-sync | ✅ **MERGED 2026-05-24** | [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED |
 | P0b Foundations (full) | mypy Phase 3 cleanup + Layer 4 wiki | ⏳ DEFERRED | — |
 | P0c-slim | Dispatcher + 1 worker (ADR-D1) | ✅ **MERGED 2026-05-24** | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED |
-| **P1 worker 1/3** | prework-similar-code (Qdrant) | ✅ **OPEN, awaits merge** | **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** |
-| P1 worker 2/3 | prework-github-bp (cache-first WebSearch) | ⏳ PENDING | — |
-| P1 worker 3/3 | prework-stackoverflow (UPS + reactive Bash) | ⏳ PENDING | — |
+| P1 worker 1/3 | prework-similar-code (Qdrant) | ✅ **MERGED 2026-05-25** | [#12](https://github.com/Alex1980Alex/1C-Framework/pull/12) MERGED |
+| **P1 worker 2/3** | prework-github-bp (cache-first GitHub) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
+| **P1 worker 3/3** | prework-stackoverflow (UPS cache-first; PostToolUse reactive deferred) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
+| **§20 P0** | CodeQL bare-except (5 alerts: 4 fixed + 1 dismissed) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
 
@@ -1565,12 +1589,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | PR | Branch | Status |
 |---|---|---|
-| **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** | feat/prework-similar-code | **OPEN — P1 worker 1/3, awaits CI green** |
+| **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** | feat/p1-workers-23-and-bare-except | **OPEN — P1 workers 2/3 + 3/3 + §20 P0, awaits CI green** |
 
 **Recently closed (since prior log entry):**
 - [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) CLOSED (superseded by #10 hotfix)
 - [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED 2026-05-24T04:50Z
 - [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED 2026-05-24T04:09Z
+- [#12](https://github.com/Alex1980Alex/1C-Framework/pull/12) MERGED (P1 worker 1/3 prework-similar-code, landed на master до этой сессии)
 
 **Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
 
