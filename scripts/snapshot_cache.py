@@ -268,10 +268,14 @@ def cmd_gc(days: int, dry_run: bool) -> int:
 
 
 def cmd_diff(snap_id: str) -> int:
-    """Show file-count diff between snapshot and current cache."""
-    src = SNAPSHOTS_DIR / snap_id
-    if not src.exists():
-        print(f"Snapshot not found: {snap_id}", file=sys.stderr)
+    """Show file-set diff (names only, NOT content) between snapshot and current cache.
+
+    For content comparison: use `--restore <id> --dry-run` to list files that
+    would be re-linked, or compute hashes manually via Python.
+    """
+    src = _resolve_snap(snap_id)
+    if src is None:
+        print(f"Snapshot not found or invalid id: {snap_id}", file=sys.stderr)
         return 1
 
     def _rel_set(root: Path) -> set[str]:
@@ -310,6 +314,14 @@ def cmd_diff(snap_id: str) -> int:
 
 
 def main() -> int:
+    # Windows cp1251 console mitigation — module docstring has non-ASCII.
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--snapshot", action="store_true",
