@@ -46,8 +46,10 @@ SIGNATURE_PATTERNS = [
     re.compile(r"^fatal:\s+(?P<msg>.+)$", re.MULTILINE),
 ]
 
-# Min total length to consider (skip trivial outputs).
-MIN_TEXT_LEN = 50
+# Min total length to consider (skip trivial outputs like `echo ok`).
+# Real error signatures (`npm ERR! 404`, `fatal: ...`) могут быть ~30 chars,
+# поэтому threshold низкий.
+MIN_TEXT_LEN = 20
 
 # Skip commands where errors are expected/handled.
 SKIP_CMD_SUBSTRINGS = (
