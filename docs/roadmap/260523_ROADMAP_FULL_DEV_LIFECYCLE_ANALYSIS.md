@@ -1485,6 +1485,28 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (evening) — §15 P0 (4/4) crypto-shredding per-session-key
+
+**Outcome:** **§15 P0 phase теперь полностью complete** (subtask 4/4). Per-session AES-256-GCM encryption of sensitive `error` field в hook-invocations.jsonl. Key delete = permanent ciphertext erasure (GDPR retention mechanism, §15.2 item 7 / §15.5 critical urgency). Закрывает NTFS-recovery regression class — encrypted fields после key shred технически невозможно восстановить.
+
+**Landed (PR [#48](https://github.com/Alex1980Alex/1C-Framework/pull/48) OPEN, stacked on #47):**
+- [`.claude/hooks/shared/session_keys.py`](../../.claude/hooks/shared/session_keys.py) — per-session 32-byte AES-256 key store. `get_or_create_key(sid)`, `delete_key(sid)`, `list_keys()`, `gc_old_keys(days)`. Storage: `~/.claude/projects/<proj>/keys/<sid>.key`, POSIX perms 0o600.
+- [`.claude/hooks/shared/crypto_shred.py`](../../.claude/hooks/shared/crypto_shred.py) — `AESGCM` wrapper. `encrypt(text, key)` → `enc::<base64>` envelope (12B nonce + ciphertext + 16B auth tag). `decrypt(blob, key)` → text or None. Graceful: missing `cryptography` lib → no-op.
+- [`.claude/hooks/shared/invocation_logger.py`](../../.claude/hooks/shared/invocation_logger.py) — `log_invocation()` now encrypts `error` field via session key when both `error` + `session_id` present. Opt-out: `CLAUDE_LOG_NO_CRYPTO=1`. Backward-compat preserved.
+- [`scripts/shred_session.py`](../../scripts/shred_session.py) — CLI: `--session-id <id>` (erase one) / `--list` / `--gc DAYS` / `--decrypt-error <sid> <blob>` (debug).
+- [`scripts/audit_query.py`](../../scripts/audit_query.py) — `--decrypt-errors` flag for in-query decryption + pre-filter malformed JSONL lines (5 skipped on current log; previously fall-back to `ignore_errors=true` collapsed schema to single `json` column).
+
+**Smoke (all PASS):** AES-GCM roundtrip · Cyrillic plaintext · wrong-key rejection · **shredding demo** (encrypt → delete_key → decrypt returns None) · log_invocation auto-encrypt · opt-out env · audit_query shows `<shredded>` после key deletion · ruff PASS.
+
+**§15 P0 status:** **4/4 complete.** All subtasks (CloudEvents wrapping + W3C traceparent + DuckDB query layer + crypto-shredding) landed.
+
+**Next priorities (updated 2026-05-25 evening):**
+1. ⏳ Дождаться CI на PR #46 + #47 + #48 → merge (stacked: #46 → #47 → #48 base=#47)
+2. ⏳ §20 P1 87 `review` category — manual triage по decision tree (real fixes vs dismiss)
+3. ⏳ §15 P1 — nightly parquet `COPY TO` + PyIceberg snapshot + JSON Schema per event_type
+4. ⏳ §15 P2 — DuckDB views для RAGAS replay + RocksDB-style hard-link snapshots
+5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
+
 ### 2026-05-25 (late PM) — §14.5 reactive SO + §20 P2 mass-dismiss + §15 P0 foundation
 
 **Outcome:** §14 Pre-Work pipeline теперь **полностью complete** (Option C UPS + PostToolUse halves). §20 P2 закрыт (174 alerts mass-dismissed). §15 P0 foundation landed (3/4 subtasks: CloudEvents + traceparent + DuckDB query).
