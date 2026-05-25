@@ -140,24 +140,54 @@ def _check_duckdb():
 
 
 def _build_relation(con, include_rotated: bool):
-    """Create `logs` view from one or both JSONL files."""
+    """Create `logs` view from one or both JSONL files.
+
+    Pre-filters malformed lines via Python (DuckDB `ignore_errors=true` collapses
+    schema to single `json` column when corrupted lines present — see git
+    history of this file). Pre-cleaned content written to one temp JSONL,
+    которое DuckDB читает с полноценным schema inference.
+    """
+    import json
+    import tempfile
+
     if not JSONL_PATH.exists():
         print(f"ERROR: {JSONL_PATH} not found", file=sys.stderr)
         sys.exit(2)
 
-    paths = [str(JSONL_PATH)]
+    paths = [JSONL_PATH]
     if include_rotated and ROTATED_PATH.exists():
-        paths.append(str(ROTATED_PATH))
+        paths.append(ROTATED_PATH)
+
+    # Pre-clean: stream-filter valid JSON lines into a single temp file.
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".jsonl", delete=False, encoding="utf-8", newline="\n"
+    )
+    bad = 0
+    try:
+        for src in paths:
+            with open(src, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line_s = line.strip()
+                    if not line_s:
+                        continue
+                    try:
+                        json.loads(line_s)
+                    except (ValueError, json.JSONDecodeError):
+                        bad += 1
+                        continue
+                    tmp.write(line_s + "\n")
+    finally:
+        tmp.close()
+
+    if bad:
+        print(f"(skipped {bad} malformed lines)", file=sys.stderr)
 
     # union_by_name=True handles schema drift (Phase 7→8→9 added fields).
-    # ignore_errors=True skips malformed JSON lines (legacy entries сometimes
-    # contain unescaped control chars; not worth blocking analytics over).
-    # format='newline_delimited' is explicit JSONL.
-    files_array = "[" + ", ".join(f"'{p}'" for p in paths) + "]"
+    # No ignore_errors — temp file is pre-cleaned.
     con.execute(
         f"CREATE OR REPLACE VIEW logs AS "
-        f"SELECT * FROM read_json_auto({files_array}, "
-        f"format='newline_delimited', union_by_name=true, ignore_errors=true)"
+        f"SELECT * FROM read_json_auto('{tmp.name}', "
+        f"format='newline_delimited', union_by_name=true)"
     )
 
 
