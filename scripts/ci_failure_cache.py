@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """CI Failure Cache + Analysis."""
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,8 @@ OCCURRENCE_THRESHOLD = 3
 NOISE_PATTERNS = re.compile(
     r"##\[group\]|Prepare workflow|Set up Python|Install uv|Cache dependencies|"
     r"Initialize CodeQL|Post Run|safe\.directory|Cleaning up orphan|Post job cleanup",
-    re.IGNORECASE)
+    re.IGNORECASE,
+)
 
 
 def _now_iso() -> str:
@@ -31,9 +33,15 @@ def _now_iso() -> str:
 
 
 def _gh(*args: str) -> tuple[int, str, str]:
-    r = subprocess.run(["gh", *args], capture_output=True, text=True,
-                       encoding="utf-8", errors="replace",
-                       cwd=str(PROJECT_ROOT), check=False)
+    r = subprocess.run(
+        ["gh", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=str(PROJECT_ROOT),
+        check=False,
+    )
     return r.returncode, r.stdout, r.stderr
 
 
@@ -102,7 +110,9 @@ def _embed_tei(text: str) -> list[float] | None:
     prefix = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
     try:
         with httpx.Client(base_url=TEI_URL, timeout=3.0) as c:
-            r = c.post("/embed", json={"inputs": [prefix + text], "normalize": True, "truncate": True})
+            r = c.post(
+                "/embed", json={"inputs": [prefix + text], "normalize": True, "truncate": True}
+            )
             r.raise_for_status()
             data = r.json()
     except Exception:
@@ -126,11 +136,14 @@ def _parse_embedding(data) -> list[float] | None:
 def _ensure_qdrant_collection() -> bool:
     try:
         import httpx
+
         with httpx.Client(base_url=QDRANT_URL, timeout=3.0) as c:
             if c.get(f"/collections/{COLLECTION}").status_code == 200:
                 return True
-            r = c.put(f"/collections/{COLLECTION}",
-                      json={"vectors": {"size": COLLECTION_DIM, "distance": "Cosine"}})
+            r = c.put(
+                f"/collections/{COLLECTION}",
+                json={"vectors": {"size": COLLECTION_DIM, "distance": "Cosine"}},
+            )
             return r.status_code in (200, 201)
     except Exception:
         return False
@@ -139,10 +152,12 @@ def _ensure_qdrant_collection() -> bool:
 def _search_qdrant(vec: list[float], top_k: int = 3) -> list[dict]:
     try:
         import httpx
+
         with httpx.Client(base_url=QDRANT_URL, timeout=3.0) as c:
-            r = c.post(f"/collections/{COLLECTION}/points/search",
-                       json={"vector": vec, "limit": top_k, "with_payload": True,
-                             "score_threshold": 0.7})
+            r = c.post(
+                f"/collections/{COLLECTION}/points/search",
+                json={"vector": vec, "limit": top_k, "with_payload": True, "score_threshold": 0.7},
+            )
             return r.json().get("result", []) if r.status_code == 200 else []
     except Exception:
         return []
@@ -151,10 +166,13 @@ def _search_qdrant(vec: list[float], top_k: int = 3) -> list[dict]:
 def _upsert_qdrant(point_id: str, vec: list[float], payload: dict) -> bool:
     try:
         import httpx
+
         int_id = int(point_id[:15], 16)
         with httpx.Client(base_url=QDRANT_URL, timeout=3.0) as c:
-            r = c.put(f"/collections/{COLLECTION}/points",
-                      json={"points": [{"id": int_id, "vector": vec, "payload": payload}]})
+            r = c.put(
+                f"/collections/{COLLECTION}/points",
+                json={"points": [{"id": int_id, "vector": vec, "payload": payload}]},
+            )
             return r.status_code in (200, 201)
     except Exception:
         return False
@@ -188,9 +206,16 @@ def _maybe_create_issue(error_hash: str, error_line: str, occ: list[dict]) -> st
         f"**PRs:** {', '.join(prs) if prs else '(none)'}\n\n**Runs:**\n{urls}\n\n"
         f"_Auto-created by `scripts/ci_failure_cache.py`._"
     )
-    rc, out, _ = _gh("issue", "create",
-                     "--title", f"[CI] Recurring: {error_line[:60]}",
-                     "--body", body, "--label", "ci-failure,automated")
+    rc, out, _ = _gh(
+        "issue",
+        "create",
+        "--title",
+        f"[CI] Recurring: {error_line[:60]}",
+        "--body",
+        body,
+        "--label",
+        "ci-failure,automated",
+    )
     if rc != 0:
         return None
     url = out.strip().splitlines()[-1] if out.strip() else None
@@ -203,8 +228,18 @@ def _maybe_create_issue(error_hash: str, error_line: str, occ: list[dict]) -> st
 def analyze_failure(pr, sha, run_id, job) -> dict:
     if not run_id and (pr or sha):
         ref = sha or f"refs/pull/{pr}/head"
-        rc, out, _ = _gh("run", "list", "--branch", ref, "--workflow", "Python CI",
-                         "--limit", "1", "--json", "databaseId,conclusion")
+        rc, out, _ = _gh(
+            "run",
+            "list",
+            "--branch",
+            ref,
+            "--workflow",
+            "Python CI",
+            "--limit",
+            "1",
+            "--json",
+            "databaseId,conclusion",
+        )
         if rc == 0:
             try:
                 data = json.loads(out)
@@ -223,9 +258,16 @@ def analyze_failure(pr, sha, run_id, job) -> dict:
 def _process_failure(pr, sha, run_id: str, job, log: str) -> dict:
     error_line = extract_first_error(log)
     error_hash = _hash(error_line)
-    entry = {"ts": _now_iso(), "pr": pr, "sha": sha, "job": job, "run_id": run_id,
-             "url": f"https://github.com/Alex1980Alex/1C-Framework/actions/runs/{run_id}",
-             "error_first_line": error_line, "error_hash": error_hash}
+    entry = {
+        "ts": _now_iso(),
+        "pr": pr,
+        "sha": sha,
+        "job": job,
+        "run_id": run_id,
+        "url": f"https://github.com/Alex1980Alex/1C-Framework/actions/runs/{run_id}",
+        "error_first_line": error_line,
+        "error_hash": error_hash,
+    }
     _append_jsonl(entry)
     same = [e for e in _read_jsonl() if e.get("error_hash") == error_hash]
     similar = []
@@ -234,16 +276,23 @@ def _process_failure(pr, sha, run_id: str, job, log: str) -> dict:
         _upsert_qdrant(error_hash + str(len(same)).zfill(4), vec, entry)
         similar = _search_qdrant(vec, top_k=3)
     issue_url = _maybe_create_issue(error_hash, error_line, same)
-    return {"logged": True, "error_hash": error_hash, "error_line": error_line,
-            "occurrences": len(same), "similar": _format_similar(similar),
-            "issue_url": issue_url}
+    return {
+        "logged": True,
+        "error_hash": error_hash,
+        "error_line": error_line,
+        "occurrences": len(same),
+        "similar": _format_similar(similar),
+        "issue_url": issue_url,
+    }
 
 
 def _format_similar(similar: list[dict]) -> list[dict]:
     return [
-        {"score": round(s.get("score", 0), 3),
-         "hash": s.get("payload", {}).get("error_hash"),
-         "ts": s.get("payload", {}).get("ts")}
+        {
+            "score": round(s.get("score", 0), 3),
+            "hash": s.get("payload", {}).get("error_hash"),
+            "ts": s.get("payload", {}).get("ts"),
+        }
         for s in similar
     ]
 
@@ -254,15 +303,25 @@ def stats() -> dict:
     for e in entries:
         by_hash.setdefault(e.get("error_hash", "?"), []).append(e)
     top = sorted(by_hash.items(), key=lambda kv: -len(kv[1]))[:10]
-    return {"total_failures": len(entries), "unique_hashes": len(by_hash),
-            "top_recurring": [{"hash": h, "count": len(v),
-                               "first": (v[0].get("error_first_line") or "")[:80],
-                               "last_ts": v[-1].get("ts")} for h, v in top]}
+    return {
+        "total_failures": len(entries),
+        "unique_hashes": len(by_hash),
+        "top_recurring": [
+            {
+                "hash": h,
+                "count": len(v),
+                "first": (v[0].get("error_first_line") or "")[:80],
+                "last_ts": v[-1].get("ts"),
+            }
+            for h, v in top
+        ],
+    }
 
 
 def search_text(query: str) -> list[dict]:
-    return [e for e in _read_jsonl()
-            if query.lower() in (e.get("error_first_line", "") or "").lower()][-10:]
+    return [
+        e for e in _read_jsonl() if query.lower() in (e.get("error_first_line", "") or "").lower()
+    ][-10:]
 
 
 def main() -> int:
