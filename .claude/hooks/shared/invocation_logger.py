@@ -146,6 +146,23 @@ def log_invocation(
         # correlationid pins all events in one slash-command/session together.
         correlation_id = run_id or session_id or event_id
 
+        # §15 P0 P0.4 — crypto-shred sensitive `error` field per session key.
+        # Opt-out via env CLAUDE_LOG_NO_CRYPTO=1 (kept plain).
+        # Encryption silently no-ops если cryptography/key unavailable.
+        error_value = error
+        if error and session_id and os.environ.get("CLAUDE_LOG_NO_CRYPTO") != "1":
+            try:
+                from shared.crypto_shred import encrypt
+                from shared.session_keys import get_or_create_key
+
+                _key = get_or_create_key(session_id)
+                if _key:
+                    _ct = encrypt(error, _key)
+                    if _ct:
+                        error_value = _ct  # replace plaintext with envelope
+            except Exception:
+                pass  # never block logging
+
         entry = {
             "ts": iso_now,
             "hook": hook,
