@@ -34,6 +34,47 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JSONL_PATH = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 ROTATED_PATH = PROJECT_ROOT / "data" / "hook-invocations.1.jsonl"
 
+# §15 P0 P0.4 — optional decrypt of crypto-shredded error envelopes.
+_HOOKS_DIR = PROJECT_ROOT / ".claude" / "hooks"
+sys.path.insert(0, str(_HOOKS_DIR))
+try:
+    from shared.crypto_shred import decrypt as _crypto_decrypt
+    from shared.crypto_shred import is_encrypted as _is_encrypted
+    from shared.session_keys import get_or_create_key as _get_key
+
+    _CRYPTO_OK = True
+except ImportError:
+    _CRYPTO_OK = False
+
+    def _is_encrypted(_v: object) -> bool:  # type: ignore[misc]
+        return False
+
+    def _crypto_decrypt(_b: str, _k: bytes) -> str | None:  # type: ignore[misc]
+        return None
+
+    def _get_key(_s: str) -> bytes | None:  # type: ignore[misc]
+        return None
+
+
+def _maybe_decrypt(value: object, session_id: object) -> str:
+    """Return plaintext if value is encrypted envelope AND session key available.
+
+    Otherwise returns value as-is, or `<shredded>` if envelope present but key
+    gone (crypto-shredding semantics — §15.2 item 7).
+    """
+    if not isinstance(value, str) or not _is_encrypted(value):
+        return str(value) if value is not None else ""
+    sid = str(session_id) if session_id else ""
+    if not sid:
+        return "<encrypted>"
+    key = _get_key(sid)
+    if not key:
+        return "<shredded>"
+    pt = _crypto_decrypt(value, key)
+    if pt is None:
+        return "<shredded>"
+    return pt
+
 
 VIEWS: dict[str, str] = {
     "hooks-per-session": """
