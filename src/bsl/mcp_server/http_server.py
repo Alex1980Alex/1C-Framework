@@ -360,7 +360,7 @@ class MCPHttpServer:
             try:
                 body = await request.json()
                 logger.debug(f"Client registration request: {body}")
-            except:
+            except Exception:  # noqa: BLE001 — starlette JSON parse may raise various error types
                 body = {}
 
             # Определяем публичный URL для redirect_uris
