@@ -28,6 +28,8 @@ def _load_cfc():
 def _rehash_entries(entries: list[dict], cfc) -> int:
     rehashed = 0
     for e in entries:
+        if e.get("event_type"):
+            continue
         new_hash = cfc._hash(e.get("error_first_line", ""))
         if new_hash != e.get("error_hash"):
             e["error_hash"] = new_hash

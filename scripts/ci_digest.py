@@ -54,6 +54,8 @@ def _load_failures(since: datetime) -> list[dict]:
             e = json.loads(ln)
         except json.JSONDecodeError:
             continue
+        if e.get("event_type"):
+            continue  # skip generic events (notifications/pr-reviews) — only CI failures
         try:
             ts = datetime.fromisoformat((e.get("ts") or "").replace("Z", "+00:00"))
         except (ValueError, AttributeError):
