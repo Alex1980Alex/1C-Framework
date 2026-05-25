@@ -188,11 +188,62 @@ def log_invocation(
             "traceparent": _make_traceparent(run_id=run_id, session_id=session_id),
         }
 
+        # §15 P1 — optional JSON Schema validation (opt-in via CLAUDE_LOG_VALIDATE=1).
+        # Validation failures logged but never block — schema is advisory, not gate.
+        if os.environ.get("CLAUDE_LOG_VALIDATE") == "1":
+            _validate_entry(entry)
+
         line = json.dumps(entry, ensure_ascii=False) + "\n"
         with open(filepath, "a", encoding="utf-8") as f:
             f.write(line)
     except Exception:
         pass  # Never block on logging failure
+
+
+def _validate_entry(entry: dict) -> None:
+    """Best-effort JSON Schema validation. Logs warning to stderr on mismatch.
+
+    Schema: .claude/schemas/events/hook-invocation.json (CloudEvents v1.0 +
+    framework extensions). Validation is advisory only — never raises.
+    Opt-in через env CLAUDE_LOG_VALIDATE=1 (default off для performance).
+    """
+    try:
+        import sys as _sys
+
+        from jsonschema import Draft202012Validator
+        from jsonschema.exceptions import ValidationError
+
+        global _SCHEMA_CACHE
+        try:
+            _SCHEMA_CACHE  # noqa: F823 — module-level cache
+        except NameError:
+            _SCHEMA_CACHE = None
+
+        if _SCHEMA_CACHE is None:
+            schema_path = (
+                Path(__file__).resolve().parent.parent.parent.parent
+                / ".claude" / "schemas" / "events" / "hook-invocation.json"
+            )
+            if not schema_path.exists():
+                return
+            with open(schema_path, encoding="utf-8") as f:
+                _SCHEMA_CACHE = json.load(f)
+
+        validator = Draft202012Validator(_SCHEMA_CACHE)
+        errors = list(validator.iter_errors(entry))
+        if errors:
+            # Stderr only — never log files about logger to avoid loops.
+            _sys.stderr.write(
+                f"[invocation_logger] schema validation: {len(errors)} error(s) "
+                f"in entry hook={entry.get('hook','?')}: "
+                f"{errors[0].message[:120]}\n"
+            )
+    except (ImportError, ValueError, OSError):
+        pass  # validation never blocks
+
+
+# Cache for schema (populated on first validate call)
+_SCHEMA_CACHE: dict | None = None
 
 
 class InvocationTimer:
