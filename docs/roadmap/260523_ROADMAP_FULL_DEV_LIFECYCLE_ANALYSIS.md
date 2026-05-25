@@ -1485,6 +1485,30 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (late PM) — §14.5 reactive SO + §20 P2 mass-dismiss + §15 P0 foundation
+
+**Outcome:** §14 Pre-Work pipeline теперь **полностью complete** (Option C UPS + PostToolUse halves). §20 P2 закрыт (174 alerts mass-dismissed). §15 P0 foundation landed (3/4 subtasks: CloudEvents + traceparent + DuckDB query).
+
+**Landed (PR [#47](https://github.com/Alex1980Alex/1C-Framework/pull/47) OPEN, depends on #46):**
+- [`.claude/hooks/posttooluse-stackoverflow-on-error.py`](../../.claude/hooks/posttooluse-stackoverflow-on-error.py) — PostToolUse:Bash hook. On non-zero exit + error signature (Traceback / pip ERROR / npm ERR! / fatal:) → emit `[SO-ON-ERROR]` advisory с WebSearch SO suggestion. Pairs с UPS-time `prework-stackoverflow.py` (§14.5 Option C complete).
+- [`.claude/hooks/posttooluse-bash-errors.py`](../../.claude/hooks/posttooluse-bash-errors.py) — bonus hotfix: pre-existing 4-tuple → 3-tuple unpack bug (`Found N errors` pattern) который ломал hook на каждом invocation.
+- [`scripts/triage_codeql_alerts.py`](../../scripts/triage_codeql_alerts.py) — semi-automated CodeQL triage. **Applied: 174/261 dismissed** (vendored=43 + tests=6 + intentional=125). 87 `review` category — manual triage в отдельном PR.
+- [`.claude/hooks/shared/invocation_logger.py`](../../.claude/hooks/shared/invocation_logger.py) — CloudEvents v1.0 envelope + W3C traceparent. `_make_traceparent(run_id, session_id)` derives deterministic trace_id из run_id для cross-event correlation. Backward-compat: existing flat fields preserved.
+- [`scripts/audit_query.py`](../../scripts/audit_query.py) — DuckDB SQL layer над hook-invocations.jsonl. 5 views (recent / latency-p95 / error-rate / top-tools / hooks-per-session) + `causation-chain --correlation-id <uuid>` + raw `--sql`. `ignore_errors=true` для legacy malformed lines.
+
+**§14 Pre-Work pipeline: 100% complete** — все 4 P1 workers (ARCH + CODE + GH + SO) UPS + reactive PostToolUse:Bash SO worker.
+
+**§15 P0 status:** 3/4 subtasks. **Deferred:** crypto-shredding per-session-key (subtask 4) — отдельным PR per §15.6 P1.
+
+**Code-verify findings (Ralph Wiggum iter 1, subagent `a4396858021c471fc`):** subagent выявил 2 must-fix bugs в SO-on-error hook (dict-shape `tool_response` ломал ^-anchored regexes; `_bash_exit_failed` fall-through на `exit_code=0`). Оба fix'нуты, post-fix 7/7 smoke PASS.
+
+**Next priorities (updated 2026-05-25 late PM):**
+1. ⏳ Дождаться CI на PR #46 + #47 → merge
+2. ⏳ §15 P0 subtask 4 — crypto-shredding per-session-key
+3. ⏳ §20 P1 87 `review` category — manual triage по decision tree (real fixes vs dismiss)
+4. ⏳ §15 P1 — nightly parquet `COPY TO` + PyIceberg snapshot + JSON Schema per event_type
+5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
+
 ### 2026-05-25 (AM) — Failure cache + analysis pipeline + autopilot reactions
 
 **Outcome:** Maximum CI tier теперь имеет **полный cache+analyze layer**. Все CI failures автоматически логируются, embed'ятся, дедуплицируются, и при 3+ recurrences создают GitHub issue.
