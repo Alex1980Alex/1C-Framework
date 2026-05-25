@@ -1603,3 +1603,9 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 **NOT trigger:** routine auto-save commits, WIP без deliverable, docs-only без state change.
 
 **Memory anchor:** [`feedback_roadmap_progress_log_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_roadmap_progress_log_protocol.md). Future Claude sessions ОБЯЗАНЫ проверять §18 и обновлять после каждого milestone.
+
+---
+
+## §20 CodeQL Security Alerts Triage (2026-05-25, follow-up of §17 ADR-D3)
+
+**Trigger:** после enable CodeQL workflow (PR #19) обнаружено **1337 open alerts** на full codebase scan. После batch-dismiss vendored (16) + tests (20) + code-quality noise (~700) остаётся **29 production-code alerts** требующих manual triage.
