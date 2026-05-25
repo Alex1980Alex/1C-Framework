@@ -225,28 +225,47 @@ def _maybe_create_issue(error_hash: str, error_line: str, occ: list[dict]) -> st
     return url
 
 
+def _resolve_pr_head(pr: int) -> tuple[str | None, str | None]:
+    """Resolve PR number to (headRefName, headRefOid). Returns (None, None) on failure."""
+    rc, out, _ = _gh("pr", "view", str(pr), "--json", "headRefName,headRefOid")
+    if rc != 0:
+        return None, None
+    try:
+        data = json.loads(out)
+        return data.get("headRefName"), data.get("headRefOid")
+    except json.JSONDecodeError:
+        return None, None
+
+
+def _resolve_run_id(pr, sha) -> str | None:
+    """Find latest FAILURE run for PR/SHA. Prefers --commit (specific) over --branch."""
+    branch, commit = None, sha
+    if pr:
+        branch, head_oid = _resolve_pr_head(int(pr))
+        commit = commit or head_oid
+    args = ["run", "list", "--limit", "10", "--json", "databaseId,conclusion,workflowName"]
+    if commit:
+        args += ["--commit", commit]
+    elif branch:
+        args += ["--branch", branch]
+    else:
+        return None
+    rc, out, _ = _gh(*args)
+    if rc != 0:
+        return None
+    try:
+        data = json.loads(out)
+    except json.JSONDecodeError:
+        return None
+    for d in data:
+        if d.get("conclusion") == "failure":
+            return str(d.get("databaseId"))
+    return str(data[0].get("databaseId")) if data else None
+
+
 def analyze_failure(pr, sha, run_id, job) -> dict:
     if not run_id and (pr or sha):
-        ref = sha or f"refs/pull/{pr}/head"
-        rc, out, _ = _gh(
-            "run",
-            "list",
-            "--branch",
-            ref,
-            "--workflow",
-            "Python CI",
-            "--limit",
-            "1",
-            "--json",
-            "databaseId,conclusion",
-        )
-        if rc == 0:
-            try:
-                data = json.loads(out)
-                if data:
-                    run_id = str(data[0].get("databaseId"))
-            except json.JSONDecodeError:
-                pass
+        run_id = _resolve_run_id(pr, sha)
     if not run_id:
         return {"error": "no run_id resolved"}
     log = fetch_failure_log(run_id, job)
@@ -297,6 +316,66 @@ def _format_similar(similar: list[dict]) -> list[dict]:
     ]
 
 
+def _lookup_pr_for_branch(branch: str) -> int | None:
+    if not branch:
+        return None
+    for state in ("open", "all"):
+        rc, out, _ = _gh(
+            "pr", "list", "--head", branch, "--state", state, "--limit", "1", "--json", "number"
+        )
+        if rc != 0:
+            continue
+        try:
+            data = json.loads(out)
+            if data:
+                return data[0].get("number")
+        except (json.JSONDecodeError, IndexError, KeyError):
+            continue
+    return None
+
+
+def catchup(limit: int = 20) -> dict:
+    """Fetch recent FAILURE runs, process those not yet in cache.
+
+    Returns: {processed, skipped, errors[]}. Safe to call repeatedly.
+    """
+    existing = {e.get("run_id") for e in _read_jsonl() if e.get("run_id")}
+    rc, out, _ = _gh(
+        "run",
+        "list",
+        "--status",
+        "failure",
+        "--limit",
+        str(limit),
+        "--json",
+        "databaseId,headSha,headBranch,workflowName,event",
+    )
+    if rc != 0:
+        return {"error": "gh run list failed"}
+    try:
+        runs = json.loads(out)
+    except json.JSONDecodeError:
+        return {"error": "invalid JSON from gh"}
+    processed, skipped, errors = 0, 0, []
+    for r in runs:
+        run_id = str(r.get("databaseId", ""))
+        if not run_id or run_id in existing:
+            skipped += 1
+            continue
+        pr = _lookup_pr_for_branch(r.get("headBranch", ""))
+        log = fetch_failure_log(run_id)
+        if not log:
+            errors.append({"run_id": run_id, "reason": "no log"})
+            continue
+        try:
+            _process_failure(pr, r.get("headSha"), run_id, None, log)
+            processed += 1
+        except Exception as e:  # noqa: BLE001 — graceful degradation, never break batch
+            errors.append({"run_id": run_id, "error": str(e)[:120]})
+            print(f"[catchup] error run_id={run_id}: {e}", file=sys.stderr)
+    return {"processed": processed, "skipped": skipped, "errors": errors}
+
+
 def stats() -> dict:
     entries = _read_jsonl()
     by_hash: dict = {}
@@ -332,6 +411,14 @@ def main() -> int:
     p.add_argument("--job", type=str)
     p.add_argument("--stats", action="store_true")
     p.add_argument("--search", type=str)
+    p.add_argument(
+        "--catchup",
+        nargs="?",
+        const=20,
+        type=int,
+        metavar="LIMIT",
+        help="Backfill recent FAILURE runs not in cache (default LIMIT=20)",
+    )
     args = p.parse_args()
     return _dispatch(args)
 
@@ -343,8 +430,14 @@ def _dispatch(args) -> int:
     if args.search:
         print(json.dumps(search_text(args.search), indent=2, ensure_ascii=False))
         return 0
+    if args.catchup is not None:
+        print(json.dumps(catchup(limit=args.catchup), indent=2, ensure_ascii=False))
+        return 0
     if not (args.pr or args.sha or args.run_id):
-        print("error: provide --pr, --sha, --run-id, --stats, or --search", file=sys.stderr)
+        print(
+            "error: provide --pr, --sha, --run-id, --stats, --search, or --catchup",
+            file=sys.stderr,
+        )
         return 2
     result = analyze_failure(args.pr, args.sha, args.run_id, args.job)
     print(json.dumps(result, indent=2, ensure_ascii=False))

@@ -65,11 +65,12 @@ description: "Используй этот скилл для понимания �
 | `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `configuration/`, `ИБTransportManagementDevelop/` (EDT проект), `src/bsl/`, `openspec/`, `.pre-commit-config.yaml`, `.kblintrc.yml` (kb-lint config; living in `docs/wiki/.kblintrc.yml` per `kb_lint/config.py:60-78`), `codecov.yml`, `data/eval/`. При добавлении нового EDT-проекта в корень — добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. (Roadmap: динамическое обнаружение через `.bsl-language-server.json` маркер — см. `src/bsl/project_discovery.py`.) |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
 
-#### SessionStart (1)
+#### SessionStart (2)
 
 | Hook | Назначение |
 |------|-----------|
 | `ensure-docker-qdrant.py` | Проверка Docker engine + контейнера `pdf-rag-qdrant` при старте сессии; фоновый авто-старт Docker Desktop и `docker compose up -d qdrant` при необходимости. Не блокирует сессию (SessionStart advisory); graceful degradation на Linux/Mac/отсутствие Docker. Timeout 10s. |
+| `ci-catchup-on-start.py` | Auto-backfill `.claude/cache/ci-failures.jsonl` recent FAILURE runs которые могли упасть пока Claude сессия была offline (Monitor `bkozphbx9` session-bound — между сессиями нет auto-trigger). Detached subprocess вызывает `python scripts/ci_failure_cache.py --catchup 20`, hook возвращается за ms. Opt-out `CI_CATCHUP_DISABLE=1`, override `CI_CATCHUP_LIMIT=N`. Timeout 5s (background subprocess до 30s). Док: [42.4 Failure Caching](../../../docs/framework%20documentation/42_MONITOR_CI/42.4_Failure_Caching.md). |
 
 ### Skills (66 шт.) — КАК / ЧТО
 
