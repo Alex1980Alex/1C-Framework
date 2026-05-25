@@ -61,7 +61,12 @@ HOOK_NAME = "posttooluse-stackoverflow-on-error"
 
 
 def _normalize_response(tool_response: object) -> str:
-    """Flatten various tool_response shapes into a single text string."""
+    """Flatten various tool_response shapes into a single text string.
+
+    Bash tool_response обычно имеет dict-форму с `stdout`/`stderr`/`output` keys —
+    нужно extract'нуть текстовые секции, а НЕ репрезентовать dict через `str()`
+    (это даёт single-line `{'stdout': '...'}` и ломает многострочные regex anchors).
+    """
     if isinstance(tool_response, list):
         text_parts = []
         for block in tool_response:
@@ -70,9 +75,20 @@ def _normalize_response(tool_response: object) -> str:
             elif isinstance(block, str):
                 text_parts.append(block)
         return "".join(text_parts)
+    if isinstance(tool_response, dict):
+        parts = []
+        for key in ("stdout", "stderr", "output", "text"):
+            val = tool_response.get(key)
+            if isinstance(val, str) and val:
+                parts.append(val)
+        if parts:
+            return "\n".join(parts)
+        # Fallback: empty if no text fields (avoid single-line `str(dict)` repr
+        # which breaks ^-anchored multiline regexes).
+        return ""
     if isinstance(tool_response, str):
         return tool_response
-    return str(tool_response) if tool_response else ""
+    return ""
 
 
 def _extract_signature(text: str) -> str | None:
