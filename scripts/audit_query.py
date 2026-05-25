@@ -139,11 +139,13 @@ def _causation_chain(con, correlation_id: str) -> None:
     print("-" * 100)
     for row in rows:
         ts, eid, caused, hook, event, _tool, outcome = row
-        eid_short = (eid or "")[:8]
-        caused_short = (caused or "—")[:8] if caused else "—"
+        eid_short = str(eid or "")[:8]
+        caused_short = str(caused or "")[:8] if caused else "—"
+        hook_str = str(hook or "")[:25]
+        event_str = str(event or "")[:18]
         print(
-            f"{ts:<28} {eid_short:<8} {caused_short:<8} "
-            f"{(hook or '')[:25]:<25} {(event or '')[:18]:<18} {outcome or ''}"
+            f"{str(ts):<28} {eid_short:<8} {caused_short:<8} "
+            f"{hook_str:<25} {event_str:<18} {outcome or ''}"
         )
 
 
