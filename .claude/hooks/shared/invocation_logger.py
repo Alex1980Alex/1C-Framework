@@ -31,6 +31,7 @@ Based on task_master.py patterns: graceful degradation, never block.
 """
 
 import json
+import os
 import secrets
 import time
 import uuid
@@ -145,6 +146,23 @@ def log_invocation(
         # correlationid pins all events in one slash-command/session together.
         correlation_id = run_id or session_id or event_id
 
+        # §15 P0 P0.4 — crypto-shred sensitive `error` field per session key.
+        # Opt-out via env CLAUDE_LOG_NO_CRYPTO=1 (kept plain).
+        # Encryption silently no-ops если cryptography/key unavailable.
+        error_value = error
+        if error and session_id and os.environ.get("CLAUDE_LOG_NO_CRYPTO") != "1":
+            try:
+                from shared.crypto_shred import encrypt
+                from shared.session_keys import get_or_create_key
+
+                _key = get_or_create_key(session_id)
+                if _key:
+                    _ct = encrypt(error, _key)
+                    if _ct:
+                        error_value = _ct  # replace plaintext with envelope
+            except Exception:
+                pass  # never block logging
+
         entry = {
             "ts": iso_now,
             "hook": hook,
@@ -153,7 +171,7 @@ def log_invocation(
             "elapsed_ms": elapsed_ms,
             "outcome": outcome,
             "session": session_id or "",
-            "error": error,
+            "error": error_value,  # §15 P0: may be `enc::<base64>` envelope when crypto active
             "agent_id": agent_id,  # Phase 7
             "category": category,  # Phase 8
             "run_id": run_id,  # Phase 8
@@ -170,11 +188,60 @@ def log_invocation(
             "traceparent": _make_traceparent(run_id=run_id, session_id=session_id),
         }
 
+        # §15 P1 — optional JSON Schema validation (opt-in via CLAUDE_LOG_VALIDATE=1).
+        # Validation failures logged but never block — schema is advisory, not gate.
+        if os.environ.get("CLAUDE_LOG_VALIDATE") == "1":
+            _validate_entry(entry)
+
         line = json.dumps(entry, ensure_ascii=False) + "\n"
         with open(filepath, "a", encoding="utf-8") as f:
             f.write(line)
     except Exception:
         pass  # Never block on logging failure
+
+
+# Cache for JSON Schema (populated on first validate call). Module-level
+# для lazy-singleton pattern — single load per process lifetime.
+_SCHEMA_CACHE: dict | None = None
+
+
+def _validate_entry(entry: dict) -> None:
+    """Best-effort JSON Schema validation. Logs warning to stderr on mismatch.
+
+    Schema: .claude/schemas/events/hook-invocation.json (CloudEvents v1.0 +
+    framework extensions). Validation is advisory only — never raises.
+    Opt-in через env CLAUDE_LOG_VALIDATE=1 (default off для performance).
+    """
+    global _SCHEMA_CACHE
+    try:
+        import sys as _sys
+
+        from jsonschema import Draft202012Validator
+
+        if _SCHEMA_CACHE is None:
+            schema_path = (
+                Path(__file__).resolve().parent.parent.parent.parent
+                / ".claude"
+                / "schemas"
+                / "events"
+                / "hook-invocation.json"
+            )
+            if not schema_path.exists():
+                return
+            with open(schema_path, encoding="utf-8") as f:
+                _SCHEMA_CACHE = json.load(f)
+
+        validator = Draft202012Validator(_SCHEMA_CACHE)
+        errors = list(validator.iter_errors(entry))
+        if errors:
+            # Stderr only — never log to files about logger to avoid loops.
+            _sys.stderr.write(
+                f"[invocation_logger] schema validation: {len(errors)} error(s) "
+                f"in entry hook={entry.get('hook', '?')}: "
+                f"{errors[0].message[:120]}\n"
+            )
+    except (ImportError, ValueError, OSError):
+        pass  # validation never blocks
 
 
 class InvocationTimer:

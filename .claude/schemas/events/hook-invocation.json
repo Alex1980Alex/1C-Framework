@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://1c-framework.local/schemas/events/hook-invocation.json",
+  "title": "Hook Invocation Event (CloudEvents v1.0)",
+  "description": "Single entry in data/hook-invocations.jsonl. CloudEvents v1.0 envelope + framework-specific extension fields. Per roadmap 260523 §15.6 P1 item 8 (JSON Schema per event_type).",
+  "type": "object",
+  "required": [
+    "ts",
+    "hook",
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time"
+  ],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Legacy ISO timestamp (kept for backward compat with pre-§15 readers)."
+    },
+    "hook": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Hook class name or script name."
+    },
+    "event": {
+      "type": ["string", "null"],
+      "description": "Claude Code hook event type."
+    },
+    "tool": {
+      "type": ["string", "null"]
+    },
+    "elapsed_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["allow", "block", "message", "error", "skip"]
+    },
+    "session": {
+      "type": "string"
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Plaintext OR `enc::<base64>` envelope when crypto-shredding active (§15 P0 subtask 4)."
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["hook", "mcp_call", "slash_run", "phase", "run_end", "run_start"]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "specversion": {
+      "type": "string",
+      "const": "1.0",
+      "description": "CloudEvents spec version (pinned to 1.0)."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "CloudEvents required: unique event identifier (UUID v4)."
+    },
+    "source": {
+      "type": "string",
+      "const": "claude-code-hooks",
+      "description": "CloudEvents required: producer identity."
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^com\\.anthropic\\.claude\\.hook(\\.|$)",
+      "description": "CloudEvents required: reverse-DNS event type. Prefix `com.anthropic.claude.hook.<event_name>`."
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "CloudEvents required: event occurrence time (== ts)."
+    },
+    "datacontenttype": {
+      "type": "string",
+      "const": "application/json"
+    },
+    "correlationid": {
+      "type": "string",
+      "description": "CloudEvents extension: groups all events from one slash-run/session."
+    },
+    "causationid": {
+      "type": "string",
+      "description": "CloudEvents extension: parent event id (DAG causality). Empty for roots."
+    },
+    "traceparent": {
+      "type": "string",
+      "pattern": "^00-[0-9a-f]{32}-[0-9a-f]{16}-(00|01)$",
+      "description": "W3C Trace Context: version-trace_id-parent_span_id-flags."
+    }
+  },
+  "additionalProperties": true
+}
