@@ -39,7 +39,7 @@ from shared.crypto_shred import decrypt  # noqa: E402
 from shared.session_keys import (  # noqa: E402
     delete_key,
     gc_old_keys,
-    get_or_create_key,
+    get_existing_key,
     list_keys,
 )
 
@@ -82,10 +82,14 @@ def cmd_gc(days: int) -> int:
 
 
 def cmd_decrypt(session_id: str, blob: str) -> int:
-    """Debug helper: decrypt one error envelope (requires session key)."""
-    key = get_or_create_key(session_id)
+    """Debug helper: decrypt one error envelope (requires session key).
+
+    Uses `get_existing_key` (read-only) — does NOT create a new key if the
+    session has been shredded, which would otherwise leak a phantom key file.
+    """
+    key = get_existing_key(session_id)
     if not key:
-        print(f"No key available for session: {session_id}")
+        print(f"No key available for session: {session_id} (missing or shredded)")
         return 1
     pt = decrypt(blob, key)
     if pt is None:
