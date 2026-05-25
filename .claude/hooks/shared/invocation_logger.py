@@ -10,18 +10,30 @@ Used by:
   (ralph_wiggum_stop, git-commit-enforcer, docs-change-enforcer,
    task-enforcer, auto-git-save-prompt, skill-eval-enforcer-shell)
 
-Entry format:
+Entry format (§15 P0 ADD: CloudEvents v1.0 envelope + W3C traceparent):
   {"ts":"ISO","hook":"SkillRouter","event":"UserPromptSubmit",
    "tool":null,"elapsed_ms":45,"outcome":"message",
-   "session":"abc123","agent_id":"xyz789","error":null}
+   "session":"abc123","agent_id":"xyz789","error":null,
+   "specversion":"1.0","id":"<uuid>","source":"claude-code-hooks",
+   "type":"com.anthropic.claude.hook.UserPromptSubmit",
+   "time":"ISO","correlationid":"<run_id|session>",
+   "causationid":"<parent_id or empty>",
+   "traceparent":"00-<32hex>-<16hex>-01"}
 
 Phase 7: Added agent_id for subagent monitoring.
+Phase 9 (§15 P0): CloudEvents wrapping + W3C trace context.
+
+Backward compatibility: all pre-§15 flat fields preserved verbatim.
+New fields are additive — existing grep/jq/DuckDB queries continue
+to work without modification.
 
 Based on task_master.py patterns: graceful degradation, never block.
 """
 
 import json
+import secrets
 import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 
