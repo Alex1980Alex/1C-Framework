@@ -33,6 +33,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JSONL_PATH = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 ROTATED_PATH = PROJECT_ROOT / "data" / "hook-invocations.1.jsonl"
+ARCHIVE_DIR = PROJECT_ROOT / "data" / "archive"  # §15 P1 — Parquet cold tier
 
 # §15 P0 P0.4 — optional decrypt of crypto-shredded error envelopes.
 _HOOKS_DIR = PROJECT_ROOT / ".claude" / "hooks"
