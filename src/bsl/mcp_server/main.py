@@ -113,10 +113,10 @@ async def main():
         # Устанавливаем локаль
         try:
             locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
-        except:
+        except locale.Error:
             try:
                 locale.setlocale(locale.LC_ALL, "Russian_Russia.1251")
-            except:
+            except locale.Error:
                 pass  # Игнорируем ошибки локали
 
     # Убеждаемся, что stderr работает без буферизации
