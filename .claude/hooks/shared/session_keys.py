@@ -74,6 +74,27 @@ def _key_path(session_id: str) -> Path:
     return _keys_dir() / f"{safe}.key"
 
 
+def get_existing_key(session_id: str) -> bytes | None:
+    """Read-only lookup — return existing key or None.
+
+    Unlike `get_or_create_key`, this never creates a key file. Use it for
+    debug/decryption helpers where creating a phantom key would be misleading
+    (e.g., after the session has been shredded).
+    """
+    if not session_id:
+        return None
+    try:
+        path = _key_path(session_id)
+        if not path.exists():
+            return None
+        data = path.read_bytes()
+        if len(data) != KEY_SIZE_BYTES:
+            return None
+        return data
+    except OSError:
+        return None
+
+
 def get_or_create_key(session_id: str) -> bytes | None:
     """Return existing key for session or create new one.
 
