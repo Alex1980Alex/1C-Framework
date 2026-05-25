@@ -31,6 +31,7 @@ Based on task_master.py patterns: graceful degradation, never block.
 """
 
 import json
+import os
 import secrets
 import time
 import uuid
