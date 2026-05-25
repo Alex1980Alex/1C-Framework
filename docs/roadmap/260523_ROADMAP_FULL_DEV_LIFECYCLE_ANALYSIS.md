@@ -1609,3 +1609,12 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 ## §20 CodeQL Security Alerts Triage (2026-05-25, follow-up of §17 ADR-D3)
 
 **Trigger:** после enable CodeQL workflow (PR #19) обнаружено **1337 open alerts** на full codebase scan. После batch-dismiss vendored (16) + tests (20) + code-quality noise (~700) остаётся **29 production-code alerts** требующих manual triage.
+
+### §20.1 Scope
+
+| Rule | Count | Severity | Описание |
+|---|---|---|---|
+| `py/empty-except` | 19 | note | `except (...): pass` или `except: pass` — body пустой |
+| `py/catch-base-exception` | 10 | note | `except:` или `except BaseException:` ловит KeyboardInterrupt/SystemExit |
+
+**Геолокация (не test, не vendor):** `src/bsl/mcp_server/main.py`, `src/bsl/finetuning/scripts/`, `src/bsl/semantic_search/refactor/backends/`, `.claude/hooks/base/protocol.py`, `.claude/hooks/prework-*.py`, `src/pdf_framework/...` и т.д.
