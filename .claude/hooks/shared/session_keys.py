@@ -136,12 +136,14 @@ def list_keys() -> list[dict]:
                 stat = path.stat()
                 mtime = dt.datetime.fromtimestamp(stat.st_mtime)
                 age_days = (now - mtime).days
-                out.append({
-                    "session_id": path.stem,
-                    "age_days": age_days,
-                    "size_bytes": stat.st_size,
-                    "path": str(path),
-                })
+                out.append(
+                    {
+                        "session_id": path.stem,
+                        "age_days": age_days,
+                        "size_bytes": stat.st_size,
+                        "path": str(path),
+                    }
+                )
             except OSError:
                 continue
     except OSError:

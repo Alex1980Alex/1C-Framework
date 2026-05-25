@@ -131,6 +131,7 @@ VIEWS: dict[str, str] = {
 def _check_duckdb():
     try:
         import duckdb  # noqa: F401
+
         return True
     except ImportError:
         print(
@@ -215,9 +216,7 @@ def _build_relation(con, include_rotated: bool, include_archive: bool = False) -
         if parquets:
             files = "[" + ", ".join(f"'{p}'" for p in parquets) + "]"
             # union_by_name=true reconciles schema drift Parquet ↔ JSONL.
-            parts.append(
-                f"SELECT * FROM read_parquet({files}, union_by_name=true)"
-            )
+            parts.append(f"SELECT * FROM read_parquet({files}, union_by_name=true)")
             print(f"(merging {len(parquets)} archive parquet(s))", file=sys.stderr)
 
     if len(parts) == 1:
@@ -260,19 +259,27 @@ def _causation_chain(con, correlation_id: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--view", choices=list(VIEWS.keys()) + ["causation-chain"],
-                        help="Predefined view")
+    parser.add_argument(
+        "--view", choices=list(VIEWS.keys()) + ["causation-chain"], help="Predefined view"
+    )
     parser.add_argument("--sql", help="Raw SQL (uses `logs` as table name)")
-    parser.add_argument("--correlation-id",
-                        help="For --view causation-chain")
-    parser.add_argument("--include-rotated", action="store_true",
-                        help="Also scan hook-invocations.1.jsonl (rotated)")
-    parser.add_argument("--include-archive", action="store_true",
-                        help="Also scan data/archive/*.parquet cold tier (§15 P1)")
-    parser.add_argument("--limit", type=int, default=0,
-                        help="Append LIMIT to result (0=no limit)")
-    parser.add_argument("--decrypt-errors", action="store_true",
-                        help="Decrypt `error` envelopes when session key available")
+    parser.add_argument("--correlation-id", help="For --view causation-chain")
+    parser.add_argument(
+        "--include-rotated",
+        action="store_true",
+        help="Also scan hook-invocations.1.jsonl (rotated)",
+    )
+    parser.add_argument(
+        "--include-archive",
+        action="store_true",
+        help="Also scan data/archive/*.parquet cold tier (§15 P1)",
+    )
+    parser.add_argument("--limit", type=int, default=0, help="Append LIMIT to result (0=no limit)")
+    parser.add_argument(
+        "--decrypt-errors",
+        action="store_true",
+        help="Decrypt `error` envelopes when session key available",
+    )
     args = parser.parse_args()
 
     if not args.view and not args.sql:
@@ -295,6 +302,7 @@ def main() -> int:
     finally:
         try:
             import os as _os
+
             _os.unlink(tmp_path)
         except OSError:
             pass

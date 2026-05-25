@@ -221,7 +221,10 @@ def _validate_entry(entry: dict) -> None:
         if _SCHEMA_CACHE is None:
             schema_path = (
                 Path(__file__).resolve().parent.parent.parent.parent
-                / ".claude" / "schemas" / "events" / "hook-invocation.json"
+                / ".claude"
+                / "schemas"
+                / "events"
+                / "hook-invocation.json"
             )
             if not schema_path.exists():
                 return
@@ -234,7 +237,7 @@ def _validate_entry(entry: dict) -> None:
             # Stderr only — never log to files about logger to avoid loops.
             _sys.stderr.write(
                 f"[invocation_logger] schema validation: {len(errors)} error(s) "
-                f"in entry hook={entry.get('hook','?')}: "
+                f"in entry hook={entry.get('hook', '?')}: "
                 f"{errors[0].message[:120]}\n"
             )
     except (ImportError, ValueError, OSError):

@@ -76,19 +76,25 @@ CATEGORIES: list[tuple[str, list[str], str, str]] = [
     ),
 ]
 
-REVIEW_REASON = (
-    "Production-code site requires manual review — may need typed exception or explicit logger.debug()."
-)
+REVIEW_REASON = "Production-code site requires manual review — may need typed exception or explicit logger.debug()."
 
 
 def fetch_alerts(rule: str) -> list[dict]:
     """Fetch all open alerts matching rule via gh CLI."""
     out = subprocess.run(
         [
-            "gh", "api", "-X", "GET", f"repos/{REPO}/code-scanning/alerts",
-            "-f", "state=open", "--paginate",
+            "gh",
+            "api",
+            "-X",
+            "GET",
+            f"repos/{REPO}/code-scanning/alerts",
+            "-f",
+            "state=open",
+            "--paginate",
         ],
-        capture_output=True, text=True, encoding="utf-8",
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     )
     if out.returncode != 0:
         print(f"ERROR fetching alerts: {out.stderr[:500]}", file=sys.stderr)
@@ -111,27 +117,37 @@ def dismiss(alert_number: int, reason: str, comment: str) -> bool:
     """Invoke gh api PATCH to dismiss one alert. True on success."""
     result = subprocess.run(
         [
-            "gh", "api", "-X", "PATCH",
+            "gh",
+            "api",
+            "-X",
+            "PATCH",
             f"repos/{REPO}/code-scanning/alerts/{alert_number}",
-            "-f", "state=dismissed",
-            "-f", f"dismissed_reason={reason}",
-            "-f", f"dismissed_comment={comment}",
+            "-f",
+            "state=dismissed",
+            "-f",
+            f"dismissed_reason={reason}",
+            "-f",
+            f"dismissed_comment={comment}",
         ],
-        capture_output=True, text=True, encoding="utf-8",
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     )
     return result.returncode == 0
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rule", default=DEFAULT_RULE,
-                        help=f"CodeQL rule id (default: {DEFAULT_RULE})")
-    parser.add_argument("--apply", action="store_true",
-                        help="Actually dismiss alerts (default: dry-run)")
-    parser.add_argument("--include-review", action="store_true",
-                        help="Also dismiss `review` category as won't-fix")
-    parser.add_argument("--limit", type=int, default=0,
-                        help="Limit total dismissals (0=no limit)")
+    parser.add_argument(
+        "--rule", default=DEFAULT_RULE, help=f"CodeQL rule id (default: {DEFAULT_RULE})"
+    )
+    parser.add_argument(
+        "--apply", action="store_true", help="Actually dismiss alerts (default: dry-run)"
+    )
+    parser.add_argument(
+        "--include-review", action="store_true", help="Also dismiss `review` category as won't-fix"
+    )
+    parser.add_argument("--limit", type=int, default=0, help="Limit total dismissals (0=no limit)")
     args = parser.parse_args()
 
     alerts = fetch_alerts(args.rule)
