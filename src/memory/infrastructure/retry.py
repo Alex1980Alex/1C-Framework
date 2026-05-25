@@ -189,8 +189,7 @@ def async_retry(
             if last_exc is not None:
                 raise last_exc
             raise RuntimeError(
-                "async_retry: loop exited without execution "
-                f"(cfg.max_retries={cfg.max_retries})"
+                f"async_retry: loop exited without execution (cfg.max_retries={cfg.max_retries})"
             )
 
         return wrapper
