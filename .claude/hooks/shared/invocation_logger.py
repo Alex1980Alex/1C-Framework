@@ -200,6 +200,11 @@ def log_invocation(
         pass  # Never block on logging failure
 
 
+# Cache for JSON Schema (populated on first validate call). Module-level
+# для lazy-singleton pattern — single load per process lifetime.
+_SCHEMA_CACHE: dict | None = None
+
+
 def _validate_entry(entry: dict) -> None:
     """Best-effort JSON Schema validation. Logs warning to stderr on mismatch.
 
@@ -207,17 +212,11 @@ def _validate_entry(entry: dict) -> None:
     framework extensions). Validation is advisory only — never raises.
     Opt-in через env CLAUDE_LOG_VALIDATE=1 (default off для performance).
     """
+    global _SCHEMA_CACHE
     try:
         import sys as _sys
 
         from jsonschema import Draft202012Validator
-        from jsonschema.exceptions import ValidationError
-
-        global _SCHEMA_CACHE
-        try:
-            _SCHEMA_CACHE  # noqa: F823 — module-level cache
-        except NameError:
-            _SCHEMA_CACHE = None
 
         if _SCHEMA_CACHE is None:
             schema_path = (
@@ -232,7 +231,7 @@ def _validate_entry(entry: dict) -> None:
         validator = Draft202012Validator(_SCHEMA_CACHE)
         errors = list(validator.iter_errors(entry))
         if errors:
-            # Stderr only — never log files about logger to avoid loops.
+            # Stderr only — never log to files about logger to avoid loops.
             _sys.stderr.write(
                 f"[invocation_logger] schema validation: {len(errors)} error(s) "
                 f"in entry hook={entry.get('hook','?')}: "
@@ -240,10 +239,6 @@ def _validate_entry(entry: dict) -> None:
             )
     except (ImportError, ValueError, OSError):
         pass  # validation never blocks
-
-
-# Cache for schema (populated on first validate call)
-_SCHEMA_CACHE: dict | None = None
 
 
 class InvocationTimer:
