@@ -33,6 +33,48 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 JSONL_PATH = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 ROTATED_PATH = PROJECT_ROOT / "data" / "hook-invocations.1.jsonl"
+ARCHIVE_DIR = PROJECT_ROOT / "data" / "archive"  # §15 P1 — Parquet cold tier
+
+# §15 P0 P0.4 — optional decrypt of crypto-shredded error envelopes.
+_HOOKS_DIR = PROJECT_ROOT / ".claude" / "hooks"
+sys.path.insert(0, str(_HOOKS_DIR))
+try:
+    from shared.crypto_shred import decrypt as _crypto_decrypt
+    from shared.crypto_shred import is_encrypted as _is_encrypted
+    from shared.session_keys import get_or_create_key as _get_key
+
+    _CRYPTO_OK = True
+except ImportError:
+    _CRYPTO_OK = False
+
+    def _is_encrypted(_v: object) -> bool:  # type: ignore[misc]
+        return False
+
+    def _crypto_decrypt(_b: str, _k: bytes) -> str | None:  # type: ignore[misc]
+        return None
+
+    def _get_key(_s: str) -> bytes | None:  # type: ignore[misc]
+        return None
+
+
+def _maybe_decrypt(value: object, session_id: object) -> str:
+    """Return plaintext if value is encrypted envelope AND session key available.
+
+    Otherwise returns value as-is, or `<shredded>` if envelope present but key
+    gone (crypto-shredding semantics — §15.2 item 7).
+    """
+    if not isinstance(value, str) or not _is_encrypted(value):
+        return str(value) if value is not None else ""
+    sid = str(session_id) if session_id else ""
+    if not sid:
+        return "<encrypted>"
+    key = _get_key(sid)
+    if not key:
+        return "<shredded>"
+    pt = _crypto_decrypt(value, key)
+    if pt is None:
+        return "<shredded>"
+    return pt
 
 
 VIEWS: dict[str, str] = {
@@ -99,26 +141,91 @@ def _check_duckdb():
         return False
 
 
-def _build_relation(con, include_rotated: bool):
-    """Create `logs` view from one or both JSONL files."""
-    if not JSONL_PATH.exists():
+def _build_relation(con, include_rotated: bool, include_archive: bool = False) -> str:
+    """Create `logs` view spanning current JSONL + optional rotated + Parquet archive.
+
+    Pre-filters malformed lines via Python (DuckDB `ignore_errors=true` collapses
+    schema to single `json` column when corrupted lines present — see git
+    history of this file). Pre-cleaned content written to one temp JSONL,
+    которое DuckDB читает с полноценным schema inference.
+
+    With `include_archive=True`, UNIONs all `data/archive/*.parquet` files via
+    DuckDB `read_parquet()` (§15 P1 — cold tier). Both branches use
+    `union_by_name=True` так что schema drift между JSONL и Parquet harmless.
+
+    Returns the temp JSONL file path so caller can delete it after query.
+    """
+    import atexit
+    import json
+    import os
+    import tempfile
+
+    if not JSONL_PATH.exists() and not include_archive:
         print(f"ERROR: {JSONL_PATH} not found", file=sys.stderr)
         sys.exit(2)
 
-    paths = [str(JSONL_PATH)]
+    paths = []
+    if JSONL_PATH.exists():
+        paths.append(JSONL_PATH)
     if include_rotated and ROTATED_PATH.exists():
-        paths.append(str(ROTATED_PATH))
+        paths.append(ROTATED_PATH)
+
+    # Pre-clean: stream-filter valid JSON lines into a single temp file.
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".jsonl", delete=False, encoding="utf-8", newline="\n"
+    )
+    bad = 0
+    try:
+        for src in paths:
+            with open(src, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line_s = line.strip()
+                    if not line_s:
+                        continue
+                    try:
+                        json.loads(line_s)
+                    except (ValueError, json.JSONDecodeError):
+                        bad += 1
+                        continue
+                    tmp.write(line_s + "\n")
+    finally:
+        tmp.close()
+
+    # Belt-and-suspenders: register cleanup at interpreter shutdown
+    # in case caller forgets explicit unlink (e.g. exception в SQL).
+    def _cleanup(path: str = tmp.name) -> None:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+    atexit.register(_cleanup)
+
+    if bad:
+        print(f"(skipped {bad} malformed lines)", file=sys.stderr)
 
     # union_by_name=True handles schema drift (Phase 7→8→9 added fields).
-    # ignore_errors=True skips malformed JSON lines (legacy entries сometimes
-    # contain unescaped control chars; not worth blocking analytics over).
-    # format='newline_delimited' is explicit JSONL.
-    files_array = "[" + ", ".join(f"'{p}'" for p in paths) + "]"
-    con.execute(
-        f"CREATE OR REPLACE VIEW logs AS "
-        f"SELECT * FROM read_json_auto({files_array}, "
-        f"format='newline_delimited', union_by_name=true, ignore_errors=true)"
-    )
+    # No ignore_errors — temp file is pre-cleaned.
+    parts = [
+        f"SELECT * FROM read_json_auto('{tmp.name}', "
+        f"format='newline_delimited', union_by_name=true)"
+    ]
+
+    if include_archive and ARCHIVE_DIR.exists():
+        parquets = sorted(ARCHIVE_DIR.glob("*.parquet"))
+        if parquets:
+            files = "[" + ", ".join(f"'{p}'" for p in parquets) + "]"
+            # union_by_name=true reconciles schema drift Parquet ↔ JSONL.
+            parts.append(f"SELECT * FROM read_parquet({files}, union_by_name=true)")
+            print(f"(merging {len(parquets)} archive parquet(s))", file=sys.stderr)
+
+    if len(parts) == 1:
+        union_sql = parts[0]
+    else:
+        union_sql = " UNION ALL BY NAME ".join(f"({p})" for p in parts)
+
+    con.execute(f"CREATE OR REPLACE VIEW logs AS {union_sql}")
+    return tmp.name
 
 
 def _causation_chain(con, correlation_id: str) -> None:
@@ -162,7 +269,17 @@ def main() -> int:
         action="store_true",
         help="Also scan hook-invocations.1.jsonl (rotated)",
     )
+    parser.add_argument(
+        "--include-archive",
+        action="store_true",
+        help="Also scan data/archive/*.parquet cold tier (§15 P1)",
+    )
     parser.add_argument("--limit", type=int, default=0, help="Append LIMIT to result (0=no limit)")
+    parser.add_argument(
+        "--decrypt-errors",
+        action="store_true",
+        help="Decrypt `error` envelopes when session key available",
+    )
     args = parser.parse_args()
 
     if not args.view and not args.sql:
@@ -174,8 +291,24 @@ def main() -> int:
     import duckdb
 
     con = duckdb.connect(":memory:")
-    _build_relation(con, include_rotated=args.include_rotated)
+    tmp_path = _build_relation(
+        con,
+        include_rotated=args.include_rotated,
+        include_archive=args.include_archive,
+    )
+    # Best-effort cleanup в normal exit path; atexit handles abnormal exits.
+    try:
+        return _main_inner(con, args, parser)
+    finally:
+        try:
+            import os as _os
 
+            _os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+def _main_inner(con, args, parser) -> int:
     if args.view == "causation-chain":
         if not args.correlation_id:
             parser.error("--view causation-chain requires --correlation-id")
@@ -196,11 +329,16 @@ def main() -> int:
         print(f"SQL error: {exc}", file=sys.stderr)
         return 1
 
-    # Print column names + rows
+    # Print column names + rows; optional decrypt of `error` field per row.
     cols = [d[0] for d in result.description]
+    err_idx = cols.index("error") if "error" in cols else -1
+    sess_idx = cols.index("session") if "session" in cols else -1
     print("\t".join(cols))
     for row in result.fetchall():
-        print("\t".join(str(v) if v is not None else "" for v in row))
+        row_list = list(row)
+        if args.decrypt_errors and err_idx >= 0 and sess_idx >= 0:
+            row_list[err_idx] = _maybe_decrypt(row_list[err_idx], row_list[sess_idx])
+        print("\t".join(str(v) if v is not None else "" for v in row_list))
 
     return 0
 
