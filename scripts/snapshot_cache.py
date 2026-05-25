@@ -171,12 +171,30 @@ def cmd_list() -> int:
     return 0
 
 
+def _resolve_snap(snap_id: str) -> Path | None:
+    """Return resolved snapshot Path confined to SNAPSHOTS_DIR, else None.
+
+    Path-traversal guard: rejects `../`, absolute paths, symlinked escapes —
+    anything outside SNAPSHOTS_DIR after resolution.
+    """
+    candidate = (SNAPSHOTS_DIR / snap_id).resolve()
+    snap_root = SNAPSHOTS_DIR.resolve()
+    try:
+        if not candidate.is_relative_to(snap_root):
+            return None
+    except (ValueError, OSError):
+        return None
+    if not candidate.exists() or not candidate.is_dir():
+        return None
+    return candidate
+
+
 def cmd_restore(snap_id: str, dry_run: bool) -> int:
     """Restore cache state from snapshot (overwrites current)."""
-    src = SNAPSHOTS_DIR / snap_id
-    if not src.exists() or not src.is_dir():
-        print(f"Snapshot not found: {snap_id}", file=sys.stderr)
-        print(f"List available via: --list", file=sys.stderr)
+    src = _resolve_snap(snap_id)
+    if src is None:
+        print(f"Snapshot not found or invalid id: {snap_id}", file=sys.stderr)
+        print("List available via: --list", file=sys.stderr)
         return 1
 
     files = []
