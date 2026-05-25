@@ -44,8 +44,11 @@ WORKERS: list[tuple[str, float, str]] = [
         4.0,
         "GH",
     ),  # P1 — cache-first GitHub best-practices lookup (§14.4 Option B)
-    # Future P1 additions:
-    # ("prework-stackoverflow.py", 1.0, "SO"),
+    (
+        "prework-stackoverflow.py",
+        1.0,
+        "SO",
+    ),  # P1 — cache-first SO/error-context lookup (§14.5 Option C, UPS half)
 ]
 
 
