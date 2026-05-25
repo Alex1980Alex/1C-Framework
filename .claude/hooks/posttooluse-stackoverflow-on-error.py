@@ -117,13 +117,14 @@ def _bash_exit_failed(tool_response: object, text: str) -> bool:
     "Exit code: N" / "exit code N" / "command failed". Если не уверены — fallback на
     presence of traceback-like patterns в тексте.
     """
-    # Explicit exit code field
+    # Explicit exit code field — authoritative когда есть.
     if isinstance(tool_response, dict):
         ec = tool_response.get("exit_code")
-        if isinstance(ec, int) and ec != 0:
-            return True
-        if isinstance(ec, str) and ec.strip() not in ("", "0"):
-            return True
+        if isinstance(ec, int):
+            return ec != 0
+        if isinstance(ec, str) and ec.strip():
+            return ec.strip() != "0"
+        # Field absent → fall through to textual indicators below.
 
     # Textual indicators
     lower = text.lower()
