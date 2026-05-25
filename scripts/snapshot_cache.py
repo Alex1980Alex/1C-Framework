@@ -192,7 +192,19 @@ def _resolve_snap(snap_id: str) -> Path | None:
 
 
 def cmd_restore(snap_id: str, dry_run: bool) -> int:
-    """Restore cache state from snapshot (overwrites current)."""
+    """Restore cache state from snapshot (true rollback semantics).
+
+    Sequence:
+    1. Enumerate snapshot files → `snap_rel_set` (relative paths).
+    2. Create rescue snapshot of current state (safety net).
+    3. **Purge orphans:** unlink current cache files NOT in `snap_rel_set`
+       (excluding the `snapshots/` dir itself — recursion safety).
+    4. Hard-link / copy snapshot files into cache.
+
+    This restores cache to EXACT snapshot state — files added after snapshot
+    are removed, modified files are replaced. Without step 3 the restore is
+    additive only ("dirty restore"), confusing для true rollback.
+    """
     src = _resolve_snap(snap_id)
     if src is None:
         print(f"Snapshot not found or invalid id: {snap_id}", file=sys.stderr)
@@ -200,18 +212,33 @@ def cmd_restore(snap_id: str, dry_run: bool) -> int:
         return 1
 
     files = []
+    snap_rel_set: set[Path] = set()
     for root, dirs, names in os.walk(src):
         dirs[:] = [d for d in dirs if d not in EXCLUDE_NAMES]
         for n in names:
-            files.append(Path(root) / n)
+            abs_path = Path(root) / n
+            files.append(abs_path)
+            snap_rel_set.add(abs_path.relative_to(src))
+
+    # Enumerate current cache files (excluding snapshots/ and transient files).
+    orphans: list[Path] = []
+    for cur in _iter_source_files():
+        rel = cur.relative_to(CACHE_DIR)
+        if rel not in snap_rel_set:
+            orphans.append(cur)
 
     print(f"Snapshot: {snap_id}")
     print(f"Files to restore: {len(files)}")
+    print(f"Orphan files to purge (in cache, not in snap): {len(orphans)}")
     if dry_run:
-        for f in files[:10]:
-            print(f"  {f.relative_to(src)}")
-        if len(files) > 10:
-            print(f"  ... +{len(files) - 10} more")
+        for f in files[:5]:
+            print(f"  + {f.relative_to(src)}")
+        if len(files) > 5:
+            print(f"  + ... +{len(files) - 5} more")
+        for o in orphans[:5]:
+            print(f"  - {o.relative_to(CACHE_DIR)}")
+        if len(orphans) > 5:
+            print(f"  - ... +{len(orphans) - 5} more")
         print("(dry-run — no writes)")
         return 0
 
@@ -221,6 +248,15 @@ def cmd_restore(snap_id: str, dry_run: bool) -> int:
     if rescue_rc != 0:
         print("Rescue snapshot failed — aborting restore for safety.", file=sys.stderr)
         return 2
+
+    # Purge orphans (true rollback semantics).
+    purged = 0
+    for o in orphans:
+        try:
+            o.unlink()
+            purged += 1
+        except OSError:
+            pass
 
     counts = {"link": 0, "copy": 0, "fail": 0}
     for f in files:
@@ -233,6 +269,8 @@ def cmd_restore(snap_id: str, dry_run: bool) -> int:
                 pass
         mode = _link_or_copy(f, target)
         counts[mode] += 1
+
+    print(f"Purged: {purged} orphan file(s)")
 
     print(
         f"Restore complete: {counts['link']} hard-link, "
