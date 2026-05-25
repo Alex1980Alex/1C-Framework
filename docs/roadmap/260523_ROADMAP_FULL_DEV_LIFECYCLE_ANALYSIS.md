@@ -1633,3 +1633,11 @@ Alert на production file
   │           │     │     → DISMISS как "won't fix" с reason
   │           │     └─ Нет → ADD logger.debug() или fix
 ```
+
+### §20.3 Phases (P0-P2)
+
+| Phase | Items | Effort | Status |
+|---|---|---|---|
+| **P0 — Bare except triage** | 10 alerts `py/catch-base-exception`. Replace `except:` → `except Exception:` или specific. Group commit `fix(bare-except): replace bare except with typed Exception across X files`. | 1-2h | PENDING |
+| **P1 — Empty-except categorization** | 19 alerts `py/empty-except`. Per alert decide: intentional graceful → dismiss; sloppy → add `logger.debug()` или fix. | 1-2h | PENDING |
+| **P2 — Mass dismiss script** | `scripts/triage_codeql_alerts.py` — semi-automated triage: load all open, classify по rule + path heuristics, bulk-dismiss safe categories, output review TODO list for ambiguous. | 2-3h | DEFERRED |
