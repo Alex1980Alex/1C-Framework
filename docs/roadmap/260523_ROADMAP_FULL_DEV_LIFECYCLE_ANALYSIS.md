@@ -1485,6 +1485,29 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (PM) — P1 workers 2/3 + 3/3 + §20 P0 bare-except batch
+
+**Outcome:** §14 Pre-Work pipeline теперь имеет **все 4 prework worker'а** (ARCH + CODE + GH + SO) запущенных параллельно через dispatcher (ADR-D1). §20 P0 bare-except triage closed.
+
+**Landed (PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46) OPEN, awaits CI):**
+- [`.claude/hooks/prework-github-bp.py`](../../.claude/hooks/prework-github-bp.py) — cache-first GitHub best-practices (§14.4 Option B). Filters `architecture-research/cache/` by `github_repos_count > 0` + freshness (≤365d) + rapidfuzz score ≥60. Timeout 4s.
+- [`.claude/hooks/prework-stackoverflow.py`](../../.claude/hooks/prework-stackoverflow.py) — cache-first SO/error-context (§14.5 Option C, UPS half). Merges `tech-research` (dict schema) + `architecture-research` (list schema) caches, SO_SIGNALS keyword filter + freshness (≤540d). Timeout 1s.
+- [`.claude/hooks/shared/prework_dispatcher.py`](../../.claude/hooks/shared/prework_dispatcher.py) WORKERS registry — added GH (4s) + SO (1s) entries. End-to-end smoke: 4 sections в unified systemMessage, SO список truncated по `MAX_TOTAL_CHARS=2000` cap per ADR-D2.
+- §20 P0 — 4 BSL files: `src/bsl/mcp_server/main.py` (locale.Error specific), `src/bsl/mcp_server/http_server.py` + `src/bsl/finetuning/scripts/index_to_chroma.py` (Exception + noqa BLE001 для vendor errors). Alert #1358 (`real_bsl_client.py:274`) DISMISSED via `gh api` как intentional thread bootstrap pattern.
+
+**§14 Pre-Work pipeline status:** ALL 4 P1 workers live (architecture + similar-code + github-bp + stackoverflow). Reactive PostToolUse:Bash для SO errors — оставлен на отдельную итерацию (§14.5 Option C, PostToolUse half).
+
+**Smoke verification:**
+
+`how to set up GitHub Actions CI/CD for Python project with claude bot review` → dispatcher emits unified systemMessage с секциями ARCH (3 hits) + CODE (3 hits via Qdrant) + GH (3 hits top score 1.0 `github-pr-automation-2026.md`) + SO (truncated at cap).
+
+**Next priorities (updated 2026-05-25 PM):**
+1. ⏳ Дождаться CI на PR #46 → merge
+2. ⏳ §14 PostToolUse:Bash reactive SO worker (Option C completeness)
+3. ⏳ §20 P1 empty-except categorization (19 alerts py/empty-except)
+4. ⏳ §15 P0 Process Caching (CloudEvents wrapping + crypto-shredding)
+5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
+
 ### 2026-05-25 (AM) — Failure cache + analysis pipeline + autopilot reactions
 
 **Outcome:** Maximum CI tier теперь имеет **полный cache+analyze layer**. Все CI failures автоматически логируются, embed'ятся, дедуплицируются, и при 3+ recurrences создают GitHub issue.
