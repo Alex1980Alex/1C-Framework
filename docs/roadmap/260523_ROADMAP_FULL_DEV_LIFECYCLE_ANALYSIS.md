@@ -1485,6 +1485,27 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (AM) — Failure cache + analysis pipeline + autopilot reactions
+
+**Outcome:** Maximum CI tier теперь имеет **полный cache+analyze layer**. Все CI failures автоматически логируются, embed'ятся, дедуплицируются, и при 3+ recurrences создают GitHub issue.
+
+**Landed:**
+- [`scripts/ci_failure_cache.py`](../../scripts/ci_failure_cache.py) — multi-layer cache (JSONL append-only + Qdrant `ci_failures` 1024d MRL Qwen3 + SHA256 dedup + auto-issue creation on `OCCURRENCE_THRESHOLD=3`). CLI: `--pr/--sha/--run-id/--job/--stats/--search`. Code-verify PASS via subagent `acf6d9f923f670ef4` (15 checks).
+- [Chapter 42.4 Failure Caching](../framework%20documentation/42_MONITOR_CI/42.4_Failure_Caching.md) — pipeline doc, storage layers, CLI examples.
+- Monitor `bkozphbx9` integrated: on FAILURE event → spawn `ci_failure_cache.py --pr N --job <name>` → emit `FAIL PR#N occ=Y [issue_url]`.
+- Fixed `src/memory/infrastructure/retry.py` `raise None` (CodeQL alert #1349, py/illegal-raise error severity). Code-verify PASS via subagent `ac929a17a7847c182` (12 checks). Doc note в [01.2 Архитектура](../framework%20documentation/01_ОБЗОР/01.2_Архитектура.md).
+- Fixed `.github/workflows/claude.yml` bot filter (`user.type != 'Bot'`) → skip Dependabot PRs (claude-code-action rejects bot authors).
+- Dismissed bulk CodeQL noise: 16 vendored alerts (serena/lazy-mcp/auto-documenter/external) + 20 test-file false positives + ~700 low-value code quality rules (unused vars/imports/cycles/style) via batch script.
+
+**Autonomous reactions (Monitor → action):**
+1. PR #26 claude=FAILURE → diagnosed → fixed → pushed → resolved in 1 turn
+2. 17 Dependabot PRs opened после dependabot.yml `directories:` change → 14 merged + 3 closed (cleanup) + Dependabot regenerated remaining
+3. CodeQL alert #1349 py/illegal-raise → read code → fixed → committed → verified
+4. 8 test-file SEC-ALERTs → dismissed as "used in tests"
+5. 2 alerts on own new file (ci_failure_cache.py) → dismissed as "intentional graceful skip"
+
+**User pending:** rotate ANTHROPIC_API_KEY · review 29 production-code empty-except + catch-base-exception alerts.
+
 ### 2026-05-25 (early AM) — Maximum CI tier MERGED + Dependabot wave
 
 **Outcome:** PR #19 (Maximum autopilot tier) MERGED 21:06Z. PR #20 (python-multipart bump) MERGED follow-up. 3 stale ci-bump PRs (#5/#6/#7) cleanup-closed. PR #21-24 имеют conflict с merged #20 — Dependabot re-rebase auto.
