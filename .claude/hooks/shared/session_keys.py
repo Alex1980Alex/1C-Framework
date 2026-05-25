@@ -35,19 +35,26 @@ KEY_SIZE_BYTES = 32  # AES-256
 
 
 def _project_slug() -> str:
-    """Derive project slug from current project path.
+    """Derive project slug matching Claude Code's `~/.claude/projects/<slug>/` layout.
 
-    Mirrors logic in memory layout: replace `\\` and `/` with `-`,
-    strip leading sep, prefix with C--.
+    Claude Code replaces all non-[A-Za-z0-9_-] chars (including Cyrillic letters,
+    drive colons, path separators) with `-`. Example:
 
-    Example: "C:\\1С-Framework" → "C--1--Framework"
+        "C:\\1С-Framework"  →  "C--1--Framework"
+
+    Path arithmetic: session_keys.py lives at `.claude/hooks/shared/session_keys.py`
+    — four levels deep from project root.
     """
-    project_root = Path(__file__).resolve().parent.parent.parent
-    # Mimic Claude Code's project naming scheme used in ~/.claude/projects/
-    raw = str(project_root).replace("\\", "--").replace("/", "--")
-    # Drop drive colons: "C:" → "C-"
-    raw = raw.replace(":", "-")
-    return raw
+    # shared → hooks → .claude → project root
+    project_root = Path(__file__).resolve().parent.parent.parent.parent
+    raw = str(project_root)
+    out: list[str] = []
+    for ch in raw:
+        if ch.isascii() and (ch.isalnum() or ch in "-_"):
+            out.append(ch)
+        else:
+            out.append("-")
+    return "".join(out).strip("-") or "default"
 
 
 def _keys_dir() -> Path:
