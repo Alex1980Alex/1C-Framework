@@ -1485,6 +1485,31 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (night) — §15 P2 hard-link snapshots для `.claude/cache/`
+
+**Outcome:** §15 P2 item 11 landed. RocksDB-style point-in-time snapshots через `os.link()` — O(1) per file, shared inodes (N snapshots ≈ 1× disk size). Rollback safety net против accidental cache corruption / NTFS recovery incidents.
+
+**Landed (PR [#50](https://github.com/Alex1980Alex/1C-Framework/pull/50) OPEN, stacked on #49):**
+- [`scripts/snapshot_cache.py`](../../scripts/snapshot_cache.py) — single-file CLI (~310 lines, stdlib only). Commands: `--snapshot` / `--list` / `--restore <id>` (auto-creates rescue snapshot first) / `--gc DAYS` / `--diff <id>` (name-only file-set diff) / `--dry-run`. Storage: `.claude/cache/snapshots/<YYYY-MM-DDTHH-MM-SS>/` mirror. Hard-link via `os.link()`, fallback `shutil.copy2` если cross-volume. Exclusions: symlinks (security), `.lock`/`.tmp` (transient), recursion в snapshots/ (self).
+
+**Code-verify (subagent `ab2f61b57ac4317e8`) → Ralph Wiggum iter 1 (2 fixes) → PASS:**
+1. **Path traversal** в `cmd_restore` / `cmd_diff` — `SNAPSHOTS_DIR / snap_id` без resolve guard позволял `--restore "../../../scripts"`. Fix: `_resolve_snap()` helper c `.resolve().is_relative_to(SNAPSHOTS_DIR.resolve())`.
+2. **Console encoding** — non-ASCII в docstring (Cyrillic + `≈`/`←`/`→`) ломал `--help` на cp1251 Windows console. Fix: `sys.stdout.reconfigure(encoding='utf-8')` в начале `main()`.
+
+**Smoke (all PASS):** 118 cache files snapshotted (5.7MB logical, all hard-link, zero copy fallback) · diff right-after-snap = 0/0/118 · atomic-rename modify preserves snapshot inode (industry standard editor pattern) · truncate-in-place affects both (documented limitation) · restore round-trip recovers content · path traversal blocked · `--help` works · ruff PASS.
+
+**§15 phase status (cumulative across PRs #47, #48, #49, #50):**
+- P0 (subtasks 1-4): **DONE** — CloudEvents wrapping + W3C traceparent + DuckDB query layer + crypto-shredding
+- P1 (subtasks 5/8/9): **DONE** — Parquet COPY TO + JSON Schema validation + audit_query archive
+- P2 (item 11): **DONE** — hard-link snapshots
+
+**Next priorities (updated 2026-05-25 night):**
+1. ⏳ Дождаться CI на stack #46 → #47 → #48 → #49 → #50 → merge
+2. ⏳ §20 P1 87 `review` category — manual triage
+3. ⏳ §15 P1 deferred (PyIceberg + replay-checkpoint) — после MinIO/S3 setup
+4. ⏳ §15 P2 item 10 — RAGAS replay из Langfuse dataset exports
+5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
+
 ### 2026-05-25 (late evening) — §15 P1 (subset) — JSON Schema + Parquet COPY TO
 
 **Outcome:** §15 P1 phase частично landed (subtasks 5 + 8 + 9 partial). JSON Schema Draft 2020-12 для CloudEvents-extended hook entries + DuckDB Parquet ZSTD archival cold tier + audit_query archive support. Deferred sub-items требуют external infra (PyIceberg/MinIO/S3).
