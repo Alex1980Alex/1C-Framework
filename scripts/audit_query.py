@@ -109,10 +109,14 @@ def _build_relation(con, include_rotated: bool):
         paths.append(str(ROTATED_PATH))
 
     # union_by_name=True handles schema drift (Phase 7→8→9 added fields).
+    # ignore_errors=True skips malformed JSON lines (legacy entries сometimes
+    # contain unescaped control chars; not worth blocking analytics over).
+    # format='newline_delimited' is explicit JSONL.
     files_array = "[" + ", ".join(f"'{p}'" for p in paths) + "]"
     con.execute(
         f"CREATE OR REPLACE VIEW logs AS "
-        f"SELECT * FROM read_json_auto({files_array}, union_by_name=true)"
+        f"SELECT * FROM read_json_auto({files_array}, "
+        f"format='newline_delimited', union_by_name=true, ignore_errors=true)"
     )
 
 
