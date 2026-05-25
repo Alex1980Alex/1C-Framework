@@ -89,6 +89,7 @@ VIEWS: dict[str, str] = {
 def _check_duckdb():
     try:
         import duckdb  # noqa: F401
+
         return True
     except ImportError:
         print(
@@ -151,15 +152,17 @@ def _causation_chain(con, correlation_id: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--view", choices=list(VIEWS.keys()) + ["causation-chain"],
-                        help="Predefined view")
+    parser.add_argument(
+        "--view", choices=list(VIEWS.keys()) + ["causation-chain"], help="Predefined view"
+    )
     parser.add_argument("--sql", help="Raw SQL (uses `logs` as table name)")
-    parser.add_argument("--correlation-id",
-                        help="For --view causation-chain")
-    parser.add_argument("--include-rotated", action="store_true",
-                        help="Also scan hook-invocations.1.jsonl (rotated)")
-    parser.add_argument("--limit", type=int, default=0,
-                        help="Append LIMIT to result (0=no limit)")
+    parser.add_argument("--correlation-id", help="For --view causation-chain")
+    parser.add_argument(
+        "--include-rotated",
+        action="store_true",
+        help="Also scan hook-invocations.1.jsonl (rotated)",
+    )
+    parser.add_argument("--limit", type=int, default=0, help="Append LIMIT to result (0=no limit)")
     args = parser.parse_args()
 
     if not args.view and not args.sql:
