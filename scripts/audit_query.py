@@ -201,6 +201,8 @@ def main() -> int:
                         help="Also scan hook-invocations.1.jsonl (rotated)")
     parser.add_argument("--limit", type=int, default=0,
                         help="Append LIMIT to result (0=no limit)")
+    parser.add_argument("--decrypt-errors", action="store_true",
+                        help="Decrypt `error` envelopes when session key available")
     args = parser.parse_args()
 
     if not args.view and not args.sql:
