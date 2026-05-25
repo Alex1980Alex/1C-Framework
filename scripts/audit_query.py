@@ -236,11 +236,16 @@ def main() -> int:
         print(f"SQL error: {exc}", file=sys.stderr)
         return 1
 
-    # Print column names + rows
+    # Print column names + rows; optional decrypt of `error` field per row.
     cols = [d[0] for d in result.description]
+    err_idx = cols.index("error") if "error" in cols else -1
+    sess_idx = cols.index("session") if "session" in cols else -1
     print("\t".join(cols))
     for row in result.fetchall():
-        print("\t".join(str(v) if v is not None else "" for v in row))
+        row_list = list(row)
+        if args.decrypt_errors and err_idx >= 0 and sess_idx >= 0:
+            row_list[err_idx] = _maybe_decrypt(row_list[err_idx], row_list[sess_idx])
+        print("\t".join(str(v) if v is not None else "" for v in row_list))
 
     return 0
 
