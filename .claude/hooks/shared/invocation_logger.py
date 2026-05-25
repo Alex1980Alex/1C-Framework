@@ -10,18 +10,30 @@ Used by:
   (ralph_wiggum_stop, git-commit-enforcer, docs-change-enforcer,
    task-enforcer, auto-git-save-prompt, skill-eval-enforcer-shell)
 
-Entry format:
+Entry format (§15 P0 ADD: CloudEvents v1.0 envelope + W3C traceparent):
   {"ts":"ISO","hook":"SkillRouter","event":"UserPromptSubmit",
    "tool":null,"elapsed_ms":45,"outcome":"message",
-   "session":"abc123","agent_id":"xyz789","error":null}
+   "session":"abc123","agent_id":"xyz789","error":null,
+   "specversion":"1.0","id":"<uuid>","source":"claude-code-hooks",
+   "type":"com.anthropic.claude.hook.UserPromptSubmit",
+   "time":"ISO","correlationid":"<run_id|session>",
+   "causationid":"<parent_id or empty>",
+   "traceparent":"00-<32hex>-<16hex>-01"}
 
 Phase 7: Added agent_id for subagent monitoring.
+Phase 9 (§15 P0): CloudEvents wrapping + W3C trace context.
+
+Backward compatibility: all pre-§15 flat fields preserved verbatim.
+New fields are additive — existing grep/jq/DuckDB queries continue
+to work without modification.
 
 Based on task_master.py patterns: graceful degradation, never block.
 """
 
 import json
+import secrets
 import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -64,6 +76,29 @@ def _rotate_if_needed(filepath: Path) -> None:
 # --- Public API ---
 
 
+def _make_traceparent(run_id: str = "", session_id: str = "") -> str:
+    """Build W3C traceparent header value.
+
+    Format: `00-<trace_id_32hex>-<span_id_16hex>-01`.
+    trace_id derived from run_id|session for cross-event correlation.
+    span_id always fresh (per-event).
+
+    Spec: https://www.w3.org/TR/trace-context/#traceparent-header
+    """
+    seed = (run_id or session_id or "").replace("-", "")[:32]
+    if len(seed) >= 32:
+        trace_id = seed[:32]
+    else:
+        # Derive deterministic 32-hex from seed; pad with random if seed empty/short
+        if seed:
+            # Hash-pad to 32 hex chars (uuid.uuid5 gives 32 hex via .hex)
+            trace_id = uuid.uuid5(uuid.NAMESPACE_URL, seed).hex
+        else:
+            trace_id = secrets.token_hex(16)
+    span_id = secrets.token_hex(8)  # 16 hex chars = 8 bytes
+    return f"00-{trace_id}-{span_id}-01"
+
+
 def log_invocation(
     hook: str,
     event: str | None = None,
@@ -75,6 +110,7 @@ def log_invocation(
     agent_id: str = "",  # Phase 7: Subagent monitoring
     category: str = "hook",  # Phase 8: Multi-source log unification
     run_id: str = "",  # Phase 8: Cross-hook correlation (slash-command run)
+    causation_id: str = "",  # Phase 9 (§15 P0): parent event id (DAG causality)
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -94,14 +130,23 @@ def log_invocation(
         run_id: UUID linking events to one slash-command invocation.
                 Set by slash-command-tracker on UserPromptSubmit, read by other
                 hooks via shared/run_context.get_run_id(session_id).
+        causation_id: CloudEvents extension — id of the event that directly
+                      triggered this one (parent in DAG). Empty for roots.
     """
     try:
         filepath = _get_log_file()
         filepath.parent.mkdir(parents=True, exist_ok=True)
         _rotate_if_needed(filepath)
 
+        iso_now = datetime.now().isoformat()
+        event_id = str(uuid.uuid4())
+        # CloudEvents `type` follows reverse-DNS convention. Fall back when event missing.
+        ce_type = f"com.anthropic.claude.hook.{event}" if event else "com.anthropic.claude.hook"
+        # correlationid pins all events in one slash-command/session together.
+        correlation_id = run_id or session_id or event_id
+
         entry = {
-            "ts": datetime.now().isoformat(),
+            "ts": iso_now,
             "hook": hook,
             "event": event,
             "tool": tool,
@@ -112,6 +157,17 @@ def log_invocation(
             "agent_id": agent_id,  # Phase 7
             "category": category,  # Phase 8
             "run_id": run_id,  # Phase 8
+            # --- CloudEvents v1.0 envelope (§15 P0) ---
+            "specversion": "1.0",
+            "id": event_id,
+            "source": "claude-code-hooks",
+            "type": ce_type,
+            "time": iso_now,
+            "datacontenttype": "application/json",
+            "correlationid": correlation_id,
+            "causationid": causation_id or "",
+            # --- W3C Trace Context (§15 P0) ---
+            "traceparent": _make_traceparent(run_id=run_id, session_id=session_id),
         }
 
         line = json.dumps(entry, ensure_ascii=False) + "\n"
@@ -141,6 +197,7 @@ class InvocationTimer:
         self.agent_id: str = ""  # Phase 7
         self.category: str = "hook"  # Phase 8
         self.run_id: str = ""  # Phase 8
+        self.causation_id: str = ""  # Phase 9 (§15 P0) — parent event id
         self._start: float = 0.0
 
     def start(self) -> "InvocationTimer":
@@ -162,4 +219,5 @@ class InvocationTimer:
             agent_id=self.agent_id,  # Phase 7
             category=self.category,  # Phase 8
             run_id=self.run_id,  # Phase 8
+            causation_id=self.causation_id,  # Phase 9 (§15 P0)
         )

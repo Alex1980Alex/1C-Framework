@@ -33,8 +33,8 @@ ERROR_PATTERNS = [
     ("ERROR: Could not find a version", "pip_version_error", "package"),
     ("ERROR: No matching distribution", "pip_dist_error", "package"),
     ("ResolutionImpossible", "pip_resolve_error", "deps"),
-    # ruff/linting
-    ("Found ", " errors", "lint_errors", "code"),
+    # ruff/linting — matches "Found N errors" output
+    ("Found ", "lint_errors", "code"),
     # mypy/pyright
     ("error:", "type_error", "type"),
     # general

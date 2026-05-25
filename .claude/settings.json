@@ -402,6 +402,11 @@
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-bash-errors.py",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/posttooluse-stackoverflow-on-error.py",
+            "timeout": 3
           }
         ]
       },
