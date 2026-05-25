@@ -54,6 +54,8 @@ def _load_failures(since: datetime) -> list[dict]:
             e = json.loads(ln)
         except json.JSONDecodeError:
             continue
+        if not isinstance(e, dict):
+            continue  # defensive: jsonl can contain non-dict roots (list/string/null)
         if e.get("event_type"):
             continue  # skip generic events (notifications/pr-reviews) — only CI failures
         try:

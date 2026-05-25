@@ -27,13 +27,14 @@ description: "Используй этот скилл для понимания �
 | `implement-1c-task-preflight.py` | Content-фильтр на `/implement-1c-task` → запуск `scripts/smoke_test_implement_1c_task.py --json` → systemMessage с pipeline mode (Full / **Full (no-BP)** / Code-only / Read-only verify / Read-only research / unusable) + строка «Debug environment: ready/not-ready» по полю `mcp_health.debug_hmr` (2026-05-11 — roadmap 260510 Phase 1 §3.1). Не блокирует. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>`. |
 | `analyze-1c-task-preflight.py` | Content-фильтр на `/analyze-1c-task` (с/без `--trace`) → probe debug-hmr через shared `shared/debug_hmr_health.probe_debug_hmr_ready()` → systemMessage с readiness Phase 2.5 Runtime Trace (2026-05-11 — roadmap 260510 Phase 3 §5.1). Не блокирует — Phase 2.5 opt-in. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>;trace_flag=<0\|1>`. |
 
-#### PreToolUse (4)
+#### PreToolUse (5)
 
 | Hook | Matcher | Назначение |
 |------|---------|-----------|
 | `code-skill-enforcer.py` | Write\|Edit\|Bash | Skill-First: BLOCK если скилл не активирован (уровни A-C) |
 | `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
 | `search-optimizer.py` | Bash | Оптимизация параметров Search API |
+| `pre-merge-review-check.py` | Bash | Блокирует `gh pr merge N` если у PR есть unresolved HIGH/MEDIUM bot review comments (gemini-code-assist `![high]`/`![medium]` markers). Override: env `GH_MERGE_REVIEW_OVERRIDE=1`. Enforces protocol [`feedback_pre_merge_review_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_pre_merge_review_protocol.md). Timeout 6s. |
 | `approval-gate.py` | Skill | SDD Phase 3: блокировка implementation-skills (`implement-1c-task`, `opsx:apply`) без `approval.status: approved` в `.openspec.yaml`. Читает `profile` field (default `1c-bsl`). Поддерживаемые профили: `1c-bsl` (BSL changes), `python-framework` (Python framework changes, см. `openspec/profiles/python-framework.yaml`). Для new profile добавить YAML файл в `openspec/profiles/` — hook автоматически подхватит через `_read_profile()`. |
 
 `code-skill-enforcer.py` читает конфигурацию из `shared/code-skill-patterns.json` (массив правил `{pattern, skill, label, domain}`). Каждое правило связывает regex-паттерн команды/файла с обязательным для активации скиллом. **Важно**: `skill` должен существовать в каталоге `.claude/skills/` — entries с несуществующими target-скиллами создают phantom-блокировки (enforcer требует активации скилла, которого нет), поэтому при удалении скилла нужно сразу чистить соответствующие правила.

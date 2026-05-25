@@ -55,9 +55,16 @@ def main() -> int:
         return 1
 
     cfc = _load_cfc()
-    entries = [
-        json.loads(ln) for ln in JSONL.read_text(encoding="utf-8").splitlines() if ln.strip()
-    ]
+    entries = []
+    for ln in JSONL.read_text(encoding="utf-8").splitlines():
+        if not ln.strip():
+            continue
+        try:
+            parsed = json.loads(ln)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            entries.append(parsed)
     print(f"Loaded {len(entries)} entries")
 
     old = collections.Counter(e.get("error_hash", "?") for e in entries)
