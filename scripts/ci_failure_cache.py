@@ -399,12 +399,15 @@ def catchup(limit: int = 20) -> dict:
 
 def stats() -> dict:
     entries = _read_jsonl()
+    failures = [e for e in entries if not e.get("event_type")]
+    events = [e for e in entries if e.get("event_type")]
     by_hash: dict = {}
-    for e in entries:
+    for e in failures:
         by_hash.setdefault(e.get("error_hash", "?"), []).append(e)
     top = sorted(by_hash.items(), key=lambda kv: -len(kv[1]))[:10]
     return {
-        "total_failures": len(entries),
+        "total_failures": len(failures),
+        "total_events": len(events),
         "unique_hashes": len(by_hash),
         "top_recurring": [
             {
@@ -419,9 +422,32 @@ def stats() -> dict:
 
 
 def search_text(query: str) -> list[dict]:
+    q = query.lower()
     return [
-        e for e in _read_jsonl() if query.lower() in (e.get("error_first_line", "") or "").lower()
+        e
+        for e in _read_jsonl()
+        if q in (e.get("error_first_line") or "").lower()
+        or q in (e.get("content_preview") or "").lower()
     ][-10:]
+
+
+def log_event(event_type: str, key: str, content: str) -> dict:
+    error_hash = _hash(content)
+    entry = {
+        "ts": _now_iso(),
+        "event_type": event_type,
+        "key": key,
+        "content_preview": content[:300],
+        "error_hash": error_hash,
+    }
+    _append_jsonl(entry)
+    same = [e for e in _read_jsonl() if e.get("error_hash") == error_hash]
+    return {
+        "logged": True,
+        "event_type": event_type,
+        "error_hash": error_hash,
+        "occurrences": len(same),
+    }
 
 
 def main() -> int:
@@ -440,6 +466,13 @@ def main() -> int:
         metavar="LIMIT",
         help="Backfill recent FAILURE runs not in cache (default LIMIT=20)",
     )
+    p.add_argument(
+        "--log-event",
+        dest="log_event_type",
+        help="Log generic event (pr-review|notification|workflow-event|other)",
+    )
+    p.add_argument("--key", help="Event key/identifier (used with --log-event)")
+    p.add_argument("--content", help="Event content for hashing (used with --log-event)")
     args = p.parse_args()
     return _dispatch(args)
 
@@ -453,6 +486,13 @@ def _dispatch(args) -> int:
         return 0
     if args.catchup is not None:
         print(json.dumps(catchup(limit=args.catchup), indent=2, ensure_ascii=False))
+        return 0
+    if args.log_event_type:
+        if not (args.key and args.content):
+            print("error: --log-event requires --key and --content", file=sys.stderr)
+            return 2
+        result = log_event(args.log_event_type, args.key, args.content)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
     if not (args.pr or args.sha or args.run_id):
         print(
