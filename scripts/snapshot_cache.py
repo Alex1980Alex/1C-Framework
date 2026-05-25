@@ -126,8 +126,10 @@ def cmd_snapshot(dry_run: bool) -> int:
         mode = _link_or_copy(src, dst)
         counts[mode] += 1
 
-    print(f"Snapshot complete: {counts['link']} hard-link, "
-          f"{counts['copy']} copy fallback, {counts['fail']} failed")
+    print(
+        f"Snapshot complete: {counts['link']} hard-link, "
+        f"{counts['copy']} copy fallback, {counts['fail']} failed"
+    )
     return 0 if counts["fail"] == 0 else 1
 
 
@@ -232,8 +234,10 @@ def cmd_restore(snap_id: str, dry_run: bool) -> int:
         mode = _link_or_copy(f, target)
         counts[mode] += 1
 
-    print(f"Restore complete: {counts['link']} hard-link, "
-          f"{counts['copy']} copy fallback, {counts['fail']} failed")
+    print(
+        f"Restore complete: {counts['link']} hard-link, "
+        f"{counts['copy']} copy fallback, {counts['fail']} failed"
+    )
     return 0 if counts["fail"] == 0 else 1
 
 
@@ -324,18 +328,14 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--snapshot", action="store_true",
-                       help="Create new snapshot of .claude/cache/")
-    group.add_argument("--list", action="store_true",
-                       help="List all snapshots")
-    group.add_argument("--restore", metavar="ID",
-                       help="Restore cache from snapshot id")
-    group.add_argument("--gc", type=int, metavar="DAYS",
-                       help="Delete snapshots older than N days")
-    group.add_argument("--diff", metavar="ID",
-                       help="Show file-set diff (snap vs current)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Preview, no writes")
+    group.add_argument(
+        "--snapshot", action="store_true", help="Create new snapshot of .claude/cache/"
+    )
+    group.add_argument("--list", action="store_true", help="List all snapshots")
+    group.add_argument("--restore", metavar="ID", help="Restore cache from snapshot id")
+    group.add_argument("--gc", type=int, metavar="DAYS", help="Delete snapshots older than N days")
+    group.add_argument("--diff", metavar="ID", help="Show file-set diff (snap vs current)")
+    parser.add_argument("--dry-run", action="store_true", help="Preview, no writes")
     args = parser.parse_args()
 
     if args.snapshot:

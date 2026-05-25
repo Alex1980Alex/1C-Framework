@@ -50,6 +50,7 @@ ARCHIVE_DIR = PROJECT_ROOT / "data" / "archive"
 def _check_duckdb() -> bool:
     try:
         import duckdb  # noqa: F401
+
         return True
     except ImportError:
         print("ERROR: duckdb not installed. pip install duckdb", file=sys.stderr)
@@ -119,8 +120,7 @@ def cmd_archive(rotate: bool, dry_run: bool) -> int:
         )
         # COMPRESSION ZSTD — best ratio/speed для cold tier per duckdb docs.
         con.execute(
-            f"COPY (SELECT * FROM logs) TO '{archive_path}' "
-            f"(FORMAT PARQUET, COMPRESSION ZSTD)"
+            f"COPY (SELECT * FROM logs) TO '{archive_path}' (FORMAT PARQUET, COMPRESSION ZSTD)"
         )
         size = archive_path.stat().st_size
         print(f"Archive written: {size:,} bytes")
@@ -169,12 +169,16 @@ def cmd_retention(days: int, dry_run: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rotate", action="store_true",
-                        help="After archive, move source jsonl → .archived-<date>")
-    parser.add_argument("--retention", type=int, metavar="DAYS",
-                        help="Delete archives older than N days (separate run mode)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Show what would be done, no writes")
+    parser.add_argument(
+        "--rotate", action="store_true", help="After archive, move source jsonl → .archived-<date>"
+    )
+    parser.add_argument(
+        "--retention",
+        type=int,
+        metavar="DAYS",
+        help="Delete archives older than N days (separate run mode)",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be done, no writes")
     args = parser.parse_args()
 
     if args.retention is not None:

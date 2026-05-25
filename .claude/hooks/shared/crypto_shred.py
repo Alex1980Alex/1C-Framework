@@ -70,7 +70,7 @@ def decrypt(blob: str, key: bytes) -> str | None:
     if not HAS_CRYPTOGRAPHY or not blob or not key or len(key) not in (16, 24, 32):
         return None
     if blob.startswith(ENVELOPE_PREFIX):
-        blob = blob[len(ENVELOPE_PREFIX):]
+        blob = blob[len(ENVELOPE_PREFIX) :]
     try:
         raw = base64.b64decode(blob.encode("ascii"))
     except (ValueError, TypeError):
