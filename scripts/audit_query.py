@@ -140,26 +140,32 @@ def _check_duckdb():
         return False
 
 
-def _build_relation(con, include_rotated: bool) -> str:
-    """Create `logs` view from one or both JSONL files.
+def _build_relation(con, include_rotated: bool, include_archive: bool = False) -> str:
+    """Create `logs` view spanning current JSONL + optional rotated + Parquet archive.
 
     Pre-filters malformed lines via Python (DuckDB `ignore_errors=true` collapses
     schema to single `json` column when corrupted lines present — see git
     history of this file). Pre-cleaned content written to one temp JSONL,
     которое DuckDB читает с полноценным schema inference.
 
-    Returns the temp file path so caller can delete it after query execution.
+    With `include_archive=True`, UNIONs all `data/archive/*.parquet` files via
+    DuckDB `read_parquet()` (§15 P1 — cold tier). Both branches use
+    `union_by_name=True` так что schema drift между JSONL и Parquet harmless.
+
+    Returns the temp JSONL file path so caller can delete it after query.
     """
     import atexit
     import json
     import os
     import tempfile
 
-    if not JSONL_PATH.exists():
+    if not JSONL_PATH.exists() and not include_archive:
         print(f"ERROR: {JSONL_PATH} not found", file=sys.stderr)
         sys.exit(2)
 
-    paths = [JSONL_PATH]
+    paths = []
+    if JSONL_PATH.exists():
+        paths.append(JSONL_PATH)
     if include_rotated and ROTATED_PATH.exists():
         paths.append(ROTATED_PATH)
 
