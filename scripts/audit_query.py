@@ -267,6 +267,8 @@ def main() -> int:
                         help="For --view causation-chain")
     parser.add_argument("--include-rotated", action="store_true",
                         help="Also scan hook-invocations.1.jsonl (rotated)")
+    parser.add_argument("--include-archive", action="store_true",
+                        help="Also scan data/archive/*.parquet cold tier (§15 P1)")
     parser.add_argument("--limit", type=int, default=0,
                         help="Append LIMIT to result (0=no limit)")
     parser.add_argument("--decrypt-errors", action="store_true",
@@ -282,7 +284,11 @@ def main() -> int:
     import duckdb
 
     con = duckdb.connect(":memory:")
-    tmp_path = _build_relation(con, include_rotated=args.include_rotated)
+    tmp_path = _build_relation(
+        con,
+        include_rotated=args.include_rotated,
+        include_archive=args.include_archive,
+    )
     # Best-effort cleanup в normal exit path; atexit handles abnormal exits.
     try:
         return _main_inner(con, args, parser)
