@@ -1595,6 +1595,7 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 - [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) CLOSED (superseded by #10 hotfix)
 - [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED 2026-05-24T04:50Z
 - [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED 2026-05-24T04:09Z
+- [#12](https://github.com/Alex1980Alex/1C-Framework/pull/12) MERGED (P1 worker 1/3 prework-similar-code, landed на master до этой сессии)
 
 **Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
 
