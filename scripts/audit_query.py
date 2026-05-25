@@ -259,8 +259,19 @@ def main() -> int:
     import duckdb
 
     con = duckdb.connect(":memory:")
-    _build_relation(con, include_rotated=args.include_rotated)
+    tmp_path = _build_relation(con, include_rotated=args.include_rotated)
+    # Best-effort cleanup в normal exit path; atexit handles abnormal exits.
+    try:
+        return _main_inner(con, args, parser)
+    finally:
+        try:
+            import os as _os
+            _os.unlink(tmp_path)
+        except OSError:
+            pass
 
+
+def _main_inner(con, args, parser) -> int:
     if args.view == "causation-chain":
         if not args.correlation_id:
             parser.error("--view causation-chain requires --correlation-id")
