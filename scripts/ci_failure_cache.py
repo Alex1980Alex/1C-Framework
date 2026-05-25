@@ -45,8 +45,26 @@ def _gh(*args: str) -> tuple[int, str, str]:
     return r.returncode, r.stdout, r.stderr
 
 
+_NORMALIZE_PATTERNS = [
+    (re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z?"), ""),
+    (re.compile(r"\b\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\b"), ""),
+    (re.compile(r"<job_\d+>"), "<job_ID>"),
+    (re.compile(r"\brun_id=\d+\b"), "run_id=N"),
+    (re.compile(r"\bid=\d+\b"), "id=N"),
+    (re.compile(r"\s+"), " "),
+]
+
+
+def _normalize_for_hash(s: str) -> str:
+    for pat, repl in _NORMALIZE_PATTERNS:
+        s = pat.sub(repl, s)
+    return s.strip()
+
+
 def _hash(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()[:16]
+    return hashlib.sha256(_normalize_for_hash(text).encode("utf-8", errors="replace")).hexdigest()[
+        :16
+    ]
 
 
 def _append_jsonl(entry: dict) -> None:
@@ -78,7 +96,10 @@ def extract_first_error(log: str) -> str:
         if not line or NOISE_PATTERNS.search(line):
             continue
         line = re.sub(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+", "", line)
-        line = re.sub(r"^[A-Za-z0-9 ()]+\t[A-Z ]+\t", "", line)
+        # Strip "<job>\t<step>\t" prefix — step can be mixed case + /@.-
+        line = re.sub(r"^[\w\s().\-]+\t[\w\s().\-/@]+\t", "", line)
+        # Strip any embedded ISO timestamp (after prefix removal)
+        line = re.sub(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s*", "", line)
         for m in markers:
             if m in line:
                 return line[:300]
