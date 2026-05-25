@@ -1485,6 +1485,36 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-25 (late evening) — §15 P1 (subset) — JSON Schema + Parquet COPY TO
+
+**Outcome:** §15 P1 phase частично landed (subtasks 5 + 8 + 9 partial). JSON Schema Draft 2020-12 для CloudEvents-extended hook entries + DuckDB Parquet ZSTD archival cold tier + audit_query archive support. Deferred sub-items требуют external infra (PyIceberg/MinIO/S3).
+
+**Landed (PR [#49](https://github.com/Alex1980Alex/1C-Framework/pull/49) OPEN, stacked on #48):**
+- [`.claude/schemas/events/hook-invocation.json`](../../.claude/schemas/events/hook-invocation.json) — JSON Schema Draft 2020-12. CloudEvents v1.0 envelope (specversion / id / source / type / time / datacontenttype / correlationid / causationid) + W3C traceparent regex (`^00-[0-9a-f]{32}-[0-9a-f]{16}-(00|01)$`) + legacy flat fields. `additionalProperties: true` для forward-compat.
+- [`.claude/hooks/shared/invocation_logger.py`](../../.claude/hooks/shared/invocation_logger.py) — added `_validate_entry()` + module-level `_SCHEMA_CACHE` (lazy-singleton). **Opt-in via env `CLAUDE_LOG_VALIDATE=1`** (default off, zero overhead в hot path). Validation failures → stderr warning, never block/raise.
+- [`scripts/archive_jsonl_to_parquet.py`](../../scripts/archive_jsonl_to_parquet.py) — DuckDB-powered archival CLI. Workflow: pre-clean malformed JSON → temp jsonl → `COPY ... TO '...parquet' (FORMAT PARQUET, COMPRESSION ZSTD)`. Flags: `--rotate` / `--retention DAYS` / `--dry-run`. **Smoke: 48,587 events → 463KB parquet (~63× compression)**.
+- [`scripts/audit_query.py`](../../scripts/audit_query.py) — `--include-archive` flag. Globs `data/archive/*.parquet` + `UNION ALL BY NAME` через `read_parquet(..., union_by_name=true)`. Source JSONL теперь optional (archive-only mode works). Bonus cleanup: `_SCHEMA_CACHE` redeclaration removed per code-verify follow-up.
+
+**Smoke results:**
+- Default (jsonl only): 8,759 events
+- `--include-archive`: 57,346 (8,759 jsonl + 48,587 parquet)
+- Archive-only (jsonl renamed): 48,587
+
+**Code-verify (subagent `afb52ef6a6b3ca063`) → PASS** на первой итерации, без must-fix. 4 cosmetic follow-ups; 1 fixed in-PR (`_SCHEMA_CACHE` redeclaration cleanup).
+
+**§15 P1 status:** **3/4 partial subtasks complete**. **Deferred** (separate PRs requiring external infra):
+- §15.6 P1 item 6 — PyIceberg snapshot append (needs S3/MinIO)
+- §15.6 P1 item 7 — replay-checkpoint.json protocol
+- §15.6 P2 item 10 — RAGAS replay из Langfuse dataset exports
+- §15.6 P2 item 11 — RocksDB-style hard-link snapshots для `.claude/cache/`
+
+**Next priorities (updated 2026-05-25 late evening):**
+1. ⏳ Дождаться CI на PR stack #46 → #47 → #48 → #49 → merge
+2. ⏳ §20 P1 87 `review` category — manual triage по decision tree
+3. ⏳ §15 P1 deferred items (PyIceberg + replay-checkpoint) — после MinIO/S3 setup
+4. ⏳ §15 P2 deferred items (RAGAS replay + hard-link snapshots)
+5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
+
 ### 2026-05-25 (evening) — §15 P0 (4/4) crypto-shredding per-session-key
 
 **Outcome:** **§15 P0 phase теперь полностью complete** (subtask 4/4). Per-session AES-256-GCM encryption of sensitive `error` field в hook-invocations.jsonl. Key delete = permanent ciphertext erasure (GDPR retention mechanism, §15.2 item 7 / §15.5 critical urgency). Закрывает NTFS-recovery regression class — encrypted fields после key shred технически невозможно восстановить.
