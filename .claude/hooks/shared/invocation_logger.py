@@ -197,6 +197,7 @@ class InvocationTimer:
         self.agent_id: str = ""  # Phase 7
         self.category: str = "hook"  # Phase 8
         self.run_id: str = ""  # Phase 8
+        self.causation_id: str = ""  # Phase 9 (§15 P0) — parent event id
         self._start: float = 0.0
 
     def start(self) -> "InvocationTimer":
@@ -218,4 +219,5 @@ class InvocationTimer:
             agent_id=self.agent_id,  # Phase 7
             category=self.category,  # Phase 8
             run_id=self.run_id,  # Phase 8
+            causation_id=self.causation_id,  # Phase 9 (§15 P0)
         )
