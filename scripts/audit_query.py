@@ -205,11 +205,27 @@ def _build_relation(con, include_rotated: bool, include_archive: bool = False) -
 
     # union_by_name=True handles schema drift (Phase 7→8→9 added fields).
     # No ignore_errors — temp file is pre-cleaned.
-    con.execute(
-        f"CREATE OR REPLACE VIEW logs AS "
+    parts = [
         f"SELECT * FROM read_json_auto('{tmp.name}', "
         f"format='newline_delimited', union_by_name=true)"
-    )
+    ]
+
+    if include_archive and ARCHIVE_DIR.exists():
+        parquets = sorted(ARCHIVE_DIR.glob("*.parquet"))
+        if parquets:
+            files = "[" + ", ".join(f"'{p}'" for p in parquets) + "]"
+            # union_by_name=true reconciles schema drift Parquet ↔ JSONL.
+            parts.append(
+                f"SELECT * FROM read_parquet({files}, union_by_name=true)"
+            )
+            print(f"(merging {len(parquets)} archive parquet(s))", file=sys.stderr)
+
+    if len(parts) == 1:
+        union_sql = parts[0]
+    else:
+        union_sql = " UNION ALL BY NAME ".join(f"({p})" for p in parts)
+
+    con.execute(f"CREATE OR REPLACE VIEW logs AS {union_sql}")
     return tmp.name
 
 
