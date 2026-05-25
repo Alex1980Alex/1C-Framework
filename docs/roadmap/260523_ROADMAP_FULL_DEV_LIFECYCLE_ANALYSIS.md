@@ -1578,9 +1578,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | P0b Foundations (sync only) | mypy ratchet re-sync | ✅ **MERGED 2026-05-24** | [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED |
 | P0b Foundations (full) | mypy Phase 3 cleanup + Layer 4 wiki | ⏳ DEFERRED | — |
 | P0c-slim | Dispatcher + 1 worker (ADR-D1) | ✅ **MERGED 2026-05-24** | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED |
-| **P1 worker 1/3** | prework-similar-code (Qdrant) | ✅ **OPEN, awaits merge** | **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** |
-| P1 worker 2/3 | prework-github-bp (cache-first WebSearch) | ⏳ PENDING | — |
-| P1 worker 3/3 | prework-stackoverflow (UPS + reactive Bash) | ⏳ PENDING | — |
+| P1 worker 1/3 | prework-similar-code (Qdrant) | ✅ **MERGED 2026-05-25** | [#12](https://github.com/Alex1980Alex/1C-Framework/pull/12) MERGED |
+| **P1 worker 2/3** | prework-github-bp (cache-first GitHub) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
+| **P1 worker 3/3** | prework-stackoverflow (UPS cache-first; PostToolUse reactive deferred) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
+| **§20 P0** | CodeQL bare-except (5 alerts: 4 fixed + 1 dismissed) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
 
@@ -1588,7 +1589,7 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | PR | Branch | Status |
 |---|---|---|
-| **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** | feat/prework-similar-code | **OPEN — P1 worker 1/3, awaits CI green** |
+| **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** | feat/p1-workers-23-and-bare-except | **OPEN — P1 workers 2/3 + 3/3 + §20 P0, awaits CI green** |
 
 **Recently closed (since prior log entry):**
 - [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) CLOSED (superseded by #10 hotfix)
