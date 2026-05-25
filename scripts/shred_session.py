@@ -49,7 +49,9 @@ def cmd_delete(session_id: str) -> int:
     ok = delete_key(session_id)
     if ok:
         print(f"Deleted key for session: {session_id}")
-        print("Note: all `error_enc` fields encrypted with this key are now permanently unreadable.")
+        print(
+            "Note: all `error_enc` fields encrypted with this key are now permanently unreadable."
+        )
         return 0
     print(f"No key found for session: {session_id}")
     return 1
