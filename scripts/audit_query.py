@@ -139,15 +139,19 @@ def _check_duckdb():
         return False
 
 
-def _build_relation(con, include_rotated: bool):
+def _build_relation(con, include_rotated: bool) -> str:
     """Create `logs` view from one or both JSONL files.
 
     Pre-filters malformed lines via Python (DuckDB `ignore_errors=true` collapses
     schema to single `json` column when corrupted lines present — see git
     history of this file). Pre-cleaned content written to one temp JSONL,
     которое DuckDB читает с полноценным schema inference.
+
+    Returns the temp file path so caller can delete it after query execution.
     """
+    import atexit
     import json
+    import os
     import tempfile
 
     if not JSONL_PATH.exists():
@@ -179,6 +183,16 @@ def _build_relation(con, include_rotated: bool):
     finally:
         tmp.close()
 
+    # Belt-and-suspenders: register cleanup at interpreter shutdown
+    # in case caller forgets explicit unlink (e.g. exception в SQL).
+    def _cleanup(path: str = tmp.name) -> None:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+    atexit.register(_cleanup)
+
     if bad:
         print(f"(skipped {bad} malformed lines)", file=sys.stderr)
 
@@ -189,6 +203,7 @@ def _build_relation(con, include_rotated: bool):
         f"SELECT * FROM read_json_auto('{tmp.name}', "
         f"format='newline_delimited', union_by_name=true)"
     )
+    return tmp.name
 
 
 def _causation_chain(con, correlation_id: str) -> None:
