@@ -1641,3 +1641,17 @@ Alert на production file
 | **P0 — Bare except triage** | 10 alerts `py/catch-base-exception`. Replace `except:` → `except Exception:` или specific. Group commit `fix(bare-except): replace bare except with typed Exception across X files`. | 1-2h | PENDING |
 | **P1 — Empty-except categorization** | 19 alerts `py/empty-except`. Per alert decide: intentional graceful → dismiss; sloppy → add `logger.debug()` или fix. | 1-2h | PENDING |
 | **P2 — Mass dismiss script** | `scripts/triage_codeql_alerts.py` — semi-automated triage: load all open, classify по rule + path heuristics, bulk-dismiss safe categories, output review TODO list for ambiguous. | 2-3h | DEFERRED |
+
+### §20.4 Acceptance criteria
+
+- [ ] **P0:** 0 bare `except:` в production src/ (.claude/hooks/ allowed if intentional + commented)
+- [ ] **P1:** Каждый `except (...): pass` либо имеет comment why intentional, либо has body action
+- [ ] CodeQL re-scan на master shows 0 alerts с severity=error для `py/illegal-raise|py/catch-base-exception`
+- [ ] Memory entry `feedback_codeql_triage_pattern` saved для future sessions
+
+### §20.5 Related
+
+- §17.3 ADR-D3 OTel observability — CodeQL workflow это часть Maximum observability tier
+- §18 Progress Log entry 2026-05-25 (AM) — где CodeQL впервые включён
+- `.github/workflows/codeql.yml` — workflow definition
+- [memory `feedback_ci_maximum_autopilot_works`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_ci_maximum_autopilot_works.md) — context на predecessor pattern
