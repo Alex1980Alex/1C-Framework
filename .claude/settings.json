@@ -536,6 +536,12 @@
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/audit-coverage-check.py",
             "timeout": 5,
             "statusMessage": "audit-coverage"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/ci-catchup-on-start.py",
+            "timeout": 5,
+            "statusMessage": "ci-catchup"
           }
         ]
       }
