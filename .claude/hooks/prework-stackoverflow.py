@@ -44,9 +44,7 @@ except ImportError:
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 TECH_INDEX = PROJECT_ROOT / ".claude" / "skills" / "tech-research" / "cache" / "_index.json"
-ARCH_INDEX = (
-    PROJECT_ROOT / ".claude" / "skills" / "architecture-research" / "cache" / "_index.json"
-)
+ARCH_INDEX = PROJECT_ROOT / ".claude" / "skills" / "architecture-research" / "cache" / "_index.json"
 
 # Signals indicating SO/troubleshooting relevance.
 SO_SIGNALS = {
