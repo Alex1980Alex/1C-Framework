@@ -1489,7 +1489,7 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Outcome:** §14 Pre-Work pipeline теперь **полностью complete** (Option C UPS + PostToolUse halves). §20 P2 закрыт (174 alerts mass-dismissed). §15 P0 foundation landed (3/4 subtasks: CloudEvents + traceparent + DuckDB query).
 
-**Landed (PR [#47](https://github.com/Alex1980Alex/1C-Framework/pull/47) OPEN, depends on #46):**
+**Landed (PR [#47](https://github.com/Alex1980Alex/1C-Framework/pull/47), merged 2026-05-25):**
 - [`.claude/hooks/posttooluse-stackoverflow-on-error.py`](../../.claude/hooks/posttooluse-stackoverflow-on-error.py) — PostToolUse:Bash hook. On non-zero exit + error signature (Traceback / pip ERROR / npm ERR! / fatal:) → emit `[SO-ON-ERROR]` advisory с WebSearch SO suggestion. Pairs с UPS-time `prework-stackoverflow.py` (§14.5 Option C complete).
 - [`.claude/hooks/posttooluse-bash-errors.py`](../../.claude/hooks/posttooluse-bash-errors.py) — bonus hotfix: pre-existing 4-tuple → 3-tuple unpack bug (`Found N errors` pattern) который ломал hook на каждом invocation.
 - [`scripts/triage_codeql_alerts.py`](../../scripts/triage_codeql_alerts.py) — semi-automated CodeQL triage. **Applied: 174/261 dismissed** (vendored=43 + tests=6 + intentional=125). 87 `review` category — manual triage в отдельном PR.
@@ -1502,9 +1502,25 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Code-verify findings (Ralph Wiggum iter 1, subagent `a4396858021c471fc`):** subagent выявил 2 must-fix bugs в SO-on-error hook (dict-shape `tool_response` ломал ^-anchored regexes; `_bash_exit_failed` fall-through на `exit_code=0`). Оба fix'нуты, post-fix 7/7 smoke PASS.
 
+### 2026-05-25 (PM) — P1 workers 2/3 + 3/3 + §20 P0 bare-except batch
+
+**Outcome:** §14 Pre-Work pipeline теперь имеет **все 4 prework worker'а** (ARCH + CODE + GH + SO) запущенных параллельно через dispatcher (ADR-D1). §20 P0 bare-except triage closed.
+
+**Landed (PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46), merged 2026-05-25):**
+- [`.claude/hooks/prework-github-bp.py`](../../.claude/hooks/prework-github-bp.py) — cache-first GitHub best-practices (§14.4 Option B). Filters `architecture-research/cache/` by `github_repos_count > 0` + freshness (≤365d) + rapidfuzz score ≥60. Timeout 4s.
+- [`.claude/hooks/prework-stackoverflow.py`](../../.claude/hooks/prework-stackoverflow.py) — cache-first SO/error-context (§14.5 Option C, UPS half). Merges `tech-research` (dict schema) + `architecture-research` (list schema) caches, SO_SIGNALS keyword filter + freshness (≤540d). Timeout 1s.
+- [`.claude/hooks/shared/prework_dispatcher.py`](../../.claude/hooks/shared/prework_dispatcher.py) WORKERS registry — added GH (4s) + SO (1s) entries. End-to-end smoke: 4 sections в unified systemMessage, SO список truncated по `MAX_TOTAL_CHARS=2000` cap per ADR-D2.
+- §20 P0 — 4 BSL files: `src/bsl/mcp_server/main.py` (locale.Error specific), `src/bsl/mcp_server/http_server.py` + `src/bsl/finetuning/scripts/index_to_chroma.py` (Exception + noqa BLE001 для vendor errors). Alert #1358 (`real_bsl_client.py:274`) DISMISSED via `gh api` как intentional thread bootstrap pattern.
+
+**§14 Pre-Work pipeline status:** ALL 4 P1 workers live (architecture + similar-code + github-bp + stackoverflow). Reactive PostToolUse:Bash для SO errors — оставлен на отдельную итерацию (§14.5 Option C, PostToolUse half).
+
+**Smoke verification:**
+
+`how to set up GitHub Actions CI/CD for Python project with claude bot review` → dispatcher emits unified systemMessage с секциями ARCH (3 hits) + CODE (3 hits via Qdrant) + GH (3 hits top score 1.0 `github-pr-automation-2026.md`) + SO (truncated at cap).
+
 **Next priorities (updated 2026-05-25 late PM):**
-1. ⏳ Дождаться CI на PR #46 + #47 → merge
-2. ⏳ §15 P0 subtask 4 — crypto-shredding per-session-key
+1. ⏳ Дождаться CI на PR #48 → merge
+2. ⏳ §15 P0 subtask 4 — crypto-shredding per-session-key (PR #48)
 3. ⏳ §20 P1 87 `review` category — manual triage по decision tree (real fixes vs dismiss)
 4. ⏳ §15 P1 — nightly parquet `COPY TO` + PyIceberg snapshot + JSON Schema per event_type
 5. ⏳ DEFERRED — Phase 3 mypy cleanup (265 errors)
@@ -1579,9 +1595,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | P0b Foundations (sync only) | mypy ratchet re-sync | ✅ **MERGED 2026-05-24** | [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED |
 | P0b Foundations (full) | mypy Phase 3 cleanup + Layer 4 wiki | ⏳ DEFERRED | — |
 | P0c-slim | Dispatcher + 1 worker (ADR-D1) | ✅ **MERGED 2026-05-24** | [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED |
-| **P1 worker 1/3** | prework-similar-code (Qdrant) | ✅ **OPEN, awaits merge** | **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** |
-| P1 worker 2/3 | prework-github-bp (cache-first WebSearch) | ⏳ PENDING | — |
-| P1 worker 3/3 | prework-stackoverflow (UPS + reactive Bash) | ⏳ PENDING | — |
+| P1 worker 1/3 | prework-similar-code (Qdrant) | ✅ **MERGED 2026-05-25** | [#12](https://github.com/Alex1980Alex/1C-Framework/pull/12) MERGED |
+| **P1 worker 2/3** | prework-github-bp (cache-first GitHub) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
+| **P1 worker 3/3** | prework-stackoverflow (UPS cache-first; PostToolUse reactive deferred) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
+| **§20 P0** | CodeQL bare-except (5 alerts: 4 fixed + 1 dismissed) | ✅ **OPEN, awaits merge** | **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** |
 | P2 | Process Caching P0 | ⏳ PENDING | — |
 | P3 | Cold-tier + observability migration | ⏳ DEFERRED | — |
 
@@ -1589,12 +1606,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | PR | Branch | Status |
 |---|---|---|
-| **[#12](https://github.com/Alex1980Alex/1C-Framework/pull/12)** | feat/prework-similar-code | **OPEN — P1 worker 1/3, awaits CI green** |
+| **[#46](https://github.com/Alex1980Alex/1C-Framework/pull/46)** | feat/p1-workers-23-and-bare-except | **OPEN — P1 workers 2/3 + 3/3 + §20 P0, awaits CI green** |
 
 **Recently closed (since prior log entry):**
 - [#8](https://github.com/Alex1980Alex/1C-Framework/pull/8) CLOSED (superseded by #10 hotfix)
 - [#9](https://github.com/Alex1980Alex/1C-Framework/pull/9) MERGED 2026-05-24T04:50Z
 - [#10](https://github.com/Alex1980Alex/1C-Framework/pull/10) MERGED 2026-05-24T04:09Z
+- [#12](https://github.com/Alex1980Alex/1C-Framework/pull/12) MERGED (P1 worker 1/3 prework-similar-code, landed на master до этой сессии)
 
 **Cache artifacts saved (6 new, all 2026-05-23):** roadmap-260523-3-decisions, rag-token-budget-adaptive-injection, process-caching-observability-100-percent, lifecycle-hooks-defense-depth-saga, memory-delegation-routing, pr-automation-failure-modes-observability.
 
