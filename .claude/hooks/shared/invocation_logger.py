@@ -171,7 +171,7 @@ def log_invocation(
             "elapsed_ms": elapsed_ms,
             "outcome": outcome,
             "session": session_id or "",
-            "error": error,
+            "error": error_value,  # §15 P0: may be `enc::<base64>` envelope when crypto active
             "agent_id": agent_id,  # Phase 7
             "category": category,  # Phase 8
             "run_id": run_id,  # Phase 8
