@@ -171,6 +171,7 @@ SKIP_PATTERNS = [
     "dockerfile",
     "docker-compose",
     ".log",
+    "logs/",
     # Git infrastructure (submodule/attributes config — not product code)
     # (.gitignore already listed above)
     ".gitmodules",
