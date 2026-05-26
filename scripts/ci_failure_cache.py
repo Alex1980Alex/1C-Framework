@@ -83,9 +83,11 @@ def _read_jsonl() -> list[dict]:
             if not line:
                 continue
             try:
-                out.append(json.loads(line))
+                parsed = json.loads(line)
             except json.JSONDecodeError:
-                pass
+                continue
+            if isinstance(parsed, dict):
+                out.append(parsed)
     return out
 
 
@@ -431,7 +433,14 @@ def search_text(query: str) -> list[dict]:
     ][-10:]
 
 
+VALID_EVENT_TYPES = {"notification", "pr-review", "workflow-event", "other"}
+
+
 def log_event(event_type: str, key: str, content: str) -> dict:
+    if event_type not in VALID_EVENT_TYPES:
+        raise ValueError(
+            f"invalid event_type {event_type!r}; expected one of {sorted(VALID_EVENT_TYPES)}"
+        )
     error_hash = _hash(content)
     entry = {
         "ts": _now_iso(),
@@ -491,7 +500,11 @@ def _dispatch(args) -> int:
         if not (args.key and args.content):
             print("error: --log-event requires --key and --content", file=sys.stderr)
             return 2
-        result = log_event(args.log_event_type, args.key, args.content)
+        try:
+            result = log_event(args.log_event_type, args.key, args.content)
+        except ValueError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 2
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
     if not (args.pr or args.sha or args.run_id):

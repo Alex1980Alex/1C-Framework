@@ -250,6 +250,11 @@
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/bulk-action-guard.py",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pre-merge-review-check.py",
+            "timeout": 6
           }
         ]
       },
