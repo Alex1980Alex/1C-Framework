@@ -66,8 +66,13 @@ def _all_first_party_modules() -> list[str]:
         except ImportError:  # pragma: no cover - root package must import
             continue
         # ``onerror`` keeps a sub-package that fails to import (e.g. an uninstalled
-        # optional dependency in a reduced CI matrix) from aborting *collection* —
-        # the per-module test below still reports it via skip/fail.
+        # optional dependency in a reduced CI matrix) from aborting *collection*.
+        # Such a sub-package is simply dropped from discovery — walk cannot recurse
+        # into a package it cannot import. ``onerror`` only receives the *name*, not
+        # the cause, so we cannot reliably tell a missing optional dep from a real
+        # first-party error here; we tolerate the drop rather than risk false
+        # failures in reduced-dependency CI. A *total* discovery collapse (e.g. a
+        # typo'd prefix) is still caught loudly by ``test_discovery_is_non_empty``.
         for info in pkgutil.walk_packages(
             pkg.__path__, prefix=f"{prefix}.", onerror=lambda _name: None
         ):
