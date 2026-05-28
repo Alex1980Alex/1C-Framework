@@ -57,7 +57,7 @@ class ImageProcessor:
         self._enable_description = enable_description
         self._enable_embedding = enable_embedding
 
-    def process_pdf(
+    async def process_pdf(
         self,
         pdf_path: str | Path,
         document_id: str = "",
