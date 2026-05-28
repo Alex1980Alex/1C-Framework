@@ -119,7 +119,7 @@ class ContextGenerator:
         # Use context-specific model (fast/cheap) if set, else fall back to agent model
         model = self._ctx.model or self._settings.model
 
-        llm_kwargs: dict = {
+        llm_kwargs: dict[str, Any] = {
             "model": model,
             "temperature": 0.0,
             "max_tokens": self._ctx.max_context_tokens,
