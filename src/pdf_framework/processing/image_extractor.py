@@ -404,7 +404,7 @@ class ImageExtractor:
             model=self._model,
             max_tokens=2048,
             system=self._SYSTEM_PROMPT,
-            messages=[message],
+            messages=[message],  # type: ignore[list-item]  # hand-built MessageParam dict
         )
 
         # Handle response.content being list[ContentBlock]
