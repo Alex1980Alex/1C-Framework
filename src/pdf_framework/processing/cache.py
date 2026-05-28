@@ -182,7 +182,7 @@ class DocumentProcessingCache:
         logger.info(f"[DOC_CACHE] Cleared {count} cached documents")
         return count
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, int]:
         """Get cache statistics."""
         return self._stats.copy()
 
