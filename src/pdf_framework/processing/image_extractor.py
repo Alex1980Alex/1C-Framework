@@ -164,7 +164,7 @@ class ImageExtractor:
 
     async def _extract_from_page(
         self,
-        page,
+        page: Any,
         page_number: int,
     ) -> list[ImageDescription]:
         """Extract images from a single PyMuPDF page."""
