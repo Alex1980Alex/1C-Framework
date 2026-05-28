@@ -61,7 +61,7 @@ class RulesManager:
         ),
     ]
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any = None):
         self.config = config
         self._rules: dict[str, BSLRule] = {r.key: r for r in self.DEFAULT_RULES}
 
