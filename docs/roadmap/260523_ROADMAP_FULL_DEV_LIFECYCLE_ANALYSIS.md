@@ -1487,6 +1487,16 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-29 — Phase 3 mypy cleanup срез 5: loaders/providers/docling_loader.py 11→0
+
+**Outcome:** пятый срез Phase 3. `docling_loader.py` 11→0 mypy (annotation-only). Baseline **1592→1581** (−11, без каскада). Gate green.
+
+**Fixes:** 3 `no-untyped-def` (lazy-init `_get_converter`/`_select_pdf_backend`/`_create_ocr_options` → `-> Any`, т.к. возвращают объекты untyped Docling) → попутно снялись 3 `no-untyped-call`; 3 `type-arg` (`list[dict]` → `list[dict[str, Any]]`); 2 `var-annotated` (`elements`/`tables: list[dict[str, Any]] = []`).
+
+**Gates:** ruff ✅ · mypy 0 issues ✅ · filter exit 0 ✅ · annotation-only (структурная code-verify). Docs: note в 03.1 Загрузка PDF.
+
+**Phase 3 cumulative (5 срезов):** ragas 33 + link_registry 15 + orchestrator 10 + prometheus 10 + docling 11 = **79 чистых fix**. Baseline 1849→1581.
+
 ### 2026-05-29 — Phase 3 mypy cleanup срез 4: observability/prometheus_metrics.py 10→0
 
 **Outcome:** четвёртый срез Phase 3. `src/pdf_framework/observability/prometheus_metrics.py` 10→0 mypy (annotation-only). Baseline **1602→1592** (−10, без каскада). Gate green.

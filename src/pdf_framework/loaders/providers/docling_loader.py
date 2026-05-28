@@ -31,7 +31,7 @@ class DoclingLoader(BaseLoader):
         self._settings = settings or DoclingSettings()
         self._converter = None  # Lazy init
 
-    def _get_converter(self):
+    def _get_converter(self) -> Any:
         """Lazy-initialize Docling converter (heavy import)."""
         if self._converter is not None:
             return self._converter
@@ -94,7 +94,7 @@ class DoclingLoader(BaseLoader):
         return self._converter
 
     @staticmethod
-    def _select_pdf_backend():
+    def _select_pdf_backend() -> Any:
         """Select PDF backend, falling back to pypdfium2 if docling_parse fails.
 
         docling_parse (C++ backend) crashes on Windows when the venv path
@@ -114,7 +114,7 @@ class DoclingLoader(BaseLoader):
 
             return PyPdfiumDocumentBackend
 
-    def _create_ocr_options(self):
+    def _create_ocr_options(self) -> Any:
         """Create OCR options based on configured engine."""
         engine = self._settings.ocr_engine
         langs = self._settings.ocr_languages
@@ -322,9 +322,9 @@ class DoclingLoader(BaseLoader):
             raw_text=raw_text,
         )
 
-    def _extract_layout_elements(self, doc: Any) -> list[dict]:
+    def _extract_layout_elements(self, doc: Any) -> list[dict[str, Any]]:
         """Convert Docling document structure to framework layout elements."""
-        elements = []
+        elements: list[dict[str, Any]] = []
 
         type_mapping = {
             "title": "title",
@@ -388,9 +388,9 @@ class DoclingLoader(BaseLoader):
 
         return elements
 
-    def _extract_tables_info(self, doc: Any) -> list[dict]:
+    def _extract_tables_info(self, doc: Any) -> list[dict[str, Any]]:
         """Extract structured table information."""
-        tables = []
+        tables: list[dict[str, Any]] = []
 
         if not hasattr(doc, "tables"):
             return tables
@@ -425,7 +425,7 @@ class DoclingLoader(BaseLoader):
         return tables
 
     @staticmethod
-    def _count_elements(elements: list[dict]) -> dict[str, int]:
+    def _count_elements(elements: list[dict[str, Any]]) -> dict[str, int]:
         """Count elements by type."""
         counts: dict[str, int] = {}
         for el in elements:
