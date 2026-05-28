@@ -116,7 +116,7 @@ class ImageProcessor:
 
         return processed
 
-    def process_from_chunks(
+    async def process_from_chunks(
         self,
         image_chunks: list[ImageChunk],
     ) -> list[ProcessedImage]:
