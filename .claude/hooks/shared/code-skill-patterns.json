@@ -240,9 +240,9 @@
         "priority": "medium"
       },
       {
-        "pattern": "pytest\\.fixture|@pytest|conftest\\.py",
-        "label": "Pytest Framework",
-        "domain": "testing",
+        "pattern": "Dockerfile|docker-compose\\.yml|FROM\\s+\\w+:",
+        "label": "Docker Configuration",
+        "domain": "devops",
         "priority": "medium"
       }
     ]
