@@ -158,7 +158,9 @@ def test_name_resolver_guard_behavior() -> None:
     target = "src.pdf_framework.embeddings"
     # Stale symbol (the bug we fixed) must NOT resolve → suite would fail loudly.
     assert not _name_resolves(emb, target, "get_embedding")
-    # Real exported symbol resolves.
+    # Real exported symbol resolves via the ``hasattr`` branch.
     assert _name_resolves(emb, target, "get_embedding_engine")
-    # Real submodule resolves even though it is not an attribute of the package.
-    assert _name_resolves(emb, target, "cache")
+    # Real submodule that is NOT re-exported as a package attribute resolves via
+    # the ``find_spec`` fallback branch (the package-style-import guard).
+    assert not hasattr(emb, "vision")  # precondition: exercises find_spec, not hasattr
+    assert _name_resolves(emb, target, "vision")
