@@ -94,7 +94,7 @@ def cmd_analyze(args: argparse.Namespace) -> None:
         sys.exit(result.returncode)
 
 
-def cmd_rules(args):
+def cmd_rules(args: argparse.Namespace) -> None:
     """Команда списка правил"""
     from .rules_manager import RulesManager
 
@@ -114,7 +114,7 @@ def cmd_rules(args):
         print()
 
 
-def cmd_config(args):
+def cmd_config(args: argparse.Namespace) -> None:
     """Команда конфигурации"""
     from .config_manager import ConfigManager
 
