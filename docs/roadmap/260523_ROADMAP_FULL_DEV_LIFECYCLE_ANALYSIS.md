@@ -1487,6 +1487,19 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-29 — Phase 3 mypy cleanup срез 4: observability/prometheus_metrics.py 10→0
+
+**Outcome:** четвёртый срез Phase 3. `src/pdf_framework/observability/prometheus_metrics.py` 10→0 mypy (annotation-only). Baseline **1602→1592** (−10, без каскада). Gate green.
+
+**Fixes** (decorator-фабрики `track_query`/`track_llm_call`): 8 `no-untyped-def` + 2 `type-arg` (Callable без параметров):
+- фабрики → `-> Callable[[Callable[..., Any]], Callable[..., Any]]`
+- вложенные `decorator(func: Callable[..., Any]) -> Callable[..., Any]`
+- `async_wrapper`/`sync_wrapper` → `(*args: Any, **kwargs: Any) -> Any`
+
+**Gates:** ruff ✅ · mypy 0 issues ✅ · filter exit 0 ✅ · annotation-only (структурная code-verify: только аннотации добавлены, рантайм не меняется). Docs: note в 09.4.2 Prometheus.
+
+**Phase 3 cumulative (4 среза):** ragas 33 + link_registry 15 + orchestrator 10 + prometheus 10 = **68 чистых fix**. Baseline 1849→1592.
+
 ### 2026-05-28 (поздний вечер) — Phase 3 mypy cleanup срез 3: agents/multi/orchestrator.py 10→0
 
 **Outcome:** третий incremental срез Phase 3. `src/pdf_framework/agents/multi/orchestrator.py` 10→0 mypy. Baseline **1612→1602** (−10, без каскада). Gate green.

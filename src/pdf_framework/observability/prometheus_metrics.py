@@ -15,6 +15,7 @@ import logging
 import time
 from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
@@ -136,7 +137,7 @@ queue_depth = Gauge(
 # =============================================================================
 
 
-def track_query(strategy: str = "unknown"):
+def track_query(strategy: str = "unknown") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Decorator to track query metrics.
 
@@ -149,9 +150,9 @@ def track_query(strategy: str = "unknown"):
             ...
     """
 
-    def decorator(func: Callable):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             start_time = time.time()
             status = "success"
 
@@ -171,7 +172,7 @@ def track_query(strategy: str = "unknown"):
                 query_total.labels(strategy=strategy, status=status).inc()
 
         @wraps(func)
-        def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             start_time = time.time()
             status = "success"
 
@@ -201,7 +202,7 @@ def track_query(strategy: str = "unknown"):
     return decorator
 
 
-def track_llm_call(model: str = "unknown"):
+def track_llm_call(model: str = "unknown") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Decorator to track LLM API metrics.
 
@@ -214,9 +215,9 @@ def track_llm_call(model: str = "unknown"):
             ...
     """
 
-    def decorator(func: Callable):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             status = "success"
 
             try:
@@ -246,7 +247,7 @@ def track_llm_call(model: str = "unknown"):
                 llm_request_total.labels(model=model, status=status).inc()
 
         @wraps(func)
-        def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             status = "success"
 
             try:
