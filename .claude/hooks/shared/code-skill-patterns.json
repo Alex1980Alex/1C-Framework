@@ -100,6 +100,12 @@
         "skill": "framework-api",
         "label": "FastAPI REST API",
         "domain": "framework"
+      },
+      {
+        "pattern": "pytest\\.fixture|@pytest|conftest\\.py",
+        "skill": "evaluation-benchmark",
+        "label": "Pytest Framework",
+        "domain": "testing"
       }
     ]
   },
