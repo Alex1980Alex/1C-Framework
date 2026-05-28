@@ -678,7 +678,7 @@ class DocumentVersionManager:
         self,
         document_id: str,
         version_id: str | None = None,
-    ) -> tuple[list[dict], list[list[float]] | None, dict]:
+    ) -> tuple[list[dict[str, Any]], list[list[float]] | None, dict[str, Any]]:
         """
         Rollback document to a previous version.
 
