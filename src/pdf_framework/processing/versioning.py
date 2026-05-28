@@ -481,7 +481,7 @@ class DocumentVersionManager:
         if row is None:
             return False
 
-        return (now - row[0]) < self._STALE_TIMEOUT
+        return bool((now - row[0]) < self._STALE_TIMEOUT)
 
     async def create_version(
         self,
