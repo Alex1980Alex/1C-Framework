@@ -651,7 +651,7 @@ class DocumentVersionManager:
                 )
             return None
 
-    async def get_version_chunks(self, version_id: str) -> dict | None:
+    async def get_version_chunks(self, version_id: str) -> dict[str, Any] | None:
         """
         Get cached chunks for a version.
 
@@ -668,7 +668,8 @@ class DocumentVersionManager:
 
         try:
             with open(cache_file) as f:
-                return json.load(f)
+                data: dict[str, Any] = json.load(f)
+                return data
         except Exception as e:
             logger.error(f"[VERSION] Error loading version chunks: {e}")
             return None
