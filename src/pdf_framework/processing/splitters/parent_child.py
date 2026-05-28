@@ -192,7 +192,9 @@ class ParentChildSplitter:
 
         return clean_children
 
-    def get_stats(self, parents: list[DocumentChunk], children: list[DocumentChunk]) -> dict:
+    def get_stats(
+        self, parents: list[DocumentChunk], children: list[DocumentChunk]
+    ) -> dict[str, Any]:
         """
         Get statistics about the split results.
 
