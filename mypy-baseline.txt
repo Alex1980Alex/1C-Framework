@@ -152,14 +152,6 @@ src/memory/infrastructure/metrics.py:0: error: "bool" is invalid as return type 
 src/memory/infrastructure/metrics.py:0: note: Use "typing.Literal[False]" as the return type or change it to "None"
 src/memory/infrastructure/metrics.py:0: note: If return type of "__exit__" implies that it may return True, the context manager may swallow exceptions
 src/memory/infrastructure/metrics.py:0: error: Call to untyped function "MetricsCollector" in typed context  [no-untyped-call]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/infrastructure/conflict_resolver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/ai_memory/adapters/base.py:0: error: Returning Any from function declared to return "float"  [no-any-return]
 src/memory/ai_memory/adapters/base.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 src/memory/ai_memory/adapters/base.py:0: error: Returning Any from function declared to return "list[str]"  [no-any-return]
@@ -270,18 +262,6 @@ src/memory/orchestrator/unified_search.py:0: error: Function is missing a return
 src/memory/orchestrator/unified_search.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/infrastructure/retry.py:0: error: Missing type arguments for generic type "Callable"  [type-arg]
 src/memory/infrastructure/retry.py:0: error: Missing type arguments for generic type "Callable"  [type-arg]
-src/memory/infrastructure/circuit_breaker.py:0: error: Call to untyped function "record_success" in typed context  [no-untyped-call]
-src/memory/infrastructure/circuit_breaker.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/infrastructure/circuit_breaker.py:0: note: Use "-> None" if function does not return a value
-src/memory/infrastructure/circuit_breaker.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/infrastructure/circuit_breaker.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/infrastructure/circuit_breaker.py:0: note: Use "-> None" if function does not return a value
-src/memory/infrastructure/circuit_breaker.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/infrastructure/circuit_breaker.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/infrastructure/circuit_breaker.py:0: note: Use "-> None" if function does not return a value
-src/memory/infrastructure/circuit_breaker.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/infrastructure/circuit_breaker.py:0: note: Use "-> None" if function does not return a value
-src/memory/infrastructure/circuit_breaker.py:0: error: Call to untyped function "reset" in typed context  [no-untyped-call]
 src/memory/ai_memory/services/versioning_service.py:0: error: Need type annotation for "versions" (hint: "versions: list[<type>] = ...")  [var-annotated]
 src/memory/ai_memory/services/ttl_service.py:0: error: Missing type arguments for generic type "Task"  [type-arg]
 src/memory/ai_memory/services/ttl_service.py:0: error: Function is missing a return type annotation  [no-untyped-def]
@@ -1124,13 +1104,11 @@ src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a t
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: note: Use "-> None" if function does not return a value
-src/memory/orchestrator/memory_orchestrator.py:0: error: Call to untyped function "CircuitBreakerRegistry" in typed context  [no-untyped-call]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: note: Use "-> None" if function does not return a value
 src/memory/orchestrator/memory_orchestrator.py:0: error: Call to untyped function "stop" in typed context  [no-untyped-call]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Item "None" of "LinkRegistry | None" has no attribute "create_link"  [union-attr]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Call to untyped function "start" in typed context  [no-untyped-call]
-src/memory/orchestrator/memory_orchestrator.py:0: error: Call to untyped function "reset" in typed context  [no-untyped-call]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Incompatible types in assignment (expression has type "list[TTLEntry]", variable has type "bool")  [assignment]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Value of type "bool" is not indexable  [index]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]

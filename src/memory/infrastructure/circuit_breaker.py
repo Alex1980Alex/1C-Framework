@@ -169,7 +169,7 @@ class CircuitBreaker:
             self.record_failure(str(e))
             raise
 
-    def record_success(self):
+    def record_success(self) -> None:
         """Record successful execution."""
         self._stats.success_count += 1
         self._stats.consecutive_successes += 1
@@ -186,7 +186,7 @@ class CircuitBreaker:
         elif self._stats.state == CircuitState.CLOSED:
             self._stats.failure_count = 0  # reset on success
 
-    def record_failure(self, error: str = ""):
+    def record_failure(self, error: str = "") -> None:
         """Record failed execution. May transition to OPEN."""
         self._stats.failure_count += 1
         self._stats.consecutive_successes = 0
@@ -208,11 +208,11 @@ class CircuitBreaker:
                     error[:100],
                 )
 
-    def reset(self):
+    def reset(self) -> None:
         """Force reset to CLOSED state."""
         self._transition_to(CircuitState.CLOSED)
 
-    def _transition_to(self, new_state: CircuitState):
+    def _transition_to(self, new_state: CircuitState) -> None:
         """Transition to a new state."""
         old = self._stats.state
         self._stats.state = new_state
@@ -252,7 +252,7 @@ class CircuitBreakerRegistry:
         status = registry.get_all_stats()
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._breakers: dict[str, CircuitBreaker] = {}
 
     def get_or_create(
@@ -269,7 +269,7 @@ class CircuitBreakerRegistry:
     def get_all_stats(self) -> dict[str, dict[str, Any]]:
         return {name: cb.stats for name, cb in self._breakers.items()}
 
-    def reset_all(self):
+    def reset_all(self) -> None:
         for cb in self._breakers.values():
             cb.reset()
 

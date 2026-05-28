@@ -1487,6 +1487,18 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-29 — Phase 3 mypy cleanup срез 6 (batch memory-infra): conflict_resolver + circuit_breaker 16→0
+
+**Plan-driven** (по запросу пользователя сформирован план безопасных срезов). Batch B = два файла `src/memory/infrastructure/` в одном коммите (один домен → один doc-note).
+
+**Fixes:** `conflict_resolver.py` 8 `type-arg` (`current`/`incoming: dict[str, Any]`); `circuit_breaker.py` 6 `no-untyped-def` (`-> None` на mutation-методах) + 2 `no-untyped-call` (сняты аннотацией). Baseline **1581→1563** (−18: 16 прямых + 2 downstream call-site резолюции в caller-файлах — bonus).
+
+**Gates:** ruff ✅ · mypy 0 issues (оба файла) ✅ · filter exit 0 ✅ · `test_p1_infrastructure.py -k Circuit` 13/13 ✅. Annotation-only. Docs: расширена «Type-safety памяти» заметка в 01.2.
+
+**Плановое замечание:** срез A (api/routes: collections/analytics/health) **отложен** — code-skill-enforcer требует `learning-loop` на любой `FastAPI|APIRouter` паттерн (overkill для аннотаций; нет dedicated FastAPI-скилла). Нужен либо отдельный заход через learning-loop, либо правка `code-skill-patterns.json` (FastAPI→framework-api вместо learning-loop). Приоритет переставлен на non-FastAPI файлы.
+
+**Phase 3 cumulative (6 срезов):** 33+15+10+10+11+16 = **95 чистых fix**. Baseline 1849→1563.
+
 ### 2026-05-29 — Phase 3 mypy cleanup срез 5: loaders/providers/docling_loader.py 11→0
 
 **Outcome:** пятый срез Phase 3. `docling_loader.py` 11→0 mypy (annotation-only). Baseline **1592→1581** (−11, без каскада). Gate green.

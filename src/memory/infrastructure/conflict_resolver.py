@@ -206,8 +206,8 @@ class ConflictResolver:
 
     def _resolve_last_write_wins(
         self,
-        current: dict,
-        incoming: dict,
+        current: dict[str, Any],
+        incoming: dict[str, Any],
         current_ts: datetime,
         incoming_ts: datetime,
         entity_id: str,
@@ -222,8 +222,8 @@ class ConflictResolver:
 
     def _resolve_source_priority(
         self,
-        current: dict,
-        incoming: dict,
+        current: dict[str, Any],
+        incoming: dict[str, Any],
         current_src: str,
         incoming_src: str,
         entity_id: str,
@@ -239,8 +239,8 @@ class ConflictResolver:
 
     def _resolve_merge_fields(
         self,
-        current: dict,
-        incoming: dict,
+        current: dict[str, Any],
+        incoming: dict[str, Any],
         current_ts: datetime,
         incoming_ts: datetime,
         current_src: str,
@@ -258,8 +258,8 @@ class ConflictResolver:
 
     def _resolve_manual(
         self,
-        current: dict,
-        incoming: dict,
+        current: dict[str, Any],
+        incoming: dict[str, Any],
         current_ts: datetime,
         incoming_ts: datetime,
         current_src: str,
