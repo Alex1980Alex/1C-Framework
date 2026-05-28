@@ -119,7 +119,7 @@ class PropositionSplitter(TextSplitter):
                 [{"role": "user", "content": PROPOSITION_PROMPT.format(text=text)}]
             )
 
-            content = response.content.strip()
+            content = str(response.content).strip()
 
             # Parse numbered list
             propositions = self._parse_numbered_list(content)
