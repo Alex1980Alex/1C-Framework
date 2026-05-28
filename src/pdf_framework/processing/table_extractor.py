@@ -264,7 +264,7 @@ class TableExtractor:
         self,
         tables: list[TableData],
         document_id: str = "unknown",
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """
         Convert tables to chunks ready for embedding.
 
