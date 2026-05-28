@@ -4,6 +4,7 @@ import bisect
 import hashlib
 import logging
 import time
+from typing import Any
 
 from src.pdf_framework.config import ParentChildSettings, PDFSettings
 from src.pdf_framework.processing.metadata_enricher import MetadataEnricher
