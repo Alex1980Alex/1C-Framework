@@ -17,6 +17,10 @@ __pycache__/
 /dist/
 /build/
 .mypy_cache/
+# Scratch mypy/analysis output dumps at repo root (e.g. .mypy4.txt) — never commit
+/.mypy[0-9]*.txt
+/.mypy_full_out.txt
+/.baseline_head.txt
 .ruff_cache/
 .pytest_cache/
 .coverage
