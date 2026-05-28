@@ -295,9 +295,10 @@ def create_image_processor(
     )
 
     # Create embedder
-    from src.pdf_framework.embeddings import get_embedding
+    from src.pdf_framework.config import EmbeddingSettings
+    from src.pdf_framework.embeddings import get_embedding_engine
 
-    embedder = get_embedding(model=embedding_model)
+    embedder = get_embedding_engine(EmbeddingSettings(model=embedding_model))
 
     # Create extractor
     extractor = ImageExtractor(output_dir=Path(output_dir) if output_dir else None)
