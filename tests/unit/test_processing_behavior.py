@@ -187,7 +187,7 @@ def test_proposition_splitter_survives_list_content() -> None:
     splitter = PropositionSplitter(llm=llm)
     # Long text → goes through _extract_propositions → str(list).strip(); must not raise.
     result = splitter.split_text("A long enough sentence to exceed the fifty character threshold here.")
-    assert isinstance(result, list)
+    assert result and isinstance(result[0], str)
 
 
 def test_proposition_split_documents() -> None:
