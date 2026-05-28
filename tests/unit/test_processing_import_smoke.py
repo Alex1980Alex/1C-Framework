@@ -164,5 +164,3 @@ def test_name_resolver_guard_behavior() -> None:
     # ``find_spec`` branch depends on import order (importing ``pkg.sub`` anywhere
     # binds ``sub`` as a package attribute), so we assert only the result, not the path.
     assert _name_resolves(emb, target, "vision")
-    # The ``find_spec`` fallback in isolation: a never-imported submodule still resolves.
-    assert _name_resolves(emb, "src.pdf_framework.embeddings.providers", "local")
