@@ -1487,6 +1487,19 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-28 (поздний вечер) — Phase 3 mypy cleanup срез 3: agents/multi/orchestrator.py 10→0
+
+**Outcome:** третий incremental срез Phase 3. `src/pdf_framework/agents/multi/orchestrator.py` 10→0 mypy. Baseline **1612→1602** (−10, без каскада). Gate green.
+
+**Выбор файла:** по урокам из срезов 1-2 фильтровал кандидаты на «0 cascade-кодов (`arg-type`/`attr-defined`/`union-attr`/`untyped-decorator`), не UI (Gradio handlers messy), не MCP-server (untyped-decorator)». `orchestrator.py` — 8 `type-arg` + 2 `no-untyped-def`, type-arg-dominated (самый безопасный класс). Fixes:
+- 5 LangGraph node-функций `(state) -> dict` → `-> dict[str, Any]`
+- 3 дженерик-аннотации `dict`/`list[dict]` → `dict[str, Any]` / `list[dict[str, Any]]`
+- 2 `no-untyped-def`: `create_multi_agent` (возвращает `graph.compile()`) и `_search` (response-or-None) → `-> Any` (precise LangGraph/search типы добавили бы import-риск без выгоды)
+
+**Gates:** ruff ✅ · mypy 0 issues ✅ · gate filter exit 0 ✅ · annotation-only (нет behavior/API change; нет dedicated теста на этот модуль — `test_memory_orchestrator.py` про *другой* orchestrator в `src/memory/`). Docs: type-safety note в 05.5 Специализированные агенты.
+
+**Phase 3 cumulative (3 среза):** ragas 33 + link_registry 15 + orchestrator 10 = **58 чистых fix**. Baseline 1849→1602.
+
 ### 2026-05-28 (вечер) — Phase 3 mypy cleanup срез 2: link_registry.py 15→0
 
 **Outcome:** второй incremental срез Phase 3. `src/memory/orchestrator/link_registry.py` приведён к 0 mypy-ошибок (было 15). Baseline ratcheted **1627→1612** (ровно −15, **без каскада**).

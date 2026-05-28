@@ -12,6 +12,7 @@ Uses LangGraph for handoff coordination.
 import asyncio
 import json
 import logging
+from typing import Any
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -38,7 +39,7 @@ def create_multi_agent(
     settings: AgentSettings | None = None,
     api_key: str = "",
     fast_model: str = "claude-sonnet-4-5-20250929",
-):
+) -> Any:
     """Create the Multi-Agent Orchestrator (Phase 39).
 
     Args:
@@ -52,7 +53,7 @@ def create_multi_agent(
     """
     settings = settings or AgentSettings()
 
-    llm_kwargs: dict = dict(
+    llm_kwargs: dict[str, Any] = dict(
         model=settings.model,
         temperature=0.1,
         max_tokens=settings.max_tokens,
@@ -62,7 +63,7 @@ def create_multi_agent(
         llm_kwargs["base_url"] = settings.base_url
     llm = ChatAnthropic(**llm_kwargs)
 
-    fast_kwargs: dict = dict(
+    fast_kwargs: dict[str, Any] = dict(
         model=fast_model,
         temperature=0.0,
         max_tokens=2048,
@@ -75,7 +76,7 @@ def create_multi_agent(
     parser = StrOutputParser()
 
     # ========== Agent 1: Retrieval Agent ==========
-    async def retrieval_agent(state: OrchestratorState) -> dict:
+    async def retrieval_agent(state: OrchestratorState) -> dict[str, Any]:
         """Find relevant chunks using multiple strategies."""
         question = state["question"]
         messages_log = list(state.get("messages", []))
@@ -87,7 +88,7 @@ def create_multi_agent(
         if verif.get("issues"):
             strategies.append("section_first")
 
-        async def _search(strategy: str):
+        async def _search(strategy: str) -> Any:
             try:
                 if strategy == "section_first":
                     return await search_manager.search_section_first(
@@ -108,7 +109,7 @@ def create_multi_agent(
 
         # Deduplicate
         seen: set[str] = set()
-        chunks: list[dict] = []
+        chunks: list[dict[str, Any]] = []
         for resp in results:
             if resp is None:
                 continue
@@ -154,7 +155,7 @@ def create_multi_agent(
         }
 
     # ========== Agent 2: Analysis Agent ==========
-    async def analysis_agent(state: OrchestratorState) -> dict:
+    async def analysis_agent(state: OrchestratorState) -> dict[str, Any]:
         """Analyze retrieved chunks: compare, find patterns, draw conclusions."""
         question = state["question"]
         retrieval = state.get("retrieval", {})
@@ -246,7 +247,7 @@ def create_multi_agent(
         }
 
     # ========== Agent 3: Writing Agent ==========
-    async def writing_agent(state: OrchestratorState) -> dict:
+    async def writing_agent(state: OrchestratorState) -> dict[str, Any]:
         """Synthesize analysis into a structured report."""
         question = state["question"]
         retrieval = state.get("retrieval", {})
@@ -349,7 +350,7 @@ def create_multi_agent(
         }
 
     # ========== Agent 4: Verification Agent ==========
-    async def verification_agent(state: OrchestratorState) -> dict:
+    async def verification_agent(state: OrchestratorState) -> dict[str, Any]:
         """Fact-check and validate the draft report."""
         question = state["question"]
         draft = state.get("draft", {})
@@ -437,7 +438,7 @@ def create_multi_agent(
         }
 
     # ========== Finalize ==========
-    async def finalize(state: OrchestratorState) -> dict:
+    async def finalize(state: OrchestratorState) -> dict[str, Any]:
         """Produce the final output."""
         draft = state.get("draft", {})
         verification = state.get("verification", {})
