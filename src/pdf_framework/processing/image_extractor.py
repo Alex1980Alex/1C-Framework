@@ -363,6 +363,8 @@ class ImageExtractor:
             feedback: Ralph Wiggum correction — reason why previous attempt
                       was rejected. Appended to prompt so model can self-correct.
         """
+        if self._client is None:
+            raise RuntimeError("Anthropic client not configured (no api_key provided)")
         prompt_text = (
             "Подробно опиши это изображение из технической документации 1С:Предприятие.\n\n"
             "Правила:\n"
