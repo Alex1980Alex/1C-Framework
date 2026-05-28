@@ -1714,7 +1714,7 @@ Alert на production file
 | Phase | Items | Effort | Status |
 |---|---|---|---|
 | **P0 — Bare except triage** | 10 alerts `py/catch-base-exception`. Replace `except:` → `except Exception:` или specific. Group commit `fix(bare-except): replace bare except with typed Exception across X files`. | 1-2h | ✅ **DONE 2026-05-25** — 5 alerts addressed (4 fixed + 1 dismissed) в BSL files via PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46) |
-| **P1 — Empty-except categorization** | 19 alerts `py/empty-except`. Per alert decide: intentional graceful → dismiss; sloppy → add `logger.debug()` или fix. | 1-2h | 🟡 PARTIAL — 87 `review` category alerts остаются на manual triage по decision tree (subset of P1+P2) |
+| **P1 — Empty-except categorization** | 19 alerts `py/empty-except`. Per alert decide: intentional graceful → dismiss; sloppy → add `logger.debug()` или fix. | 1-2h | ✅ **DONE 2026-05-28** — re-scan surfaced **98 open** `py/empty-except`; all 98 manually triaged (7 auto-`intentional` + 91 `review`), classified into 9 fail-soft categories, **0 real-fix / 98 dismiss** "won't fix" с per-category reason. `py/empty-except` + `py/catch-base-exception` = **0 open**. |
 | **P2 — Mass dismiss script** | `scripts/triage_codeql_alerts.py` — semi-automated triage: load all open, classify по rule + path heuristics, bulk-dismiss safe categories, output review TODO list for ambiguous. | 2-3h | ✅ **DONE 2026-05-25** — script landed via PR [#47](https://github.com/Alex1980Alex/1C-Framework/pull/47); **applied 174/261 dismissed** (vendored=43 + tests=6 + intentional=125); 87 review остаются manual |
 
 ### §20.4 Acceptance criteria
