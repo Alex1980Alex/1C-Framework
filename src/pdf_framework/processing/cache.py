@@ -23,9 +23,9 @@ class CachedDocument(BaseModel):
 
     file_hash: str
     file_path: str
-    chunks: list[dict]
+    chunks: list[dict[str, Any]]
     embeddings: list[list[float]]
-    metadata: dict
+    metadata: dict[str, Any]
     cached_at: str
     file_size_bytes: int
 
