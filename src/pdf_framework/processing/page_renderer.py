@@ -287,11 +287,11 @@ class PageRenderer:
         saved_paths = []
 
         for page_num, img in rendered:
-            ext = self._format.lower()
+            ext = self._config.format.lower()
             filename = f"{prefix}_{page_num:04d}.{ext}"
             filepath = output_dir / filename
 
-            img.save(filepath, format=self._format)
+            img.save(filepath, format=self._config.format)
             saved_paths.append(filepath)
 
         logger.info(f"[PAGE_RENDERER] Saved {len(saved_paths)} pages to {output_dir}")
