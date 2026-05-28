@@ -271,7 +271,7 @@ class StructureAwareSplitter:
         page_number: int,
         doc_id: str,
         section_title: str | None = None,
-        bbox: tuple | None = None,
+        bbox: tuple[float, ...] | None = None,
     ) -> DocumentChunk:
         """Create a standard document chunk."""
         content_hash = int(hashlib.sha256(text.encode("utf-8")).hexdigest()[:8], 16) % 10000
