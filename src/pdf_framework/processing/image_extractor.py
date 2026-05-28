@@ -39,7 +39,7 @@ class ImageDescription(BaseModel):
         """Convert to markdown chunk for embedding."""
         return f"[Изображение на странице {self.page_number}]\n{self.description}"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary (excluding binary data)."""
         return {
             "description": self.description,
