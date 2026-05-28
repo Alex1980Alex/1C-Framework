@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "description": "Skill-First Enforcement: Pattern to Skill mappings for PreToolUse and PostToolUse hooks",
-  "updated_at": "2026-02-23",
+  "updated_at": "2026-05-29",
   "patterns": {
     "description": "Content patterns (regex) that map to specific skills. Checked in PRE mode Level A.",
     "mappings": [
