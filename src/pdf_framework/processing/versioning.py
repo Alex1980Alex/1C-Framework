@@ -486,9 +486,9 @@ class DocumentVersionManager:
     async def create_version(
         self,
         document_id: str,
-        chunks: list[dict],
+        chunks: list[dict[str, Any]],
         embeddings: list[list[float]] | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> VersionInfo:
         """
         Create a new document version.
