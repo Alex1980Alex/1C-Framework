@@ -63,6 +63,19 @@ def _is_missing_thirdparty(exc: ModuleNotFoundError) -> bool:
     return not name.startswith("src")
 
 
+def _name_resolves(target_mod: object, target: str, name: str) -> bool:
+    """True if ``name`` exists in ``target`` — either as an attribute/symbol or as
+    an (importable) submodule. ``from pkg import submod`` is valid Python even when
+    ``submod`` has not been imported as an attribute yet, so attribute-only checks
+    would false-positive on package-style imports."""
+    if hasattr(target_mod, name):
+        return True
+    try:
+        return importlib.util.find_spec(f"{target}.{name}") is not None
+    except ModuleNotFoundError:
+        return False
+
+
 @pytest.mark.parametrize("module_name", _MODULES)
 def test_module_imports_cleanly(module_name: str) -> None:
     """Every processing module must import at runtime.
