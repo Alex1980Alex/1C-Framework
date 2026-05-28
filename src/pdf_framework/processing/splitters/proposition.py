@@ -183,7 +183,9 @@ Extract facts:"""
 
         return propositions
 
-    def split_documents(self, documents: list[Any]) -> list[DocumentChunk]:
+    def split_documents(  # type: ignore[override]  # domain DocumentChunk in/out, not langchain Document
+        self, documents: list[Any]
+    ) -> list[DocumentChunk]:
         """Split documents into proposition chunks.
 
         Args:
