@@ -211,7 +211,7 @@ def _hash_file(file_path: Path) -> str:
 _document_cache: DocumentProcessingCache | None = None
 
 
-def get_document_cache(**kwargs) -> DocumentProcessingCache:
+def get_document_cache(**kwargs: Any) -> DocumentProcessingCache:
     """Get or create global document cache instance."""
     global _document_cache
     if _document_cache is None:
