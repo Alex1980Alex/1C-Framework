@@ -70,6 +70,7 @@ _EXEMPT_PREFIXES = [
     ".claude/",
     "docs/",
     "data/",
+    "tests/",  # test code is precision work (exact signatures/fixtures), not delegatable generation
 ]
 
 # Paths within data/ that ARE enforced for large .md files (not exempt)
