@@ -149,7 +149,7 @@ class PageRenderer:
         # Convert to PIL Image
         img = Image.frombytes(
             "RGB",
-            [pix.width, pix.height],
+            (pix.width, pix.height),
             pix.samples,
         )
 
