@@ -1487,6 +1487,22 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-28 (вечер) — Phase 3 mypy cleanup срез 2: link_registry.py 15→0
+
+**Outcome:** второй incremental срез Phase 3. `src/memory/orchestrator/link_registry.py` приведён к 0 mypy-ошибок (было 15). Baseline ratcheted **1627→1612** (ровно −15, **без каскада**).
+
+**Урок из qdrant.py (отвергнут):** сначала пробовал `vector_store/providers/qdrant.py` (25 `attr-defined`, все `"None" has no attribute"` — single root cause `self._client: AsyncQdrantClient | None`). Добавил `_require_client()` narrowing helper — но `qdrant-client` **типизирован**, и сужение `None`→реальный тип **вскрыло 26 ранее скрытых `arg-type`** (7→33), net 39→40 (хуже). Откатил полностью. **Вывод: narrowing-fix `None`→typed-lib каскадит в arg-type; для Phase 3 выбирать файлы с self-contained mechanical кодами (`no-untyped-def`/`type-arg`), а не attr-defined/union-attr на типизированных либах.**
+
+**Выбран link_registry.py** — 15 ошибок, **0 arg-type/attr-defined** (нет каскада), реальный класс с понятными сигнатурами, **покрыт тестами** (`test_p1_infrastructure.py::TestPropagationEngine` использует `LinkRegistry`). Fixes (все mechanical, behavior-preserving):
+- 7 `no-untyped-def` → `-> None` / `other: object` / `_get_connection -> Iterator[sqlite3.Connection]` (+ import `collections.abc.Iterator`)
+- 5 `type-arg` → `dict`→`dict[str, Any]`, `list`→`list[Any]`
+- 2 `no-any-return` → `return int(cursor.rowcount)` (был Any из `-> int`)
+- 1 `no-untyped-call` (`_init_db`) — снят аннотацией его def
+
+**Gates:** ruff ✅ · mypy link_registry.py 0 issues ✅ · CI ratchet filter exit 0 ✅ (gate green) · pytest `test_p1_infrastructure.py` **39/39** ✅. Аннотации-only, behavior не менялся (тесты подтверждают) → code-verify subagent не требуется (no behavior/API change, tests green).
+
+**Remaining Phase 3:** 1612 ошибок. Доминируют `arg-type` (389) — топ-файлы (agents/analytical, agents/rag) требуют per-error анализа + риск каскада. Следующие безопасные срезы: `type-arg`/`no-untyped-def`-dominated файлы с 0 attr-defined (`ui/pages/settings.py`, `memory/skill_learning/server.py`, `memory/ai_memory/server.py`).
+
 ### 2026-05-28 (late PM) — Phase 3 mypy cleanup: ragas.py 33→0 + baseline ratchet + gate restored
 
 **Outcome:** Первый incremental срез Phase 3 mypy cleanup. `src/pdf_framework/evaluation/ragas.py` приведён к 0 mypy-ошибок (было 33), mypy-baseline ratcheted, **CI mypy-baseline gate восстановлен из red в green** (был red на master из-за pre-existing drift).

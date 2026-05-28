@@ -10,6 +10,7 @@ Migrated from D:\\1C-Enterprise_Framework\\memory-orchestrator\\src\\link_regist
 
 import json
 import sqlite3
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -74,7 +75,7 @@ class EntityLink:
     bidirectional: bool = False
     expires_at: datetime | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not 0.0 <= self.strength <= 1.0:
             raise ValueError(f"Strength must be between 0.0 and 1.0, got {self.strength}")
         if not self.source_id or not self.target_id:
@@ -91,7 +92,7 @@ class EntityLink:
             f"{self.source_id} --[{self.link_type.value}:{self.strength:.2f}]--> {self.target_id}"
         )
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, EntityLink):
             return self.link_id == other.link_id
         return False
@@ -200,7 +201,7 @@ class LinkRegistry:
         self._init_db()
 
     @contextmanager
-    def _get_connection(self):
+    def _get_connection(self) -> Iterator[sqlite3.Connection]:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         try:
@@ -208,7 +209,7 @@ class LinkRegistry:
         finally:
             conn.close()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -292,7 +293,7 @@ class LinkRegistry:
         target_id: str,
         link_type: LinkType,
         strength: float = 0.8,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
         created_by: str = "system",
         bidirectional: bool = False,
         expires_at: datetime | None = None,
@@ -376,7 +377,7 @@ class LinkRegistry:
         self,
         link_id: str,
         strength: float | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
         updated_by: str = "system",
         reason: str = "",
     ) -> bool:
@@ -387,7 +388,7 @@ class LinkRegistry:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             updates = []
-            params: list = []
+            params: list[Any] = []
 
             if strength is not None:
                 if not 0.0 <= strength <= 1.0:
@@ -469,7 +470,7 @@ class LinkRegistry:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             query = "SELECT * FROM entity_links WHERE source_id = ? AND strength >= ?"
-            params: list = [entity_id, min_strength]
+            params: list[Any] = [entity_id, min_strength]
             if link_types:
                 placeholders = ",".join("?" * len(link_types))
                 query += f" AND link_type IN ({placeholders})"
@@ -487,7 +488,7 @@ class LinkRegistry:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             query = "SELECT * FROM entity_links WHERE target_id = ? AND strength >= ?"
-            params: list = [entity_id, min_strength]
+            params: list[Any] = [entity_id, min_strength]
             if link_types:
                 placeholders = ",".join("?" * len(link_types))
                 query += f" AND link_type IN ({placeholders})"
@@ -651,11 +652,11 @@ class LinkRegistry:
             )
             deleted = cursor.rowcount
             conn.commit()
-        return deleted
+        return int(deleted)
 
     # === Stats ===
 
-    def _update_stats(self, cursor: sqlite3.Cursor, entity_id: str):
+    def _update_stats(self, cursor: sqlite3.Cursor, entity_id: str) -> None:
         cursor.execute(
             """
             INSERT OR REPLACE INTO link_stats (entity_id, outgoing_count, incoming_count, avg_strength, last_updated)
@@ -726,9 +727,9 @@ class LinkRegistry:
             )
             deleted = cursor.rowcount
             conn.commit()
-        return deleted
+        return int(deleted)
 
-    def vacuum(self):
+    def vacuum(self) -> None:
         with self._get_connection() as conn:
             conn.execute("VACUUM")
 
@@ -803,6 +804,6 @@ def get_link_registry() -> LinkRegistry:
     return _global_registry
 
 
-def set_link_registry(registry: LinkRegistry):
+def set_link_registry(registry: LinkRegistry) -> None:
     global _global_registry
     _global_registry = registry
