@@ -145,3 +145,20 @@ def test_firstparty_imports_resolve(module_name: str) -> None:
                 f"{module_name}: `from {target} import {name}` — "
                 f"name does not exist in {target!r} (stale/typo import)"
             )
+
+
+def test_name_resolver_guard_behavior() -> None:
+    """Lock the resolver's contract so the guard itself cannot silently regress.
+
+    Uses the real ``embeddings`` package — the exact site of the historical
+    ``get_embedding`` factory bug this suite is meant to catch.
+    """
+    import src.pdf_framework.embeddings as emb
+
+    target = "src.pdf_framework.embeddings"
+    # Stale symbol (the bug we fixed) must NOT resolve → suite would fail loudly.
+    assert not _name_resolves(emb, target, "get_embedding")
+    # Real exported symbol resolves.
+    assert _name_resolves(emb, target, "get_embedding_engine")
+    # Real submodule resolves even though it is not an attribute of the package.
+    assert _name_resolves(emb, target, "cache")
