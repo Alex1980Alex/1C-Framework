@@ -44,7 +44,7 @@ class SectionSummaryService:
             kwargs: dict[str, Any] = {"api_key": api_key}
             if base_url:
                 kwargs["base_url"] = base_url
-            self._client = Anthropic(**kwargs)
+            self._client: Anthropic | None = Anthropic(**kwargs)
         else:
             self._client = None
 
