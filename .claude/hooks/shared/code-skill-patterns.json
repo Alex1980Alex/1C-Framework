@@ -296,11 +296,11 @@
     "schema_version": "1.0",
     "last_migration": "2026-02-23",
     "stats": {
-      "total_patterns": 14,
+      "total_patterns": 15,
       "total_directory_rules": 9,
       "total_bash_rules": 7,
       "total_research_rules": 4,
-      "total_research_protocol": 6,
+      "total_research_protocol": 5,
       "total_post_verification": 3
     }
   }
