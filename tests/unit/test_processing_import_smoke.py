@@ -88,7 +88,10 @@ def _firstparty_from_imports(module_name: str) -> list[tuple[str, list[str]]]:
     if spec is None or not spec.origin or not spec.origin.endswith(".py"):
         return []
     tree = ast.parse(Path(spec.origin).read_text(encoding="utf-8"))
-    package = module_name.rpartition(".")[0]
+    # `spec.parent` is the correct relative-import anchor: for a package
+    # (``__init__.py``) it is the package itself, for a module it is the parent
+    # package — unlike ``rpartition``, which would wrongly climb one level for packages.
+    package = spec.parent or module_name.rpartition(".")[0]
 
     results: list[tuple[str, list[str]]] = []
     for node in ast.walk(tree):
