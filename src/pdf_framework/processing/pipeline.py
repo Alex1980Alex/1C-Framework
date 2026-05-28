@@ -120,7 +120,7 @@ class ProcessingPipeline:
         For each image chunk, finds text chunks on the same page (or adjacent pages)
         and copies their section metadata.
         """
-        page_sections: dict[int, dict] = {}
+        page_sections: dict[int, dict[str, Any]] = {}
         for c in text_chunks:
             if c.page_number and c.section and c.section != "image":
                 page_sections[c.page_number] = {
