@@ -72,7 +72,9 @@ class PropositionSplitter(TextSplitter):
         self._batch_size = batch_size
 
         if llm is None:
-            self._llm = ChatAnthropic(model=model, temperature=0.0)
+            # langchain_anthropic stub expects `model_name`; `model` is the documented
+            # runtime arg (populate_by_name alias) — stub/runtime mismatch.
+            self._llm = ChatAnthropic(model=model, temperature=0.0)  # type: ignore[call-arg]
         else:
             self._llm = llm
 
