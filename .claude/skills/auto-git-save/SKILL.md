@@ -88,15 +88,23 @@ Remove-Item .claude/cache/auto-git-save.paused
 
 ## Механизмы
 
-### 1. Sync Commit (порог)
+### 1. Sync Commit (порог) — split commit (2026-05-29)
 
-При `file_count >= SYNC_COMMIT_THRESHOLD`:
-1. `git add --` для каждого отслеженного файла
-2. `git commit -m "chore: auto-save foo.py, bar.py, baz.py +N more"` (basenames первых 3 файлов; `+N more` если файлов > 3 — единый формат всех трёх auto-save хуков с 2026-05-14, до этого `auto-git-save.py` и `auto-git-save-prompt.py` использовали generic `N file(s)` и теряли контекст изменения)
-3. `complete_task_by_hook()` — завершает pending задачу
-4. systemMessage → `[AUTO-GIT-SAVE OK]`
+При `file_count >= SYNC_COMMIT_THRESHOLD` `auto-git-save.py` делает **раздельные коммиты**, чтобы не смешивать чужой дрифт с правкой Claude под вводящим в заблуждение именем:
 
-При неудаче: создаёт mandatory задачу для ручного коммита.
+1. Берёт `get_uncommitted_files()` (все незакоммиченные в watched-путях) и делит на два множества:
+   - **tracked** = пересечение с файлами, которые хук реально отследил через Write/Edit (`modified_data["files"]`)
+   - **drift** = всё остальное незакоммиченное (правки от других процессов/прошлых сессий)
+2. `perform_sync_commit(tracked)` → `chore: auto-save foo.py, bar.py +N more` (basenames первых 3; `+N more` если >3 — единый формат всех auto-save хуков с 2026-05-14)
+3. `perform_sync_commit(drift, prefix="chore: sweep unrelated drift")` → отдельный коммит для дрифта
+4. `complete_task_by_hook()` — завершает pending задачу
+5. systemMessage → `[AUTO-GIT-SAVE OK] ... N файл(ов) в M коммит(ах) [tracked:hash, drift:hash]`
+
+**Множество коммитимых файлов не меняется** (tracked ∪ drift = все незакоммиченные) → дерево остаётся чистым, `git-commit-enforcer` доволен. Меняется только группировка: концерны разделены, сообщения честные.
+
+`perform_sync_commit(files, timeout=None, prefix="chore: auto-save")` — `prefix` параметризован (Edit 2026-05-29). Fallback: если split не дал файлов (tracked уже закоммичен debounce-хуком, дрифта нет) — старое поведение (commit всех uncommitted).
+
+При неудаче: создаёт mandatory задачу для ручного коммита. Частичный успех (один коммит прошёл, другой нет) → `[AUTO-GIT-SAVE OK] ... | не закоммичено: ...` + задача.
 
 ### 2. Zombie Task Prevention
 

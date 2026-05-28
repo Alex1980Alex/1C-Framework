@@ -257,8 +257,15 @@ def save_modified_files(data: dict) -> None:
 # --- Core: Sync Commit ---
 
 
-def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -> dict:
+def perform_sync_commit(
+    modified_files: list[str], timeout: int | None = None, prefix: str = "chore: auto-save"
+) -> dict:
     """Execute git add + git commit SYNCHRONOUSLY.
+
+    Args:
+        modified_files: relative paths to stage and commit.
+        timeout: git commit timeout (auto-calculated if None).
+        prefix: commit message prefix (e.g. "chore: sweep unrelated drift").
 
     Returns dict with success status and metadata.
     """
@@ -354,7 +361,7 @@ def perform_sync_commit(modified_files: list[str], timeout: int | None = None) -
         count = len(modified_files)
         from shared.auto_save_core import format_commit_message
 
-        commit_msg = format_commit_message(modified_files, prefix="chore: auto-save")
+        commit_msg = format_commit_message(modified_files, prefix=prefix)
 
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
@@ -607,29 +614,73 @@ class AutoGitSave(BaseHook):
         # --- Threshold reached: SYNC COMMIT ---
         log.debug(f"file_count={file_count} threshold={SYNC_COMMIT_THRESHOLD}")
         if file_count >= SYNC_COMMIT_THRESHOLD:
-            # Commit ALL uncommitted files in watched paths, not just tracked ones
+            # Split commit: files THIS hook actually tracked (edited) get a named
+            # commit; any OTHER uncommitted files in watched paths are swept into a
+            # SEPARATE "chore: sweep unrelated drift" commit. The set of committed
+            # files is unchanged (tree still ends up clean → git-commit-enforcer is
+            # satisfied), but unrelated changes no longer hide under a misleading
+            # "auto-save X.py" message. See skill `auto-git-save`.
             all_uncommitted = get_uncommitted_files()
-            files_to_commit = all_uncommitted if all_uncommitted else modified_data["files"]
+            uncommitted_set = set(all_uncommitted)
+            tracked_set = set(modified_data["files"])
+            tracked_files = [f for f in modified_data["files"] if f in uncommitted_set]
+            drift_files = [f for f in all_uncommitted if f not in tracked_set]
             log.debug(
-                f"all_uncommitted={len(all_uncommitted)} tracked={len(modified_data['files'])}"
+                f"THRESHOLD REACHED → split commit: tracked_uncommitted={len(tracked_files)} "
+                f"drift={len(drift_files)} all={len(all_uncommitted)}"
             )
-            timeout = calculate_timeout(len(files_to_commit))
-            log.debug(
-                f"THRESHOLD REACHED → sync commit {len(files_to_commit)} files timeout={timeout}"
-            )
-            result = perform_sync_commit(files_to_commit, timeout=timeout)
-            log.debug(f"commit result: {result}")
 
-            if result.get("success") and result.get("committed"):
-                files_count = result.get("files_count", 0)
-                commit_hash = result.get("commit_hash", "unknown")
-                return HookOutput().system_message(
-                    f"[AUTO-GIT-SAVE OK] Коммит выполнен: "
-                    f"{files_count} файл(ов), hash: {commit_hash}"
+            commits = []  # list of (label, result)
+            if tracked_files:
+                commits.append(
+                    ("tracked", perform_sync_commit(
+                        tracked_files, timeout=calculate_timeout(len(tracked_files))
+                    ))
                 )
+            if drift_files:
+                commits.append(
+                    ("drift", perform_sync_commit(
+                        drift_files,
+                        timeout=calculate_timeout(len(drift_files)),
+                        prefix="chore: sweep unrelated drift",
+                    ))
+                )
+            # Fallback: split produced nothing to commit (e.g. tracked file already
+            # committed by the debounce hook, no drift) — preserve legacy behavior.
+            if not commits:
+                files_to_commit = all_uncommitted if all_uncommitted else modified_data["files"]
+                commits.append(
+                    ("fallback", perform_sync_commit(
+                        files_to_commit, timeout=calculate_timeout(len(files_to_commit))
+                    ))
+                )
+            log.debug(f"commit results: {commits}")
+
+            succeeded = [
+                (label, r) for label, r in commits if r.get("success") and r.get("committed")
+            ]
+            if succeeded:
+                total_files = sum(r.get("files_count", 0) for _, r in succeeded)
+                hashes = ", ".join(f"{label}:{r.get('commit_hash', '?')}" for label, r in succeeded)
+                msg = (
+                    f"[AUTO-GIT-SAVE OK] Коммит(ы) выполнен(ы): "
+                    f"{total_files} файл(ов) в {len(succeeded)} коммит(ах) [{hashes}]"
+                )
+                failed = [
+                    (label, r)
+                    for label, r in commits
+                    if not (r.get("success") and r.get("committed"))
+                ]
+                if failed:
+                    msg += " | не закоммичено: " + "; ".join(
+                        f"{label}: {r.get('error', 'Unknown')}" for label, r in failed
+                    )
+                    self._ensure_task(modified_data)
+                    save_modified_files(modified_data)
+                return HookOutput().system_message(msg)
             else:
-                # Commit failed — create task for manual commit
-                error = result.get("error", "Unknown")
+                # All commits failed — create task for manual commit
+                error = "; ".join(r.get("error", "Unknown") for _, r in commits)
                 self._ensure_task(modified_data)
                 save_modified_files(modified_data)
                 return HookOutput().system_message(
