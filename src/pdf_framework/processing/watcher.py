@@ -39,7 +39,7 @@ class PDFFileWatcher:
         self._extensions = extensions
         self._known_files: dict[str, float] = {}  # path → mtime
         self._running = False
-        self._task: asyncio.Task | None = None
+        self._task: asyncio.Task[None] | None = None
         self._pending: dict[str, tuple[str, float]] = {}  # path → (event_type, first_seen)
 
     async def start(self) -> None:
