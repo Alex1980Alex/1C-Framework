@@ -9,6 +9,7 @@ Version: 1.1.0 - Phase 10.2: Structure-Aware Chunking
 
 import hashlib
 import logging
+from typing import Any
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
