@@ -296,7 +296,7 @@
     "schema_version": "1.0",
     "last_migration": "2026-02-23",
     "stats": {
-      "total_patterns": 15,
+      "total_patterns": 16,
       "total_directory_rules": 9,
       "total_bash_rules": 7,
       "total_research_rules": 4,
