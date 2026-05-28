@@ -144,6 +144,21 @@ async def test_version_manager_incremental_and_checkpoints(
     assert await mgr.is_indexing_in_progress() is False
 
 
+async def test_version_manager_concurrency_guard(tmp_path: Path) -> None:
+    """A second, different file cannot start indexing while another is in progress."""
+    from src.pdf_framework.processing.versioning import DocumentVersionManager
+
+    mgr = DocumentVersionManager(db_path=tmp_path / "v.db", cache_dir=tmp_path / "chunks")
+    file_a = tmp_path / "a.txt"
+    file_a.write_text("aaa", encoding="utf-8")
+    file_b = tmp_path / "b.txt"
+    file_b.write_text("bbb", encoding="utf-8")
+
+    await mgr.start_indexing(str(file_a), "da", total_batches=1, total_chunks=1)
+    with pytest.raises(RuntimeError, match="already in progress"):
+        await mgr.start_indexing(str(file_b), "db", total_batches=1, total_chunks=1)
+
+
 # --------------------------------------------------------------------------- #
 # page_renderer.py — PageRenderer.save_pages  (the self._format regression site)
 # --------------------------------------------------------------------------- #
