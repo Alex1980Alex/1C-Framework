@@ -56,7 +56,7 @@ class TableData(BaseModel):
 
         return "\n".join(lines)
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         """
         Convert table to JSON-serializable dict.
 
