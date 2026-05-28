@@ -1224,7 +1224,7 @@ graceful degradation на failure. Escalation для complex через subagent
 | **P0 — Foundation (1-2 days)** | (1) CloudEvents wrapping в `invocation_logger.py` (causation_id, correlation_id) <br>(2) W3C traceparent injection <br>(3) DuckDB `scripts/audit_query.py` (zero-migration SQL) <br>(4) Crypto-shredding per-session-key | 12-16h |
 | **P1 — Cold tier + replay (2-3 days)** | (5) Nightly `COPY TO parquet` cron job <br>(6) PyIceberg snapshot append → MinIO <br>(7) `replay-checkpoint.json` checkpoint protocol <br>(8) JSON Schema Draft 2020-12 per event_type | 16-24h |
 | **P2 — Query + analysis tooling (1-2 days)** | (9) DuckDB views (hooks per session, latency p95, error rate) <br>(10) RAGAS replay из Langfuse dataset exports <br>(11) RocksDB-style hard-link snapshots для `.claude/cache/` | 12-16h |
-| **P3 — Long-term observability (2-3 days)** | (12) Vector.dev sidecar (universal fan-out) <br>(13) Grafana Tempo (если LGTM выбрано) <br>(14) Adaptive retention (hot 7d / warm 90d / cold ∞ с crypto-shredded keys) | 16-24h |
+| **P3 — Long-term observability (2-3 days)** | (12) Vector.dev sidecar (universal fan-out) — ⏳ **DEFERRED** (gated >5GB jsonl; сейчас ~2.4MB) <br>(13) Grafana Tempo (если LGTM выбрано) — ⏳ **DEFERRED** (LGTM не выбран, §15.4 P1) <br>(14) Adaptive retention (hot 7d / warm 90d / cold ∞ с crypto-shredded keys) — ✅ **DONE 2026-05-28** ([`scripts/retention_policy.py`](../../scripts/retention_policy.py) orchestrator + 28 unit tests) | 16-24h |
 
 ### 15.7 Cache artifacts (this analysis)
 
@@ -1487,6 +1487,27 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-28 (PM) — §15 P3 item 14 Adaptive Retention DONE
+
+**Outcome:** §15 Process Caching P3 продвинут — **item 14 (adaptive 3-tier retention) landed**; items 12/13 формально deferred с обоснованием. §15 теперь P0 ✅ / P1 3/4 / P2 item 11 / P3 item 14 ✅.
+
+**Inventory audit перед реализацией** (protocol [[project_roadmap_audit_pattern]]): live `hook-invocations.jsonl` = **2.4MB** ≪ 5GB-порога §15.4 P1 → items 12 (Vector.dev sidecar) + 13 (Grafana Tempo) остаются deferred (gated «по росту >5GB» / «если LGTM выбрано»). Только item 14 строится additively на готовых P0/P1 примитивах.
+
+**Landed:**
+- [`scripts/retention_policy.py`](../../scripts/retention_policy.py) — orchestrator (НЕ reimplementation): композирует `archive_jsonl_to_parquet.cmd_archive` (hot→warm) + `shared.session_keys.gc_old_keys` (cold crypto-shred). 3 tier: HOT(<7d jsonl) / WARM(<90d parquet) / COLD(>90d ∞, keys GC'd = GDPR erasure). Pure testable funcs (`jsonl_stats`/`parquet_stats`/`key_stats`/`build_plan`/`_parse_ts`/`_oldest_entry_age_days`). **Default dry-run** (cold-shred irreversible → `--apply` opt-in). Env: `RETENTION_HOT_DAYS`/`WARM_DAYS`/`HOT_MAX_MB`. Cross-tree import через `importlib` (mypy-clean). Graceful degradation на всех I/O.
+- [`tests/unit/test_retention_policy.py`](../../tests/unit/test_retention_policy.py) — **28 unit-тестов** (config/ts-parse/tier-stats/build_plan edge cases + apply-path delegation wiring). Zero external deps.
+
+**Gates:** ruff ✅ · ruff format ✅ · mypy ✅ (Success, 0 issues) · pytest 28/28 ✅. Live smoke: status показал jsonl 2.4MB / 1 parquet / 24 keys / 0 shred-candidates, plan корректен.
+
+**Code-verify:** subagent `a5dc2b91a7f0fa65e` → **PASS**. 1 valuable finding applied: dry-run preview мог **under-report** cold-shred (т.к. `list_keys` truncates age к целым дням, а `gc_old_keys` удаляет по секундам) → `key_stats` переведён `>`→`>=` (safe over-estimate direction для irreversible op) + boundary-тест. Также hardened `build_plan` `.get("size_mb")` + добавлен apply-path тест (archive-failure-must-not-block-shred contract).
+
+**Delegation note:** z-ai-write-guard сработал; 2 llm_complete на полную генерацию timed out (60s cap, Z.AI latency), успешный consult (claude-cli-haiku via rotation, 35.8s) на test-edge-case review — выявил None-age + boundary gaps, оба покрыты.
+
+**Next priorities (updated 2026-05-28 PM):**
+1. ⏳ Phase 3 mypy cleanup (265 errors) — deferred, не заблокирован
+2. ⏳ §15 P1/P2 deferred (PyIceberg + replay-checkpoint + items 9-10) — **заблокированы** S3/MinIO
+3. ⏳ §15 items 12/13 — отложены до jsonl >5GB / решения о LGTM migration
+
 ### 2026-05-28 — §20 P1 empty-except triage COMPLETE (0 open)
 
 **Outcome:** §20 (CodeQL Security Alerts Triage) теперь **полностью закрыт** (P0 ✅ / P1 ✅ / P2 ✅). `py/empty-except` + `py/catch-base-exception` = **0 open** на master.
@@ -1533,7 +1554,7 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Follow-up (PR [#52](https://github.com/Alex1980Alex/1C-Framework/pull/52), merged 2026-05-25T09:32Z):** gemini-code-assist fixes — `cmd_decrypt` phantom key + restore purge orphans patterns в `session_keys.py` + `shred_session.py` + `snapshot_cache.py`.
 
-**§15 status update:** P0 ✅ **4/4** | P1 = 3/4 (PyIceberg + replay-checkpoint deferred — needs S3/MinIO) | P2 = item 11 DONE (items 9-10 deferred) | P3 ⏳ PENDING.
+**§15 status update:** P0 ✅ **4/4** | P1 = 3/4 (PyIceberg + replay-checkpoint deferred — needs S3/MinIO) | P2 = item 11 DONE (items 9-10 deferred) | P3 = item 14 ✅ DONE 2026-05-28 (items 12/13 deferred — gated >5GB / LGTM-not-chosen).
 
 **Code-verify trail (cumulative):** PR #48 subagent `a50ab54f8d9b00ed5` PASS iter 1 (3 fixes: `_project_slug` path arithmetic, Cyrillic slug normalization, temp file leak); PR #49 subagent `afb52ef6a6b3ca063` PASS iter 0 (1 cosmetic cleanup `_SCHEMA_CACHE` redeclaration); PR #50 subagent `ab2f61b57ac4317e8` PASS iter 1 (2 fixes: path traversal `cmd_restore`/`cmd_diff`, console encoding `sys.stdout.reconfigure`).
 
