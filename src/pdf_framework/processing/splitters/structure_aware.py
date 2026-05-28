@@ -78,7 +78,7 @@ class StructureAwareSplitter:
         doc_id = document.id
         chunks: list[DocumentChunk] = []
         current_section_title: str | None = None
-        current_section_content: list[dict] = []
+        current_section_content: list[dict[str, Any]] = []
         last_page_number = 1
 
         for el_data in layout_elements:
@@ -219,7 +219,7 @@ class StructureAwareSplitter:
             for i, text in enumerate(texts)
         ]
 
-    def _format_section_content(self, content_items: list[dict]) -> str:
+    def _format_section_content(self, content_items: list[dict[str, Any]]) -> str:
         """Format section content items into text."""
         return "\n\n".join(item["content"] for item in content_items)
 
