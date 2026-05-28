@@ -141,7 +141,7 @@ def test_firstparty_imports_resolve(module_name: str) -> None:
                 pytest.skip(f"optional third-party dependency not installed: {exc.name}")
             raise  # first-party target module missing → real bug
         for name in names:
-            assert hasattr(target_mod, name), (
+            assert _name_resolves(target_mod, target, name), (
                 f"{module_name}: `from {target} import {name}` — "
                 f"name does not exist in {target!r} (stale/typo import)"
             )
