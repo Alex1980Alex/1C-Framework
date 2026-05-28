@@ -40,7 +40,7 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def cmd_analyze(args):
+def cmd_analyze(args: argparse.Namespace) -> None:
     """Команда анализа через sonar-scanner subprocess"""
     import shutil
     import subprocess

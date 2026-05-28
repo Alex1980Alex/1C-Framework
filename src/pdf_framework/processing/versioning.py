@@ -762,7 +762,7 @@ class DocumentVersionManager:
 _version_manager: DocumentVersionManager | None = None
 
 
-def get_version_manager(**kwargs) -> DocumentVersionManager:
+def get_version_manager(**kwargs: Any) -> DocumentVersionManager:
     """Get or create global version manager instance."""
     global _version_manager
     if _version_manager is None:
