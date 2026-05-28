@@ -151,7 +151,7 @@ class ImageProcessor:
             img.description_model = desc.model_used
 
             if self._enable_embedding and self._embedder:
-                img.embedding = self._embed_description(desc.description)
+                img.embedding = await self._embed_description(desc.description)
 
             processed.append(ProcessedImage(chunk=img, description_response=desc))
 
