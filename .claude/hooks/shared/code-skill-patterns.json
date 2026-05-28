@@ -210,12 +210,6 @@
     "description": "Fallback patterns for topics without dedicated skills. Triggers research protocol in PRE mode.",
     "patterns": [
       {
-        "pattern": "FastAPI|APIRouter|from\\s+fastapi",
-        "label": "FastAPI Framework",
-        "domain": "tech",
-        "priority": "high"
-      },
-      {
         "pattern": "Redis\\.|from\\s+redis|aioredis",
         "label": "Redis Caching",
         "domain": "tech",
