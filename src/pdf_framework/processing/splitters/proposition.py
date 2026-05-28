@@ -152,7 +152,7 @@ Extract facts:"""
                 [{"role": "user", "content": retry_prompt.format(text=text)}]
             )
 
-            content = response.content.strip()
+            content = str(response.content).strip()
             lines = [line.strip() for line in content.split("\n") if line.strip()]
 
             return lines[: self._max_propositions]
