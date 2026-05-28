@@ -1487,6 +1487,26 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-28 (late PM) — Phase 3 mypy cleanup: ragas.py 33→0 + baseline ratchet + gate restored
+
+**Outcome:** Первый incremental срез Phase 3 mypy cleanup. `src/pdf_framework/evaluation/ragas.py` приведён к 0 mypy-ошибок (было 33), mypy-baseline ratcheted, **CI mypy-baseline gate восстановлен из red в green** (был red на master из-за pre-existing drift).
+
+**Inventory audit (protocol [[project_roadmap_audit_pattern]]):** полный `mypy src/` = **1660 ошибок** (baseline.txt был 1849, stale). Top-files dominated by `arg-type` (риск, нужен per-error анализ). Выбран `ragas.py` — **33 ошибки, все одного кода `union-attr`, один root cause** (single-pattern fix, не 40 разрозненных arg-type).
+
+**Root cause + fix:** все 33 = `response.content[0].text` на Anthropic SDK, где `content[0]` — union блоков (`TextBlock | ThinkingBlock | ToolUseBlock | ...`), только `TextBlock` имеет `.text`. Добавлен helper `_first_text(response: Message) -> str` (idiomatic SDK pattern `next((b.text for b in content if b.type == "text"), "")` per skill `claude-api`), 3 идентичных call-site заменены. Это и type-fix, и **реальное robustness-улучшение** (не-text первый блок → "" вместо runtime AttributeError/IndexError).
+
+**Baseline ratchet:** обнаружено, что committed baseline уже был **out-of-sync** (gate red даже против HEAD baseline — pre-existing drift `call-arg`/`func-returns-value`/`dict-item` +1 каждый, не связан с ragas). Применён documented re-sync `mypy src/ ... | python -m mypy_baseline sync` → baseline 1849→1824 (отражает current 1627 ошибок; ragas-записи = 0). **Gate теперь PASS (filter exit 0)** — restored из red. Sync absorbed pre-existing drift (был uncaught на master т.к. gate уже red).
+
+**Gates:** ruff ✅ · mypy ragas.py ✅ (0 issues) · CI ratchet filter exit 0 ✅ · pytest `test_ragas_evaluation.py` 13/13 ✅ (+4 новых unit-теста на `_first_text`: happy/skip-non-text/empty/no-text).
+
+**Code-verify:** subagent `a74239fc23dd4a1bd` → **PASS** (behavior-preservation). Happy path (no thinking/tools в этих eval-вызовах) строго эквивалентен; edge-case оба пути дают 0.5 (`_parse_score("")` → fallback 0.5 = `except`-ветка). Рекомендация subagent'а (unit-тест на `_first_text`) — выполнена (+4 теста).
+
+**Remaining Phase 3:** ~1627 ошибок. Top-files `arg-type`-heavy (agents/analytical=53, agents/rag=50, search/strategies/graphrag_global=42) — нужен per-error анализ, не single-pattern. Берутся отдельными срезами.
+
+**Next priorities (updated 2026-05-28 late PM):**
+1. ⏳ Phase 3 mypy cleanup — следующий single-root-cause file (предпочтительно не arg-type-dominated)
+2. ⏳ §15 P1/P2 deferred + items 12/13 — **заблокированы** S3/MinIO / jsonl>5GB
+
 ### 2026-05-28 (PM) — §15 P3 item 14 Adaptive Retention DONE
 
 **Outcome:** §15 Process Caching P3 продвинут — **item 14 (adaptive 3-tier retention) landed**; items 12/13 формально deferred с обоснованием. §15 теперь P0 ✅ / P1 3/4 / P2 item 11 / P3 item 14 ✅.

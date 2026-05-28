@@ -7,6 +7,8 @@ Tests for:
   - EvalHistoryStore: store/query metrics over time
 """
 
+from types import SimpleNamespace
+
 import pytest
 
 
@@ -116,3 +118,43 @@ class TestEvalHistoryStore:
         await store.initialize()
         history = await store.get_history("mrr", days=30)
         assert isinstance(history, list)
+
+
+class TestFirstText:
+    """`_first_text` selects the first text content block (skips non-text).
+
+    Locks the contract introduced when fixing the `union-attr` mypy errors:
+    Anthropic responses are a union of block types and only TextBlock has
+    `.text`. Duck-typed stubs suffice — `_first_text` only reads
+    `response.content`, `block.type`, and `block.text`.
+    """
+
+    @staticmethod
+    def _resp(*blocks):
+        return SimpleNamespace(content=list(blocks))
+
+    def test_returns_first_text_block(self):
+        from src.pdf_framework.evaluation.ragas import _first_text
+
+        resp = self._resp(SimpleNamespace(type="text", text="0.8"))
+        assert _first_text(resp) == "0.8"
+
+    def test_skips_leading_non_text_block(self):
+        from src.pdf_framework.evaluation.ragas import _first_text
+
+        resp = self._resp(
+            SimpleNamespace(type="thinking", thinking="hmm"),
+            SimpleNamespace(type="text", text="score: 0.5"),
+        )
+        assert _first_text(resp) == "score: 0.5"
+
+    def test_empty_content_returns_blank(self):
+        from src.pdf_framework.evaluation.ragas import _first_text
+
+        assert _first_text(self._resp()) == ""
+
+    def test_no_text_block_returns_blank(self):
+        from src.pdf_framework.evaluation.ragas import _first_text
+
+        resp = self._resp(SimpleNamespace(type="tool_use", id="t1"))
+        assert _first_text(resp) == ""

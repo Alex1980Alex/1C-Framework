@@ -15,11 +15,23 @@ import logging
 from typing import Any
 
 from anthropic import Anthropic
+from anthropic.types import Message
 from pydantic import BaseModel
 
 from src.pdf_framework.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
+
+
+def _first_text(response: Message) -> str:
+    """Return the text of the first text content block, or "" if none.
+
+    ``response.content`` is a union of block types (TextBlock, ThinkingBlock,
+    ToolUseBlock, ...); only TextBlock carries ``.text``. Selecting on the
+    ``.type`` discriminator avoids an AttributeError when the leading block is
+    not text (e.g. a thinking block) and lets the type checker narrow safely.
+    """
+    return next((block.text for block in response.content if block.type == "text"), "")
 
 
 class RAGASEvaluation(BaseModel):
@@ -172,7 +184,7 @@ Return a JSON object:
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            result = self._parse_score(response.content[0].text)
+            result = self._parse_score(_first_text(response))
             return result
 
         except Exception as e:
@@ -237,7 +249,7 @@ Return a JSON object:
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            result = self._parse_score(response.content[0].text)
+            result = self._parse_score(_first_text(response))
             return result
 
         except Exception as e:
@@ -296,7 +308,7 @@ Return a JSON object:
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            result = self._parse_score(response.content[0].text)
+            result = self._parse_score(_first_text(response))
             return result
 
         except Exception as e:
