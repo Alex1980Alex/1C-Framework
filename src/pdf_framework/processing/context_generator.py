@@ -144,7 +144,7 @@ class ContextGenerator:
         title: str,
         doc_excerpt: str,
         use_prompt_caching: bool = False,
-    ) -> list:
+    ) -> list[Any]:
         """Build LLM messages with optional Anthropic prompt caching."""
         # System message with prompt caching for document excerpt
         if use_prompt_caching and len(doc_excerpt) > 1024:
