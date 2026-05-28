@@ -97,7 +97,7 @@ class DocumentProcessingCache:
 
         try:
             with open(cache_path, "rb") as f:
-                cached_doc = pickle.load(f)
+                cached_doc: CachedDocument = pickle.load(f)
 
             # Check if stale
             if cached_doc.is_stale(file_path):
@@ -119,9 +119,9 @@ class DocumentProcessingCache:
     def set(
         self,
         file_path: str | Path,
-        chunks: list[dict],
+        chunks: list[dict[str, Any]],
         embeddings: list[list[float]],
-        metadata: dict,
+        metadata: dict[str, Any],
     ) -> None:
         """
         Store processed document in cache.
