@@ -92,7 +92,7 @@ Remove-Item .claude/cache/auto-git-save.paused
 
 При `file_count >= SYNC_COMMIT_THRESHOLD` `auto-git-save.py` делает **раздельные коммиты**, чтобы не смешивать чужой дрифт с правкой Claude под вводящим в заблуждение именем:
 
-1. Берёт `get_uncommitted_files()` (все незакоммиченные в watched-путях) и делит на два множества:
+1. Берёт `get_uncommitted_files()` (все незакоммиченные в watched-путях; **gitlink-записи mode 160000 — submodule/embedded-repo pointer bumps — исключаются** через `get_gitlink_paths()`, чтобы автокоммит не подхватывал указатели подмодулей) и делит на два множества:
    - **tracked** = пересечение с файлами, которые хук реально отследил через Write/Edit (`modified_data["files"]`)
    - **drift** = всё остальное незакоммиченное (правки от других процессов/прошлых сессий)
 2. `perform_sync_commit(tracked)` → `chore: auto-save foo.py, bar.py +N more` (basenames первых 3; `+N more` если >3 — единый формат всех auto-save хуков с 2026-05-14)

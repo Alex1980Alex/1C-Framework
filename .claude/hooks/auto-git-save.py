@@ -137,11 +137,45 @@ def _get_relative_path(file_path: str) -> str | None:
         return None
 
 
+def get_gitlink_paths() -> set[str]:
+    """Return paths registered as gitlinks (mode 160000) — submodules and
+    embedded git repos.
+
+    Auto-git-save must NOT sweep submodule/embedded-repo pointer bumps into
+    automatic commits: they belong to a deliberate parent-commit step, and
+    silently committing a pointer bump is both noisy and risky (see memory
+    `auto-git-save preempts parent commit` / `embedded git repos`).
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "ls-files", "--stage"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
+            cwd=str(PROJECT_ROOT),
+        )
+        if result.returncode != 0:
+            return set()
+        paths = set()
+        for line in result.stdout.splitlines():
+            # format: "<mode> <sha> <stage>\t<path>"
+            if not line.startswith("160000"):
+                continue
+            tab = line.find("\t")
+            if tab >= 0:
+                paths.add(line[tab + 1 :].strip().replace("\\", "/"))
+        return paths
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return set()
+
+
 def get_uncommitted_files() -> list[str]:
     """Get all uncommitted files via git status.
 
     Gitignore-first: returns everything git reports (respects .gitignore),
-    filtering only internal hook state via IGNORE_PATTERNS.
+    filtering only internal hook state via IGNORE_PATTERNS and gitlink
+    (submodule / embedded-repo) pointer bumps via get_gitlink_paths().
     """
     try:
         result = subprocess.run(
@@ -154,6 +188,7 @@ def get_uncommitted_files() -> list[str]:
         )
         if result.returncode != 0:
             return []
+        gitlinks = get_gitlink_paths()
         files = []
         for line in result.stdout.strip().splitlines():
             if not line or len(line) < 2:
@@ -163,6 +198,9 @@ def get_uncommitted_files() -> list[str]:
                 continue
             name = Path(filepath).name
             if name in IGNORE_PATTERNS:
+                continue
+            # Skip submodule / embedded-repo pointer bumps — never auto-commit
+            if filepath in gitlinks or any(filepath.startswith(g + "/") for g in gitlinks):
                 continue
             files.append(filepath)
         return files
