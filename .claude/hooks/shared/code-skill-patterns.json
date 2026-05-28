@@ -94,6 +94,12 @@
         "skill": "1c-doc-research",
         "label": "1C SKD (Data Composition System)",
         "domain": "1c"
+      },
+      {
+        "pattern": "FastAPI|APIRouter|from\\s+fastapi",
+        "skill": "framework-api",
+        "label": "FastAPI REST API",
+        "domain": "framework"
       }
     ]
   },
