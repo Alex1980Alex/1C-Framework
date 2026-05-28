@@ -319,6 +319,8 @@ class SectionSummaryService:
 
     def _call_summary_api(self, title: str, content: str) -> str:
         """Synchronous LLM call for section summary (runs in thread)."""
+        if self._client is None:
+            raise RuntimeError("Anthropic client not configured (no api_key provided)")
         response = self._client.messages.create(
             model=self._model,
             max_tokens=300,
