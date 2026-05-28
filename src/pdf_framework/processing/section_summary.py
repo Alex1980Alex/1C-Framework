@@ -199,7 +199,7 @@ class SectionSummaryService:
         conn = sqlite3.connect(str(self._db_path))
         try:
             cursor = conn.execute("SELECT COUNT(*) FROM section_summaries")
-            return cursor.fetchone()[0]
+            return int(cursor.fetchone()[0])
         except sqlite3.OperationalError:
             return 0
         finally:
