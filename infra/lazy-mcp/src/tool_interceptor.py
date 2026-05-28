@@ -14,6 +14,7 @@ import logging
 import os
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
@@ -361,7 +362,7 @@ class ToolInterceptor:
         server_name: str,
         tool_name: str,
         args: dict[str, Any],
-        execute_direct: callable | None = None,
+        execute_direct: Callable | None = None,
     ) -> InterceptResult:
         """
         Перехватить и маршрутизировать вызов инструмента.
@@ -593,7 +594,7 @@ def get_interceptor() -> ToolInterceptor:
 
 
 async def intercept_tool_call(
-    server_name: str, tool_name: str, args: dict[str, Any], execute_direct: callable | None = None
+    server_name: str, tool_name: str, args: dict[str, Any], execute_direct: Callable | None = None
 ) -> InterceptResult:
     """
     Удобная функция для перехвата вызова инструмента.
