@@ -5,6 +5,7 @@ Phase 45: Миграция из 1C-Enterprise_Framework
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass

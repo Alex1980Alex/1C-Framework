@@ -129,7 +129,7 @@ def cmd_config(args: argparse.Namespace) -> None:
         print(f"  Quality Profile: {config.quality_profile}")
 
 
-def main():
+def main() -> None:
     """Точка входа CLI"""
     parser = create_parser()
     args = parser.parse_args()
