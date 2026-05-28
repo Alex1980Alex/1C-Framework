@@ -1487,6 +1487,27 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-28 — §20 P1 empty-except triage COMPLETE (0 open)
+
+**Outcome:** §20 (CodeQL Security Alerts Triage) теперь **полностью закрыт** (P0 ✅ / P1 ✅ / P2 ✅). `py/empty-except` + `py/catch-base-exception` = **0 open** на master.
+
+**Контекст / drift:** документ фиксировал «87 review» (snapshot после PR #47). Re-scan после merge-волны #46-#63 пересоставил fingerprints → на 2026-05-28 было **98 open** `py/empty-except` (7 авто-`intentional` в `.claude/hooks/shared/` + 91 `review`), `py/catch-base-exception` = 0 (P0 держится).
+
+**Действия:**
+- 7 `intentional` dismissed через `scripts/triage_codeql_alerts.py --rule py/empty-except --apply` (path-heuristic `.claude/hooks/`).
+- 91 `review` — каждый site прочитан (context dump), классифицирован по decision-tree §20.2. **Вердикт: все 91 — intentional graceful degradation, 0 sloppy sites.** Сгруппированы в 9 fail-soft категорий с tailored per-category dismiss reason ("won't fix"):
+  - A console UTF-8 reconfigure (13) · B temp-file cleanup unlink (8) · C optional import (6) · D idempotent collection delete (4) · E async/process teardown (17) · F parse/validation skip (11) · G CUDA cache release (2) · H best-effort metric/cache write (10) · I best-effort enrichment/introspection (20).
+- Dismiss выполнен через `gh api -X PATCH .../code-scanning/alerts/{n}`. Gotcha: `dismissed_comment` лимит **280 символов** (category-I reason 297 → HTTP 422; shortened to 263, retry OK).
+
+**Code changes:** 0 (нет sloppy sites → нет `logger.debug()` правок). code-verify N/A (только API-dismiss + doc edits, не code output).
+
+**Acceptance §20.4:** P1 ✅ · memory `feedback_codeql_triage_pattern` ✅ saved · оба rule severity gate = 0 open.
+
+**Next priorities (updated 2026-05-28):**
+1. ⏳ §15 P3 — cold-tier + observability migration (PENDING, инфраструктурно автономен)
+2. ⏳ Phase 3 mypy cleanup (265 errors) — deferred, не заблокирован
+3. ⏳ §15 P1/P2 deferred (PyIceberg + replay-checkpoint + items 9-10) — **заблокированы** S3/MinIO
+
 ### 2026-05-25 (evening) — §15 consolidated P0/P1/P2 + Gemini follow-ups
 
 **Backfilled retroactively** (entry not added at merge time, restored during status sync 2026-05-25).
@@ -1720,9 +1741,9 @@ Alert на production file
 ### §20.4 Acceptance criteria
 
 - [x] **P0:** 0 bare `except:` в production src/ — закрыто PR [#46](https://github.com/Alex1980Alex/1C-Framework/pull/46) (4 файла BSL + 1 dismissed intentional pattern)
-- [ ] **P1:** Каждый `except (...): pass` либо имеет comment why intentional, либо has body action — 87 review остаются на manual pass
+- [x] **P1:** Каждый `except (...): pass` либо имеет comment why intentional, либо has body action — ✅ **DONE 2026-05-28**: все 98 `py/empty-except` dismissed с documented per-category reason (decision-tree §20.2 verdict = intentional graceful degradation для всех; 0 sloppy sites требующих body action)
 - [x] CodeQL re-scan на master shows 0 alerts с severity=error для `py/illegal-raise|py/catch-base-exception` — `py/illegal-raise` alert #1349 закрыт hotfix commit `037fe6228`; bare-except в production = 0 после PR #46
-- [ ] Memory entry `feedback_codeql_triage_pattern` saved для future sessions
+- [x] Memory entry `feedback_codeql_triage_pattern` saved для future sessions — ✅ 2026-05-28
 
 ### §20.5 Related
 
