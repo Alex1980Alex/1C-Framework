@@ -226,7 +226,7 @@ class StructureAwareSplitter:
     def _create_section_chunks(
         self,
         title: str | None,
-        content_items: list[dict],
+        content_items: list[dict[str, Any]],
         page_number: int,
         doc_id: str,
     ) -> list[DocumentChunk]:
