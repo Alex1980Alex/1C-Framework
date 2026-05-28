@@ -48,16 +48,6 @@ src/ui/pages/hook_dashboard.py:0: error: Function is missing a return type annot
 src/shared/mcp_oauth/models.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/shared/mcp_oauth/models.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/shared/mcp_oauth/models.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/orchestrator/unified_id.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/unified_id.py:0: note: Use "-> None" if function does not return a value
-src/memory/orchestrator/unified_id.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
-src/memory/orchestrator/unified_id.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
-src/memory/orchestrator/unified_id.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/unified_id.py:0: note: Use "-> None" if function does not return a value
-src/memory/orchestrator/unified_id.py:0: error: Missing type arguments for generic type "tuple"  [type-arg]
-src/memory/orchestrator/unified_id.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/unified_id.py:0: error: Call to untyped function "IDRegistry" in typed context  [no-untyped-call]
-src/memory/orchestrator/unified_id.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/bsl/semantic_search/refactor/lsp_subprocess.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/lsp_subprocess.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/lsp_subprocess.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
@@ -164,16 +154,6 @@ src/bsl/semantic_search/refactor/classifier.py:0: error: Missing type arguments 
 src/bsl/semantic_search/refactor/classifier.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/classifier.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/classifier.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/memory/orchestrator/memory_router.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/memory_router.py:0: note: Use "-> None" if function does not return a value
-src/memory/orchestrator/memory_router.py:0: error: Missing type arguments for generic type "Pattern"  [type-arg]
-src/memory/orchestrator/memory_router.py:0: error: Call to untyped function "ContentClassifier" in typed context  [no-untyped-call]
-src/memory/orchestrator/memory_router.py:0: error: Call to untyped function "_compile_patterns" in typed context  [no-untyped-call]
-src/memory/orchestrator/memory_router.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/memory_router.py:0: note: Use "-> None" if function does not return a value
-src/memory/orchestrator/memory_router.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/memory_router.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/memory_router.py:0: note: Use "-> None" if function does not return a value
 src/bsl/semantic_search/refactor/backends/ast_grep_runner.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/backends/factory.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/driver.py:0: error: Missing type arguments for generic type "dict"  [type-arg]

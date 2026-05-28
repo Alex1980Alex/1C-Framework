@@ -360,8 +360,8 @@ class ContentClassifier:
     Reference: Memori (MemoriLabs/Memori) — auto-classify turns middleware.
     """
 
-    def __init__(self):
-        self._compiled: dict[ContentType, list[tuple[re.Pattern, str]]] = {}
+    def __init__(self) -> None:
+        self._compiled: dict[ContentType, list[tuple[re.Pattern[str], str]]] = {}
         for ct, patterns in _CONTENT_TYPE_SIGNALS.items():
             self._compiled[ct] = [(re.compile(p, re.IGNORECASE), label) for p, label in patterns]
 
@@ -438,7 +438,7 @@ class MemoryRouter:
         self._classifier = ContentClassifier()
         self._compile_patterns()
 
-    def _compile_patterns(self):
+    def _compile_patterns(self) -> None:
         """Pre-compile regex patterns for content type detection."""
         self._code_patterns = [re.compile(p) for p in CODE_PATTERNS]
         self._config_patterns = [re.compile(p) for p in CONFIG_PATTERNS]
@@ -641,7 +641,7 @@ class MemoryRouter:
             classification=classification,
         )
 
-    def _track_stats(self, method: str):
+    def _track_stats(self, method: str) -> None:
         """Track routing statistics."""
         if method == "auto_classify":
             self.stats.auto_classify_matches += 1
@@ -660,7 +660,7 @@ class MemoryRouter:
         """Get routing statistics."""
         return self.stats
 
-    def reset_stats(self):
+    def reset_stats(self) -> None:
         """Reset routing statistics."""
         self.stats = RoutingStats()
 

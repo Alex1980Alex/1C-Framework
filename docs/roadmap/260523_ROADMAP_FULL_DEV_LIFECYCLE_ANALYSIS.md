@@ -1487,6 +1487,16 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
 
+### 2026-05-29 — Phase 3 mypy cleanup срез 7 (batch C, memory orchestrator): unified_id + memory_router 15→0
+
+**Fixes** (annotation-only): `unified_id.py` 8 (`-> None`, `other: object`, `**kwargs: Any`, `tuple[Any, ...]`, 1 no-untyped-call снят); `memory_router.py` 7 (`-> None` ×4, `re.Pattern[str]`, 2 no-untyped-call сняты). Baseline **1563→1548** (−15). Gate green.
+
+**Gates:** ruff ✅ · mypy 0 issues (оба) ✅ · filter exit 0 ✅ · `test_memory_orchestrator.py` 18/18 ✅. Docs: расширена «Type-safety памяти» в 01.2.
+
+**Phase 3 cumulative (7 срезов):** 33+15+10+10+11+16+15 = **110 чистых fix**. Baseline 1849→1548.
+
+**Инфра-побочное (этой сессии):** (1) gitignore guard на scratch `.mypyN.txt` (commit `1a866abdf`). (2) Внешний split-commit enhancement `auto-git-save.py` (не мой, через auto-save `f95d116f1`) — оставлен, surfaced пользователю. (3) Срез A (api/routes) остаётся blocked на FastAPI→learning-loop enforcer.
+
 ### 2026-05-29 — Phase 3 mypy cleanup срез 6 (batch memory-infra): conflict_resolver + circuit_breaker 16→0
 
 **Plan-driven** (по запросу пользователя сформирован план безопасных срезов). Batch B = два файла `src/memory/infrastructure/` в одном коммите (один домен → один doc-note).

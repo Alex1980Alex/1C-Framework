@@ -91,7 +91,7 @@ class UnifiedID:
 
     _IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z0-9_:\-]+$")
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self._IDENTIFIER_PATTERN.match(self.identifier):
             raise ValueError(
                 f"Invalid identifier format: {self.identifier}. "
@@ -112,7 +112,7 @@ class UnifiedID:
     def __hash__(self) -> int:
         return hash(self.unified)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, UnifiedID):
             return self.unified == other.unified
         if isinstance(other, str):
@@ -175,7 +175,7 @@ class UnifiedID:
     def to_original(self) -> str:
         return self.identifier
 
-    def with_metadata(self, **kwargs) -> "UnifiedID":
+    def with_metadata(self, **kwargs: Any) -> "UnifiedID":
         return UnifiedID(
             memory_type=self.memory_type,
             source=self.source,
@@ -213,7 +213,7 @@ class IDRegistry:
     batch operations, and export/import for persistence.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._unified_to_original: dict[str, str] = {}
         self._original_to_unified: dict[str, str] = {}
         self._metadata: dict[str, dict[str, Any]] = {}
@@ -255,7 +255,7 @@ class IDRegistry:
         self.register(unified_id, original_id)
         return unified_id
 
-    def batch_register(self, items: list[tuple]) -> list[UnifiedID]:
+    def batch_register(self, items: list[tuple[Any, ...]]) -> list[UnifiedID]:
         results = []
         for source, original_id, memory_type in items:
             unified_id = self.get_or_create(source, original_id, memory_type)
@@ -269,7 +269,7 @@ class IDRegistry:
             "metadata": self._metadata,
         }
 
-    def import_state(self, state: dict[str, Any]):
+    def import_state(self, state: dict[str, Any]) -> None:
         self._unified_to_original = state.get("unified_to_original", {})
         self._original_to_unified = state.get("original_to_unified", {})
         self._metadata = state.get("metadata", {})
@@ -326,6 +326,6 @@ def get_registry() -> IDRegistry:
     return _global_registry
 
 
-def set_registry(registry: IDRegistry):
+def set_registry(registry: IDRegistry) -> None:
     global _global_registry
     _global_registry = registry
