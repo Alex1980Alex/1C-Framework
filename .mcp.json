@@ -156,7 +156,7 @@
         "PYTHONIOENCODING": "utf-8",
         "MCP_ONEC_URL": "http://localhost/transport",
         "MCP_ONEC_SERVICE_ROOT": "mcp",
-        "MCP_ONEC_USERNAME": "a.terletskiy@sodrugestvo.ru",
+        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
         "MCP_ONEC_PASSWORD": "Alex80Alex"
       },
       "timeout": 60000
