@@ -2,6 +2,43 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "ut-pricing-mechanism-registrar-subordinate": {
+      "title": "Типовой механизм ценообразования УТ 11 / ERP — ВидыЦен + УстановкаЦенНоменклатуры + ЦеныНоменклатуры (РС подчинённый регистратору)",
+      "file": "ut-pricing-mechanism-registrar-subordinate.md",
+      "created": "2026-05-29",
+      "last_verified": "2026-05-29",
+      "keywords": [
+        "ВидыЦен",
+        "УстановкаЦенНоменклатуры",
+        "ЦеныНоменклатуры",
+        "подчинение регистратору",
+        "по позиции регистратора",
+        "СрезПоследних",
+        "СрезПервых",
+        "залоговые цены",
+        "ценообразование УТ 11",
+        "независимый регистр сведений",
+        "периодический регистр",
+        "способ задания цены",
+        "цена включает НДС",
+        "точность округления",
+        "ключ уникальности",
+        "отбор по регистратору",
+        "НаборЗаписей"
+      ],
+      "sources": [
+        "its.1c.ru/metod8dev/i8102588",
+        "infostart.ru/1c/articles/1749405",
+        "infostart.ru/1c/articles/195575",
+        "koderline.ru article-polzovatelskiy-rezhim-1s-periodicheskiy-registr-svedeniy",
+        "1s-up.ru/podchinennye-registry-svedenij_1c",
+        "wiseadvice-it.ru/registr-svedenii-v-1s-8-3",
+        "tnsoft.ru/blog/registr-svedenij-tsenynomenklatury25",
+        "coderstar.ru/kurs-ut11/ustanovka-tsen",
+        "1softbiz.ru/kak-sozdat-vidy-cen-v-ut-11",
+        "1clancer.ru/article/poluchenie_v_zaprose_tsen_na_datu_dokumenta_802"
+      ]
+    },
     "rdbg-protocol-command-catalog": {
       "title": "RDBG protocol — полный каталог команд (XSD-derived) + verdict по attach-by-PID",
       "keywords": [
