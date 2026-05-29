@@ -891,7 +891,7 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 | Pri | Item | Effort | Rationale |
 |---|---|---|---|
 | P1 | Document 1С pipelines (`/analyze-1c-task`, `/implement-1c-task`, VA BDD) | 1 day | Большой surface area, отсутствует в этом roadmap |
-| P1 | mypy-baseline.txt ratchet (roadmap 260514) — return mypy to pre-commit | 1-2 days | 1616 pre-existing errors блокируют strict сейчас |
+| P1 | mypy-baseline.txt ratchet (roadmap 260514) — return mypy to pre-commit | 1-2 days | 🟡 **IN PROGRESS** (Phase 3, см. §18): baseline 1849→1548, 110 чистых fix за 7 срезов. Срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix) |
 | P2 | Implement Layer 4 wiki search (memory-first-hook) | 0.5 day | Currently STUB returns [] |
 | P2 | RAGAS skill-router precision/recall benchmark | 1 day | Need ground truth для tuning |
 | P2 | Migrate hardcoded `D:\1С-Framework` paths → `C:/1С-Framework` | 0.5 day | Phase 5 path migration follow-up |
@@ -1485,7 +1485,31 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 ## §18 Implementation Progress Log (live)
 
-**Auto-updated** после каждой phase completion / PR merge. Reverse chronological. См. §19 для protocol.
+**Updated manually by Claude** после каждой phase completion / PR merge (протокол §19 — это checklist, не автоматизация; см. §19 «Статус реализации»). Reverse chronological.
+
+### 2026-05-29 (поздний вечер) — Enforcer routing-fix UNBLOCKS api/routes mypy срез + docs sync + 08.6 behavioral tests
+
+**Outcome:** разблокирован **mypy срез A (api/routes)**, который §18 фиксировал как blocked в срезах 6/7 (строки «срез A остаётся blocked на FastAPI→learning-loop enforcer»). Рекомендованный там фикс (`code-skill-patterns.json`: FastAPI→framework-api вместо learning-loop) **выполнен**. Плюс закрыт code/doc drift в skill-routing docs и добавлена глава 08.6 про Python-тест-тиры.
+
+**Landed (routing-fix, прошлая сессия — зафиксировано здесь ретроактивно):**
+- `code-skill-patterns.json` — `FastAPI|APIRouter` и `pytest\.fixture|@pytest|conftest\.py` перенесены из `research_protocol` (Level A.1, форсил `learning-loop`) в `patterns.mappings` (Level A) → `framework-api` / `evaluation-benchmark`. **Снимает блокер mypy среза A** — теперь аннотации в `api/routes/` не требуют learning-loop.
+- `z-ai-write-guard.py` `_EXEMPT_PREFIXES += tests/` — тест-код = precision-работа, не делегируемая генерация (устранён code/doc drift с docstring).
+- `tests/unit/test_import_smoke.py` + `tests/unit/test_processing_behavior.py` (14 тестов) — behavioral покрытие orphan-классов `src/pdf_framework/processing/` (coverage: versioning 82% / page_renderer 75% / cache 74% / image_processor 49% / section_summary 45% / image_extractor 26% / table_extractor 15%). Marker `unit` → CI-джоб `test-unit`.
+
+**Landed (docs sync, эта сессия — commit `a3bd3df00`):**
+- Новая глава [08.6 Unit / Smoke / Behavioral](../framework%20documentation/08_ОЦЕНКА_КАЧЕСТВА/08.6_Unit_Smoke_Behavioral.md) + регистрация в 00_СОДЕРЖАНИЕ.
+- Синхронизирован stale routing в `11.4_Skill_Enforcement.md` + `09.8_Skill_First_Enforcement.md` (Level A/A.1/C таблицы, JSON-пример, счётчики паттернов: content 17 / research_protocol 4).
+- `30.3_Enforcers.md` — задокументирован `z-ai-write-guard._EXEMPT_PREFIXES` (+`tests/`) + правило больших `.md`.
+- `03.5_Изображения_и_таблицы.md` — кросс-ссылка на 08.6.
+
+**Gates:** ruff/mypy N/A (docs-only commit + прошлый routing-fix — config). Все ссылки 08.6 verified (test-файлы + cross-refs существуют). Delegation: генерация 08.6 (>50 строк .md) делегирована через `llm_complete` (claude-cli-haiku, факты сверены).
+
+**Roadmap-impact:** срезы 6/7 blocker «api/routes blocked на FastAPI enforcer» → **RESOLVED**. §11 P1 «mypy-baseline ratchet» — api/routes теперь доступен для Phase 3.
+
+**Next priorities (updated 2026-05-29 late PM):**
+1. ⏳ Phase 3 mypy cleanup — **срез A (api/routes)** теперь разблокирован (collections/analytics/health) — следующий кандидат
+2. ⏳ Phase 3 — продолжить non-FastAPI single-root-cause файлы
+3. ⏳ §15 P1/P2 deferred — заблокированы S3/MinIO
 
 ### 2026-05-29 — Phase 3 mypy cleanup срез 7 (batch C, memory orchestrator): unified_id + memory_router 15→0
 
@@ -1796,22 +1820,42 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 ## §19 Auto-update protocol для §18
 
-**Mandatory action после каждой phase completion / PR merge:**
+> **Важно про название:** «Auto-update» = **manual checklist, который Claude обязан выполнять** (governed by memory anchor), а НЕ автоматизированный хук. Реальной автоматизации (хук/скрипт, который сам детектит trigger и дописывает §18) **пока нет** — см. «Статус реализации» ниже. Раньше §18 header гласил «Auto-updated», что вводило в заблуждение — исправлено 2026-05-29.
 
-1. Edit §18 — добавить новую section dated `YYYY-MM-DD` на top (reverse chrono)
-2. Update phase table status (P0a/P0b/P0c/P1/P2/P3)
-3. Add PR в PRs table
-4. List new memory entries / cache artifacts
-5. Update "Next priorities" list
-6. Commit с message `docs(roadmap): progress log YYYY-MM-DD <summary>`
+### §19.1 Шаги протокола (6-step, mandatory после каждого milestone)
 
-**Trigger conditions (any of):**
+| # | Шаг | Статус |
+|---|-----|--------|
+| 1 | Edit §18 — добавить новую section dated `YYYY-MM-DD` на top (reverse chrono) | ✅ реализовано (выполняется вручную) |
+| 2 | Update phase table status (P0a/P0b/P0c/P1/P2/P3) | ✅ реализовано |
+| 3 | Add PR в PRs table | ✅ реализовано |
+| 4 | List new memory entries / cache artifacts | ✅ реализовано |
+| 5 | Update "Next priorities" list | ✅ реализовано |
+| 6 | Commit с message `docs(roadmap): progress log YYYY-MM-DD <summary>` | 🟡 частично — иногда поглощается auto-git-save `chore:` коммитом (см. [[feedback_auto_git_save_preempt]]) |
+
+### §19.2 Trigger conditions (any of)
+
 - PR merged OR phase marked DONE
 - New memory entry с framework-wide impact
 - Cache artifact с cross-roadmap relevance
 - Critical decision (new ADR) OR roadmap structural change
 
 **NOT trigger:** routine auto-save commits, WIP без deliverable, docs-only без state change.
+
+### §19.3 Статус реализации — что реализовано и что нужно реализовать
+
+| Пункт | Тип | Статус | Заметка |
+|-------|-----|--------|---------|
+| Manual 6-step checklist | процедура | ✅ **реализовано** | Claude следует протоколу; подтверждено записями §18 за 2026-05-23…05-29 |
+| Memory anchor `feedback_roadmap_progress_log_protocol` | enforcement (soft) | ✅ **реализовано** | Recall-память напоминает future-сессиям проверять §18 |
+| Reverse-chrono формат + dated sections | формат | ✅ **реализовано** | Соблюдается |
+| Trigger-detection (автодетект «PR merged / phase DONE») | автоматизация | ❌ **нужно реализовать** | Нет хука, сканирующего `gh pr merge` / TaskUpdate→DONE и напоминающего обновить §18. Кандидат: Stop-хук, проверяющий «был ли merge/phase-DONE в сессии И §18 не тронут» → advisory reminder (по образцу `docs-change-enforcer`, но soft) |
+| Auto-append §18 entry | автоматизация | ❌ **нужно реализовать** (опционально) | Скрипт-заготовка `scripts/roadmap_progress_log.py append --date --summary --pr` для генерации skeleton-записи (Claude дополняет деталями). Снижает риск пропуска шага |
+| Roadmap §18 freshness lint (CI) | gate | ❌ **нужно реализовать** | CI-проверка: если в PR изменилась phase table (§18) ИЛИ merged PR закрывает phase — §18 должен иметь свежую dated-запись. Аналог docs-change-enforcer для roadmap |
+| Commit-message convention для §18 | gate | 🟡 **частично** | `docs(roadmap): progress log` соблюдается вручную, но auto-git-save может перехватить (preempt) — нужен либо exempt в `auto_save_core.py` для `docs/roadmap/*`, либо amend-поглощение |
+| Cross-link §18 ↔ memory ↔ cache artifacts | трассируемость | 🟡 **частично** | Memory/cache перечисляются текстом, но нет машинной проверки что упомянутый entry реально существует (битые `[[wikilinks]]` не детектятся) |
+
+**Приоритет реализации:** trigger-detection reminder (P1, наибольший anti-regression эффект) → §18 freshness lint (P2) → auto-append skeleton (P3, nice-to-have).
 
 **Memory anchor:** [`feedback_roadmap_progress_log_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_roadmap_progress_log_protocol.md). Future Claude sessions ОБЯЗАНЫ проверять §18 и обновлять после каждого milestone.
 
