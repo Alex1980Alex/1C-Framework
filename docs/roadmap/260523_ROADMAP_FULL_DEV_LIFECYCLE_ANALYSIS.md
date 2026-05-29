@@ -1487,6 +1487,18 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-29 (предрассветно) — §19.3 ПОЛНОСТЬЮ ЗАКРЫТ: commit-preempt fix + wikilink-валидация
+
+**Outcome:** закрыты последние два 🟡-минора §19.3 → весь §19.3 теперь ✅ (8/8 пунктов). Дальнейших gap'ов в протоколе §19 нет.
+
+**Landed:**
+- **Commit-convention preempt fix:** `docs/roadmap/` добавлен в exempt обоих auto-save хуков — [`auto-git-save.py`](../../.claude/hooks/auto-git-save.py) (новый `IGNORE_PATH_PREFIXES` + `_is_path_ignored`, проверка в `should_track_file` И `get_uncommitted_files`) + [`posttooluse-auto-git-save.py`](../../.claude/hooks/posttooluse-auto-git-save.py) (`SKIP_PATTERNS += docs/roadmap/`). Правки §18 больше не перехватываются `chore: auto-save` → возможен осознанный `docs(roadmap): progress log` коммит. Safety net — `git-commit-enforcer` (watches `docs/`). *Дог-фуд: эта самая запись коммитится вручную, а не auto-save.*
+- **Wikilink-валидация:** [`roadmap_progress_log.py links`](../../scripts/roadmap_progress_log.py) — валидирует `[[name]]` против memory store. Scope `_MEMORY_NAME_RE` (prefix `feedback/project/reference/user` + `-`/`_`) убирает false-positives от doc-syntax-примеров (`[[overview]]`), code-артефактов (`[[Callable[..., Any]`), концепт-упоминаний (`[[wikilinks]]`) — но ловит реальные refs И hyphen/underscore drift. Advisory (skip если memory dir отсутствует → CI-safe; `--strict` → fail).
+
+**Gates:** 37/37 unit PASS (+6 wikilink) · ruff clean · exempt smoke (оба хука: roadmap→False, src/docs→True) · `links` на реальных роадмапах → OK (0 broken после scoping; до scoping вскрывал 20+ false-positive) · UnicodeEncodeError на `→` в cp1251-консоли исправлен (`sys.stdout.reconfigure` utf-8) · code-verify (см. ниже).
+
+**Next priorities:** §19 полностью закрыт. Phase 3 mypy срез A (api/routes) — основной открытый кандидат.
+
 ### 2026-05-29 (глубокая ночь) — §19 P2+P3 DONE: freshness lint в CI + auto-append skeleton
 
 **Outcome:** §19.3 automation полностью закрыта (P1+P2+P3 все ✅). Добавлен единый инструмент `scripts/roadmap_progress_log.py` (lint + append) и зашит в CI. Теперь §18 защищён на трёх уровнях: Stop-хук (reminder), CI-lint (structural + append-only freshness gate), append (skeleton-генератор).
@@ -1877,10 +1889,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | Trigger-detection (автодетект «PR merged») | автоматизация | ✅ **реализовано 2026-05-29** | [`roadmap-progress-enforcer.py`](../../.claude/hooks/roadmap-progress-enforcer.py) — Stop-хук: парсит transcript на Bash `tool_use` с `gh pr merge`/`git merge` (НЕ raw-text → чтение роадмапа не ложно-срабатывает); если merge был, а `docs/roadmap/` не тронут → **block-once per session** (sentinel, soft — не deadlock'ит). Opt-out `ROADMAP_PROGRESS_NO_ENFORCE=1`. Зарегистрирован в Stop-chain после `docs-change-enforcer`. Smoke 4/4 detection + 5/5 e2e PASS. *phase-DONE автодетект пока не покрыт — нет noise-free сигнала; merge — основной trigger* |
 | Auto-append §18 entry | автоматизация | ✅ **реализовано 2026-05-29** | [`scripts/roadmap_progress_log.py append --date --summary --pr [--apply]`](../../scripts/roadmap_progress_log.py) — вставляет skeleton dated-запись на top §18 (Claude/оператор дополняет). Default dry-run. Scope: только heading-based dated логи |
 | Roadmap §18 freshness lint (CI) | gate | ✅ **реализовано 2026-05-29** | [`roadmap_progress_log.py lint`](../../scripts/roadmap_progress_log.py) — structural (dated entries valid + reverse-chrono) **always** + append-only freshness (`--base <ref>`: §18 изменён vs base без новой dated-записи → FAIL). Зашит в CI `lint`-job (PR: `--base origin/<base>`, push: structural-only, graceful если base недоступен). 24 unit-теста + git FAIL/revert smoke PASS |
-| Commit-message convention для §18 | gate | 🟡 **частично** | `docs(roadmap): progress log` соблюдается вручную, но auto-git-save может перехватить (preempt) — нужен либо exempt в `auto_save_core.py` для `docs/roadmap/*`, либо amend-поглощение |
-| Cross-link §18 ↔ memory ↔ cache artifacts | трассируемость | 🟡 **частично** | Memory/cache перечисляются текстом, но нет машинной проверки что упомянутый entry реально существует (битые `[[wikilinks]]` не детектятся) |
+| Commit-message convention для §18 | gate | ✅ **реализовано 2026-05-29** | `docs/roadmap/` добавлен в exempt обоих auto-save хуков ([`auto-git-save.py`](../../.claude/hooks/auto-git-save.py) `IGNORE_PATH_PREFIXES` + [`posttooluse-auto-git-save.py`](../../.claude/hooks/posttooluse-auto-git-save.py) `SKIP_PATTERNS`) → правки §18 не перехватываются `chore: auto-save`, ждут осознанного `docs(roadmap): progress log`. Safety net — `git-commit-enforcer` (watches `docs/`) |
+| Cross-link §18 ↔ memory | трассируемость | ✅ **реализовано 2026-05-29** | [`roadmap_progress_log.py links`](../../scripts/roadmap_progress_log.py) — валидирует `[[name]]` против memory store; scope `_MEMORY_NAME_RE` (`feedback/project/reference/user` + `-`/`_`) → ловит реальные refs И hyphen/underscore drift, исключает doc-syntax-примеры/код. Advisory (skip если memory dir отсутствует, напр. CI; `--strict` → fail) |
 
-**Приоритет реализации:** ~~trigger-detection reminder (P1)~~ ✅ → ~~§18 freshness lint (P2)~~ ✅ → ~~auto-append skeleton (P3)~~ ✅ — **все 3 пункта автоматизации DONE 2026-05-29** (`roadmap-progress-enforcer.py` hook + `scripts/roadmap_progress_log.py` lint+append + CI wiring). Остаются 🟡-частичные: commit-convention preempt + cross-link wikilink-валидация (low priority).
+**Приоритет реализации:** ✅ **§19.3 ПОЛНОСТЬЮ ЗАКРЫТ 2026-05-29** — все 8 пунктов реализованы: P1 trigger-detection hook + P2 freshness lint (CI) + P3 auto-append skeleton + commit-convention preempt (roadmap exempt в auto-save) + cross-link wikilink-валидация (`links` subcommand). Manual checklist + memory anchor + reverse-chrono формат — соблюдаются. Дальнейших gap'ов в §19 нет.
 
 **Memory anchor:** [`feedback_roadmap_progress_log_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_roadmap_progress_log_protocol.md). Future Claude sessions ОБЯЗАНЫ проверять §18 и обновлять после каждого milestone.
 
