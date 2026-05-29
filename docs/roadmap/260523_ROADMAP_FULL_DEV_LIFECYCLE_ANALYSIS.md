@@ -1487,6 +1487,16 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-29 (день) — §21 Remaining Work Inventory (deep-check) добавлен
+
+**Outcome:** проведена глубокая проверка остатка роадмапа со сверкой каждого claim'а против кода; результат зафиксирован новым **§21** для будущей реализации. Вывод: «реализуемого сейчас» почти нет — роадмап = аналитический snapshot, не execution-backlog.
+
+**Landed:** §21 с 7 подсекциями: §21.1 verified-DONE (не переоткрывать) · §21.2 correctly-stubbed (Layer 4 — `docs/wiki/drafts/` пуст, stub корректен; + re-scope опция) · §21.3 infra-blocked (§15 → S3/MinIO / >5GB / LGTM) · §21.4 ongoing mypy (+ **drift-находка:** baseline.txt 1674 ≠ §18-claim 1548) · §21.5 §16 doc-blockers (counts 59/89/40, env `AUTO_PR_AUTO_MERGE`, cache 16, providers ~6 — verifiable, ~1-2ч) · §21.6 aspirational (~60 BP + §11 P1/P3/P4) · §21.7 рекомендованный порядок.
+
+**Метод:** verified против кода — `search_wiki()=return[]` + пустой drafts; `mypy-baseline.txt`=1674 строки; 16 cache-файлов; 6 llm-провайдеров. Docs-only, code-verify N/A.
+
+**Next priorities:** §21.5 doc-blockers (zero-risk, по запросу) → §21.4 mypy re-sync → §21.2/§21.3 по prerequisite.
+
 ### 2026-05-29 (предрассветно) — §19.3 ПОЛНОСТЬЮ ЗАКРЫТ: commit-preempt fix + wikilink-валидация
 
 **Outcome:** закрыты последние два 🟡-минора §19.3 → весь §19.3 теперь ✅ (8/8 пунктов). Дальнейших gap'ов в протоколе §19 нет.
@@ -1947,3 +1957,65 @@ Alert на production file
 - §18 Progress Log entry 2026-05-25 (AM) — где CodeQL впервые включён
 - `.github/workflows/codeql.yml` — workflow definition
 - [memory `feedback_ci_maximum_autopilot_works`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_ci_maximum_autopilot_works.md) — context на predecessor pattern
+
+---
+
+## §21 Remaining Work Inventory — Deep-Check 2026-05-29
+
+> **Что это.** Глубокая проверка остатка роадмапа со сверкой каждого «Missing/❌/STUB/deferred» claim'а против реального кода (протокол [[project_roadmap_audit_pattern]]). Вывод: это **аналитический snapshot, не execution-backlog** — «реализуемого сейчас» почти нет. Категории ниже фиксируют что осталось + **prerequisite-to-unblock** для каждой группы, чтобы будущая сессия могла взяться без повторного аудита.
+
+### §21.1 ✅ Verified DONE — НЕ переоткрывать
+
+| Блок | Где |
+|---|---|
+| §19 automation triad (8/8) | `roadmap-progress-enforcer.py` + `scripts/roadmap_progress_log.py` (lint/append/links) + roadmap exempt в auto-save |
+| §20 CodeQL triage (P0/P1/P2) | 0 open bare/empty-except |
+| §15 P0-P3 (кроме blocked) | crypto-shred + JSON Schema + Parquet + snapshots + retention_policy |
+| §14 Pre-Work pipeline (4 workers + dispatcher) | PR #9/#12/#46/#47 |
+
+### §21.2 🟡 «Числится remaining», но реализовывать НЕЧЕГО (verified)
+
+**Layer 4 wiki search** (§7.1, §11 P2, §16 #8) — `search_wiki()` в [`memory-first-hook.py:425`](../../.claude/hooks/memory-first-hook.py) = `return []`.
+- **Deep-check:** `docs/wiki/drafts/` **пуст** (только `.gitkeep`). Stub сейчас **корректен** — drafts наполняет L5-пайплайн (`session-memory-save → export_graph_to_wiki promote-patterns`), который ещё не отрабатывал. Поиск по пустой папке = те же `[]`.
+- **Prerequisite-to-unblock:** дождаться, пока L5 promote начнёт писать в `docs/wiki/drafts/` (≥1 draft). ТОЛЬКО ТОГДА реализация Layer 4 даёт ROI.
+- **Альтернатива (scope-change, требует решения):** переориентировать Layer 4 с пустого `drafts/` на наполненный `docs/wiki/` (entities/overview/patterns/`_index.md`). Caveat §16 #8: memory-first уже на 3s-бюджете → нужен time-box + token-overlap (не embed) для соблюдения budget.
+
+### §21.3 🔴 Infra-blocked — нельзя сделать до появления зависимости
+
+| Item | Блокер (prerequisite) |
+|---|---|
+| §15 P1/P2: PyIceberg time-travel + replay-checkpoint + items 9-10 | **S3/MinIO** endpoint + creds |
+| §15 item 12: Vector.dev universal fan-out | jsonl **>5GB** (сейчас 2.4MB) |
+| §15 item 13: Grafana Tempo + S3 + TraceQL | решение **«LGTM выбран»** (§15.4 P3 non-decision; см. §16 #9 — нужен explicit migration gate) |
+
+### §21.4 ⏳ Ongoing track — Phase 3 mypy cleanup
+
+- **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
+- **⚠️ Deep-check drift:** `mypy-baseline.txt` = **1674 строки**, но §18 (срез 7) заявляет baseline **1548**. Расхождение ~126 → **baseline stale/loose ИЛИ регресс после среза 7**. **Prerequisite:** `mypy src/ | python -m mypy_baseline sync` для сверки реального счёта ПЕРЕД продолжением срезов (иначе срезы считают от неверной базы). См. [[feedback_precommit_mypy_baseline_gap]], [[feedback_post_merge_baseline_resync_protocol]].
+- **Next file:** срез A (api/routes: collections/analytics/health) — теперь доступен.
+
+### §21.5 📋 §16 doc-blockers — флагнуты в §16.1, НЕ исправлены (verifiable, ~1-2ч)
+
+Роадмап сам помечает «FIX FIRST» (§16.5), но фиксы не применены. Все verifiable против кода:
+
+| §16 # | Doc-bug | Реальность (verified 2026-05-29) | Fix |
+|---|---|---|---|
+| #1 | §0/§4 inventory counts | claim 73 hooks/98 skills/45 memory → **реально 59/89/40**, 66 registrations | recount + update §0/§4/§14.7 |
+| #5 | §8.5 env vars | `AUTO_PR_MERGE_ENABLED` / `AUTO_PR_TIMEOUT` **не существуют** в коде → оператор получит no-op; реально `AUTO_PR_AUTO_MERGE` | sync §8.5 env-table к коду |
+| #6 | §10.2 cache-list | wrong filename (`auto-git-save.json` → `auto-git-save-state.json`), count «12» → **реально 16** | update §10.2 + cleanup стрей-артефактов (`posttool-test-2.txt`, `verify_report.py` в `.claude/cache/`) |
+| #7 (§7) | provider count | §0 «5» vs §7.3 «7» → **реально ~6** (zai/gemini/openrouter/mistral/ollama/anthropic) | reconcile §0↔§7.3 |
+| #2 | §X.7/§X.8 subsection ordering | best-practices вставлены до tech-stack по всем §3-§10 | renumber |
+
+### §21.6 💡 Aspirational backlog — НЕ committed scope (idea catalog)
+
+**~60 GitHub-best-practice «Missing»** из survey-таблиц §3.8/4.2/5.4/6.5/7.3/9.x/15.x — это **каталог идей с атрибуцией**, не план. Каждую брать только по явному запросу + через `architecture-research` (Фаза 0-6). Notable высокого ROI (если когда-то решим): DI-framework (§3.8 #7), Lefthook parallel hooks (§4.2 #2), RRF k=60 для memory federated (§7.3 #4), structlog (§10.x #7), PyBreaker для Qdrant/Neo4j/TEI (§9.x #4).
+
+**§11 Next Improvements P1/P3/P4** (backlog): Document 1C pipelines, RAGAS skill-router benchmark, D:\→C:\ path migration, skill bundle expansion, dead-skill detection cron, GitHub App migration, OpenSpec live JIRA sync (stub), Sandbox LangSmith/E2B backends (DryRun only).
+
+### §21.7 Рекомендованный порядок (когда возьмёмся)
+
+1. **§21.5 doc-blockers** (~1-2ч, zero-risk, verifiable) — снять расхождения роадмапа с кодом, чтобы будущие estimate/recount были на верной базе.
+2. **§21.4 mypy baseline re-sync** → продолжить Phase 3 срез A.
+3. **§21.2 Layer 4** — когда L5 наполнит drafts, ЛИБО решение о re-scope на `docs/wiki/`.
+4. **§21.3 §15 blocked** — когда появится S3/MinIO или jsonl перерастёт 5GB.
+5. **§21.6 aspirational** — по запросу, через architecture-research.
