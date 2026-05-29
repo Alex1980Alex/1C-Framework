@@ -258,6 +258,44 @@ exclude_lines = [
 python_version = "3.11"
 strict = true
 
+# Сторонние библиотеки без type stubs / py.typed marker — ignore_missing_imports
+# (root-cause fix вместо baseline-masking; §21.4, verified 2026-05-29).
+# ВАЖНО: внутренние модули (pdf_framework.*, shared.*) сюда НЕ входят — их
+# import-not-found = реальные баги (mypy-path/namespace), фиксятся в срезах.
+[[tool.mypy.overrides]]
+module = [
+    "asyncpg.*",
+    "colpali_engine.*",
+    "datasets.*",
+    "docling.*",
+    "docling_parse.*",
+    "dspy.*",
+    "e2b_code_interpreter.*",
+    "fitz", "fitz.*",
+    "FlagEmbedding.*",
+    "gradio.*",
+    "graspologic.*",
+    "langgraph.checkpoint.sqlite",
+    "multilspy.*",
+    "networkx", "networkx.*",
+    "pandas", "pandas.*",
+    "plotly", "plotly.*",
+    "pymorphy3", "pymorphy3.*",
+    "pymupdf4llm", "pymupdf4llm.*",
+    "ragatouille.*",
+    "serpapi", "serpapi.*",
+    "sklearn.*",
+    "streamlit", "streamlit.*",
+    "tavily", "tavily.*",
+    "tqdm", "tqdm.*",
+    "trl", "trl.*",
+    "unsloth", "unsloth.*",
+    "unstructured.*",
+    "watchdog.*",
+    "yaml", "yaml.*",
+]
+ignore_missing_imports = true
+
 [tool.interrogate]
 ignore-init-method = true
 ignore-init-module = true
