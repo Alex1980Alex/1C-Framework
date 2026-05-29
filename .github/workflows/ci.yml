@@ -44,6 +44,17 @@ jobs:
       - name: TOC ↔ filesystem consistency
         run: python scripts/validate_toc.py --json
 
+      - name: Roadmap §18 progress-log lint
+        run: |
+          if [ -n "${{ github.base_ref }}" ]; then
+            # Explicit refspec materializes origin/<base> even on single-branch checkout.
+            git fetch --no-tags --depth=1 origin \
+              "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" || true
+            python scripts/roadmap_progress_log.py lint --base "origin/${{ github.base_ref }}"
+          else
+            python scripts/roadmap_progress_log.py lint --no-freshness
+          fi
+
   typecheck:
     name: Type Check (mypy)
     runs-on: ubuntu-latest
