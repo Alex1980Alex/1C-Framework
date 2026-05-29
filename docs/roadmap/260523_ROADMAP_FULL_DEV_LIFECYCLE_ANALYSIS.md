@@ -3,7 +3,7 @@
 **Дата создания:** 2026-05-23
 **Тип:** Analytical roadmap (snapshot of framework patterns and lifecycle)
 **Scope:** End-to-end dev lifecycle от user prompt до cleanup post-merge
-**Источники (verified 2026-05-23 via find/wc):** 59 hook `.py` files (66 registered в `settings.json`: 5 SessionStart + 14 UPS + 1 UPE + 18 PreToolUse + 14 PostToolUse + 14 Stop), 20 shared modules, ~16 cache state files, 87 skills, 40 memory entries, 70+ CODE_TO_DOMAIN mappings
+**Источники (re-verified 2026-05-29 via find/wc — reproducible commands ниже):** 69 hook `.py` files (`ls .claude/hooks/*.py | wc -l`) + 26 shared modules (`.claude/hooks/shared/`) + 3 base modules (`.claude/hooks/base/`) = **98 total .py** (`find .claude/hooks -name '*.py' | wc -l`); 66 registered в `settings.json` (5 SessionStart + 14 UPS + 1 UPE + 18 PreToolUse + 14 PostToolUse + 14 Stop), 23 cache state files (после cleanup стрей-артефактов 2026-05-29), 85 skills (`find .claude/skills -name SKILL.md | wc -l`), 52 memory entries (`= число '- [' строк в MEMORY.md`), 70+ CODE_TO_DOMAIN mappings. **Базой служат команды, а не замороженные числа** — пересчёт тривиален и не требует ручного аудита.
 
 ---
 
@@ -16,7 +16,7 @@
 
 **Сильные стороны:** defense-in-depth (критичные проверки на 3 уровнях), graceful degradation (хуки не блокируют exit), observability (`data/hook-invocations.jsonl` audit log + Langfuse spans).
 
-**Слабые места:** Windows-bug #6305 (PostToolUse unreliable) → требует UserPromptSubmit/Stop fallback patterns; bug #10450 (Windows stdin empty); Cyrillic path encoding (mitigated через `encoding="utf-8"`); большой surface area (59 hooks, 66 registrations) с риском cascading regression (см. недавний PR #2 -X theirs merge → 4 silent hook breakages).
+**Слабые места:** Windows-bug #6305 (PostToolUse unreliable) → требует UserPromptSubmit/Stop fallback patterns; bug #10450 (Windows stdin empty); Cyrillic path encoding (mitigated через `encoding="utf-8"`); большой surface area (69 hooks, 66 registrations) с риском cascading regression (см. недавний PR #2 -X theirs merge → 4 silent hook breakages).
 
 **Цель этого документа:** zero-prior-knowledge reader должен понять как промпт пользователя проходит через ~15 стадий до cleanup, какие паттерны на каждой стадии срабатывают, где state хранится, и где failure modes.
 
@@ -291,7 +291,7 @@ Claude интерпретирует tool result, продолжает работ
 | **Outcome corpus** | data/delegation-outcomes.jsonl | Online bandit update |
 | **Langfuse span** | delegation.routing.decision | Observability foundation |
 | **Mandatory Opus review** | z-ai-delegation skill | Hard tasks: thorough review (security, edge cases, perf) |
-| **Provider fallback** | src/shared/llm_rotation/ | 5 providers (Z.AI GLM-5, Gemini, OpenRouter, Ollama, Anthropic) |
+| **Provider fallback** | src/shared/llm_rotation/ | 6 providers (Z.AI GLM-5, Gemini, OpenRouter, Mistral, Ollama, Anthropic) |
 
 ### 3.5 Git/PR patterns
 
@@ -401,7 +401,7 @@ Claude интерпретирует tool result, продолжает работ
   - `transcript` fallback (legacy)
 - **HookOutput** — builds JSON для stdout: `systemMessage` (advisory), `hookSpecificOutput` (structured), `decision: block`+`reason` (для exit 2)
 - **Settings.json hook chain** — `event → matcher (regex) → [{command, timeout}]`; multiple hooks per matcher выполняются последовательно
-- **Hook discovery** — 59 .py файла в `.claude/hooks/` (66 registrations в settings.json) + 20 shared modules в `.claude/hooks/shared/`
+- **Hook discovery** — 69 .py файла в `.claude/hooks/` (66 registrations в settings.json) + 26 shared modules в `.claude/hooks/shared/` + 3 base modules в `.claude/hooks/base/` = 98 .py всего (verified 2026-05-29)
 
 ---
 
@@ -562,7 +562,7 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 
 **Outcome corpus:** `data/delegation-outcomes.jsonl` (online bandit update).
 
-**5 providers:** Z.AI GLM-5 (primary), Gemini, OpenRouter, Ollama, Anthropic (fallback).
+**6 providers:** Z.AI GLM-5 (primary), Gemini, OpenRouter, Mistral, Ollama, Anthropic (fallback).
 
 **Guard:** `z-ai-write-guard.py` blocks >15 lines code если no `llm_delegation` в session.
 
@@ -589,7 +589,7 @@ Bug #6305 (PostToolUse ненадёжен на Windows) forced defense-in-depth 
 
 | # | Practice | Source | Have/Partial/Missing | Improvement |
 |---|---|---|---|---|
-| 13 | Error-type-aware fallback chain (LiteLLM `default/context_window/content_policy`) | docs.litellm.ai/docs/proxy/reliability | Partial | llm_rotation имеет 5 providers, fallback flat round-robin |
+| 13 | Error-type-aware fallback chain (LiteLLM `default/context_window/content_policy`) | docs.litellm.ai/docs/proxy/reliability | Partial | llm_rotation имеет 6 providers, fallback flat round-robin |
 | 14 | Weighted failover within model_group (`enable_weighted_failover`) | docs.litellm.ai/docs/routing | Missing | Конфиг плоский |
 | 15 | Circuit breaker per provider (3 states: Closed/Open/Half-open) | markaicode.com/circuit-breaker-resilient-ai-systems | Missing | fail → permanent until `llm_reset_provider`; PyBreaker patch |
 | 16 | Exponential backoff + jitter (Tenacity) | machinelearningplus.com/gen-ai/resilient-llm-client | Have | skill tenacity-retry |
@@ -828,14 +828,14 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 
 **Diagnostic:** `tail -500 data/hook-invocations.jsonl | jq 'select(.outcome=="error")'`
 
-### 10.2 Cache state files (12 files)
+### 10.2 Cache state files (23 файла на 2026-05-29; ниже — ключевые)
 
 | File | Used by |
 |---|---|
 | `hook-todos.json` | task-enforcer, task_master (mandatory tasks queue) |
 | `session-skills.json` | task-protocol-observer (phase, activated skills) |
 | `post-task-push-pr-state.json` | post-task-push-pr + dashboard |
-| `auto-git-save.json` | auto-git-save (counter + files list) |
+| `auto-git-save-state.json` | auto-git-save (counter + files list) |
 | `auto-git-save.paused` | TTL string sentinel |
 | `circuit-breaker-state.json` | shared/circuit_breaker.py |
 | `memory-first-cooldown.json` | memory-first-hook |
@@ -1123,7 +1123,7 @@ graceful degradation на failure. Escalation для complex через subagent
 + 100% pre-work coverage automatically
 + Reduced cognitive load (context inline)
 + Reduced cycle time (no manual triggers)
-- 4 new hooks к maintain (59 .py → 63; registrations 66 → 70)
+- 4 new hooks к maintain (69 .py → 73; registrations 66 → 70)
 - ~5K tokens overhead per prompt (mitigated via ranking)
 - UPS latency +3-5s worst case (parallel mitigation)
 
@@ -1160,7 +1160,7 @@ graceful degradation на failure. Escalation для complex через subagent
 | Layer | Tool | Coverage | Query | Replay | Retention |
 |---|---|---|---|---|---|
 | Hook invocations | `data/hook-invocations.jsonl` | 100% (atomic FileLock append) | grep/jq only | None | Unbounded growth |
-| State files | `.claude/cache/*.json` (12 files) | 100% per-state | Direct file read | None | Latest snapshot only |
+| State files | `.claude/cache/*.json` (23 files) | 100% per-state | Direct file read | None | Latest snapshot only |
 | LLM traces | Langfuse spans (`langfuse>=2.0`) | LLM calls only | Langfuse UI | Manual dataset replay | Per Langfuse plan |
 | Memory | `data/memory_ai.db` SQLite | Saved sessions | SQL | None | Unbounded |
 | Cache entries | `architecture-research/cache/*.md` + `_index.json` | Manual save | Markdown read | None | Manual cleanup |
@@ -1245,12 +1245,12 @@ graceful degradation на failure. Escalation для complex через subagent
 
 | # | Severity | Issue | Evidence |
 |---|---|---|---|
-| 1 | **HIGH** | Inventory counts wrong across all chapters | §0 claims `73 hooks, 24 shared, 98 skills, 45 memory`; actual: **59 .py / 21 shared / 89 skills / 40 memory**. settings.json registrations sum to 66. ADR §14.7 `73→77` anchored to wrong baseline |
+| 1 | **HIGH** | Inventory counts wrong across all chapters | ✅ синхронизировано 2026-05-29. Verified actual: **69 .py / 26 shared / 3 base / 85 skills / 52 memory**, registrations 66. §0/§4/§14 обновлены, база — reproducible-команды (§0) |
 | 2 | Medium | §X subsection ordering bug (X.8 ДО X.7) | Systematic across §3/§4/§5/§6/§7/§8/§9/§10 — best-practices appended без renumbering tech-stack |
 | 3 | Medium | §14 token budget self-contradicts | Success criterion (§14.2): `<5K tokens`. Evaluation matrix (§14.4): `~7800 → exceeds`. Mitigation handwaves "top-K ranking" без threshold spec |
 | 4 | Medium | §14 latency assumes parallel UPS — infra не существует | §14.5 diagram + §14.4 (≈6.5s) assume parallel. Actual settings.json — **sequential** (per §4.1). Sequential sum: 9.1s + existing 14 UPS ~3s = >12s — нарушает UPS UX |
-| 5 | **HIGH** | §8.5 env var documentation errors | `AUTO_PR_MERGE_ENABLED` — **не существует** в коде (актуально `AUTO_PR_AUTO_MERGE`). `AUTO_PR_TIMEOUT=600` — не существует. Operator following §8.5 силently получит no-op |
-| 6 | Medium | §10.2 cache file list — wrong filename + missing files | Claims `auto-git-save.json`; actual `auto-git-save-state.json`. Missing 5+ state files. Real cache count ~16 vs claimed "12" |
+| 5 | **HIGH** | §8.5 env var documentation errors | ✅ resolved (verify 2026-05-29): §8.5/§651 уже используют `AUTO_PR_AUTO_MERGE`; `AUTO_PR_MERGE_ENABLED`/`AUTO_PR_TIMEOUT` отсутствуют как live-vars (только в этом audit-описании) |
+| 6 | Medium | §10.2 cache file list — wrong filename + missing files | ✅ fixed 2026-05-29: `auto-git-save.json`→`auto-git-save-state.json`; count «12»→**23** (актуально); стрей-артефакты `posttool-test-2.txt`+`verify_report.py` удалены |
 | 7 | Low-Med | §3.1 file location | `auto-git-save-prompt-canary.log` лежит в `.claude/cache/`, не в `.claude/hooks/` |
 | 8 | Medium | §7.1 Layer 4 STUB vs §11 P2 effort vs §14.5 latency | Layer 4 = STUB returns []. §11 estimate 0.5 day. §14.5 budget 3s memory-first уже full. После Layer 4 implementation budget shrinks — un-modeled |
 | 9 | **HIGH** | §10 (Langfuse) vs §15.4 (LGTM Tempo) — no migration gate | §10 marks Langfuse `Have`. §15.4 P3 "если LGTM выбрано" — non-decision. Risk: dual-write infra 6 months without retirement criteria |
@@ -1261,14 +1261,14 @@ graceful degradation на failure. Escalation для complex через subagent
 
 | Chapter | Verified | Unverified | Missing deps | Errors | Effort risk |
 |---|---|---|---|---|---|
-| §0 TL;DR | Tech stack list directionally OK | Counts wrong (66/89/40 not 73/98/45) | None | Cited memory not file | Low |
+| §0 TL;DR | Tech stack list directionally OK | ✅ counts synced 2026-05-29 (69/85/52, 66 reg) | None | Cited memory not file | Low |
 | §1 Scope | Reasonable exclusions | — | — | — | Low |
 | §2 Lifecycle | Hook order matches settings.json ✓ | — | Stage 8 PR-auto AUTO_PR_ENABLED prereq не stated | Layer 1/2/3/4 naming для auto-git-save inconsistent | Low-Med |
 | §3 Patterns | Most Have/Partial labels accurate | "3-Layer auto-git-save" actually 4 per §8.1 | §3.7 после §3.8 ordering | AUTO_PR_MERGE_ENABLED не существует | Low |
-| §4 Hook Matrix | 1320s timeout verified ✓ | "73 total" wrong | None | PreToolUse 21 vs actual 18; PostToolUse 18 vs actual 14 | **Med** |
+| §4 Hook Matrix | 1320s timeout verified ✓ | ✅ "69 .py / 98 total" synced 2026-05-29 | None | PreToolUse 21 vs actual 18; PostToolUse 18 vs actual 14 | **Med** |
 | §5 3-Level Arch | Bug #6305/#10450/Cyrillic mitigations verified | "4 silent breakages" narrative | None | — | Low |
-| §6 Skills | skill-router-config.json v9 ✓ | 98 skills (89 actual), 50+ bundles unverified | task-protocol skill ✓ | Marker rfind() approach not verified | Low |
-| §7 Memory | TEI/Qwen3 4096d ✓ | "5 providers" (§0) vs 7 (§7.3) mismatch | TEI HTTP up = soft dep | Layer 4 STUB ✓ | **Med** |
+| §6 Skills | skill-router-config.json v9 ✓ | 85 skills (verified 2026-05-29), 50+ bundles unverified | task-protocol skill ✓ | Marker rfind() approach not verified | Low |
+| §7 Memory | TEI/Qwen3 4096d ✓ | 6 providers (synced §0↔§7 2026-05-29) | TEI HTTP up = soft dep | Layer 4 STUB ✓ | **Med** |
 | §8 Git/PR | 11-stage pipeline ✓ | "post-merge auto-revert" running unverified | gh CLI auth not gated | **AUTO_PR_MERGE_ENABLED, AUTO_PR_TIMEOUT — не существуют** | Low |
 | §9 Failure Modes | Memory feedback ✓ | "59" hardcoded — drift | — | importlib sweep не учитывает future prework-*.py | Low |
 | §10 Observability | Langfuse optional extra ✓ | Prometheus stack production claim unverified | Tempo migration deferred к §15 (when?) | — | Med (vs §15) |
@@ -1452,7 +1452,7 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 | # | Blocker (§16.3) | Status after §17 | Remaining work |
 |---|---|---|---|
-| 1 | Inventory baseline wrong | **RESOLVED 2026-05-23** | §0/§4/§14.7 recount applied (59/87/40/20/66 verified via find+wc) |
+| 1 | Inventory baseline wrong | **RE-RESOLVED 2026-05-29** | Recount 2026-05-23 сам устарел (59/87/40/20) — re-verified против кода: **69 .py / 26 shared / 3 base / 85 skills / 52 memory / 23 cache / 6 providers**, registrations 66. §0/§4/§14 синхронизированы; база теперь — reproducible-команды в §0, не замороженные числа |
 | 2 | §14 parallel-UPS unimplemented | **RESOLVED → ADR-D1** | Build `shared/prework_dispatcher.py` (1d in P0c) |
 | 3 | `AUTO_PR_MERGE_ENABLED` doc error | **RESOLVED 2026-05-23** | §8.5 env table synced к real code (16 actual env vars), wrong names anchored к actual replacements |
 | 4 | §14 token budget conflict | **RESOLVED → ADR-D2** | Implement adaptive routing + MMR (0.5d added to P1) |
@@ -1486,6 +1486,19 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 ## §18 Implementation Progress Log (live)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
+
+### 2026-05-29 (вечер) — §21.5 doc-blockers применены (#1/#5/#6/#7), #2 deferred
+
+**Outcome:** сняты count/env/cache-расхождения роадмапа с кодом — чтобы будущие estimate/recount были на верной базе. Ключевая находка: прежний recount 2026-05-23 (59/87/40/20) **сам устарел** — re-verified против кода даёт другие числа. База переведена с замороженных чисел на **reproducible-команды** в §0.
+
+**Landed:**
+- **#1 inventory** — verified `ls/find+wc`: **69 .py hooks + 26 shared + 3 base = 98 total · 85 skills · 52 memory**, 66 registrations. Синхронизированы §0 «Источники»+«Слабые места», §4 Hook discovery, §14 ADR hook-delta (69→73), §16 audit-ячейки (#1/§0/§4/§6/§7) + §17.5 re-status.
+- **#7 providers** — **6** (zai/gemini/openrouter/mistral/ollama/anthropic); §0↔§7 синхронизированы (+ Mistral в §6.x, §7.2, §7.3).
+- **#6 cache** — `auto-git-save.json`→`auto-git-save-state.json`; count 12→**23** (§10.2 + §13); удалены стрей-артефакты `posttool-test-2.txt` + `verify_report.py` (25→23 файла).
+- **#5 env vars** — verify-only: `AUTO_PR_AUTO_MERGE` уже в §8.5/§651, `AUTO_PR_MERGE_ENABLED`/`AUTO_PR_TIMEOUT` отсутствуют как live-vars → live-правок не требовалось.
+- **#2 renumber** — ⏸️ DEFERRED: косметика (не code-discrepancy), массовый renumber заголовков §X.7/§X.8 по §3-§10 рискует ломкой cross-ref — единственная не-«zero-risk» часть.
+
+**Метод:** verified против кода (`ls .claude/hooks/*.py|wc -l` и т.д.). Docs-only, code-verify N/A.
 
 ### 2026-05-29 (день) — §21 Remaining Work Inventory (deep-check) добавлен
 
@@ -1994,17 +2007,17 @@ Alert на production file
 - **⚠️ Deep-check drift:** `mypy-baseline.txt` = **1674 строки**, но §18 (срез 7) заявляет baseline **1548**. Расхождение ~126 → **baseline stale/loose ИЛИ регресс после среза 7**. **Prerequisite:** `mypy src/ | python -m mypy_baseline sync` для сверки реального счёта ПЕРЕД продолжением срезов (иначе срезы считают от неверной базы). См. [[feedback_precommit_mypy_baseline_gap]], [[feedback_post_merge_baseline_resync_protocol]].
 - **Next file:** срез A (api/routes: collections/analytics/health) — теперь доступен.
 
-### §21.5 📋 §16 doc-blockers — флагнуты в §16.1, НЕ исправлены (verifiable, ~1-2ч)
+### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
-Роадмап сам помечает «FIX FIRST» (§16.5), но фиксы не применены. Все verifiable против кода:
+**Статус:** count/env/cache-расхождения сняты — re-verified против кода (прежний recount 2026-05-23 сам устарел). База теперь = reproducible-команды в §0, не замороженные числа.
 
-| §16 # | Doc-bug | Реальность (verified 2026-05-29) | Fix |
+| §16 # | Doc-bug | Итог 2026-05-29 | Что сделано |
 |---|---|---|---|
-| #1 | §0/§4 inventory counts | claim 73 hooks/98 skills/45 memory → **реально 59/89/40**, 66 registrations | recount + update §0/§4/§14.7 |
-| #5 | §8.5 env vars | `AUTO_PR_MERGE_ENABLED` / `AUTO_PR_TIMEOUT` **не существуют** в коде → оператор получит no-op; реально `AUTO_PR_AUTO_MERGE` | sync §8.5 env-table к коду |
-| #6 | §10.2 cache-list | wrong filename (`auto-git-save.json` → `auto-git-save-state.json`), count «12» → **реально 16** | update §10.2 + cleanup стрей-артефактов (`posttool-test-2.txt`, `verify_report.py` в `.claude/cache/`) |
-| #7 (§7) | provider count | §0 «5» vs §7.3 «7» → **реально ~6** (zai/gemini/openrouter/mistral/ollama/anthropic) | reconcile §0↔§7.3 |
-| #2 | §X.7/§X.8 subsection ordering | best-practices вставлены до tech-stack по всем §3-§10 | renumber |
+| #1 | §0/§4/§14 inventory counts | ✅ DONE — **verified: 69 .py / 26 shared / 3 base / 85 skills / 52 memory**, 66 reg (claim 73 и recount 59 оба устарели) | синхронизированы §0 «Источники»+«Слабые места», §4 Hook discovery, §14 ADR hook-delta, §16 audit-ячейки; добавлены reproducible-команды в §0 |
+| #5 | §8.5 env vars | ✅ already-resolved (verify) — `AUTO_PR_AUTO_MERGE` уже в §8.5/§651; `AUTO_PR_MERGE_ENABLED`/`AUTO_PR_TIMEOUT` отсутствуют как live-vars (только в audit-описаниях бага) | подтверждено, live-правок не требовалось |
+| #6 | §10.2 cache-list | ✅ DONE — `auto-git-save.json`→`auto-git-save-state.json`; count «12»→**23** (§10.2 + §13 state-table) | + удалены стрей-артефакты `posttool-test-2.txt`, `verify_report.py` из `.claude/cache/` (25→23) |
+| #7 (§7) | provider count | ✅ DONE — **6 providers** (zai/gemini/openrouter/mistral/ollama/anthropic); §0↔§7 синхронизированы, добавлен Mistral | строки §6.x таблица, §7.2 «6 providers», §7.3 best-practice-ячейка |
+| #2 | §X.7/§X.8 subsection ordering | ⏸️ **DEFERRED** — best-practices subsection стоит перед tech-stack (напр. §10.5 до §10.4) по §3-§10 | косметика (не code-discrepancy) + массовый renumber заголовков риск ломки cross-ref «§X.Y» → вынесено отдельно, НЕ «zero-risk» |
 
 ### §21.6 💡 Aspirational backlog — НЕ committed scope (idea catalog)
 
