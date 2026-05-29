@@ -44,6 +44,17 @@ _SECTION_HEADING_RE = re.compile(r"^##\s+§18\b.*$", re.MULTILINE)
 _NEXT_SECTION_RE = re.compile(r"^##\s+§", re.MULTILINE)
 # Dated entry inside §18: `### 2026-05-29 (optional suffix) — title`
 _ENTRY_RE = re.compile(r"^###\s+(\d{4}-\d{2}-\d{2})\b(.*)$", re.MULTILINE)
+# Obsidian-style memory wikilink `[[name]]` / `[[name|alias]]` / `[[name#anchor]]`.
+_WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
+# A wikilink worth validating as a MEMORY reference: starts with a memory-entry
+# type prefix (feedback/project/reference/user) + `-`/`_` separator. Scoping to this
+# convention avoids false-positives from doc syntax examples (`[[overview]]`,
+# `[[page-name]]`), code artifacts (`[[Callable[..., Any]`), and concept mentions
+# (`[[wikilinks]]`), while still catching real refs AND hyphen/underscore drift
+# (e.g. `[[feedback-bsl-...]]` → file is `feedback_bsl_...md`).
+_MEMORY_NAME_RE = re.compile(r"^(feedback|project|reference|user)[-_][\w-]+$")
+# Default memory store (Claude Code project memory dir). Overridable via --memory-dir.
+_DEFAULT_MEMORY_DIR = Path.home() / ".claude" / "projects" / "C--1--Framework" / "memory"
 # Tolerate small clock skew between local/CI/commit timezones.
 _FUTURE_SKEW_DAYS = 2
 
@@ -141,6 +152,16 @@ def freshness_problem(base_text: str, head_text: str) -> str | None:
         "entry was rewritten) — the Progress Log is append-only (§19). Add a new "
         "`### YYYY-MM-DD — title` entry on top instead of editing history, or revert."
     )
+
+
+def extract_wikilinks(text: str) -> list[str]:
+    """Return unique `[[name]]` targets (alias/anchor stripped), preserving order."""
+    seen: dict[str, None] = {}
+    for m in _WIKILINK_RE.finditer(text):
+        name = m.group(1).strip()
+        if name:
+            seen.setdefault(name, None)
+    return list(seen)
 
 
 def build_skeleton(d: str, summary: str, pr: str | None = None) -> str:
@@ -298,7 +319,47 @@ def cmd_append(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_links(args: argparse.Namespace) -> int:
+    """Validate `[[name]]` memory wikilinks across roadmaps against the memory store.
+
+    Advisory by default: the memory dir is local-only (absent in CI) → graceful skip,
+    rc 0. `--strict` makes broken links a hard failure (rc 1) for local use.
+    """
+    mem_dir = Path(args.memory_dir) if args.memory_dir else _DEFAULT_MEMORY_DIR
+    if not mem_dir.exists():
+        print(f"[roadmap-links] memory dir not found ({mem_dir}) — skipped (advisory)")
+        return 0
+
+    files = sorted(ROADMAP_DIR.glob("*.md")) if ROADMAP_DIR.exists() else []
+    broken: dict[str, list[str]] = {}
+    for p in files:
+        rel = p.relative_to(PROJECT_ROOT).as_posix()
+        mem_links = [n for n in extract_wikilinks(_read(p)) if _MEMORY_NAME_RE.match(n)]
+        bad = [n for n in mem_links if not (mem_dir / f"{n}.md").exists()]
+        if bad:
+            broken[rel] = bad
+
+    if args.json:
+        print(json.dumps({"ok": not broken, "broken": broken}, ensure_ascii=False, indent=2))
+    elif not broken:
+        print("[roadmap-links] OK — all memory wikilinks resolve")
+    else:
+        for rel, names in broken.items():
+            print(f"[roadmap-links] {rel}: {len(names)} broken `[[...]]`")
+            for n in names:
+                print(f"    - [[{n}]] → missing {n}.md")
+
+    return 1 if (broken and args.strict) else 0
+
+
 def main(argv: list[str] | None = None) -> int:
+    # Windows consoles default to cp1251 → non-cp1251 chars (→, §, em-dash, `[[...]]`)
+    # raise UnicodeEncodeError. Force UTF-8 stdout (project convention).
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+    except Exception:
+        pass
+
     ap = argparse.ArgumentParser(description="§18 Progress Log tooling (roadmap 260523 §19)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -316,6 +377,12 @@ def main(argv: list[str] | None = None) -> int:
     apnd.add_argument("--roadmap", default=None, help="target roadmap file (default: the sole §18 roadmap)")
     apnd.add_argument("--apply", action="store_true", help="write the file (default: dry-run)")
     apnd.set_defaults(func=cmd_append)
+
+    lk = sub.add_parser("links", help="validate [[name]] memory wikilinks (advisory)")
+    lk.add_argument("--memory-dir", default=None, help="memory store dir (default: ~/.claude/projects/C--1--Framework/memory)")
+    lk.add_argument("--strict", action="store_true", help="exit 1 on broken links")
+    lk.add_argument("--json", action="store_true")
+    lk.set_defaults(func=cmd_links)
 
     args = ap.parse_args(argv)
     return args.func(args)

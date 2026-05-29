@@ -277,3 +277,83 @@ def test_git_show_graceful_on_exception(monkeypatch):
 
     monkeypatch.setattr(rpl.subprocess, "run", _boom)
     assert rpl._git_show("origin/master", "x.md") is None
+
+
+# ── wikilink extraction + memory-name scoping ─────────────────────────────────
+
+
+def test_extract_wikilinks_basic_alias_anchor_dedup():
+    text = "see [[feedback_x]] and [[project_y|alias]] and [[reference_z#sec]] and [[feedback_x]]"
+    assert rpl.extract_wikilinks(text) == ["feedback_x", "project_y", "reference_z"]
+
+
+def test_memory_name_re_accepts_real_refs():
+    for name in ["feedback_auto_git_save_preempt", "project_x", "reference_a", "user_b",
+                 "feedback-bsl-indexer-backend-choice"]:
+        assert rpl._MEMORY_NAME_RE.match(name), name
+
+
+def test_memory_name_re_rejects_non_memory():
+    # Doc syntax examples, code artifacts, concept mentions → must NOT be validated.
+    for name in ["overview", "PATTERNS", "wikilinks", "page-name", "Callable[..., Any",
+                 "...", "wiki-links", "_index"]:
+        assert not rpl._MEMORY_NAME_RE.match(name), name
+
+
+def test_cmd_links_broken_and_ok(tmp_path, monkeypatch, capsys):
+    # Isolated roadmap dir + memory dir.
+    rdir = tmp_path / "roadmap"
+    rdir.mkdir()
+    (rdir / "r.md").write_text(
+        "refs [[feedback_exists]] [[feedback_missing]] [[overview]] [[Callable[..., Any]]\n",
+        encoding="utf-8",
+    )
+    mem = tmp_path / "memory"
+    mem.mkdir()
+    (mem / "feedback_exists.md").write_text("x", encoding="utf-8")
+
+    monkeypatch.setattr(rpl, "ROADMAP_DIR", rdir)
+    monkeypatch.setattr(rpl, "PROJECT_ROOT", tmp_path)
+
+    ns = type("NS", (), {"memory_dir": str(mem), "strict": False, "json": False})()
+    rc = rpl.cmd_links(ns)
+    out = capsys.readouterr().out
+    assert "feedback_missing" in out  # real broken memory ref flagged
+    assert "overview" not in out  # non-memory wikilink ignored
+    assert rc == 0  # advisory by default
+
+
+def test_cmd_links_strict_fails(tmp_path, monkeypatch):
+    rdir = tmp_path / "roadmap"
+    rdir.mkdir()
+    (rdir / "r.md").write_text("[[feedback_missing]]\n", encoding="utf-8")
+    mem = tmp_path / "memory"
+    mem.mkdir()
+    monkeypatch.setattr(rpl, "ROADMAP_DIR", rdir)
+    monkeypatch.setattr(rpl, "PROJECT_ROOT", tmp_path)
+    ns = type("NS", (), {"memory_dir": str(mem), "strict": True, "json": False})()
+    assert rpl.cmd_links(ns) == 1  # --strict → hard fail
+
+
+def test_cmd_links_absent_memory_dir_advisory(tmp_path, monkeypatch, capsys):
+    ns = type("NS", (), {"memory_dir": str(tmp_path / "nope"), "strict": True, "json": False})()
+    rc = rpl.cmd_links(ns)
+    assert rc == 0  # missing memory dir → skip even with --strict
+    assert "skipped" in capsys.readouterr().out
+
+
+def test_cmd_links_json_output(tmp_path, monkeypatch, capsys):
+    import json as _json
+
+    rdir = tmp_path / "roadmap"
+    rdir.mkdir()
+    (rdir / "r.md").write_text("[[feedback_missing]]\n", encoding="utf-8")
+    mem = tmp_path / "memory"
+    mem.mkdir()
+    monkeypatch.setattr(rpl, "ROADMAP_DIR", rdir)
+    monkeypatch.setattr(rpl, "PROJECT_ROOT", tmp_path)
+    ns = type("NS", (), {"memory_dir": str(mem), "strict": False, "json": True})()
+    rpl.cmd_links(ns)
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["ok"] is False
+    assert "feedback_missing" in payload["broken"]["roadmap/r.md"]

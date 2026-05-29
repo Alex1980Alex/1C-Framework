@@ -111,6 +111,19 @@ IGNORE_PATTERNS = [
     ".ralph_wiggum_count",
 ]
 
+# Path-prefix exemptions (relative to repo root, POSIX). Files under these dirs
+# are NOT auto-committed — they require a deliberate, properly-messaged commit.
+# The Stop-level git-commit-enforcer (watches docs/) is the safety net so edits
+# aren't lost. See roadmap 260523 §19.3 (commit-convention preempt fix).
+IGNORE_PATH_PREFIXES = [
+    "docs/roadmap/",  # §18 Progress Log → manual `docs(roadmap): progress log` commit (§19 step 6)
+]
+
+
+def _is_path_ignored(rel_posix: str) -> bool:
+    """True if the POSIX-relative path is under an IGNORE_PATH_PREFIXES dir."""
+    return any(rel_posix.startswith(p) for p in IGNORE_PATH_PREFIXES)
+
 
 # --- Helpers ---
 
@@ -123,6 +136,8 @@ def should_track_file(file_path: str) -> bool:
     """
     rel = _get_relative_path(file_path)
     if rel is None:
+        return False
+    if _is_path_ignored(rel.replace("\\", "/")):
         return False
     name = Path(rel).name
     return name not in IGNORE_PATTERNS
@@ -198,6 +213,8 @@ def get_uncommitted_files() -> list[str]:
                 continue
             name = Path(filepath).name
             if name in IGNORE_PATTERNS:
+                continue
+            if _is_path_ignored(filepath):
                 continue
             # Skip submodule / embedded-repo pointer bumps — never auto-commit
             if filepath in gitlinks or any(filepath.startswith(g + "/") for g in gitlinks):

@@ -47,6 +47,10 @@ SKIP_PATTERNS = [
     "data/delegation-outcomes.jsonl",
     "data/hook-invocations.jsonl",
     "data/hook-latency.jsonl",
+    # §18 Progress Log → deliberate `docs(roadmap): progress log` commit, not
+    # chore: auto-save preempt (roadmap 260523 §19.3). git-commit-enforcer is
+    # the safety net (watches docs/).
+    "docs/roadmap/",
 ]
 
 
