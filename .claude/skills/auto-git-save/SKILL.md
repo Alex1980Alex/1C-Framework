@@ -166,6 +166,14 @@ Remove-Item .claude/cache/auto-git-save.paused
 
 **Игнорируются**: `cache/`, `temp/`, `__pycache__`, `node_modules`, `.git/`, `active-todos.json`, `hook-todos.json`
 
+### Path-prefix exempt (2026-05-29) — `docs/roadmap/`
+
+Помимо basename-фильтра `IGNORE_PATTERNS`, оба auto-save хука исключают **path-prefix** `docs/roadmap/`:
+- `auto-git-save.py` — `IGNORE_PATH_PREFIXES` + `_is_path_ignored()`, проверяется в `should_track_file()` (threshold) И `get_uncommitted_files()` (commit-путь, включая drift-set split-commit).
+- `posttooluse-auto-git-save.py` — `"docs/roadmap/"` в `SKIP_PATTERNS`.
+
+**Зачем:** §18 Progress Log дорожных карт должен получать осознанный коммит `docs(roadmap): progress log` (протокол §19), а не `chore: auto-save` preempt. Safety net — `git-commit-enforcer` (watches `docs/`) заблокирует Stop, если §18-правка осталась uncommitted → потери нет. См. [roadmap 260523 §19.3](../../../docs/roadmap/260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md). При добавлении новых «manual-commit» директорий — дополнять обе точки (`IGNORE_PATH_PREFIXES` + `SKIP_PATTERNS`).
+
 ---
 
 ## task_master.py API
