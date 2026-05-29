@@ -1487,6 +1487,18 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge (протокол §19 — это checklist, не автоматизация; см. §19 «Статус реализации»). Reverse chronological.
 
+### 2026-05-29 (ночь) — §19 P1 trigger-detection hook реализован (roadmap-progress-enforcer)
+
+**Outcome:** закрыт главный gap протокола §19 — обновление §18 больше **не держится только на memory-anchor**. Реализован Stop-хук, который детектит milestone (merge) и напоминает обновить §18, если `docs/roadmap/` не тронут. §19.3 item «trigger-detection» переведён ❌→✅.
+
+**Landed:**
+- [`.claude/hooks/roadmap-progress-enforcer.py`](../../.claude/hooks/roadmap-progress-enforcer.py) — Stop-хук (soft, **block-once per session** через sentinel `.claude/cache/roadmap-progress-enforcer-state.json`). Milestone-детект: парсит transcript JSONL на Bash `tool_use` с `gh pr merge`/`git merge` (исключая `--abort`); **парсинг tool_use, а не raw-text** → чтение роадмапа, полного «MERGED», не даёт false-positive. Если merge был + `docs/roadmap/` не изменён эту сессию (working tree + session-bounded `git log`, auto-save commits ВКЛЮЧены) + ещё не напоминал → `decision:block` + exit 2 (один раз). Opt-out `ROADMAP_PROGRESS_NO_ENFORCE=1`.
+- `settings.json` Stop-chain — зарегистрирован после `docs-change-enforcer.py` (timeout 5s).
+
+**Verification:** detection 4/4 (real `gh pr merge` ✓ / read-only roadmap text → None ✓ / `--abort` excluded ✓ / missing file → None ✓); e2e exit codes 5/5 (first-block=2 / second-soft-pass=0 / roadmap-touched=0 / no-milestone=0 / opt-out=0). Graceful degradation: любой internal error → exit 0 (never block).
+
+**§19 status:** P1 trigger-detection ✅ DONE. Remaining: §18 freshness lint (P2) + auto-append skeleton (P3).
+
 ### 2026-05-29 (поздний вечер) — Enforcer routing-fix UNBLOCKS api/routes mypy срез + docs sync + 08.6 behavioral tests
 
 **Outcome:** разблокирован **mypy срез A (api/routes)**, который §18 фиксировал как blocked в срезах 6/7 (строки «срез A остаётся blocked на FastAPI→learning-loop enforcer»). Рекомендованный там фикс (`code-skill-patterns.json`: FastAPI→framework-api вместо learning-loop) **выполнен**. Плюс закрыт code/doc drift в skill-routing docs и добавлена глава 08.6 про Python-тест-тиры.
@@ -1849,13 +1861,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 | Manual 6-step checklist | процедура | ✅ **реализовано** | Claude следует протоколу; подтверждено записями §18 за 2026-05-23…05-29 |
 | Memory anchor `feedback_roadmap_progress_log_protocol` | enforcement (soft) | ✅ **реализовано** | Recall-память напоминает future-сессиям проверять §18 |
 | Reverse-chrono формат + dated sections | формат | ✅ **реализовано** | Соблюдается |
-| Trigger-detection (автодетект «PR merged / phase DONE») | автоматизация | ❌ **нужно реализовать** | Нет хука, сканирующего `gh pr merge` / TaskUpdate→DONE и напоминающего обновить §18. Кандидат: Stop-хук, проверяющий «был ли merge/phase-DONE в сессии И §18 не тронут» → advisory reminder (по образцу `docs-change-enforcer`, но soft) |
+| Trigger-detection (автодетект «PR merged») | автоматизация | ✅ **реализовано 2026-05-29** | [`roadmap-progress-enforcer.py`](../../.claude/hooks/roadmap-progress-enforcer.py) — Stop-хук: парсит transcript на Bash `tool_use` с `gh pr merge`/`git merge` (НЕ raw-text → чтение роадмапа не ложно-срабатывает); если merge был, а `docs/roadmap/` не тронут → **block-once per session** (sentinel, soft — не deadlock'ит). Opt-out `ROADMAP_PROGRESS_NO_ENFORCE=1`. Зарегистрирован в Stop-chain после `docs-change-enforcer`. Smoke 4/4 detection + 5/5 e2e PASS. *phase-DONE автодетект пока не покрыт — нет noise-free сигнала; merge — основной trigger* |
 | Auto-append §18 entry | автоматизация | ❌ **нужно реализовать** (опционально) | Скрипт-заготовка `scripts/roadmap_progress_log.py append --date --summary --pr` для генерации skeleton-записи (Claude дополняет деталями). Снижает риск пропуска шага |
 | Roadmap §18 freshness lint (CI) | gate | ❌ **нужно реализовать** | CI-проверка: если в PR изменилась phase table (§18) ИЛИ merged PR закрывает phase — §18 должен иметь свежую dated-запись. Аналог docs-change-enforcer для roadmap |
 | Commit-message convention для §18 | gate | 🟡 **частично** | `docs(roadmap): progress log` соблюдается вручную, но auto-git-save может перехватить (preempt) — нужен либо exempt в `auto_save_core.py` для `docs/roadmap/*`, либо amend-поглощение |
 | Cross-link §18 ↔ memory ↔ cache artifacts | трассируемость | 🟡 **частично** | Memory/cache перечисляются текстом, но нет машинной проверки что упомянутый entry реально существует (битые `[[wikilinks]]` не детектятся) |
 
-**Приоритет реализации:** trigger-detection reminder (P1, наибольший anti-regression эффект) → §18 freshness lint (P2) → auto-append skeleton (P3, nice-to-have).
+**Приоритет реализации:** ~~trigger-detection reminder (P1)~~ ✅ **DONE 2026-05-29** (`roadmap-progress-enforcer.py`) → §18 freshness lint (P2, next) → auto-append skeleton (P3, nice-to-have).
 
 **Memory anchor:** [`feedback_roadmap_progress_log_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_roadmap_progress_log_protocol.md). Future Claude sessions ОБЯЗАНЫ проверять §18 и обновлять после каждого milestone.
 
