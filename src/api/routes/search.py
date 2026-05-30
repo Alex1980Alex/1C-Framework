@@ -675,12 +675,10 @@ async def plan_execute_query(
     if components.settings.agent.base_url:
         llm_kwargs["base_url"] = components.settings.agent.base_url
 
-    llm = ChatAnthropic(
-        **llm_kwargs,
-        api_key=SecretStr(components.settings.anthropic_api_key)
-        if components.settings.anthropic_api_key
-        else None,
-    )
+    if components.settings.anthropic_api_key:
+        llm_kwargs["api_key"] = SecretStr(components.settings.anthropic_api_key)
+
+    llm = ChatAnthropic(**llm_kwargs)
 
     # Create tools
     tools = {
