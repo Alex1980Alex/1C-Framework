@@ -286,13 +286,7 @@ async def cancel_job(job_id: str) -> dict[str, str]:
             )
 
         # Update status to cancelled
-        await redis.hset(
-            key,
-            mapping={
-                "status": "cancelled",
-                "progress": "-1",
-            },
-        )
+        await _hset(redis, key, {"status": "cancelled", "progress": "-1"})
 
         logger.info(f"[JOBS] Cancelled: {job_id}")
 
