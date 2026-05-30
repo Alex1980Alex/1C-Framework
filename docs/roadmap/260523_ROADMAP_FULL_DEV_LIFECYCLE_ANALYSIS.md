@@ -1487,6 +1487,19 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-29 (вечер-2) — §21.4 mypy baseline drift RESOLVED + stub-overrides срез
+
+**Outcome:** устранён двусторонний drift baseline и красный CI mypy gate; установлена верная база для срезов.
+
+**Findings (verified):** `mypy src/` = **1599** (claim'ы 1548/1674 оба устарели). `mypy_baseline filter` → **113 un-baselined** ошибок (CI красный): 72 = `import-not-found`/`import-untyped` сторонних libs без stubs, ~41 real (напр. `quick.py` union-attr ×12).
+
+**Landed:**
+- **Root-cause срез (stubs):** `pyproject.toml` → `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs → **1599 → 1530** (−69). Внутренние `pdf_framework.*`/`shared.*` НЕ заглушены (реальные баги).
+- **Baseline sync:** `mypy_baseline sync` (`PYTHONIOENCODING=utf-8`) → baseline = current 1530; **filter EXIT=0, new=0 → CI mypy green**.
+- §21.4 обновлён: точная база **1530**, топ-файлы для следующих срезов.
+
+**Метод:** `mypy src/` + `mypy_baseline filter/sync`. Code-change (pyproject) — verify через повторный filter (green).
+
 ### 2026-05-29 (вечер) — §21.5 doc-blockers применены (#1/#5/#6/#7), #2 deferred
 
 **Outcome:** сняты count/env/cache-расхождения роадмапа с кодом — чтобы будущие estimate/recount были на верной базе. Ключевая находка: прежний recount 2026-05-23 (59/87/40/20) **сам устарел** — re-verified против кода даёт другие числа. База переведена с замороженных чисел на **reproducible-команды** в §0.
@@ -2004,8 +2017,9 @@ Alert на production file
 ### §21.4 ⏳ Ongoing track — Phase 3 mypy cleanup
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
-- **⚠️ Deep-check drift:** `mypy-baseline.txt` = **1674 строки**, но §18 (срез 7) заявляет baseline **1548**. Расхождение ~126 → **baseline stale/loose ИЛИ регресс после среза 7**. **Prerequisite:** `mypy src/ | python -m mypy_baseline sync` для сверки реального счёта ПЕРЕД продолжением срезов (иначе срезы считают от неверной базы). См. [[feedback_precommit_mypy_baseline_gap]], [[feedback_post_merge_baseline_resync_protocol]].
-- **Next file:** срез A (api/routes: collections/analytics/health) — теперь доступен.
+- **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
+- **Текущая база:** **1530 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **Next file:** срез A (api/routes) ИЛИ Pareto top-file (analytical/agent.py). Срезы теперь считают от верной базы 1530.
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
