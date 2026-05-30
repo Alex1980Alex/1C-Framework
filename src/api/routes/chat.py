@@ -158,7 +158,7 @@ async def send_message(request: ChatMessageRequest) -> StreamingResponse | dict[
 
                 # Collect response for storage
                 if event.type.value == "token":
-                    assistant_response.append(event.data)
+                    assistant_response.append(str(event.data))
 
             # Store assistant response
             full_response = "".join(assistant_response)
