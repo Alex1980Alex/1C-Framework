@@ -471,7 +471,7 @@ class MultiAgentResponse(BaseModel):
 async def multi_agent_question(
     request: MultiAgentRequest,
     components: Components = Depends(get_components),
-):
+) -> MultiAgentResponse:
     """Multi-agent orchestration: retrieval → analysis → writing → verification.
 
     Phase 39: Specialized agents collaborate for comprehensive analysis.
