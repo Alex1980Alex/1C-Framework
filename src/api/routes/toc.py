@@ -220,7 +220,7 @@ async def get_section_detail(
 async def generate_section_summaries(
     document_id: str,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Trigger LLM summary generation for all sections of a document.
 
     Reads chunks from vector store, extracts sections, and generates
