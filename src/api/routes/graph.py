@@ -147,7 +147,10 @@ async def build_communities() -> dict[str, Any]:
         )
 
     # Step 4: Save graph to disk
-    components.graph_store._save_to_file()
+    # NetworkX backend persists to disk explicitly; other backends auto-persist.
+    save_to_file = getattr(components.graph_store, "_save_to_file", None)
+    if callable(save_to_file):
+        save_to_file()
 
     logger.info(
         "[COMMUNITIES] Done: %d communities, %d summaries, graph saved",
