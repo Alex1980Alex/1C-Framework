@@ -8,6 +8,8 @@ Version: 1.0.0 - Phase 9.4: Chat API endpoints
 
 import logging
 import uuid
+from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
