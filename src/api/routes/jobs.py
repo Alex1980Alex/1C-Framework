@@ -293,7 +293,7 @@ async def cancel_job(job_id: str) -> dict[str, str]:
 
 
 @router.get("/{job_id}/stream")
-async def stream_job_progress(job_id: str):
+async def stream_job_progress(job_id: str) -> StreamingResponse:
     """Stream job progress via Server-Sent Events (SSE).
 
     Args:
