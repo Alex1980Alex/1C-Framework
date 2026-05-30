@@ -1,0 +1,98 @@
+diff --git a/src/pdf_framework/agents/analytical/agent.py b/src/pdf_framework/agents/analytical/agent.py
+index b7c47ca74..b44c9e5ec 100644
+--- a/src/pdf_framework/agents/analytical/agent.py
++++ b/src/pdf_framework/agents/analytical/agent.py
+@@ -58,7 +58,7 @@ def create_analytical_agent(
+     """
+     settings = settings or AgentSettings()
+ 
+-    llm_kwargs = dict(
++    llm_kwargs: dict[str, Any] = dict(
+         model=settings.model,
+         temperature=0.1,
+         max_tokens=settings.max_tokens,
+@@ -68,7 +68,7 @@ def create_analytical_agent(
+         llm_kwargs["base_url"] = settings.base_url
+     llm = ChatAnthropic(**llm_kwargs)
+ 
+-    fast_llm_kwargs = dict(
++    fast_llm_kwargs: dict[str, Any] = dict(
+         model=fast_model,
+         temperature=0.0,
+         max_tokens=2048,
+@@ -81,7 +81,7 @@ def create_analytical_agent(
+     parser = StrOutputParser()
+ 
+     # ========== Node 1: Plan ==========
+-    async def plan_analysis(state: AnalyticalState) -> dict:
++    async def plan_analysis(state: AnalyticalState) -> dict[str, Any]:
+         """Analyze the question and create a retrieval plan."""
+         question = state["question"]
+ 
+@@ -148,7 +148,7 @@ def create_analytical_agent(
+         }
+ 
+     # ========== Node 2: Multi-Source Retrieve ==========
+-    async def retrieve(state: AnalyticalState) -> dict:
++    async def retrieve(state: AnalyticalState) -> dict[str, Any]:
+         """Execute search queries from the plan (parallel, multi-strategy)."""
+         plan = AnalysisPlan(**state["plan"])
+         current_round = state.get("round", 0)
+@@ -169,7 +169,7 @@ def create_analytical_agent(
+         if plan.question_type in ("comparative", "overview"):
+             strategies.append("section_first")
+ 
+-        all_results = []
++        all_results: list[Any] = []
+ 
+         async def _search_one(query: str, strategy: str) -> Any:
+             try:
+@@ -187,7 +187,7 @@ def create_analytical_agent(
+         results = await asyncio.gather(*tasks, return_exceptions=True)
+ 
+         for r in results:
+-            if r is not None and not isinstance(r, Exception):
++            if r is not None and not isinstance(r, BaseException):
+                 all_results.append(r)
+ 
+         # Deduplicate chunks by ID
+@@ -240,10 +240,10 @@ def create_analytical_agent(
+         }
+ 
+     # ========== Node 3: Collect Evidence ==========
+-    async def collect_evidence(state: AnalyticalState) -> dict:
++    async def collect_evidence(state: AnalyticalState) -> dict[str, Any]:
+         """Extract structured evidence from retrieved chunks using LLM."""
+         plan = AnalysisPlan(**state["plan"])
+-        chunks = state.get("_current_chunks", [])
++        chunks: list[dict[str, Any]] = state.get("_current_chunks") or []
+ 
+         if not chunks:
+             return {"round": state.get("round", 0) + 1}
+@@ -318,7 +318,7 @@ def create_analytical_agent(
+         }
+ 
+     # ========== Node 4: Compare (for comparative questions) ==========
+-    async def compare_entities(state: AnalyticalState) -> dict:
++    async def compare_entities(state: AnalyticalState) -> dict[str, Any]:
+         """Build a comparison table from collected evidence."""
+         plan = AnalysisPlan(**state["plan"])
+         evidence = state.get("evidence", [])
+@@ -384,7 +384,7 @@ def create_analytical_agent(
+         return {"comparison_table": table.model_dump()}
+ 
+     # ========== Node 5: Check Coverage ==========
+-    async def check_coverage(state: AnalyticalState) -> dict:
++    async def check_coverage(state: AnalyticalState) -> dict[str, Any]:
+         """Check if all aspects of the question are covered by evidence."""
+         plan = AnalysisPlan(**state["plan"])
+         evidence = state.get("evidence", [])
+@@ -420,7 +420,7 @@ def create_analytical_agent(
+         }
+ 
+     # ========== Node 6: Synthesize ==========
+-    async def synthesize(state: AnalyticalState) -> dict:
++    async def synthesize(state: AnalyticalState) -> dict[str, Any]:
+         """Generate the final structured answer from evidence."""
+         question = state["question"]
+         plan = AnalysisPlan(**state["plan"])
