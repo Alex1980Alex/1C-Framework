@@ -141,7 +141,7 @@ async def chat_completions(
 
             async for event in runner.stream(query, search_strategy="hybrid"):
                 if event.type.value == "token":
-                    token = event.data
+                    token = str(event.data)
                     full_content += token
 
                     chunk = ChatChunk(
@@ -221,7 +221,7 @@ async def _run_rag(query: str, components: Components) -> str:
         }
     )
 
-    return result.get("answer", "No answer generated.")
+    return str(result.get("answer", "No answer generated."))
 
 
 @router.post("/embeddings", response_model=EmbeddingResponse)
