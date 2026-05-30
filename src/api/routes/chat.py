@@ -105,7 +105,7 @@ class ThreadsListResponse(BaseModel):
 
 
 @router.post("/message")
-async def send_message(request: ChatMessageRequest):
+async def send_message(request: ChatMessageRequest) -> StreamingResponse | dict[str, Any]:
     """
     Send a chat message and get streaming response.
 
