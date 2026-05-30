@@ -221,7 +221,7 @@ async def entity_embeddings_stats() -> dict[str, Any]:
 
 
 @router.get("/neighbors/{entity_id}")
-async def get_neighbors(entity_id: str, depth: int = 1):
+async def get_neighbors(entity_id: str, depth: int = 1) -> dict[str, Any]:
     """Get neighboring entities for a given entity."""
     components = await get_components()
     subgraph = await components.graph_store.get_neighbors(entity_id, depth=depth)
