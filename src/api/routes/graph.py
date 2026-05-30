@@ -261,59 +261,18 @@ async def incremental_graph_update(
     IDOR guard (roadmap 260509 §2.3): non-admin callers can only update graphs
     in their own tenant. Admins may target any tenant via `tenant_id`.
     """
-    from src.pdf_framework.graph_store.incremental import IncrementalGraphUpdater
-
+    # IDOR guard retained (roadmap 260509 §2.3).
     assert_tenant_access(tenant_id, _current_tenant, _role)
-
-    components = await get_components()
-
-    # Get document chunks from vector store
-    chunks = await components.vector_store.get_chunks(document_id, tenant_id)
-
-    if not chunks:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No chunks found for document: {document_id}",
-        )
-
-    # Convert chunks to dict format for change detector
-    chunk_dicts = [
-        {
-            "id": c.chunk_id,
-            "content": c.text,
-            "metadata": getattr(c, "metadata", {}),
-        }
-        for c in chunks
-    ]
-
-    # Create incremental updater
-    updater = IncrementalGraphUpdater(
-        graph_store=components.graph_store,
-        entity_extractor=getattr(components, "entity_extractor", None),
+    # NOT IMPLEMENTED (roadmap §21.4 / срез G): prior body called non-existent APIs
+    # (vector_store.get_chunks / IncrementalGraphUpdater.update_document / entity_extractor
+    # kwarg) → runtime AttributeError. Needs chunks→entity-extraction→update() wiring (feature).
+    raise HTTPException(
+        status_code=501,
+        detail=(
+            f"Incremental graph update for '{document_id}' is not implemented "
+            "(requires entity-extraction wiring). Use POST /graph/build-communities. §21.4."
+        ),
     )
-
-    # Update graph incrementally
-    result = await updater.update_document(
-        chunks=chunk_dicts,
-        document_id=document_id,
-        tenant_id=tenant_id,
-    )
-
-    # Update entity embeddings if enabled
-    if components.entity_embeddings and result.get("added_entities", 0) > 0:
-        # Get added/modified entity IDs
-        # This would require tracking entity IDs during update
-        # For now, do a full rebuild
-        try:
-            await components.entity_embeddings.build(components.graph_store)
-        except Exception as e:
-            logger.warning("[INCREMENTAL] Entity embedding update failed: %s", e)
-
-    return {
-        "status": "success",
-        "document_id": document_id,
-        **result,
-    }
 
 
 @router.get("/incremental/detect-changes")
