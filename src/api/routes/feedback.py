@@ -120,7 +120,7 @@ async def submit_feedback(
 @router.get("/stats", response_model=FeedbackStats)
 async def get_feedback_stats(
     components: Components = Depends(get_components),
-):
+) -> FeedbackStats:
     """Get feedback statistics.
 
     Returns overall stats and per-strategy performance.
