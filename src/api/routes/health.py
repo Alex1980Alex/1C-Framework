@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health", tags=["health"])
 
 
-async def check_vector_store() -> dict:
+async def check_vector_store() -> dict[str, Any]:
     """Check vector store health."""
     try:
         components = await get_components()
