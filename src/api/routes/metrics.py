@@ -494,7 +494,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
 
 
 @router.get("")
-async def get_metrics():
+async def get_metrics() -> dict[str, Any]:
     """Get system metrics as JSON."""
     metrics_collector = get_metrics_collector()
     llm_cache = get_llm_cache()
