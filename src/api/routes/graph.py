@@ -58,7 +58,7 @@ async def list_entities(
 
 
 @router.delete("/clear")
-async def clear_graph():
+async def clear_graph() -> dict[str, Any]:
     """Clear all entities and relations from the knowledge graph."""
     components = await get_components()
     stats_before = await components.graph_store.get_statistics()
