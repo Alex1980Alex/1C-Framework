@@ -5,6 +5,7 @@ and community detection (Leiden + LLM summarization).
 """
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
