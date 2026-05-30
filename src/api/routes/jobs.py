@@ -92,7 +92,7 @@ async def get_job_status(job_id: str) -> JobInfo | None:
     try:
         redis = await get_redis()
         key = f"job:{job_id}"
-        data = await redis.hgetall(key, encoding="utf-8")
+        data = await _hgetall(redis, key)
 
         if not data:
             return None
@@ -239,7 +239,7 @@ async def list_jobs(
         active = 0
 
         for key in keys[:limit]:
-            data = await redis.hgetall(key, encoding="utf-8")
+            data = await _hgetall(redis, key)
             if data:
                 job_status = JobStatus(data.get("status", "pending"))
                 if status_filter is None or job_status == status_filter:
@@ -279,7 +279,7 @@ async def cancel_job(job_id: str) -> dict[str, str]:
 
         # Check if job exists
         key = f"job:{job_id}"
-        data = await redis.hgetall(key, encoding="utf-8")
+        data = await _hgetall(redis, key)
 
         if not data:
             raise HTTPException(
@@ -328,7 +328,7 @@ async def stream_job_progress(job_id: str) -> StreamingResponse:
             key = f"job:{job_id}"
 
             while True:
-                data = await redis.hgetall(key, encoding="utf-8")
+                data = await _hgetall(redis, key)
 
                 if not data:
                     yield "event: error\ndata: {'message': 'Job not found'}\n\n"
