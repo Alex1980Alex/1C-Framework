@@ -88,7 +88,7 @@ async def get_analytics_summary(
 @router.get("/queries", response_model=QueryStatsResponse)
 async def get_query_stats(
     components: Components = Depends(get_components),
-):
+) -> QueryStatsResponse:
     """Get query analytics: total, latency, strategies, popular queries."""
     tracker = getattr(components, "query_tracker", None)
     if tracker is None:
