@@ -291,7 +291,7 @@ async def generate_section_summaries(
     }
 
 
-def _count_sections(tree: list[dict]) -> int:
+def _count_sections(tree: list[dict[str, Any]]) -> int:
     """Count total sections in a tree (recursive)."""
     count = 0
     for node in tree:
