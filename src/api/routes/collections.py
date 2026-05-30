@@ -72,7 +72,7 @@ async def list_collections() -> dict[str, Any]:
 
 
 @router.get("/{collection_id}")
-async def get_collection(collection_id: str):
+async def get_collection(collection_id: str) -> dict[str, Any]:
     """Get a collection by ID with details."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
