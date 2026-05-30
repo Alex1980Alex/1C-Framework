@@ -167,7 +167,7 @@ async def build_communities() -> dict[str, Any]:
 
 
 @router.post("/build-entity-embeddings")
-async def build_entity_embeddings():
+async def build_entity_embeddings() -> dict[str, Any]:
     """Build entity and relation embeddings for LightRAG (Phase 38).
 
     Creates vector embeddings for all graph entities and relations,
