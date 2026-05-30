@@ -72,7 +72,7 @@ async def check_graph_store() -> dict[str, Any]:
         }
 
 
-async def check_llm() -> dict:
+async def check_llm() -> dict[str, Any]:
     """Check LLM availability."""
     try:
         settings = get_settings()
