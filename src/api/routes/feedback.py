@@ -127,7 +127,8 @@ async def get_feedback_stats(
     """
     try:
         collector = _get_collector(components)
-        return collector.get_stats()
+        stats: FeedbackStats = collector.get_stats()
+        return stats
 
     except Exception as e:
         logger.error(f"[FEEDBACK] Failed to get stats: {e}")
