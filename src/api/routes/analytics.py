@@ -60,7 +60,7 @@ class AnalyticsSummaryResponse(BaseModel):
 @router.get("/summary", response_model=AnalyticsSummaryResponse)
 async def get_analytics_summary(
     components: Components = Depends(get_components),
-):
+) -> AnalyticsSummaryResponse:
     """Get combined analytics summary: queries + costs + audit."""
     query_stats = {}
     cost_stats = {}
