@@ -11,6 +11,7 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from enum import Enum
+from typing import Any, cast
 
 from src.pdf_framework.agents.rag.state import RAGState
 
@@ -33,8 +34,8 @@ class StreamEvent:
     def __init__(
         self,
         type: StreamEventType | str,
-        data: str | dict | list,
-        metadata: dict | None = None,
+        data: str | dict[str, Any] | list[Any],
+        metadata: dict[str, Any] | None = None,
     ):
         """
         Initialize stream event.
@@ -63,7 +64,7 @@ class StreamEvent:
 
         return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for non-SSE delivery."""
         return {
             "type": self.type.value,
@@ -72,7 +73,7 @@ class StreamEvent:
         }
 
 
-def _format_sources(sources: list) -> list[dict]:
+def _format_sources(sources: list[Any]) -> list[dict[str, Any]]:
     """Format source items (strings or dicts) into uniform dicts."""
     formatted = []
     for s in sources:
@@ -103,7 +104,7 @@ class StreamingRAGRunner:
 
     def __init__(
         self,
-        graph,
+        graph: Any,
         show_status: bool = True,
         show_sources: bool = True,
     ):
@@ -123,7 +124,7 @@ class StreamingRAGRunner:
         self,
         question: str,
         thread_id: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> AsyncIterator[StreamEvent]:
         """
         Stream RAG execution with real-time events.
@@ -137,11 +138,14 @@ class StreamingRAGRunner:
             StreamEvent objects with token/source/status/done events
         """
         # Build input state
-        input_state: RAGState = {
-            "question": question,
-            "thread_id": thread_id,
-            **kwargs,
-        }
+        input_state: RAGState = cast(
+            RAGState,
+            {
+                "question": question,
+                "thread_id": thread_id,
+                **kwargs,
+            },
+        )
 
         logger.info(f"[STREAM] Starting stream for thread {thread_id}")
 
@@ -183,8 +187,8 @@ class StreamingRAGRunner:
                         continue
 
                     chunk = event_data.get("chunk")
-                    if hasattr(chunk, "content"):
-                        content = chunk.content
+                    content = getattr(chunk, "content", None)
+                    if content is not None:
                         # content can be str or list[ContentBlock]
                         if isinstance(content, list):
                             content = "".join(getattr(block, "text", "") for block in content)
@@ -242,7 +246,7 @@ class StreamingRAGRunner:
         self,
         question: str,
         thread_id: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> AsyncIterator[str]:
         """
         Stream RAG execution as SSE-formatted strings.
@@ -259,7 +263,7 @@ class StreamingRAGRunner:
             yield event.to_sse()
 
 
-async def collect_stream(stream: AsyncIterator[StreamEvent]) -> dict:
+async def collect_stream(stream: AsyncIterator[StreamEvent]) -> dict[str, Any]:
     """
     Collect all events from a stream into a structured result.
 
@@ -271,13 +275,13 @@ async def collect_stream(stream: AsyncIterator[StreamEvent]) -> dict:
     Returns:
         Dict with answer (concatenated tokens), sources, and metadata
     """
-    answer_parts = []
-    sources = []
-    status_events = []
+    answer_parts: list[str] = []
+    sources: list[Any] = []
+    status_events: list[Any] = []
 
     async for event in stream:
         if event.type == StreamEventType.TOKEN:
-            answer_parts.append(event.data)
+            answer_parts.append(str(event.data))
         elif event.type == StreamEventType.SOURCE:
             sources.extend(event.data if isinstance(event.data, list) else [event.data])
         elif event.type == StreamEventType.STATUS:

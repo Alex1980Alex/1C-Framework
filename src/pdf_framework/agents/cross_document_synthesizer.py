@@ -12,6 +12,7 @@ Version: 1.0.0 - Phase 19: Deep Research Agent
 import logging
 
 from anthropic import Anthropic
+from anthropic.types import TextBlock
 from pydantic import BaseModel, Field
 
 from src.pdf_framework.config import Settings, get_settings
@@ -102,7 +103,8 @@ class CrossDocumentSynthesizer:
                 ],
             )
 
-            result = response.content[0].text
+            block = response.content[0]
+            result = block.text if isinstance(block, TextBlock) else ""
             answer = self._parse_synthesis(result, results)
 
             logger.info(

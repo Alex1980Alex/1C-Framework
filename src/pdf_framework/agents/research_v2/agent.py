@@ -13,6 +13,7 @@ import asyncio
 import json
 import logging
 import uuid
+from typing import Any
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -45,7 +46,7 @@ def create_research_agent_v2(
     settings: AgentSettings | None = None,
     api_key: str = "",
     fast_model: str = "claude-sonnet-4-5-20250929",
-):
+) -> Any:
     """Create a LangGraph Research Agent v2.
 
     Phase 36: Plan-Execute-Verify with evidence graph and quality gates.
@@ -61,7 +62,7 @@ def create_research_agent_v2(
     """
     settings = settings or AgentSettings()
 
-    llm_kwargs: dict = dict(
+    llm_kwargs: dict[str, Any] = dict(
         model=settings.model,
         temperature=0.1,
         max_tokens=settings.max_tokens,
@@ -71,7 +72,7 @@ def create_research_agent_v2(
         llm_kwargs["base_url"] = settings.base_url
     llm = ChatAnthropic(**llm_kwargs)
 
-    fast_kwargs: dict = dict(
+    fast_kwargs: dict[str, Any] = dict(
         model=fast_model,
         temperature=0.0,
         max_tokens=2048,
@@ -84,7 +85,7 @@ def create_research_agent_v2(
     parser = StrOutputParser()
 
     # ========== Node 1: Plan Research ==========
-    async def plan_research(state: ResearchV2State) -> dict:
+    async def plan_research(state: ResearchV2State) -> dict[str, Any]:
         """Generate a dependency-tree research plan."""
         question = state["question"]
 
@@ -168,7 +169,7 @@ def create_research_agent_v2(
         }
 
     # ========== Node 2: Execute Tasks ==========
-    async def execute_tasks(state: ResearchV2State) -> dict:
+    async def execute_tasks(state: ResearchV2State) -> dict[str, Any]:
         """Execute ready tasks from the plan (parallel where possible)."""
         plan = ResearchPlanTree(**state["plan"])
         ready = plan.get_ready_tasks()
@@ -184,7 +185,7 @@ def create_research_agent_v2(
             }
 
         # Execute ready tasks in parallel
-        async def _search_task(task: ResearchTask):
+        async def _search_task(task: ResearchTask) -> tuple[ResearchTask, Any]:
             try:
                 strategy = task.strategy
                 if strategy == "section_first":
@@ -206,7 +207,7 @@ def create_research_agent_v2(
             *[_search_task(t) for t in ready[:4]],  # max 4 parallel
         )
 
-        all_chunks: list[dict] = []
+        all_chunks: list[dict[str, Any]] = []
         seen_ids: set[str] = set()
 
         # Collect existing evidence chunk_ids
@@ -252,7 +253,7 @@ def create_research_agent_v2(
         }
 
     # ========== Node 3: Build Evidence ==========
-    async def build_evidence(state: ResearchV2State) -> dict:
+    async def build_evidence(state: ResearchV2State) -> dict[str, Any]:
         """Extract facts from chunks and build the evidence graph."""
         chunks = state.get("current_chunks", [])
         if not chunks:
@@ -363,7 +364,7 @@ def create_research_agent_v2(
         }
 
     # ========== Node 4: Quality Gate ==========
-    async def quality_gate(state: ResearchV2State) -> dict:
+    async def quality_gate(state: ResearchV2State) -> dict[str, Any]:
         """Evaluate quality gates: coverage, groundedness, confidence."""
         plan = ResearchPlanTree(**state["plan"])
         eg = EvidenceGraph(**state.get("evidence_graph", {}))
@@ -435,7 +436,7 @@ def create_research_agent_v2(
         return {"quality": gate.model_dump()}
 
     # ========== Node 5: Generate Report ==========
-    async def generate_report(state: ResearchV2State) -> dict:
+    async def generate_report(state: ResearchV2State) -> dict[str, Any]:
         """Generate a comprehensive structured report."""
         question = state["question"]
         eg = EvidenceGraph(**state.get("evidence_graph", {}))
@@ -454,10 +455,10 @@ def create_research_agent_v2(
         if contradictions:
             fact_map = {f.id: f for f in eg.facts}
             for c in contradictions:
-                src = fact_map.get(c.source_id)
-                tgt = fact_map.get(c.target_id)
-                if src and tgt:
-                    contra_text += f'- ПРОТИВОРЕЧИЕ: "{src.fact}" vs "{tgt.fact}"\n'
+                src_fact = fact_map.get(c.source_id)
+                tgt_fact = fact_map.get(c.target_id)
+                if src_fact and tgt_fact:
+                    contra_text += f'- ПРОТИВОРЕЧИЕ: "{src_fact.fact}" vs "{tgt_fact.fact}"\n'
 
         # Group facts by plan task
         task_sections = ""
