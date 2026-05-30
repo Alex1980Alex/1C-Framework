@@ -172,7 +172,7 @@ async def tune_strategies(
     min_samples: int = 20,
     learning_rate: float = 0.1,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Tune strategy weights based on feedback.
 
     Adjusts hybrid search weights to favor better-performing strategies.
