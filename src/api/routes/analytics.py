@@ -136,7 +136,7 @@ async def get_audit_log(
 @router.get("/audit/stats", response_model=AuditStatsResponse)
 async def get_audit_stats(
     components: Components = Depends(get_components),
-):
+) -> AuditStatsResponse:
     """Get audit statistics: event types, agents, unique users."""
     audit_logger = getattr(components, "audit_logger", None)
     if audit_logger is None:
