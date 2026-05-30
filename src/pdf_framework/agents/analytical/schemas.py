@@ -84,6 +84,7 @@ class AnalyticalState(TypedDict, total=False):
     # Evidence collection
     evidence: list[dict[str, Any]]  # List of Evidence as dicts
     search_responses: list[dict[str, Any]]  # SearchResponses from each round
+    _current_chunks: list[dict[str, Any]]  # Transient: retrieved chunks for current round
 
     # Analysis
     comparison_table: dict[str, Any] | None  # ComparisonTable as dict
