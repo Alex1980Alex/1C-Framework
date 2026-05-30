@@ -128,7 +128,7 @@ async def update_collection(collection_id: str, request: UpdateCollectionRequest
 
 
 @router.delete("/{collection_id}")
-async def delete_collection(collection_id: str):
+async def delete_collection(collection_id: str) -> dict[str, Any]:
     """Delete a collection (documents remain indexed, only grouping is removed)."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
