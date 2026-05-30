@@ -1487,6 +1487,16 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 mypy срез C (api/routes/tenants.py, real type-work): 1491 → 1466
+
+**Outcome:** `api/routes/tenants.py` — 25 ошибок (`arg-type` ×21 + `union-attr` ×4) → 0; baseline synced (1466), filter green. **Не аннотации — реальный type-work + мелкий bugfix.**
+
+**Landed:**
+- ISO `str` → `datetime`: `metadata.created_at`/`last_activity` (`TenantMetadata` хранит как TEXT) оборачиваются `datetime.fromisoformat(...)` при сборке response-моделей (`Tenant`/`TenantStats`, поля `datetime`). Runtime-identical — pydantic уже коэрсил str→datetime; аудит подтвердил, что эти поля читаются только в tenants.py.
+- `get_quota()`/`request.quota` (`TenantQuota | None`) → `... or TenantQuota()`: и тип сходится (`Tenant.quota`/`TenantUsageResponse.quota` = non-optional с `default_factory`), и устраняется latent pydantic-ValidationError при None (фикс совпадает с семантикой default_factory). Заодно ушли `union-attr` на `quota.max_documents/max_storage_mb`.
+
+**Verify:** `mypy tenants.py` → "Success"; full `mypy src/` 1491→**1466**; filter EXIT=0.
+
 ### 2026-05-30 — §21.4 mypy срез B (api/routes annotation-only batch): 1507 → 1491
 
 **Outcome:** `api/routes/{auth,cache,feedback,toc,github_webhooks}.py` — 16 strict-ошибок (`no-untyped-def` + `type-arg` + `no-any-return`) → 0; baseline synced (1491), filter green.
@@ -2038,11 +2048,12 @@ Alert на production file
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
 - **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
-- **Текущая база:** **1491 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **Текущая база:** **1466 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **✅ срез C done (2026-05-30):** `api/routes/tenants.py` — 25 (arg-type + union-attr) → 0. **1491 → 1466.** Реальный type-work: ISO `str`→`datetime` (`datetime.fromisoformat`, runtime-identical — pydantic уже коэрсил) + `get_quota() or TenantQuota()` (устраняет latent pydantic-crash при None, aligned с schema `default_factory`). Не чистая косметика — мелкий bugfix.
 - **✅ срез A done (2026-05-30):** `api/routes/{health,collections,analytics}.py` — 23 (no-untyped-def + type-arg) → 0. **1530 → 1507.** Annotation-only.
 - **✅ срез B done (2026-05-30):** `api/routes/{auth,cache,feedback,toc,github_webhooks}.py` — 16 (no-untyped-def + type-arg + no-any-return) → 0. **1507 → 1491.** Annotation-only (dict[str, Any] / response-model типы + typed intermediates).
-- **Остаток api/routes (≈95, требуют реального type-work, НЕ только аннотаций):** tenants (25 arg-type), graph (14), chat (11), jobs (10), search (9), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. — брать по 1 файлу, т.к. arg-type/attr-defined/no-untyped-call = настоящие несоответствия типов (риск регрессии при спешке).
-- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1491.
+- **Остаток api/routes (≈70, требуют реального type-work):** graph (14), chat (11), jobs (10), search (9), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. — брать по 1 файлу (arg-type/attr-defined = настоящие несоответствия, риск регрессии при спешке).
+- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1466.
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
