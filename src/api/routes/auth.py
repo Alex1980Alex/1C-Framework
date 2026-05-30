@@ -68,7 +68,7 @@ async def create_token(
 @router.post("/validate")
 async def validate_token(
     token: str,
-):
+) -> dict[str, Any]:
     """Validate a JWT token and return its payload."""
     settings = get_settings()
 
