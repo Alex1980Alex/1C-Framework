@@ -9,6 +9,7 @@ Version: 1.5.0 - Phase 14.3: OpenAI-Compatible API
 
 import logging
 import uuid
+from collections.abc import AsyncIterator
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Header
