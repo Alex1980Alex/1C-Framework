@@ -64,7 +64,7 @@ async def create_tenant(
             name=request.name,
             quota=request.quota or TenantQuota(),
             is_active=True,
-            created_at=metadata.created_at,
+            created_at=datetime.fromisoformat(metadata.created_at),
             updated_at=metadata.created_at,
         )
 
@@ -111,7 +111,7 @@ async def list_tenants(
                     name=tenant_id,  # Use tenant_id as name for now
                     quota=quota,
                     is_active=True,
-                    created_at=metadata.created_at,
+                    created_at=datetime.fromisoformat(metadata.created_at),
                     updated_at=metadata.last_activity,
                     stats=TenantStats(
                         tenant_id=tenant_id,
@@ -119,7 +119,7 @@ async def list_tenants(
                         chunks_count=0,  # Not tracked in metadata
                         queries_today=0,
                         storage_used_mb=metadata.storage_bytes / (1024 * 1024),
-                        created_at=metadata.created_at,
+                        created_at=datetime.fromisoformat(metadata.created_at),
                         last_active=metadata.last_activity,
                     ),
                 )
@@ -163,7 +163,7 @@ async def get_tenant(
             name=tenant_id,
             quota=quota,
             is_active=True,
-            created_at=metadata.created_at,
+            created_at=datetime.fromisoformat(metadata.created_at),
             updated_at=metadata.last_activity,
             stats=TenantStats(
                 tenant_id=tenant_id,
@@ -171,7 +171,7 @@ async def get_tenant(
                 chunks_count=0,
                 queries_today=0,
                 storage_used_mb=metadata.storage_bytes / (1024 * 1024),
-                created_at=metadata.created_at,
+                created_at=datetime.fromisoformat(metadata.created_at),
                 last_active=metadata.last_activity,
             ),
         )
@@ -213,7 +213,7 @@ async def get_tenant_stats(
             chunks_count=0,
             queries_today=0,
             storage_used_mb=metadata.storage_bytes / (1024 * 1024),
-            created_at=metadata.created_at,
+            created_at=datetime.fromisoformat(metadata.created_at),
             last_active=metadata.last_activity,
         )
 
@@ -257,7 +257,7 @@ async def get_tenant_usage(
             chunks_count=0,
             queries_today=0,
             storage_used_mb=metadata.storage_bytes / (1024 * 1024),
-            created_at=metadata.created_at,
+            created_at=datetime.fromisoformat(metadata.created_at),
             last_active=metadata.last_activity,
         )
 
@@ -322,7 +322,7 @@ async def update_tenant(
             name=request.name or tenant_id,
             quota=quota,
             is_active=request.is_active if request.is_active is not None else True,
-            created_at=metadata.created_at,
+            created_at=datetime.fromisoformat(metadata.created_at),
             updated_at=metadata.last_activity,
         )
 
