@@ -171,7 +171,7 @@ async def add_documents_to_collection(collection_id: str, request: AddDocumentsR
 
 
 @router.delete("/{collection_id}/documents/{document_id}")
-async def remove_document_from_collection(collection_id: str, document_id: str):
+async def remove_document_from_collection(collection_id: str, document_id: str) -> dict[str, Any]:
     """Remove a document from a collection."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
