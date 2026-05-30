@@ -266,7 +266,7 @@ async def clear_history(thread_id: str) -> dict[str, Any]:
 
 
 @router.get("/threads", response_model=ThreadsListResponse)
-async def list_threads(limit: int = 100):
+async def list_threads(limit: int = 100) -> ThreadsListResponse:
     """
     List all active conversation threads.
 
