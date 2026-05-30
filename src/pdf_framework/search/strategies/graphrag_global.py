@@ -60,12 +60,12 @@ class GraphRAGGlobalStrategy:
         self.settings = settings or GraphRAGSettings()
 
         # LLMs for map and reduce phases — pass api_key and base_url for Z.AI
-        map_kwargs = dict(
+        map_kwargs: dict[str, Any] = dict(
             model=self.settings.global_search_map_model,
             temperature=0.0,
             max_tokens=1024,
         )
-        reduce_kwargs = dict(
+        reduce_kwargs: dict[str, Any] = dict(
             model=self.settings.global_search_reduce_model,
             temperature=0.0,
             max_tokens=2048,
@@ -86,7 +86,7 @@ class GraphRAGGlobalStrategy:
         k: int = 5,
         filter: dict[str, Any] | None = None,
         max_communities: int | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> SearchResponse:
         """
         Perform global search using community summaries.
@@ -171,7 +171,7 @@ class GraphRAGGlobalStrategy:
         Returns:
             Dictionary mapping community_key -> summary
         """
-        summaries = {}
+        summaries: dict[str, str] = {}
 
         # Access graph store to get community nodes
         graph = self._graph_store._graph if hasattr(self._graph_store, "_graph") else None
