@@ -66,7 +66,7 @@ async def search_documents(
     request: SearchRequest,
     components: Components = Depends(get_components),
     current_user: str | None = Depends(get_current_user),  # F3.2.4: User attribution for tracing
-):
+) -> SearchResponseModel:
     """Search indexed documents."""
     # F3.2.4: Extract user_id for trace attribution
     user_id = current_user or "anonymous"
