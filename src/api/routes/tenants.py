@@ -65,7 +65,7 @@ async def create_tenant(
             quota=request.quota or TenantQuota(),
             is_active=True,
             created_at=datetime.fromisoformat(metadata.created_at),
-            updated_at=metadata.created_at,
+            updated_at=datetime.fromisoformat(metadata.created_at),
         )
 
         logger.info(f"[TENANT] Created: {request.tenant_id}")
