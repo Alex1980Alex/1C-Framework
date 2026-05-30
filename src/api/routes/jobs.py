@@ -231,9 +231,9 @@ async def list_jobs(
 
         # Get all job keys
         pattern = "job:*"
-        keys = []
-        async for key in redis.iscan(match=pattern):
-            keys.append(key)
+        keys: list[str] = []
+        async for raw_key in redis.scan_iter(match=pattern):
+            keys.append(raw_key.decode("utf-8") if isinstance(raw_key, bytes) else raw_key)
 
         jobs = []
         active = 0
