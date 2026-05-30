@@ -165,7 +165,7 @@ def aggregate_status(checks: dict[str, dict[str, Any]]) -> str:
 
 
 @router.get("")
-async def health_check():
+async def health_check() -> dict[str, Any]:
     """
     Full health check endpoint.
 
