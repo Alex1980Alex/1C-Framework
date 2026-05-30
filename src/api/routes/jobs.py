@@ -303,7 +303,7 @@ async def stream_job_progress(job_id: str) -> StreamingResponse:
         StreamingResponse with progress events
     """
 
-    async def event_stream():
+    async def event_stream() -> AsyncIterator[str]:
         """Generate SSE events for job progress."""
         try:
             redis = await get_redis()
