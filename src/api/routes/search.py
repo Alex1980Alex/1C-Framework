@@ -551,7 +551,7 @@ async def visual_search(
     request: VisualSearchRequest,
     components: Components = Depends(get_components),
     current_user: str | None = Depends(get_current_user),
-):
+) -> VisualSearchResponse:
     """Visual search using ColPali embeddings for tables/charts/diagrams.
 
     Phase 55: End-to-end visual retrieval without OCR.
