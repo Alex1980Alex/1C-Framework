@@ -294,7 +294,7 @@ async def list_threads(limit: int = 100) -> ThreadsListResponse:
 
 
 @router.get("/stats/{thread_id}")
-async def get_thread_stats(thread_id: str):
+async def get_thread_stats(thread_id: str) -> dict[str, Any]:
     """
     Get statistics for a conversation thread.
 
