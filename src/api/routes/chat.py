@@ -244,7 +244,7 @@ async def get_history(thread_id: str) -> ChatHistoryResponse:
 
 
 @router.delete("/history/{thread_id}")
-async def clear_history(thread_id: str):
+async def clear_history(thread_id: str) -> dict[str, Any]:
     """
     Clear conversation history for a thread.
 
