@@ -19,7 +19,7 @@ router = APIRouter(prefix="/cache", tags=["cache"])
 
 
 @router.get("/stats")
-async def cache_stats():
+async def cache_stats() -> dict[str, Any]:
     """Get statistics for all caches."""
     embedding_cache = get_embedding_cache()
     llm_cache = get_llm_cache()
