@@ -126,12 +126,13 @@ async def get_cost_stats(
 async def get_audit_log(
     limit: int = Query(default=100, ge=1, le=1000),
     components: Components = Depends(get_components),
-):
+) -> list[dict[str, Any]]:
     """Get recent audit log entries."""
     audit_logger = getattr(components, "audit_logger", None)
     if audit_logger is None:
         return []
-    return audit_logger.get_recent(limit=limit)
+    entries: list[dict[str, Any]] = audit_logger.get_recent(limit=limit)
+    return entries
 
 
 @router.get("/audit/stats", response_model=AuditStatsResponse)
