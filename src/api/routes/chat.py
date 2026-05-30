@@ -194,7 +194,7 @@ async def send_message(request: ChatMessageRequest) -> StreamingResponse | dict[
         # Non-streaming mode: collect and return
         from src.pdf_framework.agents.rag.streaming import collect_stream
 
-        async def collect():
+        async def collect() -> AsyncIterator[Any]:
             async for event in runner.stream(
                 question=request.message,
                 thread_id=thread_id,
