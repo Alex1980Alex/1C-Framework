@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["websocket"])
 
 
-def _ws_message(msg_type: str, data: Any, metadata: dict | None = None) -> str:
+def _ws_message(msg_type: str, data: Any, metadata: dict[str, Any] | None = None) -> str:
     """Format a WebSocket message as JSON string."""
     return json.dumps(
         {"type": msg_type, "data": data, "metadata": metadata or {}},
