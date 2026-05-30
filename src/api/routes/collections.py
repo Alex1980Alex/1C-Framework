@@ -97,7 +97,7 @@ async def get_collection(collection_id: str) -> dict[str, Any]:
     else:
         documents = [{"document_id": d} for d in doc_ids]
 
-    result = collection.model_dump()
+    result: dict[str, Any] = collection.model_dump()
     result["documents"] = documents
     return result
 
