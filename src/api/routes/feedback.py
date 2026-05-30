@@ -58,7 +58,7 @@ def _get_collector(components: Components) -> FeedbackCollector:
 async def submit_feedback(
     request: FeedbackRequest,
     components: Components = Depends(get_components),
-):
+) -> FeedbackResponse:
     """Submit user feedback on a RAG response.
 
     Dual-writes to both old FeedbackCollector (for StrategyTuner)
