@@ -6,6 +6,10 @@ venv/
 # Local scratch / backup directory (path migration backups, ad-hoc artefacts)
 .tmp/
 
+# Stray temp diff dumps (collapsed `git diff > C:\...` redirects landing in repo root;
+# `:` shows as PUA U+F03A under WSL). e.g. C:Tempdiff_agent.txt
+*Tempdiff*.txt
+
 # Detached subprojects (own git history, not part of parent repo)
 configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/
 configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников/
