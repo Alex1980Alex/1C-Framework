@@ -60,16 +60,17 @@ def _verify_signature(body: bytes, sig_header: str | None) -> bool:
     return hmac.compare_digest(mac, expected)
 
 
-def _load_state() -> dict:
+def _load_state() -> dict[str, Any]:
     if not _STATE_FILE.exists():
         return {}
     try:
-        return json.loads(_STATE_FILE.read_text(encoding="utf-8"))
+        state: dict[str, Any] = json.loads(_STATE_FILE.read_text(encoding="utf-8"))
+        return state
     except (OSError, ValueError):
         return {}
 
 
-def _save_state(state: dict) -> None:
+def _save_state(state: dict[str, Any]) -> None:
     try:
         _STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         tmp = _STATE_FILE.with_suffix(_STATE_FILE.suffix + ".tmp")
