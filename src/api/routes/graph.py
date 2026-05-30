@@ -71,7 +71,7 @@ async def clear_graph() -> dict[str, Any]:
 
 
 @router.post("/build-communities")
-async def build_communities():
+async def build_communities() -> dict[str, Any]:
     """Run Leiden community detection + LLM summarization on the knowledge graph.
 
     This enables GraphRAG Global search by:
