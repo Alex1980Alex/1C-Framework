@@ -209,7 +209,7 @@ async def build_entity_embeddings() -> dict[str, Any]:
 
 
 @router.get("/entity-embeddings/stats")
-async def entity_embeddings_stats():
+async def entity_embeddings_stats() -> dict[str, Any]:
     """Get stats for the entity/relation embeddings collection."""
     components = await get_components()
 
