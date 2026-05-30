@@ -21,7 +21,6 @@ from fastapi.testclient import TestClient
 
 from src.api.auth.dependencies import get_current_role, get_current_tenant
 
-
 # --------------------------------------------------------------------------- #
 # graph.py — incremental endpoints now return 501 instead of crashing
 # --------------------------------------------------------------------------- #

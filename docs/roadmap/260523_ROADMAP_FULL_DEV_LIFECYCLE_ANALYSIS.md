@@ -1487,6 +1487,14 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 BUGFIX-PR (graph.py + jobs.py stale APIs) + shipped chat regression: 1437 → 1422
+
+Pivot из mypy-уборки в реальный bugfix (branch `bugfix/api-routes-stale-apis`, +8 unit tests).
+- **graph.py:** Phase 61 incremental endpoints были dead-on-arrival (несуществующие API + `components.entity_extractor` отсутствует; full impl = фича) → **HTTP 501** вместо краша; `_save_to_file` getattr-guard.
+- **jobs.py:** redis-py migration — `iscan`→`scan_iter`, `hgetall(encoding=)`→`_hgetall`(decode+`type: ignore[misc]`), `enqueue_job()→Job|None`→`job.job_id`+409, enqueue через `get_redis()`, `except HTTPException: raise`.
+- **🐛 shipped regression найден тестами:** срез E `send_message -> StreamingResponse|dict` ломал построение FastAPI-роутера (`FastAPIError`; mypy не ловит) → `@router.post(..., response_model=None)`.
+- **Verify:** 8/8 unit tests pass; `mypy src/` 1437→**1422**; filter green.
+
 ### 2026-05-30 — §21.4 срез G (jobs.py) — REVERTED, bug-finding only (база без изменений: 1437)
 
 Попытка annotation-среза `api/routes/jobs.py` провалилась полезным образом: аннотация `get_redis() -> ArqRedis` дала mypy проверить redis-вызовы → счёт **вырос 10→12**, вскрыв **stale aioredis API**: `redis.iscan` (нет у ArqRedis → `scan_iter`), `hgetall(encoding="utf-8")` (kwarg удалён в redis-py 4+/5), `enqueue_job()→Job\|None` используется как str-id (→ `job.job_id`). Эндпоинты `/jobs/*` упадут при `QUEUE__ENABLED=true`. **Edits откатаны** (`git checkout`; jobs.py == HEAD, baseline без изменений, filter green). Finding → §21.4 bugfix-кандидаты. **Урок:** аннотация типа-источника может УВЕЛИЧИТЬ счёт, разоблачив скрытые баги — annotation-срез подходит не каждому файлу; такие — в отдельный bugfix-PR.
@@ -2068,7 +2076,7 @@ Alert на production file
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
 - **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
-- **Текущая база:** **1437 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **Текущая база:** **1422 ошибки** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
 - **✅ срез E done (2026-05-30):** `api/routes/chat.py` — 11 (no-untyped-def + type-arg + no-untyped-call + arg-type) → 0. **1457 → 1446.** Return-types + inner async-generator аннотации (`AsyncIterator`) + 1 real arg-type (`"".join` над `list[str|dict|list]` → `list[str]` + `str(event.data)`, token уже str → behavior-identical).
 - **✅ срез F done (2026-05-30):** `api/routes/search.py` — 9 (no-untyped-def + no-untyped-call + arg-type) → 0. **1446 → 1437.** Return-types (response-models) + `AsyncIterator` на event_generator + `ChatAnthropic` api_key через `llm_kwargs` conditional (`SecretStr`; omit при None = env-fallback, behavior-identical с прежним `or None`).
 - **✅ срез D done (2026-05-30):** `api/routes/graph.py` — 9 `no-untyped-def` → 0 (`dict[str, Any]`). **1466 → 1457.** Частичный: 5 ошибок ОСТАВЛЕНЫ baselined осознанно (см. ниже finding).
@@ -2079,11 +2087,13 @@ Alert на production file
 - **✅ срез A done (2026-05-30):** `api/routes/{health,collections,analytics}.py` — 23 (no-untyped-def + type-arg) → 0. **1530 → 1507.** Annotation-only.
 - **✅ срез B done (2026-05-30):** `api/routes/{auth,cache,feedback,toc,github_webhooks}.py` — 16 (no-untyped-def + type-arg + no-any-return) → 0. **1507 → 1491.** Annotation-only (dict[str, Any] / response-model типы + typed intermediates).
 - **Остаток api/routes (≈41, требуют реального type-work):** completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. Брать по 1 файлу.
-- **🐛 BUGFIX-кандидаты (отдельные PR, НЕ mypy-аннотации):**
-  - `graph.py` (5) — Phase 61 routes вызывают несуществующие API (см. срез D finding).
-  - `jobs.py` (10) — **stale aioredis API**: попытка аннотировать `get_redis() -> ArqRedis` (срез G, 2026-05-30) **увеличила** счёт 10→12, т.к. mypy наконец проверил redis-вызовы и вскрыл: `redis.iscan` (нет у ArqRedis — нужно `scan_iter`), `hgetall(encoding="utf-8")` (kwarg `encoding` удалён в redis-py 4+/5), `enqueue_job()` → `Job\|None` используется как str-id (нужно `job.job_id`). Эндпоинты `/jobs/*` упадут в runtime при `QUEUE__ENABLED=true`. Аннотации откатаны (оставлены baselined); нужен redis-API-migration PR + тест. **Урок:** аннотация типа-источника (get_redis) может РАЗОБЛАЧИТЬ скрытые баги и увеличить счёт — не всякий файл годится для annotation-среза.
-- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1437.
-- **Сделано в сессии 2026-05-30 (срезы A-F + drift):** 1599 → 1437 (**−162**), CI mypy green каждый шаг, отдельные verified-коммиты; найден реальный баг (graph.py Phase 61 routes).
+- **✅ BUGFIX-PR DONE 2026-05-30 (branch `bugfix/api-routes-stale-apis`, +tests):**
+  - `graph.py` (5) — Phase 61 routes были dead-on-arrival (звали несуществующие API; `components.entity_extractor` тоже нет; полноценная реализация = фича). → `/graph/incremental-update` + `/incremental/detect-changes` теперь возвращают **HTTP 501** вместо AttributeError-краша; `_save_to_file` type-narrow (getattr-guard, не падает на не-NetworkX). 06.2_REST_API.md помечает их known-issue.
+  - `jobs.py` (12) — **redis-py migration fix**: `iscan`→`scan_iter`(+decode key), `hgetall(encoding=)`→`_hgetall` helper (manual decode, `# type: ignore[misc]` на redis-py async-stub union), `enqueue_job()→Job\|None` → `job.job_id` + None→409, enqueue теперь через `get_redis()` (DRY/testable), `except HTTPException: raise` guard.
+  - **🐛 БОНУС — найден+исправлен shipped regression:** срез E (`4f5fd2e43`) аннотировал `send_message -> StreamingResponse | dict` → FastAPI **падал при построении роутера** (`FastAPIError`, mypy не ловит) → весь `src.api.routes` не импортировался / app не стартовал. Fix: `@router.post("/message", response_model=None)`. Тест-suite это и вскрыл.
+  - Тесты: `tests/unit/api/test_stale_api_bugfix.py` (8 pass: 501×2, decode_hash×4, enqueue job.job_id + None→409).
+- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База **1422**.
+- **Сделано в сессии 2026-05-30:** 1599 → **1422** (срезы A-F + drift + bugfix-PR), CI mypy green; найдены+исправлены 2 dead-route группы (graph Phase 61 → 501) + 1 shipped regression (chat router build) + redis-migration (jobs).
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
