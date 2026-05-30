@@ -145,7 +145,7 @@ async def check_disk_space() -> dict[str, Any]:
         }
 
 
-def aggregate_status(checks: dict) -> str:
+def aggregate_status(checks: dict[str, dict[str, Any]]) -> str:
     """Aggregate check statuses into overall status."""
     statuses = [check.get("status", "unknown") for check in checks.values()]
 
