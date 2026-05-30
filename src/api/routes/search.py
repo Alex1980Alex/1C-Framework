@@ -654,7 +654,7 @@ async def plan_execute_query(
     request: PlanExecuteRequest,
     components: Components = Depends(get_components),
     current_user: str | None = Depends(get_current_user),
-):
+) -> PlanExecuteResponse:
     """Plan-Execute agent for complex queries (Phase 57).
 
     Breaks down complex queries into 2-5 steps, executes each with appropriate tool,
