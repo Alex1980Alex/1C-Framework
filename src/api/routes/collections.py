@@ -103,7 +103,7 @@ async def get_collection(collection_id: str) -> dict[str, Any]:
 
 
 @router.patch("/{collection_id}")
-async def update_collection(collection_id: str, request: UpdateCollectionRequest):
+async def update_collection(collection_id: str, request: UpdateCollectionRequest) -> dict[str, Any]:
     """Update collection metadata."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
