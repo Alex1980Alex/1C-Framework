@@ -47,7 +47,7 @@ async def check_vector_store() -> dict[str, Any]:
         }
 
 
-async def check_graph_store() -> dict:
+async def check_graph_store() -> dict[str, Any]:
     """Check graph store health."""
     try:
         components = await get_components()
