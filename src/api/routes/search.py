@@ -2,11 +2,12 @@
 
 import json
 import time
+from collections.abc import AsyncIterator
 from typing import Any
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 from src.api.dependencies.auth import get_current_user  # F3.2.4: Get user from JWT
 from src.api.dependencies.components import Components, get_components
