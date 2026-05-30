@@ -152,9 +152,10 @@ async def get_user_audit(
     user_id: str,
     limit: int = Query(default=50, ge=1, le=500),
     components: Components = Depends(get_components),
-):
+) -> list[dict[str, Any]]:
     """Get audit log entries for a specific user."""
     audit_logger = getattr(components, "audit_logger", None)
     if audit_logger is None:
         return []
-    return audit_logger.get_by_user(user_id=user_id, limit=limit)
+    user_entries: list[dict[str, Any]] = audit_logger.get_by_user(user_id=user_id, limit=limit)
+    return user_entries
