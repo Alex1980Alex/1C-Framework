@@ -112,7 +112,7 @@ async def get_recent_queries(
 @router.get("/costs", response_model=CostStatsResponse)
 async def get_cost_stats(
     components: Components = Depends(get_components),
-):
+) -> CostStatsResponse:
     """Get cost tracking: tokens and estimated USD by model."""
     cost_tracker = getattr(components, "cost_tracker", None)
     if cost_tracker is None:
