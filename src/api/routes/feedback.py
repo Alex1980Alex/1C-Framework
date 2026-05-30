@@ -207,7 +207,7 @@ async def tune_strategies(
 async def clear_old_feedback(
     days: int = 30,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Clear old feedback entries.
 
     Removes feedback entries older than specified days.
