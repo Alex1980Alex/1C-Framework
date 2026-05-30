@@ -142,10 +142,10 @@ async def send_message(request: ChatMessageRequest) -> StreamingResponse | dict[
     # Exclude the just-added user message from history
     history = history[:-1] if len(history) > 1 else []
 
-    async def event_generator():
+    async def event_generator() -> AsyncIterator[str]:
         """Generate SSE events for the response."""
         try:
-            assistant_response = []
+            assistant_response: list[str] = []
 
             async for event in runner.stream(
                 question=request.message,
