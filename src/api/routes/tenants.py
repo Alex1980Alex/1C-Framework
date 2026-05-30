@@ -112,7 +112,7 @@ async def list_tenants(
                     quota=quota,
                     is_active=True,
                     created_at=datetime.fromisoformat(metadata.created_at),
-                    updated_at=metadata.last_activity,
+                    updated_at=datetime.fromisoformat(metadata.last_activity),
                     stats=TenantStats(
                         tenant_id=tenant_id,
                         documents_count=metadata.document_count,
@@ -164,7 +164,7 @@ async def get_tenant(
             quota=quota,
             is_active=True,
             created_at=datetime.fromisoformat(metadata.created_at),
-            updated_at=metadata.last_activity,
+            updated_at=datetime.fromisoformat(metadata.last_activity),
             stats=TenantStats(
                 tenant_id=tenant_id,
                 documents_count=metadata.document_count,
@@ -323,7 +323,7 @@ async def update_tenant(
             quota=quota,
             is_active=request.is_active if request.is_active is not None else True,
             created_at=datetime.fromisoformat(metadata.created_at),
-            updated_at=metadata.last_activity,
+            updated_at=datetime.fromisoformat(metadata.last_activity),
         )
 
     except HTTPException:
