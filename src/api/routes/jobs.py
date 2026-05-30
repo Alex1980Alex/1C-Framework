@@ -141,10 +141,7 @@ async def enqueue_job(
         )
 
     try:
-        from arq import create_pool
-        from arq.connections import RedisSettings
-
-        redis = await create_pool(RedisSettings.from_dsn(settings.queue.redis_url))
+        redis = await get_redis()
 
         # Get task function
         task_map = {
