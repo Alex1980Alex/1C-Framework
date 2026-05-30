@@ -82,7 +82,7 @@ class ChatHistoryResponse(BaseModel):
     """Response model for chat history."""
 
     thread_id: str
-    messages: list[dict]
+    messages: list[dict[str, Any]]
     message_count: int
 
 
