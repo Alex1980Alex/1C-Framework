@@ -677,7 +677,9 @@ async def plan_execute_query(
 
     llm = ChatAnthropic(
         **llm_kwargs,
-        api_key=components.settings.anthropic_api_key or None,
+        api_key=SecretStr(components.settings.anthropic_api_key)
+        if components.settings.anthropic_api_key
+        else None,
     )
 
     # Create tools
