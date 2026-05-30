@@ -222,7 +222,7 @@ async def ask_question(
         )
 
     # --- Streaming path (SSE) ---
-    async def event_generator():
+    async def event_generator() -> AsyncIterator[str]:
         search_ms = (time.perf_counter() - t0) * 1000
         yield _sse_event("status", "searching_done", {"elapsed_ms": round(search_ms)})
 
