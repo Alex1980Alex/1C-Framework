@@ -22,7 +22,7 @@ async def create_token(
     api_key: str,
     tenant_id: str | None = None,
     role: Literal["viewer", "editor", "admin"] = "viewer",
-):
+) -> dict[str, Any]:
     """
     Create a JWT token.
 
