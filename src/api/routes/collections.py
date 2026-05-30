@@ -57,7 +57,7 @@ async def create_collection(request: CreateCollectionRequest) -> dict[str, Any]:
 
 
 @router.get("/")
-async def list_collections():
+async def list_collections() -> dict[str, Any]:
     """List all collections with document counts."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
