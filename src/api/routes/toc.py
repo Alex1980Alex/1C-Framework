@@ -147,7 +147,7 @@ async def get_section_detail(
     document_id: str,
     section_number: str,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Get detailed info about a specific section.
 
     Returns: breadcrumb, chunk count, page range, summary (if available),
