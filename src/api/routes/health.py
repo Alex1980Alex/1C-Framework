@@ -210,7 +210,7 @@ async def readiness_probe() -> dict[str, str]:
 
 
 @router.get("/live")
-async def liveness_probe():
+async def liveness_probe() -> dict[str, str]:
     """
     Liveness probe for Kubernetes.
 
