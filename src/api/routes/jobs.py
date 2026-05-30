@@ -4,10 +4,11 @@ Phase 59: Async Processing Queue - job status, listing, cancellation.
 """
 
 import logging
+from collections.abc import AsyncIterator
 from enum import Enum
 from typing import Any
 
-from arq import create_pool
+from arq import ArqRedis, create_pool
 from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
