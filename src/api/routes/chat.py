@@ -222,7 +222,7 @@ async def send_message(request: ChatMessageRequest) -> StreamingResponse | dict[
 
 
 @router.get("/history/{thread_id}", response_model=ChatHistoryResponse)
-async def get_history(thread_id: str):
+async def get_history(thread_id: str) -> ChatHistoryResponse:
     """
     Get conversation history for a thread.
 
