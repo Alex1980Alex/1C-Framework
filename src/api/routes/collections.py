@@ -146,7 +146,7 @@ async def delete_collection(collection_id: str) -> dict[str, Any]:
 
 
 @router.post("/{collection_id}/documents")
-async def add_documents_to_collection(collection_id: str, request: AddDocumentsRequest):
+async def add_documents_to_collection(collection_id: str, request: AddDocumentsRequest) -> dict[str, Any]:
     """Add documents to a collection."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
