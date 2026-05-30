@@ -34,7 +34,7 @@ async def list_entities(
     name: str | None = None,
     entity_type: str | None = None,
     limit: int = 50,
-):
+) -> dict[str, Any]:
     """Search or list entities in the knowledge graph."""
     components = await get_components()
     entities = await components.graph_store.find_entities(
