@@ -110,7 +110,7 @@ def _build_toc_tree(chunks: list[Any]) -> list[dict[str, Any]]:
 async def get_document_toc(
     document_id: str,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Get document table of contents as tree.
 
     Builds ToC from chunk metadata (section_number, breadcrumb).
