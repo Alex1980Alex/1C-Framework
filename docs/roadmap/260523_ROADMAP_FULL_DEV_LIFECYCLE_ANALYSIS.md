@@ -1487,6 +1487,18 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 mypy срез A (api/routes trio): 1530 → 1507
+
+**Outcome:** `api/routes/{health,collections,analytics}.py` — 23 strict-ошибки (`no-untyped-def` + `type-arg`) → 0; baseline синхронизирован, CI mypy green.
+
+**Landed:**
+- health.py: 5× `dict`→`dict[str, Any]` + 3 return-аннотации (+ `from typing import Any`).
+- collections.py: 8 endpoint return-аннотаций (+ `Any` import); 3 функции с `getattr`-Any-возвратом получили typed-intermediate (против `no-any-return`).
+- analytics.py: 7 endpoint аннотаций (response-model типы + `list[dict[str, Any]]` с typed-intermediate на 3 getattr-возвратах).
+- **Annotation-only, нулевое изменение логики/behaviour** (REST surface неизменен → docs-tracker таски = false-positive, закрыты с обоснованием).
+
+**Verify:** `mypy` 3 файла → "Success"; full `mypy src/` 1530→**1507**; `mypy_baseline filter` EXIT=0.
+
 ### 2026-05-29 (вечер-2) — §21.4 mypy baseline drift RESOLVED + stub-overrides срез
 
 **Outcome:** устранён двусторонний drift baseline и красный CI mypy gate; установлена верная база для срезов.
@@ -2018,8 +2030,9 @@ Alert на production file
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
 - **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
-- **Текущая база:** **1530 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
-- **Next file:** срез A (api/routes) ИЛИ Pareto top-file (analytical/agent.py). Срезы теперь считают от верной базы 1530.
+- **Текущая база:** **1507 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **✅ срез A done (2026-05-30):** `api/routes/{health,collections,analytics}.py` — 23 ошибки (no-untyped-def + type-arg) → 0. **1530 → 1507.** Annotation-only (return-types + typed intermediates против no-any-return на getattr-Any). filter green.
+- **Next file:** остаток `api/routes` (tenants 25 / graph 14 / chat 11 …) ИЛИ Pareto top-file `agents/analytical/agent.py` (53). Срезы считают от верной базы 1507.
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
