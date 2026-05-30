@@ -186,7 +186,7 @@ async def remove_document_from_collection(collection_id: str, document_id: str) 
 
 
 @router.get("/{collection_id}/documents")
-async def list_collection_documents(collection_id: str):
+async def list_collection_documents(collection_id: str) -> dict[str, Any]:
     """List all documents in a collection with metadata."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
