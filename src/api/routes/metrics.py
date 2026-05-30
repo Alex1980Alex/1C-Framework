@@ -577,7 +577,7 @@ async def get_metrics() -> dict[str, Any]:
 
 
 @router.get("/html", response_class=HTMLResponse)
-async def get_metrics_html():
+async def get_metrics_html() -> str:
     """Get metrics dashboard as HTML page."""
     metrics_data = await get_metrics()
 
@@ -735,7 +735,7 @@ async def get_metrics_html():
 
 
 @router.post("/reset")
-async def reset_metrics():
+async def reset_metrics() -> dict[str, str]:
     """Reset daily metrics counter."""
     from datetime import datetime
 
@@ -759,7 +759,7 @@ from src.pdf_framework.observability.prometheus_metrics import (
 
 
 @router.get("/prometheus")
-async def get_prometheus_metrics():
+async def get_prometheus_metrics() -> Response:
     """
     F3.3.3: Get metrics in Prometheus exposition format.
 
