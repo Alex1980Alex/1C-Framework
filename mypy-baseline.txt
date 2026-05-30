@@ -1498,15 +1498,6 @@ src/workers/tasks/evaluation.py:0: error: Missing type arguments for generic typ
 src/workers/tasks/evaluation.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/workers/tasks/evaluation.py:0: error: Module "src.pdf_framework.evaluation" has no attribute "load_dataset"  [attr-defined]
 src/workers/tasks/evaluation.py:0: error: Module "src.pdf_framework.evaluation" has no attribute "run_ragas_evaluation"  [attr-defined]
-src/api/routes/websocket.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
-src/api/routes/websocket.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/websocket.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/websocket.py:0: note: Use "-> None" if function does not return a value
-src/api/routes/websocket.py:0: error: Missing type arguments for generic type "Task"  [type-arg]
-src/api/routes/websocket.py:0: error: Call to untyped function "_run_search" in typed context  [no-untyped-call]
-src/api/routes/websocket.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/websocket.py:0: note: Use "-> None" if function does not return a value
-src/api/routes/websocket.py:0: error: Call to untyped function "_listen_for_cancel" in typed context  [no-untyped-call]
 src/api/routes/documents.py:0: error: Incompatible types in "await" (actual type "Awaitable[int] | int", expected type "Awaitable[Any]")  [misc]
 src/api/routes/completions.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/api/routes/completions.py:0: error: "SearchManager" has no attribute "search_and_answer"  [attr-defined]
