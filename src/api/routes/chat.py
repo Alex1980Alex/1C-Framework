@@ -104,7 +104,9 @@ class ThreadsListResponse(BaseModel):
 # ========== API Endpoints ==========
 
 
-@router.post("/message")
+# response_model=None: the return type is a Response|dict union (streaming vs JSON),
+# which FastAPI cannot turn into a Pydantic response model — disable inference.
+@router.post("/message", response_model=None)
 async def send_message(request: ChatMessageRequest) -> StreamingResponse | dict[str, Any]:
     """
     Send a chat message and get streaming response.
