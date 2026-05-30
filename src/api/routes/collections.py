@@ -37,7 +37,7 @@ class AddDocumentsRequest(BaseModel):
 
 
 @router.post("/")
-async def create_collection(request: CreateCollectionRequest):
+async def create_collection(request: CreateCollectionRequest) -> dict[str, Any]:
     """Create a new document collection."""
     components = await get_components()
     coll_store = getattr(components, "collection_store", None)
@@ -50,7 +50,8 @@ async def create_collection(request: CreateCollectionRequest):
             description=request.description,
             tags=request.tags,
         )
-        return collection.model_dump()
+        created: dict[str, Any] = collection.model_dump()
+        return created
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
