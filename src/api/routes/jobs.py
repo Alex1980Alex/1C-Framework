@@ -178,6 +178,8 @@ async def enqueue_job(
 
         return {"job_id": job_id, "status": "pending"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[JOBS] Failed to enqueue job: {e}")
         raise HTTPException(
