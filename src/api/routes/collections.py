@@ -123,7 +123,8 @@ async def update_collection(collection_id: str, request: UpdateCollectionRequest
     if updated is None:
         raise HTTPException(status_code=404, detail="Collection not found")
 
-    return updated.model_dump()
+    updated_dump: dict[str, Any] = updated.model_dump()
+    return updated_dump
 
 
 @router.delete("/{collection_id}")
