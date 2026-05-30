@@ -1245,11 +1245,6 @@ src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: note: Superclass:
 src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: note: def on_tool_error(self, error: BaseException, *, run_id: UUID, parent_run_id: UUID | None = ..., **kwargs: Any) -> Any
 src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: note: Subclass:
 src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: note: def on_tool_error(self, error: Exception, **kwargs: Any) -> None
-src/api/routes/metrics.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/metrics.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/metrics.py:0: error: Call to untyped function "get_metrics" in typed context  [no-untyped-call]
-src/api/routes/metrics.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/metrics.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/pdf_framework/agents/rag/middleware.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/pdf_framework/agents/rag/middleware.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/pdf_framework/tools/graph_query/graph_tool.py:0: error: Function is missing a return type annotation  [no-untyped-def]
@@ -1498,7 +1493,6 @@ src/workers/tasks/evaluation.py:0: error: Missing type arguments for generic typ
 src/workers/tasks/evaluation.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/workers/tasks/evaluation.py:0: error: Module "src.pdf_framework.evaluation" has no attribute "load_dataset"  [attr-defined]
 src/workers/tasks/evaluation.py:0: error: Module "src.pdf_framework.evaluation" has no attribute "run_ragas_evaluation"  [attr-defined]
-src/api/routes/documents.py:0: error: Incompatible types in "await" (actual type "Awaitable[int] | int", expected type "Awaitable[Any]")  [misc]
 src/pdf_framework/quick.py:0: error: Function is missing a type annotation  [no-untyped-def]
 src/pdf_framework/quick.py:0: error: Item "None" of "Any | None" has no attribute "loader"  [union-attr]
 src/pdf_framework/quick.py:0: error: Item "None" of "Any | None" has no attribute "pipeline"  [union-attr]
@@ -1563,12 +1557,6 @@ src/cli/main.py:0: error: Argument 2 to "create_token" of "JWTHandler" has incom
 src/cli/main.py:0: error: Argument "method" to "SuggestionConfig" has incompatible type "str"; expected "Literal['entity', 'frequency', 'llm', 'related']"  [arg-type]
 src/cli/main.py:0: error: Unexpected keyword argument "question" for "SubResult"; did you mean "sub_question"?  [call-arg]
 src/cli/main.py:0: error: "type[BenchmarkLoader]" has no attribute "load"  [attr-defined]
-src/api/routes/openai_compat.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/openai_compat.py:0: error: Unsupported operand types for + ("str" and "dict[Any, Any]")  [operator]
-src/api/routes/openai_compat.py:0: error: Unsupported operand types for + ("str" and "list[Any]")  [operator]
-src/api/routes/openai_compat.py:0: note: Right operand is of type "str | dict[Any, Any] | list[Any]"
-src/api/routes/openai_compat.py:0: error: Call to untyped function "stream_generator" in typed context  [no-untyped-call]
-src/api/routes/openai_compat.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
 src/workers/worker.py:0: error: Module "arq.worker" has no attribute "WorkerSettings"; maybe "WorkerSettingsType"?  [attr-defined]
 src/workers/worker.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/workers/worker.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
