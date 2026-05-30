@@ -67,7 +67,7 @@ async def websocket_search(websocket: WebSocket) -> None:
             rerank = request.get("rerank", True)
 
             # Run search + streaming generation as a cancellable task
-            async def _run_search():
+            async def _run_search() -> None:
                 t0 = time.perf_counter()
 
                 # Step 1: Search
