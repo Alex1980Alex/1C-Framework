@@ -78,6 +78,15 @@ def _decode_hash(data: dict[Any, Any]) -> dict[str, str]:
     return {_s(k): _s(v) for k, v in data.items()}
 
 
+async def _hgetall(redis: ArqRedis, key: str) -> dict[str, str]:
+    # redis-py async stub types methods as Awaitable[T] | T; the async client IS awaitable.
+    return _decode_hash(await redis.hgetall(key))  # type: ignore[misc]
+
+
+async def _hset(redis: ArqRedis, key: str, mapping: dict[str, str]) -> None:
+    await redis.hset(key, mapping=mapping)  # type: ignore[misc]
+
+
 async def get_job_status(job_id: str) -> JobInfo | None:
     """Get job status from Redis."""
     try:
