@@ -126,7 +126,7 @@ async def chat_completions(
 
     if request.stream:
         # Streaming response
-        async def stream_generator():
+        async def stream_generator() -> AsyncIterator[str]:
             from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
 
             agent = create_rag_agent(
