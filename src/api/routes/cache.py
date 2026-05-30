@@ -29,7 +29,7 @@ async def cache_stats() -> dict[str, Any]:
     llm_stats = llm_cache.get_stats()
     doc_stats = doc_cache.get_stats()
 
-    result = {
+    result: dict[str, Any] = {
         "embedding": {
             "hits": emb_stats.hits,
             "misses": emb_stats.misses,
