@@ -1487,6 +1487,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 (поздно) — §21.4 срез N (graphrag_global.py) + baseline re-sync + catch-up K/L/M
+
+Pivot из api/routes в Pareto top-file track. Перед началом: `analytical/agent.py` (бывший «Next» из §18) оказался **уже сделан** — коммит `e39a887d1` срез K (1396→1343); следом прошли **срез L** `rag/agent.py` (1343→1293) и **срез M** `deep-research/streaming` (1259→1210), которые в §18 не были залогированы (catch-up здесь). Стрей-артефакт `C:Tempdiff_agent.txt` (дамп diff'а среза K, подцеплен auto-commit) удалён + `.gitignore` правило `*Tempdiff*.txt` (`0330e35`).
+- **срез N** `search/strategies/graphrag_global.py` (42) → 0: `map_kwargs`/`reduce_kwargs: dict[str, Any]` (40 arg-type на `ChatAnthropic(**kwargs)` — `dict[str, object]` инференс ломал unpacking), `search(**kwargs: Any)` (no-untyped-def), `summaries: dict[str, str]` (var-annotated). Annotation-only, behavior-preserving. Коммит `fdf68d8`.
+- **baseline re-sync:** `mypy-baseline.txt` 1377→1330 (захватил накопленный дрейф K/L/M + срез N); filter `fixed=0/new=0/unresolved=1330` (1168 errors + 162 notes), EXIT=0. CI mypy gate green.
+- **Verify:** `mypy src/` 1216→1174 (grep error-lines) / authoritative «Found 1168 errors»; 0 новых ошибок в др. файлах (diff чист).
+
 ### 2026-05-30 — §21.4 срезы H/I/J + 🏁 api/routes MILESTONE: 1422 → 1396
 
 Завершение каталога `src/api/routes/` после bugfix-PR.
@@ -2084,7 +2091,11 @@ Alert на production file
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
 - **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
-- **Текущая база:** **1396 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **Текущая база (2026-05-30 поздно, после среза N + baseline re-sync):** **1174 ошибки** (grep error-lines) / authoritative «Found 1168 errors» + 162 notes = baseline 1330. filter-clean (new=0/fixed=0, EXIT=0). Топ-файлы по ошибкам (новый Pareto после ухода analytical/rag/deep-research/graphrag): `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32), `processing/summary_index.py` (31), `search/hyde.py` (27), `mcp_server/server.py` (27), `bsl/semantic_search/mcp.py` (27), `bsl/mcp_server/http_server.py` (26), `workers/tasks/indexing.py` (25). _Прежняя база «1396» относилась к снимку до срезов K/L/M/N._
+- **✅ срез K done (2026-05-30, коммит `e39a887d1`):** `agents/analytical/agent.py` (53) → 0. **1396 → 1343.** `llm_kwargs`/`fast_llm_kwargs: dict[str, Any]` (тот же arg-type-на-`**kwargs` паттерн, что в срезе N). _(catch-up: не был залогирован в §18 при выполнении.)_
+- **✅ срез L done (2026-05-30, коммит `ccafce881`):** `agents/rag/agent.py` (Self-RAG) → 0. **1343 → 1293.** _(catch-up.)_
+- **✅ срез M done (2026-05-30, коммит `71fa9b10b`):** `agents/{deep-research,streaming}` → 0. **1259 → 1210.** _(catch-up.)_
+- **✅ срез N done (2026-05-30, коммит `fdf68d8`):** `search/strategies/graphrag_global.py` (42) → 0. **1216 → 1174.** `map_kwargs`/`reduce_kwargs: dict[str, Any]` (40 arg-type на `ChatAnthropic(**kwargs)`), `search(**kwargs: Any)`, `summaries: dict[str, str]`. Annotation-only. + baseline re-sync 1377→1330 (захватил дрейф K/L/M).
 - **✅ срез J done + MILESTONE (2026-05-30):** `api/routes/{openai_compat,metrics,documents}.py` — 11 (no-untyped-def + operator + no-any-return + no-untyped-call + misc) → 0. **1407 → 1396.** openai_compat: `AsyncIterator[str]` на stream_generator + `str(event.data)`/`str(result.get())` (token уже str → behavior-identical). metrics: 4 return-аннотации (`dict[str,Any]`/`str`/`dict[str,str]`/`Response`). documents: `redis.hset` `# type: ignore[misc]` (redis-py async-stub union). **🏁 `src/api/routes/` теперь полностью типизирован — 0 mypy-ошибок во всём каталоге (17 routers).**
 - **✅ срез I done (2026-05-30):** `api/routes/completions.py` **УДАЛЁН** (8 ошибок → 0). Dead-on-arrival: НЕ mounted в app.py, 0 импортов, зовёт несуществующие `SearchManager.search_and_answer` + `Components.agent` — stale-дубликат активного `openai_compat.py`. Runtime неизменён (был недостижим). Убраны 4 ложные `/completions/*` строки из framework-api SKILL.md. **1415 → 1407.**
 - **✅ срез H done (2026-05-30):** `api/routes/websocket.py` — 7 (no-untyped-def + type-arg + no-untyped-call) → 0. **1422 → 1415.** Annotation-only (`-> None`, `dict[str, Any]`, `asyncio.Task[None]`).
@@ -2103,8 +2114,8 @@ Alert на production file
   - `jobs.py` (12) — **redis-py migration fix**: `iscan`→`scan_iter`(+decode key), `hgetall(encoding=)`→`_hgetall` helper (manual decode, `# type: ignore[misc]` на redis-py async-stub union), `enqueue_job()→Job\|None` → `job.job_id` + None→409, enqueue теперь через `get_redis()` (DRY/testable), `except HTTPException: raise` guard.
   - **🐛 БОНУС — найден+исправлен shipped regression:** срез E (`4f5fd2e43`) аннотировал `send_message -> StreamingResponse | dict` → FastAPI **падал при построении роутера** (`FastAPIError`, mypy не ловит) → весь `src.api.routes` не импортировался / app не стартовал. Fix: `@router.post("/message", response_model=None)`. Тест-suite это и вскрыл.
   - Тесты: `tests/unit/api/test_stale_api_bugfix.py` (8 pass: 501×2, decode_hash×4, enqueue job.job_id + None→409).
-- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База **1422**.
-- **Сделано в сессии 2026-05-30:** 1599 → **1422** (срезы A-F + drift + bugfix-PR), CI mypy green; найдены+исправлены 2 dead-route группы (graph Phase 61 → 501) + 1 shipped regression (chat router build) + redis-migration (jobs).
+- **Next:** Pareto top-file `vector_store/providers/qdrant.py` (39) — новый лидер после ухода analytical/rag/deep-research/graphrag. База **1174**. Внимание (урок срезов D/G): аннотация type-источника может ВСКРЫТЬ latent-баги (как stale redis/vector_store API) — такие в отдельный bugfix-PR, не маскировать.
+- **Сделано в сессии 2026-05-30:** 1599 → **1174** (срезы A-N + drift + bugfix-PR + baseline re-sync 1330), CI mypy green; найдены+исправлены 2 dead-route группы (graph Phase 61 → 501) + 1 shipped regression (chat router build) + redis-migration (jobs); удалён стрей-артефакт `C:Tempdiff_agent.txt` + `.gitignore` правило.
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
