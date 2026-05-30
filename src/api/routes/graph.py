@@ -249,7 +249,7 @@ async def incremental_graph_update(
     tenant_id: str = "default",
     _current_tenant: str = Depends(get_current_tenant),
     _role: str = Depends(get_current_role),
-):
+) -> dict[str, Any]:
     """Incrementally update graph for a document.
 
     Only processes changed chunks instead of full document rebuild.
