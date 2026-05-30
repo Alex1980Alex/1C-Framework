@@ -31,7 +31,7 @@ def _ws_message(msg_type: str, data: Any, metadata: dict[str, Any] | None = None
 
 
 @router.websocket("/ws/search")
-async def websocket_search(websocket: WebSocket):
+async def websocket_search(websocket: WebSocket) -> None:
     """WebSocket endpoint for streaming search with cancel support.
 
     Protocol:
