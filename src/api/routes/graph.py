@@ -281,30 +281,12 @@ async def detect_graph_changes(document_id: str) -> dict[str, Any]:
 
     Returns ChangeSet with added/modified/deleted chunk IDs.
     """
-    from src.pdf_framework.graph_store.change_detector import get_change_detector
-
-    components = await get_components()
-
-    # Get current chunks
-    chunks = await components.vector_store.get_chunks(document_id, "default")
-
-    chunk_dicts = [
-        {
-            "id": c.chunk_id,
-            "content": c.text,
-            "metadata": getattr(c, "metadata", {}),
-        }
-        for c in chunks
-    ]
-
-    # Detect changes
-    detector = get_change_detector()
-    changes = await detector.detect_changes(chunk_dicts, document_id)
-
-    return {
-        "document_id": document_id,
-        "changes": changes.summary(),
-        "added_chunk_ids": changes.added,
-        "modified_chunk_ids": changes.modified,
-        "deleted_chunk_ids": changes.deleted,
-    }
+    # NOT IMPLEMENTED (roadmap §21.4 / срез G): prior body called vector_store.get_chunks
+    # (no such method — use scroll); also feeds the unwired incremental update. 501, not crash.
+    raise HTTPException(
+        status_code=501,
+        detail=(
+            f"Change detection for '{document_id}' is not implemented "
+            "(requires chunk retrieval via vector_store.scroll). Tracked in roadmap §21.4."
+        ),
+    )
