@@ -163,20 +163,18 @@ async def enqueue_job(
             )
 
         # Enqueue job
-        job_id = await redis.enqueue_job(
-            task_path,
-            **request.task_kwargs,
-            _queue_name=settings.queue.queue_name,
+        job = await redis.enqueue_job(
+            task_path, **request.task_kwargs, _queue_name=settings.queue.queue_name
         )
+        if job is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Enqueue returned no job (duplicate or deferred job_id).",
+            )
+        job_id = job.job_id
 
         # Initialize job status
-        await redis.hset(
-            f"job:{job_id}",
-            mapping={
-                "status": "pending",
-                "progress": "0",
-            },
-        )
+        await _hset(redis, f"job:{job_id}", {"status": "pending", "progress": "0"})
         await redis.expire(f"job:{job_id}", settings.queue.job_timeout)
 
         logger.info(f"[JOBS] Enqueued: {job_id} ({request.task_name})")
