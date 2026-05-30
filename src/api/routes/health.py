@@ -109,7 +109,7 @@ async def check_llm() -> dict[str, Any]:
         }
 
 
-async def check_disk_space() -> dict:
+async def check_disk_space() -> dict[str, Any]:
     """Check available disk space."""
     try:
         # Get disk usage for data directory
