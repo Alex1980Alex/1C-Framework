@@ -69,6 +69,15 @@ async def get_redis() -> ArqRedis:
     return await create_pool(RedisSettings.from_dsn(settings.queue.redis_url))
 
 
+def _decode_hash(data: dict[Any, Any]) -> dict[str, str]:
+    """Decode a Redis hash to str->str (arq's ArqRedis does not set decode_responses)."""
+
+    def _s(v: Any) -> str:
+        return v.decode("utf-8") if isinstance(v, bytes) else str(v)
+
+    return {_s(k): _s(v) for k, v in data.items()}
+
+
 async def get_job_status(job_id: str) -> JobInfo | None:
     """Get job status from Redis."""
     try:
