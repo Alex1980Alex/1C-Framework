@@ -1487,6 +1487,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 срез G (jobs.py) — REVERTED, bug-finding only (база без изменений: 1437)
+
+Попытка annotation-среза `api/routes/jobs.py` провалилась полезным образом: аннотация `get_redis() -> ArqRedis` дала mypy проверить redis-вызовы → счёт **вырос 10→12**, вскрыв **stale aioredis API**: `redis.iscan` (нет у ArqRedis → `scan_iter`), `hgetall(encoding="utf-8")` (kwarg удалён в redis-py 4+/5), `enqueue_job()→Job\|None` используется как str-id (→ `job.job_id`). Эндпоинты `/jobs/*` упадут при `QUEUE__ENABLED=true`. **Edits откатаны** (`git checkout`; jobs.py == HEAD, baseline без изменений, filter green). Finding → §21.4 bugfix-кандидаты. **Урок:** аннотация типа-источника может УВЕЛИЧИТЬ счёт, разоблачив скрытые баги — annotation-срез подходит не каждому файлу; такие — в отдельный bugfix-PR.
+
 ### 2026-05-30 — §21.4 mypy срез F (api/routes/search.py): 1446 → 1437
 
 `api/routes/search.py` — 9 (no-untyped-def + no-untyped-call + arg-type) → 0. Return-types (response-models на 5 endpoints), `AsyncIterator[str]` на `event_generator`, `ChatAnthropic` api_key fix: вынесён в `llm_kwargs` conditional через `SecretStr` (omit при None = env-fallback, behavior-identical с прежним `or None`; stub ожидает `SecretStr`, не `SecretStr | None`). `mypy search.py` "Success"; full 1446→**1437**; filter green.
@@ -2074,7 +2078,10 @@ Alert на production file
 - **✅ срез C done (2026-05-30):** `api/routes/tenants.py` — 25 (arg-type + union-attr) → 0. **1491 → 1466.** Реальный type-work: ISO `str`→`datetime` (`datetime.fromisoformat`, runtime-identical — pydantic уже коэрсил) + `get_quota() or TenantQuota()` (устраняет latent pydantic-crash при None, aligned с schema `default_factory`). Не чистая косметика — мелкий bugfix.
 - **✅ срез A done (2026-05-30):** `api/routes/{health,collections,analytics}.py` — 23 (no-untyped-def + type-arg) → 0. **1530 → 1507.** Annotation-only.
 - **✅ срез B done (2026-05-30):** `api/routes/{auth,cache,feedback,toc,github_webhooks}.py` — 16 (no-untyped-def + type-arg + no-any-return) → 0. **1507 → 1491.** Annotation-only (dict[str, Any] / response-model типы + typed intermediates).
-- **Остаток api/routes (≈41, требуют реального type-work):** jobs (10), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. + graph.py (5 — отдельный bugfix, см. finding). Брать по 1 файлу.
+- **Остаток api/routes (≈41, требуют реального type-work):** completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. Брать по 1 файлу.
+- **🐛 BUGFIX-кандидаты (отдельные PR, НЕ mypy-аннотации):**
+  - `graph.py` (5) — Phase 61 routes вызывают несуществующие API (см. срез D finding).
+  - `jobs.py` (10) — **stale aioredis API**: попытка аннотировать `get_redis() -> ArqRedis` (срез G, 2026-05-30) **увеличила** счёт 10→12, т.к. mypy наконец проверил redis-вызовы и вскрыл: `redis.iscan` (нет у ArqRedis — нужно `scan_iter`), `hgetall(encoding="utf-8")` (kwarg `encoding` удалён в redis-py 4+/5), `enqueue_job()` → `Job\|None` используется как str-id (нужно `job.job_id`). Эндпоинты `/jobs/*` упадут в runtime при `QUEUE__ENABLED=true`. Аннотации откатаны (оставлены baselined); нужен redis-API-migration PR + тест. **Урок:** аннотация типа-источника (get_redis) может РАЗОБЛАЧИТЬ скрытые баги и увеличить счёт — не всякий файл годится для annotation-среза.
 - **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1437.
 - **Сделано в сессии 2026-05-30 (срезы A-F + drift):** 1599 → 1437 (**−162**), CI mypy green каждый шаг, отдельные verified-коммиты; найден реальный баг (graph.py Phase 61 routes).
 
