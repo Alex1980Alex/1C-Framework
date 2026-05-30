@@ -26,6 +26,7 @@ from src.pdf_framework.agents.rag.nodes import (
 )
 from src.pdf_framework.agents.rag.state import RAGState
 from src.pdf_framework.config import PROJECT_ROOT, AgentSettings, SelfRAGSettings
+from src.pdf_framework.schemas.documents import SearchResponse
 from src.pdf_framework.search.manager import SearchManager
 
 logger = logging.getLogger(__name__)
@@ -87,7 +88,7 @@ def create_rag_agent(
     token_tracker = TokenTracker(node_name="init")
 
     # LLM instances — pass base_url for Z.AI or other proxies
-    main_llm_kwargs = dict(
+    main_llm_kwargs: dict[str, Any] = dict(
         model=settings.model,
         temperature=settings.temperature,
         max_tokens=settings.max_tokens,
@@ -100,7 +101,7 @@ def create_rag_agent(
 
     # Single fast LLM for all Self-RAG tasks (grading, rewriting, hallucination)
     # All three use the same model (Haiku by default), so one instance suffices.
-    fast_llm_kwargs = dict(
+    fast_llm_kwargs: dict[str, Any] = dict(
         model=self_rag_settings.grading_model,
         temperature=0.0,
         max_tokens=1024,
@@ -114,7 +115,7 @@ def create_rag_agent(
     parser = StrOutputParser()
 
     # ========== Node 1: Analyze Query ==========
-    async def analyze_query(state: RAGState) -> dict:
+    async def analyze_query(state: RAGState) -> dict[str, Any]:
         """Classify the question and choose the best search strategy."""
         token_tracker.set_node("analyze")
         question = state["question"]
@@ -168,7 +169,7 @@ def create_rag_agent(
         }
 
     # ========== Node 2: Execute Search ==========
-    async def execute_search(state: RAGState) -> dict:
+    async def execute_search(state: RAGState) -> dict[str, Any]:
         """Run the chosen search strategy."""
         strategy = state.get("search_strategy", "vector")
         question = state["question"]
@@ -186,7 +187,7 @@ def create_rag_agent(
             return {"error": str(e), "context": ""}
 
     # ========== Node 3: Grade Documents (Phase 5) ==========
-    async def grade_documents_node(state: RAGState) -> dict:
+    async def grade_documents_node(state: RAGState) -> dict[str, Any]:
         """Grade retrieved documents for relevance, then filter context."""
         token_tracker.set_node("grade")
         if not self_rag_settings.enabled:
@@ -201,8 +202,6 @@ def create_rag_agent(
         if search_response and graded:
             relevant_ids = {g["chunk_id"] for g in graded if g["is_relevant"]}
             if relevant_ids:
-                from src.pdf_framework.schemas.documents import SearchResponse
-
                 filtered_results = [
                     r for r in search_response.results if r.chunk.id in relevant_ids
                 ]
@@ -221,7 +220,7 @@ def create_rag_agent(
 
         return result
 
-    def _legacy_evaluate_results(state: RAGState) -> dict:
+    def _legacy_evaluate_results(state: RAGState) -> dict[str, Any]:
         """Legacy evaluation for backward compatibility."""
         response = state.get("search_response")
         if not response or not response.results:
@@ -232,13 +231,13 @@ def create_rag_agent(
         return {"relevance_score": avg_score, "needs_more_context": needs_more}
 
     # ========== Node 4: Rewrite Query (Phase 5) ==========
-    async def rewrite_query_node(state: RAGState) -> dict:
+    async def rewrite_query_node(state: RAGState) -> dict[str, Any]:
         """Rewrite query when relevance is low."""
         token_tracker.set_node("rewrite")
         return await rewrite_query(state, fast_llm, self_rag_settings)
 
     # ========== Node 5: Generate Answer (Ralph Wiggum) ==========
-    async def generate_answer(state: RAGState) -> dict:
+    async def generate_answer(state: RAGState) -> dict[str, Any]:
         """Generate the final answer from context with self-correcting retry."""
         token_tracker.set_node("generate")
         question = state["question"]
@@ -364,7 +363,7 @@ def create_rag_agent(
         return {"answer": answer, "sources": sources, "metadata": metadata}
 
     # ========== Node 6: Check Hallucination (Phase 5) ==========
-    async def check_hallucination_node(state: RAGState) -> dict:
+    async def check_hallucination_node(state: RAGState) -> dict[str, Any]:
         """Check if answer is grounded in context."""
         token_tracker.set_node("hallucinate_check")
         if not self_rag_settings.enabled or not self_rag_settings.hallucination_check_enabled:
@@ -374,7 +373,7 @@ def create_rag_agent(
         return await check_hallucination(state, fast_llm, self_rag_settings)
 
     # ========== Node 7: Regenerate Answer (Phase 5) ==========
-    async def regenerate_answer_node(state: RAGState) -> dict:
+    async def regenerate_answer_node(state: RAGState) -> dict[str, Any]:
         """Regenerate answer with stricter prompt."""
         token_tracker.set_node("regenerate")
         return await regenerate_answer(state, main_llm, self_rag_settings)
@@ -465,7 +464,7 @@ def create_rag_agent(
     graph.add_edge("regenerate", END)
 
     # Phase 43: LangGraph checkpointing for state persistence
-    compile_kwargs: dict = {}
+    compile_kwargs: dict[str, Any] = {}
     if settings.checkpointer == "sqlite":
         try:
             import sqlite3
@@ -507,7 +506,7 @@ def _extract_section_number(title: str) -> str:
     return m.group(1) if m else ""
 
 
-def _build_context(response) -> str:
+def _build_context(response: SearchResponse) -> str:
     """Build context string from search results.
 
     Phase 41: Each chunk starts with §section_number for LLM to reference.
