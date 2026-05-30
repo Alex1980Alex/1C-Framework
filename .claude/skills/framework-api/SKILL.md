@@ -316,10 +316,6 @@ curl -X POST http://localhost:8000/search/ \
 | `POST` | `/collections/{collection_id}/documents` | `src\api\routes\collections.py` |
 | `DELETE` | `/collections/{collection_id}/documents/{document_id}` | `src\api\routes\collections.py` |
 | `GET` | `/collections/{collection_id}/documents` | `src\api\routes\collections.py` |
-| `POST` | `/completions/chat/completions` | `src\api\routes\completions.py` |
-| `GET` | `/completions/models` | `src\api\routes\completions.py` |
-| `GET` | `/completions/models/{model_id}` | `src\api\routes\completions.py` |
-| `POST` | `/completions/embeddings` | `src\api\routes\completions.py` |
 | `PATCH` | `/documents/registry/{document_id}` | `src\api\routes\documents.py` |
 | `GET` | `/feedback/examples/positive` | `src\api\routes\feedback.py` |
 | `POST` | `/feedback/tune` | `src\api\routes\feedback.py` |
