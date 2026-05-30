@@ -101,12 +101,13 @@ async def get_query_stats(
 async def get_recent_queries(
     limit: int = Query(default=50, ge=1, le=500),
     components: Components = Depends(get_components),
-):
+) -> list[dict[str, Any]]:
     """Get recent tracked queries."""
     tracker = getattr(components, "query_tracker", None)
     if tracker is None:
         return []
-    return tracker.get_recent(limit=limit)
+    recent: list[dict[str, Any]] = tracker.get_recent(limit=limit)
+    return recent
 
 
 @router.get("/costs", response_model=CostStatsResponse)
