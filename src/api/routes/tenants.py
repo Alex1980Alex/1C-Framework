@@ -104,7 +104,7 @@ async def list_tenants(
         for tenant_id in tenant_ids:
             metadata = await store_manager.get_tenant_metadata(tenant_id)
             if metadata:
-                quota = await store_manager.get_quota(tenant_id)
+                quota = await store_manager.get_quota(tenant_id) or TenantQuota()
 
                 tenant = Tenant(
                     tenant_id=metadata.tenant_id,
@@ -156,7 +156,7 @@ async def get_tenant(
                 detail=f"Tenant not found: {tenant_id}",
             )
 
-        quota = await store_manager.get_quota(tenant_id)
+        quota = await store_manager.get_quota(tenant_id) or TenantQuota()
 
         return Tenant(
             tenant_id=metadata.tenant_id,
@@ -248,7 +248,7 @@ async def get_tenant_usage(
                 detail=f"Tenant not found: {tenant_id}",
             )
 
-        quota = await store_manager.get_quota(tenant_id)
+        quota = await store_manager.get_quota(tenant_id) or TenantQuota()
         exceeded = await store_manager.check_quota(tenant_id)
 
         stats = TenantStats(
@@ -315,7 +315,7 @@ async def update_tenant(
         if request.quota:
             await store_manager.set_quota(tenant_id, request.quota)
 
-        quota = await store_manager.get_quota(tenant_id)
+        quota = await store_manager.get_quota(tenant_id) or TenantQuota()
 
         return Tenant(
             tenant_id=metadata.tenant_id,
