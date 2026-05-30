@@ -64,7 +64,7 @@ class JobListResponse(BaseModel):
     active: int
 
 
-async def get_redis():
+async def get_redis() -> ArqRedis:
     """Get Redis connection pool."""
     return await create_pool(RedisSettings.from_dsn(settings.queue.redis_url))
 
