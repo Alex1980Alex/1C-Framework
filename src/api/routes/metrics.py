@@ -8,6 +8,7 @@ Version: 1.2.0 - Phase 11.6: Metrics Dashboard
 
 import logging
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
