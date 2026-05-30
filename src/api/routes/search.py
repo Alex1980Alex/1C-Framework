@@ -385,7 +385,7 @@ class ResearchResponse(BaseModel):
 async def research_question(
     request: ResearchRequest,
     components: Components = Depends(get_components),
-):
+) -> ResearchResponse:
     """Deep research v2: plan-execute-verify with evidence graph.
 
     Phase 36: Autonomous multi-round research with:
