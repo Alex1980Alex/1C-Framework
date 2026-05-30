@@ -56,7 +56,7 @@ async def cache_stats() -> dict[str, Any]:
 
 
 @router.post("/clear")
-async def clear_all_caches():
+async def clear_all_caches() -> dict[str, int]:
     """Clear all caches (embeddings, LLM, documents)."""
     embedding_cache = get_embedding_cache()
     llm_cache = get_llm_cache()
