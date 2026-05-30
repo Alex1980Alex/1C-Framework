@@ -120,7 +120,7 @@ async def list_tenants(
                         queries_today=0,
                         storage_used_mb=metadata.storage_bytes / (1024 * 1024),
                         created_at=datetime.fromisoformat(metadata.created_at),
-                        last_active=metadata.last_activity,
+                        last_active=datetime.fromisoformat(metadata.last_activity),
                     ),
                 )
                 tenants.append(tenant)
@@ -172,7 +172,7 @@ async def get_tenant(
                 queries_today=0,
                 storage_used_mb=metadata.storage_bytes / (1024 * 1024),
                 created_at=datetime.fromisoformat(metadata.created_at),
-                last_active=metadata.last_activity,
+                last_active=datetime.fromisoformat(metadata.last_activity),
             ),
         )
 
@@ -214,7 +214,7 @@ async def get_tenant_stats(
             queries_today=0,
             storage_used_mb=metadata.storage_bytes / (1024 * 1024),
             created_at=datetime.fromisoformat(metadata.created_at),
-            last_active=metadata.last_activity,
+            last_active=datetime.fromisoformat(metadata.last_activity),
         )
 
     except HTTPException:
@@ -258,7 +258,7 @@ async def get_tenant_usage(
             queries_today=0,
             storage_used_mb=metadata.storage_bytes / (1024 * 1024),
             created_at=datetime.fromisoformat(metadata.created_at),
-            last_active=metadata.last_activity,
+            last_active=datetime.fromisoformat(metadata.last_activity),
         )
 
         usage_percentage = {
