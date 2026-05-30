@@ -1487,6 +1487,14 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 срезы H/I/J + 🏁 api/routes MILESTONE: 1422 → 1396
+
+Завершение каталога `src/api/routes/` после bugfix-PR.
+- **срез H** `websocket.py` (7) → 0: `-> None`, `dict[str, Any]`, `asyncio.Task[None]`. 1422→1415.
+- **срез I** `completions.py` **DELETED** (8) → 0: dead unmounted duplicate of `openai_compat.py` (0 importers, calls non-existent `SearchManager.search_and_answer`/`Components.agent`); 4 phantom `/completions/*` rows removed from framework-api SKILL.md. 1415→1407.
+- **срез J** `openai_compat.py`+`metrics.py`+`documents.py` (11) → 0: `AsyncIterator[str]`+`str()` coercions; 4 metrics return-annotations + duplicate-import cleanup; `redis.hset # type: ignore[misc]`. 1407→1396.
+- **🏁 MILESTONE:** весь `src/api/routes/` (19 source files / 17 routers) теперь mypy-чист — **0 ошибок** (`mypy src/api/routes/` → "Success"). filter green throughout.
+
 ### 2026-05-30 — §21.4 BUGFIX-PR (graph.py + jobs.py stale APIs) + shipped chat regression: 1437 → 1422
 
 Pivot из mypy-уборки в реальный bugfix (branch `bugfix/api-routes-stale-apis`, +8 unit tests).
