@@ -306,7 +306,7 @@ class AnalyzeResponse(BaseModel):
 async def analyze_question(
     request: AnalyzeRequest,
     components: Components = Depends(get_components),
-):
+) -> AnalyzeResponse:
     """Analytical RAG: multi-round evidence gathering with structured output.
 
     Phase 33: For comparative, analytical, and overview questions.
