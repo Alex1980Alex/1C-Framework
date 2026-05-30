@@ -1487,6 +1487,14 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 mypy срез D (api/routes/graph.py annotations) + bug-finding: 1466 → 1457
+
+**Outcome:** `api/routes/graph.py` — 9 `no-untyped-def` → 0 (`dict[str, Any]`; `get_statistics` уже `dict[str, Any]` → без invariance-trap). **Частичный срез** + **обнаружены реальные баги**.
+
+**🐛 Finding (важно):** оставшиеся 5 mypy-ошибок graph.py = вызовы несуществующих API → Phase 61 эндпоинты `/graph/incremental-update` + `/incremental/detect-changes` **падают в runtime**: `vector_store.get_chunks()` (метода нет — есть `scroll`), `IncrementalGraphUpdater(entity_extractor=...)` (нет kwarg) + `.update_document()` (есть `update`). Stale-роуты после рефакторинга. **НЕ замаскированы** (`type: ignore` не ставил) — оставлены baselined + вынесены в §21.4 как отдельный bugfix-PR (фикс/удаление + тест). `_save_to_file` (5-я) — type-narrow на NetworkX-gated роуте.
+
+**Verify:** `mypy graph.py` → 14→5 (9 fixed, 0 new); full `mypy src/` 1466→**1457**; filter EXIT=0. Урок: «remaining api/routes» содержит не только типизацию, но и латентные баги — срезы их выявляют.
+
 ### 2026-05-30 — §21.4 mypy срез C (api/routes/tenants.py, real type-work): 1491 → 1466
 
 **Outcome:** `api/routes/tenants.py` — 25 ошибок (`arg-type` ×21 + `union-attr` ×4) → 0; baseline synced (1466), filter green. **Не аннотации — реальный type-work + мелкий bugfix.**
@@ -2048,12 +2056,16 @@ Alert на production file
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
 - **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
-- **Текущая база:** **1466 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **Текущая база:** **1457 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **✅ срез D done (2026-05-30):** `api/routes/graph.py` — 9 `no-untyped-def` → 0 (`dict[str, Any]`). **1466 → 1457.** Частичный: 5 ошибок ОСТАВЛЕНЫ baselined осознанно (см. ниже finding).
+- **🐛 FINDING (срез D) — реальные баги в graph.py, НЕ маскировать:** 5 оставшихся mypy-ошибок = вызовы несуществующих API → эндпоинты **падают в runtime**:
+  - `POST /graph/incremental-update` + `GET /graph/incremental/detect-changes` (Phase 61): `vector_store.get_chunks(...)` — метода нет (есть `scroll`); `IncrementalGraphUpdater(entity_extractor=...)` — нет такого kwarg; `updater.update_document(...)` — у класса метод `update`, не `update_document`. Похоже на stale-роуты после рефакторинга `IncrementalGraphUpdater`/vector store. **Требуют отдельного bugfix-PR (не mypy-аннотации) + теста, или удаления мёртвых эндпоинтов.**
+  - `graph_store._save_to_file()` (line 150) — приватный метод, есть только у `NetworkXGraphStore`; роут уже NetworkX-gated → type-narrow (cast/getattr) при последующем проходе.
 - **✅ срез C done (2026-05-30):** `api/routes/tenants.py` — 25 (arg-type + union-attr) → 0. **1491 → 1466.** Реальный type-work: ISO `str`→`datetime` (`datetime.fromisoformat`, runtime-identical — pydantic уже коэрсил) + `get_quota() or TenantQuota()` (устраняет latent pydantic-crash при None, aligned с schema `default_factory`). Не чистая косметика — мелкий bugfix.
 - **✅ срез A done (2026-05-30):** `api/routes/{health,collections,analytics}.py` — 23 (no-untyped-def + type-arg) → 0. **1530 → 1507.** Annotation-only.
 - **✅ срез B done (2026-05-30):** `api/routes/{auth,cache,feedback,toc,github_webhooks}.py` — 16 (no-untyped-def + type-arg + no-any-return) → 0. **1507 → 1491.** Annotation-only (dict[str, Any] / response-model типы + typed intermediates).
-- **Остаток api/routes (≈70, требуют реального type-work):** graph (14), chat (11), jobs (10), search (9), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. — брать по 1 файлу (arg-type/attr-defined = настоящие несоответствия, риск регрессии при спешке).
-- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1466.
+- **Остаток api/routes (≈61, требуют реального type-work):** chat (11), jobs (10), search (9), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. + graph.py (5 — отдельный bugfix, см. finding). Брать по 1 файлу.
+- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1457.
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
