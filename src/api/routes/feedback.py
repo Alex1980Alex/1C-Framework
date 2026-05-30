@@ -140,7 +140,7 @@ async def get_positive_examples(
     strategy: str | None = None,
     limit: int = 50,
     components: Components = Depends(get_components),
-):
+) -> dict[str, Any]:
     """Get positive feedback entries as examples.
 
     These can be used as few-shot examples in prompts.
