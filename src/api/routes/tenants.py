@@ -62,7 +62,7 @@ async def create_tenant(
         tenant = Tenant(
             tenant_id=request.tenant_id,
             name=request.name,
-            quota=request.quota,
+            quota=request.quota or TenantQuota(),
             is_active=True,
             created_at=metadata.created_at,
             updated_at=metadata.created_at,
