@@ -188,7 +188,7 @@ async def health_check() -> dict[str, Any]:
 
 
 @router.get("/ready")
-async def readiness_probe():
+async def readiness_probe() -> dict[str, str]:
     """
     Readiness probe for Kubernetes.
 
