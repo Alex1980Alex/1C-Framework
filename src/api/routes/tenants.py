@@ -14,6 +14,7 @@ from src.pdf_framework.multitenancy.tenant_store import get_tenant_store_manager
 from src.pdf_framework.schemas.tenant import (
     Tenant,
     TenantCreate,
+    TenantQuota,
     TenantStats,
     TenantUpdate,
     TenantUsageResponse,
