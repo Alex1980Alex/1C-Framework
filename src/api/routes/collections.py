@@ -5,6 +5,7 @@ for cross-document analysis and scoped search.
 """
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
