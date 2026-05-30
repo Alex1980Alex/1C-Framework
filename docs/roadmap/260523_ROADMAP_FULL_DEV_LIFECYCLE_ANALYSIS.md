@@ -1487,6 +1487,10 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-30 — §21.4 mypy срез F (api/routes/search.py): 1446 → 1437
+
+`api/routes/search.py` — 9 (no-untyped-def + no-untyped-call + arg-type) → 0. Return-types (response-models на 5 endpoints), `AsyncIterator[str]` на `event_generator`, `ChatAnthropic` api_key fix: вынесён в `llm_kwargs` conditional через `SecretStr` (omit при None = env-fallback, behavior-identical с прежним `or None`; stub ожидает `SecretStr`, не `SecretStr | None`). `mypy search.py` "Success"; full 1446→**1437**; filter green.
+
 ### 2026-05-30 — §21.4 mypy срез E (api/routes/chat.py): 1457 → 1446
 
 `api/routes/chat.py` — 11 (no-untyped-def + type-arg + no-untyped-call + arg-type) → 0. Return-types, inner async-generator аннотации (`AsyncIterator[str]`/`[Any]` → заодно ушли 2 no-untyped-call), 1 real arg-type (`"".join` над `list[str|dict|list]` → `assistant_response: list[str]` + `str(event.data)`; token data уже str → behavior-identical). `mypy chat.py` "Success"; full 1457→**1446**; filter green.
@@ -2060,8 +2064,9 @@ Alert на production file
 
 - **Статус:** baseline ratcheted за 7 срезов; срез A (api/routes) разблокирован 2026-05-29 (FastAPI enforcer fix).
 - **✅ Drift RESOLVED 2026-05-29 (вечер):** реальный `mypy src/` = **1599** (не 1548 и не 1674 — оба claim'а устарели). `mypy_baseline filter` показал **113 un-baselined ошибок** (CI gate был красный): из них **72 = import-not-found/import-untyped** сторонних libs без stubs. **Root-cause fix:** добавлен `[[tool.mypy.overrides]] ignore_missing_imports` для ~30 external libs (gradio/plotly/fitz/networkx/yaml/dspy/tqdm/pandas/docling/unstructured/…) → **1599 → 1530**. Затем `mypy_baseline sync` → baseline = current; **filter EXIT=0, new=0 → CI green**. Внутренние `pdf_framework.*`/`shared.*` import-not-found НЕ заглушены (реальные баги → срезы). Запускать sync с `PYTHONIOENCODING=utf-8` (иначе cp1251 crash, см. [[feedback_post_merge_baseline_resync_protocol]]).
-- **Текущая база:** **1446 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
+- **Текущая база:** **1437 ошибок** (точная, filter-clean). Топ-файлы по ошибкам: `agents/analytical/agent.py` (53), `agents/rag/agent.py` (51), `search/strategies/graphrag_global.py` (42), `vector_store/providers/qdrant.py` (39), `memory/orchestrator/memory_orchestrator.py` (32).
 - **✅ срез E done (2026-05-30):** `api/routes/chat.py` — 11 (no-untyped-def + type-arg + no-untyped-call + arg-type) → 0. **1457 → 1446.** Return-types + inner async-generator аннотации (`AsyncIterator`) + 1 real arg-type (`"".join` над `list[str|dict|list]` → `list[str]` + `str(event.data)`, token уже str → behavior-identical).
+- **✅ срез F done (2026-05-30):** `api/routes/search.py` — 9 (no-untyped-def + no-untyped-call + arg-type) → 0. **1446 → 1437.** Return-types (response-models) + `AsyncIterator` на event_generator + `ChatAnthropic` api_key через `llm_kwargs` conditional (`SecretStr`; omit при None = env-fallback, behavior-identical с прежним `or None`).
 - **✅ срез D done (2026-05-30):** `api/routes/graph.py` — 9 `no-untyped-def` → 0 (`dict[str, Any]`). **1466 → 1457.** Частичный: 5 ошибок ОСТАВЛЕНЫ baselined осознанно (см. ниже finding).
 - **🐛 FINDING (срез D) — реальные баги в graph.py, НЕ маскировать:** 5 оставшихся mypy-ошибок = вызовы несуществующих API → эндпоинты **падают в runtime**:
   - `POST /graph/incremental-update` + `GET /graph/incremental/detect-changes` (Phase 61): `vector_store.get_chunks(...)` — метода нет (есть `scroll`); `IncrementalGraphUpdater(entity_extractor=...)` — нет такого kwarg; `updater.update_document(...)` — у класса метод `update`, не `update_document`. Похоже на stale-роуты после рефакторинга `IncrementalGraphUpdater`/vector store. **Требуют отдельного bugfix-PR (не mypy-аннотации) + теста, или удаления мёртвых эндпоинтов.**
@@ -2069,9 +2074,9 @@ Alert на production file
 - **✅ срез C done (2026-05-30):** `api/routes/tenants.py` — 25 (arg-type + union-attr) → 0. **1491 → 1466.** Реальный type-work: ISO `str`→`datetime` (`datetime.fromisoformat`, runtime-identical — pydantic уже коэрсил) + `get_quota() or TenantQuota()` (устраняет latent pydantic-crash при None, aligned с schema `default_factory`). Не чистая косметика — мелкий bugfix.
 - **✅ срез A done (2026-05-30):** `api/routes/{health,collections,analytics}.py` — 23 (no-untyped-def + type-arg) → 0. **1530 → 1507.** Annotation-only.
 - **✅ срез B done (2026-05-30):** `api/routes/{auth,cache,feedback,toc,github_webhooks}.py` — 16 (no-untyped-def + type-arg + no-any-return) → 0. **1507 → 1491.** Annotation-only (dict[str, Any] / response-model типы + typed intermediates).
-- **Остаток api/routes (≈50, требуют реального type-work):** jobs (10), search (9), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. + graph.py (5 — отдельный bugfix, см. finding). Брать по 1 файлу.
-- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1446.
-- **Сделано в сессии 2026-05-30 (срезы A-E + drift):** 1599 → 1446 (**−153**), CI mypy green каждый шаг, отдельные verified-коммиты; найден реальный баг (graph.py Phase 61 routes).
+- **Остаток api/routes (≈41, требуют реального type-work):** jobs (10), completions (8 attr-defined), websocket (7), metrics/openai_compat/etc. + graph.py (5 — отдельный bugfix, см. finding). Брать по 1 файлу.
+- **Next:** Pareto top-file `agents/analytical/agent.py` (53) ИЛИ остаток api/routes по файлу. База 1437.
+- **Сделано в сессии 2026-05-30 (срезы A-F + drift):** 1599 → 1437 (**−162**), CI mypy green каждый шаг, отдельные verified-коммиты; найден реальный баг (graph.py Phase 61 routes).
 
 ### §21.5 ✅ §16 doc-blockers — применено 2026-05-29 (#1/#5/#6/#7), #2 deferred
 
