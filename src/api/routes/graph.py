@@ -22,7 +22,7 @@ router = APIRouter(prefix="/graph", tags=["graph"])
 
 
 @router.get("/stats")
-async def graph_stats():
+async def graph_stats() -> dict[str, Any]:
     """Get knowledge graph statistics."""
     components = await get_components()
     stats = await components.graph_store.get_statistics()
