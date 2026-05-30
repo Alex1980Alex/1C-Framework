@@ -150,7 +150,7 @@ async def websocket_search(websocket: WebSocket) -> None:
                     )
                 )
 
-            search_task: asyncio.Task = asyncio.create_task(_run_search())
+            search_task: asyncio.Task[None] = asyncio.create_task(_run_search())
 
             # Listen for cancel while search runs
             async def _listen_for_cancel():
