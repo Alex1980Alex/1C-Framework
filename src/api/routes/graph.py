@@ -317,7 +317,7 @@ async def incremental_graph_update(
 
 
 @router.get("/incremental/detect-changes")
-async def detect_graph_changes(document_id: str):
+async def detect_graph_changes(document_id: str) -> dict[str, Any]:
     """Detect changes in document chunks for incremental update.
 
     Returns ChangeSet with added/modified/deleted chunk IDs.
