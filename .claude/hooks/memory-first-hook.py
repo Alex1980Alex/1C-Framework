@@ -652,13 +652,13 @@ def _surface_cache_get(key: str) -> dict[str, Any] | None:
         return None
 
 
-def _surface_cache_put(key: str, results: list, pids: list) -> None:
+def _surface_cache_put(key: str, results: list[Any], pids: list[Any]) -> None:
     """Store the fused surfacing result + surfaced pattern ids. Atomic, FIFO-capped, fail-soft."""
     if not SURFACE_CACHE_ENABLED:
         return
     try:
         SURFACE_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        data: dict = {}
+        data: dict[str, Any] = {}
         if SURFACE_CACHE_FILE.exists():
             try:
                 data = json.loads(SURFACE_CACHE_FILE.read_text(encoding="utf-8"))
