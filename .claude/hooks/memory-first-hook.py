@@ -64,11 +64,17 @@ LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
 SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
 
 # Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
+# learned_patterns included for semantic surfacing (§24 P0 ADR-D6)
 SEMANTIC_COLLECTIONS = [
     ("skill_library", "skill"),
     ("experience_embeddings", "experience"),
     ("conversation_memory", "conversation"),
+    ("learned_patterns", "pattern"),
 ]
+
+# §24 P0 — confidence gating thresholds
+MIN_SURFACE_CONF = 0.15   # hard noise floor: below this → never surface
+CONF_FLOOR = 0.30          # soft floor for floored-multiply score adjustment
 
 # Timeout budgets (seconds). TEI cold ~600ms, warm ~80ms (vs Ollama ~2s cold).
 SQLITE_TIMEOUT = 0.200
@@ -288,10 +294,38 @@ def _extract_category(payload: dict, collection_type: str) -> str:
     return "pattern"
 
 
+def _pattern_effective_confidence(payload: dict) -> float:
+    """§24 P0: lazy-import §22 pure function; graceful degrade on any failure."""
+    try:
+        src_path = str(PROJECT_ROOT / "src")
+        if src_path not in sys.path:
+            sys.path.insert(0, src_path)
+        from memory.vector_memory.confidence import payload_effective_confidence
+        return payload_effective_confidence(payload)
+    except Exception:
+        return float(payload.get("confidence", 0.5))
+
+
+def _pattern_score_gate(payload: dict, base_score: float) -> "float | None":
+    """§24 ADR-D6 gating: archived hard-exclude + hard floor + floored-multiply.
+
+    Returns None to suppress the result, or an adjusted score to surface it.
+    """
+    if payload.get("expired_at") and os.environ.get("MEMORY_INCLUDE_ARCHIVED") != "1":
+        return None                                        # archived → hard-exclude (§24.2.4)
+    eff = _pattern_effective_confidence(payload)
+    if eff < MIN_SURFACE_CONF:
+        return None                                        # noise floor (§24.2.3 hard)
+    return base_score * max(CONF_FLOOR, eff)              # floored-multiply (§24.2.3 soft)
+
+
 def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> list:
-    """Token-overlap surfacing of learned_patterns (no embedding). Runs ALWAYS
-    (not just on TEI-down) so P1 reinforcement sees surfaced patterns even when
-    TEI is healthy. Results tagged _collection='learned_patterns'. Fail-soft → []."""
+    """Token-overlap surfacing of learned_patterns (TEI-DOWN FALLBACK only, §24 P0).
+
+    Called only when TEI is unavailable/returned empty. When TEI is healthy,
+    learned_patterns surface via the semantic loop in search_qdrant instead.
+    Results tagged _collection='learned_patterns'. Fail-soft → [].
+    Applies §24 confidence gating (_pattern_score_gate) to every candidate."""
     out: list = []
     try:
         from qdrant_client import QdrantClient
@@ -317,17 +351,21 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
             if not overlap:
                 continue
             score = len(overlap) / max(len(query_tokens), 1)
-            if score >= SCORE_THRESHOLD:
-                out.append(
-                    {
-                        "source": "qdrant",
-                        "id": str(point.id),
-                        "content": content[:200],
-                        "category": payload.get("category", "pattern"),
-                        "score": round(score, 4),
-                        "_collection": "learned_patterns",
-                    }
-                )
+            if score < SCORE_THRESHOLD:
+                continue
+            adj = _pattern_score_gate(payload, score)
+            if adj is None:
+                continue
+            out.append(
+                {
+                    "source": "qdrant",
+                    "id": str(point.id),
+                    "content": content[:200],
+                    "category": payload.get("category", "pattern"),
+                    "score": round(adj, 4),
+                    "_collection": "learned_patterns",
+                }
+            )
 
         out.sort(key=lambda x: -x["score"])
         return out[:limit]
@@ -336,12 +374,16 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
 
 
 def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
-    """Semantic search across 3 Qdrant collections via TEI Qwen3 embeddings.
+    """Semantic search across SEMANTIC_COLLECTIONS via TEI Qwen3 embeddings (§24 P0).
 
-    learned_patterns are ALWAYS surfaced via token-overlap (no embedding) and
-    merged with semantic results — required for P1 reinforcement loop (#1 fix).
-    Previously learned_patterns were only surfaced in the TEI-down fallback branch,
-    making record_surfaced() a no-op in production.
+    learned_patterns now surface semantically (included in SEMANTIC_COLLECTIONS) with
+    §24 ADR-D6 confidence gating applied per hit.  The legacy token-overlap path
+    (_search_learned_patterns) is a TEI-DOWN FALLBACK: it runs only when TEI fails
+    or returns an empty embedding.  When TEI is healthy, token-overlap is skipped.
+
+    Dedup by id (keep max score) before final sort+truncate, so any overlap between
+    semantic and fallback paths cannot produce duplicates.
+
     Disable all searches: MEMORY_HOOK_NO_SEMANTIC=1.
     """
     if os.environ.get("MEMORY_HOOK_NO_SEMANTIC") == "1":
@@ -353,11 +395,13 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     query_text = prompt or " ".join(query_tokens)
 
     semantic_results: list = []
+    tei_ok = False
     try:
         from shared.semantic_search import embed_query_tei, search_qdrant_semantic
 
         embedding = embed_query_tei(query_text, timeout=1.5)
         if embedding:
+            tei_ok = True
             for collection, ctype in SEMANTIC_COLLECTIONS:
                 if time.monotonic() - start > QDRANT_TIMEOUT:
                     break
@@ -373,22 +417,44 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                     content = _extract_content(payload, ctype)
                     if not content:
                         continue
-                    semantic_results.append(
-                        {
+                    base_score = hit.get("score", 0.0)
+                    if ctype == "pattern":
+                        # §24 ADR-D6: gate learned_patterns hits by confidence
+                        adj = _pattern_score_gate(payload, base_score)
+                        if adj is None:
+                            continue
+                        entry = {
                             "source": "qdrant",
                             "id": hit.get("id", ""),
                             "content": content[:200],
                             "category": _extract_category(payload, ctype),
-                            "score": round(hit.get("score", 0.0), 4),
+                            "score": round(adj, 4),
+                            "_collection": "learned_patterns",
                         }
-                    )
+                    else:
+                        entry = {
+                            "source": "qdrant",
+                            "id": hit.get("id", ""),
+                            "content": content[:200],
+                            "category": _extract_category(payload, ctype),
+                            "score": round(base_score, 4),
+                        }
+                    semantic_results.append(entry)
     except Exception:
         pass
 
-    # ALWAYS surface learned_patterns (token-overlap) — required for P1 reinforcement (#1 fix)
-    pattern_results = _search_learned_patterns(query_tokens, start, limit)
-    combined = semantic_results + pattern_results
-    combined.sort(key=lambda x: -x["score"])
+    # TEI-down fallback: token-overlap on learned_patterns (degraded path)
+    if not tei_ok:
+        fallback = _search_learned_patterns(query_tokens, start, limit)
+        semantic_results.extend(fallback)
+
+    # Dedup by id (keep max score) — safe even if both paths ran
+    by_id: dict = {}
+    for item in semantic_results:
+        item_id = item.get("id", "")
+        if item_id not in by_id or item["score"] > by_id[item_id]["score"]:
+            by_id[item_id] = item
+    combined = sorted(by_id.values(), key=lambda x: -x["score"])
     return combined[:limit]
 
 
