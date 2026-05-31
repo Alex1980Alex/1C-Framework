@@ -12,6 +12,21 @@
   ],
   "last_updated": "2026-05-31",
   "topics": {
+    "memory-surfacing-ranking-2026": {
+      "file": "memory-surfacing-ranking-2026.md",
+      "domain": "rag",
+      "category": "pattern",
+      "created": "2026-05-31",
+      "last_verified": "2026-05-31",
+      "version": "RRF Cormack2009 / generative_agents / mem0 / crewAI / Qdrant hybrid",
+      "summary": "Ранжирование памяти для LLM-контекста (§24 ADR-D6): composite additive/RRF (НЕ multiply), hybrid RRF k=60, confidence-gating (hard floor + floored-multiply), archived hard-exclude, TEI-down lexical fallback. ~11 repos source-level.",
+      "keywords": [
+        "memory-surfacing", "retrieval-ranking", "rrf", "reciprocal-rank-fusion",
+        "hybrid-retrieval", "confidence-weighted-retrieval", "composite-score",
+        "recency-importance-relevance", "time-weighted-retriever",
+        "min-score-filter", "archived-exclude", "rank-fusion", "bm25-dense-fusion"
+      ]
+    },
     "confidence-lifecycle-implementation-2026": {
       "file": "confidence-lifecycle-implementation-2026.md",
       "domain": "agents",
