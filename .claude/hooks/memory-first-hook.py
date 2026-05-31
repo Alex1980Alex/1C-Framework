@@ -771,6 +771,7 @@ def _rerank_results(query_text: str, results: list[Any], t0: float) -> list[Any]
     # Budget = time left before hard-kill, minus a safety margin to still emit.
     remaining = RERANK_HARD_TIMEOUT - (time.monotonic() - t0) - RERANK_SAFETY
     if remaining < 0.8:  # not enough to attempt a useful rerank
+        _trace_set("rerank", "skipped_no_budget")
         return results
 
     lines = []
@@ -821,6 +822,7 @@ def _rerank_results(query_text: str, results: list[Any], t0: float) -> list[Any]
     for i, c in enumerate(results):
         if i not in seen:
             reranked.append(c)
+    _trace_set("rerank", "applied")
     return reranked
 
 
