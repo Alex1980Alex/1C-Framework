@@ -423,6 +423,9 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     )
 
     _bump_epoch()  # §24: new/updated pattern -> invalidate surfacing cache
+    _log_lifecycle(
+        "save", pattern_id=pattern_id, confidence=round(float(pattern.confidence), 4)
+    )
     logger.info(f"Saved pattern {pattern_id}: {pattern.name} (confidence={pattern.confidence})")
     return [
         TextContent(
@@ -703,6 +706,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
 
     if decayed or archived or revived:
         _bump_epoch()  # §24: confidence/archive state changed -> invalidate surfacing cache
+        _log_lifecycle("decay_sweep", decayed=decayed, archived=archived, revived=revived)
     logger.info(f"Decay complete: {decayed} decayed, {archived} archived, {revived} revived")
     return [
         TextContent(
