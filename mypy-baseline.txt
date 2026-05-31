@@ -755,9 +755,6 @@ src/pdf_framework/graph_store/entity_embeddings.py:0: error: Call to untyped fun
 src/pdf_framework/graph_store/entity_embeddings.py:0: error: Call to untyped function "_get_client" in typed context  [no-untyped-call]
 src/pdf_framework/graph_store/entity_embeddings.py:0: error: Call to untyped function "_get_client" in typed context  [no-untyped-call]
 src/pdf_framework/graph_store/entity_embeddings.py:0: error: Call to untyped function "_get_client" in typed context  [no-untyped-call]
-src/memory/vector_memory/server.py:0: error: Argument "must" to "Filter" has incompatible type "list[FieldCondition]"; expected "list[FieldCondition | IsEmptyCondition | IsNullCondition | HasIdCondition | HasVectorCondition | NestedCondition | Filter] | FieldCondition | IsEmptyCondition | IsNullCondition | HasIdCondition | HasVectorCondition | NestedCondition | Filter | None"  [arg-type]
-src/memory/vector_memory/server.py:0: note: "list" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance
-src/memory/vector_memory/server.py:0: note: Consider using "Sequence" instead, which is covariant
 src/memory/librarian/wiki_promoter.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/memory/librarian/wiki_promoter.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/memory/librarian/wiki_promoter.py:0: error: Missing type arguments for generic type "dict"  [type-arg]

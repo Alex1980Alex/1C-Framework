@@ -24,7 +24,13 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
-from .confidence import apply_to_payload, decay_counts, derive_confidence, seed_counts_from_legacy
+from .confidence import (
+    apply_to_payload,
+    decay_counts,
+    derive_confidence,
+    payload_effective_confidence,
+    seed_counts_from_legacy,
+)
 from .models import (
     EvidenceSource,
     LearnedPattern,
@@ -427,35 +433,47 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
 
     vector = await _get_embedding(query)
 
-    conditions = [qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))]
+    # NOTE: The server-side `confidence` Range prefilter is intentionally
+    # omitted here.  With count-based decay, effective confidence drifts
+    # toward the prior 0.70, so it can be HIGHER than the stored value for
+    # fail-heavy idle patterns.  A stored-confidence prefilter is therefore
+    # NOT a safe superset for the effective-confidence threshold and would
+    # silently discard valid results.  Client-side filtering on effective
+    # confidence (below) is authoritative.
+    conditions: list[Any] = []
     pattern_types = args.get("pattern_types")
     if pattern_types:
         conditions.append(
             qmodels.FieldCondition(key="pattern_type", match=qmodels.MatchAny(any=pattern_types))
         )
 
+    fetch_limit = max(limit * 5, 50)
     results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=vector,
-        query_filter=qmodels.Filter(must=conditions),
-        limit=limit,
+        query_filter=qmodels.Filter(must=conditions) if conditions else None,
+        limit=fetch_limit,
         with_payload=True,
     )
 
     search_results = []
     for point in results.points:
+        eff = payload_effective_confidence(point.payload or {})
+        if eff < min_confidence:
+            continue
         pattern = _pattern_from_payload(str(point.id), point.payload)
         similarity = point.score if point.score else 0.0
         search_results.append(
             PatternSearchResult(
                 pattern=pattern,
                 similarity_score=similarity,
-                adjusted_confidence=pattern.confidence,
-                combined_score=similarity * pattern.confidence,
+                adjusted_confidence=eff,
+                combined_score=similarity * eff,
             )
         )
 
     search_results.sort(key=lambda r: r.combined_score, reverse=True)
+    search_results = search_results[:limit]
     return [
         TextContent(
             type="text",
@@ -521,11 +539,14 @@ async def handle_get_pattern(args: dict[str, Any]) -> list[TextContent]:
             )
         ]
     pattern = _pattern_from_payload(str(points[0].id), points[0].payload)
+    eff = payload_effective_confidence(points[0].payload or {})
     return [
         TextContent(
             type="text",
             text=json.dumps(
-                {"success": True, "pattern": pattern.to_dict()}, ensure_ascii=False, indent=2
+                {"success": True, "pattern": pattern.to_dict(), "effective_confidence": eff},
+                ensure_ascii=False,
+                indent=2,
             ),
         )
     ]

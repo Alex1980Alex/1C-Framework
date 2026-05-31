@@ -154,25 +154,24 @@ def seed_counts_from_legacy(confidence: float, application_count: int) -> tuple[
     return (succ, fail)
 
 
-def apply_to_payload(
+def _resolve_state(
     payload: dict[str, Any],
-    success: bool,
-    now: datetime,
-    *,
     default_decay_rate: float = DEFAULT_DECAY_RATE,
-) -> dict[str, Any]:
-    """Pure: given a Qdrant point payload + outcome, return the payload-field
-    updates for a decayed-Beta confidence step. No I/O. Single source of the
-    apply math (used by handle_apply_pattern and the reinforcement hook).
+) -> tuple[float, float, datetime | None, float]:
+    """Return (succ, fail, last_decay_at, decay_rate) from a Qdrant payload.
+
+    Lazily migrates legacy points (no succ/fail keys) via
+    :func:`seed_counts_from_legacy`.  Used by both :func:`apply_to_payload`
+    (write-path) and :func:`payload_effective_confidence` (read-path) to
+    avoid duplicating the resolution logic.
 
     Args:
         payload: Qdrant point payload dict (read-only; not mutated).
-        success: True = success observation; False = failure observation.
-        now: Current datetime reference (injected for testability).
         default_decay_rate: Fallback decay rate when payload lacks ``decay_rate``.
 
     Returns:
-        Dict of field updates suitable for ``client.set_payload(...)``.
+        ``(succ, fail, last_decay_at, decay_rate)`` ready for
+        :func:`decay_counts` / :func:`apply_outcome`.
     """
     # Resolve succ/fail — lazy migration for legacy points without the fields.
     raw_succ = payload.get("succ")
@@ -194,6 +193,52 @@ def apply_to_payload(
             break
 
     decay_rate = float(payload.get("decay_rate", default_decay_rate))
+    return (succ, fail, last_decay_at, decay_rate)
+
+
+def payload_effective_confidence(
+    payload: dict[str, Any],
+    now: datetime | None = None,
+) -> float:
+    """Lazy decay-on-read: effective confidence from a payload's stored counts.
+
+    Computes the Beta-posterior confidence after applying time-decay to the
+    stored counts, decayed to *now*.  No I/O, no write — suitable for the
+    search/get read-path (§22 P2).
+
+    Args:
+        payload: Qdrant point payload dict (read-only; not mutated).
+        now: Reference datetime; defaults to :func:`datetime.now`.
+
+    Returns:
+        Effective posterior mean confidence after lazy decay.
+    """
+    now = now or datetime.now()
+    succ, fail, lda, rate = _resolve_state(payload)
+    return effective_confidence(succ, fail, lda, now, rate)
+
+
+def apply_to_payload(
+    payload: dict[str, Any],
+    success: bool,
+    now: datetime,
+    *,
+    default_decay_rate: float = DEFAULT_DECAY_RATE,
+) -> dict[str, Any]:
+    """Pure: given a Qdrant point payload + outcome, return the payload-field
+    updates for a decayed-Beta confidence step. No I/O. Single source of the
+    apply math (used by handle_apply_pattern and the reinforcement hook).
+
+    Args:
+        payload: Qdrant point payload dict (read-only; not mutated).
+        success: True = success observation; False = failure observation.
+        now: Current datetime reference (injected for testability).
+        default_decay_rate: Fallback decay rate when payload lacks ``decay_rate``.
+
+    Returns:
+        Dict of field updates suitable for ``client.set_payload(...)``.
+    """
+    succ, fail, last_decay_at, decay_rate = _resolve_state(payload, default_decay_rate)
     succ, fail = apply_outcome(succ, fail, last_decay_at, now, decay_rate, success)
     new_conf = derive_confidence(succ, fail)
 

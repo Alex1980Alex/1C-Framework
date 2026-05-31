@@ -19,6 +19,7 @@ from src.memory.vector_memory.confidence import (
     decay_counts,
     derive_confidence,
     effective_confidence,
+    payload_effective_confidence,
     seed_counts_from_legacy,
 )
 from src.memory.vector_memory.reinforce import reinforce_pattern
@@ -129,6 +130,78 @@ def test_apply_to_payload_failure() -> None:
     # Beta(7+5, 3+1) / (7+5+3+1) = 12/16 = 0.75
     assert result["confidence"] == pytest.approx(0.75)
     assert result["application_count"] == 6
+
+
+# ---------------------------------------------------------------------------
+# payload_effective_confidence — §22 P2 lazy decay-on-read
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_payload_effective_confidence_fresh() -> None:
+    """Fresh payload read at t0: no decay elapsed → approx 0.80 (5 successes)."""
+    payload = {
+        "succ": 5.0,
+        "fail": 0.0,
+        "last_decay_at": t0.isoformat(),
+        "application_count": 5,
+    }
+    result = payload_effective_confidence(payload, now=t0)
+    # Beta(7+5, 3+0)/(7+5+3+0) = 12/15 = 0.80
+    assert result == pytest.approx(0.80)
+
+
+@pytest.mark.unit
+def test_payload_effective_confidence_decayed_90d() -> None:
+    """Same payload read 90 days later drifts toward prior (0.70 < eff < 0.80)."""
+    payload = {
+        "succ": 5.0,
+        "fail": 0.0,
+        "last_decay_at": t0.isoformat(),
+        "application_count": 5,
+    }
+    now_90 = t0 + timedelta(days=90)
+    result = payload_effective_confidence(payload, now=now_90)
+    expected = effective_confidence(5.0, 0.0, last_decay_at=t0, now=now_90)
+    assert result > 0.70
+    assert result < 0.80
+    assert result == pytest.approx(expected)
+
+
+@pytest.mark.unit
+def test_payload_effective_confidence_legacy_migration() -> None:
+    """Legacy payload (no succ/fail) migrates via seed_counts_from_legacy."""
+    payload = {
+        "confidence": 0.85,
+        "application_count": 10,
+        "updated_at": t0.isoformat(),
+    }
+    # seed: succ=8.5, fail=1.5; no decay (t0→t0); Beta(7+8.5,3+1.5)/(7+8.5+3+1.5)=15.5/20
+    result = payload_effective_confidence(payload, now=t0)
+    assert result == pytest.approx(15.5 / 20)
+
+
+@pytest.mark.unit
+def test_payload_effective_confidence_fail_heavy_drifts_up() -> None:
+    """Fail-heavy pattern: effective drifts UP toward 0.70 over time.
+
+    This documents why search cannot server-prefilter on stored confidence:
+    effective confidence can be HIGHER than stored for patterns that were
+    penalised but then left idle (counts decay toward zero → prior 0.70).
+    """
+    payload = {
+        "succ": 0.0,
+        "fail": 5.0,
+        "last_decay_at": t0.isoformat(),
+    }
+    eff_t0 = payload_effective_confidence(payload, now=t0)
+    # Beta(7+0, 3+5)/(7+0+3+5) = 7/15 ≈ 0.4667
+    assert eff_t0 == pytest.approx(7 / 15)
+
+    now_90 = t0 + timedelta(days=90)
+    eff_90 = payload_effective_confidence(payload, now=now_90)
+    # Fail counts decay → posterior drifts back toward prior 0.70
+    assert eff_90 > eff_t0
 
 
 # ---------------------------------------------------------------------------

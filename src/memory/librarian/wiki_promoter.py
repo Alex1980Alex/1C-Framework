@@ -16,6 +16,7 @@ from src.memory.infrastructure.conflict_resolver import ConflictResolver, Confli
 from src.memory.infrastructure.event_bus import EventBus
 from src.memory.orchestrator.memcube import ContentType, MemoryCube
 from src.memory.orchestrator.unified_id import MemoryType, SourceServer
+from src.memory.vector_memory.confidence import payload_effective_confidence
 
 
 class WikiPromoter:
@@ -61,6 +62,11 @@ class WikiPromoter:
         created: list[str] = []
         for point in candidates:
             payload = point.payload or {}
+            # Lazy-decay gate: stored conf≥0.8 is a valid cheap prefilter
+            # (effective≥0.8 ⟹ stored≥0.8), but stale patterns whose stored
+            # conf≥0.8 has decayed below threshold at read-time are skipped here.
+            if payload_effective_confidence(payload) < self.confidence_threshold:
+                continue
             vector = self._extract_vector(point, payload)
             existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
