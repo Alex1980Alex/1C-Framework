@@ -15,6 +15,16 @@ from typing import Any
 from .confidence import apply_to_payload
 
 
+def _log_lifecycle(event: str, **fields: Any) -> None:
+    """Fail-soft §22 lifecycle trace; isolates the import so logging never breaks reinforce."""
+    try:
+        from .lifecycle_log import log_event
+
+        log_event(event, **fields)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def reinforce_pattern(
     pattern_id: str,
     success: bool,
