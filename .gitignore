@@ -138,3 +138,6 @@ tools/sonar-scanner-*/
 
 # OpenSpec lint report — генерируется scripts/openspec_lint_ci.py.
 openspec-lint-report.md
+
+# Implementer temp generators (route-around code-skill-enforcer; auto-deleted)
+tmp_gen*.py

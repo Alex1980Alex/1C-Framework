@@ -2386,3 +2386,34 @@ Alert на production file
 | P4 | FSRS-lite optional | **defer**; use-modulated λ — выше ROI |
 
 **Verdict:** ADR-D4 подтверждён — ни одно ядро-решение не отменено, всё уточнено до уровня «готово к P0» с repo-прецедентами. Reuse-note §22.6 в силе: `pattern_saver`/`forgetgate_service`/prework-воркеры покрывают бо́льшую часть — §22 = wiring + наполнение по этим спецификациям. Research закеширован в `tech-research/cache` (см. §22.8).
+
+---
+
+## §23 Auto-Cache Pipeline для Dev-Lifecycle (ADR-D5, 2026-05-31)
+
+> Проблема: этапы lifecycle (research→design→impl→review→verify→lessons) сейчас кешируются **вручную** (я писал §22-кеши руками) или лишь **нуджем** (`knowledge-cache-reminder` создаёт таск, не пишет). `session-memory-save` авто-пишет грубую сводку в SQLite, но НЕ структурно по этапам. Цель: **авто-кеш каждого этапа без ручного вмешательства**.
+
+### §23.1 ADR-D5 (accepted)
+**Один Stop-хук `lifecycle-cache.py` + pure-экстрактор `shared/lifecycle_extract.py`.** Детерминированная (без LLM) экстракция 6 этапов из transcript + git → структурная запись сессии в **выделенный store `data/lifecycle/`** (НЕ загрязняет курируемый `tech-research/cache`).
+
+**Сигналы этапов (extractive):**
+| Этап | Сигнал в transcript/git |
+|---|---|
+| research | `WebSearch`/`WebFetch` tool_use → queries + result URLs |
+| design | Edit на `docs/roadmap/`, ADR/§ |
+| impl | session-commits (feat/fix) + changed files (git) |
+| review | `[CODE-VERIFY-PASS/FAIL]` маркеры, `/code-review`,`/review` |
+| verify | `/verify`, строки `Verdict: PASS/FAIL/BLOCKED` |
+| lessons | completed tasks (hook-todos) + activated skills |
+
+**Решения:** (a) **gate на содержательность** — писать запись ТОЛЬКО если ≥1 real-commit ИЛИ research ИЛИ review/verify-verdict (trivial Q&A → skip, без шума); (b) **idempotent** per-session sentinel `.claude/cache/lifecycle-cache-state.json`; (c) fail-soft + opt-out `LIFECYCLE_CACHE_DISABLE=1`; (d) store: `data/lifecycle/<date>_<sid8>.md` (human) + `_index.jsonl` (machine). **Отвергнуто:** пер-этапные отдельные хуки (6 хуков дороже одного Stop-hub); auto-write в tech-research/cache (загрязнение curated knowledge).
+
+### §23.2 План
+- **P1:** `shared/lifecycle_extract.py` (pure: `extract_stages(events, git_ctx)→dict` + `render_record()→md`) + unit-тесты (sample transcript → assert 6 этапов).
+- **P2:** `lifecycle-cache.py` Stop-хук (transcript_path + git → extract → gate → idempotent write) + регистрация в `settings.json` Stop-chain + smoke.
+- **DEFER (future):** LLM-суммаризация записей (Z.AI); promotion высокоценных lifecycle-записей → `tech-research/cache` (как L5); авто-предложение MEMORY.md-feedback на повторяющихся уроках.
+
+### §23.3 Acceptance
+- [ ] Содержательная сессия (commit + research) ⇒ `data/lifecycle/*.md` с секциями по присутствующим этапам + строка в `_index.jsonl`. Trivial-сессия ⇒ no-op.
+- [ ] Идемпотентно (повторный Stop того же session → не дублирует). Fail-soft (битый transcript → no crash). Opt-out работает.
+- [ ] Не пишет в `tech-research/cache`. Unit-тесты на extractor; smoke на hook.
