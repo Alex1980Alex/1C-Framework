@@ -879,15 +879,19 @@ def _rerank_results(query_text: str, results: list[Any], t0: float) -> list[Any]
             timeout=min(remaining, 4.0),
         )
         text = resp.json().get("response", "")
-    except Exception:
+    except Exception as exc:
+        _trace_set("rerank", "error")
+        _trace_set("rerank_error", f"{type(exc).__name__}: {exc}"[:160])
         return results
 
     match = re.search(r"\d+(?:\s*,\s*\d+)+", text)
     if not match:
+        _trace_set("rerank", "no_ranking")
         return results
     try:
         order = [int(x.strip()) - 1 for x in match.group(0).split(",")]
     except ValueError:
+        _trace_set("rerank", "parse_error")
         return results
 
     seen: set[int] = set()
