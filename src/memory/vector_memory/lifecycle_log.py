@@ -78,7 +78,14 @@ def log_event(event: str, **fields: Any) -> None:
         }
         record.update(fields)
 
-        with open(path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        # Cross-process-safe append: O_APPEND makes each os.write atomic at the OS
+        # level, so the MCP server and Stop-hook subprocess writing concurrently
+        # never interleave a (short) JSON line. Single write of the full line.
+        line = (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
+        fd = os.open(str(path), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, line)
+        finally:
+            os.close(fd)
     except Exception:
         pass  # Fully fail-soft: never raise.
