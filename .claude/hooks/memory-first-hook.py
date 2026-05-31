@@ -630,10 +630,32 @@ def _emit_stdout(text: str) -> None:
             pass
 
 
+def _confidence_epoch() -> float:
+    """§24: last confidence-store mutation timestamp (lazy import, fail-soft -> 0.0).
+
+    Folded into the cache key so any confidence/archive change (reinforce, apply,
+    decay) instantly invalidates memoized surfacing — no Qdrant roundtrip here,
+    just a local file read. 0.0 degrades to the legacy TTL-only behaviour.
+    """
+    try:
+        src_path = str(PROJECT_ROOT / "src")
+        if src_path not in sys.path:
+            sys.path.insert(0, src_path)
+        from memory.vector_memory.epoch import read as _read_epoch
+        return _read_epoch()
+    except Exception:
+        return 0.0
+
+
 def _surface_cache_key(query_tokens: set[str]) -> str:
-    """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases)."""
+    """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases).
+
+    Keyed on (confidence-epoch, query_tokens): a confidence mutation bumps the
+    epoch -> different key -> instant cache miss -> recompute (§24 stale-window fix).
+    """
+    payload = f"{_confidence_epoch()!r}|{' '.join(sorted(query_tokens))}"
     return hashlib.sha256(
-        " ".join(sorted(query_tokens)).encode("utf-8", errors="replace")
+        payload.encode("utf-8", errors="replace")
     ).hexdigest()[:32]
 
 
