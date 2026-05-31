@@ -366,10 +366,13 @@ def _pattern_score_gate(payload: dict, base_score: float) -> "float | None":
     Returns None to suppress the result, or an adjusted score to surface it.
     """
     if payload.get("expired_at") and os.environ.get("MEMORY_INCLUDE_ARCHIVED") != "1":
+        _trace_gate("archived")
         return None                                        # archived → hard-exclude (§24.2.4)
     eff = _pattern_effective_confidence(payload)
     if eff < MIN_SURFACE_CONF:
+        _trace_gate("below_floor")
         return None                                        # noise floor (§24.2.3 hard)
+    _trace_gate("passed")
     return base_score * max(CONF_FLOOR, eff)              # floored-multiply (§24.2.3 soft)
 
 
