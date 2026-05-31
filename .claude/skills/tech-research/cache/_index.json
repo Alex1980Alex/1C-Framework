@@ -12,6 +12,22 @@
   ],
   "last_updated": "2026-05-31",
   "topics": {
+    "confidence-lifecycle-implementation-2026": {
+      "file": "confidence-lifecycle-implementation-2026.md",
+      "domain": "agents",
+      "category": "pattern",
+      "created": "2026-05-31",
+      "last_verified": "2026-05-31",
+      "version": "commits c8409e30b..d7cf92ad7 (P0-P4 + review-fixes + live-verify)",
+      "summary": "§22 confidence lifecycle build record: file/function map, P0-P4 outcomes, review findings+fixes, live-verify, operational gotchas (MCP-stale→reconnect, cold-start, VECTOR_SIZE 4096, TEI dep).",
+      "keywords": [
+        "confidence-lifecycle", "decayed-beta", "reinforcement-loop",
+        "lazy-decay-on-read", "invalidate-not-delete", "fsrs-lite",
+        "learned-patterns", "reinforce-pattern", "pattern-reinforce",
+        "expired-at", "should-archive", "effective-confidence",
+        "mcp-stale-code", "confidence-implementation", "p0-p4-build"
+      ]
+    },
     "confidence-lifecycle-impl-github-2026": {
       "file": "confidence-lifecycle-impl-github-2026.md",
       "domain": "agents",
