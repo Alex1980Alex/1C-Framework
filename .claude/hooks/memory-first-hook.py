@@ -627,14 +627,14 @@ def _emit_stdout(text: str) -> None:
             pass
 
 
-def _surface_cache_key(query_tokens: set) -> str:
+def _surface_cache_key(query_tokens: set[str]) -> str:
     """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases)."""
     return hashlib.sha256(
         " ".join(sorted(query_tokens)).encode("utf-8", errors="replace")
     ).hexdigest()[:32]
 
 
-def _surface_cache_get(key: str) -> dict | None:
+def _surface_cache_get(key: str) -> dict[str, Any] | None:
     """Return a fresh (within-TTL) cache entry for ``key``, else None. Fail-soft."""
     if not SURFACE_CACHE_ENABLED:
         return None
