@@ -738,8 +738,14 @@ def _surface_log(outcome: str, t0: float, **extra: Any) -> None:
         except Exception:
             pass
 
-        with open(SURFACE_LOG_FILE, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        # Cross-process-safe append: O_APPEND makes each os.write atomic at the OS
+        # level, so concurrent hook processes never interleave a (short) JSON line.
+        line = (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
+        fd = os.open(str(SURFACE_LOG_FILE), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, line)
+        finally:
+            os.close(fd)
     except Exception:
         pass
 
