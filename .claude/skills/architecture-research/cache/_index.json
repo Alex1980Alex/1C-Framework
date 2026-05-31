@@ -3,6 +3,34 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "online-confidence-beta-posterior-scoring-2026.md",
+      "title": "Online confidence / reputation scoring — Beta-posterior over decayed success/failure counters",
+      "keywords": [
+        "confidence",
+        "beta-posterior",
+        "thompson-sampling",
+        "reputation-system",
+        "decay",
+        "online-learning",
+        "qdrant-payload",
+        "success-failure-counters",
+        "river",
+        "contextualbandits",
+        "openskill",
+        "trueskill",
+        "eigentrust",
+        "beta-reputation",
+        "josang",
+        "mem0",
+        "graphiti",
+        "ewmean",
+        "forgetting-factor",
+        "p0-confidence-core"
+      ],
+      "created": "2026-05-31",
+      "last_verified": "2026-05-31"
+    },
+    {
       "file": "qdrant-dedup-stable-chunk-id-bsl-2026.md",
       "title": "Qdrant дедупликация + stable chunk_id для BSL semantic search reindex pipeline",
       "keywords": [
