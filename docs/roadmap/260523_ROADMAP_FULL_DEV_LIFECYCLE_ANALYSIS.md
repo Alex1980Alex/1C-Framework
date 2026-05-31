@@ -1495,6 +1495,10 @@ Live-прогон confidence-цикла против реального `learned
 - ⚠️ **Находка 2 (fixed):** `server.py VECTOR_SIZE=1024` устарел — реальная коллекция 4096d (Qwen3). Латентный баг: auto-create создал бы 1024d коллекцию + `_hash_embed` fallback давал бы dim-mismatch на upsert. Исправлено → `int(os.getenv("LEARNING_VECTOR_SIZE","4096"))` + SKILL.md таблица 1024d→4096d.
 - ℹ️ `save_pattern`/`search_patterns` через MCP таймаутят (TEI down на :8080) — embedding-пути не проверены вживую (не §22-логика).
 
+### 2026-05-31 (impl) — §24 P1 hybrid RRF DONE + §22 P3 side-fix (commit `74a4aa761`)
+
+`search_qdrant` true hybrid: arms-dict `{skill,experience,conversation,pattern_dense,pattern_lexical}` → **client-side RRF k=60** (reuse существующего `rrf_merge`), веса `SURFACE_RRF_WEIGHTS` lexical 0.7/dense 0.3 (BSL dense-collapse). token-overlap `_search_learned_patterns` теперь **ALWAYS-ON** lexical-арка (не fallback) → паттерн в обеих арках fuses (boost). TEI-down → dense пусто, lexical-only (graceful). **Side-fix DONE:** §22 P3 `handle_search_patterns` archived `×0.5 → hard-exclude` (opt `MEMORY_INCLUDE_ARCHIVED=1`). Verify: 127 unit-тестов (+3 P1: always-on-lexical spy, RRF-boost both>single, TEI-down lexical-only); CI baseline new=0; mypy/ruff clean. **§24 core (P0+P1) DONE; opt rerank (P2 Ollama) deferred.**
+
 ### 2026-05-31 (impl) — §24 P0 surfacing DONE (commit `6906210c9`)
 
 semantic surfacing learned_patterns (→`SEMANTIC_COLLECTIONS`) + confidence-gating (`_pattern_score_gate`: hard floor `eff<0.15→drop` + floored-multiply `×max(0.3,eff)`) + archived hard-exclude (`expired_at`, opt `MEMORY_INCLUDE_ARCHIVED=1`) + token-overlap → TEI-down fallback (gated) + dedup-by-id, в `memory-first-hook.search_qdrant`. **Замыкает §22 confidence на surfacing** (раньше не применялась). Verify: 77 hooks-тестов (+10 gating) + live-проба на реальном Qdrant (high-conf surfaced score 0.8=base×eff; archived+low-conf excluded; коллекция=44). **DEFER P1:** client-side RRF k=60 hybrid (semantic⊕lexical always-on). **Side-fix pending:** §22 P3 `handle_search_patterns` MCP-search ×0.5 → hard-exclude (surfacing уже exclude; MCP-search ещё ×0.5).
@@ -2457,9 +2461,9 @@ Research **уточнил** исходное предложение (#1+#2 на�
 
 ### §24.3 План
 - **P0:** ✅ **DONE 2026-05-31 (commit `6906210c9`)** — semantic surfacing + `_pattern_score_gate` (hard floor + floored-multiply) + archived hard-exclude + TEI-down fallback + dedup; 77 тестов + live-проба. (`_extract_content` уже handle'ил `pattern` ctype через default.) Исходный план: semantic surfacing + confidence-gating + archived hard-exclude в `memory-first-hook.search_qdrant`.
-- **P1:** client-side RRF k=60 (lexical 0.7/dense 0.3) мёрж semantic⊕lexical + TEI-down fallback.
-- **P2 (optional):** post-fusion Ollama rerank.
-- **Side-fix:** §22 P3 `handle_search_patterns`/`memory-first` ×0.5 archived → hard-exclude (consistency с §24.2.4).
+- **P1:** ✅ **DONE (`74a4aa761`)** — client-side RRF k=60 (`SURFACE_RRF_WEIGHTS` lexical 0.7/dense 0.3) мёрж semantic⊕lexical (always-on) + TEI-down lexical-only.
+- **P2 (optional):** post-fusion Ollama rerank — **deferred**.
+- **Side-fix:** ✅ **DONE (`74a4aa761`)** — §22 P3 `handle_search_patterns` ×0.5 archived → hard-exclude (`MEMORY_INCLUDE_ARCHIVED=1` opt); `memory-first` уже hard-exclude (P0).
 
 ### §24.4 Acceptance
 - [ ] learned_patterns всплывают **семантически** (парафраз-запрос без word-overlap находит паттерн) при живом TEI; token-overlap — при TEI-down.
