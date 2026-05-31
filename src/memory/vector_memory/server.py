@@ -412,6 +412,7 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
         ],
     )
 
+    _bump_epoch()  # §24: new/updated pattern -> invalidate surfacing cache
     logger.info(f"Saved pattern {pattern_id}: {pattern.name} (confidence={pattern.confidence})")
     return [
         TextContent(
