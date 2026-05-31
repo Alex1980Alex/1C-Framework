@@ -679,7 +679,7 @@ def _surface_cache_put(key: str, results: list[Any], pids: list[Any]) -> None:
         pass
 
 
-def _rerank_results(query_text: str, results: list, t0: float) -> list:
+def _rerank_results(query_text: str, results: list[Any], t0: float) -> list[Any]:
     """§24 P2 ADR-D6: optional LLM rerank of the post-fusion result list.
 
     Reorders ``results`` (already RRF-fused, top-N) by relevance to ``query_text``
