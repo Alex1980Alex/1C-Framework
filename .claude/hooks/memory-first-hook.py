@@ -938,7 +938,7 @@ class MemoryFirstHook(BaseHook):
         # For UserPromptSubmit hooks, stdout is added as context Claude sees,
         # while `systemMessage` is a user-facing warning that Claude never reads.
         # See skill-router.py:502 for the same pattern.
-        print(msg)
+        _emit_stdout(msg)
         return None
 
 
