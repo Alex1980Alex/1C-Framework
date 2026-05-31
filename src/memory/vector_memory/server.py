@@ -12,7 +12,6 @@ Uses 1024d vectors (multilingual-e5-large) instead of 768d.
 import asyncio
 import json
 import logging
-import math
 import os
 import sys
 import uuid
@@ -25,6 +24,7 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from .confidence import apply_outcome, decay_counts, derive_confidence, seed_counts_from_legacy
 from .models import (
     EvidenceSource,
     LearnedPattern,
@@ -178,6 +178,33 @@ async def _get_embedding(text: str) -> list[float]:
 def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPattern:
     """Convert Qdrant point payload to LearnedPattern."""
     evidence = [EvidenceSource.from_dict(e) for e in payload.get("evidence_sources", [])]
+
+    # Lazy migration: seed succ/fail from legacy confidence + application_count
+    # when the new fields are absent (points written before P0 migration).
+    raw_succ = payload.get("succ")
+    raw_fail = payload.get("fail")
+    if raw_succ is None or raw_fail is None:
+        succ, fail = seed_counts_from_legacy(
+            payload.get("confidence", 0.7),
+            payload.get("application_count", 0),
+        )
+    else:
+        succ = float(raw_succ)
+        fail = float(raw_fail)
+
+    # last_decay_at: prefer explicit field, fall back through timestamp chain.
+    raw_lda = payload.get("last_decay_at")
+    if raw_lda:
+        last_decay_at: datetime | None = datetime.fromisoformat(raw_lda)
+    elif payload.get("last_applied"):
+        last_decay_at = datetime.fromisoformat(payload["last_applied"])
+    elif payload.get("updated_at"):
+        last_decay_at = datetime.fromisoformat(payload["updated_at"])
+    elif payload.get("created_at"):
+        last_decay_at = datetime.fromisoformat(payload["created_at"])
+    else:
+        last_decay_at = None
+
     return LearnedPattern(
         pattern_id=payload.get("pattern_id", point_id),
         pattern_type=PatternType(payload.get("pattern_type", "code-convention")),
@@ -197,6 +224,9 @@ def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPatt
         last_applied=datetime.fromisoformat(payload["last_applied"])
         if payload.get("last_applied")
         else None,
+        succ=succ,
+        fail=fail,
+        last_decay_at=last_decay_at,
         version=payload.get("version", 1),
         tags=payload.get("tags", []),
         metadata=payload.get("metadata", {}),
@@ -216,6 +246,9 @@ def _pattern_to_payload(pattern: LearnedPattern) -> dict[str, Any]:
         "created_at": pattern.created_at.isoformat(),
         "updated_at": pattern.updated_at.isoformat(),
         "last_applied": pattern.last_applied.isoformat() if pattern.last_applied else None,
+        "succ": pattern.succ,
+        "fail": pattern.fail,
+        "last_decay_at": pattern.last_decay_at.isoformat() if pattern.last_decay_at else None,
         "decay_rate": pattern.decay_rate,
         "application_count": pattern.application_count,
         "version": pattern.version,
@@ -339,13 +372,18 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     for e in args.get("evidence_sources", []):
         evidence.append(EvidenceSource.from_dict(e) if isinstance(e, dict) else e)
 
+    # Confidence is derived from Beta counts (§22.9.1); the advisory `confidence`
+    # arg is ignored here — counts grow via apply_pattern, not via save_pattern.
     pattern = LearnedPattern(
         pattern_id=pattern_id,
         pattern_type=PatternType(args["pattern_type"]),
         name=args["name"],
         description=args.get("description", ""),
         content=args["content"],
-        confidence=args.get("confidence", 0.7),
+        confidence=derive_confidence(0.0, 0.0),  # = 0.70 (Beta prior mean)
+        succ=0.0,
+        fail=0.0,
+        last_decay_at=now,
         evidence_sources=evidence,
         created_at=now,
         updated_at=now,
@@ -448,23 +486,55 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
         ]
 
     payload = points[0].payload
-    delta = 0.02 if success else -0.01
-    new_confidence = max(0.0, min(1.0, payload.get("confidence", 0.5) + delta))
+    old_confidence = payload.get("confidence", 0.5)
+
+    # Resolve succ/fail — lazy migration for legacy points without the fields.
+    raw_succ = payload.get("succ")
+    raw_fail = payload.get("fail")
+    if raw_succ is None or raw_fail is None:
+        succ, fail = seed_counts_from_legacy(
+            payload.get("confidence", 0.5),
+            payload.get("application_count", 0),
+        )
+    else:
+        succ = float(raw_succ)
+        fail = float(raw_fail)
+
+    # Resolve last_decay_at — prefer explicit field, fall back through chain.
+    raw_lda = payload.get("last_decay_at")
+    if raw_lda:
+        last_decay_at: datetime | None = datetime.fromisoformat(raw_lda)
+    elif payload.get("last_applied"):
+        last_decay_at = datetime.fromisoformat(payload["last_applied"])
+    elif payload.get("updated_at"):
+        last_decay_at = datetime.fromisoformat(payload["updated_at"])
+    elif payload.get("created_at"):
+        last_decay_at = datetime.fromisoformat(payload["created_at"])
+    else:
+        last_decay_at = None
+
+    now = datetime.now()
+    decay_rate = float(payload.get("decay_rate", 0.05))
+    succ, fail = apply_outcome(succ, fail, last_decay_at, now, decay_rate, success)
+    new_confidence = derive_confidence(succ, fail)
     new_count = payload.get("application_count", 0) + 1
 
     client.set_payload(
         collection_name=COLLECTION_NAME,
         payload={
+            "succ": succ,
+            "fail": fail,
+            "last_decay_at": now.isoformat(),
             "confidence": new_confidence,
             "application_count": new_count,
-            "last_applied": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "last_applied": now.isoformat(),
+            "updated_at": now.isoformat(),
         },
         points=[pattern_id],
     )
 
     logger.info(
-        f"Applied pattern {pattern_id}: {payload.get('confidence', 0.5):.2f} -> {new_confidence:.2f}"
+        f"Applied pattern {pattern_id}: {old_confidence:.3f} -> {new_confidence:.3f}"
     )
     return [
         TextContent(
@@ -531,19 +601,34 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
 
         for point in points:
             payload = point.payload
-            updated_at = payload.get("updated_at")
-            if not updated_at:
-                continue
 
-            days_since = (
-                datetime.now() - datetime.fromisoformat(updated_at)
-            ).total_seconds() / 86400
+            # Resolve last_decay_at — prefer explicit field, fall back to updated_at.
+            raw_lda = payload.get("last_decay_at") or payload.get("updated_at")
+            if not raw_lda:
+                continue
+            last_decay_at: datetime = datetime.fromisoformat(raw_lda)
+
+            now = datetime.now()
+            days_since = (now - last_decay_at).total_seconds() / 86400
             if days_since < 1:
                 continue
 
             decay_rate = payload.get("decay_rate", DECAY_RATE)
-            old_conf = payload.get("confidence", 0.5)
-            new_conf = old_conf * math.exp(-decay_rate * days_since / 30)
+
+            # Resolve succ/fail — lazy migration for legacy points without the fields.
+            raw_succ = payload.get("succ")
+            raw_fail = payload.get("fail")
+            if raw_succ is None or raw_fail is None:
+                succ, fail = seed_counts_from_legacy(
+                    payload.get("confidence", 0.5),
+                    payload.get("application_count", 0),
+                )
+            else:
+                succ = float(raw_succ)
+                fail = float(raw_fail)
+
+            succ, fail = decay_counts(succ, fail, last_decay_at, now, decay_rate)
+            new_conf = derive_confidence(succ, fail)
 
             if new_conf < MIN_CONFIDENCE:
                 client.delete(collection_name=COLLECTION_NAME, points_selector=[str(point.id)])
@@ -551,7 +636,13 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
             else:
                 client.set_payload(
                     collection_name=COLLECTION_NAME,
-                    payload={"confidence": new_conf, "updated_at": datetime.now().isoformat()},
+                    payload={
+                        "succ": succ,
+                        "fail": fail,
+                        "last_decay_at": now.isoformat(),
+                        "confidence": new_conf,
+                        "updated_at": now.isoformat(),
+                    },
                     points=[str(point.id)],
                 )
                 decayed += 1

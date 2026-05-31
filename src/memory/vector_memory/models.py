@@ -86,6 +86,9 @@ class LearnedPattern:
     decay_rate: float = 0.05
     application_count: int = 0
     last_applied: datetime | None = None
+    succ: float = 0.0
+    fail: float = 0.0
+    last_decay_at: datetime | None = None
     version: int = 1
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -114,6 +117,9 @@ class LearnedPattern:
             "decay_rate": self.decay_rate,
             "application_count": self.application_count,
             "last_applied": self.last_applied.isoformat() if self.last_applied else None,
+            "succ": self.succ,
+            "fail": self.fail,
+            "last_decay_at": self.last_decay_at.isoformat() if self.last_decay_at else None,
             "version": self.version,
             "tags": self.tags,
             "metadata": self.metadata,
@@ -141,6 +147,11 @@ class LearnedPattern:
             application_count=data.get("application_count", 0),
             last_applied=datetime.fromisoformat(data["last_applied"])
             if data.get("last_applied")
+            else None,
+            succ=data.get("succ", 0.0),
+            fail=data.get("fail", 0.0),
+            last_decay_at=datetime.fromisoformat(data["last_decay_at"])
+            if data.get("last_decay_at")
             else None,
             version=data.get("version", 1),
             tags=data.get("tags", []),
