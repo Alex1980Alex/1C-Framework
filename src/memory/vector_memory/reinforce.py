@@ -106,6 +106,18 @@ def reinforce_pattern(
         except Exception:  # noqa: BLE001
             pass
 
+        # §22: trace the confidence mutation (old->new, outcome, counts).
+        _log_lifecycle(
+            "reinforce",
+            pattern_id=pattern_id,
+            success=success,
+            old_confidence=round(float(payload.get("confidence", 0.5)), 4),
+            new_confidence=round(float(updates["confidence"]), 4),
+            succ=round(float(updates.get("succ") or 0.0), 4),
+            fail=round(float(updates.get("fail") or 0.0), 4),
+            application_count=updates.get("application_count"),
+        )
+
         return {
             "success": True,
             "pattern_id": pattern_id,
@@ -115,6 +127,12 @@ def reinforce_pattern(
         }
 
     except Exception as e:  # noqa: BLE001
+        _log_lifecycle(
+            "reinforce_error",
+            pattern_id=pattern_id,
+            success=success,
+            error=f"{type(e).__name__}: {e}"[:160],
+        )
         return {
             "success": False,
             "error": f"{type(e).__name__}: {e}",
