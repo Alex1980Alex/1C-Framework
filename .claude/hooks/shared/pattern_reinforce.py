@@ -53,6 +53,24 @@ DEFAULT_COOLDOWN_HOURS: float = 6.0
 DEFAULT_CAP: int = 50
 SENTINEL_CAP: int = 500
 
+
+def _log_lifecycle(event: str, **fields: Any) -> None:
+    """Fail-soft §22 lifecycle trace (shared log with reinforce.py via src import).
+
+    The reinforce_session result dict (applied/skipped/errors/status) is otherwise
+    discarded by the Stop-hook caller; this persists it so the reinforcement loop
+    is observable. Never raises into the hook.
+    """
+    try:
+        src_path = str(_PROJECT_ROOT / "src")
+        if src_path not in sys.path:
+            sys.path.insert(0, src_path)
+        from memory.vector_memory.lifecycle_log import log_event
+
+        log_event(event, **fields)
+    except Exception:  # noqa: BLE001
+        pass
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
