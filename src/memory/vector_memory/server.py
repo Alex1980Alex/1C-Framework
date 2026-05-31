@@ -33,6 +33,7 @@ from .confidence import (
     should_archive,
     stability_adjusted_rate,
 )
+from .epoch import bump as _bump_epoch  # §24: surfacing-cache invalidation signal
 from .models import (
     EvidenceSource,
     LearnedPattern,

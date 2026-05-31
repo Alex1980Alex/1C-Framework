@@ -85,6 +85,14 @@ def reinforce_pattern(
             points=[pattern_id],
         )
 
+        # §24: confidence mutated in Qdrant -> invalidate the surfacing cache.
+        try:
+            from .epoch import bump as _bump_epoch
+
+            _bump_epoch()
+        except Exception:  # noqa: BLE001
+            pass
+
         return {
             "success": True,
             "pattern_id": pattern_id,
