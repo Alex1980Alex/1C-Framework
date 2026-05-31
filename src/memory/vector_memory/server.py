@@ -469,11 +469,10 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
         pattern = _pattern_from_payload(str(point.id), point.payload)
         similarity = point.score if point.score else 0.0
         combined = similarity * eff
-        # Archived patterns stay retrievable but rank lower (revive-on-recurrence,
-        # §22 P3 invalidate-not-delete).  An apply() call will clear expired_at.
-        archived = bool((point.payload or {}).get("expired_at"))
-        if archived:
-            combined *= 0.5
+        # §24.2.4 hard-exclude archived patterns (consistency with hook-side gate).
+        # Use MEMORY_INCLUDE_ARCHIVED=1 to override (e.g. for revive workflows).
+        if (point.payload or {}).get("expired_at") and os.getenv("MEMORY_INCLUDE_ARCHIVED") != "1":
+            continue
         search_results.append(
             PatternSearchResult(
                 pattern=pattern,

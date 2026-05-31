@@ -63,6 +63,16 @@ MAX_RESULTS = 5
 LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
 SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
 
+# §24 P1 ADR-D6: per-arm RRF weights for hybrid surfacing inside search_qdrant.
+# lexical > dense for BSL (CamelCase/Cyrillic dense recall-collapse, §24.2.2).
+SURFACE_RRF_WEIGHTS: dict = {
+    "skill": 0.5,
+    "experience": 0.5,
+    "conversation": 0.5,
+    "pattern_dense": 0.3,
+    "pattern_lexical": 0.7,
+}
+
 # Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
 # learned_patterns included for semantic surfacing (§24 P0 ADR-D6)
 SEMANTIC_COLLECTIONS = [
@@ -320,12 +330,13 @@ def _pattern_score_gate(payload: dict, base_score: float) -> "float | None":
 
 
 def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> list:
-    """Token-overlap surfacing of learned_patterns (TEI-DOWN FALLBACK only, §24 P0).
+    """Token-overlap surfacing of learned_patterns — ALWAYS-ON lexical arm (§24 P1).
 
-    Called only when TEI is unavailable/returned empty. When TEI is healthy,
-    learned_patterns surface via the semantic loop in search_qdrant instead.
-    Results tagged _collection='learned_patterns'. Fail-soft → [].
-    Applies §24 confidence gating (_pattern_score_gate) to every candidate."""
+    Runs unconditionally as the 'pattern_lexical' arm in search_qdrant hybrid RRF.
+    Catches CamelCase/Cyrillic/exact-term patterns where dense embeddings underperform
+    (BSL recall-collapse). When TEI is down, this is the sole populated arm (graceful
+    degradation to lexical-only). Results tagged _collection='learned_patterns'.
+    Fail-soft → []. Applies §24 confidence gating (_pattern_score_gate) per candidate."""
     out: list = []
     try:
         from qdrant_client import QdrantClient
@@ -374,15 +385,17 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
 
 
 def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
-    """Semantic search across SEMANTIC_COLLECTIONS via TEI Qwen3 embeddings (§24 P0).
+    """Hybrid RRF search across SEMANTIC_COLLECTIONS + always-on lexical arm (§24 P1).
 
-    learned_patterns now surface semantically (included in SEMANTIC_COLLECTIONS) with
-    §24 ADR-D6 confidence gating applied per hit.  The legacy token-overlap path
-    (_search_learned_patterns) is a TEI-DOWN FALLBACK: it runs only when TEI fails
-    or returns an empty embedding.  When TEI is healthy, token-overlap is skipped.
+    Arms dict fed into rrf_merge(k=60):
+      - "skill", "experience", "conversation": TEI semantic hits per collection.
+      - "pattern_dense": learned_patterns semantic hits (§24 ADR-D6 gated, _collection tagged).
+      - "pattern_lexical": token-overlap on learned_patterns — ALWAYS-ON (not fallback).
+        Catches CamelCase/Cyrillic/exact-term where dense underperforms (BSL recall-collapse).
 
-    Dedup by id (keep max score) before final sort+truncate, so any overlap between
-    semantic and fallback paths cannot produce duplicates.
+    Weights (SURFACE_RRF_WEIGHTS): lexical 0.7 > dense 0.3 for BSL arms.
+    RRF dedup by content-hash: pattern in both arms fuses → boosted rank (correct behaviour).
+    Graceful degradation: TEI down → dense arms empty, pattern_lexical still populated.
 
     Disable all searches: MEMORY_HOOK_NO_SEMANTIC=1.
     """
@@ -394,14 +407,20 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     start = time.monotonic()
     query_text = prompt or " ".join(query_tokens)
 
-    semantic_results: list = []
-    tei_ok = False
+    # Build per-source arms (each list already score-desc from its source)
+    arms: dict = {
+        "skill": [],
+        "experience": [],
+        "conversation": [],
+        "pattern_dense": [],
+        "pattern_lexical": [],
+    }
+
     try:
         from shared.semantic_search import embed_query_tei, search_qdrant_semantic
 
         embedding = embed_query_tei(query_text, timeout=1.5)
         if embedding:
-            tei_ok = True
             for collection, ctype in SEMANTIC_COLLECTIONS:
                 if time.monotonic() - start > QDRANT_TIMEOUT:
                     break
@@ -431,6 +450,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                             "score": round(adj, 4),
                             "_collection": "learned_patterns",
                         }
+                        arms["pattern_dense"].append(entry)
                     else:
                         entry = {
                             "source": "qdrant",
@@ -439,23 +459,22 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                             "category": _extract_category(payload, ctype),
                             "score": round(base_score, 4),
                         }
-                    semantic_results.append(entry)
+                        # Route by collection type to its arm
+                        arm_key = {
+                            "skill": "skill",
+                            "experience": "experience",
+                            "conversation": "conversation",
+                        }.get(ctype, "skill")
+                        arms[arm_key].append(entry)
     except Exception:
         pass
 
-    # TEI-down fallback: token-overlap on learned_patterns (degraded path)
-    if not tei_ok:
-        fallback = _search_learned_patterns(query_tokens, start, limit)
-        semantic_results.extend(fallback)
+    # §24 P1: lexical arm — ALWAYS-ON (not fallback), catches BSL exact-term/CamelCase
+    arms["pattern_lexical"] = _search_learned_patterns(query_tokens, start, limit)
 
-    # Dedup by id (keep max score) — safe even if both paths ran
-    by_id: dict = {}
-    for item in semantic_results:
-        item_id = item.get("id", "")
-        if item_id not in by_id or item["score"] > by_id[item_id]["score"]:
-            by_id[item_id] = item
-    combined = sorted(by_id.values(), key=lambda x: -x["score"])
-    return combined[:limit]
+    # Client-side RRF merge: content-hash dedup, lexical weighted > dense for BSL
+    fused = rrf_merge(arms, SURFACE_RRF_WEIGHTS, k=60)
+    return fused[:limit]
 
 
 # ---------------------------------------------------------------------------
