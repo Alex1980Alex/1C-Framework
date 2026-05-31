@@ -864,7 +864,7 @@ class MemoryFirstHook(BaseHook):
                 merged_count=len(merged),
                 duration_ms=_cdur,
             )
-            print(format_federated_context(merged))
+            _emit_stdout(format_federated_context(merged))
             return None
 
         deadline = t0 + TOTAL_BUDGET
