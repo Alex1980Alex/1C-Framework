@@ -610,6 +610,17 @@ def _rerank_results(query_text: str, results: list, t0: float) -> list:
     """
     if not RERANK_ENABLED or len(results) < RERANK_MIN_CANDIDATES:
         return results
+    # Operability: warn once if enabled without raising the settings.json timeout —
+    # otherwise the budget-guard below silently skips almost every call (~6.5s cold
+    # cannot fit a 5s hard-kill), and the operator never learns why.
+    global _RERANK_TIMEOUT_WARNED
+    if not _RERANK_TIMEOUT_WARNED and RERANK_HARD_TIMEOUT <= 5.0:
+        _RERANK_TIMEOUT_WARNED = True
+        print(
+            "[memory-first] MEMORY_RERANK=1 but hook timeout <=5s — rerank will be "
+            "skipped on cold/slow Ollama; raise settings.json timeout to >=10s.",
+            file=sys.stderr,
+        )
     # Budget = time left before hard-kill, minus a safety margin to still emit.
     remaining = RERANK_HARD_TIMEOUT - (time.monotonic() - t0) - RERANK_SAFETY
     if remaining < 0.8:  # not enough to attempt a useful rerank
