@@ -372,6 +372,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                         "content": content[:200],
                         "category": payload.get("category", "pattern"),
                         "score": round(score, 4),
+                        "_collection": "learned_patterns",
                     }
                 )
 
@@ -569,6 +570,16 @@ class MemoryFirstHook(BaseHook):
             if time.monotonic() < deadline
             else []
         )
+        try:
+            from shared.pattern_reinforce import record_surfaced
+            _sid = inp.session_id or ""
+            record_surfaced(
+                _sid,
+                [(r["id"], r["score"]) for r in qdrant_results
+                 if r.get("_collection") == "learned_patterns" and r.get("id")],
+            )
+        except Exception:
+            pass
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
         wiki_results = search_wiki(query_tokens, limit=10) if time.monotonic() < deadline else []
 

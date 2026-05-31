@@ -291,6 +291,11 @@ class SessionMemorySave(BaseHook):
         save_to_sqlite(ctx)
         save_to_wiki_log(ctx)
         try_promote_patterns()
+        try:
+            from shared.pattern_reinforce import detect_session_success, reinforce_session
+            reinforce_session(ctx["session_id"], detect_session_success(ctx))
+        except Exception:
+            pass
         _emit_langfuse_span(ctx, status="saved")
 
         return None
