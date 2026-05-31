@@ -97,7 +97,7 @@ CODE_TO_DOMAIN = [
     ("src/bsl/", "06_ИНТЕРФЕЙСЫ", "bsl-development"),
     ("src/shared/llm_rotation/", None, "llm-rotation"),
     ("src/shared/", "01_ОБЗОР", "pdf-knowledge"),
-    ("src/memory/", "01_ОБЗОР", "pdf-knowledge"),
+    ("src/memory/", "01_ОБЗОР", "memory-unified"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
