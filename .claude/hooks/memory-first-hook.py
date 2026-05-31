@@ -592,6 +592,77 @@ def rrf_merge(layers: dict, weights: dict, k: int = 60) -> list:
     return merged
 
 
+def _rerank_results(query_text: str, results: list, t0: float) -> list:
+    """§24 P2 ADR-D6: optional LLM rerank of the post-fusion result list.
+
+    Reorders ``results`` (already RRF-fused, top-N) by relevance to ``query_text``
+    via local Ollama qwen2.5-coder. Mirrors the proven BSL ``_llm_rerank`` pattern
+    (numbered prompt → comma-separated index list → reorder, graceful fallback).
+
+    Contract (honest hot-path design):
+      - OFF unless ``MEMORY_RERANK=1`` — a 7b rerank (~1.5s) exceeds TOTAL_BUDGET.
+      - Timeout-bounded by the remaining slack before the 5s hook hard-kill, so an
+        enabled-but-slow Ollama never starves the hook of emitting anything.
+      - Skippable: any exception / no-ranking / no-budget → original fused order.
+    """
+    if not RERANK_ENABLED or len(results) < RERANK_MIN_CANDIDATES:
+        return results
+    # Budget = time left before hard-kill, minus a safety margin to still emit.
+    remaining = RERANK_HARD_TIMEOUT - (time.monotonic() - t0) - RERANK_SAFETY
+    if remaining < 0.8:  # not enough to attempt a useful rerank
+        return results
+
+    lines = []
+    for i, c in enumerate(results, 1):
+        text = (c.get("content") or "").replace("\n", " ")[:200]
+        cat = c.get("category") or c.get("source") or ""
+        lines.append(f"{i}. [{cat}] {text}")
+    prompt = (
+        "You are a developer-memory reranker. Given a query and candidate memory "
+        "snippets (past patterns, lessons, skills, notes), rank them by relevance "
+        "to the query.\n\n"
+        "Output ONLY a comma-separated list of the candidate numbers, most relevant "
+        'first. Example: "3,1,4,2".\n\n'
+        f"Query: {query_text}\n\nCandidates:\n" + "\n".join(lines) + "\n\nRanking:"
+    )
+    try:
+        import httpx
+
+        resp = httpx.post(
+            RERANK_ENDPOINT,
+            json={
+                "model": RERANK_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": 0.0, "num_predict": 64},
+            },
+            timeout=min(remaining, 4.0),
+        )
+        text = resp.json().get("response", "")
+    except Exception:
+        return results
+
+    match = re.search(r"\d+(?:\s*,\s*\d+)+", text)
+    if not match:
+        return results
+    try:
+        order = [int(x.strip()) - 1 for x in match.group(0).split(",")]
+    except ValueError:
+        return results
+
+    seen: set = set()
+    reranked: list = []
+    for idx in order:
+        if 0 <= idx < len(results) and idx not in seen:
+            reranked.append(results[idx])
+            seen.add(idx)
+    # Append any candidate the LLM omitted, preserving fused order (no silent drop).
+    for i, c in enumerate(results):
+        if i not in seen:
+            reranked.append(c)
+    return reranked
+
+
 # ---------------------------------------------------------------------------
 # Output formatter
 # ---------------------------------------------------------------------------
