@@ -638,7 +638,11 @@ def _surface_cache_key(query_tokens: set[str]) -> str:
 
 
 def _surface_cache_get(key: str) -> dict[str, Any] | None:
-    """Return a fresh (within-TTL) cache entry for ``key``, else None. Fail-soft."""
+    """Return the stored envelope ``{ts, results, pids}`` if fresh (within-TTL), else None.
+
+    Caller reads ``entry["results"]`` / ``entry["pids"]`` — the full envelope is returned,
+    not just results. Fail-soft: any IO/parse error → None (treated as a miss).
+    """
     if not SURFACE_CACHE_ENABLED:
         return None
     try:
