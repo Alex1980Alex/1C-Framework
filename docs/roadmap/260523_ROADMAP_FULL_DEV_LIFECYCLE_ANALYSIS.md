@@ -1487,6 +1487,14 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-31 (review) — §22 independent code-review → CRITICAL fix #1 + 5 findings (commit `2ffc6b863`)
+
+Adversarial code-review §22 P0-P4 (независимый субагент) вскрыл **CRITICAL #1**: learned_patterns surface'ились ТОЛЬКО в TEI-down fallback (semantic-путь делал ранний return) → `record_surfaced` всегда [] при живом TEI → **вся P1-петля была no-op в production** (замкнута лишь на бумаге; self-review P1 это пропустил — фокус был на оркестрации, не на источнике surfaced).
+- **#1 fix:** `_search_learned_patterns` (token-overlap) вынесен и **всегда** выполняется + мёржится с semantic → паттерны surface при живом TEI → reinforcement работает. + integration-тест (semantic-hit И learned_patterns одновременно — ловит именно эту регрессию).
+- **#2** expired_at в `_pattern_to_payload` (был silent un-archive на upsert). **#3** decay-sweep би-направленно архивирует/раз-архивирует (recovered fail-pattern). **#7** FIFO по parsed datetime. **#8** tool-desc → Beta. **#10** payload guard.
+- **Deferred (документированы):** #4 over-fetch perf (коллекция ~44), #6 sentinel TOCTOU (низкая вероятность). **#5 verified НЕ баг** (skip не продвигает last_decay_at → gap накапливается).
+- **Verify:** 69 unit-тестов, CI baseline new=0, mypy/ruff clean. **P1 reinforcement теперь работает end-to-end.** Урок: integration-тест на hook round-trip поймал бы #1 — pure-function тесты не покрыли wiring.
+
 ### 2026-05-31 (impl) — §22 P4 FSRS-lite stability DONE → 🏁 core lifecycle (P0-P4) complete (commit `942f55fa0`)
 
 Use-modulated λ (§22.9.4): established паттерны (высокий lifetime `application_count`) затухают **медленнее** → доверенное знание держится дольше.
