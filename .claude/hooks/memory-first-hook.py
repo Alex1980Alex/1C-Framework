@@ -94,10 +94,13 @@ WIKI_TIMEOUT = 0.200
 TOTAL_BUDGET = 3.0  # Hook timeout 5s, budget 3s (TEI faster than Ollama)
 
 # §24 P2 ADR-D6 — optional post-fusion LLM rerank (Ollama qwen2.5-coder).
-# OFF by default: a 7b LLM rerank costs ~1.5s, which the hot-path UserPromptSubmit
-# budget (TOTAL_BUDGET=3.0s) cannot absorb. Enable only when precision > latency
-# and the hook timeout in settings.json is raised accordingly. Any failure/timeout
-# degrades silently to the RRF-fused order (skippable — §24.2.6 "rerank after fusion").
+# OFF by default: measured ~2.5s warm / ~6.5s cold (model load), which the hot-path
+# UserPromptSubmit budget (TOTAL_BUDGET=3.0s) cannot absorb — a cold call exceeds the
+# 5s hook hard-kill in settings.json and would surface NOTHING. The httpx read-timeout
+# is best-effort only (Ollama holds the connection during model load), so enabling this
+# REQUIRES raising the settings.json hook timeout to >=10s. Use only when precision >
+# latency. Any failure/timeout/no-budget degrades silently to the RRF-fused order
+# (skippable — §24.2.6 "rerank after fusion, top-N"). Keep Ollama warm to stay ~2.5s.
 RERANK_ENABLED = os.environ.get("MEMORY_RERANK") == "1"
 RERANK_MODEL = os.environ.get("MEMORY_RERANK_MODEL", "qwen2.5-coder:7b")
 RERANK_ENDPOINT = os.environ.get(
