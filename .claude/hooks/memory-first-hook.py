@@ -985,6 +985,9 @@ class MemoryFirstHook(BaseHook):
             return None
 
         t0 = time.monotonic()
+        _trace_reset()
+        _trace_set("prompt_len", prompt_len)
+        _trace_set("token_count", len(query_tokens))
 
         # §24 execution cache: hash(query_tokens) → cached fused result within TTL.
         # Skips the whole pipeline (TEI+Qdrant+RRF+rerank) on a repeated query.
