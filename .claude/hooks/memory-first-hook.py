@@ -819,6 +819,36 @@ class MemoryFirstHook(BaseHook):
             return None
 
         t0 = time.monotonic()
+
+        # §24 execution cache: hash(query_tokens) → cached fused result within TTL.
+        # Skips the whole pipeline (TEI+Qdrant+RRF+rerank) on a repeated query.
+        cache_key = _surface_cache_key(query_tokens)
+        cached = _surface_cache_get(cache_key)
+        if cached is not None:
+            merged = cached.get("results") or []
+            # Replay reinforcement so §22 P1 still counts surfaced patterns on hits.
+            try:
+                from shared.pattern_reinforce import record_surfaced
+                record_surfaced(
+                    inp.session_id or "",
+                    [tuple(p) for p in cached.get("pids", [])],
+                )
+            except Exception:
+                pass
+            _cdur = (time.monotonic() - t0) * 1000
+            if not merged:
+                _emit_langfuse_span("cached-empty", prompt_len=prompt_len, duration_ms=_cdur)
+                return None
+            update_cooldown()
+            _emit_langfuse_span(
+                "injected-cached",
+                prompt_len=prompt_len,
+                merged_count=len(merged),
+                duration_ms=_cdur,
+            )
+            print(format_federated_context(merged))
+            return None
+
         deadline = t0 + TOTAL_BUDGET
 
         sqlite_results = (
