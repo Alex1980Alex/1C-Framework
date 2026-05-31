@@ -748,8 +748,8 @@ def _rerank_results(query_text: str, results: list[Any], t0: float) -> list[Any]
     except ValueError:
         return results
 
-    seen: set = set()
-    reranked: list = []
+    seen: set[int] = set()
+    reranked: list[Any] = []
     for idx in order:
         if 0 <= idx < len(results) and idx not in seen:
             reranked.append(results[idx])
