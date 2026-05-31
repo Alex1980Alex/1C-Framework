@@ -61,6 +61,9 @@ SURFACE_CACHE_FILE = (
     PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing-cache.json"
 )
 SURFACE_CACHE_ENABLED = os.environ.get("MEMORY_SURFACE_CACHE_DISABLE") != "1"
+# TTL tradeoff: a pattern archived / confidence-dropped mid-TTL stays surfaced (and
+# re-reinforced) for up to this window. Bounded to 5 min; lower it or key on a
+# confidence-store epoch if staleness ever matters.
 SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "300"))  # 5 min
 SURFACE_CACHE_CAP = 200  # max distinct query hashes retained (FIFO by timestamp)
 
