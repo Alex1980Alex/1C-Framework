@@ -755,6 +755,7 @@ def _rerank_results(query_text: str, results: list[Any], t0: float) -> list[Any]
       - Skippable: any exception / no-ranking / no-budget → original fused order.
     """
     if not RERANK_ENABLED or len(results) < RERANK_MIN_CANDIDATES:
+        _trace_set("rerank", "off" if not RERANK_ENABLED else "too_few_candidates")
         return results
     # Operability: warn once if enabled without raising the settings.json timeout —
     # otherwise the budget-guard below silently skips almost every call (~6.5s cold
