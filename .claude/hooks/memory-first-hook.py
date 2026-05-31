@@ -51,6 +51,18 @@ MEMORY_DIR = Path(
 COOLDOWN_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-cooldown.json"
 SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 
+# §24 execution cache — memoize the surfacing pipeline by hash(query_tokens).
+# The hook spawns a fresh process per UserPromptSubmit, so an in-process cache is
+# useless → persist to disk. A repeated query (same normalized tokens) within TTL
+# returns the cached fused result, skipping TEI-embed + Qdrant + RRF + rerank (~2s).
+# Reinforcement side-effect (record_surfaced) is replayed on hit so §22 P1 still works.
+SURFACE_CACHE_FILE = (
+    PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing-cache.json"
+)
+SURFACE_CACHE_ENABLED = os.environ.get("MEMORY_SURFACE_CACHE_DISABLE") != "1"
+SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "300"))  # 5 min
+SURFACE_CACHE_CAP = 200  # max distinct query hashes retained (FIFO by timestamp)
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
