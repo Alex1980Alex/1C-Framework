@@ -29,7 +29,7 @@ description: "Unified Memory System — кросс-системная памят
 | System | Type | Backend | Collection/DB |
 |--------|------|---------|---------------|
 | Memory AI | Episodic | SQLite | `data/memory_ai.db` |
-| Vector Memory | Semantic | Qdrant | `learned_patterns` (1024d) |
+| Vector Memory | Semantic | Qdrant | `learned_patterns` (4096d, Qwen3) |
 | Skill Learning | Learning | JSONL files | `data/skill_learning/` |
 | PDF Docs | Documentation | Qdrant | existing framework collections |
 
