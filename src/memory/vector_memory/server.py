@@ -24,7 +24,7 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
-from .confidence import apply_outcome, decay_counts, derive_confidence, seed_counts_from_legacy
+from .confidence import apply_to_payload, decay_counts, derive_confidence, seed_counts_from_legacy
 from .models import (
     EvidenceSource,
     LearnedPattern,
@@ -488,53 +488,11 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
     payload = points[0].payload
     old_confidence = payload.get("confidence", 0.5)
 
-    # Resolve succ/fail — lazy migration for legacy points without the fields.
-    raw_succ = payload.get("succ")
-    raw_fail = payload.get("fail")
-    if raw_succ is None or raw_fail is None:
-        succ, fail = seed_counts_from_legacy(
-            payload.get("confidence", 0.5),
-            payload.get("application_count", 0),
-        )
-    else:
-        succ = float(raw_succ)
-        fail = float(raw_fail)
-
-    # Resolve last_decay_at — prefer explicit field, fall back through chain.
-    raw_lda = payload.get("last_decay_at")
-    if raw_lda:
-        last_decay_at: datetime | None = datetime.fromisoformat(raw_lda)
-    elif payload.get("last_applied"):
-        last_decay_at = datetime.fromisoformat(payload["last_applied"])
-    elif payload.get("updated_at"):
-        last_decay_at = datetime.fromisoformat(payload["updated_at"])
-    elif payload.get("created_at"):
-        last_decay_at = datetime.fromisoformat(payload["created_at"])
-    else:
-        last_decay_at = None
-
-    now = datetime.now()
-    decay_rate = float(payload.get("decay_rate", 0.05))
-    succ, fail = apply_outcome(succ, fail, last_decay_at, now, decay_rate, success)
-    new_confidence = derive_confidence(succ, fail)
-    new_count = payload.get("application_count", 0) + 1
-
-    client.set_payload(
-        collection_name=COLLECTION_NAME,
-        payload={
-            "succ": succ,
-            "fail": fail,
-            "last_decay_at": now.isoformat(),
-            "confidence": new_confidence,
-            "application_count": new_count,
-            "last_applied": now.isoformat(),
-            "updated_at": now.isoformat(),
-        },
-        points=[pattern_id],
-    )
+    updates = apply_to_payload(payload, success, datetime.now())
+    client.set_payload(collection_name=COLLECTION_NAME, payload=updates, points=[pattern_id])
 
     logger.info(
-        f"Applied pattern {pattern_id}: {old_confidence:.3f} -> {new_confidence:.3f}"
+        f"Applied pattern {pattern_id}: {old_confidence:.3f} -> {updates['confidence']:.3f}"
     )
     return [
         TextContent(
@@ -543,9 +501,9 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
                 {
                     "success": True,
                     "pattern_id": pattern_id,
-                    "old_confidence": payload.get("confidence", 0.5),
-                    "new_confidence": new_confidence,
-                    "application_count": new_count,
+                    "old_confidence": old_confidence,
+                    "new_confidence": updates["confidence"],
+                    "application_count": updates["application_count"],
                 }
             ),
         )

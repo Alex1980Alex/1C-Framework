@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
+from typing import Any
 
 # Beta prior hyper-parameters: prior mean = 7/(7+3) = 0.70
 PRIOR_SUCCESS: float = 7.0
@@ -151,3 +152,57 @@ def seed_counts_from_legacy(confidence: float, application_count: int) -> tuple[
     succ = confidence * n
     fail = (1.0 - confidence) * n
     return (succ, fail)
+
+
+def apply_to_payload(
+    payload: dict[str, Any],
+    success: bool,
+    now: datetime,
+    *,
+    default_decay_rate: float = DEFAULT_DECAY_RATE,
+) -> dict[str, Any]:
+    """Pure: given a Qdrant point payload + outcome, return the payload-field
+    updates for a decayed-Beta confidence step. No I/O. Single source of the
+    apply math (used by handle_apply_pattern and the reinforcement hook).
+
+    Args:
+        payload: Qdrant point payload dict (read-only; not mutated).
+        success: True = success observation; False = failure observation.
+        now: Current datetime reference (injected for testability).
+        default_decay_rate: Fallback decay rate when payload lacks ``decay_rate``.
+
+    Returns:
+        Dict of field updates suitable for ``client.set_payload(...)``.
+    """
+    # Resolve succ/fail — lazy migration for legacy points without the fields.
+    raw_succ = payload.get("succ")
+    raw_fail = payload.get("fail")
+    if raw_succ is None or raw_fail is None:
+        succ, fail = seed_counts_from_legacy(
+            payload.get("confidence", 0.5),
+            payload.get("application_count", 0),
+        )
+    else:
+        succ, fail = float(raw_succ), float(raw_fail)
+
+    # Resolve last_decay_at — prefer explicit field, fall back through chain.
+    last_decay_at: datetime | None = None
+    for key in ("last_decay_at", "last_applied", "updated_at", "created_at"):
+        raw = payload.get(key)
+        if raw:
+            last_decay_at = datetime.fromisoformat(raw)
+            break
+
+    decay_rate = float(payload.get("decay_rate", default_decay_rate))
+    succ, fail = apply_outcome(succ, fail, last_decay_at, now, decay_rate, success)
+    new_conf = derive_confidence(succ, fail)
+
+    return {
+        "succ": succ,
+        "fail": fail,
+        "last_decay_at": now.isoformat(),
+        "confidence": new_conf,
+        "application_count": int(payload.get("application_count", 0)) + 1,
+        "last_applied": now.isoformat(),
+        "updated_at": now.isoformat(),
+    }
