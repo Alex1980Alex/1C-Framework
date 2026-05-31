@@ -1007,6 +1007,7 @@ class MemoryFirstHook(BaseHook):
             _cdur = (time.monotonic() - t0) * 1000
             if not merged:
                 _emit_langfuse_span("cached-empty", prompt_len=prompt_len, duration_ms=_cdur)
+                _surface_log("cached-empty", t0, cache="hit")
                 return None
             update_cooldown()
             _emit_langfuse_span(
@@ -1015,9 +1016,11 @@ class MemoryFirstHook(BaseHook):
                 merged_count=len(merged),
                 duration_ms=_cdur,
             )
+            _surface_log("injected-cached", t0, cache="hit", merged_count=len(merged))
             _emit_stdout(format_federated_context(merged))
             return None
 
+        _trace_set("cache", "miss")
         deadline = t0 + TOTAL_BUDGET
 
         sqlite_results = (
