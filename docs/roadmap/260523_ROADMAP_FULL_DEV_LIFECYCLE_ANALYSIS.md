@@ -1495,6 +1495,10 @@ Live-прогон confidence-цикла против реального `learned
 - ⚠️ **Находка 2 (fixed):** `server.py VECTOR_SIZE=1024` устарел — реальная коллекция 4096d (Qwen3). Латентный баг: auto-create создал бы 1024d коллекцию + `_hash_embed` fallback давал бы dim-mismatch на upsert. Исправлено → `int(os.getenv("LEARNING_VECTOR_SIZE","4096"))` + SKILL.md таблица 1024d→4096d.
 - ℹ️ `save_pattern`/`search_patterns` через MCP таймаутят (TEI down на :8080) — embedding-пути не проверены вживую (не §22-логика).
 
+### 2026-05-31 (impl) — §24 P0 surfacing DONE (commit `6906210c9`)
+
+semantic surfacing learned_patterns (→`SEMANTIC_COLLECTIONS`) + confidence-gating (`_pattern_score_gate`: hard floor `eff<0.15→drop` + floored-multiply `×max(0.3,eff)`) + archived hard-exclude (`expired_at`, opt `MEMORY_INCLUDE_ARCHIVED=1`) + token-overlap → TEI-down fallback (gated) + dedup-by-id, в `memory-first-hook.search_qdrant`. **Замыкает §22 confidence на surfacing** (раньше не применялась). Verify: 77 hooks-тестов (+10 gating) + live-проба на реальном Qdrant (high-conf surfaced score 0.8=base×eff; archived+low-conf excluded; коллекция=44). **DEFER P1:** client-side RRF k=60 hybrid (semantic⊕lexical always-on). **Side-fix pending:** §22 P3 `handle_search_patterns` MCP-search ×0.5 → hard-exclude (surfacing уже exclude; MCP-search ещё ×0.5).
+
 ### 2026-05-31 (research) — §24 NEW: memory-surfacing quality (ADR-D6, ~11 repos)
 
 Deep-research (3 агента, ~11 GitHub repos source-level) по ранжированию surfaced learned_patterns. **Уточнил** наивное предложение (`score *= effective_confidence`): production primary-rankers — **additive/RRF, НЕ multiply** ([generative_agents] weighted-sum+minmax, [mem0] additive, [crewAI] 0.5·sim+0.3·decay+0.2·imp, [YourMemory] явно отвергает `cosine×strength` для ранжирования). **ADR-D6:** (1) semantic surfacing — learned_patterns→`SEMANTIC_COLLECTIONS` (эмбеддинги уже TEI 4096d, reindex не нужен); (2) hybrid **RRF k=60** (Cormack; lexical 0.7/dense 0.3 для BSL-collapse; client-side, т.к. Qdrant native k=2); (3) confidence-gating — hard floor (<0.15 drop) + floored-multiply `×max(0.3,conf)` (не raw); (4) **archived hard-exclude** (рефайнит §22 P3 search ×0.5 — research: invalidated EXCLUDE, не downweight); (5) TEI-down → lexical-only fallback; (6) opt rerank (Ollama). **Главное:** §22 confidence сейчас НЕ применяется к surfacing (только MCP-search) — §24 замыкает. План P0-P2 в §24.3. Реализация по запросу.
@@ -2452,7 +2456,7 @@ Research **уточнил** исходное предложение (#1+#2 на�
 6. **Optional rerank** (P2): после RRF top-N → Ollama qwen2.5-coder → top-k; skippable.
 
 ### §24.3 План
-- **P0:** semantic surfacing (`SEMANTIC_COLLECTIONS` + `_extract_content` pattern ctype) + confidence-gating (hard floor + floored-multiply) + archived hard-exclude в `memory-first-hook.search_qdrant`. Unit-тесты (gating/exclude) + live recall-проба.
+- **P0:** ✅ **DONE 2026-05-31 (commit `6906210c9`)** — semantic surfacing + `_pattern_score_gate` (hard floor + floored-multiply) + archived hard-exclude + TEI-down fallback + dedup; 77 тестов + live-проба. (`_extract_content` уже handle'ил `pattern` ctype через default.) Исходный план: semantic surfacing + confidence-gating + archived hard-exclude в `memory-first-hook.search_qdrant`.
 - **P1:** client-side RRF k=60 (lexical 0.7/dense 0.3) мёрж semantic⊕lexical + TEI-down fallback.
 - **P2 (optional):** post-fusion Ollama rerank.
 - **Side-fix:** §22 P3 `handle_search_patterns`/`memory-first` ×0.5 archived → hard-exclude (consistency с §24.2.4).
