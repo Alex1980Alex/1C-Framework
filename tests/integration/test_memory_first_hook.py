@@ -210,7 +210,13 @@ class TestDimAlignment:
     Qdrant collections were 4096d Qwen3 — caused silent 0-result semantic recall)."""
 
     EXPECTED_DIM = 4096
-    KNOWN_COLLECTIONS = {"skill_library", "experience_embeddings", "conversation_memory"}
+    # learned_patterns added in §24 P0 (semantic surfacing of confidence-gated patterns).
+    KNOWN_COLLECTIONS = {
+        "skill_library",
+        "experience_embeddings",
+        "conversation_memory",
+        "learned_patterns",
+    }
 
     def test_hook_declares_expected_collections(self) -> None:
         declared = {name for name, _ in mod.SEMANTIC_COLLECTIONS}
