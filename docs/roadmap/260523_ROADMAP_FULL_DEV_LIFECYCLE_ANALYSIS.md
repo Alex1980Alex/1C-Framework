@@ -1487,6 +1487,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-31 (impl) — §22 P4 FSRS-lite stability DONE → 🏁 core lifecycle (P0-P4) complete (commit `942f55fa0`)
+
+Use-modulated λ (§22.9.4): established паттерны (высокий lifetime `application_count`) затухают **медленнее** → доверенное знание держится дольше.
+- `confidence.py`: `STABILITY_K=0.3` + `stability_adjusted_rate(base, application_count) = base/(1+K·ln(1+count))`; применён в `_resolve_state` (single-source → все decay-пути) + `handle_decay_confidence` sweep. Без нового поля (переиспользует monotonic `application_count`).
+- **Verify:** 43 memory-тестов (+3: rate@0=base, monotonic, established-decays-slower; обновлён decayed_90d); apply days=0 неизменно; mypy/ruff clean; CI baseline new=0. Полный FSRS power-curve остаётся **deferred** (succ/fail + use-modulated λ покрывают цель).
+- 🏁 **§22 core lifecycle (P0-P4) реализован:** создание (P0) → рост (P1) → затухание-при-чтении (P2) → забывание/оживление (P3) → stability (P4). **Остаётся:** P1b (web-enrichment — отдельная фича) + явные DEFER: neighbor-gate (link_registry), transcript no-error gate, `pattern_saver` стабы, full FSRS curve, decay-class LLM-importance при save.
+
 ### 2026-05-31 (impl) — §22 P3 forgetting+revive DONE (commit `2aa6fcb21`)
 
 Invalidate-not-delete (Graphiti-style, §22.9.4): stale/failing паттерны **архивируются** (флаг `expired_at`), не удаляются; остаются retrievable; оживают при `apply`.
@@ -2283,7 +2290,7 @@ Alert на production file
 - **P1b — Ingestion enrichment (web, async):** при capture обогащать кандидат — `bsl-pattern`→its.1c.ru/Infostart ([[1c-doc-research]]), прочее→GitHub/SO (reuse [`prework-github-bp`](../../.claude/hooks/prework-github-bp.py)/[`prework-stackoverflow`](../../.claude/hooks/prework-stackoverflow.py) + кэши); attach attributed `evidence_sources`; corroboration→confidence/decay-class сигнал; противоречие→`pending`. Async/cache-first вне hot-path; graceful offline-skip.
 - **P2 — Lazy decay-on-read:** ✅ **DONE 2026-05-31 (commit `b05d1081d`)** — `payload_effective_confidence` + `handle_search_patterns` (drop server-prefilter, client-side effective) + `get_pattern` (surface effective) + `WikiPromoter` gate; 31 тест, CI new=0. Исходный план: `conf_effective` в `handle_search_patterns`/`get_pattern` + в `WikiPromoter` фильтре (читать effective, не stored).
 - **P3 — Forgetting + revive:** ✅ **DONE 2026-05-31 (commit `2aa6fcb21`)** — `expired_at` invalidate-not-delete + `is_invariant`/`should_archive` + revive-on-apply + search ×0.5 + wiki skip; 38 тестов, CI new=0. neighbor-gate — DEFER (link_registry). Исходный план: archive по **staleness** (`last_applied>180д & conf_eff<0.75 & decay_class≠invariant`) + fail-floor `0.40`, neighbor-aware, reversible un-archive; **revive-on-recurrence** (archived остаются в retrieval ×0.5, `apply` → auto-un-archive); **reuse `forgetgate_service.py`** (готовые strategies `CONFIDENCE_DECAY`/`ACCESS_BASED`/`COMPOSITE` + actions `ARCHIVE`/`DECAY`/`KEEP`) + `wiki_decay.py` — decay/archive не переизобретать, только подключить триггер + добавить `decay_class≠invariant` гейт.
-- **P4 (optional) — FSRS-lite stability** `S_days` (established паттерны затухают ещё медленнее; importance-modulation уже в core P1).
+- **P4 (optional) — FSRS-lite stability** ✅ **DONE 2026-05-31 (commit `942f55fa0`)** — `stability_adjusted_rate` (use-modulated λ через `application_count`); established паттерны затухают медленнее; без нового поля; 43 теста. Full FSRS power-curve остаётся deferred.
 
 ### §22.7 Acceptance criteria
 - [ ] Smoke end-to-end (по образцу [260514 §6](260514_ROADMAP_WIKI_PROMOTION_GAP.md)): N успешных сессий с surfaced паттерном ⇒ `confidence 0.7→≥0.8` ⇒ promote ⇒ `docs/wiki/drafts/<slug>.md` создан.
