@@ -1487,6 +1487,13 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-31 — §22 NEW: Confidence Lifecycle strategy (ADR-D4 accepted)
+
+Deep-research (hybrid task-evaluation: 3 параллельных web+GitHub агента) → новый раздел **§22** с выбранной стратегией авто-роста/авто-затухания `confidence` L2-паттернов. Закрывает корневой gap за §21.2 / [260514](260514_ROADMAP_WIKI_PROMOTION_GAP.md): `apply_pattern` никем не вызывается → confidence заморожен на 0.7 → drafts/ пуст.
+- **ADR-D4 (accepted):** ядро **decayed Beta(7,3)** (`conf=(7+S)/(10+S+F)` над time-decayed counts → 0.7 старт, 0.8 за 5 успехов, дрейф к 0.7 при простое) + **lazy exp decay-on-read** (`e^(−λΔt)`, H=90д, без cron) + reinforcement-петля «surfaced→reward» Stop-хук + **invalidate-not-delete** forgetting (Graphiti-style). Evaluation matrix: B побил A/C/D/E.
+- **Research sources:** evanmiller (Wilson) · fsrs4anki · duolingo/halflife-regression · generative_agents (recency·importance·relevance) · getzep/graphiti · YourMemory.
+- **План:** P0 confidence core → P1 reinforcement → P2 lazy decay → P3 forgetting → P4 FSRS-lite (optional). Реализация — отдельным срезом по запросу.
+
 ### 2026-05-30 (поздно) — §21.4 срез N (graphrag_global.py) + baseline re-sync + catch-up K/L/M
 
 Pivot из api/routes в Pareto top-file track. Перед началом: `analytical/agent.py` (бывший «Next» из §18) оказался **уже сделан** — коммит `e39a887d1` срез K (1396→1343); следом прошли **срез L** `rag/agent.py` (1343→1293) и **срез M** `deep-research/streaming` (1259→1210), которые в §18 не были залогированы (catch-up здесь). Стрей-артефакт `C:Tempdiff_agent.txt` (дамп diff'а среза K, подцеплен auto-commit) удалён + `.gitignore` правило `*Tempdiff*.txt` (`0330e35`).
@@ -2142,3 +2149,97 @@ Alert на production file
 3. **§21.2 Layer 4** — когда L5 наполнит drafts, ЛИБО решение о re-scope на `docs/wiki/`.
 4. **§21.3 §15 blocked** — когда появится S3/MinIO или jsonl перерастёт 5GB.
 5. **§21.6 aspirational** — по запросу, через architecture-research.
+
+---
+
+## §22 Confidence Lifecycle — Auto-Raise & Auto-Decay Strategy (research + ADR-D4, 2026-05-31)
+
+> Закрывает корневой gap за §21.2 / [260514 Wiki Promotion Gap](260514_ROADMAP_WIKI_PROMOTION_GAP.md): `confidence` L2-паттернов заморожен на 0.7 → не пересекает promote-порог 0.8 → `docs/wiki/drafts/` пуст. Hybrid-workflow (task-evaluation): deep-research (web+GitHub, 3 параллельных агента) → evaluation matrix → ADR → план реализации.
+
+### §22.1 Problem framing
+- **Что решаем:** `confidence` паттернов в `learned_patterns` (L2) должен (a) **авто-расти**, когда паттерн реально полезен, и (b) **авто-падать**, когда устаревает / не используется / фейлит — чтобы L2→L5 promotion (`confidence ≥ 0.8` И `application_count ≥ 5`) и обратный forgetting работали без ручного вмешательства.
+- **Текущее состояние (verified 2026-05-31):** `handle_apply_pattern` ([`vector_memory/server.py:437`](../../src/memory/vector_memory/server.py)) делает наивный `+0.02 success / −0.01 fail`, clamp [0,1]. Но `apply_pattern` **никем не вызывается** (grep по всему репо: единственный реальный caller — сам хендлер; в `wiki_promoter.py` лишь комментарий) → confidence застыл на стартовом `0.7` ([`server.py:348`](../../src/memory/vector_memory/server.py)). Decay (`decay_rate=0.05` в payload, [`wiki_decay.py`](../../src/memory/librarian/wiki_decay.py), MCP `decay_confidence`) существует, но **не запускается** ни по таймеру, ни on-read.
+- **Критерии успеха:** (1) полезный паттерн доходит до `≥0.8` за ~5 реальных успешных применений; (2) неиспользуемый сам дрейфует обратно к 0.7 и ниже; (3) O(1) на апдейт, без обязательного cron; (4) обратимость (forgetting ≠ destructive delete); (5) сигнал «успех» детектится автоматически.
+- **Ограничения:** Qdrant payload-based (нет реляционных транзакций); хуки на 3-5s бюджете; не ломать promote-pipeline ([`session-memory-save.py:try_promote_patterns`](../../.claude/hooks/session-memory-save.py)).
+
+### §22.2 Research summary (deep-check 2026-05-31, cited)
+
+**(I) Raising — оценка биномиальной пропорции.**
+- **Beta-Bernoulli posterior mean** (сопряжённый prior): `conf = (α₀+S)/(α₀+β₀+S+F)`. Prior `Beta(7,3)` ⇒ mean **0.70**; +5 чистых успехов ⇒ `Beta(12,3)` ⇒ **0.80 ровно**; fail откладывает promote (`Beta(12,4)`→0.75). O(1), 2 счётчика. **Best fit** — арифметика буквально кодирует «0.7 старт → 0.8 за 5».
+- **Wilson score lower bound** (Reddit/Yelp; [Evan Miller](https://www.evanmiller.org/how-not-to-sort-by-average-rating.html)): отличный small-n conservatism, но **без prior** → стартует пессимистично (5/0 ⇒ ~0.566), воюет с «0.7 старт».
+- **Laplace/additive smoothing** `(S+a)/(n+a+b)` ([Wikipedia](https://en.wikipedia.org/wiki/Additive_smoothing)) = тождественно Beta-mean при `(a,b)=(7,3)`.
+- **EWMA** `cₜ=(1−α)cₜ₋₁+α·xₜ` — recency raise+lower одной строкой, но без sample-awareness.
+- **Online logistic/bandit** (Vowpal Wabbit) — overkill; оправдан только для *контекстно-зависимого* confidence.
+
+**(II) Lowering — temporal decay / forgetting.**
+- **Lazy exponential decay-on-read** keyed на `last_applied`: `conf = conf_last·e^(−λ·Δdays)`, `λ=ln2/H`. Математически **идентично** периодическому tick'у (экспонента memoryless), но **без cron**, O(1), idempotent, downtime-proof ([Jules Jacobs](https://julesjacobs.com/2015/05/06/exponentially-decaying-likes.html)). **Recommended baseline**.
+- **Spaced-repetition stability** (FSRS power-curve `R=(1+19/81·t/S)^(−0.5)`, [fsrs4anki](https://github.com/open-spaced-repetition/fsrs4anki); SM-2 EF, [super-memory.com](https://super-memory.com/english/ol/sm2.htm)): per-pattern stability `S` растёт с каждым успехом (diminishing returns) → устоявшиеся паттерны затухают **медленнее**. Higher fidelity, больше state.
+- **Half-Life Regression** (Duolingo, [Settles & Meeder ACL2016](https://github.com/duolingo/halflife-regression)): `p=2^(−Δt/h)`, `h=2^(θ·x)` — learned half-life.
+- Periodic multiplicative tick — O(N) writes/день, missed-cron corruption → **avoid**.
+
+**(III) Production systems (GitHub).**
+- **Generative Agents** (Stanford, [joonspk-research](https://github.com/joonspk-research/generative_agents)): score = `recency·1 + importance·1 + relevance·1`; recency exp-decay factor **0.995**, **reset on access** (retrieval = reinforcement); importance = LLM 1-10 poignancy, static.
+- **YourMemory** ([sachitrafa/YourMemory](https://github.com/sachitrafa/YourMemory)): `strength = importance·e^(−λ_eff·active_days)·(1+recall_count·0.2)`, `λ_eff=λ·(1−importance·0.8)` (importance замедляет decay), prune <0.05 каждые 24h, **active_days** (не wall-clock — простой не штрафует), neighbor-aware.
+- **Graphiti/Zep** ([getzep/graphiti](https://github.com/getzep/graphiti)): bi-temporal `valid_at`/`invalid_at`/`expired_at` — **invalidate, not delete** (point-in-time queryable, reversible) + LLM contradiction-detection on write.
+- **mem0 / LangMem / Letta**: LLM-driven ADD/UPDATE/DELETE/NOOP structural edits + background consolidation; numeric decay — меньшинство. LangMem procedural optimizer обучается на «successful vs unsuccessful» interactions; episodic хранит few-shot **только из успешных**.
+- **Success-signal detection:** два семейства — *implicit* (retrieval/recall = reward; самый дешёвый) и *explicit outcome* (success/fail label гейтит storage/reinforcement). Конкретные software-сигналы (test passed, commit, no-error) — application-layer wiring (ровно то, что делает наш `+0.02/−0.01`).
+
+### §22.3 Candidate approaches (5)
+- **[A] Minimal-decay** — оставить аддитивный `+0.02/−0.01`, добавить только lazy exp decay-on-read.
+- **[B] Decayed Beta(7,3)** — `confidence` = posterior mean над **time-decayed** evidence counts (S,F). Один механизм и поднимает, и опускает.
+- **[C] FSRS-lite** — `confidence × R(Δt,S)`, stability `S` растёт per success (established decay slower).
+- **[D] Composite** (Generative-Agents/YourMemory) — importance (LLM 1-10) модулирует λ + recall-reset on access.
+- **[E] LLM-structural** (mem0/Graphiti) — invalidation + contradiction detection, без скалярного confidence.
+
+### §22.4 Evaluation matrix
+
+| Критерий | A Minimal | **B Decayed-Beta** | C FSRS-lite | D Composite | E LLM-struct |
+|---|---|---|---|---|---|
+| Impl complexity | Low | **Low-Med** | Med | Med-High | High |
+| Raise principled | ✗ ad-hoc | **✓✓** | ✓ | ✓ | n/a |
+| Lower (decay) | ✓ | **✓✓** | ✓✓ | ✓✓ | invalidate |
+| Sample-awareness | ✗ | **✓** | ✓ | partial | n/a |
+| 0.7→0.8@5 точно | ✗ | **✓** | tune | tune | n/a |
+| State added | last_applied | S,F counts | S,D | importance,recall,S | temporal fields |
+| Cron-free | ✓ | **✓** on-read | ✓ | ✓ | ✓ |
+| Reversible forget | ✗ | partial | partial | partial | **✓✓** |
+| LLM-cost | none | **none** | none | 1 call/pattern | many |
+| Risk | Low | **Low** | Med | Med | High |
+
+### §22.5 Recommendation / ADR-D4 (accepted 2026-05-31)
+
+**Выбран: [B] decayed Beta(7,3) как ядро + 2 заимствования ([E] invalidate-not-delete, [D] importance — optional P4).** Три слоя:
+
+1. **Confidence formula (raise+lower в одном):**
+   - Store per pattern: `success_count S`, `failure_count F`, `last_applied`. Prior `(α₀,β₀)=(7,3)`.
+   - On outcome (elapsed `Δt` дней, `λ=ln2/H`): `S ← S·e^(−λΔt); F ← F·e^(−λΔt)`; затем `S+=1` (success) / `F+=1` (fail).
+   - `confidence = (7+S)/(10+S+F)` (cached в payload, derived). ⇒ **0.70 старт, ровно 0.80 после 5 чистых успехов, дрейф к 0.70 при простое** (decay усыхает S,F к prior).
+   - On read (lazy, без записи): `conf_effective = (7+S·d)/(10+(S+F)·d)`, `d=e^(−λ·Δsince_last_applied)`.
+2. **Reinforcement trigger (success-signal)** — Stop-хук «surfaced→reward»:
+   - [`memory-first-hook.py`](../../.claude/hooks/memory-first-hook.py) логирует surfaced `pattern_ids` в `.claude/cache/surfaced-patterns-<session>.json`.
+   - [`session-memory-save.py`](../../.claude/hooks/session-memory-save.py) (Stop) перед `try_promote_patterns()` зовёт `apply_pattern(id, success=<heuristic>)`; **idempotent раз/сессия** (cooldown).
+   - Success-эвристика: сессия без unresolved Bash-errors **И** (task completed **ИЛИ** commit made **ИЛИ** test passed) ⇒ `True`; иначе `False`/skip.
+3. **Forgetting (Graphiti-style, reversible):** `conf < 0.40` ≥N дней ⇒ `status: archived` (payload-flag, **не** delete), **neighbor-aware** (не архивировать, если linked pattern активен). Обратимо.
+
+Параметры по умолчанию: half-life **H=90 дней** (`λ≈0.0077/day`); archive-floor **0.40**. Sanity: conf 0.85 без apply 30 дней → `0.85·e^(−0.0077·30)=0.675` (ниже 0.8 за ~9 дней, ниже 0.40 за ~98 дней). **План Б:** [A] minimal-decay, если Beta-рефактор инвазивен к payload; [C] FSRS-lite как future enhancement.
+
+### §22.6 Implementation plan (phased)
+- **P0 — Confidence core [B]:** добавить `success_count`/`failure_count` в payload + `_pattern_to_payload`/`_pattern_from_payload`; переписать `handle_apply_pattern` на decayed-Beta; back-compat миграция (existing `confidence`+`application_count` → seed S,F). Regression-тест: `Beta(7,3)→0.7`, `+5→0.8`, `+5succ+1fail→0.75`.
+- **P1 — Reinforcement loop:** surfaced-log в `memory-first-hook`; reward-блок в `session-memory-save`; success-эвристика (парс transcript: unresolved errors + commit/test/task-complete); cooldown idempotency (`SESSION_MEMORY_NO_REWARD=1` opt-out).
+- **P2 — Lazy decay-on-read:** `conf_effective` в `handle_search_patterns`/`get_pattern` + в `WikiPromoter` фильтре (читать effective, не stored).
+- **P3 — Forgetting:** archive-флаг ниже floor, neighbor-aware, reversible un-archive; интеграция с `wiki_decay.py`.
+- **P4 (optional) — FSRS-lite stability** `S_days` + importance (LLM 1-10) modulation λ.
+
+### §22.7 Acceptance criteria
+- [ ] Smoke end-to-end (по образцу [260514 §6](260514_ROADMAP_WIKI_PROMOTION_GAP.md)): N успешных сессий с surfaced паттерном ⇒ `confidence 0.7→≥0.8` ⇒ promote ⇒ `docs/wiki/drafts/<slug>.md` создан.
+- [ ] Unused pattern: после ~H/2 дней без apply ⇒ effective confidence <0.8 (verиф через lazy-read); <0.40 ⇒ archived.
+- [ ] Failing pattern (`success=False ×k`) ⇒ confidence падает, не promotes.
+- [ ] O(1) на apply; нет обязательного cron; decay idempotent (lazy-read == N×tick).
+- [ ] Reversible: archived pattern восстановим.
+- [ ] code-verify PASS (behavior-preservation на хендлерах + bug-fix-validation на success-heuristic).
+
+### §22.8 Related
+- §21.2 (Layer 4 wiki / L5 stub), §7.1 (4-layer recall), [260514 Wiki Promotion Gap](260514_ROADMAP_WIKI_PROMOTION_GAP.md).
+- Code: [`vector_memory/server.py:437`](../../src/memory/vector_memory/server.py) (handle_apply_pattern), `:331` (save_pattern), [`librarian/wiki_promoter.py`](../../src/memory/librarian/wiki_promoter.py) (thresholds), [`librarian/wiki_decay.py`](../../src/memory/librarian/wiki_decay.py), [`memory-first-hook.py`](../../.claude/hooks/memory-first-hook.py), [`session-memory-save.py`](../../.claude/hooks/session-memory-save.py).
+- Memory: создать `feedback_confidence_lifecycle` после P0 prod-observation.
+- Sources: evanmiller.org (Wilson) · Wikipedia (Beta/Laplace/EWMA) · open-spaced-repetition/fsrs4anki (FSRS) · duolingo/halflife-regression (HLR) · joonspk-research/generative_agents (recency·importance·relevance, decay 0.995) · getzep/graphiti (bi-temporal) · sachitrafa/YourMemory (strength formula) · mem0ai/mem0 + LangMem + letta-ai/letta.
