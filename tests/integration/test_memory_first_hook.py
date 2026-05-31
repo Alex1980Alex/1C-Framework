@@ -269,3 +269,77 @@ class TestHookIntegrationSubprocess:
             timeout=20,
         )
         assert result.returncode == 0
+
+
+class TestSurfaceExecutionCache:
+    """§24 execution cache — hash(query_tokens) memoization of the surfacing pipeline."""
+
+    def _use_tmp(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(mod, "SURFACE_CACHE_FILE", tmp_path / "sc.json")
+        monkeypatch.setattr(mod, "SURFACE_CACHE_ENABLED", True)
+        monkeypatch.setattr(mod, "SURFACE_CACHE_TTL", 300.0)
+
+    def test_key_order_and_case_independent(self):
+        k1 = mod._surface_cache_key({"pytest", "fixture", "test"})
+        k2 = mod._surface_cache_key({"test", "fixture", "pytest"})
+        assert k1 == k2 and len(k1) == 32
+
+    def test_put_get_roundtrip(self, tmp_path, monkeypatch):
+        self._use_tmp(tmp_path, monkeypatch)
+        key = mod._surface_cache_key({"a", "b"})
+        results = [{"content": "x", "category": "skill", "fused_score": 0.1}]
+        pids = [("id-1", 0.5), ("id-2", 0.4)]
+        mod._surface_cache_put(key, results, pids)
+        entry = mod._surface_cache_get(key)
+        assert entry is not None
+        assert entry["results"] == results
+        assert [tuple(p) for p in entry["pids"]] == pids
+
+    def test_miss_on_unknown_key(self, tmp_path, monkeypatch):
+        self._use_tmp(tmp_path, monkeypatch)
+        mod._surface_cache_put(mod._surface_cache_key({"a"}), [], [])
+        assert mod._surface_cache_get("deadbeef") is None
+
+    def test_ttl_expiry(self, tmp_path, monkeypatch):
+        self._use_tmp(tmp_path, monkeypatch)
+        key = mod._surface_cache_key({"a"})
+        mod._surface_cache_put(key, [{"content": "x"}], [])
+        monkeypatch.setattr(mod, "SURFACE_CACHE_TTL", 0.0)
+        assert mod._surface_cache_get(key) is None  # expired → miss
+
+    def test_disabled_is_noop(self, tmp_path, monkeypatch):
+        self._use_tmp(tmp_path, monkeypatch)
+        monkeypatch.setattr(mod, "SURFACE_CACHE_ENABLED", False)
+        mod._surface_cache_put(mod._surface_cache_key({"a"}), [{"content": "x"}], [])
+        assert not (tmp_path / "sc.json").exists()
+        assert mod._surface_cache_get(mod._surface_cache_key({"a"})) is None
+
+    def test_fifo_cap(self, tmp_path, monkeypatch):
+        self._use_tmp(tmp_path, monkeypatch)
+        monkeypatch.setattr(mod, "SURFACE_CACHE_CAP", 3)
+        import time as _t
+
+        for i in range(6):
+            mod._surface_cache_put(f"k{i}", [{"content": str(i)}], [])
+            _t.sleep(0.001)  # distinct timestamps for FIFO ordering
+        data = json.loads((tmp_path / "sc.json").read_text(encoding="utf-8"))
+        assert len(data["entries"]) <= 3
+        assert "k0" not in data["entries"]  # oldest dropped
+
+
+class TestEmitStdoutCp1251:
+    """Regression: print() of Cyrillic on a cp1251 stdout pipe raised UnicodeEncodeError
+    and silently dropped the whole surfaced-memory injection. _emit_stdout writes UTF-8 bytes."""
+
+    def test_cyrillic_written_as_utf8(self, monkeypatch):
+        import io
+
+        class _FakeStdout:
+            def __init__(self):
+                self.buffer = io.BytesIO()
+
+        fake = _FakeStdout()
+        monkeypatch.setattr(mod.sys, "stdout", fake)
+        mod._emit_stdout("Привет [MEMORY] УправлениеТранспортом")
+        written = fake.buffer.getvalue()
+        assert written.decode("utf-8") == "Привет [MEMORY] УправлениеТранспортом\n"
