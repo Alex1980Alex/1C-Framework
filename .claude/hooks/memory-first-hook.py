@@ -467,6 +467,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
         from shared.semantic_search import embed_query_tei, search_qdrant_semantic
 
         embedding = embed_query_tei(query_text, timeout=1.5)
+        _trace_set("tei", "ok" if embedding else "no_embedding")
         if embedding:
             for collection, ctype in SEMANTIC_COLLECTIONS:
                 if time.monotonic() - start > QDRANT_TIMEOUT:
@@ -513,14 +514,19 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                             "conversation": "conversation",
                         }.get(ctype, "skill")
                         arms[arm_key].append(entry)
-    except Exception:
-        pass
+    except Exception as exc:
+        _trace_set("tei", "down")
+        _trace_set("tei_error", f"{type(exc).__name__}: {exc}"[:160])
 
     # §24 P1: lexical arm — ALWAYS-ON (not fallback), catches BSL exact-term/CamelCase
     arms["pattern_lexical"] = _search_learned_patterns(query_tokens, start, limit)
 
+    # Per-arm hit counts before fusion — shows which signals actually fired.
+    _trace_set("arms", {k: len(v) for k, v in arms.items()})
+
     # Client-side RRF merge: content-hash dedup, lexical weighted > dense for BSL
     fused = rrf_merge(arms, SURFACE_RRF_WEIGHTS, k=60)
+    _trace_set("rrf_fused", len(fused))
     return fused[:limit]
 
 
