@@ -50,7 +50,9 @@ logger = logging.getLogger("vector-memory")
 # Qdrant configuration — shared instance with PDF framework
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("LEARNING_COLLECTION_NAME", "learned_patterns")
-VECTOR_SIZE = 1024  # multilingual-e5-large (project standard)
+VECTOR_SIZE = int(
+    os.getenv("LEARNING_VECTOR_SIZE", "4096")
+)  # Qwen3-Embedding-8B (actual learned_patterns dim); was stale 1024 (multilingual-e5)
 DECAY_RATE = float(os.getenv("LEARNING_DECAY_RATE", "0.05"))
 MIN_CONFIDENCE = float(os.getenv("LEARNING_MIN_CONFIDENCE", "0.3"))
 
