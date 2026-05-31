@@ -742,6 +742,10 @@ async def handle_health_check(args: dict[str, Any]) -> list[TextContent]:
 
 async def main() -> None:
     logger.info("Starting Vector-Memory MCP Server...")
+    # §22/#2: stamp the lifecycle trace at process start so the log shows when the
+    # MCP code actually (re)loaded -- makes the "/mcp reconnect needed" caveat
+    # observable instead of silent. pid distinguishes pre/post-reconnect processes.
+    _log_lifecycle("server_start", pid=os.getpid(), collection=COLLECTION_NAME)
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
 
