@@ -252,8 +252,15 @@ def reinforce_session(
 
         patterns_dict: dict[str, str] = state["patterns"]
         if len(patterns_dict) > SENTINEL_CAP:
-            # Drop oldest by isoformat sort (oldest = smallest string)
-            sorted_pids = sorted(patterns_dict.keys(), key=lambda k: patterns_dict[k])
+            # Drop oldest by parsed datetime (robust against string-order edge cases).
+            # Unparseable timestamps are treated as oldest so they get evicted first.
+            def _parse_ts(v: str) -> datetime:
+                try:
+                    return datetime.fromisoformat(v)
+                except (ValueError, TypeError):
+                    return datetime.min
+
+            sorted_pids = sorted(patterns_dict.keys(), key=lambda k: _parse_ts(patterns_dict[k]))
             for old_pid in sorted_pids[: len(patterns_dict) - SENTINEL_CAP]:
                 del patterns_dict[old_pid]
         state["patterns"] = patterns_dict

@@ -288,58 +288,11 @@ def _extract_category(payload: dict, collection_type: str) -> str:
     return "pattern"
 
 
-def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
-    """Semantic search across 3 Qdrant collections via TEI Qwen3 embeddings.
-
-    Falls back to token overlap on learned_patterns if TEI is unavailable.
-    """
-    if os.environ.get("MEMORY_HOOK_NO_SEMANTIC") == "1":
-        return []
-    if not query_tokens:
-        return []
-
-    start = time.monotonic()
-    query_text = prompt or " ".join(query_tokens)
-
-    # Try semantic search first
-    try:
-        from shared.semantic_search import embed_query_tei, search_qdrant_semantic
-
-        embedding = embed_query_tei(query_text, timeout=1.5)
-        if embedding:
-            results = []
-            for collection, ctype in SEMANTIC_COLLECTIONS:
-                if time.monotonic() - start > QDRANT_TIMEOUT:
-                    break
-                remaining = QDRANT_TIMEOUT - (time.monotonic() - start)
-                hits = search_qdrant_semantic(
-                    collection,
-                    embedding,
-                    limit=5,
-                    timeout=max(0.2, remaining),
-                )
-                for hit in hits:
-                    payload = hit.get("payload", {})
-                    content = _extract_content(payload, ctype)
-                    if not content:
-                        continue
-                    results.append(
-                        {
-                            "source": "qdrant",
-                            "id": hit.get("id", ""),
-                            "content": content[:200],
-                            "category": _extract_category(payload, ctype),
-                            "score": round(hit.get("score", 0.0), 4),
-                        }
-                    )
-            if results:
-                results.sort(key=lambda x: -x["score"])
-                return results[:limit]
-    except Exception:
-        pass
-
-    # Fallback: token overlap on learned_patterns (no embedding needed)
-    results = []
+def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> list:
+    """Token-overlap surfacing of learned_patterns (no embedding). Runs ALWAYS
+    (not just on TEI-down) so P1 reinforcement sees surfaced patterns even when
+    TEI is healthy. Results tagged _collection='learned_patterns'. Fail-soft → []."""
+    out: list = []
     try:
         from qdrant_client import QdrantClient
 
@@ -365,7 +318,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                 continue
             score = len(overlap) / max(len(query_tokens), 1)
             if score >= SCORE_THRESHOLD:
-                results.append(
+                out.append(
                     {
                         "source": "qdrant",
                         "id": str(point.id),
@@ -376,10 +329,67 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                     }
                 )
 
-        results.sort(key=lambda x: -x["score"])
-        return results[:limit]
+        out.sort(key=lambda x: -x["score"])
+        return out[:limit]
     except Exception:
-        return results[:limit]
+        return out[:limit]
+
+
+def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
+    """Semantic search across 3 Qdrant collections via TEI Qwen3 embeddings.
+
+    learned_patterns are ALWAYS surfaced via token-overlap (no embedding) and
+    merged with semantic results — required for P1 reinforcement loop (#1 fix).
+    Previously learned_patterns were only surfaced in the TEI-down fallback branch,
+    making record_surfaced() a no-op in production.
+    Disable all searches: MEMORY_HOOK_NO_SEMANTIC=1.
+    """
+    if os.environ.get("MEMORY_HOOK_NO_SEMANTIC") == "1":
+        return []
+    if not query_tokens:
+        return []
+
+    start = time.monotonic()
+    query_text = prompt or " ".join(query_tokens)
+
+    semantic_results: list = []
+    try:
+        from shared.semantic_search import embed_query_tei, search_qdrant_semantic
+
+        embedding = embed_query_tei(query_text, timeout=1.5)
+        if embedding:
+            for collection, ctype in SEMANTIC_COLLECTIONS:
+                if time.monotonic() - start > QDRANT_TIMEOUT:
+                    break
+                remaining = QDRANT_TIMEOUT - (time.monotonic() - start)
+                hits = search_qdrant_semantic(
+                    collection,
+                    embedding,
+                    limit=5,
+                    timeout=max(0.2, remaining),
+                )
+                for hit in hits:
+                    payload = hit.get("payload", {})
+                    content = _extract_content(payload, ctype)
+                    if not content:
+                        continue
+                    semantic_results.append(
+                        {
+                            "source": "qdrant",
+                            "id": hit.get("id", ""),
+                            "content": content[:200],
+                            "category": _extract_category(payload, ctype),
+                            "score": round(hit.get("score", 0.0), 4),
+                        }
+                    )
+    except Exception:
+        pass
+
+    # ALWAYS surface learned_patterns (token-overlap) — required for P1 reinforcement (#1 fix)
+    pattern_results = _search_learned_patterns(query_tokens, start, limit)
+    combined = semantic_results + pattern_results
+    combined.sort(key=lambda x: -x["score"])
+    return combined[:limit]
 
 
 # ---------------------------------------------------------------------------

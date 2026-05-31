@@ -407,3 +407,87 @@ def test_stability_established_decays_slower() -> None:
     assert eff_established > eff_rookie  # established retained more confidence
     assert eff_established < 0.80        # both decayed somewhat
     assert eff_rookie < 0.80
+
+
+# ── §22 Fix #2: _pattern_to_payload round-trips expired_at ──────────────────
+
+
+@pytest.mark.unit
+def test_pattern_to_payload_expired_at_set() -> None:
+    """_pattern_to_payload must include expired_at when set on the model."""
+    from src.memory.vector_memory.models import LearnedPattern, PatternType
+    from src.memory.vector_memory.server import _pattern_to_payload
+
+    pattern = LearnedPattern(
+        pattern_id="test-id",
+        pattern_type=PatternType.WORKFLOW_PATTERN,
+        name="test",
+        description="",
+        content="test content",
+        confidence=0.70,
+        succ=0.0,
+        fail=0.0,
+        last_decay_at=t0,
+        expired_at=t0,
+    )
+    payload = _pattern_to_payload(pattern)
+    assert "expired_at" in payload
+    assert payload["expired_at"] == t0.isoformat()
+
+
+@pytest.mark.unit
+def test_pattern_to_payload_expired_at_none() -> None:
+    """_pattern_to_payload emits expired_at=None when unset."""
+    from src.memory.vector_memory.models import LearnedPattern, PatternType
+    from src.memory.vector_memory.server import _pattern_to_payload
+
+    pattern = LearnedPattern(
+        pattern_id="test-id-2",
+        pattern_type=PatternType.WORKFLOW_PATTERN,
+        name="test",
+        description="",
+        content="test content",
+        confidence=0.70,
+        succ=0.0,
+        fail=0.0,
+        last_decay_at=t0,
+        expired_at=None,
+    )
+    payload = _pattern_to_payload(pattern)
+    assert "expired_at" in payload
+    assert payload["expired_at"] is None
+
+
+# ── §22 Fix #3: should_archive recover/stay decision ────────────────────────
+
+
+@pytest.mark.unit
+def test_should_archive_recovered_fail_pattern_false() -> None:
+    """A pattern whose fail counts decayed back to zero is not archived.
+
+    Documents the un-archive condition: sweep sets expired_at=None when
+    should_archive transitions False on a previously-archived pattern.
+    """
+    # succ=5 fail=0 → eff=0.80, not stale (last_applied=t0, read at t0)
+    # → sweep would un-archive
+    payload = {
+        "succ": 5.0,
+        "fail": 0.0,
+        "last_applied": t0.isoformat(),
+        "expired_at": t0.isoformat(),  # was archived
+        "pattern_type": "workflow-pattern",
+    }
+    assert should_archive(payload, t0) is False
+
+
+@pytest.mark.unit
+def test_should_archive_still_failing_pattern_true() -> None:
+    """A pattern with heavy fail counts stays archived (should_archive=True)."""
+    payload = {
+        "succ": 0.0,
+        "fail": 20.0,
+        "last_applied": t0.isoformat(),
+        "expired_at": t0.isoformat(),
+        "pattern_type": "workflow-pattern",
+    }
+    assert should_archive(payload, t0) is True

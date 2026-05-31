@@ -257,6 +257,7 @@ def _pattern_to_payload(pattern: LearnedPattern) -> dict[str, Any]:
         "succ": pattern.succ,
         "fail": pattern.fail,
         "last_decay_at": pattern.last_decay_at.isoformat() if pattern.last_decay_at else None,
+        "expired_at": pattern.expired_at.isoformat() if pattern.expired_at else None,
         "decay_rate": pattern.decay_rate,
         "application_count": pattern.application_count,
         "version": pattern.version,
@@ -306,7 +307,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="apply_pattern",
-            description="Record pattern application and update confidence (success +0.02, failure -0.01).",
+            description="Record pattern application; updates confidence via decayed Beta(7,3) posterior (success/failure counts) and revives if archived.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -511,7 +512,7 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
             )
         ]
 
-    payload = points[0].payload
+    payload = points[0].payload or {}
     old_confidence = payload.get("confidence", 0.5)
 
     updates = apply_to_payload(payload, success, datetime.now())
@@ -584,6 +585,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
     client = _get_qdrant()
     decayed = 0
     archived = 0  # renamed from deleted — patterns are never hard-deleted here
+    revived = 0   # previously-archived patterns recovered by decay sweeping counts back above thresholds
 
     offset = None
     while True:
@@ -640,6 +642,10 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
 
             # Determine archival: merge post-decay fields over original payload and
             # evaluate should_archive (§22 P3 invalidate-not-delete).
+            # The sweep manages archival state in BOTH directions:
+            #   • should_archive=True  → set expired_at (archive)
+            #   • should_archive=False AND was archived → clear expired_at (un-archive)
+            #   • otherwise           → leave expired_at untouched
             candidate = {**payload, **set_fields}
             if should_archive(candidate, now):
                 set_fields["expired_at"] = now.isoformat()
@@ -649,7 +655,16 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
                     f"(type={payload.get('pattern_type', '?')}, "
                     f"conf={new_conf:.3f})"
                 )
-            # If not archiving, leave expired_at unchanged (only apply() revives).
+            elif payload.get("expired_at"):
+                # Pattern was archived but counts have decayed back above thresholds
+                # (e.g. fail-counts decayed → effective confidence recovered).
+                set_fields["expired_at"] = None
+                revived += 1
+                logger.debug(
+                    f"Un-archived pattern {point.id} "
+                    f"(type={payload.get('pattern_type', '?')}, "
+                    f"conf={new_conf:.3f})"
+                )
 
             client.set_payload(
                 collection_name=COLLECTION_NAME,
@@ -662,7 +677,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
             break
         offset = next_offset
 
-    logger.info(f"Decay complete: {decayed} decayed, {archived} archived")
+    logger.info(f"Decay complete: {decayed} decayed, {archived} archived, {revived} revived")
     return [
         TextContent(
             type="text",
@@ -671,6 +686,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
                     "success": True,
                     "decayed": decayed,
                     "archived": archived,
+                    "revived": revived,
                     "timestamp": datetime.now().isoformat(),
                 }
             ),
