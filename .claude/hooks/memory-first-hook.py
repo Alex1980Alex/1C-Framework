@@ -780,6 +780,10 @@ class MemoryFirstHook(BaseHook):
             LAYER_WEIGHTS,
         )[:MAX_RESULTS]
 
+        # §24 P2: optional LLM rerank of the final top-N (opt-in, skippable, bounded).
+        if merged:
+            merged = _rerank_results(prompt, merged, t0)
+
         duration_ms = (time.monotonic() - t0) * 1000
 
         if not merged:
