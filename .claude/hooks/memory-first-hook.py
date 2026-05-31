@@ -892,6 +892,10 @@ class MemoryFirstHook(BaseHook):
         if merged:
             merged = _rerank_results(prompt, merged, t0)
 
+        # §24 execution cache: store fused result + surfaced pattern ids (empty cached
+        # too → avoids re-running the pipeline for queries that yield nothing).
+        _surface_cache_put(cache_key, merged, pids)
+
         duration_ms = (time.monotonic() - t0) * 1000
 
         if not merged:
