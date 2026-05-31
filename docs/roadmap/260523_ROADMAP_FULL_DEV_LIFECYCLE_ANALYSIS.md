@@ -1487,6 +1487,14 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-31 (live-verify) — §22 проверен на реальном Qdrant + 2 операционные находки
+
+Live-прогон confidence-цикла против реального `learned_patterns` (44 pts, 4096d) с temp-fixture (создан/удалён).
+- **PASS на новом коде** (через `reinforce_pattern` — функция, что зовёт production Stop-хук): P0/P1 0.7273→0.75→0.7692→0.7857→**0.8000** за 5 успехов (точный Beta(7,3)); fail→0.75; P2 effective(90d idle)=0.7936<stored; P3 fail-heavy eff=0.2333→archive→reinforce→`expired_at=None` revive; P4 established(ac=100)=0.7918 > rookie(ac=2)=0.7856.
+- ⚠️ **Находка 1 (операционная):** running **vector-memory MCP-сервер исполняет СТАРЫЙ код** — MCP `apply_pattern` дал `0.72` (наивный +0.02), не Beta. Persistent stdio-процесс загружен ДО §22-правок. **Manual MCP-вызовы используют старую логику до `/mcp reconnect`.** НО авто-петля (hooks спавнятся свежим процессом на событие) — уже на новом коде. Действие оператора: reconnect vector-memory MCP.
+- ⚠️ **Находка 2 (fixed):** `server.py VECTOR_SIZE=1024` устарел — реальная коллекция 4096d (Qwen3). Латентный баг: auto-create создал бы 1024d коллекцию + `_hash_embed` fallback давал бы dim-mismatch на upsert. Исправлено → `int(os.getenv("LEARNING_VECTOR_SIZE","4096"))` + SKILL.md таблица 1024d→4096d.
+- ℹ️ `save_pattern`/`search_patterns` через MCP таймаутят (TEI down на :8080) — embedding-пути не проверены вживую (не §22-логика).
+
 ### 2026-05-31 (review) — §22 independent code-review → CRITICAL fix #1 + 5 findings (commit `2ffc6b863`)
 
 Adversarial code-review §22 P0-P4 (независимый субагент) вскрыл **CRITICAL #1**: learned_patterns surface'ились ТОЛЬКО в TEI-down fallback (semantic-путь делал ранний return) → `record_surfaced` всегда [] при живом TEI → **вся P1-петля была no-op в production** (замкнута лишь на бумаге; self-review P1 это пропустил — фокус был на оркестрации, не на источнике surfaced).
