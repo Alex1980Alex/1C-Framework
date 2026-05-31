@@ -2214,25 +2214,25 @@ Alert на production file
    - Store per pattern: `success_count S`, `failure_count F`, `last_applied`. Prior `(α₀,β₀)=(7,3)`.
    - On outcome (elapsed `Δt` дней, `λ=ln2/H`): `S ← S·e^(−λΔt); F ← F·e^(−λΔt)`; затем `S+=1` (success) / `F+=1` (fail).
    - `confidence = (7+S)/(10+S+F)` (cached в payload, derived). ⇒ **0.70 старт, ровно 0.80 после 5 чистых успехов, дрейф к 0.70 при простое** (decay усыхает S,F к prior).
-   - On read (lazy, без записи): `conf_effective = (7+S·d)/(10+(S+F)·d)`, `d=e^(−λ·Δsince_last_applied)`.
+   - On read (lazy, без записи): `conf_effective = (7+S·d)/(10+(S+F)·d)`, `d=e^(−λ·Δsince_last_applied)`. **NB:** счётчик-decay дрейфит `conf_eff` к **prior 0.70**, не к 0 — простой даёт только де-промоушен (ниже 0.8), не обнуление; ниже 0.40 возможно лишь накоплением фейлов (рост F).
 2. **Reinforcement trigger (success-signal)** — Stop-хук «surfaced→reward»:
    - [`memory-first-hook.py`](../../.claude/hooks/memory-first-hook.py) логирует surfaced `pattern_ids` в `.claude/cache/surfaced-patterns-<session>.json`.
    - [`session-memory-save.py`](../../.claude/hooks/session-memory-save.py) (Stop) перед `try_promote_patterns()` зовёт `apply_pattern(id, success=<heuristic>)`; **idempotent раз/сессия** (cooldown).
    - Success-эвристика: сессия без unresolved Bash-errors **И** (task completed **ИЛИ** commit made **ИЛИ** test passed) ⇒ `True`; иначе `False`/skip.
-3. **Forgetting (Graphiti-style, reversible):** `conf < 0.40` ≥N дней ⇒ `status: archived` (payload-flag, **не** delete), **neighbor-aware** (не архивировать, если linked pattern активен). Обратимо.
+3. **Forgetting (Graphiti-style, reversible):** т.к. счётчик-decay дрейфит confidence к prior **0.70** (не к 0), простой сам по себе даёт лишь де-промоушен, не архивацию. Архивация — по **staleness-сигналу**: `status: archived` если `last_applied > 180 дн` **И** `conf_eff < 0.75` **И** нет активных linked-паттернов (**neighbor-aware**). Доп.триггер: `conf_eff < 0.40` (достижим только накоплением фейлов). Payload-flag (**не** delete), обратимо (`un-archive`).
 
-Параметры по умолчанию: half-life **H=90 дней** (`λ≈0.0077/day`); archive-floor **0.40**. Sanity: conf 0.85 без apply 30 дней → `0.85·e^(−0.0077·30)=0.675` (ниже 0.8 за ~9 дней, ниже 0.40 за ~98 дней). **План Б:** [A] minimal-decay, если Beta-рефактор инвазивен к payload; [C] FSRS-lite как future enhancement.
+Параметры по умолчанию: half-life **H=90 дней** (`λ≈0.0077/day`); staleness-archival `last_applied>180д & conf_eff<0.75`; fail-archival floor `0.40`. Sanity (count-decay, `S=10,F=0`→conf 0.85): без apply 90 дн (`d=0.5`) ⇒ `conf_eff=(7+5)/(10+5)=0.80` (де-промоушен); →∞ ⇒ дрейф к prior **0.70** (НЕ к 0 — потому архивация по staleness, а не по «простому» decay). **План Б:** [A] minimal-decay, если Beta-рефактор инвазивен к payload; [C] FSRS-lite как future enhancement.
 
 ### §22.6 Implementation plan (phased)
 - **P0 — Confidence core [B]:** добавить `success_count`/`failure_count` в payload + `_pattern_to_payload`/`_pattern_from_payload`; переписать `handle_apply_pattern` на decayed-Beta; back-compat миграция (existing `confidence`+`application_count` → seed S,F). Regression-тест: `Beta(7,3)→0.7`, `+5→0.8`, `+5succ+1fail→0.75`.
 - **P1 — Reinforcement loop:** surfaced-log в `memory-first-hook`; reward-блок в `session-memory-save`; success-эвристика (парс transcript: unresolved errors + commit/test/task-complete); cooldown idempotency (`SESSION_MEMORY_NO_REWARD=1` opt-out).
 - **P2 — Lazy decay-on-read:** `conf_effective` в `handle_search_patterns`/`get_pattern` + в `WikiPromoter` фильтре (читать effective, не stored).
-- **P3 — Forgetting:** archive-флаг ниже floor, neighbor-aware, reversible un-archive; интеграция с `wiki_decay.py`.
+- **P3 — Forgetting:** archive по **staleness** (`last_applied>180д & conf_eff<0.75`) + fail-floor `0.40`, neighbor-aware, reversible un-archive; интеграция с `wiki_decay.py`.
 - **P4 (optional) — FSRS-lite stability** `S_days` + importance (LLM 1-10) modulation λ.
 
 ### §22.7 Acceptance criteria
 - [ ] Smoke end-to-end (по образцу [260514 §6](260514_ROADMAP_WIKI_PROMOTION_GAP.md)): N успешных сессий с surfaced паттерном ⇒ `confidence 0.7→≥0.8` ⇒ promote ⇒ `docs/wiki/drafts/<slug>.md` создан.
-- [ ] Unused pattern: после ~H/2 дней без apply ⇒ effective confidence <0.8 (verиф через lazy-read); <0.40 ⇒ archived.
+- [ ] Unused pattern: после ~45–90 дней без apply (зависит от накопленного S) ⇒ `conf_eff < 0.8` (де-промоушен, verиф lazy-read); после staleness-порога (`last_applied>180д` И `conf_eff<0.75`) ⇒ `archived`. **NB:** count-decay floors at prior 0.70 → архивация по staleness, НЕ по `conf<0.40`.
 - [ ] Failing pattern (`success=False ×k`) ⇒ confidence падает, не promotes.
 - [ ] O(1) на apply; нет обязательного cron; decay idempotent (lazy-read == N×tick).
 - [ ] Reversible: archived pattern восстановим.
