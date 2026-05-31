@@ -738,9 +738,10 @@ def _surface_log(outcome: str, t0: float, **extra: Any) -> None:
         except Exception:
             pass
 
-        # Buffered append (see lifecycle_log.py for the rationale): an os.open(
-        # O_APPEND) variant lost writes under win32 concurrent-open sharing
-        # violations, strictly worse than the accepted low-risk interleaving here.
+        # Buffered append (see lifecycle_log.py for the full rationale): per-call
+        # open() under heavy win32 concurrency can drop writes via the fail-soft
+        # guard, but the real per-prompt single-process workload makes that moot;
+        # an O_APPEND variant was strictly worse on win32.
         with open(SURFACE_LOG_FILE, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception:
