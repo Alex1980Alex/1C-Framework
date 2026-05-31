@@ -1079,6 +1079,7 @@ class MemoryFirstHook(BaseHook):
                 layer_counts=layer_counts,
                 duration_ms=duration_ms,
             )
+            _surface_log("no-results", t0, cache="miss")
             return None
 
         msg = format_federated_context(merged)
@@ -1094,6 +1095,7 @@ class MemoryFirstHook(BaseHook):
         # For UserPromptSubmit hooks, stdout is added as context Claude sees,
         # while `systemMessage` is a user-facing warning that Claude never reads.
         # See skill-router.py:502 for the same pattern.
+        _surface_log("injected", t0, cache="miss", merged_count=len(merged))
         _emit_stdout(msg)
         return None
 
