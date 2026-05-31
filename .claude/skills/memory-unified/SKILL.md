@@ -58,10 +58,16 @@ Examples:
 
 ### Confidence System (Vector Memory)
 
-- Range: 0.0-1.0
-- Application: success +0.02, failure -0.01
-- Decay: `confidence * exp(-0.05 * days/30)`
-- Threshold: patterns below 0.3 auto-deleted
+**Обновлено 2026-05-31 (§22 P0, commit `c8409e30b`):** confidence теперь **производный** от Beta(7,3) posterior над time-decayed счётчиками успехов/фейлов (раньше — наивный `+0.02/−0.01`). Чистые функции: [`src/memory/vector_memory/confidence.py`](../../../src/memory/vector_memory/confidence.py).
+
+- Range: 0.0-1.0; **prior Beta(7,3)** → стартовое значение **0.70**.
+- Формула (derived, денорм-кэш `confidence` для Qdrant-фильтра): `confidence = (7 + succ) / (10 + succ + fail)`.
+- Хранятся sufficient stats: `succ`, `fail` (float-счётчики), `last_decay_at`. Prior — read-time константа, не хранится. Без clamp (ratio ∈ (0,1)).
+- Application (`apply_pattern`): сначала decay счётчиков `succ,fail *= exp(−decay_rate·Δdays/30)` (floor <1e-6→0), затем `succ+=1` (success) / `fail+=1` (fail). 5 чистых успехов: 0.70 → **0.80**; +1 фейл → 0.75.
+- Decay (`decay_confidence`): затухают **счётчики**, confidence дрейфит к **prior 0.70** (НЕ к 0). Простой → де-промоушен, не обнуление.
+- Legacy-миграция (lazy, on-read): `succ=conf·n, fail=(1−conf)·n` (n=application_count); отсутствие полей → prior 0.70.
+- Threshold: `<0.3` auto-delete сохранён (но count-decay floors at 0.70 → срабатывает редко; staleness-архивация — §22 P3, ещё не реализована).
+- Полная стратегия (raise/decay/forgetting/enrichment) + research: roadmap §22 ([260523](../../../docs/roadmap/260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)).
 
 ## Key Files
 
