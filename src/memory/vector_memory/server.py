@@ -31,6 +31,7 @@ from .confidence import (
     payload_effective_confidence,
     seed_counts_from_legacy,
     should_archive,
+    stability_adjusted_rate,
 )
 from .models import (
     EvidenceSource,
@@ -608,7 +609,10 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
             if days_since < 1:
                 continue
 
-            decay_rate = payload.get("decay_rate", DECAY_RATE)
+            decay_rate = stability_adjusted_rate(
+                float(payload.get("decay_rate", DECAY_RATE)),
+                int(payload.get("application_count", 0)),
+            )
 
             # Resolve succ/fail — lazy migration for legacy points without the fields.
             raw_succ = payload.get("succ")

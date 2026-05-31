@@ -23,6 +23,7 @@ from src.memory.vector_memory.confidence import (
     payload_effective_confidence,
     seed_counts_from_legacy,
     should_archive,
+    stability_adjusted_rate,
 )
 from src.memory.vector_memory.reinforce import reinforce_pattern
 
@@ -155,7 +156,10 @@ def test_payload_effective_confidence_fresh() -> None:
 
 @pytest.mark.unit
 def test_payload_effective_confidence_decayed_90d() -> None:
-    """Same payload read 90 days later drifts toward prior (0.70 < eff < 0.80)."""
+    """Same payload read 90 days later drifts toward prior (0.70 < eff < 0.80).
+
+    §22 P4: stability_adjusted_rate is used because application_count=5 > 0.
+    """
     payload = {
         "succ": 5.0,
         "fail": 0.0,
@@ -164,7 +168,8 @@ def test_payload_effective_confidence_decayed_90d() -> None:
     }
     now_90 = t0 + timedelta(days=90)
     result = payload_effective_confidence(payload, now=now_90)
-    expected = effective_confidence(5.0, 0.0, last_decay_at=t0, now=now_90)
+    rate = stability_adjusted_rate(0.05, 5)
+    expected = effective_confidence(5.0, 0.0, last_decay_at=t0, now=now_90, decay_rate=rate)
     assert result > 0.70
     assert result < 0.80
     assert result == pytest.approx(expected)
@@ -360,3 +365,45 @@ def test_should_archive_fresh_never_applied_no() -> None:
     payload = {"succ": 1.0, "fail": 0.0, "created_at": t0.isoformat(),
                "pattern_type": "workflow-pattern"}
     assert should_archive(payload, t0) is False
+
+
+# ── §22 P4: FSRS-lite stability_adjusted_rate ────────────────────────────────
+
+
+@pytest.mark.unit
+def test_stability_adjusted_rate_zero_count() -> None:
+    """count=0 → rate unchanged (no history = no discount)."""
+    assert stability_adjusted_rate(0.05, 0) == pytest.approx(0.05)
+
+
+@pytest.mark.unit
+def test_stability_adjusted_rate_monotonic_decreasing() -> None:
+    """Higher application_count → strictly lower decay rate."""
+    r5 = stability_adjusted_rate(0.05, 5)
+    r50 = stability_adjusted_rate(0.05, 50)
+    assert r50 < r5 < 0.05
+
+
+@pytest.mark.unit
+def test_stability_established_decays_slower() -> None:
+    """Established pattern (high application_count) retains more confidence.
+
+    Core §22 P4 property: two payloads identical except application_count.
+    After 180 days the established one has higher effective confidence,
+    but both have decayed below 0.80 (neither is frozen).
+    """
+    base_payload = {
+        "succ": 5.0,
+        "fail": 0.0,
+        "last_decay_at": t0.isoformat(),
+    }
+    rookie = {**base_payload, "application_count": 2}
+    established = {**base_payload, "application_count": 100}
+    now_180 = t0 + timedelta(days=180)
+
+    eff_rookie = payload_effective_confidence(rookie, now=now_180)
+    eff_established = payload_effective_confidence(established, now=now_180)
+
+    assert eff_established > eff_rookie  # established retained more confidence
+    assert eff_established < 0.80        # both decayed somewhat
+    assert eff_rookie < 0.80

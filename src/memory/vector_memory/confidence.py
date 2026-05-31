@@ -21,6 +21,18 @@ DEFAULT_DECAY_RATE: float = 0.05
 # Floor below which a decayed count is treated as zero (avoids subnormals)
 COUNT_FLOOR: float = 1e-6
 
+# FSRS-lite stability modulation factor (§22 P4)
+STABILITY_K: float = 0.3
+
+
+def stability_adjusted_rate(base_rate: float, application_count: int) -> float:
+    """Use-modulated decay (FSRS-lite, §22 P4): more lifetime applications →
+    lower effective decay rate → established patterns decay slower.
+    application_count is monotonic (never decayed), so it's a stable
+    'establishedness' signal. rate = base / (1 + K·ln(1+count))."""
+    n = max(0, application_count)
+    return base_rate / (1.0 + STABILITY_K * math.log1p(n))
+
 
 def derive_confidence(succ: float, fail: float) -> float:
     """Return Beta(PRIOR_SUCCESS+succ, PRIOR_FAILURE+fail) posterior mean.
@@ -192,7 +204,9 @@ def _resolve_state(
             last_decay_at = datetime.fromisoformat(raw)
             break
 
-    decay_rate = float(payload.get("decay_rate", default_decay_rate))
+    base = float(payload.get("decay_rate", default_decay_rate))
+    app_count = int(payload.get("application_count", 0))
+    decay_rate = stability_adjusted_rate(base, app_count)
     return (succ, fail, last_decay_at, decay_rate)
 
 
