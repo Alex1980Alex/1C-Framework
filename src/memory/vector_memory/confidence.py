@@ -250,9 +250,13 @@ def should_archive(
     now = now or datetime.now()
     eff = payload_effective_confidence(payload, now)
 
-    # Resolve idle anchor: prefer last_applied, then last_decay_at, updated_at, created_at.
+    # Resolve idle anchor = time since last actual USE (or birth if never used).
+    # Use last_applied → created_at ONLY. Deliberately exclude last_decay_at /
+    # updated_at: those bookkeeping timestamps are bumped by the decay sweep and
+    # any write, so they are NOT "last used" signals — using them would make a
+    # never-applied pattern look perpetually fresh (idle=0) and evade staleness.
     anchor_raw: str | None = None
-    for key in ("last_applied", "last_decay_at", "updated_at", "created_at"):
+    for key in ("last_applied", "created_at"):
         val = payload.get(key)
         if val:
             anchor_raw = val

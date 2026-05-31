@@ -344,3 +344,19 @@ def test_apply_to_payload_revives_archived() -> None:
                "expired_at": t0.isoformat(), "application_count": 1}
     result = apply_to_payload(payload, True, t0)
     assert result["expired_at"] is None  # any apply un-archives
+
+
+def test_should_archive_never_applied_uses_created_at() -> None:
+    # No last_applied — idle measured from created_at (NOT decay bookkeeping).
+    # Weak pattern saved 200d ago, never used → stale → archive.
+    payload = {"succ": 1.0, "fail": 0.0, "created_at": t0.isoformat(),
+               "last_decay_at": (t0 + timedelta(days=199)).isoformat(),
+               "pattern_type": "workflow-pattern"}
+    # last_decay_at is recent (199d in) but must be IGNORED for idle → still stale
+    assert should_archive(payload, t0 + timedelta(days=200)) is True
+
+
+def test_should_archive_fresh_never_applied_no() -> None:
+    payload = {"succ": 1.0, "fail": 0.0, "created_at": t0.isoformat(),
+               "pattern_type": "workflow-pattern"}
+    assert should_archive(payload, t0) is False
