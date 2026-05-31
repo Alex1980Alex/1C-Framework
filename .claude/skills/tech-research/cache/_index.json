@@ -10,8 +10,25 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-17",
+  "last_updated": "2026-05-31",
   "topics": {
+    "confidence-decay-reputation-update-2026": {
+      "file": "confidence-decay-reputation-update-2026.md",
+      "domain": "ml",
+      "category": "pattern",
+      "created": "2026-05-31",
+      "last_verified": "2026-05-31",
+      "version": "Beta-Bernoulli / FSRS v4 / Generative Agents / Graphiti bi-temporal",
+      "keywords": [
+        "confidence-update", "beta-bernoulli", "thompson-sampling",
+        "wilson-score", "laplace-smoothing", "ewma", "exponential-decay",
+        "half-life", "forgetting-curve", "ebbinghaus", "sm-2", "fsrs",
+        "spaced-repetition", "half-life-regression", "reputation-system",
+        "memory-decay", "generative-agents", "graphiti", "bi-temporal",
+        "invalidate-not-delete", "mem0", "langmem", "reinforcement-signal",
+        "learned-patterns", "lazy-decay-on-read"
+      ]
+    },
     "mrl-cyrillic-content-alternatives-2026": {
       "file": "mrl-cyrillic-content-alternatives-2026.md",
       "domain": "tools",
