@@ -1487,6 +1487,15 @@ P3 — §15 cold-tier + remaining §14 (4-6 days)
 
 **Updated manually by Claude** после каждой phase completion / PR merge, **подкреплено автоматизацией** (§19.3 DONE 2026-05-29): Stop-хук `roadmap-progress-enforcer` напоминает, CI-lint `roadmap_progress_log.py` валидирует structure+freshness, `append` генерит skeleton. Reverse chronological. См. §19.
 
+### 2026-05-31 (deep-dive) — §22.9 NEW: implementation research (~20 repos) → ADR-D4 code-ready
+
+4 параллельных агента × **~20 GitHub repos** (source-level) → §22.9 per-phase final decisions. ADR-D4 подтверждён, ни одно ядро не отменено, уточнено до P0-кодинга:
+- **P0:** store `succ`/`fail`+`last_decay_at`, prior read-time const, no-clamp, lazy multiplicative decay (river/Jøsang/contextualbandits); migration `succ=conf·n`.
+- **P1:** hard signal (последний Bash exit==0 + commit/test/task; LLM-критик fallback), use-gated **graded** bump (не всем surfaced), sentinel idempotency detached-on-Stop (reflexion/OpenHands/generative_agents/Letta).
+- **P1b:** STORM `Information` schema + authority-weight table (official 1.0>repo 0.7>SO 0.2) + corroboration→confidence пороги + contradiction→pending (STORM/gpt-researcher/ground-truth).
+- **P2/P3/P4:** lazy-on-read confirmed (cron только для eviction); invalidate-not-delete via `expired_at` (queryable) + neighbor-gate + `active_days` (py-fsrs/anki/YourMemory/graphiti); FSRS power-curve **deferred**.
+- Net-deltas таблица §22.9.5; research закеширован в tech-research/cache.
+
 ### 2026-05-31 — §22 NEW: Confidence Lifecycle strategy (ADR-D4 accepted)
 
 Deep-research (hybrid task-evaluation: 3 параллельных web+GitHub агента) → новый раздел **§22** с выбранной стратегией авто-роста/авто-затухания `confidence` L2-паттернов. Закрывает корневой gap за §21.2 / [260514](260514_ROADMAP_WIKI_PROMOTION_GAP.md): `apply_pattern` никем не вызывается → confidence заморожен на 0.7 → drafts/ пуст.
@@ -2262,3 +2271,65 @@ Alert на production file
 - Enrichment infra (reuse): [`prework-github-bp.py`](../../.claude/hooks/prework-github-bp.py), [`prework-stackoverflow.py`](../../.claude/hooks/prework-stackoverflow.py), skills [[1c-doc-research]] (its.1c.ru/Infostart, 8.3.27 первоисточник) / [[tech-research]] (GitHub/SO) / [[learning-loop]] FETCH.
 - Memory: создать `feedback_confidence_lifecycle` после P0 prod-observation.
 - Sources: evanmiller.org (Wilson) · Wikipedia (Beta/Laplace/EWMA) · open-spaced-repetition/fsrs4anki (FSRS) · duolingo/halflife-regression (HLR) · joonspk-research/generative_agents (recency·importance·relevance, decay 0.995) · getzep/graphiti (bi-temporal) · sachitrafa/YourMemory (strength formula) · mem0ai/mem0 + LangMem + letta-ai/letta.
+
+---
+
+## §22.9 Implementation Deep-Dive — GitHub best-practices per phase (research 2026-05-31)
+
+> Углублённое имплементационное исследование к ADR-D4: 4 параллельных агента, **~20 репозиториев** проанализированы на уровне исходников (файлы/функции). Где выводы **расходятся** с эскизом P0-P4 (§22.5-22.6) — **этот раздел авторитетнее** (refinement). Каждый факт с repo-ссылкой.
+
+### §22.9.1 P0 Confidence core — FINAL
+**Консенсус 7 repo (river/contextualbandits/openskill/trueskill/Jøsang BRS/mem0/graphiti): хранить sufficient statistics, НЕ производный score.**
+- **Payload (refines §22.5 слой 1):** `succ: float` (decayed S), `fail: float` (decayed F), `last_decay_at: iso` (temporal anchor, graphiti-style), `confidence: float` — **денормализованный кэш, пересчёт на write, ТОЛЬКО для Qdrant Range-фильтра**, `application_count: int` (analytics+migration), `decay_rate` (keep). Prior (7,3) — **read-time константа, НЕ хранится** ([contextualbandits](https://github.com/david-cortes/contextualbandits/blob/master/contextualbandits/utils.py): prior складывается при use).
+- **Update (lazy multiplicative decay, river EWMean / Jøsang λ recurrence):**
+  ```
+  d = exp(−decay_rate · days_since(last_decay_at)/30)
+  succ *= d; fail *= d            # floor <1e-6 → 0 (GC + убирает float-drift)
+  succ += 1 if success else 0; fail += 0 if success else 1
+  confidence = (7+succ)/(10+succ+fail)   # ∈(0,1) — clamp НЕ нужен (ratio неотрицательных)
+  ```
+- **Migration** (legacy `confidence`+`application_count` → S,F): `succ=conf·n, fail=(1−conf)·n` (n=application_count); n=0 ⇒ succ=fail=0 ⇒ conf=prior 0.70. Отсутствие полей ⇒ default 0 ⇒ 0.70 (back-compat). Поля аддитивны (column-append).
+- **Optional hardening (openskill ordinal):** для ранжирования — lower-confidence-bound `conf − k/√(10+S+F)`, чтобы 1-success не обгонял 50-success при равном ratio.
+- Repos: [river beta.py/ewmean.py](https://github.com/online-ml/river/blob/main/river/proba/beta.py) · [contextualbandits](https://github.com/david-cortes/contextualbandits) · [openskill ordinal.ts](https://github.com/philihp/openskill.js/blob/main/src/ordinal.ts) · [trueskill](https://github.com/sublee/trueskill) · [Jøsang BRS](https://people.cs.vt.edu/~irchen/5984/pdf/Josang-BECC02.pdf).
+
+### §22.9.2 P1 Reinforcement — FINAL
+**Hard programmatic signal > LLM-критик (reflexion/OpenHands/crewAI консенсус).**
+- **Success-эвристика (auto-detect из уже собираемых данных):** `session_success = no_unresolved_errors AND (commit OR test_passed OR task_done)`:
+  - `no_unresolved_errors`: **последний** релевантный Bash `tool_use` имеет `exit_code==0` (поздний успех перекрывает ранний фейл — reflexion `is_passing` early-exit); парсить `tool_use`, не raw-text.
+  - completion marker: успешный `git commit` ИЛИ pytest/YaXUnit/`run-1c-tests` pass ИЛИ TaskUpdate=completed.
+  - negative gate: нет trailing traceback/`npm ERR!`/`fatal:` после последнего успеха (reuse `posttooluse-stackoverflow-on-error.py` сигнатуры).
+  - LLM-критик (Voyager/crewAI) — **fallback** для доменов без hard-сигнала; у нас сигнал есть → не нужен.
+- **Attribution (НЕ весь surfaced-набор — generative_agents use-gating):** reinforce паттерн только если `surfaced AND score≥0.35 (prework cutoff) AND реально accessed`. Кредит — **малый graded bump** (existing `+0.02`, crewAI-style), не hard +1; распределить по qualifying-набору (опц. вес по surface-score).
+- **Idempotency (Letta cadence + generative_agents reset-counter + project sentinel):** 1 reward-проход/сессия — sentinel `.claude/cache/p1-reinforcement-state.json` по `session_id` (atomic `os.replace`, FIFO cap 500); dedup per `(session_id, pattern_id)`; cross-session cooldown per pattern (≤1/N часов). **detached subprocess на Stop** (как `post-merge-revert-stop.py`), fail-soft, opt-out `P1_REINFORCE_DISABLE=1`, не блокирует Stop.
+- Repos: [reflexion](https://github.com/noahshinn/reflexion) · [Voyager critic.py](https://github.com/MineDojo/Voyager/blob/main/voyager/agents/critic.py) · [generative_agents retrieve.py](https://github.com/joonspk-research/generative_agents) · [crewAI task_evaluator.py](https://github.com/crewAIInc/crewAI) · [letta sleeptime](https://github.com/letta-ai/letta) · OpenHands.
+
+### §22.9.3 P1b Ingestion enrichment — FINAL
+- **Evidence schema (STORM `Information` + llama_index numbered citations):** `{url, source_type, title, quote, date, query, authority_weight, citation_n, stance, content_hash}`. dedup-хеш = `md5(url, sorted(snippets), meta)` — НЕ только URL (один SO-пост поддерживает разные claim'ы) ([STORM interface.py](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/interface.py)).
+- **Authority-вес (official>repo>SO; 1C-aware):** `official_doc`(its.1c.ru/python.org)=1.0 · `high_star_repo`(>1k★)=0.7 · `infostart`(rated)=0.6 · `repo`=0.4 · `so_answer`(accepted)=0.4 · `blog`/single-SO=0.2.
+- **Corroboration→confidence (weighted independent sources, ground-truth «≥3 источника»):** `support=Σ weight[supporting]`, `conflict=Σ weight[conflicting]`:
+  - `support≥1.0 & conflict==0` → HIGH, `confidence += 0.15` · `0.4≤support<1.0 & conflict==0` → MEDIUM, `+= 0.05`
+  - `support>conflict & conflict>0` → **contested → `pending`** (confidence без изменений) · `conflict≥support` → likely-false → `−= 0.10`, `pending` · нет источников → no change (absence ≠ contradiction).
+- **Contradiction→pending (2 дешёвых детектора):** stance-split (supporting И conflicting одновременно) ИЛИ uncited-claim (LLM обязан `[N]`; claim без citable-источника → pending) — reuse STORM «validate `\[(\d+)\]`, drop dangling».
+- **Async/cache-first:** detached job (capture возвращается сразу, `status=pending` пока не дообогатится); **cache-first probe** `architecture-research/cache/`+Qdrant ДО web (reuse `prework-github-bp`/`prework-similar-code`); `asyncio.gather` fan-out + per-source timeout; dedup URL-set→MD5→опц. MinHashLSH(0.8); write-back в cache.
+- Repos: [STORM](https://github.com/stanford-oval/storm) · [gpt-researcher](https://github.com/assafelovic/gpt-researcher) · [llama_index CitationQueryEngine](https://github.com/run-llama/llama_index) · [datasketch](https://github.com/ekzhu/datasketch) · [cross-validated-search](https://github.com/wd041216-bit/cross-validated-search) · [ground-truth](https://github.com/TECHKNOWMAD-LABS/ground-truth).
+
+### §22.9.4 P2/P3/P4 Decay / Forgetting / Stability — FINAL
+- **P2 lazy-on-read — CONFIRMED, cron отвергнут для scoring** (py-fsrs/anki/YourMemory/cachetools/diskcache единогласно: хранят anchor `last_*`+stats, R/strength считают на чтении). `conf_eff` считать из stored `last_applied,S,F`. Cron — **только** для eviction-action (YourMemory `decay_job`/diskcache `_cull`). Touch-on-read: bump `last_applied`/`application_count` в том же write (diskcache `access_time` pattern).
+- **P3 invalidate-not-delete + neighbor-gate (Graphiti+YourMemory, НЕ hard delete):** добавить `expired_at` (system-time); archive = `expired_at=now()`, строку НЕ удалять и **НЕ фильтровать неявно** из выдачи (staleness-фильтр opt-in — [graphiti search_filters.py](https://github.com/getzep/graphiti/blob/main/graphiti_core/search/search_filters.py)). Revive = clear `expired_at` + `last_applied=now` + `application_count+=1`. Neighbor-gate перед archive ([YourMemory chain_safe_to_prune](https://github.com/sachitrafa/YourMemory/blob/main/src/graph/graph_store.py)). _Refines §22.5 слой 3: `status:archived` → поле `expired_at` (queryable), не вырезание._
+- **active_days (skip-idle, YourMemory):** `Δ = COUNT(distinct active calendar days BETWEEN last_applied AND today)`, idempotent daily `INSERT OR IGNORE` activity-log, wall-clock fallback. Чтобы простой фреймворка (dormant repos/отпуск) не штрафовал confidence. Самый переиспользуемый кусок для P2.
+- **P4 FSRS power-curve — DEFER (second-order).** `(1+FACTOR·t/S)^DECAY` лучше `e^(−λt)` ТОЛЬКО в паре с растущей stability `S` ([py-fsrs `_next_recall_stability`](https://github.com/open-spaced-repetition/py-fsrs/blob/main/fsrs/scheduler.py#L788)). Наши `S/F` в `conf_eff` уже дают stability-подобный эффект. Высший ROI P4 — use-modulated λ (YourMemory `λ_eff=λ·(1−importance·0.8)`). Полный FSRS — только если eval покажет, что confident-but-stale затухают слишком резко.
+- Repos: [py-fsrs](https://github.com/open-spaced-repetition/py-fsrs) · [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) · [anki memory_state.rs](https://github.com/ankitects/anki) · [YourMemory decay.py](https://github.com/sachitrafa/YourMemory) · [graphiti edges.py](https://github.com/getzep/graphiti) · [cachetools](https://github.com/tkem/cachetools) · [diskcache](https://github.com/grantjenks/python-diskcache).
+
+### §22.9.5 Net deltas к ADR-D4 (что уточнилось → готово к P0-кодингу)
+
+| Этап | Было (§22.5-22.6 эскиз) | Стало (§22.9 final, repo-backed) |
+|---|---|---|
+| P0 payload | `success_count`/`failure_count` | + `last_decay_at` anchor + `confidence` денорм (Qdrant filter only); prior = read-time const; **без clamp** |
+| P0 decay | в `handle_apply_pattern` | lazy multiplicative `succ*=e^(−rate·Δ/30)` + floor 1e-6 (river/Jøsang) |
+| P1 signal | «no errors + commit/test/task» | + «последний Bash exit==0 перекрывает ранний фейл»; LLM-критик = fallback |
+| P1 bump | всем surfaced | только `surfaced & score≥0.35 & accessed`; **graded**, не binary |
+| P3 archive | `status:archived` flag | поле `expired_at` (Graphiti), queryable, не вырезать; `active_days` для Δ |
+| P1b confidence | «corroboration→сигнал» | weighted authority-table + пороги (HIGH +0.15 … likely-false −0.10) |
+| P4 | FSRS-lite optional | **defer**; use-modulated λ — выше ROI |
+
+**Verdict:** ADR-D4 подтверждён — ни одно ядро-решение не отменено, всё уточнено до уровня «готово к P0» с repo-прецедентами. Reuse-note §22.6 в силе: `pattern_saver`/`forgetgate_service`/prework-воркеры покрывают бо́льшую часть — §22 = wiring + наполнение по этим спецификациям. Research закеширован в `tech-research/cache` (см. §22.8).
