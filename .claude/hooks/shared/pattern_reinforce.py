@@ -293,6 +293,15 @@ def reinforce_session(
         except Exception:  # noqa: BLE001
             pass
 
+        _log_lifecycle(
+            "session",
+            session_id=session_id[:8],
+            success=success,
+            applied=applied,
+            skipped=skipped,
+            errors=errors,
+            candidates=len(candidates),
+        )
         return {
             "status": "ok",
             "session_id": session_id,
@@ -303,4 +312,9 @@ def reinforce_session(
         }
 
     except Exception as exc:  # noqa: BLE001
+        _log_lifecycle(
+            "session_error",
+            session_id=session_id[:8],
+            error=f"{type(exc).__name__}: {exc}"[:160],
+        )
         return {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
