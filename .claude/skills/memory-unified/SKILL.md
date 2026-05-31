@@ -77,6 +77,7 @@ Examples:
 - Orchestrator: `src/memory/orchestrator/` (unified_id, link_registry, unified_search)
 - AI Memory: `src/memory/ai_memory/server.py` (5 MCP tools)
 - Vector Memory: `src/memory/vector_memory/server.py` (7 MCP tools)
+- Confidence epoch (§24): `src/memory/vector_memory/epoch.py` — `bump()`/`read()` маркер мутаций confidence/archive в `.claude/cache/confidence-epoch.txt`; вшит в `memory-first-hook` cache_key для мгновенной инвалидации surfacing-кеша без Qdrant-roundtrip. Бампается из `reinforce.py:reinforce_pattern` + server.py `handle_apply_pattern`/`decay_confidence`/`save_pattern`/`delete_pattern` (MCP-side → нужен `/mcp reconnect`)
 - Skill Learning: `src/memory/skill_learning/server.py` (7 MCP tools)
 - Tests: `tests/integration/test_memory_unified.py` (26 tests)
 - MCP config: `.mcp.json` (4 servers registered)
