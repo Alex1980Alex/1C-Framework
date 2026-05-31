@@ -707,7 +707,10 @@ def _surface_log(outcome: str, t0: float, **extra: Any) -> None:
         record.update(extra)
 
         SURFACE_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        # Naive size-based rotation: keep the tail half, drop the partial head line.
+        # Size-based rotation: keep the tail half, drop the partial head line.
+        # Atomic (tmp + os.replace) so a hard-kill mid-rotation can't truncate the
+        # log; consistent with _surface_cache_put. The new record is appended AFTER
+        # rotation, so it's never the one at risk.
         try:
             if (
                 SURFACE_LOG_FILE.exists()
@@ -717,7 +720,21 @@ def _surface_log(outcome: str, t0: float, **extra: Any) -> None:
                 nl = data.find(b"\n")
                 if nl != -1:
                     data = data[nl + 1:]
-                SURFACE_LOG_FILE.write_bytes(data)
+                import tempfile
+
+                fd, tmp = tempfile.mkstemp(
+                    dir=str(SURFACE_LOG_FILE.parent), suffix=".tmp", prefix="surflog-"
+                )
+                try:
+                    with os.fdopen(fd, "wb") as fh:
+                        fh.write(data)
+                    os.replace(tmp, str(SURFACE_LOG_FILE))
+                except Exception:
+                    try:
+                        os.unlink(tmp)
+                    except OSError:
+                        pass
+                    raise
         except Exception:
             pass
 
