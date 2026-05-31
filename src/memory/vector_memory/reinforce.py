@@ -70,6 +70,9 @@ def reinforce_pattern(
             with_payload=True,
         )
         if not points:
+            _log_lifecycle(
+                "reinforce_miss", pattern_id=pattern_id, success=success, reason="not_found"
+            )
             return {
                 "success": False,
                 "error": "pattern not found",
