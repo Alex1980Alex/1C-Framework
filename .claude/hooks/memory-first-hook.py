@@ -859,14 +859,13 @@ class MemoryFirstHook(BaseHook):
             if time.monotonic() < deadline
             else []
         )
+        pids = [
+            (r["id"], r["score"]) for r in qdrant_results
+            if r.get("_collection") == "learned_patterns" and r.get("id")
+        ]
         try:
             from shared.pattern_reinforce import record_surfaced
-            _sid = inp.session_id or ""
-            record_surfaced(
-                _sid,
-                [(r["id"], r["score"]) for r in qdrant_results
-                 if r.get("_collection") == "learned_patterns" and r.get("id")],
-            )
+            record_surfaced(inp.session_id or "", pids)
         except Exception:
             pass
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
