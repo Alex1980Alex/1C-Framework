@@ -34,6 +34,16 @@ from .confidence import (
     stability_adjusted_rate,
 )
 from .epoch import bump as _bump_epoch  # §24: surfacing-cache invalidation signal
+
+
+def _log_lifecycle(event: str, **fields: Any) -> None:
+    """Fail-soft §22 lifecycle trace; never breaks an MCP handler."""
+    try:
+        from .lifecycle_log import log_event
+
+        log_event(event, **fields)
+    except Exception:  # noqa: BLE001
+        pass
 from .models import (
     EvidenceSource,
     LearnedPattern,
