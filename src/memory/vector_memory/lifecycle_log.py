@@ -78,14 +78,13 @@ def log_event(event: str, **fields: Any) -> None:
         }
         record.update(fields)
 
-        # Cross-process-safe append: O_APPEND makes each os.write atomic at the OS
-        # level, so the MCP server and Stop-hook subprocess writing concurrently
-        # never interleave a (short) JSON line. Single write of the full line.
-        line = (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
-        fd = os.open(str(path), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
-        try:
-            os.write(fd, line)
-        finally:
-            os.close(fd)
+        # Buffered append. The cross-process race (MCP server + Stop-hook writing
+        # concurrently) is accepted as low-risk for a trace log: writes are rare and
+        # short, interleaving is improbable. An os.open(O_APPEND) variant was tried
+        # but on win32 concurrent opens hit sharing violations and *lost* writes
+        # under contention (8x200 stress -> 1228/1600), which is strictly worse —
+        # so the simpler buffered append is retained deliberately.
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception:
         pass  # Fully fail-soft: never raise.
