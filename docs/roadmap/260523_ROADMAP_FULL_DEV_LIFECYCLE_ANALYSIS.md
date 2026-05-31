@@ -2480,3 +2480,14 @@ Research **уточнил** исходное предложение (#1+#2 на�
 - [ ] learned_patterns всплывают **семантически** (парафраз-запрос без word-overlap находит паттерн) при живом TEI; token-overlap — при TEI-down.
 - [ ] `effective_confidence` влияет на ранг (высокодостоверный обгоняет low-conf при близкой relevance); conf<0.15 не всплывает; archived не всплывает (без флага).
 - [ ] RRF k=60, lexical-вес>dense; TEI-down → lexical-only (no crash). Unit + live recall на golden-наборе паттернов.
+
+## §25 Memory Effectiveness Metrics & Self-Tuning (PLANNED, 2026-06-01)
+
+> **Статус:** PLANNED (дизайн готов). Полная дорожная карта — [`260601_ROADMAP_MEMORY_EFFECTIVENESS.md`](260601_ROADMAP_MEMORY_EFFECTIVENESS.md).
+
+Закрывает пробел, выявленный после §22/§24: глава 27 имеет операционные метрики (`MetricsCollector`) и само-коррекцию доверия (§22 Beta-lifecycle), но **нет метрик качества surfacing, анализатора логов и авто-тюнинга параметров** (RRF-веса, gating-пороги, TTL — статические константы). Петля «измеряю → анализирую → чиню» разомкнута на этапе анализа; данные (`memory-first-surfacing.log` + `confidence-lifecycle.log`) уже собираются.
+
+- **Часть A (read-only):** `analyze_memory_effectiveness.py` + Stop-хук (образец `post-indexing-analyzer.py`) → отчёт `data/reports/memory/` (hit-rate, no-results, gate-drops, arm-contribution, tei-down, confidence-drift, latency, NDCG@k) + rule-based рекомендации.
+- **Часть B (self-tuning):** offline sweep + gated promotion (AutoRAG-style) над весами/порогами/TTL; golden-set-gated, dry-run by default, auto-rollback, audited. B3 future: online-MAB (AutoRAG-HP). B0 prerequisite: golden-set memory-queries.
+- **Research (live 2026-06-01):** AutoRAG, AutoRAG-HP (MAB, Recall@5≈0.8 @ ~20% cost), mem0, MemMachine (retrieval-stage > ingestion), WRRF, contextual-bandit memory-retrieval — полные цитаты в дочернем файле §8.
+- **Фазы:** A0 (вынос констант в `surfacing_tuning.json`) → A1/A2 (analyzer) → B0 (golden-set) → B1/B2 (sweep + gated promotion) → B3 (online-MAB, future).
