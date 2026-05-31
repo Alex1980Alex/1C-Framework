@@ -1495,6 +1495,10 @@ Live-прогон confidence-цикла против реального `learned
 - ⚠️ **Находка 2 (fixed):** `server.py VECTOR_SIZE=1024` устарел — реальная коллекция 4096d (Qwen3). Латентный баг: auto-create создал бы 1024d коллекцию + `_hash_embed` fallback давал бы dim-mismatch на upsert. Исправлено → `int(os.getenv("LEARNING_VECTOR_SIZE","4096"))` + SKILL.md таблица 1024d→4096d.
 - ℹ️ `save_pattern`/`search_patterns` через MCP таймаутят (TEI down на :8080) — embedding-пути не проверены вживую (не §22-логика).
 
+### 2026-05-31 (impl) — §24 P2 optional Ollama rerank DONE (off-by-default)
+
+`_rerank_results(query, results, t0)` в `memory-first-hook.py` — post-fusion LLM reorder финального top-N (Ollama `qwen2.5-coder:7b`, зеркалит проверенный BSL `_llm_rerank`: numbered prompt → CSV-индексы → reorder, omitted дописываются без drop). **Latency-конфликт подтверждён эмпирически:** ~2.5s warm / **~6.5s cold** > hot-path `TOTAL_BUDGET=3.0s` и 5s hard-kill → **OFF by default** (`MEMORY_RERANK=1` opt-in; enable требует `settings.json` timeout ≥10s + warm Ollama). httpx read-timeout best-effort (Ollama держит соединение при model-load) → in-band budget-guard (`<0.8s slack → skip`) минимизирует, но не исключает overshoot — потому default OFF. Skippable: любой fail/timeout/no-budget/<3 кандидатов → fused-порядок (verified 6/6: OFF identity, warm reorder `3,1`, bad-endpoint fallback, min-guard, no-budget guard, E2E rc=0). **§24 ПОЛНОСТЬЮ ЗАКРЫТ (P0+P1+P2).**
+
 ### 2026-05-31 (impl) — §24 P1 hybrid RRF DONE + §22 P3 side-fix (commit `74a4aa761`)
 
 `search_qdrant` true hybrid: arms-dict `{skill,experience,conversation,pattern_dense,pattern_lexical}` → **client-side RRF k=60** (reuse существующего `rrf_merge`), веса `SURFACE_RRF_WEIGHTS` lexical 0.7/dense 0.3 (BSL dense-collapse). token-overlap `_search_learned_patterns` теперь **ALWAYS-ON** lexical-арка (не fallback) → паттерн в обеих арках fuses (boost). TEI-down → dense пусто, lexical-only (graceful). **Side-fix DONE:** §22 P3 `handle_search_patterns` archived `×0.5 → hard-exclude` (opt `MEMORY_INCLUDE_ARCHIVED=1`). Verify: 127 unit-тестов (+3 P1: always-on-lexical spy, RRF-boost both>single, TEI-down lexical-only); CI baseline new=0; mypy/ruff clean. **§24 core (P0+P1) DONE; opt rerank (P2 Ollama) deferred.**
@@ -2457,12 +2461,12 @@ Research **уточнил** исходное предложение (#1+#2 на�
    - **soft в ранге:** `final = rrf_score × max(CONF_FLOOR, effective_confidence)`, `CONF_FLOOR≈0.3` (floored-multiply — gating «relevant AND trusted» = `P(rel)·P(good)`, но new-pattern с prior 0.70 не давится; discredited→0.1 сильно подавлен). Альтернатива (mainstream additive) — план Б.
 4. **Archived hard-exclude (рефайн §22 P3):** `expired_at` set → **исключить из default surfacing** (вместо ×0.5); опц. `MEMORY_INCLUDE_ARCHIVED=1`. Staleness сама уводит conf к floor → hard min-filter отсекает органично.
 5. **TEI-down graceful:** каждое плечо в try/except + timeout; dense падает → lexical-only RRF; rerank недоступен → fused-order. Никогда не ломать surfacing.
-6. **Optional rerank** (P2): после RRF top-N → Ollama qwen2.5-coder → top-k; skippable.
+6. **Optional rerank** (P2, ✅ DONE): после RRF top-N → Ollama qwen2.5-coder → reorder; **OFF by default** (latency: ~2.5s warm/~6.5s cold > hot-path budget), skippable → fused-order.
 
 ### §24.3 План
 - **P0:** ✅ **DONE 2026-05-31 (commit `6906210c9`)** — semantic surfacing + `_pattern_score_gate` (hard floor + floored-multiply) + archived hard-exclude + TEI-down fallback + dedup; 77 тестов + live-проба. (`_extract_content` уже handle'ил `pattern` ctype через default.) Исходный план: semantic surfacing + confidence-gating + archived hard-exclude в `memory-first-hook.search_qdrant`.
 - **P1:** ✅ **DONE (`74a4aa761`)** — client-side RRF k=60 (`SURFACE_RRF_WEIGHTS` lexical 0.7/dense 0.3) мёрж semantic⊕lexical (always-on) + TEI-down lexical-only.
-- **P2 (optional):** post-fusion Ollama rerank — **deferred**.
+- **P2 (optional):** ✅ **DONE 2026-05-31** — `_rerank_results()` post-fusion LLM rerank (Ollama `qwen2.5-coder:7b`, паттерн зеркалит BSL `_llm_rerank`): numbered prompt → CSV-индексы → reorder финального top-N. **OFF by default** (`MEMORY_RERANK=1`): эмпирически ~2.5s warm / **~6.5s cold** — hot-path budget (3s) и 5s hard-kill хука не покрывают → enable требует поднять `settings.json` timeout ≥10s. Skippable: fail/timeout/no-budget → fused-порядок (httpx read-timeout best-effort — Ollama держит соединение при загрузке модели). Omitted-кандидаты дописываются (no silent drop). Verify 6/6: OFF identity, warm reorder correct (`3,1` для pytest-parametrize query), bad-endpoint fallback, <MIN_CANDIDATES guard, no-budget guard, E2E hook OFF/ON rc=0.
 - **Side-fix:** ✅ **DONE (`74a4aa761`)** — §22 P3 `handle_search_patterns` ×0.5 archived → hard-exclude (`MEMORY_INCLUDE_ARCHIVED=1` opt); `memory-first` уже hard-exclude (P0).
 
 ### §24.4 Acceptance
