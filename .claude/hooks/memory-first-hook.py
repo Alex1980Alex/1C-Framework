@@ -1049,6 +1049,8 @@ class MemoryFirstHook(BaseHook):
             "md": len(md_results),
             "wiki": len(wiki_results),
         }
+        _trace_set("layers", layer_counts)
+        _trace_set("reinforced_pids", len(pids))
 
         merged = rrf_merge(
             {
