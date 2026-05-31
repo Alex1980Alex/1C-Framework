@@ -679,9 +679,23 @@ def _surface_cache_put(key: str, results: list[Any], pids: list[Any]) -> None:
             for old in ordered[: len(entries) - SURFACE_CACHE_CAP]:
                 entries.pop(old, None)
         data["entries"] = entries
-        tmp = SURFACE_CACHE_FILE.with_suffix(".tmp")
-        tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp, SURFACE_CACHE_FILE)
+        # Per-process temp (mkstemp) so concurrent hook processes can't clobber each
+        # other's in-flight write; os.replace is atomic on the same filesystem.
+        import tempfile
+
+        fd, tmp_name = tempfile.mkstemp(
+            dir=str(SURFACE_CACHE_FILE.parent), suffix=".tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(json.dumps(data, ensure_ascii=False))
+            os.replace(tmp_name, SURFACE_CACHE_FILE)
+        except Exception:
+            try:
+                os.unlink(tmp_name)
+            except Exception:
+                pass
+            raise
     except Exception:
         pass
 
