@@ -2208,7 +2208,7 @@ Alert на production file
 
 ### §22.5 Recommendation / ADR-D4 (accepted 2026-05-31)
 
-**Выбран: [B] decayed Beta(7,3) как ядро + [E] invalidate-not-delete + [D] importance/decay-class (core, НЕ optional — иначе редкие-но-вечные правила архивируются за ~180д).** Четыре слоя:
+**Выбран: [B] decayed Beta(7,3) как ядро + [E] invalidate-not-delete + [D] importance/decay-class (core, НЕ optional — иначе редкие-но-вечные правила архивируются за ~180д).** Пять слоёв:
 
 1. **Confidence formula (raise+lower в одном):**
    - Store per pattern: `success_count S`, `failure_count F`, `last_applied`. Prior `(α₀,β₀)=(7,3)`.
@@ -2226,6 +2226,12 @@ Alert на production file
      - `volatile`/heuristic (версии API, текущие структуры; importance 1-4) ⇒ нормальный `λ` (H=90д).
    - **Archived ≠ невидим:** archived-паттерны **остаются в семантическом retrieval** (fallback-ярус, вес ×0.5), не вырезаются. Рецидив задачи (даже через год) ⇒ паттерн всплывает ⇒ `apply_pattern(success)` ⇒ `last_applied` reset + `S+=1` + авто-`un-archive` ⇒ **revive**. Один `apply` оживляет.
    - Never-failed (`F=0`) промоутнутый паттерн при простое уходит в `dormant` (низкий ранг), но hard-archive только если staleness И нет семантической релевантности к недавним запросам.
+5. **Ingestion enrichment — web-sourced evidence (cache-first, attributed):** при capture кандидат обогащается внешним поиском, маршрутизация по `pattern_type`/домену:
+   - **1C** (`bsl-pattern`) → its.1c.ru (docs 8.3.27 = первоисточник) + **Infostart** (infostart.ru), по протоколу [[1c-doc-research]] — каждый факт с атрибуцией.
+   - **General** (`code-convention`/`workflow-pattern`/`debugging-heuristic`/`architectural-principle`) → **GitHub** (high-star repos / best-practices) + **Stack Overflow**, по [[tech-research]].
+   - **Reuse, НЕ новый веб-слой:** готовые [`prework-github-bp.py`](../../.claude/hooks/prework-github-bp.py) + [`prework-stackoverflow.py`](../../.claude/hooks/prework-stackoverflow.py) + их cache-first кэши + learning-loop FETCH.
+   - Найденное → `evidence_sources` (URL + дата + цитата; поле уже в схеме). **Corroboration = сигнал, не истина:** авторитет (its.1c.ru 8.3.27 / high-star GitHub / accepted SO) ⇒ initial confidence ↑ + кандидат в `decay_class=invariant`; одиночный/старый источник ⇒ слабый сигнал (confidence не поднимать); **противоречие источников** ⇒ `pending`-flag для ревью, НЕ auto-save.
+   - **Cost-control (обязательно):** enrichment **async/background** (НЕ в hot-path хука — иначе ломает 3-5s бюджет), throttle + cache-first (TTL как в prework); offline (источник недоступен) ⇒ graceful skip, паттерн сохраняется без enrichment.
 
 Параметры по умолчанию: half-life **H=90 дней** (`λ≈0.0077/day`); staleness-archival `last_applied>180д & conf_eff<0.75`; fail-archival floor `0.40`. Sanity (count-decay, `S=10,F=0`→conf 0.85): без apply 90 дн (`d=0.5`) ⇒ `conf_eff=(7+5)/(10+5)=0.80` (де-промоушен); →∞ ⇒ дрейф к prior **0.70** (НЕ к 0 — потому архивация по staleness, а не по «простому» decay). **План Б:** [A] minimal-decay, если Beta-рефактор инвазивен к payload; [C] FSRS-lite как future enhancement.
 
@@ -2235,6 +2241,7 @@ Alert на production file
 
 - **P0 — Confidence core [B]:** добавить `success_count`/`failure_count` в payload + `_pattern_to_payload`/`_pattern_from_payload`; переписать `handle_apply_pattern` на decayed-Beta; back-compat миграция (existing `confidence`+`application_count` → seed S,F). Regression-тест: `Beta(7,3)→0.7`, `+5→0.8`, `+5succ+1fail→0.75`. **Single-source:** decayed-Beta живёт в одном месте; и `handle_apply_pattern` (vector_memory), и `PatternSaver.record_success/failure` (infra, наполнить стабы) делегируют к нему — без двух расходящихся реализаций.
 - **P1 — Reinforcement loop + decay-class:** surfaced-log в `memory-first-hook`; reward-блок в `session-memory-save`; success-эвристика (парс transcript: unresolved errors + commit/test/task-complete); cooldown idempotency (`SESSION_MEMORY_NO_REWARD=1` opt-out). **+ decay-class/importance классификация при `save_pattern`** (LLM 1-10 poignancy → `invariant`|`volatile`, modulates `λ_eff` — поднято из P4 в core: без него редкие-но-вечные правила архивируются за ~180д). **Reuse:** auto-capture (закрыть ingestion-разрыв) через готовые `PatternSaver.extract_patterns_from_code()` + `PatternMatcher.find_matching_patterns()` (дедуп, similarity 0.85); reward-хук зовёт `record_success/failure` (наполненные в P0). decay-class маппится из существующего `pattern_type` (`architectural-principle`/`bsl-pattern`→invariant, `workflow`/`debugging-heuristic`→volatile).
+- **P1b — Ingestion enrichment (web, async):** при capture обогащать кандидат — `bsl-pattern`→its.1c.ru/Infostart ([[1c-doc-research]]), прочее→GitHub/SO (reuse [`prework-github-bp`](../../.claude/hooks/prework-github-bp.py)/[`prework-stackoverflow`](../../.claude/hooks/prework-stackoverflow.py) + кэши); attach attributed `evidence_sources`; corroboration→confidence/decay-class сигнал; противоречие→`pending`. Async/cache-first вне hot-path; graceful offline-skip.
 - **P2 — Lazy decay-on-read:** `conf_effective` в `handle_search_patterns`/`get_pattern` + в `WikiPromoter` фильтре (читать effective, не stored).
 - **P3 — Forgetting + revive:** archive по **staleness** (`last_applied>180д & conf_eff<0.75 & decay_class≠invariant`) + fail-floor `0.40`, neighbor-aware, reversible un-archive; **revive-on-recurrence** (archived остаются в retrieval ×0.5, `apply` → auto-un-archive); **reuse `forgetgate_service.py`** (готовые strategies `CONFIDENCE_DECAY`/`ACCESS_BASED`/`COMPOSITE` + actions `ARCHIVE`/`DECAY`/`KEEP`) + `wiki_decay.py` — decay/archive не переизобретать, только подключить триггер + добавить `decay_class≠invariant` гейт.
 - **P4 (optional) — FSRS-lite stability** `S_days` (established паттерны затухают ещё медленнее; importance-modulation уже в core P1).
@@ -2244,6 +2251,7 @@ Alert на production file
 - [ ] Unused pattern: после ~45–90 дней без apply (зависит от накопленного S) ⇒ `conf_eff < 0.8` (де-промоушен, verиф lazy-read); после staleness-порога (`last_applied>180д` И `conf_eff<0.75`) ⇒ `archived`. **NB:** count-decay floors at prior 0.70 → архивация по staleness, НЕ по `conf<0.40`.
 - [ ] **One-off invariant** (`decay_class=invariant`, importance≈1.0, как БСП-печать): 1 год простоя ⇒ `λ_eff≈0` ⇒ **НЕ** archived (conf держится ~0.8); fallback — если archived, рецидив задачи через год ⇒ паттерн всплывает в retrieval (×0.5) ⇒ `apply` ⇒ auto-un-archive (revive).
 - [ ] Failing pattern (`success=False ×k`) ⇒ confidence падает, не promotes; invariant инвалидируется только так (или по противоречию), НЕ по времени.
+- [ ] **Enriched capture:** новый `bsl-pattern` ⇒ `evidence_sources` содержит its.1c.ru/Infostart URL (attributed); general ⇒ GitHub/SO; противоречивый/одиночный источник ⇒ `pending` (не auto-save, не поднимает confidence); enrichment **async** (capture в hook-бюджете); offline ⇒ паттерн сохранён без enrichment (graceful).
 - [ ] O(1) на apply; нет обязательного cron; decay idempotent (lazy-read == N×tick).
 - [ ] Reversible: archived pattern восстановим.
 - [ ] code-verify PASS (behavior-preservation на хендлерах + bug-fix-validation на success-heuristic).
@@ -2251,5 +2259,6 @@ Alert на production file
 ### §22.8 Related
 - §21.2 (Layer 4 wiki / L5 stub), §7.1 (4-layer recall), [260514 Wiki Promotion Gap](260514_ROADMAP_WIKI_PROMOTION_GAP.md).
 - Code: [`vector_memory/server.py:437`](../../src/memory/vector_memory/server.py) (handle_apply_pattern), `:331` (save_pattern), [`librarian/wiki_promoter.py`](../../src/memory/librarian/wiki_promoter.py) (thresholds), [`librarian/wiki_decay.py`](../../src/memory/librarian/wiki_decay.py), [`memory-first-hook.py`](../../.claude/hooks/memory-first-hook.py), [`session-memory-save.py`](../../.claude/hooks/session-memory-save.py).
+- Enrichment infra (reuse): [`prework-github-bp.py`](../../.claude/hooks/prework-github-bp.py), [`prework-stackoverflow.py`](../../.claude/hooks/prework-stackoverflow.py), skills [[1c-doc-research]] (its.1c.ru/Infostart, 8.3.27 первоисточник) / [[tech-research]] (GitHub/SO) / [[learning-loop]] FETCH.
 - Memory: создать `feedback_confidence_lifecycle` после P0 prod-observation.
 - Sources: evanmiller.org (Wilson) · Wikipedia (Beta/Laplace/EWMA) · open-spaced-repetition/fsrs4anki (FSRS) · duolingo/halflife-regression (HLR) · joonspk-research/generative_agents (recency·importance·relevance, decay 0.995) · getzep/graphiti (bi-temporal) · sachitrafa/YourMemory (strength formula) · mem0ai/mem0 + LangMem + letta-ai/letta.
