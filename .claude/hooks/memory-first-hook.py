@@ -608,6 +608,58 @@ def rrf_merge(layers: dict, weights: dict, k: int = 60) -> list:
     return merged
 
 
+def _surface_cache_key(query_tokens: set) -> str:
+    """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases)."""
+    return hashlib.sha256(
+        " ".join(sorted(query_tokens)).encode("utf-8", errors="replace")
+    ).hexdigest()[:32]
+
+
+def _surface_cache_get(key: str) -> dict | None:
+    """Return a fresh (within-TTL) cache entry for ``key``, else None. Fail-soft."""
+    if not SURFACE_CACHE_ENABLED:
+        return None
+    try:
+        if not SURFACE_CACHE_FILE.exists():
+            return None
+        data = json.loads(SURFACE_CACHE_FILE.read_text(encoding="utf-8"))
+        entry = (data.get("entries") or {}).get(key)
+        if not entry:
+            return None
+        if (time.time() - float(entry.get("ts", 0))) >= SURFACE_CACHE_TTL:
+            return None  # expired → treat as miss (lazy; overwritten on next put)
+        return entry
+    except Exception:
+        return None
+
+
+def _surface_cache_put(key: str, results: list, pids: list) -> None:
+    """Store the fused surfacing result + surfaced pattern ids. Atomic, FIFO-capped, fail-soft."""
+    if not SURFACE_CACHE_ENABLED:
+        return
+    try:
+        SURFACE_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        data: dict = {}
+        if SURFACE_CACHE_FILE.exists():
+            try:
+                data = json.loads(SURFACE_CACHE_FILE.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        entries = data.get("entries") or {}
+        entries[key] = {"ts": time.time(), "results": results, "pids": pids}
+        # FIFO cap: drop oldest by timestamp when over capacity.
+        if len(entries) > SURFACE_CACHE_CAP:
+            ordered = sorted(entries, key=lambda k: entries[k].get("ts", 0))
+            for old in ordered[: len(entries) - SURFACE_CACHE_CAP]:
+                entries.pop(old, None)
+        data["entries"] = entries
+        tmp = SURFACE_CACHE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, SURFACE_CACHE_FILE)
+    except Exception:
+        pass
+
+
 def _rerank_results(query_text: str, results: list, t0: float) -> list:
     """§24 P2 ADR-D6: optional LLM rerank of the post-fusion result list.
 
