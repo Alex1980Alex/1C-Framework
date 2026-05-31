@@ -93,6 +93,20 @@ MD_TIMEOUT = 0.500
 WIKI_TIMEOUT = 0.200
 TOTAL_BUDGET = 3.0  # Hook timeout 5s, budget 3s (TEI faster than Ollama)
 
+# §24 P2 ADR-D6 — optional post-fusion LLM rerank (Ollama qwen2.5-coder).
+# OFF by default: a 7b LLM rerank costs ~1.5s, which the hot-path UserPromptSubmit
+# budget (TOTAL_BUDGET=3.0s) cannot absorb. Enable only when precision > latency
+# and the hook timeout in settings.json is raised accordingly. Any failure/timeout
+# degrades silently to the RRF-fused order (skippable — §24.2.6 "rerank after fusion").
+RERANK_ENABLED = os.environ.get("MEMORY_RERANK") == "1"
+RERANK_MODEL = os.environ.get("MEMORY_RERANK_MODEL", "qwen2.5-coder:7b")
+RERANK_ENDPOINT = os.environ.get(
+    "MEMORY_RERANK_ENDPOINT", "http://localhost:11434/api/generate"
+)
+RERANK_MIN_CANDIDATES = 3   # below this nothing to reorder meaningfully
+RERANK_HARD_TIMEOUT = 5.0   # mirror settings.json hook timeout (hard-kill ceiling)
+RERANK_SAFETY = 0.5         # margin before hard-kill so the hook still emits
+
 # Russian suffix stemming (29 suffixes, ordered by length desc)
 _RU_SUFFIXES_3 = [
     "ами",
