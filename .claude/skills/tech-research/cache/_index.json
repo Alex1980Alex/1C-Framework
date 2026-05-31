@@ -10,7 +10,7 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-05-31",
+  "last_updated": "2026-06-01",
   "topics": {
     "memory-surfacing-ranking-2026": {
       "file": "memory-surfacing-ranking-2026.md",
@@ -21,10 +21,19 @@
       "version": "RRF Cormack2009 / generative_agents / mem0 / crewAI / Qdrant hybrid",
       "summary": "Ранжирование памяти для LLM-контекста (§24 ADR-D6): composite additive/RRF (НЕ multiply), hybrid RRF k=60, confidence-gating (hard floor + floored-multiply), archived hard-exclude, TEI-down lexical fallback. ~11 repos source-level.",
       "keywords": [
-        "memory-surfacing", "retrieval-ranking", "rrf", "reciprocal-rank-fusion",
-        "hybrid-retrieval", "confidence-weighted-retrieval", "composite-score",
-        "recency-importance-relevance", "time-weighted-retriever",
-        "min-score-filter", "archived-exclude", "rank-fusion", "bm25-dense-fusion"
+        "memory-surfacing",
+        "retrieval-ranking",
+        "rrf",
+        "reciprocal-rank-fusion",
+        "hybrid-retrieval",
+        "confidence-weighted-retrieval",
+        "composite-score",
+        "recency-importance-relevance",
+        "time-weighted-retriever",
+        "min-score-filter",
+        "archived-exclude",
+        "rank-fusion",
+        "bm25-dense-fusion"
       ]
     },
     "confidence-lifecycle-implementation-2026": {
@@ -36,11 +45,21 @@
       "version": "commits c8409e30b..d7cf92ad7 (P0-P4 + review-fixes + live-verify)",
       "summary": "§22 confidence lifecycle build record: file/function map, P0-P4 outcomes, review findings+fixes, live-verify, operational gotchas (MCP-stale→reconnect, cold-start, VECTOR_SIZE 4096, TEI dep).",
       "keywords": [
-        "confidence-lifecycle", "decayed-beta", "reinforcement-loop",
-        "lazy-decay-on-read", "invalidate-not-delete", "fsrs-lite",
-        "learned-patterns", "reinforce-pattern", "pattern-reinforce",
-        "expired-at", "should-archive", "effective-confidence",
-        "mcp-stale-code", "confidence-implementation", "p0-p4-build"
+        "confidence-lifecycle",
+        "decayed-beta",
+        "reinforcement-loop",
+        "lazy-decay-on-read",
+        "invalidate-not-delete",
+        "fsrs-lite",
+        "learned-patterns",
+        "reinforce-pattern",
+        "pattern-reinforce",
+        "expired-at",
+        "should-archive",
+        "effective-confidence",
+        "mcp-stale-code",
+        "confidence-implementation",
+        "p0-p4-build"
       ]
     },
     "confidence-lifecycle-impl-github-2026": {
@@ -51,16 +70,28 @@
       "last_verified": "2026-05-31",
       "version": "river / contextualbandits / FSRS-6 / Graphiti / STORM / Voyager / Reflexion",
       "keywords": [
-        "confidence-lifecycle-impl", "online-confidence-scoring",
-        "beta-posterior-payload", "sufficient-statistics-storage",
-        "success-signal-detection", "reinforcement-loop-agent",
-        "exit-code-success-heuristic", "use-gated-reinforcement",
-        "sentinel-idempotency", "evidence-attribution-schema",
-        "storm-information-citation", "corroboration-confidence",
-        "authority-weighting-sources", "contradiction-pending",
-        "lazy-decay-on-read", "fsrs-stability", "invalidate-not-delete",
-        "expired-at-queryable", "neighbor-aware-prune", "active-days-skip-idle",
-        "minhash-lsh-dedup", "learned-patterns"
+        "confidence-lifecycle-impl",
+        "online-confidence-scoring",
+        "beta-posterior-payload",
+        "sufficient-statistics-storage",
+        "success-signal-detection",
+        "reinforcement-loop-agent",
+        "exit-code-success-heuristic",
+        "use-gated-reinforcement",
+        "sentinel-idempotency",
+        "evidence-attribution-schema",
+        "storm-information-citation",
+        "corroboration-confidence",
+        "authority-weighting-sources",
+        "contradiction-pending",
+        "lazy-decay-on-read",
+        "fsrs-stability",
+        "invalidate-not-delete",
+        "expired-at-queryable",
+        "neighbor-aware-prune",
+        "active-days-skip-idle",
+        "minhash-lsh-dedup",
+        "learned-patterns"
       ]
     },
     "confidence-decay-reputation-update-2026": {
@@ -71,13 +102,31 @@
       "last_verified": "2026-05-31",
       "version": "Beta-Bernoulli / FSRS v4 / Generative Agents / Graphiti bi-temporal",
       "keywords": [
-        "confidence-update", "beta-bernoulli", "thompson-sampling",
-        "wilson-score", "laplace-smoothing", "ewma", "exponential-decay",
-        "half-life", "forgetting-curve", "ebbinghaus", "sm-2", "fsrs",
-        "spaced-repetition", "half-life-regression", "reputation-system",
-        "memory-decay", "generative-agents", "graphiti", "bi-temporal",
-        "invalidate-not-delete", "mem0", "langmem", "reinforcement-signal",
-        "learned-patterns", "lazy-decay-on-read"
+        "confidence-update",
+        "beta-bernoulli",
+        "thompson-sampling",
+        "wilson-score",
+        "laplace-smoothing",
+        "ewma",
+        "exponential-decay",
+        "half-life",
+        "forgetting-curve",
+        "ebbinghaus",
+        "sm-2",
+        "fsrs",
+        "spaced-repetition",
+        "half-life-regression",
+        "reputation-system",
+        "memory-decay",
+        "generative-agents",
+        "graphiti",
+        "bi-temporal",
+        "invalidate-not-delete",
+        "mem0",
+        "langmem",
+        "reinforcement-signal",
+        "learned-patterns",
+        "lazy-decay-on-read"
       ]
     },
     "mrl-cyrillic-content-alternatives-2026": {
@@ -88,10 +137,19 @@
       "last_verified": "2026-05-17",
       "version": "Qwen3-Embedding-8B, Qdrant 1.17+, qdrant-client 1.13+",
       "keywords": [
-        "mrl", "matryoshka", "cyrillic", "bsl", "product-quantization",
-        "scalar-quantization", "fine-tuning", "dimension-reduction",
-        "qdrant-quantization", "code-embeddings", "bge-m3",
-        "qwen3-embedding", "voyage"
+        "mrl",
+        "matryoshka",
+        "cyrillic",
+        "bsl",
+        "product-quantization",
+        "scalar-quantization",
+        "fine-tuning",
+        "dimension-reduction",
+        "qdrant-quantization",
+        "code-embeddings",
+        "bge-m3",
+        "qwen3-embedding",
+        "voyage"
       ]
     },
     "multi-vector-detection-and-failure-gates-2026": {
@@ -414,6 +472,33 @@
         "PostToolUse",
         "tool_response",
         "dual-registration"
+      ]
+    },
+    "memory-effectiveness-self-tuning": {
+      "file": "memory-effectiveness-self-tuning.md",
+      "domain": "rag",
+      "category": "pattern",
+      "created": "2026-06-01",
+      "last_verified": "2026-06-01",
+      "version": "AutoRAG / AutoRAG-HP MAB / mem0 / MemMachine / WRRF",
+      "summary": "Memory/retrieval effectiveness metrics + self-tuning (roadmap 25): retrieval F1/recall/NDCG/MRR, mem0/MemMachine KPI, offline sweep (AutoRAG) vs online MAB (AutoRAG-HP Recall@5~0.8 @ ~20% cost), WRRF adaptive weights, gated promotion, NDCG over bare recall.",
+      "keywords": [
+        "retrieval evaluation",
+        "self-tuning",
+        "autorag",
+        "autorag-hp",
+        "multi-armed bandit",
+        "rrf weights",
+        "ndcg",
+        "recall",
+        "mem0",
+        "memmachine",
+        "memory metrics",
+        "feedback loop",
+        "hit-rate",
+        "drift detection",
+        "gated promotion",
+        "offline sweep"
       ]
     }
   }
