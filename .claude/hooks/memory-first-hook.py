@@ -109,6 +109,7 @@ RERANK_ENDPOINT = os.environ.get(
 RERANK_MIN_CANDIDATES = 3   # below this nothing to reorder meaningfully
 RERANK_HARD_TIMEOUT = 5.0   # mirror settings.json hook timeout (hard-kill ceiling)
 RERANK_SAFETY = 0.5         # margin before hard-kill so the hook still emits
+_RERANK_TIMEOUT_WARNED = False  # one-shot stderr warning guard (env/timeout desync)
 
 # Russian suffix stemming (29 suffixes, ordered by length desc)
 _RU_SUFFIXES_3 = [
