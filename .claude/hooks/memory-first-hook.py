@@ -67,6 +67,16 @@ SURFACE_CACHE_ENABLED = os.environ.get("MEMORY_SURFACE_CACHE_DISABLE") != "1"
 SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "300"))  # 5 min
 SURFACE_CACHE_CAP = 200  # max distinct query hashes retained (FIFO by timestamp)
 
+# §24.4 acceptance "логирование всех процессов" — structured per-invocation trace.
+# The whole pipeline is fail-soft (except: pass everywhere) and stdout is reserved
+# for the context injection, so failures are otherwise invisible. We accumulate a
+# single JSONL record per invocation covering every stage (cache/epoch/TEI/arms/
+# gating/RRF/rerank/reinforce/outcome/timing) → queryable post-mortem of why a
+# pattern did or didn't surface. Default ON (cheap append); opt-out below.
+SURFACE_LOG_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing.log"
+SURFACE_LOG_ENABLED = os.environ.get("MEMORY_SURFACE_LOG_DISABLE") != "1"
+SURFACE_LOG_CAP_BYTES = 2_000_000  # ~2MB; tail-truncated when exceeded
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
