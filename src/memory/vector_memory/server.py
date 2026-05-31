@@ -575,6 +575,7 @@ async def handle_delete_pattern(args: dict[str, Any]) -> list[TextContent]:
     client = _get_qdrant()
     pattern_id = args["pattern_id"]
     client.delete(collection_name=COLLECTION_NAME, points_selector=[pattern_id])
+    _bump_epoch()  # §24: pattern removed -> invalidate surfacing cache
     logger.info(f"Deleted pattern {pattern_id}")
     return [TextContent(type="text", text=json.dumps({"success": True, "pattern_id": pattern_id}))]
 
