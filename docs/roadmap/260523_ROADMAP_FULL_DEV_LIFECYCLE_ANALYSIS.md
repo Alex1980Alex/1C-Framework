@@ -1495,6 +1495,10 @@ Live-прогон confidence-цикла против реального `learned
 - ⚠️ **Находка 2 (fixed):** `server.py VECTOR_SIZE=1024` устарел — реальная коллекция 4096d (Qwen3). Латентный баг: auto-create создал бы 1024d коллекцию + `_hash_embed` fallback давал бы dim-mismatch на upsert. Исправлено → `int(os.getenv("LEARNING_VECTOR_SIZE","4096"))` + SKILL.md таблица 1024d→4096d.
 - ℹ️ `save_pattern`/`search_patterns` через MCP таймаутят (TEI down на :8080) — embedding-пути не проверены вживую (не §22-логика).
 
+### 2026-05-31 (research) — §24 NEW: memory-surfacing quality (ADR-D6, ~11 repos)
+
+Deep-research (3 агента, ~11 GitHub repos source-level) по ранжированию surfaced learned_patterns. **Уточнил** наивное предложение (`score *= effective_confidence`): production primary-rankers — **additive/RRF, НЕ multiply** ([generative_agents] weighted-sum+minmax, [mem0] additive, [crewAI] 0.5·sim+0.3·decay+0.2·imp, [YourMemory] явно отвергает `cosine×strength` для ранжирования). **ADR-D6:** (1) semantic surfacing — learned_patterns→`SEMANTIC_COLLECTIONS` (эмбеддинги уже TEI 4096d, reindex не нужен); (2) hybrid **RRF k=60** (Cormack; lexical 0.7/dense 0.3 для BSL-collapse; client-side, т.к. Qdrant native k=2); (3) confidence-gating — hard floor (<0.15 drop) + floored-multiply `×max(0.3,conf)` (не raw); (4) **archived hard-exclude** (рефайнит §22 P3 search ×0.5 — research: invalidated EXCLUDE, не downweight); (5) TEI-down → lexical-only fallback; (6) opt rerank (Ollama). **Главное:** §22 confidence сейчас НЕ применяется к surfacing (только MCP-search) — §24 замыкает. План P0-P2 в §24.3. Реализация по запросу.
+
 ### 2026-05-31 (review) — §22 independent code-review → CRITICAL fix #1 + 5 findings (commit `2ffc6b863`)
 
 Adversarial code-review §22 P0-P4 (независимый субагент) вскрыл **CRITICAL #1**: learned_patterns surface'ились ТОЛЬКО в TEI-down fallback (semantic-путь делал ранний return) → `record_surfaced` всегда [] при живом TEI → **вся P1-петля была no-op в production** (замкнута лишь на бумаге; self-review P1 это пропустил — фокус был на оркестрации, не на источнике surfaced).
@@ -2417,3 +2421,43 @@ Alert на production file
 - [ ] Содержательная сессия (commit + research) ⇒ `data/lifecycle/*.md` с секциями по присутствующим этапам + строка в `_index.jsonl`. Trivial-сессия ⇒ no-op.
 - [ ] Идемпотентно (повторный Stop того же session → не дублирует). Fail-soft (битый transcript → no crash). Opt-out работает.
 - [ ] Не пишет в `tech-research/cache`. Unit-тесты на extractor; smoke на hook.
+
+---
+
+## §24 Memory Surfacing Quality — semantic + confidence-weighted + hybrid (ADR-D6, 2026-05-31)
+
+> Проблема (verified live): `memory-first-hook` всплывает learned_patterns грубым **token-overlap** (`len(overlap)/len(query)`), хотя эмбеддинги — настоящие TEI 4096d (semantic возможен, но learned_patterns не в `SEMANTIC_COLLECTIONS`). **И §22 `effective_confidence` НЕ применяется к surfacing** (используется только в MCP `handle_search_patterns`) → достоверность не влияет на то, что инжектится в контекст. Цель: semantic recall + confidence-weighting + hybrid robustness. Research: 3 агента, ~11 GitHub repos source-level.
+
+### §24.1 Research summary (cited)
+**(I) Composite ranking — production rankers ADDITIVE/RRF, НЕ multiply.**
+- [generative_agents](https://github.com/joonspk-research/generative_agents): `gw=[0.5,3,2]`·(recency,relevance,importance), **min-max нормализация каждого → weighted sum** (НЕ α=1 как в paper — это идеализация).
+- [mem0 scoring.py](https://github.com/mem0ai/mem0/blob/main/mem0/utils/scoring.py): `semantic+bm25+entity_boost`, adaptive `/max_possible` норм; recency — отдельный multiplicative boost.
+- [crewAI types.py](https://github.com/crewAIInc/crewAI): `0.5·sim+0.3·decay+0.2·importance`, half-life `0.5^(age/30)`.
+- [LangChain TimeWeighted](https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain_classic/retrievers/time_weighted_retriever.py): `(1−rate)^hrs + Σmeta + sim` (additive, last_accessed reset on read).
+- ⚠ [YourMemory retrieve.py](https://github.com/sachitrafa/YourMemory): **явно отвергает `cosine×strength` для ранжирования** («multiplying cosine by strength causes old-but-valid memories to rank below newer-but-irrelevant — wrong; decay handles staleness via pruning, not ranking») → strength только для lifecycle/pruning. **Это рефайнит мой наивный `score *= confidence`.**
+
+**(II) Hybrid + RRF.** Rank-based **RRF `1/(k+rank)`, k=60** (Cormack SIGIR2009; [LangChain](https://github.com/langchain-ai/langchain) `EnsembleRetriever c=60`, [LlamaIndex](https://github.com/run-llama/llama_index) `QueryFusionRetriever k=60`, [ranx](https://github.com/AmenRa/ranx)) — корректный мёрж **scale-mismatched** сигналов (cosine vs overlap), без нормализации. ⚠ Qdrant native `Fusion.RRF` default **k=2** → client-side fusion для контроля k+весов. Для Cyrillic/BSL (dense recall 45-65%) — **lexical ≥ dense** (вес ~0.7/0.3). TEI-down fallback = **caller-side try/except** (библиотеки не guard'ят) → degrade к lexical-only. Rerank — ПОСЛЕ fusion, опционально (Ollama qwen2.5-coder, [[feedback_ollama_reranker_pattern]]), skippable.
+
+**(III) Confidence/staleness gating.** mem0/graphiti — **hard min-score filter** (`threshold=0.1` / `sim_min_score=0.6` / `min_fact_rating` exclude); LangChain/crewAI — soft downweight. Консенсус для trusted-knowledge: **гибрид** — hard floor (kill noise) + soft в live-band. Archived/`expired_at`: graphiti/Zep/mem0 **EXCLUDE** invalidated (не downweight) → **§22 P3 search ×0.5 стоит заменить на hard-exclude** (×0.5 рискован: sim 0.95×0.5=0.475 обгоняет live 0.45×0.9=0.405).
+
+### §24.2 ADR-D6 (accepted) — финальный дизайн surfacing learned_patterns
+Research **уточнил** исходное предложение (#1+#2 наивный `score*=conf`). Принято:
+1. **Semantic surfacing:** добавить `("learned_patterns","pattern")` в `SEMANTIC_COLLECTIONS` (TEI 4096d, эмбеддинги уже настоящие — reindex НЕ нужен) + `_extract_content/_extract_category` для ctype `pattern`. `_search_learned_patterns` (token-overlap) — **остаётся как lexical-плечо** (не fallback-only).
+2. **Hybrid RRF (не score-mix):** мёрж semantic-list ⊕ lexical-list через **client-side RRF `1/(60+rank)`**, веса **lexical 0.7 / dense 0.3** (BSL dense-collapse). Rank-based → не нужна нормализация разных шкал.
+3. **Confidence-gating (рефайн #2 — НЕ raw multiply):**
+   - **hard pre-filter:** `effective_confidence < MIN_SURFACE_CONF (~0.15)` → выбросить (kill noise; mem0/graphiti pattern).
+   - **soft в ранге:** `final = rrf_score × max(CONF_FLOOR, effective_confidence)`, `CONF_FLOOR≈0.3` (floored-multiply — gating «relevant AND trusted» = `P(rel)·P(good)`, но new-pattern с prior 0.70 не давится; discredited→0.1 сильно подавлен). Альтернатива (mainstream additive) — план Б.
+4. **Archived hard-exclude (рефайн §22 P3):** `expired_at` set → **исключить из default surfacing** (вместо ×0.5); опц. `MEMORY_INCLUDE_ARCHIVED=1`. Staleness сама уводит conf к floor → hard min-filter отсекает органично.
+5. **TEI-down graceful:** каждое плечо в try/except + timeout; dense падает → lexical-only RRF; rerank недоступен → fused-order. Никогда не ломать surfacing.
+6. **Optional rerank** (P2): после RRF top-N → Ollama qwen2.5-coder → top-k; skippable.
+
+### §24.3 План
+- **P0:** semantic surfacing (`SEMANTIC_COLLECTIONS` + `_extract_content` pattern ctype) + confidence-gating (hard floor + floored-multiply) + archived hard-exclude в `memory-first-hook.search_qdrant`. Unit-тесты (gating/exclude) + live recall-проба.
+- **P1:** client-side RRF k=60 (lexical 0.7/dense 0.3) мёрж semantic⊕lexical + TEI-down fallback.
+- **P2 (optional):** post-fusion Ollama rerank.
+- **Side-fix:** §22 P3 `handle_search_patterns`/`memory-first` ×0.5 archived → hard-exclude (consistency с §24.2.4).
+
+### §24.4 Acceptance
+- [ ] learned_patterns всплывают **семантически** (парафраз-запрос без word-overlap находит паттерн) при живом TEI; token-overlap — при TEI-down.
+- [ ] `effective_confidence` влияет на ранг (высокодостоверный обгоняет low-conf при близкой relevance); conf<0.15 не всплывает; archived не всплывает (без флага).
+- [ ] RRF k=60, lexical-вес>dense; TEI-down → lexical-only (no crash). Unit + live recall на golden-наборе паттернов.
