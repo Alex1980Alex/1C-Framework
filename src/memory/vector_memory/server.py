@@ -519,6 +519,7 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
 
     updates = apply_to_payload(payload, success, datetime.now())
     client.set_payload(collection_name=COLLECTION_NAME, payload=updates, points=[pattern_id])
+    _bump_epoch()  # §24: confidence changed -> invalidate surfacing cache
 
     logger.info(
         f"Applied pattern {pattern_id}: {old_confidence:.3f} -> {updates['confidence']:.3f}"
@@ -679,6 +680,8 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
             break
         offset = next_offset
 
+    if decayed or archived or revived:
+        _bump_epoch()  # §24: confidence/archive state changed -> invalidate surfacing cache
     logger.info(f"Decay complete: {decayed} decayed, {archived} archived, {revived} revived")
     return [
         TextContent(
