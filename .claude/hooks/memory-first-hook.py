@@ -649,6 +649,84 @@ def _emit_stdout(text: str) -> None:
             pass
 
 
+# ---------------------------------------------------------------------------
+# §24 pipeline trace — one structured JSONL record per invocation
+# ---------------------------------------------------------------------------
+# Module-global accumulator. Safe because every UserPromptSubmit spawns a fresh
+# process (no concurrency within a single _TRACE). Stages write into it via
+# _trace_set / _trace_gate; execute() resets it at entry and emits once per exit.
+# The whole surfacing pipeline is fail-soft (except: pass everywhere) and stdout
+# is reserved for the context injection, so without this trace every failure is
+# invisible. This makes "why did/didn't a pattern surface" queryable post-mortem.
+_TRACE: dict[str, Any] = {}
+
+
+def _trace_reset() -> None:
+    """Start a fresh trace for this invocation. Seeds nested gating counters."""
+    _TRACE.clear()
+    _TRACE["gate"] = {"archived": 0, "below_floor": 0, "passed": 0}
+
+
+def _trace_set(key: str, value: Any) -> None:
+    """Record a top-level trace field. Fail-soft (never raises into the pipeline)."""
+    try:
+        _TRACE[key] = value
+    except Exception:
+        pass
+
+
+def _trace_gate(reason: str) -> None:
+    """Increment a confidence-gating drop/pass counter. Defensive if not reset."""
+    try:
+        g = _TRACE.get("gate")
+        if isinstance(g, dict):
+            g[reason] = g.get(reason, 0) + 1
+    except Exception:
+        pass
+
+
+def _surface_log(outcome: str, t0: float, **extra: Any) -> None:
+    """Append one JSONL pipeline-trace record. Fail-soft; never raises.
+
+    Captures the accumulated _TRACE plus the terminal outcome + wall-clock. Size-
+    rotated (tail-keep) so the log can't grow unbounded on the hot path. Default
+    ON (cheap append); opt-out via MEMORY_SURFACE_LOG_DISABLE=1.
+    """
+    if not SURFACE_LOG_ENABLED:
+        return
+    try:
+        from datetime import datetime
+
+        record: dict[str, Any] = {
+            "ts": datetime.now().isoformat(timespec="milliseconds"),
+            "hook": HOOK_NAME,
+            "outcome": outcome,
+            "duration_ms": round((time.monotonic() - t0) * 1000, 1),
+        }
+        record.update(_TRACE)
+        record.update(extra)
+
+        SURFACE_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        # Naive size-based rotation: keep the tail half, drop the partial head line.
+        try:
+            if (
+                SURFACE_LOG_FILE.exists()
+                and SURFACE_LOG_FILE.stat().st_size > SURFACE_LOG_CAP_BYTES
+            ):
+                data = SURFACE_LOG_FILE.read_bytes()[-(SURFACE_LOG_CAP_BYTES // 2):]
+                nl = data.find(b"\n")
+                if nl != -1:
+                    data = data[nl + 1:]
+                SURFACE_LOG_FILE.write_bytes(data)
+        except Exception:
+            pass
+
+        with open(SURFACE_LOG_FILE, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
 def _confidence_epoch() -> float:
     """§24: last confidence-store mutation timestamp (lazy import, fail-soft -> 0.0).
 
