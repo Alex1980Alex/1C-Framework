@@ -78,12 +78,14 @@ def log_event(event: str, **fields: Any) -> None:
         }
         record.update(fields)
 
-        # Buffered append. The cross-process race (MCP server + Stop-hook writing
-        # concurrently) is accepted as low-risk for a trace log: writes are rare and
-        # short, interleaving is improbable. An os.open(O_APPEND) variant was tried
-        # but on win32 concurrent opens hit sharing violations and *lost* writes
-        # under contention (8x200 stress -> 1228/1600), which is strictly worse —
-        # so the simpler buffered append is retained deliberately.
+        # Buffered append. The real workload is two single-threaded *processes*
+        # (MCP server + Stop-hook) writing rarely, where interleaving is improbable —
+        # accepted as low-risk for a trace log by design review. NOTE: per-call
+        # open() is NOT robust under heavy concurrency on win32 (concurrent opens hit
+        # sharing violations -> some writes dropped by the fail-soft guard; an
+        # 8-thread x200 stress drops a few hundred). An os.open(O_APPEND) variant was
+        # tried and is strictly worse on win32, so buffered is retained. A msvcrt/
+        # fcntl file-lock would close the gap but is over-engineering for a debug log.
         with open(path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception:
