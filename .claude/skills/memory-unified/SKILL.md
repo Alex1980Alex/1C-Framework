@@ -65,6 +65,7 @@ Examples:
 - Хранятся sufficient stats: `succ`, `fail` (float-счётчики), `last_decay_at`. Prior — read-time константа, не хранится. Без clamp (ratio ∈ (0,1)).
 - Application (`apply_pattern`): сначала decay счётчиков `succ,fail *= exp(−decay_rate·Δdays/30)` (floor <1e-6→0), затем `succ+=1` (success) / `fail+=1` (fail). 5 чистых успехов: 0.70 → **0.80**; +1 фейл → 0.75.
 - Decay (`decay_confidence`): затухают **счётчики**, confidence дрейфит к **prior 0.70** (НЕ к 0). Простой → де-промоушен, не обнуление.
+- **Lazy decay-on-read (§22 P2, `b05d1081d`):** `confidence.payload_effective_confidence` пересчитывает confidence ПРИ ЧТЕНИИ из stored counts (без записи). `search_patterns` (drop server-prefilter + client-side effective filter/rank), `get_pattern` (отдаёт `effective_confidence`), `WikiPromoter` (gate на effective) — stale-паттерны ранжируются/фильтруются ниже автоматически.
 - Legacy-миграция (lazy, on-read): `succ=conf·n, fail=(1−conf)·n` (n=application_count); отсутствие полей → prior 0.70.
 - Threshold: `<0.3` auto-delete сохранён (но count-decay floors at 0.70 → срабатывает редко; staleness-архивация — §22 P3, ещё не реализована).
 - Полная стратегия (raise/decay/forgetting/enrichment) + research: roadmap §22 ([260523](../../../docs/roadmap/260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)).
