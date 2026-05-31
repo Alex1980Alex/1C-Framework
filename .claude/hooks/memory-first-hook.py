@@ -608,6 +608,24 @@ def rrf_merge(layers: dict, weights: dict, k: int = 60) -> list:
     return merged
 
 
+def _emit_stdout(text: str) -> None:
+    """Write surfaced context as UTF-8 bytes — robust on Windows cp1251 consoles.
+
+    `print(text)` raises UnicodeEncodeError when the surfaced memory contains
+    Cyrillic (almost always in this project) and stdout is a cp1251 pipe, which
+    silently drops the whole injection. Mirror HookOutput.emit()'s buffer write.
+    """
+    try:
+        sys.stdout.buffer.write(text.encode("utf-8"))
+        sys.stdout.buffer.write(b"\n")
+        sys.stdout.buffer.flush()
+    except Exception:
+        try:
+            print(text)
+        except Exception:
+            pass
+
+
 def _surface_cache_key(query_tokens: set) -> str:
     """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases)."""
     return hashlib.sha256(
