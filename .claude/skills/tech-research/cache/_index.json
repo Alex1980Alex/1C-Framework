@@ -12,6 +12,26 @@
   ],
   "last_updated": "2026-05-31",
   "topics": {
+    "confidence-lifecycle-impl-github-2026": {
+      "file": "confidence-lifecycle-impl-github-2026.md",
+      "domain": "agents",
+      "category": "pattern",
+      "created": "2026-05-31",
+      "last_verified": "2026-05-31",
+      "version": "river / contextualbandits / FSRS-6 / Graphiti / STORM / Voyager / Reflexion",
+      "keywords": [
+        "confidence-lifecycle-impl", "online-confidence-scoring",
+        "beta-posterior-payload", "sufficient-statistics-storage",
+        "success-signal-detection", "reinforcement-loop-agent",
+        "exit-code-success-heuristic", "use-gated-reinforcement",
+        "sentinel-idempotency", "evidence-attribution-schema",
+        "storm-information-citation", "corroboration-confidence",
+        "authority-weighting-sources", "contradiction-pending",
+        "lazy-decay-on-read", "fsrs-stability", "invalidate-not-delete",
+        "expired-at-queryable", "neighbor-aware-prune", "active-days-skip-idle",
+        "minhash-lsh-dedup", "learned-patterns"
+      ]
+    },
     "confidence-decay-reputation-update-2026": {
       "file": "confidence-decay-reputation-update-2026.md",
       "domain": "ml",
