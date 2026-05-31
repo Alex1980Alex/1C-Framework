@@ -531,6 +531,14 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
     updates = apply_to_payload(payload, success, datetime.now())
     client.set_payload(collection_name=COLLECTION_NAME, payload=updates, points=[pattern_id])
     _bump_epoch()  # §24: confidence changed -> invalidate surfacing cache
+    _log_lifecycle(
+        "apply",
+        pattern_id=pattern_id,
+        success=success,
+        old_confidence=round(float(old_confidence), 4),
+        new_confidence=round(float(updates["confidence"]), 4),
+        application_count=updates.get("application_count"),
+    )
 
     logger.info(
         f"Applied pattern {pattern_id}: {old_confidence:.3f} -> {updates['confidence']:.3f}"
@@ -586,6 +594,7 @@ async def handle_delete_pattern(args: dict[str, Any]) -> list[TextContent]:
     pattern_id = args["pattern_id"]
     client.delete(collection_name=COLLECTION_NAME, points_selector=[pattern_id])
     _bump_epoch()  # §24: pattern removed -> invalidate surfacing cache
+    _log_lifecycle("delete", pattern_id=pattern_id)
     logger.info(f"Deleted pattern {pattern_id}")
     return [TextContent(type="text", text=json.dumps({"success": True, "pattern_id": pattern_id}))]
 
