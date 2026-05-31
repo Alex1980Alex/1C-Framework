@@ -196,6 +196,83 @@ def _resolve_state(
     return (succ, fail, last_decay_at, decay_rate)
 
 
+def is_invariant(pattern_type: str) -> bool:
+    """Return True for pattern types exempt from time-based archival (§22.9.2).
+
+    Invariant types (architectural-principle, bsl-pattern) encode stable
+    domain knowledge that should not be time-archived even when idle.
+    They can still be fail-archived if effective confidence falls below
+    fail_floor — that branch applies to ALL classes.
+
+    Args:
+        pattern_type: Pattern type string (e.g. ``"bsl-pattern"``).
+
+    Returns:
+        True iff the pattern type is exempt from staleness-based archival.
+    """
+    return pattern_type in ("architectural-principle", "bsl-pattern")
+
+
+def should_archive(
+    payload: dict[str, Any],
+    now: datetime | None = None,
+    *,
+    staleness_days: int = 180,
+    staleness_conf: float = 0.75,
+    fail_floor: float = 0.40,
+) -> bool:
+    """Return True when a pattern should be marked expired (invalidate-not-delete).
+
+    Two independent archival triggers:
+    - **fail_breach**: effective confidence < fail_floor — applies to ALL
+      pattern types including invariants (accumulated failures → untrustworthy).
+    - **stale**: idle > staleness_days AND effective conf < staleness_conf AND
+      NOT invariant — time-archival exempts architectural/bsl patterns.
+
+    Either trigger alone is sufficient.  The caller (handle_decay_confidence)
+    sets ``expired_at`` when this returns True; it never hard-deletes.
+
+    # TODO P3: neighbor-aware gate (needs link_registry) — before archiving,
+    # check if pattern has downstream dependents; if yes, downweight rather
+    # than archive.  Deferred pending link_registry API.
+
+    Args:
+        payload: Qdrant point payload dict (read-only).
+        now: Reference datetime; defaults to :func:`datetime.now`.
+        staleness_days: Days idle threshold for staleness check (default 180).
+        staleness_conf: Effective-confidence ceiling for staleness (default 0.75).
+        fail_floor: Effective-confidence floor below which any pattern archives
+            (default 0.40).
+
+    Returns:
+        True iff the pattern should be archived.
+    """
+    now = now or datetime.now()
+    eff = payload_effective_confidence(payload, now)
+
+    # Resolve idle anchor: prefer last_applied, then last_decay_at, updated_at, created_at.
+    anchor_raw: str | None = None
+    for key in ("last_applied", "last_decay_at", "updated_at", "created_at"):
+        val = payload.get(key)
+        if val:
+            anchor_raw = val
+            break
+    if anchor_raw is None:
+        days_idle = 0
+    else:
+        days_idle = max(0, (now - datetime.fromisoformat(anchor_raw)).days)
+
+    inv = is_invariant(payload.get("pattern_type", ""))
+
+    # Fail-breach: any type (even invariant) with eff < fail_floor is archived.
+    fail_breach = eff < fail_floor
+
+    # Staleness: only non-invariant patterns, and only when idle long + conf low.
+    stale = (days_idle > staleness_days) and (eff < staleness_conf) and (not inv)
+
+    return fail_breach or stale
+
+
 def payload_effective_confidence(
     payload: dict[str, Any],
     now: datetime | None = None,
@@ -250,4 +327,6 @@ def apply_to_payload(
         "application_count": int(payload.get("application_count", 0)) + 1,
         "last_applied": now.isoformat(),
         "updated_at": now.isoformat(),
+        # Revive-on-apply: any application un-archives the pattern (§22 P3).
+        "expired_at": None,
     }

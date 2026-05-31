@@ -19,8 +19,10 @@ from src.memory.vector_memory.confidence import (
     decay_counts,
     derive_confidence,
     effective_confidence,
+    is_invariant,
     payload_effective_confidence,
     seed_counts_from_legacy,
+    should_archive,
 )
 from src.memory.vector_memory.reinforce import reinforce_pattern
 
@@ -286,3 +288,59 @@ def test_reinforce_pattern_fail_soft_on_error() -> None:
     assert result["success"] is False
     assert "error" in result
     assert result["pattern_id"] == "pid-err"
+
+
+# ── §22 P3: forgetting (is_invariant / should_archive / revive) ──────────────
+
+
+def test_is_invariant_classification() -> None:
+    assert is_invariant("architectural-principle") is True
+    assert is_invariant("bsl-pattern") is True
+    assert is_invariant("workflow-pattern") is False
+    assert is_invariant("code-convention") is False
+    assert is_invariant("") is False
+
+
+def test_should_archive_fresh_no() -> None:
+    payload = {"succ": 5.0, "fail": 0.0, "last_applied": t0.isoformat(),
+               "pattern_type": "workflow-pattern"}
+    assert should_archive(payload, t0) is False
+
+
+def test_should_archive_stale_non_invariant_yes() -> None:
+    # Weak pattern (succ=1 → conf≈0.727 < 0.75) left idle >180d → effective
+    # drifts further toward prior, stays < staleness_conf → archive.
+    # (A strong succ=5/conf=0.80 pattern needs ~550d to cross 0.75 — by design
+    # trusted patterns persist far longer; see test below.)
+    payload = {"succ": 1.0, "fail": 0.0, "last_applied": t0.isoformat(),
+               "pattern_type": "workflow-pattern"}
+    assert should_archive(payload, t0 + timedelta(days=200)) is True
+
+
+def test_should_archive_invariant_exempt_from_staleness() -> None:
+    payload = {"succ": 1.0, "fail": 0.0, "last_applied": t0.isoformat(),
+               "pattern_type": "bsl-pattern"}
+    # same staleness, but invariant → NOT time-archived
+    assert should_archive(payload, t0 + timedelta(days=200)) is False
+
+
+def test_should_archive_strong_pattern_persists() -> None:
+    # Strong pattern (succ=5/conf 0.80) idle 200d → eff still ≈0.78 > 0.75 → kept.
+    payload = {"succ": 5.0, "fail": 0.0, "last_applied": t0.isoformat(),
+               "pattern_type": "workflow-pattern"}
+    assert should_archive(payload, t0 + timedelta(days=200)) is False
+
+
+def test_should_archive_fail_floor_applies_to_invariant() -> None:
+    payload = {"succ": 0.0, "fail": 20.0, "last_applied": t0.isoformat(),
+               "pattern_type": "bsl-pattern"}
+    # eff = 7/27 ≈ 0.259 < 0.40 → fail-floor archive even for invariant
+    assert payload_effective_confidence(payload, t0) < 0.40
+    assert should_archive(payload, t0) is True
+
+
+def test_apply_to_payload_revives_archived() -> None:
+    payload = {"succ": 1.0, "fail": 0.0, "last_decay_at": t0.isoformat(),
+               "expired_at": t0.isoformat(), "application_count": 1}
+    result = apply_to_payload(payload, True, t0)
+    assert result["expired_at"] is None  # any apply un-archives

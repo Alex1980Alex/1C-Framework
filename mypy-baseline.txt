@@ -1293,6 +1293,7 @@ src/cli/main.py:0: error: Incompatible types in assignment (expression has type 
 src/cli/main.py:0: error: Argument 2 to "create_token" of "JWTHandler" has incompatible type "str"; expected "Literal['viewer', 'editor', 'admin']"  [arg-type]
 src/cli/main.py:0: error: Argument "method" to "SuggestionConfig" has incompatible type "str"; expected "Literal['entity', 'frequency', 'llm', 'related']"  [arg-type]
 src/cli/main.py:0: error: Unexpected keyword argument "question" for "SubResult"; did you mean "sub_question"?  [call-arg]
+src/cli/main.py:0: note: "SubResult" defined in "src.pdf_framework.agents.deep.synthesizer"
 src/cli/main.py:0: error: "type[BenchmarkLoader]" has no attribute "load"  [attr-defined]
 src/mcp_server/server.py:0: error: Call to untyped function "list_tools" in typed context  [no-untyped-call]
 src/mcp_server/server.py:0: error: Untyped decorator makes function "list_tools" untyped  [untyped-decorator]

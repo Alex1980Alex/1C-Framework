@@ -30,6 +30,7 @@ from .confidence import (
     derive_confidence,
     payload_effective_confidence,
     seed_counts_from_legacy,
+    should_archive,
 )
 from .models import (
     EvidenceSource,
@@ -463,12 +464,18 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
             continue
         pattern = _pattern_from_payload(str(point.id), point.payload)
         similarity = point.score if point.score else 0.0
+        combined = similarity * eff
+        # Archived patterns stay retrievable but rank lower (revive-on-recurrence,
+        # §22 P3 invalidate-not-delete).  An apply() call will clear expired_at.
+        archived = bool((point.payload or {}).get("expired_at"))
+        if archived:
+            combined *= 0.5
         search_results.append(
             PatternSearchResult(
                 pattern=pattern,
                 similarity_score=similarity,
                 adjusted_confidence=eff,
-                combined_score=similarity * eff,
+                combined_score=combined,
             )
         )
 
@@ -540,11 +547,17 @@ async def handle_get_pattern(args: dict[str, Any]) -> list[TextContent]:
         ]
     pattern = _pattern_from_payload(str(points[0].id), points[0].payload)
     eff = payload_effective_confidence(points[0].payload or {})
+    archived = bool((points[0].payload or {}).get("expired_at"))
     return [
         TextContent(
             type="text",
             text=json.dumps(
-                {"success": True, "pattern": pattern.to_dict(), "effective_confidence": eff},
+                {
+                    "success": True,
+                    "pattern": pattern.to_dict(),
+                    "effective_confidence": eff,
+                    "archived": archived,
+                },
                 ensure_ascii=False,
                 indent=2,
             ),
@@ -562,11 +575,14 @@ async def handle_delete_pattern(args: dict[str, Any]) -> list[TextContent]:
 
 async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
     """Apply temporal decay: confidence * exp(-decay_rate * days/30).
-    Patterns below MIN_CONFIDENCE threshold are deleted.
+
+    # Note: hard-delete removed — Graphiti invalidate-not-delete, §22 P3.
+    # Patterns below MIN_CONFIDENCE are archived (expired_at set) rather than
+    # deleted.  Any subsequent apply() call revives them (clears expired_at).
     """
     client = _get_qdrant()
     decayed = 0
-    deleted = 0
+    archived = 0  # renamed from deleted — patterns are never hard-deleted here
 
     offset = None
     while True:
@@ -609,28 +625,40 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
             succ, fail = decay_counts(succ, fail, last_decay_at, now, decay_rate)
             new_conf = derive_confidence(succ, fail)
 
-            if new_conf < MIN_CONFIDENCE:
-                client.delete(collection_name=COLLECTION_NAME, points_selector=[str(point.id)])
-                deleted += 1
-            else:
-                client.set_payload(
-                    collection_name=COLLECTION_NAME,
-                    payload={
-                        "succ": succ,
-                        "fail": fail,
-                        "last_decay_at": now.isoformat(),
-                        "confidence": new_conf,
-                        "updated_at": now.isoformat(),
-                    },
-                    points=[str(point.id)],
+            # Build post-decay payload fields.
+            set_fields: dict[str, Any] = {
+                "succ": succ,
+                "fail": fail,
+                "last_decay_at": now.isoformat(),
+                "confidence": new_conf,
+                "updated_at": now.isoformat(),
+            }
+
+            # Determine archival: merge post-decay fields over original payload and
+            # evaluate should_archive (§22 P3 invalidate-not-delete).
+            candidate = {**payload, **set_fields}
+            if should_archive(candidate, now):
+                set_fields["expired_at"] = now.isoformat()
+                archived += 1
+                logger.debug(
+                    f"Archived pattern {point.id} "
+                    f"(type={payload.get('pattern_type', '?')}, "
+                    f"conf={new_conf:.3f})"
                 )
-                decayed += 1
+            # If not archiving, leave expired_at unchanged (only apply() revives).
+
+            client.set_payload(
+                collection_name=COLLECTION_NAME,
+                payload=set_fields,
+                points=[str(point.id)],
+            )
+            decayed += 1
 
         if next_offset is None:
             break
         offset = next_offset
 
-    logger.info(f"Decay complete: {decayed} decayed, {deleted} deleted")
+    logger.info(f"Decay complete: {decayed} decayed, {archived} archived")
     return [
         TextContent(
             type="text",
@@ -638,7 +666,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
                 {
                     "success": True,
                     "decayed": decayed,
-                    "deleted": deleted,
+                    "archived": archived,
                     "timestamp": datetime.now().isoformat(),
                 }
             ),

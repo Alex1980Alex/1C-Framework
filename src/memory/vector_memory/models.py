@@ -89,6 +89,7 @@ class LearnedPattern:
     succ: float = 0.0
     fail: float = 0.0
     last_decay_at: datetime | None = None
+    expired_at: datetime | None = None
     version: int = 1
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -120,6 +121,7 @@ class LearnedPattern:
             "succ": self.succ,
             "fail": self.fail,
             "last_decay_at": self.last_decay_at.isoformat() if self.last_decay_at else None,
+            "expired_at": self.expired_at.isoformat() if self.expired_at else None,
             "version": self.version,
             "tags": self.tags,
             "metadata": self.metadata,
@@ -152,6 +154,9 @@ class LearnedPattern:
             fail=data.get("fail", 0.0),
             last_decay_at=datetime.fromisoformat(data["last_decay_at"])
             if data.get("last_decay_at")
+            else None,
+            expired_at=datetime.fromisoformat(data["expired_at"])
+            if data.get("expired_at")
             else None,
             version=data.get("version", 1),
             tags=data.get("tags", []),

@@ -67,6 +67,10 @@ class WikiPromoter:
             # conf≥0.8 has decayed below threshold at read-time are skipped here.
             if payload_effective_confidence(payload) < self.confidence_threshold:
                 continue
+            # §22 P3: skip archived patterns (expired_at set) — invalidate-not-delete;
+            # an apply() revives them, after which they become promotable again.
+            if payload.get("expired_at"):
+                continue
             vector = self._extract_vector(point, payload)
             existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
