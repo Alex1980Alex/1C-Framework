@@ -579,7 +579,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     _trace_set("arms", {k: len(v) for k, v in arms.items()})
 
     # Client-side RRF merge: content-hash dedup, lexical weighted > dense for BSL
-    fused = rrf_merge(arms, SURFACE_RRF_WEIGHTS, k=60)
+    fused = rrf_merge(arms, SURFACE_RRF_WEIGHTS, k=SURFACE_RRF_K)
     _trace_set("rrf_fused", len(fused))
     return fused[:limit]
 
