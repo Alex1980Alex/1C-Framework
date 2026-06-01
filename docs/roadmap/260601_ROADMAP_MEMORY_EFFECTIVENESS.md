@@ -97,15 +97,17 @@
 
 ## 6. Фазовый план
 
-| Фаза | Объём | Зависит |
-|---|---|---|
-| **A0** | вынести surfacing-константы в `surfacing_tuning.json` (reversible) | — |
-| **A1** | `analyze_memory_effectiveness.py` — агрегаты + Markdown/JSON отчёт | A0, логи (есть) |
-| **A2** | Stop-хук-триггер + rule-based рекомендации + smoke-тест | A1 |
-| **B0** | golden-set memory-queries (≥30) + harness | A1 |
-| **B1** | offline sweep по golden-set, dry-run «лучший конфиг» (AutoRAG-style) | B0, A0 |
-| **B2** | gated promotion + auto-rollback + audit (self-tuning замкнут) | B1 |
-| **B3** *(future)* | online-MAB тюнинг (AutoRAG-HP), guardrail против нестационарности | B2 |
+| Фаза | Объём | Зависит | Статус |
+|---|---|---|---|
+| **A0** | `data/memory/surfacing_tuning.json` (descriptive defaults, reversible; ещё НЕ читается хуком — wiring в B1) | — | ✅ DONE 2026-06-01 |
+| **A1** | `scripts/analyze_memory_effectiveness.py` — агрегаты §3 + Markdown/JSON/_latest + rule-based рекомендации | A0, логи (есть) | ✅ DONE 2026-06-01 |
+| **A2** | Stop-хук `memory-effectiveness-analyzer.py` (detached spawn, 6h cooldown, opt-out) + регистрация в settings.json + 8 smoke-тестов | A1 | ✅ DONE 2026-06-01 |
+| **B0** | golden-set memory-queries (≥30) + harness | A1 | PLANNED |
+| **B1** | offline sweep по golden-set, dry-run «лучший конфиг» (AutoRAG-style); wiring `surfacing_tuning.json` → hook | B0, A0 | PLANNED |
+| **B2** | gated promotion + auto-rollback + audit (self-tuning замкнут) | B1 | PLANNED |
+| **B3** *(future)* | online-MAB тюнинг (AutoRAG-HP), guardrail против нестационарности | B2 | FUTURE |
+
+> **Part A DONE (2026-06-01):** analyzer + Stop-хук + config + 8 smoke-тестов, ruff clean, **code-verify PASS**. Прогон на реальных логах (16 surfacing + 23 lifecycle) поймал live-баг `tei_down_rate=1.0` (`ModuleNotFoundError: shared.semantic_search` в surfacing-хуке) — ровно та диагностика, ради которой analyzer строился. Hook smoke: run1 exit 0 + systemMessage + state; run2 exit 0 cooldown-silent (никогда не блокирует Stop). Отчёты: `data/reports/memory/_latest.md`. Opt-out: `MEMORY_EFFECTIVENESS_ANALYZER_DISABLE=1`. Ручной запуск: `python scripts/analyze_memory_effectiveness.py --since 7d`. **Часть B (self-tuning) НЕ начата** — требует B0 golden-set.
 
 A0–A2 — самостоятельная ценность (наблюдаемость) без рисков B. B — отдельный заход после golden-set.
 
