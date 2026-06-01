@@ -203,7 +203,7 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     cur_score = target_score(cur_report, args.alpha)
 
     print(f"# Sweep (split={args.split}, n={len(golden)}, k={args.k}, alpha={args.alpha})")
-    print(f"current config score={cur_score} {cur_report and {m: cur_report[m] for m in ('hit_rate','ndcg_at_k')}}")
+    print(f"current config score={cur_score} {dict((m, cur_report[m]) for m in ('hit_rate', 'ndcg_at_k'))}")
     print(f"grid size: {len(ranked)} configs\n")
     for i, r in enumerate(ranked[: args.top], start=1):
         w = r["config"]["surface_rrf_weights"]
