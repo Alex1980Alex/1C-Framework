@@ -2491,3 +2491,62 @@ Research **уточнил** исходное предложение (#1+#2 на�
 - **Часть B (self-tuning):** offline sweep + gated promotion (AutoRAG-style) над весами/порогами/TTL; golden-set-gated, dry-run by default, auto-rollback, audited. B3 future: online-MAB (AutoRAG-HP). B0 prerequisite: golden-set memory-queries.
 - **Research (live 2026-06-01):** AutoRAG, AutoRAG-HP (MAB, Recall@5≈0.8 @ ~20% cost), mem0, MemMachine (retrieval-stage > ingestion), WRRF, contextual-bandit memory-retrieval — полные цитаты в дочернем файле §8.
 - **Фазы:** A0 (вынос констант в `surfacing_tuning.json`) → A1/A2 (analyzer) → B0 (golden-set) → B1/B2 (sweep + gated promotion) → B3 (online-MAB, future).
+
+## §26 Memory Ingestion & Cross-Store Synchronization (PLANNED, 2026-06-02)
+
+> **Статус:** PLANNED (дизайн + research готовы). **Триггер:** live-наблюдение — `learned_patterns` всего **22 точки** (после dedup), `experience_embeddings`/`conversation_memory` = **0**, skill-learning JSONL = 1 (stale с мая). Машинерия §22/§24/§25 (доверие/surfacing/self-tuning) богатая, но её **нечем кормить**. Полная карта систем: [27.12](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
+
+### 26.1 Проблема (verified live, code-grounded inventory)
+
+Система **асимметрична**: сильный *retrieval/governance*, тонкий и **силосный** *ingestion*. Подтверждено инвентаризацией кода (per-store):
+
+| Поток | Статус | Блокер |
+|---|---|---|
+| learned_patterns `save_pattern` | AUTO (но вызывается только вручную агентом) | нет харвестера |
+| memory-ai session save (Stop-хук) | ✅ AUTO | пишет в SQLite, НЕ в паттерны |
+| skill-learning capture → confirm | MANUAL | **confirmed НИКОГДА не попадает в learned_patterns** (silo) |
+| feedback-drafts (`data/memory_drafts/`) | AUTO создание | нет промоушена в `MEMORY.md` (orphaned) |
+| memory-ai → learned_patterns (light→full) | MANUAL one-off (`normalize_light_patterns.py`) | не ongoing |
+| learned_patterns → wiki (WikiPromoter) | MANUAL | нет cron |
+| decay / dedup / archive | MANUAL (`export_graph_to_wiki`, скрипты) | нет cron |
+| `experience_embeddings` / `conversation_memory` | **NONE** (0 writers) | ConversationMemory init-only, не пишет |
+| skill_library | MANUAL (`index-skills-to-qdrant.py`) | не AUTO при добавлении скилла |
+| **cross-store dedup** | **NONE** | один факт в memory-ai И learned_patterns = независимые копии |
+| **conflict_resolver** | STUB | задекларирован, не вшит в route_and_save |
+| **link_registry auto-links** | PARTIAL | только на multi-target save, не на promotion/migration |
+
+**Вывод:** нужен (1) авто-ingestion по ВСЕМ слоям, (2) консолидация episodic→semantic (reflection), (3) **cross-store синхронизация** (один факт — одна сущность + связи, не копии), (4) bounded-рост (governance).
+
+### 26.2 Research synthesis (live 2026-06-02, attributed)
+
+- **mem0** [web] — память как **слой** поверх агента: авто fact-extraction + CRUD-retrieval (48k★, $24M A). Урок: ingestion = отдельный авто-слой, не ручные вызовы. [vectorize.io, agentmarketcap]
+- **Letta/MemGPT** [web] — 3-tier (core/recall/archival), агент сам «пейджит» память функциями (OS-метафора). Урок: тиры + явные переходы между ними. [tokenmix, sureprompts]
+- **Zep/Graphiti** [web] — темпоральный **knowledge-graph** движок памяти. Урок: связи между фактами (наш link_registry) — первичны для sync. [agentmarketcap]
+- **Generative Agents** [web/arxiv 2404.00573] — scoring `recency + importance + relevance`; **reflection** консолидирует episodic→semantic. Прямая цитата: *«эпизод "user corrected date 3×" консолидируется в semantic "user prefers DD/MM/YYYY"; это редко автоматически — нужны эвристические триггеры»*. Урок: консолидация = наш memory-ai→learned_patterns, но **по триггеру кластеризации повторов**.
+- **Bounded/gated memory (CraniMem, arxiv 2603.15642)** [web] — dual-store (episodic+semantic) с **явными consolidation-pathways БЕЗ unbounded growth**. Урок: ForgetGate как граница роста. [arxiv 2502.06975 «Episodic Memory is the Missing Piece»]
+- **Внутреннее** [exp] — уже есть мосты: `MemCube` (конвертер форматов), `link_registry` (10 типов связей), `WikiPromoter` (L2→L5 паттерн промоушена), §22 confidence, `dedupe`/`normalize` скрипты, §24 surfacing, §25 self-tuning.
+
+**Принцип решения [own]:** НЕ строить новую инфру — **связать существующие мосты** в авто-петлю. `MemCube` = канонический sync-unit; `link_registry` = «один факт ↔ связи, не копии»; §22 confidence + ForgetGate = граница; content-hash (из dedup) = idempotency-ключ cross-store.
+
+### 26.3 Фазы
+
+- **P0 — Контракты ingestion+sync (foundation).** Канонический `MemCube` как единица записи/синка; **shared content-hash idempotency-ключ** (переиспользовать `sha1(content[:200])` из dedup) в payload ВСЕХ store'ов → основа cross-store dedup; per-store «писатель»-контракт. Метрики ingestion (rate/dup-rate/sizes) → в §25 analyzer.
+- **P1 — Авто-ingestion харвестеры (по всем слоям, на базе существующих хуков).**
+  - *Patterns:* харвестер (Stop-хук) майнит подтверждённые feedback-drafts + session-lessons → `save_pattern`, **gated** content-hash dedup + §22 confidence (анти-флуд).
+  - *Skills:* `index-skills-to-qdrant.py` → AUTO при изменении `.claude/skills/` (PostToolUse/Stop).
+  - *Experience/conversation:* решение — либо вшить `ConversationMemory` writer (наполнить пустые коллекции), либо **формально deprecate** (ADR) и убрать из карты. Не держать «мёртвые» коллекции.
+- **P2 — Консолидация episodic→semantic (reflection, по Generative Agents).** Scheduled job: кластеризует повторяющиеся episodic-факты (memory-ai) → консолидирует в semantic-паттерн (learned_patterns) по триггеру «N повторов / importance». Обобщить `normalize_light_patterns.py` из one-off в ongoing reflection. **Закрыть skill-learning silo:** мост confirmed `patterns.jsonl` → `learned_patterns`. Всё gated (confidence + dedup + reviewable).
+- **P3 — Cross-store синхронизация и дедуп.** Cross-store content-hash индекс → детект «один факт в ≥2 store». Вшить `conflict_resolver` (stub→active) в route_and_save + cross-store writes (LAST_WRITE_WINS/SOURCE_PRIORITY/MERGE). Авто-`link_registry` связи на promotion/migration (`PROMOTED_TO`/`DERIVES_FROM`/`MIRRORS`) — связи, НЕ копии. `MemCube` = single-source-of-truth, проецируемый в store'ы.
+- **P4 — Scheduling & bounded governance.** Manual-джобы (decay/dedup/promote/archive) → scheduled (`/schedule` cron или Stop-cadence). `ForgetGate` (archive/decay/delete) как **граница роста** (CraniMem-урок). Дашборд: ingestion-rate, cross-store-dup-rate, promotion-rate, store-sizes (в §25 reports).
+
+### 26.4 Guardrails (обязательны для всех фаз)
+
+dry-run by default + vector-backup (переиспользовать паттерн dedup/normalize) · §22 confidence-gating · content-hash dedup (анти-флуд + cross-store idempotency) · human-confirm для курируемого `.md` · ForgetGate как bound (анти-unbounded-growth) · полностью reversible.
+
+### 26.5 Зависимости и риски
+
+- **Зависит от:** §22 (confidence), §24 (surfacing), §25 (метрики/self-tuning — туда же ingestion-метрики), существующих `MemCube`/`link_registry`/`WikiPromoter`/`conflict_resolver`/dedup-скриптов.
+- **Риски:** флуд паттернами → митигация (dedup + confidence-gate + ForgetGate); cross-store дивергенция → `MemCube` single-source + связи вместо копий; плохие авто-промоушены → gated + reviewable + reversible; «мёртвые» коллекции → P1 решение (наполнить или deprecate через ADR).
+- **Не входит:** изменение §22-математики и §24-surfacing (только кормим их данными). Online-MAB тюнинг ingestion — future (после §25 B3).
+
+> **Отдельная дочерняя карта** (как у §25 → 260601) будет создана при старте реализации: `260602_ROADMAP_MEMORY_INGESTION_SYNC.md` с детальными acceptance-критериями per-phase. Здесь — обзорная глава в master-роадмапе.
