@@ -298,6 +298,56 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def regression_signals(surf: dict[str, Any]) -> list[str]:
+    """Config-attributable quality regressions in this window (TEI-down excluded)."""
+    if surf["total_invocations"] == 0:
+        return []
+    signals: list[str] = []
+    if surf["gate_drop_rate"] > THRESHOLDS["gate_drop_rate"]:
+        signals.append(f"gate_drop_rate={surf['gate_drop_rate']:.0%}")
+    if surf["no_results_rate"] > THRESHOLDS["no_results_rate"]:
+        signals.append(f"no_results_rate={surf['no_results_rate']:.0%}")
+    return [s for s in signals if s.split("=")[0] in AUTO_ROLLBACK_SIGNALS]
+
+
+def maybe_auto_rollback(report: dict[str, Any]) -> dict[str, Any]:
+    """§25 B2: auto-revert a recent surfacing-config promotion when this window shows a
+    config-attributable quality regression.
+
+    Closed loop: B2 promotion snapshots the prior config to surfacing_tuning.prev.json.
+    If quality then degrades (gate_drop/no_results breach) AND that snapshot exists (a
+    promotion happened), revert via `tune_memory_surfacing.py rollback`. Apply is gated
+    by ``MEMORY_AUTOTUNE_ROLLBACK_APPLY=1`` (dry-run otherwise, consistent with the
+    tuner's safety stance). Fail-soft: subprocess errors never raise. No snapshot ->
+    nothing to revert (a regression without a recent promotion is not config's fault).
+    """
+    signals = regression_signals(report["surfacing"])
+    snapshot_exists = TUNING_PREV_FILE.exists()
+    apply = os.environ.get("MEMORY_AUTOTUNE_ROLLBACK_APPLY") == "1"
+    outcome = {
+        "regression_signals": signals,
+        "snapshot_exists": snapshot_exists,
+        "triggered": bool(signals) and snapshot_exists,
+        "applied": False,
+        "mode": "apply" if apply else "dry-run",
+    }
+    if not outcome["triggered"]:
+        return outcome
+    if not apply:
+        outcome["note"] = "would rollback (set MEMORY_AUTOTUNE_ROLLBACK_APPLY=1 to apply)"
+        return outcome
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(TUNER_SCRIPT), "rollback", "--apply"],
+            capture_output=True, text=True, timeout=30, cwd=str(PROJECT_ROOT),
+        )
+        outcome["applied"] = proc.returncode == 0
+        outcome["stdout"] = (proc.stdout or "").strip()[:200]
+    except Exception as exc:  # noqa: BLE001 -- fail-soft, never break the analyzer
+        outcome["error"] = f"{type(exc).__name__}: {exc}"[:160]
+    return outcome
+
+
 def build_report(since: str | None, now: datetime) -> dict[str, Any]:
     cutoff = _parse_since(since, now)
     surf_rows = _read_jsonl(SURFACING_LOG, cutoff)
