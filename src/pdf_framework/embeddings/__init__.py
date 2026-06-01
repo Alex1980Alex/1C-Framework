@@ -12,6 +12,10 @@ from src.pdf_framework.embeddings.engine import BaseEmbeddingEngine
 def get_embedding_engine(settings: EmbeddingSettings | None = None) -> BaseEmbeddingEngine:
     """Factory: return an embedding engine based on settings."""
     settings = settings or EmbeddingSettings()
+    if settings.provider == "tei":
+        from src.pdf_framework.embeddings.providers.tei import TEIEmbeddingEngine
+
+        return TEIEmbeddingEngine(settings)
     if settings.provider == "local":
         from src.pdf_framework.embeddings.providers.local import LocalEmbeddingEngine
 
