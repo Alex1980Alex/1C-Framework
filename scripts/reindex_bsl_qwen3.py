@@ -130,8 +130,43 @@ def should_skip(path: Path) -> bool:
     return any(p in path_str for p in SKIP_PATTERNS)
 
 
+def detect_collection_layout(client: QdrantClient, name: str) -> str:
+    """Return existing collection layout, or 'absent' if not found.
+
+    Layouts: 'hybrid' (named {dense} + sparse {bm25:IDF}), 'dual_vector'
+    (named {content, module_path}), 'dense_only' (single-vector), 'absent'.
+    Recovered 2026-06-02 (merge/autofix regression deleted it; call sites used noqa).
+    """
+    try:
+        info = client.get_collection(collection_name=name)
+    except (UnexpectedResponse, Exception):
+        return "absent"
+    vec_cfg = info.config.params.vectors
+    sparse_cfg = info.config.params.sparse_vectors
+    has_sparse_bm25 = bool(sparse_cfg and "bm25" in sparse_cfg)
+    if isinstance(vec_cfg, dict):
+        if "dense" in vec_cfg and has_sparse_bm25:
+            return "hybrid"
+        if "content" in vec_cfg and "module_path" in vec_cfg:
+            return "dual_vector"
+    return "dense_only"
+
+
+def _looks_like_cyrillic_project(project: Path) -> bool:
+    """Heuristic: project root path contains Cyrillic (signals Cyrillic BSL inside).
+
+    Used by the late-chunking-requires-FA2 guard. Recovered 2026-06-02 (regression).
+    """
+    return any("Ѐ" <= ch <= "ӿ" for ch in str(project))
+
+
 def create_collection(
-    client: QdrantClient, name: str, dims: int, recreate: bool = False, dual_vector: bool = False
+    client: QdrantClient,
+    name: str,
+    dims: int,
+    recreate: bool = False,
+    dual_vector: bool = False,
+    enable_sparse: bool = False,
 ) -> None:
     if recreate:
         try:
