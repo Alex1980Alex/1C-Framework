@@ -500,6 +500,28 @@
         "gated promotion",
         "offline sweep"
       ]
+    },
+    "agent-memory-ingestion-consolidation-2026": {
+      "file": "agent-memory-ingestion-consolidation-2026.md",
+      "domain": "agents",
+      "category": "pattern",
+      "created": "2026-06-02",
+      "last_verified": "2026-06-02",
+      "version": "mem0/Letta/Zep/Generative-Agents/CraniMem",
+      "summary": "Ingestion + episodic→semantic consolidation (reflection) + cross-store sync паттерны агентной памяти; основа §26 roadmap",
+      "keywords": [
+        "agent-memory",
+        "ingestion",
+        "consolidation",
+        "reflection",
+        "episodic-semantic",
+        "mem0",
+        "letta",
+        "zep",
+        "generative-agents",
+        "bounded-memory",
+        "cross-store-sync"
+      ]
     }
   }
 }
