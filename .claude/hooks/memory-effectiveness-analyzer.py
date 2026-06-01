@@ -72,7 +72,10 @@ def _spawn_analyzer() -> bool:
     """Fire-and-forget detached subprocess. Returns True on launch success."""
     if not PYTHON_EXE.exists() or not ANALYZER_SCRIPT.exists():
         return False
-    cmd = [str(PYTHON_EXE), str(ANALYZER_SCRIPT), "--since", "7d"]
+    # --auto-rollback: detect config-attributable regressions and (if a promotion
+    # snapshot exists) revert. Detection always runs; the actual revert is gated inside
+    # the analyzer by MEMORY_AUTOTUNE_ROLLBACK_APPLY=1 (dry-run otherwise). §25 B2.
+    cmd = [str(PYTHON_EXE), str(ANALYZER_SCRIPT), "--since", "7d", "--auto-rollback"]
     creationflags = 0
     if sys.platform == "win32":
         creationflags = 0x00000008 | 0x08000000  # DETACHED_PROCESS | CREATE_NO_WINDOW
