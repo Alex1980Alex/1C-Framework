@@ -3,6 +3,24 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "agent-memory-ingestion-consolidation-2026.md",
+      "title": "Agent memory — ingestion, consolidation (episodic→semantic), cross-store sync",
+      "keywords": [
+        "agent-memory",
+        "ingestion",
+        "consolidation",
+        "reflection",
+        "episodic-semantic",
+        "mem0",
+        "letta",
+        "zep",
+        "generative-agents",
+        "bounded-memory",
+        "cross-store-sync"
+      ],
+      "last_verified": "2026-06-02"
+    },
+    {
       "file": "online-confidence-beta-posterior-scoring-2026.md",
       "title": "Online confidence / reputation scoring — Beta-posterior over decayed success/failure counters",
       "keywords": [
