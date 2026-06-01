@@ -130,12 +130,26 @@ def should_skip(path: Path) -> bool:
     return any(p in path_str for p in SKIP_PATTERNS)
 
 
+def _looks_like_cyrillic_project(project: Path) -> bool:
+    """Heuristic: does the project root path contain Cyrillic characters?
+
+    Used by the late-chunking-requires-FA2 guard. Cyrillic in the path is
+    a strong signal that BSL files inside also contain Cyrillic identifiers
+    (and therefore trigger the slow-without-FA2 path documented in roadmap
+    260518 §1.2.2). False positives (Latin project path containing Cyrillic
+    files) are escape-hatched via BSL_ALLOW_LATE_CHUNKING_WITHOUT_FA2=1.
+    """
+    return any("Ѐ" <= ch <= "ӿ" for ch in str(project))
+
+
 def detect_collection_layout(client: QdrantClient, name: str) -> str:
     """Return existing collection layout, or 'absent' if not found.
 
-    Layouts: 'hybrid' (named {dense} + sparse {bm25:IDF}), 'dual_vector'
-    (named {content, module_path}), 'dense_only' (single-vector), 'absent'.
-    Recovered 2026-06-02 (merge/autofix regression deleted it; call sites used noqa).
+    Layouts:
+      'hybrid'       - named {dense: dense_dim} + sparse {bm25: IDF}
+      'dual_vector'  - named {content, module_path} (Phase 8 legacy)
+      'dense_only'   - single-vector (legacy bsl_code_v4_late before 2026-05-22 swap)
+      'absent'       - collection does not exist
     """
     try:
         info = client.get_collection(collection_name=name)
@@ -152,14 +166,6 @@ def detect_collection_layout(client: QdrantClient, name: str) -> str:
     return "dense_only"
 
 
-def _looks_like_cyrillic_project(project: Path) -> bool:
-    """Heuristic: project root path contains Cyrillic (signals Cyrillic BSL inside).
-
-    Used by the late-chunking-requires-FA2 guard. Recovered 2026-06-02 (regression).
-    """
-    return any("Ѐ" <= ch <= "ӿ" for ch in str(project))
-
-
 def create_collection(
     client: QdrantClient,
     name: str,
@@ -167,7 +173,13 @@ def create_collection(
     recreate: bool = False,
     dual_vector: bool = False,
     enable_sparse: bool = False,
-) -> None:
+) -> str:
+    """Create collection if absent, return its (existing or new) layout.
+
+    `enable_sparse=True` only takes effect when CREATING the collection.
+    Auto-detect handles existing collections — important for the git
+    post-commit incremental flow that lands on the production alias.
+    """
     if recreate:
         try:
             client.delete_collection(collection_name=name)
@@ -175,13 +187,13 @@ def create_collection(
         except (UnexpectedResponse, Exception):
             pass
 
-    layout = detect_collection_layout(client, name)  # noqa: F821
+    layout = detect_collection_layout(client, name)
     if layout != "absent":
         info = client.get_collection(collection_name=name)
         print(f"Collection '{name}' exists: {info.points_count} points (layout={layout})")
         return layout
 
-    if enable_sparse:  # noqa: F821
+    if enable_sparse:
         client.create_collection(
             collection_name=name,
             vectors_config={
@@ -1358,9 +1370,33 @@ def _delete_stale_for_paths(
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
-    ap.add_argument("--project", type=Path, required=True, help="Project root with BSL files")
     ap.add_argument(
-        "--embedder", choices=["e5", "qwen3"], default="e5", help="Embedding model (default: e5)"
+        "--project",
+        type=Path,
+        default=None,
+        help="Project root with BSL files (required unless --paths is given)",
+    )
+    ap.add_argument(
+        "--paths",
+        nargs="*",
+        default=None,
+        help="Incremental mode: list of .bsl files to reindex (instead of "
+        "walking --project). Auto-detects project root from path. "
+        "Used by git post-commit hooks for per-file updates.",
+    )
+    ap.add_argument(
+        "--embedder",
+        choices=["e5", "qwen3", "qwen3-st", "qwen3-tei"],
+        default="e5",
+        help="Embedding model (default: e5; Phase 8.8 uses qwen3-st, Phase "
+        "8.12.6 adds qwen3-tei HTTP backend via text-embeddings-inference "
+        "Docker — see docker/docker-compose.gpu.yml `tei` profile)",
+    )
+    ap.add_argument(
+        "--tei-url",
+        default=Qwen3TEIEmbedder.DEFAULT_BASE_URL,
+        help="qwen3-tei only: base URL of the TEI HTTP server (default: "
+        f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
     )
     ap.add_argument("--batch-size", type=int, default=50)
     ap.add_argument(
@@ -1393,44 +1429,45 @@ def main() -> None:
     ap.add_argument(
         "--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)"
     )
-    # Recovered 2026-06-02: these 6 args were dropped by a merge/autofix regression
-    # (existed at b5ff6e9d3) while the code below still references them — restored verbatim.
-    ap.add_argument(
-        "--paths",
-        nargs="*",
-        default=None,
-        help="Incremental mode: list of .bsl files to reindex (instead of walking "
-        "--project). Used by git post-commit hooks for per-file updates.",
-    )
-    ap.add_argument(
-        "--tei-url",
-        default=Qwen3TEIEmbedder.DEFAULT_BASE_URL,
-        help=f"qwen3-tei only: base URL of the TEI HTTP server (default: "
-        f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
-    )
     ap.add_argument(
         "--enable-fa2",
         action="store_true",
-        help="qwen3-st only: enable FlashAttention 2 (1.5-2x on long chunks).",
+        help="qwen3-st only: enable FlashAttention 2 (1.5-2x on long chunks). "
+        "Requires `pip install flash-attn` and CUDA 12.x toolkit + MSVC on Windows. "
+        "Auto-applies left-padding (Phase 8.12 C6) - required for FA2 + last-token pooling.",
     )
     ap.add_argument(
         "--pooling-mode",
         choices=["standard", "late-chunking"],
         default="standard",
-        help="qwen3-st only. 'standard' (default): each chunk embedded independently. "
-        "'late-chunking': one forward pass per module, mean-pool per chunk span.",
+        help="qwen3-st only. 'standard' (default): each chunk embedded "
+        "independently. 'late-chunking' (Phase 8.12.9 A2-alt, "
+        "arXiv:2409.04701): one forward pass per module, then mean-pool "
+        "the contextualized hidden states per chunk's char span. Each "
+        "chunk vector retains document-level context. Tail chunks past "
+        "the model's max_seq_length truncation fall back to standard "
+        "embedding. Used for the 8.12.8 quality regression A/B vs A2.",
     )
     ap.add_argument(
         "--sliding-overlap",
         type=float,
         default=None,
-        help="Override sliding-window overlap ratio (default 0.15). roadmap 260518 §4.5.",
+        help="Phase 2 of roadmap 260518: override sliding-window overlap "
+        "ratio (default 0.15). Raise to 0.25 to chase fallback%% below "
+        "<1%% on god-object modules at the cost of ~10%% more wall-clock "
+        "from extra overlap windows. See roadmap section 4.5.",
     )
     ap.add_argument(
         "--no-region-aware",
         action="store_true",
-        help="late-chunking only: disable (module_path, region) grouping, revert to "
-        "module_path grouping (roadmap 260518 Phase 3). Region-aware is ON by default.",
+        help="late-chunking only (Phase 3 of roadmap 260518). RECOMMENDED "
+        "for Cyrillic BSL production after section 1.2.5 quality "
+        "benchmark (2026-05-20) showed region-aware grouping causes "
+        "-25pp recall@10 regression on medium-sized modules. Disables "
+        "`(module_path, region)` grouping in late-chunking orchestrator "
+        "and reverts to the legacy `module_path` grouping (Phase 8.12.9 "
+        "behaviour). Region-aware grouping is ON by default (kept for "
+        "backwards compat); production reindex MUST add this flag.",
     )
     args = ap.parse_args()
 
@@ -1550,7 +1587,7 @@ def main() -> None:
         args.pooling_mode == "late-chunking"
         and args.embedder == "qwen3-st"
         and not args.enable_fa2
-        and _looks_like_cyrillic_project(project)  # noqa: F821
+        and _looks_like_cyrillic_project(project)
     ):
         # roadmap 260518 §1.2.2 A/B (2026-05-19) showed Phase 2 sliding
         # forward_s is 191-437s without FA2 vs 2.1s with FA2 on Cyrillic
@@ -1579,7 +1616,7 @@ def main() -> None:
         # ratio active during the run. Range guard mirrors the ValueError
         # in `_make_char_windows` (overlap must be < window).
         if not 0.0 <= args.sliding_overlap < 1.0:
-            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got {args.sliding_overlap}")
+            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got " f"{args.sliding_overlap}")
             sys.exit(1)
         Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = args.sliding_overlap
         _evt("sliding_overlap_override", ratio=args.sliding_overlap)
@@ -1640,7 +1677,14 @@ def main() -> None:
             print(f"Context enrichment unavailable: {e}")
             enricher = None
 
-    qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
+    if args.enable_sparse and args.dual_vector:
+        # Existing dual_vector is content+module_path (2 dense slots);
+        # hybrid is dense+bm25 sparse. Combined layout {content, module_path,
+        # bm25} is untested and not used in production — refuse the combo.
+        print("ERROR: --enable-sparse is incompatible with --dual-vector")
+        sys.exit(1)
+
+    qdrant = QdrantClient(host="localhost", port=6333, timeout=120)
     layout = create_collection(
         qdrant,
         args.collection,
@@ -1657,7 +1701,7 @@ def main() -> None:
     # case of reindexing into an existing hybrid collection like the
     # production alias bsl_code_v4_late).
     sparse_encoder = None
-    if layout == "hybrid":  # noqa: F821
+    if layout == "hybrid":
         from fastembed import SparseTextEmbedding
 
         sparse_encoder = SparseTextEmbedding(model_name="Qdrant/bm25")
@@ -1710,12 +1754,25 @@ def main() -> None:
 
             for chunk in chunks:
                 batch.append(chunk)
-                if len(batch) >= args.batch_size:
-                    n = flush_batch(
-                        qdrant, embedder, args.collection, batch, dual_vector=args.dual_vector
-                    )
-                    total_chunks += n
-                    batch.clear()
+                if len(batch) >= buffer_size:
+                    # Phase 8.12 C3: clear the buffer in `finally` so a
+                    # mid-flush OOM (or any other exception) cannot leave
+                    # the previous batch around to grow unbounded — the
+                    # zombie-loop bug that ate ~75% of the 28.04 reindex.
+                    try:
+                        n = flush_batch(
+                            qdrant,
+                            embedder,
+                            args.collection,
+                            batch,
+                            dual_vector=args.dual_vector,
+                            pooling_mode=args.pooling_mode,
+                            region_aware=not args.no_region_aware,
+                            sparse_encoder=sparse_encoder,
+                        )
+                        total_chunks += n
+                    finally:
+                        batch.clear()
                     if args.limit and total_chunks >= args.limit:
                         break
 
@@ -1765,16 +1822,16 @@ def main() -> None:
         print(f"[{mode}] delete-stale: {cleaned} files cleaned")
 
     elapsed = time.time() - t0
-    print(f"\n{'=' * 50}")
+    print(f"\n{'='*50}")
     print("REINDEX COMPLETE")
-    print(f"{'=' * 50}")
+    print(f"{'='*50}")
     print(f"  Files:    {len(bsl_files)}")
     print(f"  Symbols:  {total_symbols}")
     print(f"  Chunks:   {total_chunks}")
     print(f"  Errors:   {errors}")
-    print(f"  Time:     {elapsed:.1f}s ({elapsed / max(len(bsl_files), 1):.2f}s/file)")
+    print(f"  Time:     {elapsed:.1f}s ({elapsed/max(len(bsl_files),1):.2f}s/file)")
     print(f"  Collection: {args.collection}")
-    print(f"{'=' * 50}")
+    print(f"{'='*50}")
 
     embedder.close()
     # roadmap 260518 follow-up — final summary lands in JSONL run_end record;
