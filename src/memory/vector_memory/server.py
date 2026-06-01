@@ -395,6 +395,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             "delete_pattern": handle_delete_pattern,
             "decay_confidence": handle_decay_confidence,
             "health_check": handle_health_check,
+            "list_patterns": handle_list_patterns,
         }
         handler = handlers.get(name)
         if not handler:
