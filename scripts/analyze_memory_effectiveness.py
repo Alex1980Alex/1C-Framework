@@ -370,10 +370,25 @@ def main() -> int:
     ap.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR))
     ap.add_argument("--stamp", default=None, help="override report timestamp (tests)")
     ap.add_argument("--print", action="store_true", help="print markdown to stdout, skip files")
+    ap.add_argument(
+        "--auto-rollback", action="store_true",
+        help="on a config-attributable regression + existing promotion snapshot, "
+        "revert the surfacing config (apply gated by MEMORY_AUTOTUNE_ROLLBACK_APPLY=1)",
+    )
     args = ap.parse_args()
 
     now = datetime.fromisoformat(args.stamp) if args.stamp else datetime.now()
     report = build_report(args.since, now)
+
+    if args.auto_rollback:
+        report["auto_rollback"] = maybe_auto_rollback(report)
+        ar = report["auto_rollback"]
+        if ar["triggered"]:
+            print(
+                f"[AUTO-ROLLBACK] regression {ar['regression_signals']} + snapshot -> "
+                f"{'REVERTED' if ar['applied'] else ar.get('note', ar['mode'])}"
+            )
+
     md = render_markdown(report)
 
     if args.print:
