@@ -123,7 +123,7 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=1000)
     ap.add_argument("--full", action="store_true", help="full content (default: 300-char preview)")
     ap.add_argument("--out", default=str(DEFAULT_OUT))
-    ap.add_argument("--stdout", action="store_true", help="print to stdout (ASCII-escaped)")
+    ap.add_argument("--stdout", action="store_true", help="write to stdout as UTF-8 bytes")
     args = ap.parse_args()
 
     try:
