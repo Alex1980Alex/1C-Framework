@@ -13,7 +13,7 @@ Usage:
   python scripts/view_learned_patterns.py --type code-convention
   python scripts/view_learned_patterns.py --grep rrf --full
   python scripts/view_learned_patterns.py --min-confidence 0.6
-  python scripts/view_learned_patterns.py --stdout              # print (ASCII-escaped)
+  python scripts/view_learned_patterns.py --stdout              # write UTF-8 bytes to stdout
 
 Companion to scripts/dedupe_learned_patterns.py. MCP equivalent: the
 `list_patterns` tool on the vector-memory server (same filters).
