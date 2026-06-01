@@ -113,6 +113,59 @@ SEMANTIC_COLLECTIONS = [
 MIN_SURFACE_CONF = 0.15   # hard noise floor: below this → never surface
 CONF_FLOOR = 0.30          # soft floor for floored-multiply score adjustment
 
+
+def _load_surfacing_tuning() -> None:
+    """§25 B1: overlay tunable surfacing constants from surfacing_tuning.json.
+
+    Reversible self-tuning hook-in (roadmap 260601 §5): the offline sweep (B1) /
+    gated promotion (B2) write the winning config to data/memory/surfacing_tuning.json;
+    this loads it at import time, overriding the hardcoded defaults above. Absent or
+    malformed file → keep defaults (fully reversible: delete the file). Values are
+    clamped to the file's own clamp_ranges so a bad promotion can't make the hook
+    surface garbage. Fail-soft: any error leaves defaults intact. An explicit
+    MEMORY_SURFACE_CACHE_TTL env var still wins over the file (operator override).
+    """
+    global MIN_SURFACE_CONF, CONF_FLOOR, SURFACE_RRF_K, SURFACE_CACHE_TTL
+    if os.environ.get("MEMORY_SURFACE_TUNING_DISABLE") == "1":
+        return
+    path = PROJECT_ROOT / "data" / "memory" / "surfacing_tuning.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    ranges = data.get("clamp_ranges", {}) if isinstance(data, dict) else {}
+
+    def _clamp(value: float, key: str) -> float:
+        rng = ranges.get(key)
+        if isinstance(rng, list) and len(rng) == 2:
+            return max(rng[0], min(rng[1], value))
+        return value
+
+    try:
+        if isinstance(data.get("min_surface_conf"), (int, float)):
+            MIN_SURFACE_CONF = float(_clamp(data["min_surface_conf"], "min_surface_conf"))
+        if isinstance(data.get("conf_floor"), (int, float)):
+            CONF_FLOOR = float(_clamp(data["conf_floor"], "conf_floor"))
+        if isinstance(data.get("rrf_k"), (int, float)):
+            SURFACE_RRF_K = int(data["rrf_k"])
+        if (
+            "MEMORY_SURFACE_CACHE_TTL" not in os.environ
+            and isinstance(data.get("surface_cache_ttl_seconds"), (int, float))
+        ):
+            SURFACE_CACHE_TTL = float(
+                _clamp(data["surface_cache_ttl_seconds"], "surface_cache_ttl_seconds")
+            )
+        weights = data.get("surface_rrf_weights")
+        if isinstance(weights, dict):
+            for arm, w in weights.items():
+                if arm in SURFACE_RRF_WEIGHTS and isinstance(w, (int, float)):
+                    SURFACE_RRF_WEIGHTS[arm] = float(_clamp(w, "rrf_weight"))
+    except Exception:
+        return
+
+
+_load_surfacing_tuning()
+
 # Timeout budgets (seconds). TEI cold ~600ms, warm ~80ms (vs Ollama ~2s cold).
 SQLITE_TIMEOUT = 0.200
 QDRANT_TIMEOUT = 2.000  # TEI embed (warm) + Qdrant queries
