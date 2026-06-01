@@ -148,7 +148,8 @@ def main() -> int:
     md = render(rows, len(points), full=args.full, label=label)
 
     if args.stdout:
-        # ASCII-escape to survive a cp1251 console pipe on Windows.
+        # Write raw UTF-8 bytes via the buffer to survive a cp1251 console pipe on
+        # Windows (print() would raise UnicodeEncodeError on Cyrillic content).
         sys.stdout.buffer.write(md.encode("utf-8"))
         sys.stdout.buffer.write(b"\n")
         return 0
