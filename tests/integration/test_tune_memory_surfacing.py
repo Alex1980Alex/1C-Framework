@@ -151,3 +151,8 @@ def test_promote_apply_then_rollback(tmp_path, monkeypatch):
     assert T.cmd_rollback(rb_args) == 0
     restored = __import__("json").loads(tuning.read_text(encoding="utf-8"))
     assert restored["surface_rrf_weights"]["pattern_lexical"] == 0.7
+    # Snapshot consumed (renamed) so a later unrelated regression can't re-trigger.
+    assert not prev.exists()
+    assert prev.with_suffix(".json.reverted").exists()
+    # A second rollback now has nothing to restore.
+    assert T.cmd_rollback(rb_args) == 1
