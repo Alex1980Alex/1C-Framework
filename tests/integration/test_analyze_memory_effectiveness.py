@@ -95,3 +95,22 @@ def test_percentile_and_pct_helpers():
     assert M._pct(0, 0) == 0.0
     assert M._percentile([], 0.5) == 0.0
     assert M._percentile([10.0, 20.0, 30.0], 0.5) == 20.0
+
+
+def test_parse_since_windows():
+    now = datetime(2026, 6, 1, 12, 0, 0)
+    assert M._parse_since(None, now) is None
+    assert M._parse_since("bogus", now) is None  # unparseable -> None (no filter)
+    assert M._parse_since("24h", now) == datetime(2026, 5, 31, 12, 0, 0)
+    assert M._parse_since("7d", now) == datetime(2026, 5, 25, 12, 0, 0)
+
+
+def test_read_jsonl_skips_corrupt_lines(tmp_path):
+    p = tmp_path / "log.jsonl"
+    p.write_text(
+        '{"event": "ok1"}\nnot json at all\n\n{"event": "ok2"}\n',
+        encoding="utf-8",
+    )
+    rows = M._read_jsonl(p, None)
+    assert [r.get("event") for r in rows] == ["ok1", "ok2"]
+    assert M._read_jsonl(tmp_path / "nope.jsonl", None) == []
