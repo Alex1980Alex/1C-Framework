@@ -26,6 +26,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -34,6 +37,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SURFACING_LOG = PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing.log"
 LIFECYCLE_LOG = PROJECT_ROOT / ".claude" / "cache" / "confidence-lifecycle.log"
 DEFAULT_OUT_DIR = PROJECT_ROOT / "data" / "reports" / "memory"
+TUNING_PREV_FILE = PROJECT_ROOT / "data" / "memory" / "surfacing_tuning.prev.json"
+TUNER_SCRIPT = PROJECT_ROOT / "scripts" / "tune_memory_surfacing.py"
 
 THRESHOLDS = {
     "tei_down_rate": 0.30,
@@ -41,6 +46,11 @@ THRESHOLDS = {
     "no_results_rate": 0.40,
     "cache_hit_rate_floor": 0.01,
 }
+
+# §25 B2 auto-rollback (closes the "auto-откат при регрессии на следующем окне" gap):
+# config-attributable quality regressions. TEI-down is deliberately EXCLUDED -- that's
+# an infra outage, not the surfacing config's fault, so it must not trigger a rollback.
+AUTO_ROLLBACK_SIGNALS = ("gate_drop_rate", "no_results_rate")
 
 
 def _parse_since(since: str | None, now: datetime) -> datetime | None:
