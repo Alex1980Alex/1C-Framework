@@ -1641,7 +1641,7 @@ def main() -> None:
             enricher = None
 
     qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
-    create_collection(
+    layout = create_collection(
         qdrant,
         args.collection,
         vector_dims,
