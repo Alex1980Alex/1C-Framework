@@ -1,6 +1,6 @@
 # Roadmap — Memory Effectiveness Metrics & Self-Tuning (§25)
 
-> **Дата:** 2026-06-01 · **Статус:** PLANNED (дизайн готов, реализация впереди) · **Родитель:** [260523 §25](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
+> **Дата:** 2026-06-01 · **Статус:** Part A DONE · Part B (B0–B2) DONE · B3 (online-MAB) FUTURE · **Родитель:** [260523 §25](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
 >
 > На основании этой главы выполняется реализация. Части: **A** (read-only analyzer), **B** (self-tuning loop). Research — live WebSearch/WebFetch + source-level (см. §2, цитаты).
 
@@ -20,6 +20,8 @@
 | Регрессионный **gate / алерты** | нет порога «качество < X → алерт» |
 
 Вывод: петля «измеряю качество → анализирую → чиню параметры» **разомкнута на этапе анализа**. Данные для замыкания (оба лога) уже собираются.
+
+> **UPD 2026-06-01:** петля **замкнута** (Part A + Part B). Analyzer (A) агрегирует логи и даёт rule-based рекомендации; golden-set harness (B0) + offline sweep (B1) + gated promotion (B2) дают честный авто-тюнинг параметров с held-out валидацией. Все 4 пробела в таблице закрыты (precision@k/NDCG@k — через golden-set harness, а не через лог-analyzer). См. §6 «Part A/B DONE».
 
 ## 2. Research synthesis (live, цитируемый)
 
@@ -102,10 +104,12 @@
 | **A0** | `data/memory/surfacing_tuning.json` (descriptive defaults, reversible; ещё НЕ читается хуком — wiring в B1) | — | ✅ DONE 2026-06-01 |
 | **A1** | `scripts/analyze_memory_effectiveness.py` — агрегаты §3 + Markdown/JSON/_latest + rule-based рекомендации | A0, логи (есть) | ✅ DONE 2026-06-01 |
 | **A2** | Stop-хук `memory-effectiveness-analyzer.py` (detached spawn, 6h cooldown, opt-out) + регистрация в settings.json + 8 smoke-тестов | A1 | ✅ DONE 2026-06-01 |
-| **B0** | golden-set memory-queries (≥30) + harness | A1 | PLANNED |
-| **B1** | offline sweep по golden-set, dry-run «лучший конфиг» (AutoRAG-style); wiring `surfacing_tuning.json` → hook | B0, A0 | PLANNED |
-| **B2** | gated promotion + auto-rollback + audit (self-tuning замкнут) | B1 | PLANNED |
+| **B0** | golden-set memory-queries (43: 26 skill + 17 pattern) + harness (capture/replay/metrics) + 10 smoke-тестов | A1 | ✅ DONE 2026-06-01 |
+| **B1** | offline sweep (72-config grid) по golden-set, dry-run «лучший конфиг» (AutoRAG-style); wiring `surfacing_tuning.json` → hook (`_load_surfacing_tuning`, clamp) | B0, A0 | ✅ DONE 2026-06-01 |
+| **B2** | gated promotion (held-out validation) + rollback + audit; dry-run by default; 6 smoke-тестов | B1 | ✅ DONE 2026-06-01 |
 | **B3** *(future)* | online-MAB тюнинг (AutoRAG-HP), guardrail против нестационарности | B2 | FUTURE |
+
+> **Part B DONE (2026-06-01):** golden-set [`data/memory/golden/memory_queries.jsonl`](../../data/memory/golden/memory_queries.jsonl) (43 queries, train/heldout split, relevance labelled by **content-hash** = `sha1(content[:200])[:16]`, the rrf_merge dedup key → labels align with what actually surfaces); harness [`scripts/memory_golden_harness.py`](../../scripts/memory_golden_harness.py) (precompute-then-sweep: live `capture` once → pure `evaluate` replays gating+RRF for any config, Qdrant-independent); tuner [`scripts/tune_memory_surfacing.py`](../../scripts/tune_memory_surfacing.py) (`sweep`/`promote`/`rollback`). **Live baseline (default config, all 43):** hit@5=0.79, NDCG@5=0.66, MRR=0.66 (9 misses → real room to tune, not saturated). **Sweep+gate validated end-to-end:** sweep picked `skill=0.9` (train NDCG 0.628→0.672, +0.022) — but it **overfit**: on held-out it regressed (hit 0.846→0.769) and the B2 gate correctly **REFUSED** promotion (`improvement=-0.063, no_regression=False`). Default config stays — the loop refuses to degrade prod, which is the point of held-out validation. Hook wiring: `_load_surfacing_tuning()` overlays `surfacing_tuning.json` clamped to `clamp_ranges` (override+clamp verified live); opt-out `MEMORY_SURFACE_TUNING_DISABLE=1`; apply gated by `--apply`/`MEMORY_AUTOTUNE_APPLY=1`; audit → confidence-lifecycle.log; rollback via `surfacing_tuning.prev.json`. 16 smoke-тестов (10+6), ruff clean, 29/29 hook-тестов pass (no regression). Manual: `python scripts/memory_golden_harness.py capture` then `... evaluate --split heldout`; `python scripts/tune_memory_surfacing.py sweep` / `promote`.
 
 > **Part A DONE (2026-06-01):** analyzer + Stop-хук + config + 8 smoke-тестов, ruff clean, **code-verify PASS**. Прогон на реальных логах (16 surfacing + 23 lifecycle) поймал live-баг `tei_down_rate=1.0` (`ModuleNotFoundError: shared.semantic_search` в surfacing-хуке) — ровно та диагностика, ради которой analyzer строился. Hook smoke: run1 exit 0 + systemMessage + state; run2 exit 0 cooldown-silent (никогда не блокирует Stop). Отчёты: `data/reports/memory/_latest.md`. Opt-out: `MEMORY_EFFECTIVENESS_ANALYZER_DISABLE=1`. Ручной запуск: `python scripts/analyze_memory_effectiveness.py --since 7d`. **Часть B (self-tuning) НЕ начата** — требует B0 golden-set.
 
