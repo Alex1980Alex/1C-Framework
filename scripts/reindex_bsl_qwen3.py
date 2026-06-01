@@ -1642,7 +1642,12 @@ def main() -> None:
 
     qdrant = QdrantClient(host="localhost", port=6333, timeout=30)
     create_collection(
-        qdrant, args.collection, vector_dims, args.recreate, dual_vector=args.dual_vector
+        qdrant,
+        args.collection,
+        vector_dims,
+        args.recreate,
+        dual_vector=args.dual_vector,
+        enable_sparse=args.enable_sparse,
     )
     if args.dual_vector:
         print("Dual-vector mode: content + module_path named vectors")
