@@ -167,7 +167,12 @@ def write_backup(client, stamp: str) -> Path:
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     full = fetch_points(client, with_vectors=True)
     path = BACKUP_DIR / f"{COLLECTION}_{stamp}.json"
-    path.write_text(json.dumps({"collection": COLLECTION, "points": full}, ensure_ascii=False), encoding="utf-8")
+    blob = json.dumps({"collection": COLLECTION, "points": full}, ensure_ascii=False)
+    # Atomic write: the backup is the recovery artifact, so a crash mid-write must not
+    # leave it truncated. Write to a temp file, then os.replace (atomic on win32 + posix).
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(blob, encoding="utf-8")
+    os.replace(tmp, path)
     return path
 
 
