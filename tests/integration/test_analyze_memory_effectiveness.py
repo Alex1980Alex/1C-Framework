@@ -114,3 +114,77 @@ def test_read_jsonl_skips_corrupt_lines(tmp_path):
     rows = M._read_jsonl(p, None)
     assert [r.get("event") for r in rows] == ["ok1", "ok2"]
     assert M._read_jsonl(tmp_path / "nope.jsonl", None) == []
+
+
+# --- §25 B2 auto-rollback ---------------------------------------------------
+
+def _surf_with(no_results=0, gate_archived=0, gate_passed=10, tei_down=0, total=10):
+    rows = []
+    for i in range(total):
+        rows.append({
+            "outcome": "no-results" if i < no_results else "injected",
+            "tei": "down" if i < tei_down else "ok",
+            "gate": {"archived": gate_archived, "below_floor": 0, "passed": gate_passed} if i == 0 else {},
+        })
+    return M.analyze_surfacing(rows)
+
+
+def test_regression_signals_config_attributable_only():
+    # High no_results -> signal; TEI-down alone must NOT be a rollback signal.
+    surf = _surf_with(no_results=6, total=10)
+    assert any("no_results_rate" in s for s in M.regression_signals(surf))
+    tei_only = _surf_with(no_results=0, tei_down=10, total=10)
+    assert M.regression_signals(tei_only) == []  # infra outage != config regression
+    assert M.regression_signals(M.analyze_surfacing([])) == []  # empty window
+
+
+def test_maybe_auto_rollback_no_snapshot(tmp_path, monkeypatch):
+    monkeypatch.setattr(M, "TUNING_PREV_FILE", tmp_path / "nope.json")
+    monkeypatch.delenv("MEMORY_AUTOTUNE_ROLLBACK_APPLY", raising=False)
+    report = {"surfacing": _surf_with(no_results=6, total=10)}
+    out = M.maybe_auto_rollback(report)
+    assert out["regression_signals"]  # regression detected
+    assert out["snapshot_exists"] is False
+    assert out["triggered"] is False  # no promotion to revert
+    assert out["applied"] is False
+
+
+def test_maybe_auto_rollback_dryrun_does_not_call_subprocess(tmp_path, monkeypatch):
+    snap = tmp_path / "prev.json"
+    snap.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(M, "TUNING_PREV_FILE", snap)
+    monkeypatch.delenv("MEMORY_AUTOTUNE_ROLLBACK_APPLY", raising=False)
+    called = {"n": 0}
+    monkeypatch.setattr(M.subprocess, "run", lambda *a, **k: called.__setitem__("n", called["n"] + 1))
+    report = {"surfacing": _surf_with(no_results=6, total=10)}
+    out = M.maybe_auto_rollback(report)
+    assert out["triggered"] is True
+    assert out["applied"] is False
+    assert "note" in out
+    assert called["n"] == 0  # dry-run must not shell out
+
+
+def test_maybe_auto_rollback_apply_invokes_rollback(tmp_path, monkeypatch):
+    snap = tmp_path / "prev.json"
+    snap.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(M, "TUNING_PREV_FILE", snap)
+    monkeypatch.setenv("MEMORY_AUTOTUNE_ROLLBACK_APPLY", "1")
+
+    class _Proc:
+        returncode = 0
+        stdout = "-> ROLLED BACK"
+
+    seen = {}
+    monkeypatch.setattr(M.subprocess, "run", lambda cmd, **k: seen.update(cmd=cmd) or _Proc())
+    report = {"surfacing": _surf_with(no_results=6, total=10)}
+    out = M.maybe_auto_rollback(report)
+    assert out["triggered"] is True
+    assert out["applied"] is True
+    assert "rollback" in seen["cmd"] and "--apply" in seen["cmd"]
+
+
+def test_build_report_stays_read_only_without_flag():
+    # build_report must NOT include auto_rollback (analyzer stays read-only by default).
+    M.SURFACING_LOG = M.PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing.log"
+    rep = M.build_report("7d", datetime(2026, 6, 1, 12, 0, 0))
+    assert "auto_rollback" not in rep
