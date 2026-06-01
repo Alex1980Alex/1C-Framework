@@ -1,8 +1,8 @@
 {
-  "_comment": "Roadmap section 25 A0 — reversible surfacing-tuning config. Defaults MIRROR the current hardcoded constants in .claude/hooks/memory-first-hook.py. Part B (self-tuning) will rewrite this under gated promotion; until then it is descriptive only and NOT yet read by the hook (wiring is a B1 step). Editing it now has no runtime effect.",
+  "_comment": "Roadmap section 25 — reversible surfacing-tuning config. Defaults MIRROR the hardcoded constants in .claude/hooks/memory-first-hook.py. WIRED (B1, 2026-06-01): the hook reads this at import via _load_surfacing_tuning(), clamped to clamp_ranges; delete this file to restore defaults. B2 gated promotion (scripts/tune_memory_surfacing.py) rewrites it only when the held-out target metric improves without regression. Opt-out: MEMORY_SURFACE_TUNING_DISABLE=1.",
   "version": 1,
   "updated": "2026-06-01",
-  "managed_by": "manual (Part B self-tuning not yet wired)",
+  "managed_by": "manual until first B2 promotion (tune_memory_surfacing.py)",
   "surface_rrf_weights": {
     "skill": 0.5,
     "experience": 0.5,
