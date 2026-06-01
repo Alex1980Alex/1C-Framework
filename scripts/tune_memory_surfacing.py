@@ -286,8 +286,16 @@ def cmd_rollback(args: argparse.Namespace) -> int:
         print("Dry-run: would restore surfacing_tuning.json from snapshot (use --apply).")
         return 0
     TUNING_FILE.write_text(PREV_FILE.read_text(encoding="utf-8"), encoding="utf-8")
+    # Consume the snapshot: the promotion it represented has been reverted, so it must
+    # not re-trigger the analyzer's auto-rollback on a later *unrelated* regression
+    # (review obs. 3). Rename (not delete) — keep it for audit.
+    reverted = PREV_FILE.with_suffix(".json.reverted")
+    try:
+        os.replace(PREV_FILE, reverted)
+    except OSError:
+        pass
     _audit("surfacing_tune_rollback", applied=True)
-    print(f"-> ROLLED BACK surfacing_tuning.json from {PREV_FILE.name}.")
+    print(f"-> ROLLED BACK surfacing_tuning.json (snapshot consumed -> {reverted.name}).")
     return 0
 
 
