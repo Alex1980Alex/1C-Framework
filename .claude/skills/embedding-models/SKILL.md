@@ -88,8 +88,13 @@ QWEN3_MODEL_DIR=D:/hf-manual/Qwen3-Embedding-8B   # bind-mount для compose
 | CUDA out of memory | Batch size слишком большой | Уменьшить `batch_size` (32), или `device=cpu` |
 | Cache miss на каждый запрос | Cache выключен | `EMBEDDING__CACHE_ENABLED=true`, проверить `cache_dir` |
 
+## Провайдер `tei` (Phase 8 default — factory branch добавлен 2026-06-01)
+
+`EMBEDDING__PROVIDER=tei` — **production default**, но до 2026-06-01 фабрика `get_embedding_engine()` падала с `ValueError: Unsupported embedding provider: tei` (не было ветки) → ломала всех потребителей, включая vector-memory MCP (`_get_embedding` → «embedding provider unavailable»). Фикс: [`providers/tei.py`](../../../src/pdf_framework/embeddings/providers/tei.py) `TEIEmbeddingEngine` + ветка в фабрике. Поведение: читает `TEI_URL` env (override) → `settings.tei_base_url` (default `http://localhost:8080`) + `/embed`; sub-batch ≤ `settings.tei_client_batch` (32, TEI 413-cap); **всегда** добавляет Qwen3 `QUERY_INSTRUCTION` (query-side, как `shared/semantic_search.embed_query_tei`) → для passage-индексации нужен отдельный no-prefix путь; `normalize+truncate`; dims=`settings.dimensions` (4096). После правок MCP-сервера нужен `/mcp reconnect` ([[feedback-mcp-stale-code-reconnect]]).
+
 ## Файлы
 - Engine interface: `src/pdf_framework/embeddings/engine.py`
+- TEI provider: `src/pdf_framework/embeddings/providers/tei.py` (Qwen3 4096d, PRODUCTION DEFAULT)
 - Local provider: `src/pdf_framework/embeddings/providers/local.py`
 - Giga provider: `src/pdf_framework/embeddings/providers/giga.py`
 - BGE-M3 provider: `src/pdf_framework/embeddings/providers/bgem3.py`
