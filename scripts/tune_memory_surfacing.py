@@ -322,6 +322,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    import os  # noqa: E402 -- local import keeps module header tidy; used in promote/rollback
-
     raise SystemExit(main())
