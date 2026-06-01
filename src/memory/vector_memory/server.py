@@ -625,6 +625,60 @@ async def handle_delete_pattern(args: dict[str, Any]) -> list[TextContent]:
     return [TextContent(type="text", text=json.dumps({"success": True, "pattern_id": pattern_id}))]
 
 
+async def handle_list_patterns(args: dict[str, Any]) -> list[TextContent]:
+    """Browse pattern content without a semantic query (scroll + filters, no embedding).
+
+    Read-only listing for inspection: filter by pattern_type / effective min_confidence /
+    grep substring; content is preview-truncated unless ``full=true``. No TEI roundtrip,
+    so it is not subject to the embedding-provider cold-start that gates search_patterns.
+    """
+    client = _get_qdrant()
+    type_filter = args.get("pattern_type")
+    min_conf = float(args.get("min_confidence", 0.0) or 0.0)
+    grep = (args.get("grep") or "").lower()
+    limit = int(args.get("limit", 100) or 100)
+    full = bool(args.get("full", False))
+
+    points, _ = client.scroll(
+        collection_name=COLLECTION_NAME, limit=max(limit, 1000),
+        with_payload=True, with_vectors=False,
+    )
+    rows = []
+    for p in points:
+        pl = p.payload or {}
+        content = pl.get("content") or pl.get("description") or ""
+        ptype = pl.get("pattern_type") or pl.get("category") or "?"
+        if type_filter and ptype != type_filter:
+            continue
+        if grep and grep not in content.lower():
+            continue
+        eff = payload_effective_confidence(pl)
+        if min_conf > 0.0 and eff < min_conf:
+            continue
+        rows.append(
+            {
+                "pattern_id": str(p.id),
+                "pattern_type": ptype,
+                "effective_confidence": round(eff, 4),
+                "application_count": pl.get("application_count"),
+                "created_at": pl.get("created_at", ""),
+                "archived": bool(pl.get("expired_at")),
+                "content": content if full else content[:300],
+            }
+        )
+    rows.sort(key=lambda r: str(r["created_at"]))
+    rows = rows[:limit]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {"count": len(rows), "collection": COLLECTION_NAME, "patterns": rows},
+                ensure_ascii=False, indent=2,
+            ),
+        )
+    ]
+
+
 async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
     """Apply temporal decay: confidence * exp(-decay_rate * days/30).
 
