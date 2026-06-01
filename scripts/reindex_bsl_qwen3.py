@@ -1358,6 +1358,45 @@ def main() -> None:
     ap.add_argument(
         "--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)"
     )
+    # Recovered 2026-06-02: these 6 args were dropped by a merge/autofix regression
+    # (existed at b5ff6e9d3) while the code below still references them — restored verbatim.
+    ap.add_argument(
+        "--paths",
+        nargs="*",
+        default=None,
+        help="Incremental mode: list of .bsl files to reindex (instead of walking "
+        "--project). Used by git post-commit hooks for per-file updates.",
+    )
+    ap.add_argument(
+        "--tei-url",
+        default=Qwen3TEIEmbedder.DEFAULT_BASE_URL,
+        help=f"qwen3-tei only: base URL of the TEI HTTP server (default: "
+        f"{Qwen3TEIEmbedder.DEFAULT_BASE_URL})",
+    )
+    ap.add_argument(
+        "--enable-fa2",
+        action="store_true",
+        help="qwen3-st only: enable FlashAttention 2 (1.5-2x on long chunks).",
+    )
+    ap.add_argument(
+        "--pooling-mode",
+        choices=["standard", "late-chunking"],
+        default="standard",
+        help="qwen3-st only. 'standard' (default): each chunk embedded independently. "
+        "'late-chunking': one forward pass per module, mean-pool per chunk span.",
+    )
+    ap.add_argument(
+        "--sliding-overlap",
+        type=float,
+        default=None,
+        help="Override sliding-window overlap ratio (default 0.15). roadmap 260518 §4.5.",
+    )
+    ap.add_argument(
+        "--no-region-aware",
+        action="store_true",
+        help="late-chunking only: disable (module_path, region) grouping, revert to "
+        "module_path grouping (roadmap 260518 Phase 3). Region-aware is ON by default.",
+    )
     args = ap.parse_args()
 
     # Validate --project / --paths combination.
