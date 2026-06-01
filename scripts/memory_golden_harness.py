@@ -344,8 +344,11 @@ def capture_query(query: str, mfh, embed_fn, search_fn) -> dict[str, Any]:
     # storing every candidate with overlap>0 (replay applies SCORE_THRESHOLD + gating).
     try:
         client = _vector_db_client()
+        # limit=100 mirrors the live hook (_search_learned_patterns scrolls 100); capturing
+        # more would let replay see lexical candidates the hook never would once the
+        # collection exceeds 100 points (no effect at the current 44).
         points, _ = client.scroll(
-            collection_name="learned_patterns", limit=200,
+            collection_name="learned_patterns", limit=100,
             with_payload=True, with_vectors=False,
         )
         for point in points:
