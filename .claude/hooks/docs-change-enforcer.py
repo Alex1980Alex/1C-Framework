@@ -145,6 +145,9 @@ SKIP_PATTERNS = [
     # (codecov.yml + .pre-commit-config.yaml documented in 09.4 Мониторинг,
     # data/eval/golden_v1.json — versioned dataset с CHANGELOG.md рядом).
     ".pre-commit-config.yaml",
+    # Memory subsystem runtime config/tuning (§25): surfacing_tuning.json etc.
+    # are config-data, documented in roadmap §25 + chapter 27.10, not product code.
+    "data/memory/",
     ".kblintrc.yml",
     ".markdownlint.jsonc",
     ".markdownlint.yaml",
