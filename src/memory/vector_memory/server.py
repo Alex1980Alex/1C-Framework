@@ -140,7 +140,11 @@ async def _get_embedding(text: str) -> list[float]:
 
             _embedding_provider = get_embedding_engine()
             _embedding_fn = "async"  # marker: use _embedding_provider
-            logger.info("Using project embedding provider (E5 1024d)")
+            logger.info(
+                "Using project embedding provider: %s (%dd)",
+                type(_embedding_provider).__name__,
+                getattr(_embedding_provider, "get_dimensions", lambda: VECTOR_SIZE)(),
+            )
         except Exception as exc:
             allow_fallback = os.environ.get(
                 "MEMORY_VECTOR_ALLOW_HASH_FALLBACK", ""
