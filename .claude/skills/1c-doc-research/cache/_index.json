@@ -2,6 +2,32 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "ut-okruglenie-cen-vidy-cen": {
+      "title": "Округление цены в виде цен (УТ/ERP) — настройка и значения по умолчанию",
+      "file": "ut-okruglenie-cen-vidy-cen.md",
+      "created": "2026-06-01",
+      "last_verified": "2026-06-01",
+      "keywords": [
+        "округление цены",
+        "ВидыЦен округление",
+        "ПорядокОкругления",
+        "ОкруглятьЦеныДо",
+        "ВариантОкругления",
+        "точность округления",
+        "психологическое округление",
+        "округление по арифметическим правилам",
+        "Окр15как20",
+        "ПорядкиОкругления перечисление"
+      ],
+      "sources": [
+        "its.1c.ru/metod81/8258",
+        "infostart.ru/1c/articles/195575",
+        "infostart.ru/forum9/topic296531",
+        "infostart.ru/1c/tools/998350",
+        "specportal.pro psihologicheskoe-okruglenie",
+        "Конфигурация: get_metadata enum Округл = 0"
+      ]
+    },
     "rs-zapis-nabora-trigger-obmen": {
       "title": "Перехват записи независимого РС → инициирование обмена/интеграции (модуль набора записей)",
       "file": "rs-zapis-nabora-trigger-obmen.md",
