@@ -36,8 +36,6 @@ QUERY_INSTRUCTION = (
     "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 
-# TEI rejects client batches over MAX_CLIENT_BATCH_SIZE (default 32) with HTTP 413.
-_TEI_CLIENT_BATCH = 32
 # Keep inputs under the model window; TEI also right-truncates server-side as a backstop.
 _MAX_CHARS = 8000
 
@@ -47,9 +45,13 @@ class TEIEmbeddingEngine(BaseEmbeddingEngine):
 
     def __init__(self, settings: EmbeddingSettings | None = None):
         self._settings = settings or EmbeddingSettings()
-        base = os.environ.get("TEI_URL", "http://localhost:8080").rstrip("/")
+        # TEI_URL env overrides settings for byte-parity with the hook path
+        # (shared/semantic_search reads TEI_URL); both default to localhost:8080.
+        base = os.environ.get("TEI_URL", self._settings.tei_base_url).rstrip("/")
         self._url = f"{base}/embed"
         self._model = self._settings.model or "Qwen/Qwen3-Embedding-8B"
+        # TEI rejects client batches over MAX_CLIENT_BATCH_SIZE (default 32) with HTTP 413.
+        self._client_batch = max(1, int(self._settings.tei_client_batch))
         self._client = httpx.AsyncClient(timeout=120.0)
 
     async def embed_text(self, text: str) -> list[float]:
@@ -57,12 +59,19 @@ class TEIEmbeddingEngine(BaseEmbeddingEngine):
         return result[0]
 
     async def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        """Embed texts (query-side calibration).
+
+        Always prepends the Qwen3 ``QUERY_INSTRUCTION`` prefix — this is the
+        asymmetric *query* embedding, matching the live memory-first-hook path.
+        Passage/document indexing wants the no-prefix passage mode (a separate
+        path), not this engine.
+        """
         if not texts:
             return []
         inputs = [QUERY_INSTRUCTION + t[:_MAX_CHARS] for t in texts]
         out: list[list[float]] = []
-        for start in range(0, len(inputs), _TEI_CLIENT_BATCH):
-            sub = inputs[start : start + _TEI_CLIENT_BATCH]
+        for start in range(0, len(inputs), self._client_batch):
+            sub = inputs[start : start + self._client_batch]
             out.extend(await self._post_embed(sub))
         if len(out) != len(texts):
             raise RuntimeError(f"TEI shape mismatch: {len(out)} vs {len(texts)}")
