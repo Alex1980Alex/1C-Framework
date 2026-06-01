@@ -98,6 +98,7 @@ SURFACE_RRF_WEIGHTS: dict = {
     "pattern_dense": 0.3,
     "pattern_lexical": 0.7,
 }
+SURFACE_RRF_K = 60  # RRF k constant for the surfacing fusion (tunable, §25 B1)
 
 # Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
 # learned_patterns included for semantic surfacing (§24 P0 ADR-D6)
