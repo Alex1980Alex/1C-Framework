@@ -363,6 +363,24 @@ async def list_tools() -> list[Tool]:
             description="Check Qdrant connection and collection health.",
             inputSchema={"type": "object", "properties": {}},
         ),
+        Tool(
+            name="list_patterns",
+            description=(
+                "List/browse pattern CONTENT without a semantic query (scroll-based, "
+                "no embedding). Filters: pattern_type, min_confidence (effective), grep "
+                "(case-insensitive substring), limit, full (false=300-char preview)."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "pattern_type": {"type": "string"},
+                    "min_confidence": {"type": "number", "default": 0.0},
+                    "grep": {"type": "string"},
+                    "limit": {"type": "integer", "default": 100},
+                    "full": {"type": "boolean", "default": False},
+                },
+            },
+        ),
     ]
 
 
