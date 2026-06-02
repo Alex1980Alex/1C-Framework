@@ -31,14 +31,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 COLLECTION = "learned_patterns"
 
 # Reuse the canonical hash + the dedupe script's I/O helpers (single source).
+# PROJECT_ROOT makes `scripts.*` importable when run as a CLI; src/ for `memory.*`.
+sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
-from memory.orchestrator.content_hash import content_key  # noqa: E402
 
-from scripts.dedupe_learned_patterns import (  # noqa: E402
-    _client,
-    fetch_points,
-    write_backup,
-)
+from memory.orchestrator.content_hash import content_key
+from scripts.dedupe_learned_patterns import _client, fetch_points, write_backup
 
 
 def build_plan(points: list[dict[str, Any]]) -> dict[str, Any]:
