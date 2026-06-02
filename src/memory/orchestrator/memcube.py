@@ -234,6 +234,7 @@ class MemoryCube:
             "pattern_type": self.metadata.get("pattern_type", "workflow-pattern"),
             "name": self.title or self.content[:50],
             "content": self.content,
+            "content_hash": self.content_hash,
             "description": self.what or "",
             "confidence": self.confidence,
             "tags": self.tags,
