@@ -375,7 +375,8 @@ def get_session_files(session_id: str = "") -> set[str]:
         # so the auto-save/format exclusion above was dead code and the window was
         # always a hardcoded 6h — over-firing the enforcer on cosmetic commits.
         r = subprocess.run(
-            ["git", "log", since_arg, *grep_args, "--name-only", "--pretty=", "--extended-regexp"],
+            # default basic-regex: `(` is literal, so `^style(` matches `style(ruff):`
+            ["git", "log", since_arg, *grep_args, "--name-only", "--pretty="],
             capture_output=True,
             text=True,
             encoding="utf-8",
