@@ -85,7 +85,7 @@
 
 **Артефакты:** `src/memory/orchestrator/content_hash.py` (новый, canonical) · `memcube.py` (+`content_hash` поле/проекции) · `ingest_metrics.py` (новый, D0.3) · `scripts/backfill_content_hash.py` (новый, D0.4) · `dedupe_learned_patterns.py` (делегирует) · доки [27.12 §11](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md). Тесты: 30 unit (content_hash 19 + backfill 5 + ingest 6) + 12 memcube-wiki regression = 42 green.
 
-### P1 — Авто-ingestion харвестеры (по всем слоям)
+### P1 — Авто-ingestion харвестеры (по всем слоям) — ✅ DONE (2026-06-03)
 
 **Deliverables:**
 - D1.1 *Patterns harvester* — Stop-хук (образец [`session-memory-save.py`](../../.claude/hooks/session-memory-save.py)) майнит подтверждённые feedback-drafts (`data/memory_drafts/`) + session-lessons → `MemoryCube` → `save_pattern`. **Gated:** `content_hash` dedup (skip если existing) + §22 confidence-floor + cap N/сессия (анти-флуд) + opt-out env.
@@ -93,11 +93,13 @@
 - D1.3 *Experience/conversation решение (ADR)* — либо (a) вшить `ConversationMemory` writer (наполнить пустые коллекции из session-transcript), либо (b) **формально deprecate** обе коллекции (ADR + убрать из карты/skill). **Не держать мёртвые коллекции.** Решение фиксируется ADR в этой же папке.
 
 **Acceptance:**
-- [ ] Patterns harvester: на синтетическом drafts+lessons прогоне создаёт K cubes, повтор прогона = 0 новых (dedup PASS), флуд-cap срабатывает при >N.
-- [ ] Harvester fail-soft: Qdrant/TEI down → хук не падает, exit 0, лог-warning.
-- [ ] Skills harvester: добавление тест-скилла → AUTO upsert в `skill_library` без ручного запуска; удаление → stale-cleanup.
-- [ ] ADR по experience/conversation принят и закоммичен; карта 27.12 приведена в соответствие (наполнено ИЛИ deprecated — не «0 writers без объяснения»).
-- [ ] Все харвестеры reversible (opt-out env, документирован в CLAUDE.md).
+- [x] Patterns harvester: на синтетическом drafts+lessons прогоне создаёт K cubes, повтор прогона = 0 новых (dedup PASS), флуд-cap срабатывает при >N. *(8 unit + live E2E на throwaway-коллекции)*
+- [x] Harvester fail-soft: Qdrant/TEI down → хук не падает, exit 0, лог-warning. *(embed-None + client-raise тесты)*
+- [x] Skills harvester: добавление тест-скилла → AUTO upsert в `skill_library` без ручного запуска; удаление → stale-cleanup. *(Stop-batch, hash-idempotent; 7 unit + cold-start seed 85 skills)*
+- [x] ADR по experience/conversation принят и закоммичен; карта 27.12 приведена в соответствие (deprecated). *(D1.3, см. §10)*
+- [x] Все харвестеры reversible (opt-out env, документирован в CLAUDE.md). *(`PATTERNS_HARVEST_DISABLE` / `SKILLS_HARVEST_DISABLE`)*
+
+**Артефакты:** [`shared/pattern_harvest.py`](../../.claude/hooks/shared/pattern_harvest.py) + [`patterns-harvester.py`](../../.claude/hooks/patterns-harvester.py) (D1.1) · [`shared/skills_harvest.py`](../../.claude/hooks/shared/skills_harvest.py) + [`skills-harvester.py`](../../.claude/hooks/skills-harvester.py) (D1.2) · settings.json Stop-chain · 15 unit-тестов. **Отклонение от плана:** D1.2 реализован как **Stop-batch** (а не PostToolUse:Write/Edit) — проще, idempotent по content-hash, cold-start seed избегает 80-embed шторма; PostToolUse-вариант не нужен. **Решение по lessons-источнику:** lifecycle "Lessons" сейчас = шум из auto-task-titles → добавлен noise-filter; основной high-signal источник D1.1 = confirmed feedback-drafts.
 
 ### P2 — Консолидация episodic→semantic (reflection)
 
@@ -178,5 +180,6 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 | 2026-06-03 | **P0 DONE** — content_hash foundation (D0.1-D0.4), 42 теста, backfill 23/23 на Qdrant | (этот) |
 | 2026-06-03 | **Q1 РЕШЁН (ADR)** — experience_embeddings/conversation_memory → DEPRECATE; блокер P1 close снят | (этот) |
 | 2026-06-03 | **Q1 ИСПОЛНЕН (D1.3)** — обе коллекции dropped (snapshot+delete, 0 pts), surfacing-arms убраны, конфиги/карта/stub вычищены; 29/29 hook-тестов, code-verify behavior-preservation PASS. P1 остаётся открыт: D1.1 patterns-harvester + D1.2 skills-harvester | af84f4d0e |
+| 2026-06-03 | **P1 DONE** — D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки, fail-soft, gated, reversible); 15 unit + 95/95 hook + live E2E + cold-start seed PASS, code-verify quality-review PASS | c6c2a825f |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.
