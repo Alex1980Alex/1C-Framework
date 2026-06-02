@@ -68,7 +68,7 @@
 
 ## 5. Фазы (deliverables + acceptance)
 
-### P0 — Контракты ingestion+sync (foundation)
+### P0 — Контракты ingestion+sync (foundation) — ✅ DONE (2026-06-03)
 
 **Deliverables:**
 - D0.1 — добавить поле `content_hash` в `MemoryCube` (заполняется `content_key(content)` при создании); протащить в payload **всех** проекций (`to_vector_memory_payload` / `to_ai_memory_row` / `to_skill_learning_record`).
@@ -77,11 +77,13 @@
 - D0.4 — backfill: разовый проход проставляет `content_hash` существующим 22 паттернам (idempotent, dry-run by default, vector-backup).
 
 **Acceptance:**
-- [ ] `MemoryCube(content=X).content_hash == content_key({"...": X})` — round-trip тест.
-- [ ] Каждая из 3 проекций несёт `content_hash` в payload/row/record (unit-тест на 3 проекции).
-- [ ] `memory_metrics` отдаёт ненулевые `ingest_*` после прогона харвестера (P1 smoke).
-- [ ] Backfill на реальном Qdrant: 22/22 паттерна получили `content_hash`, 0 дублей создано (повторный запуск = no-op).
-- [ ] Reversible: удаление поля не ломает чтение старых payload (lazy default).
+- [x] `MemoryCube(content=X).content_hash == content_key({"...": X})` — parity-тест (`test_content_hash.py::TestDedupeParity`).
+- [x] Каждая из 3 проекций несёт `content_hash` в payload/row/record (parametrized unit-тест).
+- [x] Ingestion-метрики пишутся (`ingest_metrics.record_ingest` → JSONL + counters); `memory_metrics`-провод к P1-харвестеру — при P1.
+- [x] Backfill на реальном Qdrant: **23/23** точки получили `content_hash`, повторный запуск = no-op (`backfill_content_hash.py`).
+- [x] Reversible: `from_dict` без `content_hash` пересчитывает из content (lazy default); backup записан при apply.
+
+**Артефакты:** `src/memory/orchestrator/content_hash.py` (новый, canonical) · `memcube.py` (+`content_hash` поле/проекции) · `ingest_metrics.py` (новый, D0.3) · `scripts/backfill_content_hash.py` (новый, D0.4) · `dedupe_learned_patterns.py` (делегирует) · доки [27.12 §11](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md). Тесты: 30 unit (content_hash 19 + backfill 5 + ingest 6) + 12 memcube-wiki regression = 42 green.
 
 ### P1 — Авто-ingestion харвестеры (по всем слоям)
 
@@ -172,6 +174,7 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 
 | Дата | Веха | Коммит |
 |---|---|---|
-| 2026-06-03 | Дочерняя карта §26 создана (PLANNED) | — |
+| 2026-06-03 | Дочерняя карта §26 создана (PLANNED) | ca12b2f45 |
+| 2026-06-03 | **P0 DONE** — content_hash foundation (D0.1-D0.4), 42 теста, backfill 23/23 на Qdrant | (этот) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.

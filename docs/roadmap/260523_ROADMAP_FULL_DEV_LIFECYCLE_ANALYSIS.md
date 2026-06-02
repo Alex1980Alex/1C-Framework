@@ -2530,7 +2530,7 @@ Research **уточнил** исходное предложение (#1+#2 на�
 
 ### 26.3 Фазы
 
-- **P0 — Контракты ingestion+sync (foundation).** Канонический `MemoryCube` как единица записи/синка; **shared content-hash idempotency-ключ** (переиспользовать существующий `content_key()` = `sha256(content)[:16]` из [`dedupe_learned_patterns.py:55`](../../scripts/dedupe_learned_patterns.py#L55)) в payload ВСЕХ store'ов → основа cross-store dedup; per-store «писатель»-контракт. Метрики ingestion (rate/dup-rate/sizes) → в §25 analyzer.
+- **P0 — Контракты ingestion+sync (foundation). ✅ DONE (2026-06-03):** Канонический `MemoryCube` как единица записи/синка; **shared content-hash idempotency-ключ** (переиспользовать существующий `content_key()` = `sha256(content)[:16]` из [`dedupe_learned_patterns.py:55`](../../scripts/dedupe_learned_patterns.py#L55)) в payload ВСЕХ store'ов → основа cross-store dedup; per-store «писатель»-контракт. Метрики ingestion (rate/dup-rate/sizes) → в §25 analyzer.
 - **P1 — Авто-ingestion харвестеры (по всем слоям, на базе существующих хуков).**
   - *Patterns:* харвестер (Stop-хук) майнит подтверждённые feedback-drafts + session-lessons → `save_pattern`, **gated** content-hash dedup + §22 confidence (анти-флуд).
   - *Skills:* `index-skills-to-qdrant.py` → AUTO при изменении `.claude/skills/` (PostToolUse/Stop).
