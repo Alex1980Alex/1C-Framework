@@ -2530,7 +2530,7 @@ Research **уточнил** исходное предложение (#1+#2 на�
 
 ### 26.3 Фазы
 
-- **P0 — Контракты ingestion+sync (foundation).** Канонический `MemCube` как единица записи/синка; **shared content-hash idempotency-ключ** (переиспользовать `sha1(content[:200])` из dedup) в payload ВСЕХ store'ов → основа cross-store dedup; per-store «писатель»-контракт. Метрики ingestion (rate/dup-rate/sizes) → в §25 analyzer.
+- **P0 — Контракты ingestion+sync (foundation).** Канонический `MemoryCube` как единица записи/синка; **shared content-hash idempotency-ключ** (переиспользовать существующий `content_key()` = `sha256(content)[:16]` из [`dedupe_learned_patterns.py:55`](../../scripts/dedupe_learned_patterns.py#L55)) в payload ВСЕХ store'ов → основа cross-store dedup; per-store «писатель»-контракт. Метрики ingestion (rate/dup-rate/sizes) → в §25 analyzer.
 - **P1 — Авто-ingestion харвестеры (по всем слоям, на базе существующих хуков).**
   - *Patterns:* харвестер (Stop-хук) майнит подтверждённые feedback-drafts + session-lessons → `save_pattern`, **gated** content-hash dedup + §22 confidence (анти-флуд).
   - *Skills:* `index-skills-to-qdrant.py` → AUTO при изменении `.claude/skills/` (PostToolUse/Stop).
@@ -2549,4 +2549,4 @@ dry-run by default + vector-backup (переиспользовать патте�
 - **Риски:** флуд паттернами → митигация (dedup + confidence-gate + ForgetGate); cross-store дивергенция → `MemCube` single-source + связи вместо копий; плохие авто-промоушены → gated + reviewable + reversible; «мёртвые» коллекции → P1 решение (наполнить или deprecate через ADR).
 - **Не входит:** изменение §22-математики и §24-surfacing (только кормим их данными). Online-MAB тюнинг ingestion — future (после §25 B3).
 
-> **Отдельная дочерняя карта** (как у §25 → 260601) будет создана при старте реализации: `260602_ROADMAP_MEMORY_INGESTION_SYNC.md` с детальными acceptance-критериями per-phase. Здесь — обзорная глава в master-роадмапе.
+> **Отдельная дочерняя карта** (как у §25 → 260601) создана: [`260602_ROADMAP_MEMORY_INGESTION_SYNC.md`](260602_ROADMAP_MEMORY_INGESTION_SYNC.md) — детальные deliverables + acceptance-критерии per-phase (P0–P4). Здесь — обзорная глава в master-роадмапе.
