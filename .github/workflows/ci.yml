@@ -33,7 +33,11 @@ jobs:
             ${{ runner.os }}-uv-
 
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev]"
+        # qdrant extra: reindex_bsl_qwen3.py imports qdrant_client at module top,
+        # and the Compile-smoke step below runs its --help (which triggers import).
+        # qdrant-client is an optional extra, not in [dev] — without it the smoke
+        # ModuleNotFoundErrors and reddens the lint job on a clean checkout.
+        run: uv pip install --system -e ".[dev,qdrant]"
 
       - name: Ruff lint
         # scripts/ + .claude/hooks/ included since 2026-06: the merge/autofix
