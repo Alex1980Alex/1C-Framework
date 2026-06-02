@@ -36,10 +36,23 @@ jobs:
         run: uv pip install --system -e ".[dev]"
 
       - name: Ruff lint
-        run: ruff check src/
+        # scripts/ + .claude/hooks/ included since 2026-06: the merge/autofix
+        # regression landed broken code in those paths, which `src/`-only lint
+        # never saw. RUF100/PGH004 (noqa hygiene) now guard the masking vector.
+        run: ruff check src/ scripts/ .claude/hooks/
 
       - name: Ruff format check
         run: ruff format --check src/
+
+      - name: Compile-smoke (scripts + hooks)
+        # Catches merge-mangling that is syntactically/structurally broken but
+        # not an undefined-name (e.g. the benchmark scripts in the 2026-06
+        # regression). --help also verifies entrypoints stay importable.
+        run: |
+          python -m compileall -q scripts .claude/hooks
+          python scripts/reindex_bsl_qwen3.py --help > /dev/null
+          python scripts/run_benchmark.py --help > /dev/null
+          python scripts/build_benchmark_tasks.py --help > /dev/null
 
       - name: TOC ↔ filesystem consistency
         run: python scripts/validate_toc.py --json
