@@ -275,12 +275,14 @@ Qdrant healthy, 11 коллекций live (`curl /collections` OK).
 - [ ] **8.8.1** Skip — 5 точек не критично, отложить до Phase 9.
 
 ### 12.2. learned_patterns (44) / experience_embeddings (61)
-- [ ] **8.8.2** Source: `data/learned_patterns.*`, `data/experience.*`
+> ⚠️ **`experience_embeddings` — SUPERSEDED 2026-06-03** ([§26 Q1 ADR](260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md)): коллекция dropped, не наполняется. Плановые 61 точек так и не материализовались (0 writers); роль покрыта episodic (`memory_ai.db`) + `learned_patterns`. Пункт 8.8.2/8.8.3 в части experience — отменён.
+- [ ] **8.8.2** Source: `data/learned_patterns.*` (~~`data/experience.*`~~ — superseded)
 - [ ] **8.8.3** Reindex; verify points_count
 
 ### 12.3. skill_library (75) / conversation_memory (372)
+> ⚠️ **`conversation_memory` — SUPERSEDED 2026-06-03** ([§26 Q1 ADR](260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md)): Qdrant-коллекция dropped, не наполняется (0 writers, pipeline `data/conversations.db`→embed→upsert никогда не построен). NB: SQLite `data/conversations.db` + класс `ConversationMemory` (chat-API) живут отдельно и не затронуты. Пункт 8.8.5 — отменён.
 - [ ] **8.8.4** Skills: `python scripts/index-skills-to-qdrant.py` — verify ≥ 75 points
-- [ ] **8.8.5** Conversations: source `data/conversations.db` — verify ≥ 372 points
+- [ ] ~~**8.8.5** Conversations~~ — superseded (см. выше)
 
 ### 12.4. bsl_metadata (1000) / pdf_documents (1012)
 - [ ] **8.8.6** BSL metadata: re-extract из BSL parser, или из `data/bsl_metadata.*`

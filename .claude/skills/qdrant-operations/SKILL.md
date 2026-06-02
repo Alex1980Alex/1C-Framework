@@ -41,7 +41,8 @@ if target_dim and target_dim < embed_dim:  # alias resolved to 1024d collection
 
 **Не на Qwen3 (исключения):**
 - `visual_grounding` (5 pts × 768d nomic) — defer
-- `conversation_memory`, `experience_embeddings` (0 pts × 1024d legacy E5) — Phase 9 candidate
+
+**Dropped 2026-06-03** (§26 Q1 ADR — [260603_ADR_Q1](../../../docs/roadmap/260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md)): `conversation_memory`, `experience_embeddings` — 0-writer коллекции, роль покрыта episodic (`memory_ai.db`) + `learned_patterns`; популяция = cross-store дубликаты.
 
 **Dropped 2026-04-30** (§27 cleanup): `bsl_code_v3` (E5 1024d legacy), `experience_embeddings_e5_legacy`, `learned_patterns_e5_legacy`.
 

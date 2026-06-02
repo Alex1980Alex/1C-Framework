@@ -5,8 +5,6 @@
   "managed_by": "manual until first B2 promotion (tune_memory_surfacing.py)",
   "surface_rrf_weights": {
     "skill": 0.5,
-    "experience": 0.5,
-    "conversation": 0.5,
     "pattern_dense": 0.3,
     "pattern_lexical": 0.7
   },

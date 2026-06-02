@@ -1,10 +1,15 @@
 """Shared semantic search utilities for Claude Code hooks.
 
-Provides fast, timeout-bounded vector search over skill_library and
-experience_embeddings Qdrant collections via TEI HTTP backend (Phase 9.1
+Provides fast, timeout-bounded vector search over Qdrant collections
+(skill_library, learned_patterns, ...) via TEI HTTP backend (Phase 9.1
 alignment with main retrieval stack — Qwen3-Embedding-8B 4096d).
 
 All functions fail gracefully (return empty/None) so hooks never block.
+
+Note (2026-06-03, §26 Q1 ADR): experience_embeddings / conversation_memory
+were deprecated/dropped. ``search_experiences_semantic`` is retained for the
+existing test but is no longer wired into surfacing; it fail-soft returns []
+now that the collection is gone.
 
 Migration (2026-04-30, Phase 9.1):
   - Ollama nomic-embed-text 768d -> TEI Qwen3-Embedding-8B 4096d

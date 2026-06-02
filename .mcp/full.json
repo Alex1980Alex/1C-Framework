@@ -87,15 +87,6 @@
       },
       "timeout": 60000
     },
-    "conversation-memory": {
-      "command": "D:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "src.memory.conversation_memory.mcp"],
-      "cwd": "D:\\1С-Framework",
-      "env": {
-        "PYTHONIOENCODING": "utf-8"
-      },
-      "timeout": 60000
-    },
     "task-master-ai": {
       "command": "npx",
       "args": ["-y", "task-master-ai"],

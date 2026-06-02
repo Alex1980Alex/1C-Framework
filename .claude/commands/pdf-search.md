@@ -17,7 +17,7 @@ User query: $ARGUMENTS
 
 ## Retrieval backbone
 
-All collections (`pdf_documents`, `bsl_code_v4_late`, `bsl_code_v4`, `framework_code_v1`, `wiki_pages_v1`, `skill_library`, `learned_patterns`, `graph_embeddings`, `experience_embeddings`, `conversation_memory`) are indexed with **Qwen/Qwen3-Embedding-8B (4096d)** via TEI Docker (`pdf-rag-tei`). The `search_documents` tool transparently uses this backbone — you do not configure it per call. See [chapter 31](../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md) for production retrieval details.
+All collections (`pdf_documents`, `bsl_code_v4_late`, `bsl_code_v4`, `framework_code_v1`, `wiki_pages_v1`, `skill_library`, `learned_patterns`, `graph_embeddings`) are indexed with **Qwen/Qwen3-Embedding-8B (4096d)** via TEI Docker (`pdf-rag-tei`). The `search_documents` tool transparently uses this backbone — you do not configure it per call. See [chapter 31](../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md) for production retrieval details.
 
 ## Routing rules — pick exactly one tool
 

@@ -211,10 +211,10 @@ class TestDimAlignment:
 
     EXPECTED_DIM = 4096
     # learned_patterns added in §24 P0 (semantic surfacing of confidence-gated patterns).
+    # experience_embeddings / conversation_memory dropped 2026-06-03 (§26 Q1 ADR):
+    #   0-writer collections, role covered by episodic (memory_ai.db) + learned_patterns.
     KNOWN_COLLECTIONS = {
         "skill_library",
-        "experience_embeddings",
-        "conversation_memory",
         "learned_patterns",
     }
 

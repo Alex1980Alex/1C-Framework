@@ -93,8 +93,6 @@ SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "W
 # lexical > dense for BSL (CamelCase/Cyrillic dense recall-collapse, §24.2.2).
 SURFACE_RRF_WEIGHTS: dict = {
     "skill": 0.5,
-    "experience": 0.5,
-    "conversation": 0.5,
     "pattern_dense": 0.3,
     "pattern_lexical": 0.7,
 }
@@ -102,10 +100,10 @@ SURFACE_RRF_K = 60  # RRF k constant for the surfacing fusion (tunable, §25 B1)
 
 # Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
 # learned_patterns included for semantic surfacing (§24 P0 ADR-D6)
+# experience_embeddings / conversation_memory dropped 2026-06-03 (§26 Q1 ADR):
+#   0-writer collections, role covered by episodic (memory_ai.db) + learned_patterns.
 SEMANTIC_COLLECTIONS = [
     ("skill_library", "skill"),
-    ("experience_embeddings", "experience"),
-    ("conversation_memory", "conversation"),
     ("learned_patterns", "pattern"),
 ]
 
@@ -489,7 +487,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     """Hybrid RRF search across SEMANTIC_COLLECTIONS + always-on lexical arm (§24 P1).
 
     Arms dict fed into rrf_merge(k=60):
-      - "skill", "experience", "conversation": TEI semantic hits per collection.
+      - "skill": TEI semantic hits from skill_library.
       - "pattern_dense": learned_patterns semantic hits (§24 ADR-D6 gated, _collection tagged).
       - "pattern_lexical": token-overlap on learned_patterns — ALWAYS-ON (not fallback).
         Catches CamelCase/Cyrillic/exact-term where dense underperforms (BSL recall-collapse).
@@ -511,8 +509,6 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     # Build per-source arms (each list already score-desc from its source)
     arms: dict = {
         "skill": [],
-        "experience": [],
-        "conversation": [],
         "pattern_dense": [],
         "pattern_lexical": [],
     }
@@ -561,13 +557,8 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                             "category": _extract_category(payload, ctype),
                             "score": round(base_score, 4),
                         }
-                        # Route by collection type to its arm
-                        arm_key = {
-                            "skill": "skill",
-                            "experience": "experience",
-                            "conversation": "conversation",
-                        }.get(ctype, "skill")
-                        arms[arm_key].append(entry)
+                        # Route non-pattern collection hits to the skill arm
+                        arms["skill"].append(entry)
     except Exception as exc:
         _trace_set("tei", "down")
         _trace_set("tei_error", f"{type(exc).__name__}: {exc}"[:160])
