@@ -158,7 +158,10 @@ target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP"]
+# RUF100 (unused-noqa) + PGH004 (blanket-noqa) — noqa hygiene: prevent a `# noqa`
+# or `# noqa: F821` from masking a deleted/renamed symbol (root cause of the
+# 2026-06 merge/autofix regression). See docs/roadmap §regression-hardening.
+select = ["E", "F", "I", "N", "W", "UP", "RUF100", "PGH004"]
 ignore = [
     "E501",   # line-too-long — handled by formatter
     "E402",   # module-import-not-at-top — conditional imports
