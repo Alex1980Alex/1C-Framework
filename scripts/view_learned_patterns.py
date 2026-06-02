@@ -134,7 +134,7 @@ def main() -> int:
             collection_name=args.collection, limit=args.limit,
             with_payload=True, with_vectors=False,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"Qdrant unavailable ({args.collection}): {exc}", file=sys.stderr)
         return 1
 

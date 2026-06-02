@@ -211,7 +211,7 @@ def main() -> int:
     try:
         client = _client()
         points, _ = client.scroll(COLLECTION, limit=10000, with_payload=True, with_vectors=False)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"Qdrant unavailable: {exc}", file=sys.stderr)
         return 1
 

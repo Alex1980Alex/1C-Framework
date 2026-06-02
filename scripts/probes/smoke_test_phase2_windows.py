@@ -22,7 +22,7 @@ class T:
                 f"({window_chars}) - sliding would loop forever otherwise."
             )
         windows = []
-        step = window_chars - overlap_chars  # noqa: F841 (kept for parity)
+        step = window_chars - overlap_chars
         snap_zone = max(1, window_chars // 10)
         start = 0
         while start < n:

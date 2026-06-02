@@ -39,9 +39,9 @@ import numpy as np
 
 # Reuse production Qwen3 ST embedder from the BSL reindex pipeline.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qdrant_client import QdrantClient  # noqa: E402
-from qdrant_client.http import models  # noqa: E402
-from reindex_bsl_qwen3 import Qwen3STEmbedder  # noqa: E402
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
+from reindex_bsl_qwen3 import Qwen3STEmbedder
 
 logger = logging.getLogger("matryoshka_bench")
 

@@ -42,8 +42,10 @@ def _log_lifecycle(event: str, **fields: Any) -> None:
         from .lifecycle_log import log_event
 
         log_event(event, **fields)
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
+
+
 from .models import (
     EvidenceSource,
     LearnedPattern,
@@ -446,9 +448,7 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     )
 
     _bump_epoch()  # §24: new/updated pattern -> invalidate surfacing cache
-    _log_lifecycle(
-        "save", pattern_id=pattern_id, confidence=round(float(pattern.confidence), 4)
-    )
+    _log_lifecycle("save", pattern_id=pattern_id, confidence=round(float(pattern.confidence), 4))
     logger.info(f"Saved pattern {pattern_id}: {pattern.name} (confidence={pattern.confidence})")
     return [
         TextContent(
@@ -640,8 +640,10 @@ async def handle_list_patterns(args: dict[str, Any]) -> list[TextContent]:
     full = bool(args.get("full", False))
 
     points, _ = client.scroll(
-        collection_name=COLLECTION_NAME, limit=max(limit, 1000),
-        with_payload=True, with_vectors=False,
+        collection_name=COLLECTION_NAME,
+        limit=max(limit, 1000),
+        with_payload=True,
+        with_vectors=False,
     )
     rows = []
     for p in points:
@@ -673,7 +675,8 @@ async def handle_list_patterns(args: dict[str, Any]) -> list[TextContent]:
             type="text",
             text=json.dumps(
                 {"count": len(rows), "collection": COLLECTION_NAME, "patterns": rows},
-                ensure_ascii=False, indent=2,
+                ensure_ascii=False,
+                indent=2,
             ),
         )
     ]
@@ -689,7 +692,9 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
     client = _get_qdrant()
     decayed = 0
     archived = 0  # renamed from deleted — patterns are never hard-deleted here
-    revived = 0   # previously-archived patterns recovered by decay sweeping counts back above thresholds
+    revived = (
+        0  # previously-archived patterns recovered by decay sweeping counts back above thresholds
+    )
 
     offset = None
     while True:

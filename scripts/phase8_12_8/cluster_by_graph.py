@@ -12,7 +12,7 @@ from pathlib import Path
 import networkx as nx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.phase8_12_8 import config  # noqa: E402
+from scripts.phase8_12_8 import config
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DB = PROJECT_ROOT / "cache" / "bsl_call_graph.db"

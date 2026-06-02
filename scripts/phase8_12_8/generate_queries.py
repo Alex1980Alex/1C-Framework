@@ -14,7 +14,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import FieldCondition, Filter, MatchValue
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.phase8_12_8 import config  # noqa: E402
+from scripts.phase8_12_8 import config
 
 PROMPT_TEMPLATE = """Контекст: модуль 1С {module_name} (тип: {module_type}), кластер связных символов: {top_modules}.
 
@@ -195,7 +195,7 @@ def main() -> None:
                 time.sleep(5)
                 try:
                     query = call_z_ai(prompt).strip()
-                except Exception as e:  # noqa: BLE001 — provider rotation can fail
+                except Exception as e:
                     print(f"  [skip] LLM error for {sid}: {e}")
                     continue
                 if not query:

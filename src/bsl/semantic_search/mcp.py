@@ -805,14 +805,14 @@ def _get_hybrid_pipeline():
 
                 embedder = _TEIEmbedder()
                 atexit.register(embedder._tei.close)
-            except Exception as exc:  # noqa: BLE001 — TEI down → no fallback
+            except Exception as exc:
                 logger.debug("TEI embedder fallback unavailable: %s", exc, exc_info=True)
 
         # Call graph (optional)
         cg = None
         try:
             cg = _get_call_graph()
-        except Exception as exc:  # noqa: BLE001 — call graph optional
+        except Exception as exc:
             logger.debug("Call graph unavailable: %s", exc, exc_info=True)
 
         _hybrid_pipeline = BSLHybridPipeline(

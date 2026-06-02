@@ -37,7 +37,7 @@ def index_to_chroma(
     try:
         client.delete_collection(collection_name)
         print(f"Удалена существующая коллекция: {collection_name}")
-    except Exception:  # noqa: BLE001 — chroma raises vendor-specific NotFound errors
+    except Exception:
         pass
 
     collection = client.create_collection(name=collection_name, metadata={"hnsw:space": "cosine"})

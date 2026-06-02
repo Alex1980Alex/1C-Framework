@@ -49,7 +49,7 @@ ARCHIVE_DIR = PROJECT_ROOT / "data" / "archive"
 
 def _check_duckdb() -> bool:
     try:
-        import duckdb  # noqa: F401
+        import duckdb
 
         return True
     except ImportError:

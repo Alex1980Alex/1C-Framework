@@ -38,15 +38,15 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from qdrant_client import QdrantClient  # noqa: E402
+from qdrant_client import QdrantClient
 
-from src.framework_search.config import (  # noqa: E402
+from src.framework_search.config import (
     DEFAULT_COLLECTION,
     DEFAULT_QDRANT_URL,
     DEFAULT_TEI_URL,
 )
-from src.framework_search.file_walker import iter_indexable_files  # noqa: E402
-from src.framework_search.indexer import run_index  # noqa: E402
+from src.framework_search.file_walker import iter_indexable_files
+from src.framework_search.indexer import run_index
 
 logger = logging.getLogger("watch-framework")
 

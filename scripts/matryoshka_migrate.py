@@ -27,8 +27,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from qdrant_client import QdrantClient  # noqa: E402
-from qdrant_client.http import models  # noqa: E402
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
 
 logger = logging.getLogger("matryoshka_migrate")
 
@@ -37,7 +37,7 @@ TOP_K = 10
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 GOLDEN_PATH = PROJECT_ROOT / "data" / "eval" / "golden_v1.json"
 # Shared constants (TEI_URL, QUERY_PREFIX, embed_query) — see scripts/_eval_common.py
-from _eval_common import QDRANT_URL as DEFAULT_QDRANT  # noqa: E402
+from _eval_common import QDRANT_URL as DEFAULT_QDRANT
 from _eval_common import embed_query
 
 THRESH_MIGRATE = -0.05

@@ -26,9 +26,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.bsl.project_discovery import find_project_for_relpath  # noqa: E402
-from src.framework_search.config import EXT_TO_LANGUAGE, MAX_FILE_BYTES, REPO_ROOT  # noqa: E402
-from src.framework_search.file_walker import _matches_skip  # noqa: E402
+from src.bsl.project_discovery import find_project_for_relpath
+from src.framework_search.config import EXT_TO_LANGUAGE, MAX_FILE_BYTES, REPO_ROOT
+from src.framework_search.file_walker import _matches_skip
 
 LOG_PATH = PROJECT_ROOT / "cache" / "framework_search_reindex.log"
 BSL_LOG_PATH = PROJECT_ROOT / "cache" / "bsl_reindex.log"

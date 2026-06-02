@@ -271,7 +271,7 @@ class RealBSLClient:
             loop.run_until_complete(self._async_startup())
             self._ready.set()
             loop.run_forever()
-        except BaseException as exc:  # noqa: BLE001
+        except BaseException as exc:
             self._start_error = exc
             self._ready.set()
         finally:

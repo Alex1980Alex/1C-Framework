@@ -21,7 +21,7 @@ def _log_lifecycle(event: str, **fields: Any) -> None:
         from .lifecycle_log import log_event
 
         log_event(event, **fields)
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
 
@@ -103,7 +103,7 @@ def reinforce_pattern(
             from .epoch import bump as _bump_epoch
 
             _bump_epoch()
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
 
         # §22: trace the confidence mutation (old->new, outcome, counts).
@@ -126,7 +126,7 @@ def reinforce_pattern(
             "application_count": updates["application_count"],
         }
 
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         _log_lifecycle(
             "reinforce_error",
             pattern_id=pattern_id,

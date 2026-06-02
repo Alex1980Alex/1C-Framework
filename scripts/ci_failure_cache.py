@@ -393,7 +393,7 @@ def catchup(limit: int = 20) -> dict:
         try:
             _process_failure(pr, r.get("headSha"), run_id, None, log)
             processed += 1
-        except Exception as e:  # noqa: BLE001 — graceful degradation, never break batch
+        except Exception as e:
             errors.append({"run_id": run_id, "error": str(e)[:120]})
             print(f"[catchup] error run_id={run_id}: {e}", file=sys.stderr)
     return {"processed": processed, "skipped": skipped, "errors": errors}

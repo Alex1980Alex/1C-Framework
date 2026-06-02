@@ -32,7 +32,7 @@ QWEN3_QUERY_INSTRUCT = (
     "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
 )
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase
 
 
 def embed_query_tei(text: str, base_url: str) -> list[float]:

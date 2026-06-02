@@ -130,7 +130,7 @@ VIEWS: dict[str, str] = {
 
 def _check_duckdb():
     try:
-        import duckdb  # noqa: F401
+        import duckdb
 
         return True
     except ImportError:

@@ -49,18 +49,14 @@ def log_event(event: str, **fields: Any) -> None:
         try:
             if path.exists() and path.stat().st_size > _LOG_CAP_BYTES:
                 data = path.read_bytes()
-                tail_data = data[-(_LOG_CAP_BYTES // 2):]
+                tail_data = data[-(_LOG_CAP_BYTES // 2) :]
                 # Drop partial first line.
                 idx = tail_data.find(b"\n")
                 if idx != -1:
-                    tail_data = tail_data[idx + 1:]
+                    tail_data = tail_data[idx + 1 :]
 
                 # Write via tempfile for atomicity.
-                fd, tmp_path = tempfile.mkstemp(
-                    dir=path.parent,
-                    suffix=".tmp",
-                    prefix="conflog-"
-                )
+                fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp", prefix="conflog-")
                 try:
                     with os.fdopen(fd, "wb") as fh:
                         fh.write(tail_data)

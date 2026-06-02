@@ -37,13 +37,13 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from qdrant_client import QdrantClient  # noqa: E402
+from qdrant_client import QdrantClient
 
 GOLDEN_PATH = _REPO_ROOT / "data" / "eval" / "golden_v1.json"
 DEFAULT_COLLECTION = "framework_code_v1"
 TOP_K = 15
 # Shared constants — see scripts/_eval_common.py (roadmap 260516 review fix)
-from _eval_common import QDRANT_URL, QUERY_PREFIX, TEI_URL  # noqa: E402,F401
+from _eval_common import QDRANT_URL, QUERY_PREFIX, TEI_URL
 
 _RELEVANCE_SYSTEM = (
     "Output JSON only. No markdown. No prose. No code fences. No file links. "
@@ -201,7 +201,7 @@ async def _process_item(
         chunk_ids = [str(points[i - 1].id) for i in indices]
         tag = "OK" if chunk_ids else "EMPTY"
         return iid, tag, chunk_ids, len(points), None
-    except Exception as e:  # noqa: BLE001 — intentional batch resilience
+    except Exception as e:
         return iid, "FAIL", [], 0, f"{type(e).__name__}: {e}"
 
 

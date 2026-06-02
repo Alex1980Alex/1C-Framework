@@ -178,7 +178,7 @@ class _AllowFilesPrefilter:
     def __init__(self, allow: set[Path] | None) -> None:
         self._allow = allow
 
-    def allowed_files(self, old_name, module_hint=None):  # noqa: ARG002
+    def allowed_files(self, old_name, module_hint=None):
         return self._allow
 
 

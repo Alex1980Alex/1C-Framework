@@ -35,8 +35,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from _progress import make_tracker  # noqa: E402
-from qdrant_client import QdrantClient, models  # noqa: E402
+from _progress import make_tracker
+from qdrant_client import QdrantClient, models
 
 
 def copy_collection(

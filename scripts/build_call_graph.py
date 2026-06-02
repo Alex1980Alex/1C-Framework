@@ -20,7 +20,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from _progress import make_tracker  # noqa: E402
+from _progress import make_tracker
 
 from src.bsl.call_graph.store import CallGraphStore
 from src.bsl.parser import BSLASTParser

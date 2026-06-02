@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools" / "bsl-debug-server"))
 
-import autonomous_debug_test as adt  # noqa: E402
+import autonomous_debug_test as adt
 
 
 # Reusable minimal valid scenario

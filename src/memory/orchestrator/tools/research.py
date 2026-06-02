@@ -175,7 +175,7 @@ class ResearchTool:
     async def _analyze_clusters(
         self,
         entity_ids: list[str],
-        max_depth: int,  # noqa: ARG002
+        max_depth: int,
     ) -> dict[str, Any]:
         """Find clusters of related entities using connected components."""
         if not self._links:

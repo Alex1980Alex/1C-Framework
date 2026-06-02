@@ -369,7 +369,7 @@ def capture_query(query: str, mfh, embed_fn, search_fn) -> dict[str, Any]:
                     "archived": bool(payload.get("expired_at")),
                 }
             )
-    except Exception as exc:  # noqa: BLE001 -- fail-soft, capture is best-effort
+    except Exception as exc:
         arms["_lexical_error"] = f"{type(exc).__name__}: {exc}"[:160]
 
     return arms

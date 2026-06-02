@@ -150,7 +150,7 @@ def test_rrf_merge_matches_hook_contract():
     try:
         mfh = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mfh)
-    except Exception:  # noqa: BLE001 -- hook imports unavailable in this env
+    except Exception:
         pytest.skip("hook module not importable")
     arms = {
         "skill": [{"content": "A"}, {"content": "B"}],

@@ -36,7 +36,7 @@ class E2BBackend(SandboxBackend):
         daily_quota: int = DAILY_QUOTA,
     ):
         try:
-            from e2b_code_interpreter import Sandbox  # noqa: F401
+            from e2b_code_interpreter import Sandbox
         except ImportError as e:
             raise RuntimeError(
                 "E2B extra not installed. Run: pip install 'e2b-code-interpreter>=1.2.0'"
@@ -148,7 +148,7 @@ class E2BBackend(SandboxBackend):
         if self._sandbox is not None:
             try:
                 await asyncio.to_thread(self._sandbox.kill)
-            except Exception:  # noqa: BLE001 — best-effort cleanup
+            except Exception:
                 logger.debug("E2B sandbox kill raised; ignoring", exc_info=True)
             finally:
                 self._sandbox = None

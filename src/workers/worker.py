@@ -54,7 +54,7 @@ def create_worker_settings() -> WorkerSettings:
 def create_worker() -> Worker:
     """Create and configure ARQ worker instance."""
     # Import tasks to register them
-    from src.workers.tasks import evaluation, graph, indexing  # noqa: F401
+    from src.workers.tasks import evaluation, graph, indexing
 
     worker_settings = create_worker_settings()
 

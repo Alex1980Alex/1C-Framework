@@ -343,7 +343,7 @@ def maybe_auto_rollback(report: dict[str, Any]) -> dict[str, Any]:
         )
         outcome["applied"] = proc.returncode == 0
         outcome["stdout"] = (proc.stdout or "").strip()[:200]
-    except Exception as exc:  # noqa: BLE001 -- fail-soft, never break the analyzer
+    except Exception as exc:
         outcome["error"] = f"{type(exc).__name__}: {exc}"[:160]
     return outcome
 

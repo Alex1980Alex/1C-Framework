@@ -21,7 +21,7 @@ if str(_SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(_SRC_ROOT))
 
 
-def _lazy_import_types():  # noqa: ANN202
+def _lazy_import_types():
     from bsl.semantic_search.refactor.types import BackendError, WorkspaceEdit
 
     return BackendError, WorkspaceEdit
@@ -116,7 +116,7 @@ class WorktreeManager:
         for wt in list(self._active_worktrees):
             try:
                 self.cleanup(wt)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
 
 
@@ -180,7 +180,7 @@ class TaskExecutor:
 
         except BackendError as exc:
             error_code = exc.code or "UNKNOWN"
-        except Exception:  # noqa: BLE001
+        except Exception:
             error_code = "UNHANDLED"
 
         return TaskResult(
@@ -415,7 +415,7 @@ class BenchmarkRunner:
                         jsonl_fh.write(json.dumps(event, ensure_ascii=False) + "\n")
                         jsonl_fh.flush()
 
-                    except Exception as exc:  # noqa: BLE001
+                    except Exception as exc:
                         tr = TaskResult(
                             task_id=tid,
                             backend=backend_name,
@@ -438,7 +438,7 @@ class BenchmarkRunner:
                         if worktree_path is not None and parent_sha != "synthetic":
                             try:
                                 self._wt_mgr.cleanup(worktree_path)
-                            except Exception:  # noqa: BLE001
+                            except Exception:
                                 pass
 
                     results.append(tr)

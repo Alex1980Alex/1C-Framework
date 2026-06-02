@@ -39,7 +39,7 @@ if sys.platform == "win32":
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.pdf_framework.observability.langfuse_setup import _get_langfuse_client  # noqa: E402
+from src.pdf_framework.observability.langfuse_setup import _get_langfuse_client
 
 logger = logging.getLogger(__name__)
 app = typer.Typer(help="Register local/zero-cost models in Langfuse")

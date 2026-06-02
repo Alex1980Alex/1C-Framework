@@ -143,7 +143,7 @@ class JsonlTelemetryWriter:
             if not match or match["stem"] != stem or match["suffix"] != suffix:
                 continue
             try:
-                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(tzinfo=UTC)  # noqa: UP017
+                file_date = datetime.strptime(match["date"], "%Y-%m-%d").replace(tzinfo=UTC)
             except ValueError:
                 continue
             if file_date >= cutoff:

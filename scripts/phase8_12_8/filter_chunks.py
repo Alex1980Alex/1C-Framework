@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.phase8_12_8 import config  # noqa: E402,F401
+from scripts.phase8_12_8 import config
 
 JUDGE_CRITERION = (
     "Содержит осмысленную BSL-логику 1С: не пустой `КонецПроцедуры`, "

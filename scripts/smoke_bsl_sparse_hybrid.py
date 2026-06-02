@@ -24,7 +24,7 @@ from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient, models
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase
 
 
 def create_target_collection(

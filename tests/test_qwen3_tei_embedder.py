@@ -101,7 +101,7 @@ def _install_mock(monkeypatch, mock: _MockClient) -> _MockClient:
     """
     import httpx
 
-    def _factory(*args, **kwargs):  # noqa: ARG001
+    def _factory(*args, **kwargs):
         return mock
 
     monkeypatch.setattr(httpx, "Client", _factory)
@@ -260,7 +260,7 @@ def test_embed_batch_propagates_server_error(monkeypatch):
     mock = _install_mock(monkeypatch, _MockClient(embed_payload=[[0.0] * 4096]))
     emb = Qwen3TEIEmbedder()
     # Flip post() to return 500 after init's /health passed.
-    mock.post = lambda url, *, json: _MockResponse({}, status_code=500)  # noqa: ARG005
+    mock.post = lambda url, *, json: _MockResponse({}, status_code=500)
 
     with pytest.raises(httpx.HTTPStatusError):
         emb.embed_batch(["x"], is_query=False)

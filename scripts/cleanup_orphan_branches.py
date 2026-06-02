@@ -27,7 +27,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / ".claude" / "hooks"))
 
-from shared import pr_helpers as pr  # noqa: E402
+from shared import pr_helpers as pr
 
 
 def _list_refs(prefix: str) -> list[str]:

@@ -42,11 +42,11 @@ def _check_prerequisites() -> list[str]:
     """Return list of missing prerequisites (empty list = ready to run)."""
     missing: list[str] = []
     try:
-        import dspy  # noqa: F401
+        import dspy
     except ImportError:
         missing.append("`dspy-ai` not installed (run: pip install dspy-ai)")
     try:
-        import qdrant_client  # noqa: F401
+        import qdrant_client
     except ImportError:
         missing.append("`qdrant-client` not installed (install via `[qdrant]` extra)")
     return missing

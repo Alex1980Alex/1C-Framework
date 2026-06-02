@@ -52,7 +52,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from _progress import ProgressTracker, make_tracker  # noqa: E402
+from _progress import ProgressTracker, make_tracker
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -925,7 +925,7 @@ class Qwen3TEIEmbedder:
                     f"expected Qwen/Qwen3-Embedding-8B. Vectors will not match "
                     f"those indexed by qwen3-st."
                 )
-        except Exception:  # noqa: BLE001 — /info is optional
+        except Exception:
             pass
 
     def _post_embed_sub(self, sub: list[str]) -> list[list[float]]:
@@ -963,8 +963,8 @@ class Qwen3TEIEmbedder:
 
     def embed_late_chunked(
         self,
-        parent_text: str,  # noqa: ARG002
-        chunk_char_spans: list[tuple[int, int]],  # noqa: ARG002
+        parent_text: str,
+        chunk_char_spans: list[tuple[int, int]],
     ) -> list[list[float] | None]:
         # TEI exposes pooled vectors only; token-level hidden states required
         # for Late Chunking are not in the API surface. Caller (CLI) already
@@ -1127,7 +1127,7 @@ def _is_cuda_oom(exc: BaseException) -> bool:
     return name == "OutOfMemoryError" or "out of memory" in msg or "cuda oom" in msg
 
 
-from src.bsl.semantic_search.services.bm25_tokenizer import (  # noqa: E402
+from src.bsl.semantic_search.services.bm25_tokenizer import (
     normalize_camelcase as _normalize_camelcase_for_bm25,
 )
 
@@ -1178,7 +1178,7 @@ def flush_batch(
         if sparse_encoder is not None:
             norm_texts = [_normalize_camelcase_for_bm25(t) if t else "" for t in texts]
             sparse_vectors = list(sparse_encoder.embed(norm_texts))
-    except Exception as e:  # noqa: BLE001 — we re-raise non-OOM
+    except Exception as e:
         if not _is_cuda_oom(e):
             raise
         try:

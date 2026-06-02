@@ -21,7 +21,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-import retention_policy as rp  # noqa: E402
+import retention_policy as rp
 
 pytestmark = pytest.mark.unit
 

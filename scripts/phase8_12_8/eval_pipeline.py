@@ -13,7 +13,7 @@ import httpx
 from qdrant_client import QdrantClient
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.phase8_12_8 import config  # noqa: E402
+from scripts.phase8_12_8 import config
 
 
 class EmbedBackend(Protocol):

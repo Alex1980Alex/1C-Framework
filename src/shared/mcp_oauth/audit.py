@@ -67,7 +67,7 @@ class AuditedOAuth2Service(OAuth2Service):
     def _safe_emit(self, event: OAuthAuditEvent) -> None:
         try:
             self._emit(event)
-        except Exception:  # noqa: BLE001 — audit never blocks auth
+        except Exception:
             pass
 
     async def generate_authorization_code(

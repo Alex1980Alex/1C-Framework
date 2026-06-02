@@ -31,8 +31,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / ".claude" / "hooks"))
 
-from shared import pr_helpers as pr  # noqa: E402
-from shared import pr_notifier as notify  # noqa: E402
+from shared import pr_helpers as pr
+from shared import pr_notifier as notify
 
 DEFAULT_STATE = PROJECT_ROOT / ".claude" / "cache" / "post-task-push-pr-state.json"
 

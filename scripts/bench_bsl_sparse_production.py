@@ -33,7 +33,7 @@ QWEN3_QUERY_INSTRUCT = (
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase  # noqa: E402
+from src.bsl.semantic_search.services.bm25_tokenizer import normalize_camelcase
 
 
 def derive_query_fragment(content: str, seed: int) -> str:

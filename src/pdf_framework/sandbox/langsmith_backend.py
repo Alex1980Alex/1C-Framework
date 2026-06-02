@@ -41,7 +41,7 @@ class LangSmithBackend(SandboxBackend):
         daily_quota: int = DAILY_QUOTA,
     ):
         try:
-            from langsmith.sandbox import SandboxClient  # noqa: F401
+            from langsmith.sandbox import SandboxClient
         except ImportError as e:
             raise RuntimeError(
                 "LangSmith sandbox extra not installed. "
@@ -164,7 +164,7 @@ class LangSmithBackend(SandboxBackend):
         if self._sandbox is not None:
             try:
                 await asyncio.to_thread(self._sandbox.close)
-            except Exception:  # noqa: BLE001 — best-effort cleanup
+            except Exception:
                 logger.debug("LangSmith sandbox close raised; ignoring", exc_info=True)
             finally:
                 self._sandbox = None

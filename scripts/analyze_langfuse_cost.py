@@ -49,8 +49,8 @@ if sys.platform == "win32":
 # Add src to path for project imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.pdf_framework.observability.langfuse_setup import _get_langfuse_client  # noqa: E402
-from src.pdf_framework.utils.retry import create_retry  # noqa: E402
+from src.pdf_framework.observability.langfuse_setup import _get_langfuse_client
+from src.pdf_framework.utils.retry import create_retry
 
 logger = logging.getLogger(__name__)
 app = typer.Typer(help="Langfuse cost baseline extractor (roadmap 260515)")
@@ -459,7 +459,7 @@ def main(
     to_date: str = typer.Option("", help="ISO date YYYY-MM-DD (default: today-1)"),
     output: str = typer.Option("md", help="Output format: md | json"),
     top_n: int = typer.Option(10, help="Top-N expensive observations to report"),
-    tag: str = typer.Option("", help="Optional Langfuse tag filter"),  # noqa: ARG001
+    tag: str = typer.Option("", help="Optional Langfuse tag filter"),
     dry_run: bool = typer.Option(False, help="Parse + format but do not write file"),
 ) -> None:
     """Generate cost baseline report from Langfuse Cloud data."""

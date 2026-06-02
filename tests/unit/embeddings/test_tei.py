@@ -37,7 +37,7 @@ def _engine_with_mock(settings, recorder):
 
     eng = TEIEmbeddingEngine(settings)
 
-    async def fake_post(url, json):  # noqa: A002 -- mirrors httpx.post(json=...) kw
+    async def fake_post(url, json):
         recorder.append(json["inputs"])
         return _FakeResp(len(json["inputs"]), eng.get_dimensions())
 

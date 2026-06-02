@@ -50,8 +50,8 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "bsl-debug-server"))
 
-import httpx  # noqa: E402
-import mcp_debug_server as mds  # noqa: E402
+import httpx
+import mcp_debug_server as mds
 
 # Exit codes
 EXIT_OK = 0

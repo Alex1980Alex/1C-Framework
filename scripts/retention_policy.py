@@ -239,7 +239,7 @@ def key_stats(
         return {"available": False, "total": 0, "shred_candidates": 0}
     try:
         keys = list_keys_fn()
-    except Exception:  # noqa: BLE001 — best-effort introspection, never block
+    except Exception:
         return {"available": False, "total": 0, "shred_candidates": 0}
     candidates = sum(1 for k in keys if k.get("age_days", 0) >= cfg.warm_days)
     return {"available": True, "total": len(keys), "shred_candidates": candidates}
@@ -278,10 +278,10 @@ def _load_session_keys() -> Any:
     if str(hooks_dir) not in sys.path:
         sys.path.insert(0, str(hooks_dir))
     try:
-        import importlib  # noqa: PLC0415
+        import importlib
 
         return importlib.import_module("shared.session_keys")
-    except Exception:  # noqa: BLE001 — optional dependency, degrade gracefully
+    except Exception:
         return None
 
 
@@ -362,14 +362,14 @@ def cmd_run(apply: bool, status_only: bool, cfg: RetentionConfig) -> int:
         if scripts_dir not in sys.path:
             sys.path.insert(0, scripts_dir)
         try:
-            from archive_jsonl_to_parquet import cmd_archive  # noqa: PLC0415
+            from archive_jsonl_to_parquet import cmd_archive
 
             print("Executing hot→warm archive (rotate=True)...")
             arc_rc = cmd_archive(rotate=True, dry_run=False)
             if arc_rc != 0:
                 print(f"  archive returned {arc_rc} (non-fatal)", file=sys.stderr)
                 rc = rc or arc_rc
-        except Exception as e:  # noqa: BLE001 — archive failure must not block shred
+        except Exception as e:
             print(f"  archive step failed: {e}", file=sys.stderr)
             rc = rc or 1
 

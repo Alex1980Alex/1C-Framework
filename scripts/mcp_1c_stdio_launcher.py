@@ -22,7 +22,7 @@ SUBMODULE_ROOT = Path(__file__).resolve().parent.parent / "external" / "1c_mcp"
 os.chdir(SUBMODULE_ROOT)
 sys.path.insert(0, str(SUBMODULE_ROOT))
 
-from src.py_server.main import main  # noqa: E402
+from src.py_server.main import main
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -19,12 +19,12 @@ from benchmark.runner import (
 
 # Namespace collision: tests/bsl/__init__.py shadows src/bsl/.
 # Force-load src/bsl/ into sys.modules as 'bsl' before importing types.
-import importlib  # noqa: E402
+import importlib
 
 _bsl_pkg = importlib.import_module("src.bsl")
 sys.modules["bsl"] = _bsl_pkg
 
-from bsl.semantic_search.refactor.types import (  # noqa: E402
+from bsl.semantic_search.refactor.types import (
     BackendError,
     FileEdit,
     Position,

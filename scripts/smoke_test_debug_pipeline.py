@@ -39,7 +39,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 WRAPPER_DIR = REPO_ROOT / "tools" / "bsl-debug-server"
 sys.path.insert(0, str(WRAPPER_DIR))
 
-import mcp_debug_server as mds  # noqa: E402
+import mcp_debug_server as mds
 
 DEFAULT_DEBUG_URL = "http://localhost:1550"
 DEFAULT_INFOBASE = "TestDB"

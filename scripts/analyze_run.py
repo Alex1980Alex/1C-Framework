@@ -21,9 +21,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from analyzers.graph import GraphAnalyzer  # noqa: E402
-from analyzers.indexing import IndexingAnalyzer  # noqa: E402
-from analyzers.report_writer import write_report  # noqa: E402
+from analyzers.graph import GraphAnalyzer
+from analyzers.indexing import IndexingAnalyzer
+from analyzers.report_writer import write_report
 
 PROGRESS_JSONL = REPO_ROOT / "data" / "indexing-progress.jsonl"
 REPORTS_DIR = REPO_ROOT / "data" / "reports"

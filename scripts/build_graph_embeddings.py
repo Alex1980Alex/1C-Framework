@@ -16,7 +16,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from _progress import make_tracker  # noqa: E402
+from _progress import make_tracker
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qm
 
@@ -203,7 +203,7 @@ def main():
             tokenizer_kwargs = {"padding_side": "left"}
             if args.enable_fa2:
                 try:
-                    import flash_attn  # noqa
+                    import flash_attn
 
                     model_kwargs["attn_implementation"] = "flash_attention_2"
                     print("  FA2 import OK")

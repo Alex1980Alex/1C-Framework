@@ -96,9 +96,9 @@ def _call_llm(prompt: str) -> str | None:
     # Lazy import to avoid forcing the heavy llm_rotation dependency at
     # module-load time (e.g. if someone imports this script for testing).
     try:
-        import asyncio  # noqa: PLC0415
+        import asyncio
 
-        from src.shared.llm_rotation import get_service  # noqa: PLC0415
+        from src.shared.llm_rotation import get_service
 
         async def _ainvoke() -> str | None:
             service = get_service()
@@ -108,7 +108,7 @@ def _call_llm(prompt: str) -> str | None:
         # Each call gets its own event loop — simpler than threading
         # asyncio.run() through a sync caller. ~5s/call dominates anyway.
         return asyncio.run(_ainvoke())
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"  [WARN] LLM call failed: {type(e).__name__}: {e}", flush=True)
         return None
 

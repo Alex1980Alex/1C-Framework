@@ -31,8 +31,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.framework_search.embedder import FrameworkTEIEmbedder  # noqa: E402
-from src.framework_search.indexer import (  # noqa: E402
+from src.framework_search.embedder import FrameworkTEIEmbedder
+from src.framework_search.indexer import (
     maybe_truncate_vectors,
     recreate_collection_preserving_alias,
     resolve_collection_dim,

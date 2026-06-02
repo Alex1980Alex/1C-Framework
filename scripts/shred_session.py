@@ -35,8 +35,8 @@ from pathlib import Path
 HOOKS_DIR = Path(__file__).resolve().parent.parent / ".claude" / "hooks"
 sys.path.insert(0, str(HOOKS_DIR))
 
-from shared.crypto_shred import decrypt  # noqa: E402
-from shared.session_keys import (  # noqa: E402
+from shared.crypto_shred import decrypt
+from shared.session_keys import (
     delete_key,
     gc_old_keys,
     get_existing_key,
