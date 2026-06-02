@@ -177,5 +177,6 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 | 2026-06-03 | Дочерняя карта §26 создана (PLANNED) | ca12b2f45 |
 | 2026-06-03 | **P0 DONE** — content_hash foundation (D0.1-D0.4), 42 теста, backfill 23/23 на Qdrant | (этот) |
 | 2026-06-03 | **Q1 РЕШЁН (ADR)** — experience_embeddings/conversation_memory → DEPRECATE; блокер P1 close снят | (этот) |
+| 2026-06-03 | **Q1 ИСПОЛНЕН (D1.3)** — обе коллекции dropped (snapshot+delete, 0 pts), surfacing-arms убраны, конфиги/карта/stub вычищены; 29/29 hook-тестов, code-verify behavior-preservation PASS. P1 остаётся открыт: D1.1 patterns-harvester + D1.2 skills-harvester | af84f4d0e |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.
