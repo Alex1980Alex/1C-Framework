@@ -72,6 +72,12 @@ class MemoryCube:
     source: SourceServer = SourceServer.MEMORY_AI
     title: str | None = None
 
+    # --- Identity (cont.) ---
+    # Canonical cross-store dedup/idempotency key = sha256(content)[:16].
+    # Auto-derived from content in __post_init__ when left empty; the same fact
+    # hashes identically in every store, so this is the join key for §26 sync.
+    content_hash: str = ""
+
     # --- Scoring ---
     confidence: float = 0.7
     importance: float = 0.5
