@@ -1,8 +1,32 @@
 # Roadmap — Memory Ingestion & Cross-Store Synchronization (§26)
 
-> **Дата:** 2026-06-03 · **Статус:** PLANNED (дизайн + research готовы, реализация не начата) · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
+> **Дата:** 2026-06-03 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2-P4 ⏳** · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
 >
 > Детальная дочерняя карта обзорной главы §26. Содержит per-phase deliverables + acceptance-критерии, по образцу [§25 → 260601](260601_ROADMAP_MEMORY_EFFECTIVENESS.md). Research — live WebSearch 2026-06-02 (атрибуция в §3) + code-grounded inventory (§2).
+
+---
+
+## 0. Промежуточные результаты (2026-06-03)
+
+**Сделано (2 из 5 фаз):** фундамент идемпотентности (P0) + полный слой авто-приёма знаний (P1). Система перестала быть «нечем кормить» (§1) — `learned_patterns` теперь имеет **авто-writers**.
+
+| Фаза | Статус | Итог |
+|---|---|---|
+| **P0** Контракты ingestion+sync | ✅ DONE | `content_hash` в `MemoryCube` + все 3 проекции; `ingest_metrics`; backfill 23/23 на Qdrant; 42 теста |
+| **P1** Авто-ingestion харвестеры | ✅ DONE | D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки) + **Q1 ADR** (D1.3); 15 unit + live E2E + cold-start seed; code-verify PASS |
+| **P2** Консолидация episodic→semantic | ⏳ PENDING | reflection `memory_ai.db`→`learned_patterns` + закрыть skill-learning silo + `DERIVES_FROM` links |
+| **P3** Cross-store sync/dedup | ⏳ PENDING | `content_hash → [stores]` индекс + `conflict_resolver` активация + `PROMOTED_TO`/`MIRRORS` links |
+| **P4** Scheduling & ForgetGate | ⏳ PENDING | cron/Stop-cadence для decay/dedup/promote + bounded-рост + дашборд |
+
+**Открытые вопросы:** Q1 ✅ РЕШЁН+ИСПОЛНЕН (deprecate experience/conversation). Q2/Q3 — при старте P2/P4.
+
+**Изменения инвентаризации (§2) после P0+P1:**
+- `experience_embeddings` / `conversation_memory` — **DROPPED** (были «0 writers»; [Q1 ADR](260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md)); surfacing-плечи `exp`/`conv` убраны.
+- `save_pattern → learned_patterns` — был «вызов только вручную» → теперь **AUTO** через [`patterns-harvester.py`](../../.claude/hooks/patterns-harvester.py) (confirmed feedback-drafts + session-lessons, gated).
+- `skill_library` — был «MANUAL (полный rebuild)» → теперь **AUTO incremental** через [`skills-harvester.py`](../../.claude/hooks/skills-harvester.py) (hash-idempotent, cold-start seed, stale-cleanup).
+- Ещё **NOT-AUTO** (остаётся на P2-P4): skill-learning silo→patterns, memory-ai→patterns reflection, learned→wiki promote cron, cross-store dedup, `conflict_resolver` (stub).
+
+**Ключевые отклонения от плана (детали в §5/§10):** D1.2 реализован как Stop-batch (не PostToolUse); lessons-источник получил noise-filter (lifecycle "Lessons" = auto-task-title шум), основной high-signal D1.1 = confirmed feedback-drafts; `save_pattern` MCP-only → харвестер делает прямой upsert с зеркалированием payload.
 
 ---
 
@@ -177,8 +201,8 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 | Дата | Веха | Коммит |
 |---|---|---|
 | 2026-06-03 | Дочерняя карта §26 создана (PLANNED) | ca12b2f45 |
-| 2026-06-03 | **P0 DONE** — content_hash foundation (D0.1-D0.4), 42 теста, backfill 23/23 на Qdrant | (этот) |
-| 2026-06-03 | **Q1 РЕШЁН (ADR)** — experience_embeddings/conversation_memory → DEPRECATE; блокер P1 close снят | (этот) |
+| 2026-06-03 | **P0 DONE** — content_hash foundation (D0.1-D0.4), 42 теста, backfill 23/23 на Qdrant | 12cd66043 |
+| 2026-06-03 | **Q1 РЕШЁН (ADR)** — experience_embeddings/conversation_memory → DEPRECATE; блокер P1 close снят | 72063c3e2 |
 | 2026-06-03 | **Q1 ИСПОЛНЕН (D1.3)** — обе коллекции dropped (snapshot+delete, 0 pts), surfacing-arms убраны, конфиги/карта/stub вычищены; 29/29 hook-тестов, code-verify behavior-preservation PASS. P1 остаётся открыт: D1.1 patterns-harvester + D1.2 skills-harvester | af84f4d0e |
 | 2026-06-03 | **P1 DONE** — D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки, fail-soft, gated, reversible); 15 unit + 95/95 hook + live E2E + cold-start seed PASS, code-verify quality-review PASS | c6c2a825f |
 
