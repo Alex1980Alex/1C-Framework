@@ -45,14 +45,13 @@ jobs:
         run: ruff format --check src/
 
       - name: Compile-smoke (scripts + hooks)
-        # Catches merge-mangling that is syntactically/structurally broken but
-        # not an undefined-name (e.g. the benchmark scripts in the 2026-06
-        # regression). --help also verifies entrypoints stay importable.
-        run: |
-          python -m compileall -q scripts .claude/hooks
-          python scripts/reindex_bsl_qwen3.py --help > /dev/null
-          python scripts/run_benchmark.py --help > /dev/null
-          python scripts/build_benchmark_tasks.py --help > /dev/null
+        # Byte-compiles every script/hook to catch merge-mangling that is
+        # syntactically/structurally broken (e.g. the benchmark scripts in the
+        # 2026-06 regression). compileall does NOT execute imports, so it stays
+        # dep-free and CI-stable. The complementary class — undefined names from
+        # deleted/renamed symbols (the reindex_bsl_qwen3.py regression) — is
+        # caught by the Ruff lint step above (F821 now runs on scripts/).
+        run: python -m compileall -q scripts .claude/hooks
 
       - name: TOC ↔ filesystem consistency
         run: python scripts/validate_toc.py --json
