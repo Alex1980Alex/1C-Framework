@@ -93,13 +93,14 @@ Examples:
 - `delete_message` — remove by ID
 - `get_categories` — list categories with stats
 
-### vector-memory (7 tools)
+### vector-memory (8 tools)
 - `save_pattern` — save with confidence
 - `search_patterns` — semantic search + confidence filter
 - `apply_pattern` — track usage, update confidence
 - `get_pattern` / `delete_pattern` — CRUD
 - `decay_confidence` — apply temporal decay
 - `health_check` — Qdrant status
+- `list_patterns` — browse pattern CONTENT without a query (scroll-based, no embedding → no TEI cold-start); filters: pattern_type / min_confidence (effective) / grep / limit / full (added 2026-06-02)
 
 ### skill-learning (7 tools)
 - `capture_pattern` — capture from tool use
