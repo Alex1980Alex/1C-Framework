@@ -98,6 +98,19 @@ class MemoryCube:
 
     # --- Lifecycle ---
 
+    def __post_init__(self) -> None:
+        """Derive the content hash if it was not supplied explicitly."""
+        if not self.content_hash:
+            self.content_hash = hash_content(self.content)
+
+    def refresh_hash(self) -> str:
+        """Recompute the content hash from current content and return it.
+
+        Call after mutating ``content`` so the dedup key stays in sync.
+        """
+        self.content_hash = hash_content(self.content)
+        return self.content_hash
+
     def touch(self) -> None:
         """Update the modification timestamp and bump version."""
         self.updated_at = datetime.now()
