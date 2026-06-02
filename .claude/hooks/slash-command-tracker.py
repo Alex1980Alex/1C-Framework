@@ -57,7 +57,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput
-from shared.slash_detect import detect_slash_command as _detect_slash_command  # noqa: F401
+from shared.slash_detect import detect_slash_command as _detect_slash_command
 
 
 class SlashCommandTracker(BaseHook):

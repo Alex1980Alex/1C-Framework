@@ -33,9 +33,9 @@ class FeedbackDraftAggregator(BaseHook):
 
         shown = drafts[:5]
         lines = ["- data/memory_drafts/" + os.path.basename(str(p)) for p in shown]
-        extra = "" if len(drafts) <= 5 else "\n…и ещё {0}".format(len(drafts) - 5)
+        extra = "" if len(drafts) <= 5 else f"\n…и ещё {len(drafts) - 5}"
         return HookOutput().system_message(
-            "[FEEDBACK-DRAFT] Черновики курируемой памяти на подтверждение ({0}):\n".format(len(drafts))
+            f"[FEEDBACK-DRAFT] Черновики курируемой памяти на подтверждение ({len(drafts)}):\n"
             + "\n".join(lines) + extra + "\n"
             "Подтверждённые перенеси в memory/feedback_*.md + MEMORY.md; неактуальные удали из data/memory_drafts/."
         )

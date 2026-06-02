@@ -25,8 +25,8 @@ from pathlib import Path
 # Ensure shared/ and base/ are importable from this file's directory.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
-from shared.lifecycle_extract import extract_stages, render_record  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
+from shared.lifecycle_extract import extract_stages, render_record
 
 # ---------------------------------------------------------------------------
 # Constants

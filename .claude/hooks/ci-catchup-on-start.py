@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPT_PATH = PROJECT_ROOT / "scripts" / "ci_failure_cache.py"
@@ -48,7 +48,7 @@ class CiCatchupOnStart(BaseHook):
             limit = "20"
 
         try:
-            subprocess.Popen(  # noqa: S603 — fixed argv, no shell
+            subprocess.Popen(
                 [str(VENV_PYTHON), str(SCRIPT_PATH), "--catchup", limit],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

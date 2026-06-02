@@ -62,10 +62,10 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
 
-from shared import pr_helpers as pr  # noqa: E402
-from shared import pr_notifier as notify  # noqa: E402
+from shared import pr_helpers as pr
+from shared import pr_notifier as notify
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 STATE_FILE = PROJECT_ROOT / ".claude" / "cache" / "post-task-push-pr-state.json"

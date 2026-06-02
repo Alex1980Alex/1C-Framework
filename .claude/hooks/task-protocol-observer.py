@@ -19,7 +19,7 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 
-from base.protocol import BaseHook, HookInput, HookOutput  # noqa: E402
+from base.protocol import BaseHook, HookInput, HookOutput
 
 
 class TaskProtocolObserver(BaseHook):

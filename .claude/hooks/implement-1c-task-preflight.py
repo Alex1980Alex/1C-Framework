@@ -41,8 +41,8 @@ from pathlib import Path
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
-from shared.slash_detect import detect_slash_command  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
+from shared.slash_detect import detect_slash_command
 
 TARGET_COMMAND = "implement-1c-task"
 SMOKE_TEST_TIMEOUT = 25  # seconds; matches handshake budget in smoke-test (3x ~6s + slack)

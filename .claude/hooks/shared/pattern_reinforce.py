@@ -68,7 +68,7 @@ def _log_lifecycle(event: str, **fields: Any) -> None:
         from memory.vector_memory.lifecycle_log import log_event
 
         log_event(event, **fields)
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
 # ---------------------------------------------------------------------------
@@ -86,7 +86,7 @@ def _atomic_write(path: Path, data: dict[str, Any]) -> None:
         if sys.platform == "win32" and path.exists():
             path.unlink()
         os.replace(tmp, str(path))
-    except Exception:  # noqa: BLE001
+    except Exception:
         try:
             os.unlink(tmp)
         except OSError:
@@ -124,7 +124,7 @@ def record_surfaced(session_id: str, items: list[tuple[str, float]]) -> None:
                 with open(path, encoding="utf-8") as fh:
                     raw = json.load(fh)
                 existing = raw.get("patterns", {})
-            except Exception:  # noqa: BLE001
+            except Exception:
                 existing = {}
 
         for pid, score in items:
@@ -136,7 +136,7 @@ def record_surfaced(session_id: str, items: list[tuple[str, float]]) -> None:
             "updated": datetime.now().isoformat(),
         }
         _atomic_write(path, payload)
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
 
@@ -151,7 +151,7 @@ def load_surfaced(session_id: str) -> dict[str, float]:
         with open(path, encoding="utf-8") as fh:
             raw = json.load(fh)
         return dict(raw.get("patterns", {}))
-    except Exception:  # noqa: BLE001
+    except Exception:
         return {}
 
 
@@ -211,7 +211,7 @@ def reinforce_session(
                     "sessions": list(loaded.get("sessions", [])),
                     "patterns": dict(loaded.get("patterns", {})),
                 }
-            except Exception:  # noqa: BLE001
+            except Exception:
                 state = {"sessions": [], "patterns": {}}
 
         # --- Per-session idempotency ---
@@ -223,7 +223,7 @@ def reinforce_session(
             src_path = str(_PROJECT_ROOT / "src")
             if src_path not in sys.path:
                 sys.path.insert(0, src_path)
-            from memory.vector_memory.reinforce import reinforce_pattern  # noqa: PLC0415
+            from memory.vector_memory.reinforce import reinforce_pattern
             reinforce_fn = reinforce_pattern
 
         # --- Filter + sort surfaced patterns ---
@@ -258,7 +258,7 @@ def reinforce_session(
                     applied += 1
                 else:
                     errors += 1
-            except Exception:  # noqa: BLE001
+            except Exception:
                 errors += 1
 
         # --- Update + FIFO-trim sentinel ---
@@ -290,7 +290,7 @@ def reinforce_session(
             sp = _surfaced_path(session_id)
             if sp.exists():
                 sp.unlink()
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
 
         _log_lifecycle(
@@ -311,7 +311,7 @@ def reinforce_session(
             "errors": errors,
         }
 
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         _log_lifecycle(
             "session_error",
             session_id=session_id[:8],

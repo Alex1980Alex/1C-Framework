@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
 
 GH_TIMEOUT_S = 4
 

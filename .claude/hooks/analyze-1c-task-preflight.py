@@ -29,9 +29,9 @@ import sys
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
-from shared.debug_hmr_health import probe_debug_hmr_ready  # noqa: E402
-from shared.slash_detect import detect_slash_command  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
+from shared.debug_hmr_health import probe_debug_hmr_ready
+from shared.slash_detect import detect_slash_command
 
 TARGET_COMMAND = "analyze-1c-task"
 SMOKE_TEST_TIMEOUT = 25  # seconds

@@ -24,7 +24,7 @@ import sys
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
 
 # Patterns that indicate SO-searchable error signatures.
 # Order matters: last-match wins (most specific signature usually trails output).

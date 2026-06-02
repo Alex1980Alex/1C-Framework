@@ -36,7 +36,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from base import BaseHook, HookInput, HookOutput  # noqa: E402
+from base import BaseHook, HookInput, HookOutput
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 PROGRESS_JSONL = PROJECT_ROOT / "data" / "indexing-progress.jsonl"

@@ -103,7 +103,7 @@ def create_draft(prompt, session_id=""):
             if key in existing.name:
                 return None  # dedupe: same normalized feedback already drafted
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = DRAFTS_DIR / ("{0}_{1}.md".format(ts, key))
+        path = DRAFTS_DIR / (f"{ts}_{key}.md")
         excerpt = str(prompt).replace("\r", "").strip()
         if len(excerpt) > 800:
             excerpt = excerpt[:800] + " …"
