@@ -252,6 +252,7 @@ class MemoryCube:
             "unified_id": f"{self.memory_type.value}:{self.source.value}:{self.cube_id}",
             "memory_type": self.memory_type.value,
             "content_type": self.content_type.value,
+            "content_hash": self.content_hash,
             "source": self.source.value,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
