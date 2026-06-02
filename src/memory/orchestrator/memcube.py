@@ -158,6 +158,7 @@ class MemoryCube:
         cube = cls(
             cube_id=data.get("cube_id", str(uuid4())),
             content=data.get("content", ""),
+            content_hash=data.get("content_hash", ""),
             content_type=ContentType(data["content_type"])
             if "content_type" in data
             else ContentType.OBSERVATION,
