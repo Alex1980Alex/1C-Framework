@@ -360,14 +360,22 @@ def get_session_files(session_id: str = "") -> set[str]:
         "^chore: auto-save",
         "^chore: rollup auto-format",
         "^chore: rollup auto-formatter",
+        # style/format/lint-hygiene commits (ruff format, dead-noqa strips) are
+        # comment/whitespace-only by convention — no semantic API change to doc.
+        "^style:",
+        r"^style(",
     )
     grep_args: list[str] = ["--invert-grep"]
     for pat in excluded_subject_patterns:
         grep_args.extend(["--grep", pat])
 
     try:
+        # NB: pass `since_arg` (session-bounded) + `grep_args` (subject exclusions)
+        # into the command. Prior to 2026-06 these were built but never wired in,
+        # so the auto-save/format exclusion above was dead code and the window was
+        # always a hardcoded 6h — over-firing the enforcer on cosmetic commits.
         r = subprocess.run(
-            ["git", "log", "--since=6 hours ago", "--name-only", "--pretty="],
+            ["git", "log", since_arg, *grep_args, "--name-only", "--pretty=", "--extended-regexp"],
             capture_output=True,
             text=True,
             encoding="utf-8",
