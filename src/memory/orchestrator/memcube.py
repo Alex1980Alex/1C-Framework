@@ -214,6 +214,7 @@ class MemoryCube:
             "name": self.title or self.content[:50],
             "description": self.what or "",
             "content": self.content,
+            "content_hash": self.content_hash,
             "confidence": self.confidence,
             "evidence_sources": [],
             "created_at": self.created_at.isoformat(),
