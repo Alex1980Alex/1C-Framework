@@ -129,6 +129,7 @@ class MemoryCube:
         return {
             "cube_id": self.cube_id,
             "content": self.content,
+            "content_hash": self.content_hash,
             "content_type": self.content_type.value,
             "memory_type": self.memory_type.value,
             "source": self.source.value,
