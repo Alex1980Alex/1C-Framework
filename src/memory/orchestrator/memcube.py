@@ -17,6 +17,7 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
+from .content_hash import hash_content
 from .unified_id import MemoryType, SourceServer
 
 
