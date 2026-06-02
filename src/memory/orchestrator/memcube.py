@@ -197,6 +197,7 @@ class MemoryCube:
         return {
             "id": self.cube_id,
             "content": self.content,
+            "content_hash": self.content_hash,
             "importance": self.importance,
             "category": self.content_type.value,
             "tags": json.dumps(self.tags, ensure_ascii=False),
