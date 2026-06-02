@@ -53,7 +53,20 @@ def _content(payload: dict[str, Any]) -> str:
 
 
 def content_key(payload: dict[str, Any]) -> str:
-    return hashlib.sha256(_content(payload).encode("utf-8", errors="replace")).hexdigest()[:16]
+    """Cross-store dedup key — delegates to the canonical implementation (§26 P0).
+
+    Falls back to the inline sha256[:16] if ``src`` is not importable, keeping the
+    script self-contained. Both paths are byte-identical by construction.
+    """
+    try:
+        src = str(PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.content_hash import content_key as _ck
+
+        return _ck(payload)
+    except Exception:
+        return hashlib.sha256(_content(payload).encode("utf-8", errors="replace")).hexdigest()[:16]
 
 
 def _num(payload: dict[str, Any], key: str) -> float:
