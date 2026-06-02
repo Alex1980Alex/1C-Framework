@@ -166,7 +166,7 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 
 ## 9. Открытые вопросы (решить при старте фазы)
 
-- **Q1 (P1 D1.3):** experience_embeddings/conversation_memory — наполнить или deprecate? → ADR обязателен ПЕРЕД P1 close.
+- **Q1 (P1 D1.3):** experience_embeddings/conversation_memory — наполнить или deprecate? → **РЕШЕНО (2026-06-03): DEPRECATE обе** — роль покрыта episodic (`memory_ai.db`) → reflection → semantic (`learned_patterns`); популяция = net-negative (cross-store дубликаты). ADR: [260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md](260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md). Реализационные шаги 1-7 — в составе P1 close.
 - **Q2 (P2):** триггер reflection — фиксированный N-повторов или адаптивный по importance-сумме? → начать с фиксированного, параметризовать.
 - **Q3 (P4 D4.1):** scheduling через `/schedule` cron vs Stop-cadence? → решить по реальной нагрузке после P1-P3 (cadence проще/безопаснее на старте).
 
@@ -176,5 +176,6 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 |---|---|---|
 | 2026-06-03 | Дочерняя карта §26 создана (PLANNED) | ca12b2f45 |
 | 2026-06-03 | **P0 DONE** — content_hash foundation (D0.1-D0.4), 42 теста, backfill 23/23 на Qdrant | (этот) |
+| 2026-06-03 | **Q1 РЕШЁН (ADR)** — experience_embeddings/conversation_memory → DEPRECATE; блокер P1 close снят | (этот) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.
