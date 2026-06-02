@@ -331,6 +331,7 @@ class MemoryCube:
         cube = cls(
             cube_id=frontmatter.get("unified_id", "").split(":")[-1] or str(uuid4()),
             content=content,
+            content_hash=frontmatter.get("content_hash", ""),
             content_type=ContentType(frontmatter.get("content_type", "wiki")),
             memory_type=MemoryType(frontmatter["memory_type"])
             if "memory_type" in frontmatter
