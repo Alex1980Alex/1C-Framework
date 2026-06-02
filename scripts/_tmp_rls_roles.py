@@ -16,25 +16,26 @@ HEADER = (
     '\t<independentRightsOfChildObjects>false</independentRightsOfChildObjects>\n'
 )
 
-REG_OLD = "гкс_СостоянияРегистрации"
-REG_NEW = "гкс_ЗалоговыеЦены"
-DOC_OLD = "гкс_УстановкаНастроекНазначенияРазгрузки"
-DOC_NEW = "гкс_УстановкаЗалоговыхЦен"
+# bare = имя в названии роли (без гкс_); meta = полное имя метаданного (FQN/условие)
+REG_OLD_BARE, REG_NEW_BARE = "СостоянияРегистрации", "ЗалоговыеЦены"
+REG_OLD_META, REG_NEW_META = "гкс_СостоянияРегистрации", "гкс_ЗалоговыеЦены"
+DOC_OLD_BARE, DOC_NEW_BARE = "УстановкаНастроекНазначенияРазгрузки", "УстановкаЗалоговыхЦен"
+DOC_OLD_META, DOC_NEW_META = "гкс_УстановкаНастроекНазначенияРазгрузки", "гкс_УстановкаЗалоговыхЦен"
 
-RS = "РегистрСведений_"
-DOK = "Документ_"
-PROS = "Просмотр"
-DOBIZM = "ДобавлениеИзменение"
+RS = "гкс_РегистрСведений_"
+DOK = "гкс_Документ_"
+PROS = "_Просмотр"
+DOBIZM = "_ДобавлениеИзменение"
 
 JOBS = [
-    ("гкс_" + RS + REG_OLD + "_" + PROS, "гкс_" + RS + REG_NEW + "_" + PROS,
-     "InformationRegister." + REG_OLD, REG_OLD, REG_NEW),
-    ("гкс_" + RS + REG_OLD + "_" + DOBIZM, "гкс_" + RS + REG_NEW + "_" + DOBIZM,
-     "InformationRegister." + REG_OLD, REG_OLD, REG_NEW),
-    ("гкс_" + DOK + DOC_OLD + "_" + PROS, "гкс_" + DOK + DOC_NEW + "_" + PROS,
-     "Document." + DOC_OLD, DOC_OLD, DOC_NEW),
-    ("гкс_" + DOK + DOC_OLD + "_" + DOBIZM, "гкс_" + DOK + DOC_NEW + "_" + DOBIZM,
-     "Document." + DOC_OLD, DOC_OLD, DOC_NEW),
+    (RS + REG_OLD_BARE + PROS, RS + REG_NEW_BARE + PROS,
+     "InformationRegister." + REG_OLD_META, REG_OLD_META, REG_NEW_META),
+    (RS + REG_OLD_BARE + DOBIZM, RS + REG_NEW_BARE + DOBIZM,
+     "InformationRegister." + REG_OLD_META, REG_OLD_META, REG_NEW_META),
+    (DOK + DOC_OLD_BARE + PROS, DOK + DOC_NEW_BARE + PROS,
+     "Document." + DOC_OLD_META, DOC_OLD_META, DOC_NEW_META),
+    (DOK + DOC_OLD_BARE + DOBIZM, DOK + DOC_NEW_BARE + DOBIZM,
+     "Document." + DOC_OLD_META, DOC_OLD_META, DOC_NEW_META),
 ]
 
 rc = 0
