@@ -43,6 +43,9 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DRAFTS_DIR = PROJECT_ROOT / "data" / "memory_drafts"
 LIFECYCLE_DIR = PROJECT_ROOT / "data" / "lifecycle"
+# §26 P2 D2.2: skill-learning silo — confirmed patterns live in patterns.jsonl
+# (pending_patterns.jsonl is awaiting review; confirm = move into this file).
+SKILL_LEARNING_FILE = PROJECT_ROOT / "data" / "skill_learning" / "patterns.jsonl"
 
 COLLECTION = os.environ.get("LEARNING_COLLECTION_NAME", "learned_patterns")
 QDRANT_HOST = os.environ.get("QDRANT_HOST", "127.0.0.1")
@@ -249,6 +252,48 @@ def iter_session_lessons(
     return items
 
 
+def iter_confirmed_skill_patterns(jsonl_file: Path = SKILL_LEARNING_FILE) -> list[HarvestItem]:
+    """§26 P2 D2.2: confirmed (non-archived) skill-learning patterns → HarvestItems.
+
+    A record in patterns.jsonl IS confirmed (capture→pending→confirm moves it here);
+    archived records and too-short content are skipped.
+    """
+    items: list[HarvestItem] = []
+    if not jsonl_file.exists():
+        return items
+    try:
+        lines = jsonl_file.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return items
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(rec, dict) or rec.get("archived"):
+            continue
+        content = str(rec.get("content") or "").strip()
+        if len(content) < MIN_CONTENT_LEN:
+            continue
+        name = str(rec.get("name") or content[:60]).strip()
+        pid = rec.get("pattern_id", "")
+        tags = rec.get("tags") if isinstance(rec.get("tags"), list) else []
+        items.append(
+            HarvestItem(
+                content=content,
+                name=name[:60],
+                description=str(rec.get("description") or "")[:200],
+                pattern_type=str(rec.get("pattern_type") or "workflow-pattern"),
+                source=f"skill-learning:{pid}",
+                tags=[*tags, "harvested", "skill-learning"],
+            )
+        )
+    return items
+
+
 def _build_payload(item: HarvestItem, content_hash: str, now: datetime) -> dict[str, Any]:
     """Mirror vector_memory _pattern_to_payload (+ content_hash, §26 P0)."""
     iso = now.isoformat()
@@ -276,23 +321,23 @@ def _build_payload(item: HarvestItem, content_hash: str, now: datetime) -> dict[
     }
 
 
-def harvest(
+def ingest_items(
+    items: list[HarvestItem],
     *,
-    drafts_dir: Path = DRAFTS_DIR,
-    lifecycle_dir: Path = LIFECYCLE_DIR,
     cap: int | None = None,
     dry_run: bool = False,
-    sources: tuple[str, ...] = ("drafts", "lessons"),
     client: Any = None,
     embed: Callable[[str], list[float] | None] | None = None,
     now: datetime | None = None,
-    lesson_max_age_hours: int = 48,
+    on_created: Callable[[HarvestItem, str], None] | None = None,
 ) -> dict[str, Any]:
-    """Harvest confirmed drafts + session-lessons into learned_patterns.
+    """Dedup (UUID5 content_hash) + cap + embed + upsert HarvestItems into learned_patterns.
 
-    Returns stats dict: created / skipped_dup / skipped_cap / skipped_gate /
-    errors / items(names). Pure fail-soft — never raises. ``client``/``embed``
-    are injectable for tests (no live Qdrant/TEI needed).
+    Shared ingestion core reused by ``harvest`` (P1) and the reflection job (P2 D2.1).
+    Returns stats: created / skipped_dup / skipped_cap / errors / items(names).
+    Pure fail-soft — never raises. ``on_created(item, point_id)`` fires after each
+    successful upsert (e.g. to record DERIVES_FROM links). ``client``/``embed`` are
+    injectable for tests (no live Qdrant/TEI needed).
     """
     cap = DEFAULT_CAP if cap is None else cap
     now = now or datetime.now()
@@ -301,22 +346,15 @@ def harvest(
         "created": 0,
         "skipped_dup": 0,
         "skipped_cap": 0,
-        "skipped_gate": 0,
         "errors": 0,
         "items": [],
         "dry_run": dry_run,
     }
 
-    candidates: list[HarvestItem] = []
-    if "drafts" in sources:
-        candidates += iter_confirmed_drafts(drafts_dir)
-    if "lessons" in sources:
-        candidates += iter_session_lessons(lifecycle_dir, lesson_max_age_hours, now)
-
     # de-dup candidates within this run by content_hash (cheap, pre-Qdrant)
     seen_local: set[str] = set()
     uniq: list[HarvestItem] = []
-    for it in candidates:
+    for it in items:
         ch = it.content_hash
         if ch in seen_local:
             continue
@@ -374,5 +412,38 @@ def harvest(
             continue
         stats["created"] += 1
         stats["items"].append(it.name)
+        if on_created is not None:
+            try:
+                on_created(it, pid)
+            except Exception:
+                pass
 
     return stats
+
+
+def harvest(
+    *,
+    drafts_dir: Path = DRAFTS_DIR,
+    lifecycle_dir: Path = LIFECYCLE_DIR,
+    skill_learning_file: Path = SKILL_LEARNING_FILE,
+    cap: int | None = None,
+    dry_run: bool = False,
+    sources: tuple[str, ...] = ("drafts", "lessons", "skill_learning"),
+    client: Any = None,
+    embed: Callable[[str], list[float] | None] | None = None,
+    now: datetime | None = None,
+    lesson_max_age_hours: int = 48,
+) -> dict[str, Any]:
+    """Harvest confirmed drafts + session-lessons + confirmed skill-learning patterns
+    into learned_patterns (§26 P1 D1.1 + P2 D2.2). Delegates to ``ingest_items``.
+    Pure fail-soft.
+    """
+    now = now or datetime.now()
+    candidates: list[HarvestItem] = []
+    if "drafts" in sources:
+        candidates += iter_confirmed_drafts(drafts_dir)
+    if "lessons" in sources:
+        candidates += iter_session_lessons(lifecycle_dir, lesson_max_age_hours, now)
+    if "skill_learning" in sources:
+        candidates += iter_confirmed_skill_patterns(skill_learning_file)
+    return ingest_items(candidates, cap=cap, dry_run=dry_run, client=client, embed=embed, now=now)

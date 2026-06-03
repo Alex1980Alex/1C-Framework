@@ -111,7 +111,7 @@ def test_confirmed_drafts_and_lessons_create_cubes(dirs: tuple[Path, Path]) -> N
     )
     client = FakeClient()
     stats = ph.harvest(drafts_dir=drafts, lifecycle_dir=life, client=client, embed=_fake_embed,
-                       lesson_max_age_hours=0)
+                       sources=("drafts", "lessons"), lesson_max_age_hours=0)
     assert stats["created"] == 2  # 1 draft + 1 real lesson (noise filtered)
     assert stats["errors"] == 0
     assert len(client.store) == 2
@@ -186,6 +186,55 @@ def test_dry_run_counts_without_upsert(dirs: tuple[Path, Path]) -> None:
                        sources=("drafts",), dry_run=True)
     assert stats["created"] == 1
     assert len(client.store) == 0  # nothing persisted
+
+
+def _write_skill_jsonl(path: Path, records: list[dict]) -> None:
+    import json as _json
+
+    path.write_text("\n".join(_json.dumps(r, ensure_ascii=False) for r in records), encoding="utf-8")
+
+
+def test_skill_learning_source_ingests_confirmed(tmp_path: Path) -> None:
+    """§26 P2 D2.2: confirmed (non-archived) skill-learning patterns → learned_patterns."""
+    jf = tmp_path / "patterns.jsonl"
+    _write_skill_jsonl(
+        jf,
+        [
+            {"pattern_id": "p1", "name": "use httpx", "content": "Always use httpx.AsyncClient for async HTTP calls in this framework", "pattern_type": "code-convention", "tags": ["http"]},
+            {"pattern_id": "p2", "name": "archived one", "content": "this is archived and must be skipped entirely here", "archived": True},
+            {"pattern_id": "p3", "name": "too short", "content": "tiny"},
+        ],
+    )
+    client = FakeClient()
+    stats = ph.harvest(skill_learning_file=jf, client=client, embed=_fake_embed,
+                       sources=("skill_learning",))
+    assert stats["created"] == 1  # archived + too-short skipped
+    assert len(client.store) == 1
+    pl = next(iter(client.store.values())).payload
+    assert pl["pattern_type"] == "code-convention"
+    assert "skill-learning" in pl["tags"]
+    assert pl["metadata"]["harvest_source"].startswith("skill-learning:")
+
+
+def test_skill_learning_rerun_is_idempotent(tmp_path: Path) -> None:
+    jf = tmp_path / "patterns.jsonl"
+    _write_skill_jsonl(jf, [{"pattern_id": "p1", "name": "x", "content": "a confirmed skill pattern long enough to pass the floor"}])
+    client = FakeClient()
+    s1 = ph.harvest(skill_learning_file=jf, client=client, embed=_fake_embed, sources=("skill_learning",))
+    s2 = ph.harvest(skill_learning_file=jf, client=client, embed=_fake_embed, sources=("skill_learning",))
+    assert s1["created"] == 1 and s2["created"] == 0 and s2["skipped_dup"] == 1
+
+
+def test_ingest_items_on_created_callback() -> None:
+    """ingest_items fires on_created(item, pid) per successful upsert (P2 D2.3 links)."""
+    client = FakeClient()
+    seen: list[tuple[str, str]] = []
+    items = [ph.HarvestItem(content="a brand new consolidated semantic pattern here",
+                            name="n", description="d", pattern_type="workflow-pattern", source="reflection:x")]
+    stats = ph.ingest_items(items, client=client, embed=_fake_embed,
+                            on_created=lambda it, pid: seen.append((it.name, pid)))
+    assert stats["created"] == 1
+    assert len(seen) == 1 and seen[0][0] == "n"
 
 
 def test_payload_mirrors_save_pattern(dirs: tuple[Path, Path]) -> None:
