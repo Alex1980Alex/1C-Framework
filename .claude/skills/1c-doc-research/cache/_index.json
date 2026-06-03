@@ -2,6 +2,31 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "rdbg-bp-background-job-auto-attach": {
+      "title": "RDBG: ловля breakpoint в фоновом задании (auto-attach, гонка, фиксы)",
+      "file": "rdbg-bp-background-job-auto-attach.md",
+      "created": "2026-06-03",
+      "last_verified": "2026-06-03",
+      "keywords": [
+        "BP не срабатывает в фоновом задании",
+        "RDBG auto-attach background job",
+        "setAutoAttachSettings JOB",
+        "setBreakOnNextStatement гонка",
+        "callStackFormed не приходит",
+        "targetStarted targetQuit polling",
+        "debug фоновое задание 1С",
+        "arm_next_rphost drain",
+        "1c-debug-hmr breakpoint JOB",
+        "детерминированный харнесс вместо BP-trace"
+      ],
+      "sources": [
+        "github.com/yukon39/bsl-debug-server",
+        "kb.1ci.com гл. 32.2.2 Debugger",
+        "1c-dn.com/1c_enterprise/debugger",
+        "tools/bsl-debug-server/mcp_debug_server.py",
+        "live 2026-06-03 задача 260529_УК"
+      ]
+    },
     "ut-okruglenie-cen-vidy-cen": {
       "title": "Округление цены в виде цен (УТ/ERP) — настройка и значения по умолчанию",
       "file": "ut-okruglenie-cen-vidy-cen.md",
