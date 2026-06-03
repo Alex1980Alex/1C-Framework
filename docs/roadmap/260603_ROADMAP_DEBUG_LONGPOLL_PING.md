@@ -1,7 +1,7 @@
 # Roadmap 260603 — Long-poll ping для 1c-debug-hmr (снижение латентности доставки событий)
 
 **Дата:** 2026-06-03
-**Статус:** PROPOSED
+**Статус:** IMPLEMENTED (адаптивный polling — см. §8; true server-held long-poll не поддержан RDBG 8.3.27)
 **Область:** `tools/bsl-debug-server/mcp_debug_server.py` (`_ping_loop` / `ping`)
 **Связано:** улучшения отладки #1 (sticky capture-mode, DONE) + #3 (пауза старта в helper, DONE). Это пункт #2 из анализа «BP не ловится в фоновом JOB».
 
@@ -68,11 +68,29 @@ Wrapper:      [poll] ... [poll] ← targetStarted доставлен СЛИШК�
 
 ---
 
+## §8. Реализация (2026-06-03)
+
+**Находка при реализации:** RDBG `pingDebugUIParams` на 8.3.27 возвращает **снапшот очереди событий немедленно** — server-held long-poll (как в §3) платформой **не поддержан**. Поэтому реализован безопасный эквивалент — **адаптивный интервал polling** (та же проверенная механика, меняется только каденс):
+
+- Новые константы `RDBGClient`: `PING_INTERVAL_IDLE = 2.0`, `PING_INTERVAL_ACTIVE = 0.1`, `POST_SPAWN_POLL_SEC = 6.0`.
+- `_ping_loop`: каждую итерацию выбирает интервал — **0.1с**, если ждём событие (`_capture_mode` / `_break_on_next_silent_arm` / `_break_on_next_armed` / непустой `_attached_pending`), иначе **2с** heartbeat.
+- `_post_spawn_auto_attach` переведён на **time-based** триггер (~6с по накопленному времени), чтобы fast-poll не молотил `getDbgAllTargetStates`.
+- **Default не меняется:** когда ничего не armed (обычный режим) → 2с, как прежде.
+
+**Эффект:** в окне ожидания (capture-mode / armed) `targetStarted` доставляется за ~0.1с вместо ~2с → окно гонки attach/BP для коротких JOB сужено в ~20×. В связке с #1 (sticky capture-mode) даёт надёжную ловлю BP в фоновом задании.
+
+**Верификация:** 222/222 unit-тестов passed, ruff 0 errors, code-verify PASS.
+
+**Остаток (FUTURE, опц.):** если в будущей версии платформы/протокола появится server-held long-poll — заменить адаптивный poll на блокирующий (убрать busy-cadence в active-окне). Сейчас не требуется.
+
+---
+
 ## §18. Журнал прогресса
 
 | Дата | Событие | Кто |
 |------|---------|-----|
 | 2026-06-03 | Roadmap создан (PROPOSED). Контекст — анализ «BP не ловится в фоновом JOB» по задаче 260529_УК; #1+#3 реализованы, #2 вынесен сюда. | Claude |
+| 2026-06-03 | **IMPLEMENTED** — адаптивный ping (0.1с active / 2с idle) в `_ping_loop` + time-based auto-attach. Установлено, что server-held long-poll не поддержан RDBG 8.3.27 → реализован эквивалент. 222/222 тестов, code-verify PASS. | Claude |
 
 > Связанный кеш знаний: [`1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md`](../../.claude/skills/1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md)
 > Связанная документация: [36_AUTONOMOUS_DEBUG_CONTROL](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/)
