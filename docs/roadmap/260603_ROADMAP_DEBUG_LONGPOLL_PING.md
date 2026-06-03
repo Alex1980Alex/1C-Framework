@@ -85,12 +85,30 @@ Wrapper:      [poll] ... [poll] ← targetStarted доставлен СЛИШК�
 
 ---
 
+## §9. Глубокий live-тест (2026-06-03) — честные результаты
+
+Прогон на реальном примере (запись УК в фоновом JOB → BP в `RecordSetModule:41`):
+
+- **Найден баг #1 (sticky capture-mode):** re-arm `setBreakOnNextStatement` сразу после drain единичного таргета → т.к. команда **глобальна** («следующая инструкция на ЛЮБОМ таргете»), текущий JOB начинал single-step'иться по всем строкам и падал `ЗавершеноСОшибкой`. **Исправлено:** re-arm перенесён с after-drain в `targetQuit` (готовит арм для следующего нового таргета, не степит текущий). 222/222 тестов, code-verify PASS (субагент `ad99aa2`).
+- **Остаточная проблема (НЕ решена):** ловля BP на конкретной глубокой строке внутри **эфемерного** JOB (<100ms) на RDBG 8.3.27 остаётся **ненадёжной** — в тесте halt зафиксирован на entry-line хелпера, а не на целевой `:41` (BP-workspace не доезжает до JOB-таргета вовремя). Адаптивный ping (#2) + capture-mode (#1) **сужают** окно и убирают single-step, но **не гарантируют** halt на нужной строке.
+- **Known-limitation:** глобальный `setBreakOnNextStatement` при конкурентных JOB может перехватить чужой таргет mid-execution (узкое окно).
+
+**Рекомендованные надёжные пути верификации фоновых процессов** (подтверждены этой сессией):
+1. **Детерминированный харнесс** (`execute_code` синхронно + проверки состояния) — 100% надёжно, Qdrant-independent.
+2. **Thin-client** (интерактив, `recommended_workflow`) — BP в долгоживущем процессе ловится штатно.
+3. **#3 helper-пауза** (busy-wait в начале фонового метода) — даёт attach+BP время до целевого кода.
+
+**FUTURE (опц.):** per-target арм вместо глобального `setBreakOnNextStatement` (если RDBG поддержит target-scoped) — закроет и остаточную ненадёжность, и concurrent-JOB edge.
+
+---
+
 ## §18. Журнал прогресса
 
 | Дата | Событие | Кто |
 |------|---------|-----|
 | 2026-06-03 | Roadmap создан (PROPOSED). Контекст — анализ «BP не ловится в фоновом JOB» по задаче 260529_УК; #1+#3 реализованы, #2 вынесен сюда. | Claude |
 | 2026-06-03 | **IMPLEMENTED** — адаптивный ping (0.1с active / 2с idle) в `_ping_loop` + time-based auto-attach. Установлено, что server-held long-poll не поддержан RDBG 8.3.27 → реализован эквивалент. 222/222 тестов, code-verify PASS. | Claude |
+| 2026-06-03 | **Live deep-test (§9):** найден+исправлен баг single-step в #1 (re-arm → на targetQuit). Подтверждено: эфемерный sub-second JOB BP-trace на целевой строке остаётся ненадёжным → рекомендованы детерминированный харнесс / thin-client / #3. 222/222, code-verify PASS. | Claude |
 
 > Связанный кеш знаний: [`1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md`](../../.claude/skills/1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md)
 > Связанная документация: [36_AUTONOMOUS_DEBUG_CONTROL](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/)
