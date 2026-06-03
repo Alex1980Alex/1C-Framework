@@ -1,6 +1,6 @@
 # Roadmap — Memory Ingestion & Cross-Store Synchronization (§26)
 
-> **Дата:** 2026-06-03 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2-P4 ⏳** · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
+> **Дата:** 2026-06-03 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2 ✅ · P3-P4 ⏳** · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
 >
 > Детальная дочерняя карта обзорной главы §26. Содержит per-phase deliverables + acceptance-критерии, по образцу [§25 → 260601](260601_ROADMAP_MEMORY_EFFECTIVENESS.md). Research — live WebSearch 2026-06-02 (атрибуция в §3) + code-grounded inventory (§2).
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | **P0** Контракты ingestion+sync | ✅ DONE | `content_hash` в `MemoryCube` + все 3 проекции; `ingest_metrics`; backfill 23/23 на Qdrant; 42 теста |
 | **P1** Авто-ingestion харвестеры | ✅ DONE | D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки) + **Q1 ADR** (D1.3); 15 unit + live E2E + cold-start seed; code-verify PASS |
-| **P2** Консолидация episodic→semantic | ⏳ PENDING | reflection `memory_ai.db`→`learned_patterns` + закрыть skill-learning silo + `DERIVES_FROM` links |
+| **P2** Консолидация episodic→semantic | ✅ DONE | reflection `memory_ai.db`→`learned_patterns` (clustering, dry-run CLI) + skill-learning silo bridge (AUTO) + `DERIVES_FROM` links; 25 тестов + live dry-run |
 | **P3** Cross-store sync/dedup | ⏳ PENDING | `content_hash → [stores]` индекс + `conflict_resolver` активация + `PROMOTED_TO`/`MIRRORS` links |
 | **P4** Scheduling & ForgetGate | ⏳ PENDING | cron/Stop-cadence для decay/dedup/promote + bounded-рост + дашборд |
 
@@ -24,7 +24,9 @@
 - `experience_embeddings` / `conversation_memory` — **DROPPED** (были «0 writers»; [Q1 ADR](260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md)); surfacing-плечи `exp`/`conv` убраны.
 - `save_pattern → learned_patterns` — был «вызов только вручную» → теперь **AUTO** через [`patterns-harvester.py`](../../.claude/hooks/patterns-harvester.py) (confirmed feedback-drafts + session-lessons, gated).
 - `skill_library` — был «MANUAL (полный rebuild)» → теперь **AUTO incremental** через [`skills-harvester.py`](../../.claude/hooks/skills-harvester.py) (hash-idempotent, cold-start seed, stale-cleanup).
-- Ещё **NOT-AUTO** (остаётся на P2-P4): skill-learning silo→patterns, memory-ai→patterns reflection, learned→wiki promote cron, cross-store dedup, `conflict_resolver` (stub).
+- `skill-learning confirmed → learned_patterns` — был **SILO** → теперь **AUTO** (третий источник patterns-harvester, P2 D2.2).
+- `memory-ai episodic → learned_patterns reflection` — был **MANUAL one-off** (`normalize_light_patterns`) → теперь **clustering reflection** [`scripts/reflect_memory.py`](../../scripts/reflect_memory.py) (P2 D2.1, dry-run CLI; авто-scheduling → P4).
+- Ещё **NOT-AUTO** (остаётся на P3-P4): learned→wiki promote cron, cross-store dedup index, `conflict_resolver` (stub→active), scheduling всех batch-джобов.
 
 **Ключевые отклонения от плана (детали в §5/§10):** D1.2 реализован как Stop-batch (не PostToolUse); lessons-источник получил noise-filter (lifecycle "Lessons" = auto-task-title шум), основной high-signal D1.1 = confirmed feedback-drafts; `save_pattern` MCP-only → харвестер делает прямой upsert с зеркалированием payload.
 
@@ -125,7 +127,7 @@
 
 **Артефакты:** [`shared/pattern_harvest.py`](../../.claude/hooks/shared/pattern_harvest.py) + [`patterns-harvester.py`](../../.claude/hooks/patterns-harvester.py) (D1.1) · [`shared/skills_harvest.py`](../../.claude/hooks/shared/skills_harvest.py) + [`skills-harvester.py`](../../.claude/hooks/skills-harvester.py) (D1.2) · settings.json Stop-chain · 15 unit-тестов. **Отклонение от плана:** D1.2 реализован как **Stop-batch** (а не PostToolUse:Write/Edit) — проще, idempotent по content-hash, cold-start seed избегает 80-embed шторма; PostToolUse-вариант не нужен. **Решение по lessons-источнику:** lifecycle "Lessons" сейчас = шум из auto-task-titles → добавлен noise-filter; основной high-signal источник D1.1 = confirmed feedback-drafts.
 
-### P2 — Консолидация episodic→semantic (reflection)
+### P2 — Консолидация episodic→semantic (reflection) — ✅ DONE (2026-06-03)
 
 **Deliverables:**
 - D2.1 *Reflection job* — кластеризует повторяющиеся episodic-факты (`memory_ai.db`) → консолидирует в semantic-паттерн (`learned_patterns`) по триггеру «N повторов / суммарная importance ≥ θ» (Generative Agents). Обобщить [`normalize_light_patterns.py`](../../scripts/normalize_light_patterns.py) из one-off в ongoing reflection-проход.
@@ -133,11 +135,13 @@
 - D2.3 — `link_registry` связь `DERIVES_FROM` от semantic-паттерна к исходным episodic-фактам (трассируемость консолидации).
 
 **Acceptance:**
-- [ ] Синтетический набор из M эпизодов «одна тема» → reflection создаёт 1 semantic-паттерн (не M), с `DERIVES_FROM` на источники.
-- [ ] Триггер консолидации настраиваемый (N/θ), dry-run by default, reviewable (лог что бы консолидировалось).
-- [ ] skill-learning silo: confirmed pattern появляется в `learned_patterns` после прогона; повтор = no-op.
-- [ ] Консолидация не дублирует существующее (cross-store `content_hash` check ПЕРЕД записью).
-- [ ] Все вставки проходят §22 confidence-gate (не флуд low-confidence).
+- [x] Синтетический набор из M эпизодов «одна тема» → reflection создаёт 1 semantic-паттерн (не M), с `DERIVES_FROM` на источники. *(test_reflection: 4 эпизода → 1 паттерн + 4 links)*
+- [x] Триггер консолидации настраиваемый (N/θ), dry-run by default, reviewable (лог что бы консолидировалось). *(`--min-cluster`/`--sim`/`--theta`; CLI печатает план)*
+- [x] skill-learning silo: confirmed pattern появляется в `learned_patterns` после прогона; повтор = no-op. *(D2.2 source, dedup-тест)*
+- [x] Консолидация не дублирует существующее (cross-store `content_hash` check ПЕРЕД записью). *(deterministic UUID5(content_hash) + retrieve-check; content count-free → стабилен при росте кластера)*
+- [x] Все вставки проходят §22 confidence-gate (не флуд low-confidence). *(seed Beta(7,3)=0.70 в `_build_payload`, как save_pattern)*
+
+**Артефакты:** [`shared/reflection.py`](../../.claude/hooks/shared/reflection.py) + CLI [`scripts/reflect_memory.py`](../../scripts/reflect_memory.py) (D2.1+D2.3) · `pattern_harvest.py` (`ingest_items` extract + `iter_confirmed_skill_patterns` D2.2) · 25 новых тестов. **Реализация:** reflection — CLI/batch (dry-run default), НЕ Stop-хук (heavier; авто-scheduling → P4). skill-learning bridge — AUTO (третий источник patterns-harvester). **DERIVES_FROM** через `on_created`-callback в `ingest_items` (только на реальный upsert). Live dry-run: 25 кластеров → 3 консолидации (cross-language дубли TimescaleDB/Qdrant поймались). Code-verify исправил 2 находки: count-free content_hash (анти-orphan), cp1251 stdout.
 
 ### P3 — Cross-store синхронизация и дедуп
 
@@ -205,5 +209,6 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 | 2026-06-03 | **Q1 РЕШЁН (ADR)** — experience_embeddings/conversation_memory → DEPRECATE; блокер P1 close снят | 72063c3e2 |
 | 2026-06-03 | **Q1 ИСПОЛНЕН (D1.3)** — обе коллекции dropped (snapshot+delete, 0 pts), surfacing-arms убраны, конфиги/карта/stub вычищены; 29/29 hook-тестов, code-verify behavior-preservation PASS. P1 остаётся открыт: D1.1 patterns-harvester + D1.2 skills-harvester | af84f4d0e |
 | 2026-06-03 | **P1 DONE** — D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки, fail-soft, gated, reversible); 15 unit + 95/95 hook + live E2E + cold-start seed PASS, code-verify quality-review PASS | c6c2a825f |
+| 2026-06-03 | **P2 DONE** — D2.1 reflection (episodic clustering→semantic, dry-run CLI) + D2.2 skill-learning bridge (AUTO) + D2.3 DERIVES_FROM links; 25 unit + 105/105 hook + live dry-run PASS, code-verify PASS (2 находки исправлены) | efad8cb1f |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.
