@@ -102,6 +102,29 @@ Wrapper:      [poll] ... [poll] ← targetStarted доставлен СЛИШК�
 
 ---
 
+## §10. Глубокий анализ корня (deep research 2026-06-03, github yukon39 + EDT RDBG)
+
+**Найдено решение/корень** через изучение исходников reference-реализации [yukon39/bsl-debug-server](https://github.com/yukon39/bsl-debug-server) (Java DAP поверх RDBG) + RU-источников по отладке фоновых.
+
+### Корень бага «BP не доезжает до JOB / halt на entry-line»
+Наш wrapper исходил из **НЕВЕРНОЙ посылки** (комментарий `mcp_debug_server.py`): *«RDBG setBreakpoints workspace is per-attached-target»* → реактивно ре-применял BP в обработчике `targetStarted` (через polling) → на эфемерном JOB проигрывал гонку.
+
+**Факт (по wire-протоколу):** `RDBGSetBreakpointsRequest` несёт только `bpWorkspace` + `idOfDebuggerUI` + `infoBaseAlias` — **target-id НЕТ**. Значит `setBreakpoints` — **session-global**, и сервер `dbgs` **САМ** пропагирует workspace каждому авто-attach'енному таргету. yukon39 ставит BP **один раз на сессию** (`ServerContext.configurationDone → setBreakpoints`) и на `debugTargetStarted` делает **только attach** (никакого re-apply BP). Per-target BP API в RDBG 8.3.27 **отсутствует**.
+
+### Найденное решение (канон)
+1. Регистрировать **session-global** `bpWorkspace` ОДИН раз **ДО** спавна JOB (что и делает `debug_set_breakpoint` — setBreakpoints без target-id, до триггера). ✅ уже так.
+2. Реактивный per-target re-apply в `targetStarted` — **демотировать до BACKSTOP** (HMR-recovery), не primary. ✅ комментарий исправлен (поведение оставлено как safety-net, безвредно).
+3. Опц.: дублировать BP в `initSettings.bpWorkspace` (поле существует в `HTTPInitialDebugSettingsData`) — стартовый набор до любого attach. ⚠ риск: историческая UI+-регистрация ломалась на non-empty initSettings → **FUTURE, под флагом**.
+4. Per-target арм вместо глобального `setBreakOnNextStatement` — **RDBG не поддерживает** (FUTURE, если появится).
+
+### Остаточное ограничение (платформа, подтверждено RU-источниками)
+Авто-attach JOB реально работает только при: ragent `-debug` (порт 1550) + `setAutoAttachSettings` тип JOB + **посимвольное совпадение строки соединения** + параметр запуска **`РежимОтладки`**. Даже канонически источники **НЕ гарантируют** перехват sub-100ms эфемерного JOB на нужной строке.
+
+### Вывод
+Архитектурная модель исправлена (session-global, не per-target reactive) — комментарий приведён в соответствие факту; primary-механизм (setBreakpoints session-global до триггера) уже корректен. **Но фундаментальная ненадёжность эфемерного JOB остаётся платформенной.** Надёжные пути верификации фоновых процессов: **детерминированный харнесс** (100%), **thin-client**, **#3 helper-пауза**. Источники: [yukon39 ServerContext/Debugee/HTTPDebugClient](https://github.com/yukon39/bsl-debug-server), [koderline отладка фоновых](https://www.koderline.ru/expert/narabotki/article-otladka-fonovyh-zadanij-v-1s/), [professia1c](https://professia1c.ru/reglamentnyie-zadaniya/otladka-fonovyih-zadaniy/), [infostart 634948](https://infostart.ru/1c/articles/634948/). Полный кеш: [`1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md`](../../.claude/skills/1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md) §8.1.
+
+---
+
 ## §18. Журнал прогресса
 
 | Дата | Событие | Кто |
@@ -109,6 +132,7 @@ Wrapper:      [poll] ... [poll] ← targetStarted доставлен СЛИШК�
 | 2026-06-03 | Roadmap создан (PROPOSED). Контекст — анализ «BP не ловится в фоновом JOB» по задаче 260529_УК; #1+#3 реализованы, #2 вынесен сюда. | Claude |
 | 2026-06-03 | **IMPLEMENTED** — адаптивный ping (0.1с active / 2с idle) в `_ping_loop` + time-based auto-attach. Установлено, что server-held long-poll не поддержан RDBG 8.3.27 → реализован эквивалент. 222/222 тестов, code-verify PASS. | Claude |
 | 2026-06-03 | **Live deep-test (§9):** найден+исправлен баг single-step в #1 (re-arm → на targetQuit). Подтверждено: эфемерный sub-second JOB BP-trace на целевой строке остаётся ненадёжным → рекомендованы детерминированный харнесс / thin-client / #3. 222/222, code-verify PASS. | Claude |
+| 2026-06-03 | **Deep research (§10):** изучены исходники yukon39 + RDBG-протокол. Корень: `setBreakpoints` — session-global (НЕ per-target, как ошибочно считал wrapper); dbgs сам пропагирует. Исправлен неверный комментарий, reactive re-apply демотирован до backstop. Остаток — платформенный лимит эфемерного JOB. Знание закешировано. | Claude |
 
 > Связанный кеш знаний: [`1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md`](../../.claude/skills/1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md)
 > Связанная документация: [36_AUTONOMOUS_DEBUG_CONTROL](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/)
