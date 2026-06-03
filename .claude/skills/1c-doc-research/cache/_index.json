@@ -2,6 +2,38 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "1c-ui-automation-options": {
+      "title": "Варианты UI-автоматизации 1С (нативный механизм / Vanessa / xUnit / WinAppDriver) + debug-совместимость",
+      "file": "1c-ui-automation-options.md",
+      "created": "2026-06-04",
+      "last_verified": "2026-06-04",
+      "keywords": [
+        "UI автоматизация 1С",
+        "автоматизированное тестирование клиента",
+        "менеджер тестирования клиент тестирования",
+        "ТестируемоеПриложение ПодключитьТестируемоеПриложение",
+        "TESTCLIENT TESTMANAGER",
+        "Vanessa Automation",
+        "Vanessa-ADD",
+        "xUnitFor1C xddTestRunner",
+        "1С Сценарное тестирование КИП",
+        "WinAppDriver pywinauto SikuliX AutoIt",
+        "имитация действий пользователя",
+        "драйв тонкого клиента отладка",
+        "TESTCLIENT Debug совмещение"
+      ],
+      "sources": [
+        "v8.1c.ru/platforma/avtomatizirovannoe-testirovanie",
+        "its.1c.ru/db/metod8dev/content/5011/hdoc",
+        "infostart.ru/1c/articles/1761388",
+        "infostart.ru/journal/news/mir-1s/2559902",
+        "github.com/Pr-Mex/vanessa-automation",
+        "github.com/vanessa-opensource/add",
+        "github.com/xDrivenDevelopment/xUnitFor1C",
+        "github.com/microsoft/WinAppDriver",
+        "github.com/pywinauto/pywinauto"
+      ]
+    },
     "rdbg-bp-background-job-auto-attach": {
       "title": "RDBG: ловля breakpoint в фоновом задании (auto-attach, гонка, фиксы)",
       "file": "rdbg-bp-background-job-auto-attach.md",
