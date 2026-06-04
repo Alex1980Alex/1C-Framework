@@ -174,11 +174,14 @@ def _fact_trace(con, key: str) -> None:
     ``pattern_id`` threads ingestion(saved/dup) → lifecycle(save/apply/reinforce/
     forget) for the same fact.
     """
+    # CAST to VARCHAR: DuckDB auto-infers a UUID-shaped pattern_id column as its
+    # native UUID type, so a raw `= ?` against a non-UUID content_hash string
+    # would raise a ConversionException — cast both sides to compare as text.
     rows = con.execute(
         """
         SELECT ts, source, type, store, action, outcome
         FROM events
-        WHERE content_hash = ? OR pattern_id = ?
+        WHERE CAST(content_hash AS VARCHAR) = ? OR CAST(pattern_id AS VARCHAR) = ?
         ORDER BY ts ASC
         """,
         [key, key],
