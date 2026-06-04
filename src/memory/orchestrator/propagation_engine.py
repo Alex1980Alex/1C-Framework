@@ -418,7 +418,7 @@ class PropagationEngine:
                             queue.append((link.target_id, new_delta, depth + 1))
 
             elapsed = (datetime.now() - start_time).total_seconds() * 1000
-            return PropagationResult(
+            result = PropagationResult(
                 event_id=event.event_id,
                 source_entity_id=event.entity_id,
                 entities_updated=entities_updated,
@@ -427,6 +427,23 @@ class PropagationEngine:
                 final_depth=max_depth_seen,
                 processing_time_ms=elapsed,
             )
+            # §27 P1 D1.3: persist propagation reach/decay outcome — metadata-only, fail-soft.
+            try:
+                from ..infrastructure.trace_log import write_trace
+
+                write_trace(
+                    "memory-propagation.log",
+                    "propagate",
+                    disable_env="MEMORY_PROPAGATION_LOG_DISABLE",
+                    source=event.entity_id,
+                    entities_updated=len(entities_updated),
+                    cascades_prevented=cascades_prevented,
+                    final_depth=max_depth_seen,
+                    latency_ms=round(elapsed, 1),
+                )
+            except Exception:
+                pass
+            return result
 
         except Exception as e:
             logger.error("Propagation error: %s", e)
