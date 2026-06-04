@@ -337,25 +337,32 @@ def _emit_ingest_stats(stats: dict[str, Any], harvester: str | None) -> None:
     except Exception:
         return
     h = harvester or "ingest_items"
-    # §27 P3 D3.2: emit content_hash + derived pattern_id per saved/dup item so the
-    # ingestion sink shares the cross-store fact key with the confidence-lifecycle
-    # sink (which logs pattern_id) — enables `fact-trace` across both.
-    for ch in stats.get("created_hashes", []):
-        try:
-            record_ingest(
-                "learned_patterns", "saved",
-                content_hash=ch, pattern_id=_point_id(ch), harvester=h,
-            )
-        except Exception:
-            pass
-    for ch in stats.get("dup_hashes", []):
-        try:
-            record_ingest(
-                "learned_patterns", "dup",
-                content_hash=ch, pattern_id=_point_id(ch), harvester=h,
-            )
-        except Exception:
-            pass
+    created_hashes = stats.get("created_hashes") or []
+    dup_hashes = stats.get("dup_hashes") or []
+
+    def _emit_keyed(hashes: list[str], count: int, action: str) -> None:
+        # §27 P3 D3.2: prefer per-item content_hash + derived pattern_id so the
+        # ingestion sink shares the cross-store fact key with confidence-lifecycle
+        # (which logs pattern_id) — enables `fact-trace` across both. Fall back to
+        # count-only emission for callers that pass plain counts (backward-compat).
+        if hashes:
+            for ch in hashes:
+                try:
+                    record_ingest(
+                        "learned_patterns", action,
+                        content_hash=ch, pattern_id=_point_id(ch), harvester=h,
+                    )
+                except Exception:
+                    pass
+        else:
+            for _ in range(int(count or 0)):
+                try:
+                    record_ingest("learned_patterns", action, harvester=h)
+                except Exception:
+                    pass
+
+    _emit_keyed(created_hashes, int(stats.get("created", 0) or 0), "saved")
+    _emit_keyed(dup_hashes, int(stats.get("skipped_dup", 0) or 0), "dup")
     # Cap/error outcomes have no specific fact key — count-based.
     for stat_key, action, reason in (("skipped_cap", "skipped", "cap"), ("errors", "error", None)):
         for _ in range(int(stats.get(stat_key, 0) or 0)):
