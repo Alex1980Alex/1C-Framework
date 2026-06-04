@@ -15,7 +15,8 @@ from qdrant_client.models import FieldCondition, Filter, Range
 from src.memory.infrastructure.conflict_resolver import ConflictResolver, ConflictStrategy
 from src.memory.infrastructure.event_bus import EventBus
 from src.memory.orchestrator.memcube import ContentType, MemoryCube
-from src.memory.orchestrator.unified_id import MemoryType, SourceServer
+from src.memory.orchestrator.link_registry import LinkRegistry, LinkType
+from src.memory.orchestrator.unified_id import MemoryType, SourceServer, UnifiedID
 from src.memory.vector_memory.confidence import payload_effective_confidence
 
 
