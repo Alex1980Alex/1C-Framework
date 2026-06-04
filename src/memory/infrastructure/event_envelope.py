@@ -58,6 +58,16 @@ AUDIT_LABEL = "audit"
 # All canonical source labels (the "expected set" for regression detection).
 SOURCE_LABELS: tuple[str, ...] = tuple(CACHE_LOGS.values()) + (AUDIT_LABEL,)
 
+# Stable core columns ALWAYS present in a normalized record (None when absent).
+# A fixed core keeps the DuckDB union-by-name schema stable: read_json_auto only
+# materializes columns that appear in ≥1 line, so a predefined view referencing
+# e.g. ``outcome`` would error whenever no record happened to carry it. Seeding
+# the core guarantees every column the query views reference always exists.
+CORE_KEYS = (
+    "ts", "source", "type", "correlation_id", "content_hash",
+    "store", "action", "outcome", "latency_ms", "success",
+)
+
 # Scalar metadata projected verbatim for the generic (trace_log-style) sinks.
 # Bodies / dicts-of-bodies are intentionally excluded; small dict/list metadata
 # (e.g. arm_hits, targets) is kept since it is counts-only.
