@@ -78,6 +78,22 @@ class TestEmitIngestStats:
         ingest = [e for e in _read_log(tmp_path) if e.get("event") == "ingest"]
         assert ingest and ingest[0].get("harvester") == "ingest_items"
 
+    def test_keyed_emission_carries_content_hash_and_pattern_id(self, tmp_path, monkeypatch):
+        # §27 P3 D3.2 — per-item hashes thread the fact key into the ingestion sink.
+        monkeypatch.setenv("CLAUDE_CACHE_DIR", str(tmp_path))
+        ch = "a" * 64
+        ph._emit_ingest_stats(
+            {"created": 1, "created_hashes": [ch], "skipped_dup": 0}, "patterns"
+        )
+        saved = [
+            e for e in _read_log(tmp_path)
+            if e.get("event") == "ingest" and e.get("action") == "saved"
+        ]
+        assert len(saved) == 1
+        assert saved[0]["content_hash"] == ch
+        # pattern_id = UUID5(content_hash) — the confidence-lifecycle sink's key.
+        assert saved[0]["pattern_id"] == ph._point_id(ch)
+
 
 class TestIngestItemsDryRunGuard:
     def test_dry_run_emits_nothing(self, tmp_path, monkeypatch):
