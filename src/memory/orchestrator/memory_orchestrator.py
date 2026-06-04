@@ -630,6 +630,12 @@ class MemoryOrchestrator:
                 "link_type": link_type,
             },
         )
+        await self._audit(
+            AuditAction.LINK,
+            "link",
+            resource_id=f"{source_id}->{target_id}",
+            metadata={"link_type": link_type, "strength": strength},
+        )
         return {"success": True, "link": link.to_dict()}
 
     async def get_related(
@@ -684,6 +690,12 @@ class MemoryOrchestrator:
             base_delta=delta,
             success=success,
             metadata=metadata,
+        )
+        await self._audit(
+            AuditAction.PROPAGATE,
+            "memory",
+            resource_id=entity_id,
+            metadata={"delta": delta, "outcome_success": success},
         )
         return {
             "success": True,
