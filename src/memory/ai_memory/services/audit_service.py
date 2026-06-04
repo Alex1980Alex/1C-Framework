@@ -163,9 +163,11 @@ class AuditService:
             if action in (AuditAction.DELETE, AuditAction.ROLLBACK, AuditAction.CONFIG_CHANGE):
                 await self._persist_entry(entry)
 
-            # Auto-flush when buffer is full
+            # Auto-flush when buffer is full. We already hold self._lock here, so call
+            # the lock-free variant — _flush_buffer() would re-acquire the non-reentrant
+            # asyncio.Lock and deadlock at exactly max_buffer_size (§27 P0 D0.3 hardening).
             if len(self._buffer) >= self.max_buffer_size:
-                await self._flush_buffer()
+                self._flush_buffer_unlocked()
 
         return entry
 
