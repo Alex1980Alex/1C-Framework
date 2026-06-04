@@ -200,7 +200,8 @@ def main() -> int:
         "--view", choices=list(VIEWS.keys()) + ["fact-trace"], help="Predefined view"
     )
     parser.add_argument("--sql", help="Raw SQL (uses `events` as table name)")
-    parser.add_argument("--content-hash", help="For --view fact-trace")
+    parser.add_argument("--content-hash", help="For --view fact-trace: content_hash or pattern_id")
+    parser.add_argument("--key", help="Alias of --content-hash (content_hash OR pattern_id)")
     parser.add_argument("--limit", type=int, default=0, help="Append LIMIT (0=no limit)")
     args = parser.parse_args()
 
