@@ -1,6 +1,6 @@
 # Roadmap — Memory Full Observability (логирование всех процессов для оценки эффективности)
 
-> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ · P2..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
+> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ · P2 ✅ · P3..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
 >
 > Цель: **каждый процесс памяти оставляет структурный след** (per-event JSONL), чтобы §25-аналитика могла измерять эффективность сквозного цикла **ingestion → consolidation → sync → retrieval → forget**. Инвентаризация — code-grounded аудит 2026-06-05 (8 sink'ов × ~25 процессов, §2).
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | **P0** Подключить построенные sink'и | ✅ DONE | D0.1 `memory-ingestion.log` **оживлён** (харвестер per-action события + cadence `record_store_size`) · D0.2 ForgetGate script-path → `confidence-lifecycle.log` + epoch bump · D0.3 audit write-path **оживлён** (`_audit` ×4 + flush-on-stop + hardening re-entrant deadlock). **20 unit, 3× code-verify PASS**, live sink-revival |
 | **P1** Новые event-логи слепых процессов | ✅ DONE | D1.1 routing + D1.2 federated-read + D1.3 propagation + D1.4 circuit-breaker — все через shared `trace_log`; 5 unit, 3× code-verify PASS |
-| **P2** Persist metrics + cadence run-лог | ⏳ PENDING | |
+| **P2** Persist metrics + cadence run-лог | ✅ DONE | D2.1 metrics-snapshot на `stop()`→`memory-metrics.jsonl` · D2.2 cadence run-лог→`memory-maintenance-runs.jsonl` · D2.3 store-size series (через D0.1); 6 unit, code-verify PASS |
 | **P3** Единый envelope + сквозная корреляция | ⏳ PENDING | |
 | **P4** Слой анализа эффективности (§25) | ⏳ PENDING | |
 
@@ -153,13 +153,15 @@
 ### P2 — Персистентность метрик и cadence-потока
 
 **Deliverables:**
-- **D2.1 — flush метрик:** `MetricsCollector` периодически (Stop / cadence) сбрасывается в `memory-metrics.jsonl` (лонгитюдный ряд counters/gauges/timers).
-- **D2.2 — P4 append-only run-лог:** `memory_maintenance` дописывает одну строку-сводку на прогон в `memory-maintenance-runs.jsonl` (в дополнение к timestamped-дашбордам) → `tail`-able тренд.
-- **D2.3 — store-size time-series:** `record_store_size` на каждый cadence (через D0.1) → ряд роста store'ов.
+- **D2.1 — flush метрик:** `MetricsCollector` сбрасывается в `memory-metrics.jsonl` (лонгитюдный ряд counters/gauges/durations). — ✅ **DONE (2026-06-05)**: snapshot на orchestrator `stop()` (graceful-shutdown; hard-kill пропускает — known limitation), fail-soft, opt-out `MEMORY_METRICS_LOG_DISABLE`.
+- **D2.2 — append-only run-лог:** `memory_maintenance` дописывает строку-сводку на прогон в `memory-maintenance-runs.jsonl` (+ к timestamped-дашбордам) → `tail`-able тренд. — ✅ **DONE (2026-06-05)** (live: 1 строка/прогон — total_facts/store_sizes/dup_rate/forget/jobs).
+- **D2.3 — store-size time-series:** `record_store_size` на каждый cadence → ряд роста store'ов. — ✅ **DONE (через D0.1)** (store_size events в `memory-ingestion.log`).
 
 **Acceptance:**
-- [ ] Метрики переживают рестарт (ряд в файле, не только in-proc).
-- [ ] Тренд cadence/размеров store'ов читается из ОДНОГО потока.
+- [x] Метрики переживают рестарт (snapshot в `memory-metrics.jsonl` на `stop()`; graceful-shutdown-only — задокументировано). *(6 unit incl. snapshot-persist)*
+- [x] Тренд cadence/store-sizes читается из ОДНОГО потока (`memory-maintenance-runs.jsonl`, live-verified).
+
+**Артефакты (P2):** `memory_orchestrator.stop()` → `memory-metrics.jsonl` (D2.1) · `scripts/memory_maintenance.main()` → `memory-maintenance-runs.jsonl` (D2.2) · D2.3 = D0.1 `record_store_size` · [`tests/unit/test_trace_log.py`](../../tests/unit/test_trace_log.py) (+1 metrics-snapshot unit, 6 total) · ruff + code-verify PASS. D2.1 MCP-side (memory-orchestrator) → `/mcp reconnect`.
 
 ### P3 — Единая схема и сквозная корреляция
 
@@ -221,5 +223,6 @@ fail-soft (никогда не ронять hot-path / Stop) · atomic size-rota
 | 2026-06-05 | **P0 DONE (D0.3 + P0 закрыт)** — audit write-path оживлён (`_audit` на route_and_save/create_link/propagate/rollback + flush-on-stop) + hardening AuditService re-entrant-lock deadlock; 4 unit + code-verify PASS. **P0 завершён (D0.1+D0.2+D0.3).** Follow-up: reflection/route_and_save `record_ingest` атрибуция. **Next: P1** (routing/federated-read/propagation/breaker event-логи) | (pending) |
 | 2026-06-05 | **P1 D1.1+D1.4 DONE** — shared `trace_log` writer (fail-soft/rotation/opt-out) + routing-лог (`route_and_save`→`memory-routing.log`, metadata-only) + circuit-breaker trip-лог (`_transition_to`→`memory-circuit.log`); 5 unit + code-verify PASS. **D1.2 federated-read + D1.3 propagation — next** | (pending) |
 | 2026-06-05 | **P1 DONE (D1.2+D1.3 → P1 закрыт)** — federated-read трейс (`UnifiedSearchEngine.search`→`memory-read.log`, arm_hits/latency, query-текст не логируется) + propagation трейс (`_process_propagation`→`memory-propagation.log`, reach/depth, единая точка sync+bg); compile+ruff+code-verify PASS. **P1 завершён (D1.1-D1.4).** Next: **P2** (persist metrics + cadence run-лог) | (pending) |
+| 2026-06-05 | **P2 DONE** — metrics-snapshot на orchestrator `stop()`→`memory-metrics.jsonl` (D2.1) + cadence append-only run-лог→`memory-maintenance-runs.jsonl` (D2.2, live-verified) + store-size series via D0.1 (D2.3); 6 unit + code-verify PASS. **P2 завершён.** Next: **P3** (единый envelope + сквозная корреляция) | (pending) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения.
