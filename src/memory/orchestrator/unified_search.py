@@ -482,6 +482,27 @@ class UnifiedSearchEngine:
 
         elapsed_ms = (time.time() - start) * 1000
 
+        # §27 P1 D1.2: persist the federated-read trace (per-source hits, latency,
+        # outcome) — metadata-only (query text NOT logged), fail-soft.
+        try:
+            from ..infrastructure.trace_log import write_trace
+
+            write_trace(
+                "memory-read.log",
+                "search",
+                disable_env="MEMORY_READ_LOG_DISABLE",
+                query_len=len(query),
+                arm_hits={src: len(res) for src, res in source_results.items()},
+                sources_searched=sources_searched,
+                sources_failed=[e.source for e in sources_failed],
+                final=len(all_results),
+                min_score=min_score,
+                rrf=options.rrf_enabled,
+                latency_ms=round(elapsed_ms, 1),
+            )
+        except Exception:
+            pass
+
         return UnifiedSearchResult(
             query=query,
             total_results=len(all_results),
