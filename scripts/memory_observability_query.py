@@ -92,9 +92,9 @@ VIEWS: dict[str, str] = {
 
 def _check_duckdb() -> bool:
     try:
-        import duckdb  # noqa: F401
+        import duckdb
 
-        return True
+        return bool(duckdb)
     except ImportError:
         print("ERROR: duckdb not installed. Run: pip install duckdb", file=sys.stderr)
         return False
