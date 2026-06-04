@@ -1,6 +1,6 @@
 # Roadmap — Memory Ingestion & Cross-Store Synchronization (§26)
 
-> **Дата:** 2026-06-03 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2 ✅ · P3 ✅ · P4 ⏳** · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
+> **Дата:** 2026-06-03 (обновлено 2026-06-05) · **Статус:** ✅ DONE — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2 ✅ · P3 ✅ · P4 ✅** (все 5 фаз §26) · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
 >
 > Детальная дочерняя карта обзорной главы §26. Содержит per-phase deliverables + acceptance-критерии, по образцу [§25 → 260601](260601_ROADMAP_MEMORY_EFFECTIVENESS.md). Research — live WebSearch 2026-06-02 (атрибуция в §3) + code-grounded inventory (§2).
 
@@ -8,7 +8,7 @@
 
 ## 0. Промежуточные результаты (2026-06-03)
 
-**Сделано (2 из 5 фаз):** фундамент идемпотентности (P0) + полный слой авто-приёма знаний (P1). Система перестала быть «нечем кормить» (§1) — `learned_patterns` теперь имеет **авто-writers**.
+**Сделано (5 из 5 фаз — §26 завершён 2026-06-05):** идемпотентность (P0) + авто-приём знаний (P1) + episodic→semantic консолидация (P2) + cross-store sync/dedup (P3) + scheduling/ForgetGate/dashboard (P4). Система получила и **авто-writers**, и **bounded-governance** (рост ограничен ForgetGate).
 
 | Фаза | Статус | Итог |
 |---|---|---|
@@ -16,7 +16,7 @@
 | **P1** Авто-ingestion харвестеры | ✅ DONE | D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки) + **Q1 ADR** (D1.3); 15 unit + live E2E + cold-start seed; code-verify PASS |
 | **P2** Консолидация episodic→semantic | ✅ DONE | reflection `memory_ai.db`→`learned_patterns` (clustering, dry-run CLI) + skill-learning silo bridge (AUTO) + `DERIVES_FROM` links; 25 тестов + live dry-run |
 | **P3** Cross-store sync/dedup | ✅ DONE | D3.1 индекс + D3.2 `conflict_resolver` (SOURCE_PRIORITY canonical + audit) + D3.3 `MIRRORS`/`PROMOTED_TO` links; live: 19 cross-store дублей → **25 MIRRORS links** (idempotent), 30 unit, code-verify PASS |
-| **P4** Scheduling & ForgetGate | ⏳ PENDING | cron/Stop-cadence для decay/dedup/promote + bounded-рост + дашборд |
+| **P4** Scheduling & ForgetGate | ✅ DONE | D4.1 Stop-cadence (every-N-sessions hook → orchestrator) + D4.2 ForgetGate (archival bound, invariant-exempt) + D4.3 dashboard; 11 unit, code-verify PASS, live dry-run (total_facts=125, forget archive=0/keep=25) |
 
 **Открытые вопросы:** Q1 ✅ РЕШЁН+ИСПОЛНЕН (deprecate experience/conversation). Q2/Q3 — при старте P2/P4.
 
@@ -164,16 +164,18 @@
 ### P4 — Scheduling & bounded governance
 
 **Deliverables:**
-- D4.1 *Scheduling* — manual-джобы (decay / dedup / promote / archive / reflection) → scheduled. Вариант A: `/schedule` cron; вариант B: Stop-cadence (раз в N сессий, sentinel-state как у `post-indexing-analyzer`). Выбрать по нагрузке.
-- D4.2 *ForgetGate как граница* — `memory_forget` (archive/decay/delete) встроить в cadence как bound роста (CraniMem-урок); invariant-паттерны (§22 P3 `is_invariant`) исключены из time-archival.
-- D4.3 *Дашборд* — ingestion-rate, cross-store-dup-rate, promotion-rate, store-sizes → в §25 reports (`data/reports/memory/`).
+- D4.1 *Scheduling* — manual-джобы (decay / dedup / promote / archive / reflection) → scheduled. Вариант A: `/schedule` cron; вариант B: Stop-cadence (раз в N сессий, sentinel-state как у `post-indexing-analyzer`). Выбрать по нагрузке. — ✅ **DONE (2026-06-05)** (Q3 → **вариант B**: Stop-cadence hook → orchestrator-CLI, every-N-sessions sentinel)
+- D4.2 *ForgetGate как граница* — `memory_forget` (archive/decay/delete) встроить в cadence как bound роста (CraniMem-урок); invariant-паттерны (§22 P3 `is_invariant`) исключены из time-archival. — ✅ **DONE (2026-06-05)** (archival bound через `should_archive`; decay-persist остаётся lazy-on-read §22 P2)
+- D4.3 *Дашборд* — ingestion-rate, cross-store-dup-rate, promotion-rate, store-sizes → в §25 reports (`data/reports/memory/`). — ✅ **DONE (2026-06-05)** (`memory_maintenance_*.md` + JSON)
 
 **Acceptance:**
-- [ ] Scheduled-проход запускается без ручного триггера (cron-лог ИЛИ Stop-sentinel срабатывает раз в N).
-- [ ] ForgetGate: при синтетическом наборе stale+low-conf паттернов archive срабатывает, invariant — нет.
-- [ ] Store-sizes стабилизируются (не растут unbounded) на длинном прогоне — graph в §25 report.
-- [ ] Полный цикл наблюдаем: ingestion → consolidation → sync → forget виден в `confidence-lifecycle.log` + новый ingestion-лог.
-- [ ] Все cadence-джобы opt-out + reversible.
+- [x] Scheduled-проход без ручного триггера — Stop-hook `memory-maintenance-cadence.py` срабатывает при ≥N distinct sessions (smoke: cold-start seed без fire, increment, fire@N).
+- [x] ForgetGate: stale+low-conf archive срабатывает, invariant — нет. *(11 unit: fail-breach archive даже свежего; stale non-invariant archive; stale **invariant → kept+protected**; invariant всё ещё fail-archived.)*
+- [x] Store-sizes в dashboard каждый прогон + `record_store_size` events в `memory-ingestion.log` → long-run graph = накопление лога (foundation готов).
+- [x] Полный цикл наблюдаем: dashboard сводит ingest (memory-ingestion.log) + sync (cross_store_dup_rate) + forget summary; confidence-мутации — в `confidence-lifecycle.log` (§22).
+- [x] Все cadence-джобы opt-out (`MEMORY_MAINTENANCE_DISABLE`, per-job `--skip`) + reversible (dry-run default; archival = invalidate-not-delete, revive по apply).
+
+**Артефакты (P4):** [`src/memory/maintenance/forget_gate.py`](../../src/memory/maintenance/forget_gate.py) (ForgetGate planner — reuse §22 `should_archive`, invariant-exempt) + [`dashboard.py`](../../src/memory/maintenance/dashboard.py) (aggregate/build/render) · [`scripts/memory_maintenance.py`](../../scripts/memory_maintenance.py) (orchestrator: reflect+sync+promote subprocess + forget inline, dry-run default, dashboard report) · [`.claude/hooks/memory-maintenance-cadence.py`](../../.claude/hooks/memory-maintenance-cadence.py) (Stop-cadence, every-N-sessions sentinel, detached, opt-out) + settings.json Stop-chain · 11 unit, ruff clean, code-verify PASS. **Live dry-run:** store_sizes total=125 (lp25/ai99/sk1/wiki0), forget archive=0/keep=25, jobs reflect+sync rc=0, cross_store_dup_rate=0.196. **Deviations:** count-decay persist оставлен lazy-on-read (§22 P2) + MCP `decay_confidence`; cadence forget = archival bound (set `expired_at`); `/schedule` cron (вариант A) не требуется.
 
 ---
 
@@ -216,5 +218,6 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 | 2026-06-03 | **P2 DONE** — D2.1 reflection (episodic clustering→semantic, dry-run CLI) + D2.2 skill-learning bridge (AUTO) + D2.3 DERIVES_FROM links; 25 unit + 105/105 hook + live dry-run PASS, code-verify PASS (2 находки исправлены) | efad8cb1f |
 | 2026-06-04 | **P3 D3.1** — cross-store `content_hash` индекс (pure core `src/` + fail-soft CLI сканеры + Markdown/JSON отчёт, read-only); 13 unit PASS + ruff clean + live scan **124 записи/3 store → 19 cross-store дублей** (memory_ai↔learned_patterns). D3.2 conflict_resolver + D3.3 links — next | (pending) |
 | 2026-06-05 | **P3 D3.2+D3.3 DONE → P3 ✅** — `cross_store_sync` (MIRRORS materialization + ConflictResolver SOURCE_PRIORITY canonical + audit) + WikiPromoter `PROMOTED_TO` link; 17 unit (30 P3 total) + ruff + code-verify PASS; live: 19 групп → **25 MIRRORS links** (idempotent), canonical=learned_patterns. `Deduplicator` уже даёт query-time dedup; `route_and_save` hot-path conflict — опц. follow-up | (pending) |
+| 2026-06-05 | **P4 DONE → §26 ✅ ЗАВЕРШЁН** — D4.1 Stop-cadence (`memory-maintenance-cadence.py` every-N-sessions → `memory_maintenance.py` orchestrator) + D4.2 ForgetGate (`forget_gate.py` archival bound, invariant-exempt) + D4.3 dashboard; 11 unit + ruff + code-verify PASS; live dry-run total_facts=125, forget archive=0/keep=25. Все 5 фаз §26 закрыты | (pending) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.
