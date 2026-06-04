@@ -1,6 +1,6 @@
 # Roadmap — Memory Ingestion & Cross-Store Synchronization (§26)
 
-> **Дата:** 2026-06-03 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2 ✅ · P3-P4 ⏳** · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
+> **Дата:** 2026-06-03 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ (вкл. Q1 ADR) · P2 ✅ · P3 🔄 (D3.1 ✅) · P4 ⏳** · **Родитель:** [260523 §26](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md)
 >
 > Детальная дочерняя карта обзорной главы §26. Содержит per-phase deliverables + acceptance-критерии, по образцу [§25 → 260601](260601_ROADMAP_MEMORY_EFFECTIVENESS.md). Research — live WebSearch 2026-06-02 (атрибуция в §3) + code-grounded inventory (§2).
 
@@ -15,7 +15,7 @@
 | **P0** Контракты ingestion+sync | ✅ DONE | `content_hash` в `MemoryCube` + все 3 проекции; `ingest_metrics`; backfill 23/23 на Qdrant; 42 теста |
 | **P1** Авто-ingestion харвестеры | ✅ DONE | D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки) + **Q1 ADR** (D1.3); 15 unit + live E2E + cold-start seed; code-verify PASS |
 | **P2** Консолидация episodic→semantic | ✅ DONE | reflection `memory_ai.db`→`learned_patterns` (clustering, dry-run CLI) + skill-learning silo bridge (AUTO) + `DERIVES_FROM` links; 25 тестов + live dry-run |
-| **P3** Cross-store sync/dedup | ⏳ PENDING | `content_hash → [stores]` индекс + `conflict_resolver` активация + `PROMOTED_TO`/`MIRRORS` links |
+| **P3** Cross-store sync/dedup | 🔄 IN PROGRESS | **D3.1 ✅** cross-store индекс (`content_hash → [stores]`; live: **19 cross-store дублей** memory_ai↔learned_patterns, 13 unit); D3.2 `conflict_resolver` + D3.3 links — next |
 | **P4** Scheduling & ForgetGate | ⏳ PENDING | cron/Stop-cadence для decay/dedup/promote + bounded-рост + дашборд |
 
 **Открытые вопросы:** Q1 ✅ РЕШЁН+ИСПОЛНЕН (deprecate experience/conversation). Q2/Q3 — при старте P2/P4.
@@ -146,16 +146,18 @@
 ### P3 — Cross-store синхронизация и дедуп
 
 **Deliverables:**
-- D3.1 *Cross-store index* — индекс `content_hash → [stores]` (детект «один факт в ≥2 store»). Источник правды дедупа уже есть (`content_key`); строим обратный индекс.
+- D3.1 *Cross-store index* — индекс `content_hash → [stores]` (детект «один факт в ≥2 store»). Источник правды дедупа уже есть (`content_key`); строим обратный индекс. — ✅ **DONE (2026-06-04)**
 - D3.2 *conflict_resolver активация* — вшить [`conflict_resolver`](../../src/memory/infrastructure/conflict_resolver.py) (stub→active) в `route_and_save` + cross-store writes; стратегии `LAST_WRITE_WINS` / `SOURCE_PRIORITY` / `MERGE` (уже задекларированы в `ConflictStrategy`).
 - D3.3 *Авто-links на promotion/migration* — `PROMOTED_TO` (learned→wiki), `MIRRORS` (один факт в 2 store как связь, не копия), `DERIVES_FROM`. `MemoryCube` = single-source, проецируемый в store'ы.
 
 **Acceptance:**
-- [ ] Cross-store index на реальных данных выявляет дубли memory-ai↔learned_patterns (если есть) — отчёт.
+- [x] Cross-store index на реальных данных выявляет дубли memory-ai↔learned_patterns (если есть) — отчёт. *(live: 124 записи/3 store → **19 cross-store дублей**, rate=0.198; отчёт `data/reports/memory/cross_store_index_*.md` + JSON sidecar)*
 - [ ] При конфликте записи (один `content_hash`, разный контент) `conflict_resolver` применяет выбранную стратегию, пишет `ConflictRecord` (аудит).
 - [ ] Promotion learned→wiki создаёт `PROMOTED_TO` link, НЕ вторую независимую сущность.
 - [ ] `MIRRORS`-связь заменяет копию: federated search (`unified_search`) возвращает факт **один раз** (dedup по link), не дважды.
-- [ ] Reversible: dry-run отчёт ПЕРЕД любым merge/delete; vector-backup.
+- [x] Reversible (D3.1): индекс **read-only** (только отчёт, без записи/удаления). *(vector-backup относится к merge/delete в D3.2/D3.3.)*
+
+**Артефакты (D3.1):** [`src/memory/orchestrator/cross_store_index.py`](../../src/memory/orchestrator/cross_store_index.py) (pure core: `StoreRecord`/`build_index`/`find_cross_store_dups`/`summarize`/`render_report`) · [`scripts/cross_store_index.py`](../../scripts/cross_store_index.py) (fail-soft сканеры Qdrant/SQLite/JSONL/wiki, read-only, report+JSON sidecar) · [`tests/unit/test_cross_store_index.py`](../../tests/unit/test_cross_store_index.py) (13 unit, PASS) · ruff clean. **Отклонение:** wiki-слой индекса = `docs/wiki/drafts/` (MemoryCube-проекции); ~12k `docs/wiki/entities/` (LightRAG) вне scope (другой слой знаний, не MemoryCube-факты).
 
 ### P4 — Scheduling & bounded governance
 
@@ -210,5 +212,6 @@ dry-run by default + vector-backup (паттерн dedup/normalize) · §22 conf
 | 2026-06-03 | **Q1 ИСПОЛНЕН (D1.3)** — обе коллекции dropped (snapshot+delete, 0 pts), surfacing-arms убраны, конфиги/карта/stub вычищены; 29/29 hook-тестов, code-verify behavior-preservation PASS. P1 остаётся открыт: D1.1 patterns-harvester + D1.2 skills-harvester | af84f4d0e |
 | 2026-06-03 | **P1 DONE** — D1.1 patterns-harvester + D1.2 skills-harvester (Stop-хуки, fail-soft, gated, reversible); 15 unit + 95/95 hook + live E2E + cold-start seed PASS, code-verify quality-review PASS | c6c2a825f |
 | 2026-06-03 | **P2 DONE** — D2.1 reflection (episodic clustering→semantic, dry-run CLI) + D2.2 skill-learning bridge (AUTO) + D2.3 DERIVES_FROM links; 25 unit + 105/105 hook + live dry-run PASS, code-verify PASS (2 находки исправлены) | efad8cb1f |
+| 2026-06-04 | **P3 D3.1** — cross-store `content_hash` индекс (pure core `src/` + fail-soft CLI сканеры + Markdown/JSON отчёт, read-only); 13 unit PASS + ruff clean + live scan **124 записи/3 store → 19 cross-store дублей** (memory_ai↔learned_patterns). D3.2 conflict_resolver + D3.3 links — next | (pending) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения от плана.
