@@ -225,9 +225,10 @@ def main() -> int:
 
 def _main_inner(con, args, parser) -> int:
     if args.view == "fact-trace":
-        if not args.content_hash:
-            parser.error("--view fact-trace requires --content-hash")
-        _fact_trace(con, args.content_hash)
+        key = args.key or args.content_hash
+        if not key:
+            parser.error("--view fact-trace requires --key (or --content-hash)")
+        _fact_trace(con, key)
         return 0
 
     sql = VIEWS[args.view] if args.view else args.sql
