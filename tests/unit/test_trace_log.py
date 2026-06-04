@@ -68,3 +68,23 @@ class TestCircuitBreakerLog:
         cb = CircuitBreaker("t2", CircuitBreakerConfig())
         cb.reset()  # already CLOSED → CLOSED: no-op transition, must not log
         assert _read(tmp_path, "memory-circuit.log") == []
+
+
+class TestMetricsSnapshot:
+    """§27 P2 D2.1 — MetricsCollector snapshot persists to memory-metrics.jsonl."""
+
+    def test_metrics_get_all_persists(self, tmp_path, monkeypatch):
+        from src.memory.infrastructure.metrics import MetricsCollector
+
+        monkeypatch.setenv("CLAUDE_CACHE_DIR", str(tmp_path))
+        monkeypatch.delenv("MEMORY_TRACE_DISABLE", raising=False)
+        m = MetricsCollector()
+        m.counter("route_and_save", 3)
+        m.gauge("store_size_learned_patterns", 25.0)
+        # This is exactly what orchestrator.stop() does on teardown:
+        write_trace("memory-metrics.jsonl", "snapshot", **m.get_all())
+        rec = _read(tmp_path, "memory-metrics.jsonl")[0]
+        assert rec["event"] == "snapshot"
+        assert rec["counters"]["route_and_save"] == 3
+        assert rec["gauges"]["store_size_learned_patterns"] == 25.0
+        assert "durations" in rec and "uptime_seconds" in rec
