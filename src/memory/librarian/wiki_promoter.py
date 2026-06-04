@@ -27,6 +27,7 @@ class WikiPromoter:
         self,
         qdrant_client,
         event_bus: EventBus | None = None,
+        link_registry: LinkRegistry | None = None,
         wiki_drafts_dir: Path = Path("docs/wiki/drafts"),
         wiki_log_path: Path = Path("docs/wiki/log.md"),
         confidence_threshold: float = 0.8,
@@ -36,6 +37,7 @@ class WikiPromoter:
         self.client = qdrant_client
         self.conflict_resolver = ConflictResolver(default_strategy=ConflictStrategy.SOURCE_PRIORITY)
         self.event_bus = event_bus
+        self.link_registry = link_registry
         self.drafts_dir = wiki_drafts_dir
         self.wiki_log_path = wiki_log_path
         self.confidence_threshold = confidence_threshold
