@@ -207,10 +207,14 @@ def main() -> int:
     parser.add_argument("--content-hash", help="For --view fact-trace: content_hash or pattern_id")
     parser.add_argument("--key", help="Alias of --content-hash (content_hash OR pattern_id)")
     parser.add_argument("--limit", type=int, default=0, help="Append LIMIT (0=no limit)")
+    parser.add_argument("--root", help="Project root to read sinks from (default: this repo)")
     args = parser.parse_args()
 
     if not args.view and not args.sql:
         parser.error("specify --view or --sql")
+    if args.root:
+        global SINK_ROOT
+        SINK_ROOT = Path(args.root)
     if not _check_duckdb():
         return 2
 
