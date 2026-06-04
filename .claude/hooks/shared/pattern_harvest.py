@@ -336,20 +336,31 @@ def _emit_ingest_stats(stats: dict[str, Any], harvester: str | None) -> None:
         from memory.orchestrator.ingest_metrics import record_ingest
     except Exception:
         return
-    for stat_key, action, reason in (
-        ("created", "saved", None),
-        ("skipped_dup", "dup", None),
-        ("skipped_cap", "skipped", "cap"),
-        ("errors", "error", None),
-    ):
+    h = harvester or "ingest_items"
+    # §27 P3 D3.2: emit content_hash + derived pattern_id per saved/dup item so the
+    # ingestion sink shares the cross-store fact key with the confidence-lifecycle
+    # sink (which logs pattern_id) — enables `fact-trace` across both.
+    for ch in stats.get("created_hashes", []):
+        try:
+            record_ingest(
+                "learned_patterns", "saved",
+                content_hash=ch, pattern_id=_point_id(ch), harvester=h,
+            )
+        except Exception:
+            pass
+    for ch in stats.get("dup_hashes", []):
+        try:
+            record_ingest(
+                "learned_patterns", "dup",
+                content_hash=ch, pattern_id=_point_id(ch), harvester=h,
+            )
+        except Exception:
+            pass
+    # Cap/error outcomes have no specific fact key — count-based.
+    for stat_key, action, reason in (("skipped_cap", "skipped", "cap"), ("errors", "error", None)):
         for _ in range(int(stats.get(stat_key, 0) or 0)):
             try:
-                record_ingest(
-                    "learned_patterns",
-                    action,
-                    reason=reason,
-                    harvester=harvester or "ingest_items",
-                )
+                record_ingest("learned_patterns", action, reason=reason, harvester=h)
             except Exception:
                 pass
 
