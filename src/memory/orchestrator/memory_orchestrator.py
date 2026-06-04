@@ -464,6 +464,20 @@ class MemoryOrchestrator:
         self._versioning_service = None
         self._forgetgate_service = None
         self._circuit_registry = None
+        # §27 P2 D2.1: persist the in-process metrics snapshot before teardown — the
+        # counters/gauges/durations are otherwise lost on restart (no longitudinal series).
+        if self._metrics:
+            try:
+                from ..infrastructure.trace_log import write_trace
+
+                write_trace(
+                    "memory-metrics.jsonl",
+                    "snapshot",
+                    disable_env="MEMORY_METRICS_LOG_DISABLE",
+                    **self._metrics.get_all(),
+                )
+            except Exception:
+                pass
         self._metrics = None
         self._graph_algorithms = None
         logger.info("MemoryOrchestrator stopped")
