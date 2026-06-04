@@ -301,18 +301,24 @@ class AuditService:
 
     async def _flush_buffer(self) -> int:
         async with self._lock:
-            if not self._buffer:
-                return 0
-            count = len(self._buffer)
-            try:
-                with open(self.storage_path, "a", encoding="utf-8") as f:
-                    for entry in self._buffer:
-                        f.write(json.dumps(entry.to_dict(), ensure_ascii=False) + "\n")
-                self._buffer.clear()
-            except Exception as e:
-                logger.error("Failed to flush audit buffer: %s", e)
-                return 0
-            return count
+            return self._flush_buffer_unlocked()
+
+    def _flush_buffer_unlocked(self) -> int:
+        """Write + clear the buffer. Caller MUST already hold ``self._lock`` (or be
+        single-threaded teardown). Split out so ``log()``'s auto-flush — which already
+        holds the lock — does not re-acquire the non-reentrant lock (deadlock)."""
+        if not self._buffer:
+            return 0
+        count = len(self._buffer)
+        try:
+            with open(self.storage_path, "a", encoding="utf-8") as f:
+                for entry in self._buffer:
+                    f.write(json.dumps(entry.to_dict(), ensure_ascii=False) + "\n")
+            self._buffer.clear()
+        except Exception as e:
+            logger.error("Failed to flush audit buffer: %s", e)
+            return 0
+        return count
 
     async def _load_entries(self) -> list[AuditLogEntry]:
         entries: list[AuditLogEntry] = []

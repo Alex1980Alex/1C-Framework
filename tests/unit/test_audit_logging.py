@@ -60,3 +60,17 @@ def test_rollback_metadata_only_no_body(tmp_path):
     e = next(x for x in _entries(log) if x["action"] == "rollback")
     assert e["metadata"] == {"target_version": 2}
     assert e.get("new_value") is None and e.get("old_value") is None
+
+
+def test_auto_flush_at_capacity_no_deadlock(tmp_path):
+    # Regression: log() holds the lock and auto-flushes at max_buffer_size; the flush
+    # must NOT re-acquire the non-reentrant lock (would deadlock). wait_for guards it.
+    log = tmp_path / "audit.jsonl"
+    svc = AuditService(storage_path=log, max_buffer_size=3)
+
+    async def run():
+        for i in range(3):  # 3rd write hits capacity -> auto-flush
+            await svc.log(AuditAction.CREATE, "memory", resource_id=f"e{i}")
+
+    asyncio.run(asyncio.wait_for(run(), timeout=5))
+    assert len(_entries(log)) == 3  # auto-flush wrote the buffer to disk
