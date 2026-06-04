@@ -406,6 +406,7 @@ def ingest_items(
             client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, timeout=3)
         except Exception:
             stats["errors"] += 1
+            _emit_ingest_stats(stats, harvester)
             return stats
 
     for it in uniq:
@@ -452,6 +453,8 @@ def ingest_items(
             except Exception:
                 pass
 
+    if not dry_run:
+        _emit_ingest_stats(stats, harvester)
     return stats
 
 
