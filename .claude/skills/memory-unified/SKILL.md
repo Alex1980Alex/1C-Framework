@@ -53,8 +53,14 @@ Examples:
 | `supports` | Entity supports another |
 | `contradicts` | Entity contradicts another |
 | `extends` | Pattern extends another |
-| `derives_from` | Fact derived from another |
+| `derives_from` | Fact derived from another (§26 P2 reflection: semantic→episodic sources) |
 | `session_context` | Message in session context |
+| `promoted_to` | Learned pattern promoted to wiki page (§26 P3: WikiPromoter auto-creates) |
+| `mirrors` | Same fact in another store (§26 P3: cross_store_sync, mirror→canonical) |
+| `superseded_by` | Entity superseded by a newer version |
+| `graph_node` | Entity corresponds to a graph node |
+
+**§26 P3 cross-store sync (auto-links).** [`scripts/cross_store_sync.py`](../../../scripts/cross_store_sync.py) + [`src/memory/orchestrator/cross_store_sync.py`](../../../src/memory/orchestrator/cross_store_sync.py) консолидируют дубли (из [`cross_store_index`](../../../src/memory/orchestrator/cross_store_index.py), D3.1): `ConflictResolver(SOURCE_PRIORITY)` выбирает canonical store (`wiki > learned_patterns > skill_learning > memory_ai`) и создаёт `MIRRORS`-связи (mirror→canonical) в link_registry — **idempotent, dry-run default, additive/reversible** (`--apply` для записи). [`WikiPromoter`](../../../src/memory/librarian/wiki_promoter.py) создаёт `PROMOTED_TO` при promotion learned→wiki (opt-in `link_registry`, fail-soft). `unified_search` `Deduplicator` уже коллапсит идентичный контент при запросе; `MIRRORS` добавляет персистентную провенанс-связь. См. [roadmap §26 P3](../../../docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md).
 
 ### Confidence System (Vector Memory)
 
