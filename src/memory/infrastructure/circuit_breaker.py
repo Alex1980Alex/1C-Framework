@@ -225,6 +225,24 @@ class CircuitBreaker:
             self._stats.consecutive_successes = 0
 
         logger.debug("Circuit '%s': %s -> %s", self.name, old.value, new_state.value)
+        # §27 P1 D1.4: persist real state transitions (reliability incidents) — fail-soft.
+        if old != new_state:
+            try:
+                from .trace_log import write_trace
+
+                write_trace(
+                    "memory-circuit.log",
+                    "transition",
+                    disable_env="MEMORY_CIRCUIT_LOG_DISABLE",
+                    circuit=self.name,
+                    old=old.value,
+                    new=new_state.value,
+                    failure_count=self._stats.failure_count,
+                    total_failures=self._stats.total_failures,
+                    last_error=self._stats.last_failure_error[:160],
+                )
+            except Exception:
+                pass
 
     def __call__(self, func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         """Decorator for async functions."""
