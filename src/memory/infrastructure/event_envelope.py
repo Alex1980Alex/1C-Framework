@@ -64,7 +64,7 @@ SOURCE_LABELS: tuple[str, ...] = tuple(CACHE_LOGS.values()) + (AUDIT_LABEL,)
 # e.g. ``outcome`` would error whenever no record happened to carry it. Seeding
 # the core guarantees every column the query views reference always exists.
 CORE_KEYS = (
-    "ts", "source", "type", "correlation_id", "content_hash",
+    "ts", "source", "type", "correlation_id", "content_hash", "pattern_id",
     "store", "action", "outcome", "latency_ms", "success",
 )
 
