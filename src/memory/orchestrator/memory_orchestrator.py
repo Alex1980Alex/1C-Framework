@@ -1183,6 +1183,12 @@ class MemoryOrchestrator:
                 "success": False,
                 "error": f"Version {target_version} not found for entity {entity_id}",
             }
+        await self._audit(
+            AuditAction.ROLLBACK,
+            "memory",
+            resource_id=entity_id,
+            metadata={"target_version": target_version, "rollback_by": rollback_by},
+        )
         return {"success": True, "new_version": result.to_dict()}
 
     async def memory_version_compare(
