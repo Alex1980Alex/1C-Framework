@@ -78,6 +78,7 @@ class WikiPromoter:
             existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
                 slug = await self._create_draft(payload)
+                self._create_promotion_link(str(point.id), slug)
                 await self._publish_event(
                     "wiki.draft.created", {"slug": slug, "source_id": str(point.id)}
                 )
@@ -138,6 +139,32 @@ class WikiPromoter:
         (self.drafts_dir / f"{slug}.md").write_text(cube.to_wiki_page(), encoding="utf-8")
         self._append_log(slug, name, candidate_payload.get("confidence", 0.8))
         return slug
+
+    def _create_promotion_link(self, source_point_id: str, slug: str) -> None:
+        """Persist a PROMOTED_TO edge (learned pattern -> wiki draft) — §26 P3 D3.3.
+
+        Records L2->L5 provenance in the link_registry instead of orphaning a
+        second independent copy, so federated traversal can follow the promotion.
+        Best-effort: never blocks the draft.
+        """
+        if self.link_registry is None:
+            return
+        try:
+            source_uid = UnifiedID.from_original(
+                SourceServer.VECTOR_MEMORY, source_point_id
+            ).unified
+            target_uid = UnifiedID.from_original(SourceServer.OBSIDIAN_VAULT, slug).unified
+            if self.link_registry.find_link(source_uid, target_uid, LinkType.PROMOTED_TO) is None:
+                self.link_registry.create_link(
+                    source_id=source_uid,
+                    target_id=target_uid,
+                    link_type=LinkType.PROMOTED_TO,
+                    strength=1.0,
+                    created_by="wiki-promoter",
+                    metadata={"slug": slug},
+                )
+        except Exception:
+            pass
 
     def _append_log(self, slug: str, name: str, confidence: float) -> None:
         from datetime import datetime
