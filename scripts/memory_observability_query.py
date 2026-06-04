@@ -40,7 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from memory.infrastructure.event_envelope import known_sinks, normalize  # noqa: E402
+from memory.infrastructure.event_envelope import known_sinks, normalize
 
 VIEWS: dict[str, str] = {
     "recent": """
