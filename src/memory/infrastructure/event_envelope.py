@@ -117,23 +117,26 @@ def normalize(source: str, raw: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Flat dict with at least ``ts/source/type/correlation_id/content_hash``.
     """
+    env: dict[str, Any] = dict.fromkeys(CORE_KEYS)  # stable schema, None-seeded
+    env["source"] = source
+    env["type"] = ""
+    env["correlation_id"] = ""
+    env["content_hash"] = ""
     if not isinstance(raw, dict):
-        return {"ts": "", "source": source, "type": "", "correlation_id": "", "content_hash": ""}
+        return env
 
-    env: dict[str, Any] = {
-        "ts": _first_str(raw.get("ts"), raw.get("timestamp"), raw.get("time")),
-        "source": source,
-        "type": "",
-        "correlation_id": _first_str(raw.get("correlationid"), raw.get("correlation_id")),
-        "content_hash": _first_str(raw.get("content_hash")),
-    }
+    env["ts"] = _first_str(raw.get("ts"), raw.get("timestamp"), raw.get("time"))
+    env["correlation_id"] = _first_str(raw.get("correlationid"), raw.get("correlation_id"))
+    env["content_hash"] = _first_str(raw.get("content_hash"))
 
     if source == AUDIT_LABEL:
         env["type"] = _first_str(raw.get("action"))
+        env["action"] = raw.get("action")
         env["correlation_id"] = env["correlation_id"] or _first_str(raw.get("session_id"))
         env["resource_type"] = raw.get("resource_type")
         env["resource_id"] = raw.get("resource_id")
         env["success"] = raw.get("success")
+        env["latency_ms"] = raw.get("duration_ms")
         env["error"] = bool(raw.get("error_message"))
         md = raw.get("metadata")
         if not env["content_hash"] and isinstance(md, dict):
@@ -143,6 +146,7 @@ def normalize(source: str, raw: dict[str, Any]) -> dict[str, Any]:
     if source == "surfacing":
         # Surfacing has no `event` key — its records are keyed by `outcome`.
         env["type"] = _first_str(raw.get("outcome"), "surface")
+        env["outcome"] = raw.get("outcome")
         env["latency_ms"] = raw.get("duration_ms")
         env["cache"] = raw.get("cache")
         env["tei"] = raw.get("tei")
