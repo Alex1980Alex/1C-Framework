@@ -382,6 +382,10 @@ def ingest_items(
         "skipped_cap": 0,
         "errors": 0,
         "items": [],
+        # §27 P3 D3.2: per-item content_hashes so ingestion events carry the
+        # cross-store fact key (+ derived pattern_id) for end-to-end fact-trace.
+        "created_hashes": [],
+        "dup_hashes": [],
         "dry_run": dry_run,
     }
 
