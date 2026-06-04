@@ -42,6 +42,10 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from memory.infrastructure.event_envelope import known_sinks, normalize
 
+# Root the sink registry is read from. Overridable via --root / MEMORY_OBS_ROOT
+# (mirrors the loggers' CLAUDE_CACHE_DIR override) for tests / relocated trees.
+SINK_ROOT = Path(os.environ.get("MEMORY_OBS_ROOT") or PROJECT_ROOT)
+
 VIEWS: dict[str, str] = {
     "recent": """
         SELECT ts, source, type, content_hash, store, action, outcome, latency_ms
