@@ -217,3 +217,39 @@ class TestFreshnessRegression:
         assert "Memory Observability Report" in md
         assert any(r["source"] == "ingestion" for r in report["regressions"])
         assert "observability regression" in md.lower()
+
+
+# --------------------------------------------------------------------------- #
+# D3.2 — cross-sink fact trace (DuckDB; skipped when duckdb absent)
+# --------------------------------------------------------------------------- #
+class TestFactTraceDuckDB:
+    def test_pattern_id_threads_ingestion_and_lifecycle(self, tmp_path, monkeypatch):
+        duckdb = pytest.importorskip("duckdb")
+        import scripts.memory_observability_query as q
+
+        cache = tmp_path / ".claude" / "cache"
+        cache.mkdir(parents=True)
+        (tmp_path / "data" / "services").mkdir(parents=True)
+        pid = "9b2c1e44-0000-5000-8000-aaaaaaaaaaaa"
+        (cache / "memory-ingestion.log").write_text(
+            json.dumps({"ts": "2026-06-05T10:00:00", "event": "ingest",
+                        "action": "saved", "content_hash": "H", "pattern_id": pid}) + "\n",
+            encoding="utf-8",
+        )
+        (cache / "confidence-lifecycle.log").write_text(
+            json.dumps({"ts": "2026-06-05T10:05:00", "event": "reinforce",
+                        "pattern_id": pid}) + "\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(q, "SINK_ROOT", tmp_path)
+        con = duckdb.connect(":memory:")
+        q._build_relation(con)
+        # CAST guards the UUID-inference conversion bug (content_hash 'H' vs UUID col).
+        rows = con.execute(
+            "SELECT source, type FROM events "
+            "WHERE CAST(content_hash AS VARCHAR) = ? OR CAST(pattern_id AS VARCHAR) = ? "
+            "ORDER BY ts",
+            [pid, pid],
+        ).fetchall()
+        assert len(rows) == 2
+        assert {r[0] for r in rows} == {"ingestion", "lifecycle"}
