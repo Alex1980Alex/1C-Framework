@@ -118,6 +118,27 @@ def run_forget(apply: bool, now: datetime) -> dict[str, Any]:
             except Exception:  # per-point fail-soft
                 pass
         summary["applied_archived"] = archived
+        # §27 P0 D0.2: mirror the MCP decay path — make script-side archival visible
+        # to confidence-lifecycle.log + bump the epoch (else surfacing-cache goes stale).
+        if archived:
+            try:
+                from memory.vector_memory.lifecycle_log import log_event
+
+                log_event(
+                    "forget",
+                    source="memory_maintenance",
+                    archived=archived,
+                    candidates=len(plan.archive),
+                    invariant_protected=len(plan.invariant_protected),
+                )
+            except Exception:
+                pass
+            try:
+                from memory.vector_memory.epoch import bump as _epoch_bump
+
+                _epoch_bump()
+            except Exception:
+                pass
     return summary
 
 
