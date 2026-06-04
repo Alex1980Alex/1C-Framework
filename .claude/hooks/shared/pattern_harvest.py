@@ -321,6 +321,39 @@ def _build_payload(item: HarvestItem, content_hash: str, now: datetime) -> dict[
     }
 
 
+def _emit_ingest_stats(stats: dict[str, Any], harvester: str | None) -> None:
+    """§27 P0 D0.1 — emit per-action ingestion events to memory-ingestion.log. Fail-soft.
+
+    One event per outcome (saved/dup/skipped/error) so the §25 analyzer / P4 dashboard
+    (`aggregate_ingest_events`) can derive ingest_rate / dup_rate. Metadata only.
+    """
+    try:
+        import sys
+
+        src_dir = str(PROJECT_ROOT / "src")
+        if src_dir not in sys.path:
+            sys.path.insert(0, src_dir)
+        from memory.orchestrator.ingest_metrics import record_ingest
+    except Exception:
+        return
+    for stat_key, action, reason in (
+        ("created", "saved", None),
+        ("skipped_dup", "dup", None),
+        ("skipped_cap", "skipped", "cap"),
+        ("errors", "error", None),
+    ):
+        for _ in range(int(stats.get(stat_key, 0) or 0)):
+            try:
+                record_ingest(
+                    "learned_patterns",
+                    action,
+                    reason=reason,
+                    harvester=harvester or "ingest_items",
+                )
+            except Exception:
+                pass
+
+
 def ingest_items(
     items: list[HarvestItem],
     *,
@@ -330,6 +363,7 @@ def ingest_items(
     embed: Callable[[str], list[float] | None] | None = None,
     now: datetime | None = None,
     on_created: Callable[[HarvestItem, str], None] | None = None,
+    harvester: str | None = None,
 ) -> dict[str, Any]:
     """Dedup (UUID5 content_hash) + cap + embed + upsert HarvestItems into learned_patterns.
 
