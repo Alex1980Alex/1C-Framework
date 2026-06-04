@@ -1,8 +1,27 @@
 # Roadmap — Memory Full Observability (логирование всех процессов для оценки эффективности)
 
-> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
+> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 🔄 (D1.1+D1.4 ✅) · P2..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
 >
 > Цель: **каждый процесс памяти оставляет структурный след** (per-event JSONL), чтобы §25-аналитика могла измерять эффективность сквозного цикла **ingestion → consolidation → sync → retrieval → forget**. Инвентаризация — code-grounded аудит 2026-06-05 (8 sink'ов × ~25 процессов, §2).
+
+---
+
+## 0. Промежуточные результаты (2026-06-05)
+
+**Сделано:** **P0 завершён** — 3 из 8 топ-гэпов закрыты. Система памяти получила недостающих **writers** для уже построенных sink'ов + симметрию script/MCP путей. Слепые зоны ingestion/forget/audit стали наблюдаемы.
+
+| Фаза | Статус | Итог |
+|---|---|---|
+| **P0** Подключить построенные sink'и | ✅ DONE | D0.1 `memory-ingestion.log` **оживлён** (харвестер per-action события + cadence `record_store_size`) · D0.2 ForgetGate script-path → `confidence-lifecycle.log` + epoch bump · D0.3 audit write-path **оживлён** (`_audit` ×4 + flush-on-stop + hardening re-entrant deadlock). **20 unit, 3× code-verify PASS**, live sink-revival |
+| **P1** Новые event-логи слепых процессов | 🔄 IN PROGRESS | **D1.1 routing-лог + D1.4 circuit-breaker** ✅ (shared `trace_log` helper, 5 unit); D1.2 federated-read + D1.3 propagation — next |
+| **P2** Persist metrics + cadence run-лог | ⏳ PENDING | |
+| **P3** Единый envelope + сквозная корреляция | ⏳ PENDING | |
+| **P4** Слой анализа эффективности (§25) | ⏳ PENDING | |
+
+**Закрытые топ-гэпы:** #1 (ingestion sink без писателей), #2 (ForgetGate script невидим + epoch-баг), #3 (audit write-path мёртв).
+**Остаются:** #4 federated-read трейс, #5 routing-решения, #6 propagation/breaker, #7 metrics persist, #8 cadence run-лог.
+**Follow-up P0:** `record_ingest`-атрибуция reflection + `route_and_save` per-store + skills-harvester.
+**⚠ Runtime:** D0.3 (MCP-side `memory_orchestrator`/`audit_service`) — нужен `/mcp reconnect`; D0.1/D0.2 (хуки/скрипты) — effective сразу.
 
 ---
 
@@ -120,14 +139,16 @@
 ### P1 — Новые per-process event-логи для слепых процессов (по образцу surfacing.log)
 
 **Deliverables:**
-- **D1.1 — routing-лог:** `Router.classify`/`route` пишет решение (targets, per-target confidence, method, reasoning-tag) в `memory-routing.log`.
-- **D1.2 — federated-read трейс:** `unified_search` пишет per-query JSONL (arms-hits, score per source, RRF, dedup, rerank, latency, outcome) — зеркало surfacing-хука для MCP-чтения.
-- **D1.3 — propagation трейс:** `propagate_update`/`PropagationEngine` логирует node-reach, decay (time×dist), confidence-дельты соседей.
-- **D1.4 — CircuitBreaker trip-лог:** open/half-open/close переходы как персистентные события.
+- **D1.1 — routing-лог:** `route_and_save` пишет решение (targets/method/confidences) в `memory-routing.log`. — ✅ **DONE (2026-06-05)** (metadata-only: `reasoning`/`content` НЕ логируются; через shared `trace_log`).
+- **D1.2 — federated-read трейс:** `unified_search` пишет per-query JSONL (arms-hits, score per source, RRF, dedup, rerank, latency, outcome) — зеркало surfacing-хука для MCP-чтения. — ⏳ next.
+- **D1.3 — propagation трейс:** `propagate_update`/`PropagationEngine` логирует node-reach, decay (time×dist), confidence-дельты соседей. — ⏳ next.
+- **D1.4 — CircuitBreaker trip-лог:** open/half-open/close переходы как персистентные события. — ✅ **DONE (2026-06-05)** (`_transition_to` single choke-point; no-op transitions не логируются → `memory-circuit.log`).
 
 **Acceptance:**
-- [ ] Каждый процесс эмитит структурный JSONL на вызов; fail-soft; opt-out env; atomic-rotation.
-- [ ] По логам восстановимы: routing-accuracy, read hit-rate/латентность по источникам, охват каскада, инциденты breaker'а.
+- [x] Shared `trace_log.write_trace` (fail-soft, atomic-rotation 2MB, per-log opt-out + global `MEMORY_TRACE_DISABLE`); D1.1 routing + D1.4 circuit-breaker эмитят структурный JSONL. *(5 unit, code-verify PASS)*
+- [ ] D1.2 federated-read + D1.3 propagation — остаются (read hit-rate/латентность, охват каскада).
+
+**Артефакты (P1 D1.1+D1.4):** [`src/memory/infrastructure/trace_log.py`](../../src/memory/infrastructure/trace_log.py) (generic writer) · `circuit_breaker._transition_to` → `memory-circuit.log` (D1.4) · `memory_orchestrator.route_and_save` → `memory-routing.log` (D1.1) · [`tests/unit/test_trace_log.py`](../../tests/unit/test_trace_log.py) (5 unit) · ruff + code-verify PASS. MCP-side → `/mcp reconnect`.
 
 ### P2 — Персистентность метрик и cadence-потока
 
@@ -198,5 +219,6 @@ fail-soft (никогда не ронять hot-path / Stop) · atomic size-rota
 | 2026-06-05 | Roadmap создан (PLANNED) — аудит 8 sink'ов × ~25 процессов, 8 топ-гэпов, фазы P0-P4 | (pending) |
 | 2026-06-05 | **P0 D0.1+D0.2 DONE** — оживлён `memory-ingestion.log` (харвестер per-action события + cadence store_size) + ForgetGate script-path logging (`forget` event + epoch bump); 16 unit + ruff + code-verify PASS, live sink-revival. **D0.3 (audit write-path) — next** | (pending) |
 | 2026-06-05 | **P0 DONE (D0.3 + P0 закрыт)** — audit write-path оживлён (`_audit` на route_and_save/create_link/propagate/rollback + flush-on-stop) + hardening AuditService re-entrant-lock deadlock; 4 unit + code-verify PASS. **P0 завершён (D0.1+D0.2+D0.3).** Follow-up: reflection/route_and_save `record_ingest` атрибуция. **Next: P1** (routing/federated-read/propagation/breaker event-логи) | (pending) |
+| 2026-06-05 | **P1 D1.1+D1.4 DONE** — shared `trace_log` writer (fail-soft/rotation/opt-out) + routing-лог (`route_and_save`→`memory-routing.log`, metadata-only) + circuit-breaker trip-лог (`_transition_to`→`memory-circuit.log`); 5 unit + code-verify PASS. **D1.2 federated-read + D1.3 propagation — next** | (pending) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения.
