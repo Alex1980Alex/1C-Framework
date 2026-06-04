@@ -117,7 +117,7 @@ def _build_relation(con) -> str:
     bad = 0
     written = 0
     try:
-        for label, path in known_sinks(PROJECT_ROOT):
+        for label, path in known_sinks(SINK_ROOT):
             if not path.exists():
                 continue
             with open(path, encoding="utf-8", errors="replace") as f:
