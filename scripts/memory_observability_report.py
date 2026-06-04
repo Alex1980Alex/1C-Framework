@@ -44,9 +44,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from memory.infrastructure.event_envelope import known_sinks  # noqa: E402
-from memory.maintenance.dashboard import aggregate_ingest_events  # noqa: E402
-from scripts.analyze_memory_effectiveness import (  # noqa: E402
+from memory.infrastructure.event_envelope import known_sinks
+from memory.maintenance.dashboard import aggregate_ingest_events
+from scripts.analyze_memory_effectiveness import (
     _parse_since,
     _percentile,
     analyze_lifecycle,
