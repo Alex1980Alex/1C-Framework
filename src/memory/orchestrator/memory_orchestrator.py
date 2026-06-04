@@ -547,6 +547,16 @@ class MemoryOrchestrator:
                 "entity_count": len(saved_entities),
             },
         )
+        await self._audit(
+            AuditAction.CREATE,
+            "memory",
+            resource_id=(saved_entities[0]["entity_id"] if saved_entities else None),
+            metadata={
+                "targets": decision.targets,
+                "entity_count": len(saved_entities),
+                "auto_propagate": auto_propagate,
+            },
+        )
         return result
 
     async def get_full_context(
@@ -1673,6 +1683,38 @@ class MemoryOrchestrator:
                     await self._event_store.append(event)
             except Exception as e:
                 logger.debug("Event emission failed: %s", e)
+
+    async def _audit(
+        self,
+        action: AuditAction,
+        resource_type: str,
+        resource_id: str | None = None,
+        *,
+        new_value: dict[str, Any] | None = None,
+        old_value: dict[str, Any] | None = None,
+        success: bool = True,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        """Fail-soft audit write (§27 P0 D0.3) — revives the audit write-path.
+
+        Mirrors ``_emit_event``'s fire-and-forget contract: never raises into the
+        caller. Metadata only (no content bodies). Buffered by AuditService and
+        flushed on ``stop()`` (DELETE/ROLLBACK persist immediately).
+        """
+        if not self._audit_service:
+            return
+        try:
+            await self._audit_service.log(
+                action=action,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                new_value=new_value,
+                old_value=old_value,
+                success=success,
+                metadata=metadata or {},
+            )
+        except Exception as e:
+            logger.debug("Audit log failed: %s", e)
 
 
 # =============================================================================
