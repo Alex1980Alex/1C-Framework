@@ -84,7 +84,11 @@ class TestIngestItemsDryRunGuard:
         # dry_run is a planning mode — it must NOT pollute the ingestion log
         monkeypatch.setenv("CLAUDE_CACHE_DIR", str(tmp_path))
         item = ph.HarvestItem(
-            name="t", content="x" * 60, content_hash="deadbeefdeadbeef", pattern_type="workflow"
+            content="x" * 60,
+            name="t",
+            description="d",
+            pattern_type="workflow-pattern",
+            source="test",
         )
         stats = ph.ingest_items([item], dry_run=True)
         assert stats["created"] == 1  # planned
