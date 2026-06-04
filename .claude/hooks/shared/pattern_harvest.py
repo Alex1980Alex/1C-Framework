@@ -424,6 +424,7 @@ def ingest_items(
                 existing = client.retrieve(collection_name=COLLECTION, ids=[pid])
                 if existing:
                     stats["skipped_dup"] += 1
+                    stats["dup_hashes"].append(ch)
                     continue
         except Exception:
             stats["errors"] += 1
@@ -432,6 +433,7 @@ def ingest_items(
         if dry_run:
             stats["created"] += 1
             stats["items"].append(it.name)
+            stats["created_hashes"].append(ch)
             continue
 
         vec = embed(it.content)
