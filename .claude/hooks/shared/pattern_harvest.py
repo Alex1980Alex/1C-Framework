@@ -483,4 +483,7 @@ def harvest(
         candidates += iter_session_lessons(lifecycle_dir, lesson_max_age_hours, now)
     if "skill_learning" in sources:
         candidates += iter_confirmed_skill_patterns(skill_learning_file)
-    return ingest_items(candidates, cap=cap, dry_run=dry_run, client=client, embed=embed, now=now)
+    return ingest_items(
+        candidates, cap=cap, dry_run=dry_run, client=client, embed=embed, now=now,
+        harvester="patterns",
+    )

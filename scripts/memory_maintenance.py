@@ -145,6 +145,15 @@ def collect_store_sizes() -> dict[str, Any]:
         sizes["wiki"] = len(list(WIKI_DRAFTS.glob("*.md"))) if WIKI_DRAFTS.exists() else 0
     except Exception:
         pass
+    # §27 P0 D0.1: persist store sizes to memory-ingestion.log for bounded-growth tracking
+    try:
+        from memory.orchestrator.ingest_metrics import record_store_size
+
+        for store, size in sizes.items():
+            if isinstance(size, int):
+                record_store_size(store, size)
+    except Exception:
+        pass
     return sizes
 
 
