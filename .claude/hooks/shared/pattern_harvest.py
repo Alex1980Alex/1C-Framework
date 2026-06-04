@@ -453,6 +453,7 @@ def ingest_items(
             continue
         stats["created"] += 1
         stats["items"].append(it.name)
+        stats["created_hashes"].append(ch)
         if on_created is not None:
             try:
                 on_created(it, pid)
