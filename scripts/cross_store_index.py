@@ -59,7 +59,7 @@ def scan_learned_patterns() -> tuple[list[StoreRecord], str | None]:
 
         client = _client()
         points = fetch_points(client)
-    except Exception as exc:  #fail-soft per D3.1
+    except Exception as exc:  # fail-soft per D3.1
         return [], f"{type(exc).__name__}: {exc}"
     records: list[StoreRecord] = []
     for pt in points:
@@ -83,7 +83,7 @@ def scan_memory_ai(db_path: Path = MEMORY_AI_DB) -> tuple[list[StoreRecord], str
             rows = conn.execute("SELECT id, content FROM important_messages").fetchall()
         finally:
             conn.close()
-    except Exception as exc:  #fail-soft
+    except Exception as exc:  # fail-soft
         return [], f"{type(exc).__name__}: {exc}"
     records: list[StoreRecord] = []
     for row in rows:
@@ -116,7 +116,7 @@ def scan_skill_learning(jsonl_path: Path = SKILL_JSONL) -> tuple[list[StoreRecor
                     continue
                 item_id = str(rec.get("pattern_id") or rec.get("id") or "?")
                 records.append(StoreRecord("skill_learning", item_id, ch, content))
-    except Exception as exc:  #fail-soft
+    except Exception as exc:  # fail-soft
         return [], f"{type(exc).__name__}: {exc}"
     return records, None
 
@@ -136,7 +136,7 @@ def scan_wiki(drafts_dir: Path = WIKI_DRAFTS) -> tuple[list[StoreRecord], str | 
             if not m:
                 continue
             records.append(StoreRecord("wiki", md.stem, m.group(1), md.stem))
-    except Exception as exc:  #fail-soft
+    except Exception as exc:  # fail-soft
         return [], f"{type(exc).__name__}: {exc}"
     return records, None
 
