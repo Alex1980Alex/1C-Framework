@@ -162,21 +162,27 @@ def _build_relation(con) -> str:
     return tmp.name
 
 
-def _fact_trace(con, content_hash: str) -> None:
-    """Show every event sharing one ``content_hash`` across all sinks (D3.2)."""
+def _fact_trace(con, key: str) -> None:
+    """Show every event sharing one fact key across all sinks (D3.2).
+
+    ``key`` matches either ``content_hash`` (ingestion sink) OR ``pattern_id``
+    (= ``UUID5(content_hash)`` — the confidence-lifecycle sink's key). Passing a
+    ``pattern_id`` threads ingestion(saved/dup) → lifecycle(save/apply/reinforce/
+    forget) for the same fact.
+    """
     rows = con.execute(
         """
         SELECT ts, source, type, store, action, outcome
         FROM events
-        WHERE content_hash = ?
+        WHERE content_hash = ? OR pattern_id = ?
         ORDER BY ts ASC
         """,
-        [content_hash],
+        [key, key],
     ).fetchall()
     if not rows:
-        print(f"No events found for content_hash={content_hash}")
+        print(f"No events found for fact key={key}")
         return
-    print(f"Fact trace ({len(rows)} events) for content_hash={content_hash[:16]}…:")
+    print(f"Fact trace ({len(rows)} events) for key={key[:20]}…:")
     print("-" * 92)
     print(f"{'ts':<28} {'source':<14} {'type':<18} {'store':<16} action/outcome")
     print("-" * 92)
