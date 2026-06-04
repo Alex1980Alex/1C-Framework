@@ -64,11 +64,14 @@ def scan_learned_patterns() -> tuple[list[StoreRecord], str | None]:
     records: list[StoreRecord] = []
     for pt in points:
         payload = pt.get("payload", {}) or {}
-        ch = payload.get("content_hash") or content_key(payload)
-        if not ch:
+        content = payload.get("content") or payload.get("description") or ""
+        stored = payload.get("content_hash")
+        # Skip empty-content patterns (symmetric with the other scanners) so they
+        # don't collapse onto the constant empty-string digest and false-match.
+        if not content and not stored:
             continue
-        preview = payload.get("content") or payload.get("description") or ""
-        records.append(StoreRecord("learned_patterns", str(pt["id"]), ch, preview))
+        ch = stored or content_key(payload)
+        records.append(StoreRecord("learned_patterns", str(pt["id"]), ch, content))
     return records, None
 
 
