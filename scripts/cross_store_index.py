@@ -130,7 +130,7 @@ def scan_wiki(drafts_dir: Path = WIKI_DRAFTS) -> tuple[list[StoreRecord], str | 
         for md in sorted(drafts_dir.glob("*.md")):
             try:
                 text = md.read_text(encoding="utf-8")
-            except Exception:  #skip unreadable file
+            except Exception:  # skip unreadable file
                 continue
             m = _FRONTMATTER_HASH.search(text)
             if not m:
