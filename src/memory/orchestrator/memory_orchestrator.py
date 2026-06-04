@@ -513,6 +513,20 @@ class MemoryOrchestrator:
 
         # Route
         decision: RoutingDecision = await self._router.route(content, metadata)
+        # §27 P1 D1.1: persist the routing decision (targets/method/confidences) — fail-soft.
+        try:
+            from ..infrastructure.trace_log import write_trace
+
+            write_trace(
+                "memory-routing.log",
+                "route",
+                disable_env="MEMORY_ROUTING_LOG_DISABLE",
+                targets=decision.targets,
+                method=decision.method,
+                confidences=decision.confidences,
+            )
+        except Exception:
+            pass
 
         # Save to each target
         saved_entities = []
