@@ -1,6 +1,6 @@
 # Roadmap — Memory Full Observability (логирование всех процессов для оценки эффективности)
 
-> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 🔄 (D0.1+D0.2 ✅, D0.3 ⏳) · P1..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
+> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
 >
 > Цель: **каждый процесс памяти оставляет структурный след** (per-event JSONL), чтобы §25-аналитика могла измерять эффективность сквозного цикла **ingestion → consolidation → sync → retrieval → forget**. Инвентаризация — code-grounded аудит 2026-06-05 (8 sink'ов × ~25 процессов, §2).
 
@@ -107,12 +107,12 @@
 **Deliverables:**
 - **D0.1 — оживить `memory-ingestion.log`:** вшить `ingest_metrics.record_ingest(store, action, …)` в точки записи. — ✅ **DONE (2026-06-05)**: `pattern_harvest.ingest_items` эмитит per-action события (created→saved/dup→dup/cap→skipped/error→error, harvester-атрибуция) + `record_store_size` per-store в P4-cadence (`collect_store_sizes`). Закрывает топ-гэп #1 — sink ожил (live: store_size×4 + ingest-события). **Follow-up:** reflection-атрибуция (сейчас default `ingest_items`) + `route_and_save` per-store + skills-harvester.
 - **D0.2 — ForgetGate script-path симметрия:** `memory_maintenance.run_forget` на архивации зовёт `lifecycle_log.log_event("forget", …)` + `epoch.bump()` (зеркало MCP `handle_decay_confidence`). — ✅ **DONE (2026-06-05)**: gated `apply and archived>0`, fail-soft, metadata-only, **epoch-bump** (закрывает stale surfacing-кеш). Закрывает топ-гэп #2.
-- **D0.3 — оживить audit write-path:** `AuditService.log()` в `route_and_save` / delete / `create_link` / version-rollback / forget (operation/entity/source/ts, metadata-only). Закрывает топ-гэп #3. — ⏳ **остаётся** (следующий шаг P0).
+- **D0.3 — оживить audit write-path:** `AuditService.log()` в `route_and_save` / `create_link` / `propagate_update` / version-rollback (operation/entity/metadata-only). Закрывает топ-гэп #3. — ✅ **DONE (2026-06-05)**: fail-soft `_audit` helper (зеркало `_emit_event`) на 4 точках + **flush-on-stop** (буфер CREATE/LINK/PROPAGATE доходит до диска) + hardening re-entrant-lock deadlock (`log()` auto-flush@max_buffer). MCP-side → нужен `/mcp reconnect`.
 
 **Acceptance:**
 - [x] После прогона харвестера/cadence — `memory-ingestion.log` непустой (live: 4× store_size + ingest/saved события); `aggregate_ingest_events` готов потреблять.
 - [x] Forget script-path логирует `forget` в `confidence-lifecycle.log` + **бампает epoch** (код + зеркало MCP, code-verify PASS; runtime-событие при `archived>0`).
-- [ ] `data/services/audit.jsonl` непустой после `route_and_save` (D0.3 — остаётся).
+- [x] audit write-path жив: `_audit` пишет CREATE/LINK/PROPAGATE/ROLLBACK; `data/services/audit.jsonl` наполняется (DELETE/ROLLBACK сразу, остальное — буфер→flush на `stop()`); 4 unit (вкл. deadlock-регрессию), code-verify PASS. Runtime — после `/mcp reconnect`.
 - [x] Всё fail-soft + opt-out + metadata-only (code-verify PASS, 16 unit).
 
 **Артефакты (P0 D0.1+D0.2):** [`pattern_harvest.py`](../../.claude/hooks/shared/pattern_harvest.py) (`_emit_ingest_stats` + `ingest_items(harvester=…)`) · [`memory_maintenance.py`](../../scripts/memory_maintenance.py) (`collect_store_sizes`→`record_store_size`; `run_forget`→`log_event("forget")`+`epoch.bump`) · [`tests/unit/hooks/test_ingest_logging.py`](../../tests/unit/hooks/test_ingest_logging.py) (6 unit) · 16 unit PASS, ruff clean, code-verify PASS. **Live:** cadence dry-run → `memory-ingestion.log` оживлён (store_size lp25/ai99/sk1/wiki0 + ingest-события).
@@ -197,5 +197,6 @@ fail-soft (никогда не ронять hot-path / Stop) · atomic size-rota
 |---|---|---|
 | 2026-06-05 | Roadmap создан (PLANNED) — аудит 8 sink'ов × ~25 процессов, 8 топ-гэпов, фазы P0-P4 | (pending) |
 | 2026-06-05 | **P0 D0.1+D0.2 DONE** — оживлён `memory-ingestion.log` (харвестер per-action события + cadence store_size) + ForgetGate script-path logging (`forget` event + epoch bump); 16 unit + ruff + code-verify PASS, live sink-revival. **D0.3 (audit write-path) — next** | (pending) |
+| 2026-06-05 | **P0 DONE (D0.3 + P0 закрыт)** — audit write-path оживлён (`_audit` на route_and_save/create_link/propagate/rollback + flush-on-stop) + hardening AuditService re-entrant-lock deadlock; 4 unit + code-verify PASS. **P0 завершён (D0.1+D0.2+D0.3).** Follow-up: reflection/route_and_save `record_ingest` атрибуция. **Next: P1** (routing/federated-read/propagation/breaker event-логи) | (pending) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения.
