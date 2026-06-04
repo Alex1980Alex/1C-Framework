@@ -150,9 +150,12 @@ def collect_store_sizes() -> dict[str, Any]:
 
 def collect_cross_store() -> dict[str, Any]:
     try:
-        records, _ = run_scan()
+        records, scan_errors = run_scan()
         index = build_index(records)
-        return summarize(records, index, find_cross_store_dups(index))
+        out = summarize(records, index, find_cross_store_dups(index))
+        if scan_errors:  # surface per-store scan failures (observability)
+            out["scan_errors"] = scan_errors
+        return out
     except Exception as exc:  # fail-soft
         return {"error": f"{type(exc).__name__}: {exc}"}
 
