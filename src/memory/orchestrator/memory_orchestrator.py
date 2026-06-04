@@ -453,7 +453,13 @@ class MemoryOrchestrator:
         self._id_tool = None
         self._surprise_tool = None
         self._warmup_tool = None
-        # P4 services
+        # P4 services — flush buffered audit entries to disk before teardown (§27 P0 D0.3),
+        # else buffered CREATE/LINK/PROPAGATE audits never reach audit.jsonl.
+        if self._audit_service:
+            try:
+                await self._audit_service.flush()
+            except Exception:
+                pass
         self._audit_service = None
         self._versioning_service = None
         self._forgetgate_service = None
