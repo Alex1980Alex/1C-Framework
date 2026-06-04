@@ -251,6 +251,27 @@ def main() -> int:
             json.dumps(dash, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
+    # §27 P2 D2.2: append one summary line per run to a single tail-able stream
+    # (vs N timestamped dashboards) so long-run trend analysis is `tail`-able.
+    try:
+        from memory.infrastructure.trace_log import write_trace
+
+        write_trace(
+            "memory-maintenance-runs.jsonl",
+            "run",
+            disable_env="MEMORY_MAINTENANCE_LOG_DISABLE",
+            applied=bool(args.apply),
+            total_facts=dash.get("total_facts"),
+            store_sizes=dash.get("store_sizes"),
+            cross_store_dup_rate=(
+                cross_store.get("cross_store_dup_rate") if isinstance(cross_store, dict) else None
+            ),
+            forget=(forget if isinstance(forget, dict) else None),
+            jobs={k: (v.get("rc") if isinstance(v, dict) else v) for k, v in jobs.items()},
+        )
+    except Exception:
+        pass
+
     # ASCII-safe stdout
     print("# memory maintenance cadence", "(APPLY)" if args.apply else "(dry-run)")
     print(f"store_sizes={dash['store_sizes']} total_facts={dash['total_facts']}")
