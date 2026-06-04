@@ -82,7 +82,8 @@ Examples:
 
 ## Key Files
 
-- Orchestrator: `src/memory/orchestrator/` (unified_id, link_registry, unified_search)
+- Orchestrator: `src/memory/orchestrator/` (unified_id, link_registry, unified_search, cross_store_index, cross_store_sync)
+- Maintenance cadence (§26 P4): `src/memory/maintenance/` (`forget_gate`, `dashboard`) + `scripts/memory_maintenance.py` (orchestrator) + Stop-hook `.claude/hooks/memory-maintenance-cadence.py`
 - AI Memory: `src/memory/ai_memory/server.py` (5 MCP tools)
 - Vector Memory: `src/memory/vector_memory/server.py` (7 MCP tools)
 - Confidence lifecycle log (§22): `src/memory/vector_memory/lifecycle_log.py` — `log_event()` пишет JSONL всех confidence-мутаций в `.claude/cache/confidence-lifecycle.log` (события `reinforce`/`reinforce_miss`/`reinforce_error` из `reinforce.py`, `session`/`session_error` из Stop-hook `pattern_reinforce.py`, **MCP-side** `apply`/`decay_sweep`/`save`/`delete`/`server_start` из `server.py` — нужен `/mcp reconnect`); fail-soft, atomic-rotation 2MB, buffered append (`O_APPEND`-вариант откатан — терял записи на win32 concurrent-open), opt-out `CONFIDENCE_LOG_DISABLE=1`. Диагностика raise/decay/reinforce/archive. Анализ: `tail` + построчный `json.loads`
