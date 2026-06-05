@@ -65,7 +65,7 @@
       "Bash(powershell -File *)"
     ],
     "additionalDirectories": [
-      "d:\\1С-Framework\\.claude\\skills"
+      "C:\\1С-Framework\\.claude\\skills"
     ]
   },
   "env": {
