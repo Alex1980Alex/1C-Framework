@@ -405,7 +405,11 @@ def _pattern_effective_confidence(payload: dict) -> float:
     try:
         src_path = str(PROJECT_ROOT / "src")
         if src_path not in sys.path:
-            sys.path.insert(0, src_path)
+            # append, NOT insert(0): src/shared/ (a real package) would otherwise
+            # shadow this hook's own .claude/hooks/shared/ at sys.path[0], breaking
+            # `from shared.semantic_search import ...` (dense TEI arm) and
+            # `from shared.pattern_reinforce import ...` for the whole process.
+            sys.path.append(src_path)
         from memory.vector_memory.confidence import payload_effective_confidence
         return payload_effective_confidence(payload)
     except Exception:
