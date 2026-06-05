@@ -46,6 +46,109 @@ def _log_lifecycle(event: str, **fields: Any) -> None:
         pass
 
 
+# §27 cascade — apply_pattern → confidence propagation to linked neighbours.
+# Closes the "cascade not wired into autonomous apply" gap (§22 P3 deferred the
+# neighbour-aware link_registry gate; roadmap 260605 follow-up): the §10.2
+# feedback-loop cascade step now fires on every apply_pattern. Depth-1, same-store
+# (learned_patterns), fail-soft, bounded, gated MEMORY_APPLY_CASCADE_DISABLE=1.
+# NOTE: a no-op until real pattern↔pattern links exist in link_registry (today's graph
+# is integration-test fixtures only). MCP-side → needs /mcp reconnect to take effect.
+_APPLY_CASCADE_MAX = 10  # max neighbours nudged per apply (rate-limit; mirrors PropagationEngine)
+_APPLY_CASCADE_BASE = 1.0  # base pseudo-observation magnitude, then decayed
+
+
+def _cascade_confidence(client: Any, pattern_id: str, success: bool, now: datetime) -> dict[str, int]:
+    """Propagate an apply's confidence delta to directly-linked neighbour patterns.
+
+    Mirrors PropagationEngine decay — ``link_strength × distance(0.5^1) × time(max(0.5,1−days/365))``
+    — but synchronous and scoped to ``learned_patterns``. Nudges each neighbour's Beta succ/fail
+    (success→succ, fail→fail) and re-derives confidence. Fully fail-soft; returns trace stats.
+    """
+    stats = {"entities_updated": 0, "cascades_prevented": 0, "final_depth": 0}
+    if os.environ.get("MEMORY_APPLY_CASCADE_DISABLE") == "1":
+        return stats
+    import time as _time
+
+    t0 = _time.monotonic()
+    try:
+        from memory.orchestrator.link_registry import LinkRegistry, LinkType
+
+        from .confidence import derive_confidence, seed_counts_from_legacy
+
+        # Forward-correlation links only — CONTRADICTS has inverse semantics (excluded for v1).
+        link_types = [LinkType.SUPPORTS, LinkType.EXTENDS, LinkType.BASED_ON, LinkType.DERIVES_FROM]
+        links = LinkRegistry().get_links_from(pattern_id, link_types=link_types)
+        if not links:
+            return stats  # cheap no-op for an empty/unlinked graph
+        stats["final_depth"] = 1
+        seen: set[str] = set()
+        for link in links:
+            if stats["entities_updated"] >= _APPLY_CASCADE_MAX:
+                stats["cascades_prevented"] += 1
+                continue
+            nid = link.target_id
+            if nid == pattern_id or nid in seen:
+                continue
+            seen.add(nid)
+            npts = client.retrieve(collection_name=COLLECTION_NAME, ids=[nid], with_payload=True)
+            if not npts:  # neighbour is not a learned_pattern → can't nudge
+                stats["cascades_prevented"] += 1
+                continue
+            npay = npts[0].payload or {}
+            try:
+                ca = link.created_at
+                if isinstance(ca, str):
+                    ca = datetime.fromisoformat(ca)
+                age_days = max(0, (now - ca).days)
+            except Exception:
+                age_days = 0
+            time_decay = max(0.5, 1.0 - age_days / 365.0)
+            delta = _APPLY_CASCADE_BASE * float(link.strength) * 0.5 * time_decay  # 0.5 = dist^1
+            if delta < 0.001:
+                stats["cascades_prevented"] += 1
+                continue
+            succ, fail = npay.get("succ"), npay.get("fail")
+            if succ is None or fail is None:
+                succ, fail = seed_counts_from_legacy(
+                    float(npay.get("confidence", 0.70)), int(npay.get("application_count", 0) or 0)
+                )
+            if success:
+                succ = float(succ) + delta
+            else:
+                fail = float(fail) + delta
+            client.set_payload(
+                collection_name=COLLECTION_NAME,
+                payload={
+                    "succ": round(float(succ), 6),
+                    "fail": round(float(fail), 6),
+                    "confidence": round(derive_confidence(succ, fail), 6),
+                    "updated_at": now.isoformat(),
+                },
+                points=[nid],
+            )
+            stats["entities_updated"] += 1
+        if stats["entities_updated"]:
+            _bump_epoch()  # neighbour confidences changed → invalidate surfacing cache
+    except Exception:
+        pass
+    try:
+        from memory.infrastructure.trace_log import write_trace
+
+        write_trace(
+            "memory-propagation.log",
+            "propagate",
+            disable_env="MEMORY_PROPAGATION_LOG_DISABLE",
+            source=pattern_id,
+            entities_updated=stats["entities_updated"],
+            cascades_prevented=stats["cascades_prevented"],
+            final_depth=stats["final_depth"],
+            latency_ms=round((_time.monotonic() - t0) * 1000, 1),
+        )
+    except Exception:
+        pass
+    return stats
+
+
 from .models import (
     EvidenceSource,
     LearnedPattern,
