@@ -1,27 +1,26 @@
 # Roadmap — Memory Full Observability (логирование всех процессов для оценки эффективности)
 
-> **Дата:** 2026-06-05 · **Статус:** 🟢 IN PROGRESS — **P0 ✅ · P1 ✅ · P2 ✅ · P3..P4 ⏳** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
+> **Дата:** 2026-06-05 · **Статус:** ✅ DONE — **P0 ✅ · P1 ✅ · P2 ✅ · P3 ✅ · P4 ✅** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
 >
 > Цель: **каждый процесс памяти оставляет структурный след** (per-event JSONL), чтобы §25-аналитика могла измерять эффективность сквозного цикла **ingestion → consolidation → sync → retrieval → forget**. Инвентаризация — code-grounded аудит 2026-06-05 (8 sink'ов × ~25 процессов, §2).
 
 ---
 
-## 0. Промежуточные результаты (2026-06-05)
+## 0. Итог (2026-06-05) — roadmap ЗАКРЫТ (P0-P4)
 
-**Сделано:** **P0 завершён** — 3 из 8 топ-гэпов закрыты. Система памяти получила недостающих **writers** для уже построенных sink'ов + симметрию script/MCP путей. Слепые зоны ingestion/forget/audit стали наблюдаемы.
+**Сделано:** **все фазы завершены, 8/8 топ-гэпов закрыты — наблюдаемость памяти доведена до 100%.** P0 оживил недостающих **writers** для построенных sink'ов (ingestion/forget/audit). P1 добавил per-process event-логи слепых процессов (routing/federated-read/propagation/circuit). P2 — персистентность метрик + cadence run-поток. **P3** свёл всё к **каноническому envelope + reader-adapter** и дал DuckDB cross-log **fact-trace** (сквозной трейс факта по `content_hash`/`pattern_id`). **P4** — слой анализа: unified observability report по всем sink'ам с cross-process метриками + детектор регрессии наблюдаемости (stale-sink).
 
 | Фаза | Статус | Итог |
 |---|---|---|
 | **P0** Подключить построенные sink'и | ✅ DONE | D0.1 `memory-ingestion.log` **оживлён** (харвестер per-action события + cadence `record_store_size`) · D0.2 ForgetGate script-path → `confidence-lifecycle.log` + epoch bump · D0.3 audit write-path **оживлён** (`_audit` ×4 + flush-on-stop + hardening re-entrant deadlock). **20 unit, 3× code-verify PASS**, live sink-revival |
 | **P1** Новые event-логи слепых процессов | ✅ DONE | D1.1 routing + D1.2 federated-read + D1.3 propagation + D1.4 circuit-breaker — все через shared `trace_log`; 5 unit, 3× code-verify PASS |
 | **P2** Persist metrics + cadence run-лог | ✅ DONE | D2.1 metrics-snapshot на `stop()`→`memory-metrics.jsonl` · D2.2 cadence run-лог→`memory-maintenance-runs.jsonl` · D2.3 store-size series (через D0.1); 6 unit, code-verify PASS |
-| **P3** Единый envelope + сквозная корреляция | ⏳ PENDING | |
-| **P4** Слой анализа эффективности (§25) | ⏳ PENDING | |
+| **P3** Единый envelope + сквозная корреляция | ✅ DONE | D3.1 канонический envelope + reader-adapter (`event_envelope.py`: `normalize`/`make_envelope`/`known_sinks`, stable `CORE_KEYS`) · D3.2 DuckDB cross-log query (`memory_observability_query.py` mirror `audit_query.py`) + **fact-trace** по `content_hash` ИЛИ `pattern_id` (cross-sink thread проверен live: ingestion→reinforce→forget). Side-fix: harvester эмитит `content_hash`+`pattern_id` (D3.2-ключ) · CAST-fix DuckDB UUID-inference. **8 unit, code-verify PASS** |
+| **P4** Слой анализа эффективности (§25) | ✅ DONE | D4.1 cross-process aggregators (ingest/dup/forget/routing/read-hit/propagation-reach/circuit/audit) + D4.2 unified report (`memory_observability_report.py`→`observability-*.md`) + **stale-sink regression detection** (freshness; cold≠regression). **6 unit, code-verify PASS**, live report на реальных логах |
 
-**Закрытые топ-гэпы:** #1 (ingestion sink без писателей), #2 (ForgetGate script невидим + epoch-баг), #3 (audit write-path мёртв).
-**Остаются:** #4 federated-read трейс, #5 routing-решения, #6 propagation/breaker, #7 metrics persist, #8 cadence run-лог.
-**Follow-up P0:** `record_ingest`-атрибуция reflection + `route_and_save` per-store + skills-harvester.
-**⚠ Runtime:** D0.3 (MCP-side `memory_orchestrator`/`audit_service`) — нужен `/mcp reconnect`; D0.1/D0.2 (хуки/скрипты) — effective сразу.
+**Закрытые топ-гэпы:** все 8 — #1 (ingestion sink без писателей), #2 (ForgetGate script невидим + epoch-баг), #3 (audit write-path мёртв), #4 (federated-read), #5 (routing), #6 (propagation/breaker), #7 (metrics persist), #8 (cadence run-лог).
+**Follow-up P0 закрыт частично:** harvester теперь эмитит `content_hash`+`pattern_id` (P3 D3.2); остаётся reflection per-source-атрибуция + `route_and_save` per-store record_ingest.
+**⚠ Runtime:** P1/P2 MCP-side логи (routing/read/propagation/circuit/metrics) на диске появляются только после orchestrator-run + `/mcp reconnect`; до того отчёт корректно помечает их `missing` (cold, НЕ regression). P3/P4 (скрипты/хуки) — effective сразу.
 
 ---
 
@@ -166,22 +165,26 @@
 ### P3 — Единая схема и сквозная корреляция
 
 **Deliverables:**
-- **D3.1 — канонический конверт события:** общий helper (envelope в стиле §15: `id/source/type/time/correlation_id/causation_id`), к которому приводятся новые логи (P1/P2) + reader-адаптер для старых (confidence-lifecycle/surfacing/ingestion).
-- **D3.2 — корреляция по `content_hash`/`correlation_id`:** сквозной трейс одного факта: save → route → store-write → link → event → (позже) surfacing/apply → forget.
+- **D3.1 — канонический конверт события:** общий helper (envelope в стиле §15: `id/source/type/time/correlation_id/causation_id`), к которому приводятся новые логи (P1/P2) + reader-адаптер для старых (confidence-lifecycle/surfacing/ingestion). — ✅ **DONE (2026-06-05)**: [`event_envelope.py`](../../src/memory/infrastructure/event_envelope.py) — `normalize(source, raw)` проецирует 10 разнородных sink'ов в плоскую каноническую схему со **stable `CORE_KEYS`** (None-seed → DuckDB-колонки всегда есть, нет binder-error); `make_envelope` (forward CloudEvents v1.0); `known_sinks()` — единый реестр sink'ов (источник правды для query + freshness). Per Q3 — reader-адаптер, НЕ миграция on-disk форматов.
+- **D3.2 — корреляция по `content_hash`/`correlation_id`:** сквозной трейс одного факта: save → route → store-write → link → event → (позже) surfacing/apply → forget. — ✅ **DONE (2026-06-05)**: [`memory_observability_query.py`](../../scripts/memory_observability_query.py) `--view fact-trace --key <H>` тредит факт по `content_hash` **ИЛИ** `pattern_id` (= `UUID5(content_hash)` — ключ confidence-lifecycle). Унифицирующий ключ — `pattern_id`: harvester теперь эмитит и `content_hash`, и `pattern_id` в ingestion-события ([`pattern_harvest._emit_ingest_stats`](../../.claude/hooks/shared/pattern_harvest.py), backward-compat count-fallback) → ingestion(saved/dup) ↔ lifecycle(reinforce/forget) тредятся одним запросом (**live-проверено**: 3 события / 2 sink'а). CAST-fix: DuckDB авто-инферит UUID-shaped `pattern_id` как native UUID → `CAST(... AS VARCHAR)` в WHERE против ConversionException.
 
 **Acceptance:**
-- [ ] End-to-end трейс одного факта через ingestion→consolidation→sync→retrieval→forget восстановим (один запрос по correlation_id/content_hash).
-- [ ] DuckDB-слой (как `scripts/audit_query.py` §15) поверх всех memory-логов: union-by-name, ignore-errors.
+- [x] End-to-end трейс одного факта восстановим одним запросом (`fact-trace --key <pattern_id>` тредит ingestion→reinforce→forget; live PASS).
+- [x] DuckDB-слой (mirror `scripts/audit_query.py` §15) поверх ВСЕХ memory-логов: pre-clean + normalize → temp JSONL → `read_json_auto(union_by_name=true)`; views recent/by-source/error-rate/latency/freshness/fact-trace.
+
+**Артефакты (P3):** [`event_envelope.py`](../../src/memory/infrastructure/event_envelope.py) (D3.1) · [`memory_observability_query.py`](../../scripts/memory_observability_query.py) (D3.2, `--root`/`MEMORY_OBS_ROOT` override) · harvester `content_hash`+`pattern_id` emit (D3.2-данные) · [`tests/unit/test_memory_observability.py`](../../tests/unit/test_memory_observability.py) (envelope + fact-trace DuckDB) + [`test_ingest_logging.py`](../../tests/unit/hooks/test_ingest_logging.py) (keyed-emit). code-verify PASS.
 
 ### P4 — Слой анализа эффективности (потребление полных логов)
 
 **Deliverables:**
-- **D4.1 — расширить §25-analyzer + P4-dashboard:** считать из полных логов метрики эффективности — ingest_rate, dup_rate, **forget_volume/rate**, routing_accuracy, read hit-rate, propagation_reach, store_growth, audit-coverage.
-- **D4.2 — unified observability report:** один отчёт-роллап по всем sink'ам (`data/reports/memory/observability_*.md`) + DuckDB-вью (recent/latency/error-rate/correlation-chain).
+- **D4.1 — расширить §25-analyzer + P4-dashboard:** считать из полных логов метрики эффективности — ingest_rate, dup_rate, **forget_volume/rate**, routing_accuracy, read hit-rate, propagation_reach, store_growth, audit-coverage. — ✅ **DONE (2026-06-05)**: [`memory_observability_report.py`](../../scripts/memory_observability_report.py) переиспользует §25-aggregator'ы (surfacing+lifecycle) + добавляет ingestion/maintenance/routing/read/propagation/circuit/audit. (routing_accuracy без ground-truth даётся как target/method-распределение — честно помечено.)
+- **D4.2 — unified observability report:** один отчёт-роллап по всем sink'ам (`data/reports/memory/observability_*.md`) + DuckDB-вью (recent/latency/error-rate/correlation-chain). — ✅ **DONE (2026-06-05)**: `observability-<ts>.md` + json sidecar + `_observability_latest.md`; effectiveness-verdict (injected/dup/forget/read-hit/drift) + **freshness/regression-секция**. DuckDB-вью — в `memory_observability_query.py` (P3).
 
 **Acceptance:**
-- [ ] Единый отчёт отвечает «становится ли память эффективнее?» из **реальных** логов (не заглушек).
-- [ ] Регрессия наблюдаемости детектируется (любой процесс перестал логировать → отчёт это показывает).
+- [x] Единый отчёт отвечает «становится ли память эффективнее?» из **реальных** логов (live: 4 fresh sink'а, surfacing/ingestion/lifecycle/maintenance метрики посчитаны).
+- [x] Регрессия наблюдаемости детектируется: `analyze_freshness` помечает present-but-stale sink как `stale`→`regressions[]`; `missing`/`empty` (cold/MCP-side до run) явно НЕ regression (unit-тест + live).
+
+**Артефакты (P4):** [`memory_observability_report.py`](../../scripts/memory_observability_report.py) (D4.1 aggregators + D4.2 report/freshness) · [`tests/unit/test_memory_observability.py`](../../tests/unit/test_memory_observability.py) (aggregators + regression-detect) · live `data/reports/memory/_observability_latest.md`. code-verify PASS.
 
 ---
 
@@ -224,5 +227,6 @@ fail-soft (никогда не ронять hot-path / Stop) · atomic size-rota
 | 2026-06-05 | **P1 D1.1+D1.4 DONE** — shared `trace_log` writer (fail-soft/rotation/opt-out) + routing-лог (`route_and_save`→`memory-routing.log`, metadata-only) + circuit-breaker trip-лог (`_transition_to`→`memory-circuit.log`); 5 unit + code-verify PASS. **D1.2 federated-read + D1.3 propagation — next** | (pending) |
 | 2026-06-05 | **P1 DONE (D1.2+D1.3 → P1 закрыт)** — federated-read трейс (`UnifiedSearchEngine.search`→`memory-read.log`, arm_hits/latency, query-текст не логируется) + propagation трейс (`_process_propagation`→`memory-propagation.log`, reach/depth, единая точка sync+bg); compile+ruff+code-verify PASS. **P1 завершён (D1.1-D1.4).** Next: **P2** (persist metrics + cadence run-лог) | (pending) |
 | 2026-06-05 | **P2 DONE** — metrics-snapshot на orchestrator `stop()`→`memory-metrics.jsonl` (D2.1) + cadence append-only run-лог→`memory-maintenance-runs.jsonl` (D2.2, live-verified) + store-size series via D0.1 (D2.3); 6 unit + code-verify PASS. **P2 завершён.** Next: **P3** (единый envelope + сквозная корреляция) | (pending) |
+| 2026-06-05 | **P3+P4 DONE → roadmap ЗАКРЫТ (P0-P4)** — D3.1 канонический envelope + reader-adapter (`event_envelope.py`, stable `CORE_KEYS`) · D3.2 DuckDB cross-log query (`memory_observability_query.py`) + **fact-trace** по `content_hash`/`pattern_id` (cross-sink thread live PASS: ingestion→reinforce→forget); harvester эмитит `content_hash`+`pattern_id`; CAST-fix DuckDB UUID-inference · D4.1 cross-process aggregators + D4.2 unified `observability-*.md` + **stale-sink regression detection** (cold≠regression). 14 unit (P3+P4) + 1 ingest-keyed unit, ruff clean, compile OK, **code-verify PASS** (7/7 focus checks), live report на реальных логах. **Все 8 топ-гэпов закрыты — наблюдаемость памяти 100%.** | (pending) |
 
 > Обновлять при старте/закрытии каждой фазы (P0…P4): отметка DONE + ключевые коммиты + отклонения.
