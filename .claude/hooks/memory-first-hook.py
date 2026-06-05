@@ -807,7 +807,7 @@ def _confidence_epoch() -> float:
     try:
         src_path = str(PROJECT_ROOT / "src")
         if src_path not in sys.path:
-            sys.path.insert(0, src_path)
+            sys.path.append(src_path)  # append, NOT insert(0): else src/shared shadows hooks/shared
         from memory.vector_memory.epoch import read as _read_epoch
         return _read_epoch()
     except Exception:
