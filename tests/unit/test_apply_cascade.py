@@ -33,10 +33,10 @@ class _FakeClient:
         self.points = points
         self.set_calls: list[tuple[str, dict]] = []
 
-    def retrieve(self, collection_name, ids, with_payload=True):  # noqa: ARG002
+    def retrieve(self, collection_name, ids, with_payload=True):
         return [_FakePoint(self.points[i]) for i in ids if i in self.points]
 
-    def set_payload(self, collection_name, payload, points):  # noqa: ARG002
+    def set_payload(self, collection_name, payload, points):
         self.set_calls.append((points[0], payload))
         self.points[points[0]].update(payload)
 
