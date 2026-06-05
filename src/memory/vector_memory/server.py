@@ -669,6 +669,9 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
         application_count=updates.get("application_count"),
     )
 
+    # §27 cascade: propagate the confidence delta to directly-linked neighbour patterns.
+    cascade = _cascade_confidence(client, pattern_id, success, datetime.now())
+
     logger.info(
         f"Applied pattern {pattern_id}: {old_confidence:.3f} -> {updates['confidence']:.3f}"
     )
@@ -682,6 +685,7 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
                     "old_confidence": old_confidence,
                     "new_confidence": updates["confidence"],
                     "application_count": updates["application_count"],
+                    "cascaded": cascade["entities_updated"],
                 }
             ),
         )
