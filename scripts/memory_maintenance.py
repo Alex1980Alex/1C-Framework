@@ -152,7 +152,9 @@ def collect_store_sizes() -> dict[str, Any]:
     try:
         conn = sqlite3.connect(str(MEMORY_AI_DB))
         try:
-            sizes["memory_ai"] = conn.execute("SELECT COUNT(*) FROM important_messages").fetchone()[0]
+            sizes["memory_ai"] = conn.execute("SELECT COUNT(*) FROM important_messages").fetchone()[
+                0
+            ]
         finally:
             conn.close()
     except Exception:

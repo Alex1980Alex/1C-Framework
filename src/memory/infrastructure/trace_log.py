@@ -39,10 +39,10 @@ def _rotate(path: Path) -> None:
     """Atomic size-rotation: keep the newest half when the file exceeds the cap."""
     try:
         if path.exists() and path.stat().st_size > _CAP_BYTES:
-            data = path.read_bytes()[-(_CAP_BYTES // 2):]
+            data = path.read_bytes()[-(_CAP_BYTES // 2) :]
             idx = data.find(b"\n")
             if idx != -1:
-                data = data[idx + 1:]  # drop partial first line
+                data = data[idx + 1 :]  # drop partial first line
             fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix="trace-")
             try:
                 with os.fdopen(fd, "wb") as fh:

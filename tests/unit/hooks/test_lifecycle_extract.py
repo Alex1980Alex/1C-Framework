@@ -236,8 +236,12 @@ def test_design_edit_src_not_captured() -> None:
 
 def test_design_dedup() -> None:
     events = [
-        _tool_use_event("Edit", {"file_path": "docs/roadmap/r.md", "old_string": "a", "new_string": "b"}),
-        _tool_use_event("Edit", {"file_path": "docs/roadmap/r.md", "old_string": "c", "new_string": "d"}),
+        _tool_use_event(
+            "Edit", {"file_path": "docs/roadmap/r.md", "old_string": "a", "new_string": "b"}
+        ),
+        _tool_use_event(
+            "Edit", {"file_path": "docs/roadmap/r.md", "old_string": "c", "new_string": "d"}
+        ),
     ]
     result = le.extract_from_events(events, _EMPTY_GIT_CTX)
     assert result["design"].count("r.md") == 1

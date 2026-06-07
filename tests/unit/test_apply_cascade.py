@@ -63,8 +63,9 @@ class TestApplyCascade:
         reg = real_cls(db_path=str(tmp_db))
         _link(reg, "A", "B", LinkType.SUPPORTS, strength=0.8)
 
-        client = _FakeClient({"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0,
-                                    "application_count": 0}})
+        client = _FakeClient(
+            {"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0, "application_count": 0}}
+        )
         stats = _cascade_confidence(client, "A", success=True, now=datetime.now())
 
         assert stats["entities_updated"] == 1
@@ -81,8 +82,9 @@ class TestApplyCascade:
         real_cls, LinkType = _registry_factory(tmp_db, monkeypatch)
         _link(real_cls(db_path=str(tmp_db)), "A", "B", LinkType.EXTENDS, strength=1.0)
 
-        client = _FakeClient({"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0,
-                                    "application_count": 0}})
+        client = _FakeClient(
+            {"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0, "application_count": 0}}
+        )
         stats = _cascade_confidence(client, "A", success=False, now=datetime.now())
 
         assert stats["entities_updated"] == 1

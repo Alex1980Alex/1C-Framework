@@ -29,8 +29,14 @@ class TestEventEnvelope:
     def test_normalize_ingestion(self):
         from src.memory.infrastructure.event_envelope import normalize
 
-        raw = {"ts": "2026-06-05T01:00:00.000", "event": "ingest", "store": "learned_patterns",
-               "action": "saved", "content_hash": "abc123", "harvester": "patterns"}
+        raw = {
+            "ts": "2026-06-05T01:00:00.000",
+            "event": "ingest",
+            "store": "learned_patterns",
+            "action": "saved",
+            "content_hash": "abc123",
+            "harvester": "patterns",
+        }
         env = normalize("ingestion", raw)
         assert env["source"] == "ingestion"
         assert env["type"] == "ingest"
@@ -40,8 +46,14 @@ class TestEventEnvelope:
     def test_normalize_surfacing_uses_outcome_as_type(self):
         from src.memory.infrastructure.event_envelope import normalize
 
-        raw = {"ts": "2026-06-05T01:00:00.000", "hook": "memory-first-hook",
-               "outcome": "injected", "duration_ms": 1234.5, "cache": "miss", "tei": "down"}
+        raw = {
+            "ts": "2026-06-05T01:00:00.000",
+            "hook": "memory-first-hook",
+            "outcome": "injected",
+            "duration_ms": 1234.5,
+            "cache": "miss",
+            "tei": "down",
+        }
         env = normalize("surfacing", raw)
         assert env["type"] == "injected"
         assert env["latency_ms"] == 1234.5
@@ -50,9 +62,15 @@ class TestEventEnvelope:
     def test_normalize_audit_maps_action_and_metadata_hash(self):
         from src.memory.infrastructure.event_envelope import normalize
 
-        raw = {"timestamp": "2026-06-05T01:00:00", "action": "create", "resource_type": "pattern",
-               "resource_id": "p1", "session_id": "sess9", "success": True,
-               "metadata": {"content_hash": "deadbeef"}}
+        raw = {
+            "timestamp": "2026-06-05T01:00:00",
+            "action": "create",
+            "resource_type": "pattern",
+            "resource_id": "p1",
+            "session_id": "sess9",
+            "success": True,
+            "metadata": {"content_hash": "deadbeef"},
+        }
         env = normalize("audit", raw)
         assert env["type"] == "create"
         assert env["ts"] == "2026-06-05T01:00:00"
@@ -79,8 +97,14 @@ class TestEventEnvelope:
     def test_make_envelope_cloudevents_shape(self):
         from src.memory.infrastructure.event_envelope import make_envelope
 
-        env = make_envelope("ingestion", "ingest", ts="2026-06-05T01:00:00.000",
-                            content_hash="h1", correlation_id="c1", store="lp")
+        env = make_envelope(
+            "ingestion",
+            "ingest",
+            ts="2026-06-05T01:00:00.000",
+            content_hash="h1",
+            correlation_id="c1",
+            store="lp",
+        )
         assert env["specversion"] == "1.0"
         assert env["source"] == "ingestion" and env["type"] == "ingest"
         assert env["content_hash"] == "h1" and env["correlation_id"] == "c1"
@@ -111,8 +135,13 @@ class TestReportAggregators:
         from scripts.memory_observability_report import analyze_maintenance
 
         rows = [
-            {"event": "run", "applied": True, "forget": {"archive": 2, "keep": 8},
-             "cross_store_dup_rate": 0.2, "store_sizes": {"lp": 25}},
+            {
+                "event": "run",
+                "applied": True,
+                "forget": {"archive": 2, "keep": 8},
+                "cross_store_dup_rate": 0.2,
+                "store_sizes": {"lp": 25},
+            },
         ]
         out = analyze_maintenance(rows)
         assert out["forget_volume"] == 2
@@ -124,10 +153,18 @@ class TestReportAggregators:
         from scripts.memory_observability_report import analyze_read
 
         rows = [
-            {"event": "search", "final": 3, "latency_ms": 100,
-             "arm_hits": {"skill": 2, "pattern_dense": 0}},
-            {"event": "search", "final": 0, "latency_ms": 50,
-             "arm_hits": {"skill": 0, "pattern_dense": 1}},
+            {
+                "event": "search",
+                "final": 3,
+                "latency_ms": 100,
+                "arm_hits": {"skill": 2, "pattern_dense": 0},
+            },
+            {
+                "event": "search",
+                "final": 0,
+                "latency_ms": 50,
+                "arm_hits": {"skill": 0, "pattern_dense": 1},
+            },
         ]
         out = analyze_read(rows)
         assert out["searches"] == 2
@@ -139,8 +176,18 @@ class TestReportAggregators:
         from scripts.memory_observability_report import analyze_propagation
 
         rows = [
-            {"event": "propagate", "entities_updated": 4, "final_depth": 2, "cascades_prevented": 1},
-            {"event": "propagate", "entities_updated": 0, "final_depth": 0, "cascades_prevented": 3},
+            {
+                "event": "propagate",
+                "entities_updated": 4,
+                "final_depth": 2,
+                "cascades_prevented": 1,
+            },
+            {
+                "event": "propagate",
+                "entities_updated": 0,
+                "final_depth": 0,
+                "cascades_prevented": 3,
+            },
         ]
         out = analyze_propagation(rows)
         assert out["events"] == 2 and out["max_reach"] == 4
@@ -232,13 +279,21 @@ class TestFactTraceDuckDB:
         (tmp_path / "data" / "services").mkdir(parents=True)
         pid = "9b2c1e44-0000-5000-8000-aaaaaaaaaaaa"
         (cache / "memory-ingestion.log").write_text(
-            json.dumps({"ts": "2026-06-05T10:00:00", "event": "ingest",
-                        "action": "saved", "content_hash": "H", "pattern_id": pid}) + "\n",
+            json.dumps(
+                {
+                    "ts": "2026-06-05T10:00:00",
+                    "event": "ingest",
+                    "action": "saved",
+                    "content_hash": "H",
+                    "pattern_id": pid,
+                }
+            )
+            + "\n",
             encoding="utf-8",
         )
         (cache / "confidence-lifecycle.log").write_text(
-            json.dumps({"ts": "2026-06-05T10:05:00", "event": "reinforce",
-                        "pattern_id": pid}) + "\n",
+            json.dumps({"ts": "2026-06-05T10:05:00", "event": "reinforce", "pattern_id": pid})
+            + "\n",
             encoding="utf-8",
         )
         monkeypatch.setattr(q, "SINK_ROOT", tmp_path)

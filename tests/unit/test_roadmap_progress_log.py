@@ -232,18 +232,13 @@ def test_insert_entry_no_section_raises():
 
 
 def test_section_heading_not_matched_by_180():
-    doc = (
-        "## §17 x\n\nt\n\n## §180 Other section\n\n### 2026-01-01 — not §18\n\nbody\n"
-    )
+    doc = "## §17 x\n\nt\n\n## §180 Other section\n\n### 2026-01-01 — not §18\n\nbody\n"
     # §18 heading absent → no section (must not pick up §180).
     assert rpl.extract_section_18(doc) is None
 
 
 def test_section_18_bounded_by_following_180():
-    doc = (
-        "## §18 Log\n\n### 2026-05-29 — real\n\nbody\n\n"
-        "## §180 Appendix\n\nunrelated\n"
-    )
+    doc = "## §18 Log\n\n### 2026-05-29 — real\n\nbody\n\n## §180 Appendix\n\nunrelated\n"
     sec = rpl.extract_section_18(doc)
     assert sec is not None
     assert "real" in sec
@@ -288,15 +283,28 @@ def test_extract_wikilinks_basic_alias_anchor_dedup():
 
 
 def test_memory_name_re_accepts_real_refs():
-    for name in ["feedback_auto_git_save_preempt", "project_x", "reference_a", "user_b",
-                 "feedback-bsl-indexer-backend-choice"]:
+    for name in [
+        "feedback_auto_git_save_preempt",
+        "project_x",
+        "reference_a",
+        "user_b",
+        "feedback-bsl-indexer-backend-choice",
+    ]:
         assert rpl._MEMORY_NAME_RE.match(name), name
 
 
 def test_memory_name_re_rejects_non_memory():
     # Doc syntax examples, code artifacts, concept mentions → must NOT be validated.
-    for name in ["overview", "PATTERNS", "wikilinks", "page-name", "Callable[..., Any",
-                 "...", "wiki-links", "_index"]:
+    for name in [
+        "overview",
+        "PATTERNS",
+        "wikilinks",
+        "page-name",
+        "Callable[..., Any",
+        "...",
+        "wiki-links",
+        "_index",
+    ]:
         assert not rpl._MEMORY_NAME_RE.match(name), name
 
 

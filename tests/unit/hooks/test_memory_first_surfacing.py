@@ -116,7 +116,9 @@ class TestPatternEffectiveConfidence:
         mfh = _load_mfh(monkeypatch)
         # Poison the sub-module so lazy import raises
         monkeypatch.setitem(
-            sys.modules, "memory.vector_memory.confidence", None  # type: ignore[arg-type]
+            sys.modules,
+            "memory.vector_memory.confidence",
+            None,  # type: ignore[arg-type]
         )
         result = mfh._pattern_effective_confidence({"confidence": 0.42})
         assert isinstance(result, float)
@@ -178,7 +180,7 @@ class TestPatternScoreGate:
         payload = {"succ": 0.0, "fail": 3.0, "last_decay_at": _T0}
         result = mfh._pattern_score_gate(payload, 1.0)
         assert result is not None
-        assert abs(result - 7.0 / 13.0) < 0.05, f"Expected ~{7/13:.3f}, got {result}"
+        assert abs(result - 7.0 / 13.0) < 0.05, f"Expected ~{7 / 13:.3f}, got {result}"
 
 
 # ---------------------------------------------------------------------------
@@ -357,9 +359,7 @@ class TestSearchQdrantLearnedPatternsSemantic:
                 pass
 
             def scroll(self, **kwargs):
-                raise AssertionError(
-                    "QdrantClient.scroll should not be called when TEI is up"
-                )
+                raise AssertionError("QdrantClient.scroll should not be called when TEI is up")
 
         import qdrant_client as _qc
 
@@ -489,13 +489,27 @@ class TestSection24P1HybridRRF:
 
         def _spy(query_tokens, start, limit):
             calls["n"] += 1
-            return [{"source": "qdrant", "id": "lex1", "content": "alpha beta lexical",
-                     "category": "pattern", "score": 0.9, "_collection": "learned_patterns"}]
+            return [
+                {
+                    "source": "qdrant",
+                    "id": "lex1",
+                    "content": "alpha beta lexical",
+                    "category": "pattern",
+                    "score": 0.9,
+                    "_collection": "learned_patterns",
+                }
+            ]
 
         monkeypatch.setattr(mfh, "_search_learned_patterns", _spy)
-        _stub_semantic(monkeypatch, [0.1] * 10, lambda c, e, limit=5, timeout=1.0: (
-            [{"id": "sk1", "score": 0.8, "payload": {"skill_name": "s", "description": "d"}}]
-            if c == "skill_library" else []))
+        _stub_semantic(
+            monkeypatch,
+            [0.1] * 10,
+            lambda c, e, limit=5, timeout=1.0: (
+                [{"id": "sk1", "score": 0.8, "payload": {"skill_name": "s", "description": "d"}}]
+                if c == "skill_library"
+                else []
+            ),
+        )
         out = mfh.search_qdrant(set(mfh.tokenize("alpha beta")), limit=10, prompt="alpha beta")
         assert calls["n"] == 1, "lexical arm must ALWAYS run (not fallback-only) in P1"
         assert all("fused_score" in r for r in out), "RRF must produce fused_score"
@@ -508,17 +522,39 @@ class TestSection24P1HybridRRF:
 
         def _search(collection, embedding, limit=5, timeout=1.0):
             if collection == "learned_patterns":
-                return [{"id": "both", "score": 0.7, "payload": {
-                    "content": SHARED, "category": "pattern",
-                    "succ": 5.0, "fail": 0.0, "last_decay_at": _T0}}]
+                return [
+                    {
+                        "id": "both",
+                        "score": 0.7,
+                        "payload": {
+                            "content": SHARED,
+                            "category": "pattern",
+                            "succ": 5.0,
+                            "fail": 0.0,
+                            "last_decay_at": _T0,
+                        },
+                    }
+                ]
             return []
 
         def _lex(query_tokens, start, limit):
             return [
-                {"source": "qdrant", "id": "both", "content": SHARED[:200],
-                 "category": "pattern", "score": 0.9, "_collection": "learned_patterns"},
-                {"source": "qdrant", "id": "lexonly", "content": "delta epsilon only",
-                 "category": "pattern", "score": 0.9, "_collection": "learned_patterns"},
+                {
+                    "source": "qdrant",
+                    "id": "both",
+                    "content": SHARED[:200],
+                    "category": "pattern",
+                    "score": 0.9,
+                    "_collection": "learned_patterns",
+                },
+                {
+                    "source": "qdrant",
+                    "id": "lexonly",
+                    "content": "delta epsilon only",
+                    "category": "pattern",
+                    "score": 0.9,
+                    "_collection": "learned_patterns",
+                },
             ]
 
         monkeypatch.setattr(mfh, "_search_learned_patterns", _lex)
@@ -533,9 +569,20 @@ class TestSection24P1HybridRRF:
     def test_tei_down_lexical_only(self, monkeypatch):
         """TEI down (embed→None) → only lexical arm → still surfaces (no crash)."""
         mfh = _load_mfh(monkeypatch)
-        monkeypatch.setattr(mfh, "_search_learned_patterns", lambda q, s, l: [
-            {"source": "qdrant", "id": "lexA", "content": "alpha beta", "category": "pattern",
-             "score": 0.8, "_collection": "learned_patterns"}])
+        monkeypatch.setattr(
+            mfh,
+            "_search_learned_patterns",
+            lambda q, s, l: [
+                {
+                    "source": "qdrant",
+                    "id": "lexA",
+                    "content": "alpha beta",
+                    "category": "pattern",
+                    "score": 0.8,
+                    "_collection": "learned_patterns",
+                }
+            ],
+        )
         _stub_semantic(monkeypatch, None, lambda *a, **k: [])  # TEI down
         out = mfh.search_qdrant(set(mfh.tokenize("alpha beta")), limit=10, prompt="alpha beta")
         assert any(r["id"] == "lexA" for r in out)

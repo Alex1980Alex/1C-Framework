@@ -26,9 +26,15 @@ N = _load()
 
 
 def _light(content, category, importance=0.7, original_id="orig-1"):
-    return {"original_id": original_id, "content": content, "category": category,
-            "importance": importance, "tags": "[]", "source": "memory_ai_session",
-            "created_at": "2026-04-04T20:00:00"}
+    return {
+        "original_id": original_id,
+        "content": content,
+        "category": category,
+        "importance": importance,
+        "tags": "[]",
+        "source": "memory_ai_session",
+        "created_at": "2026-04-04T20:00:00",
+    }
 
 
 def test_is_light():
@@ -53,14 +59,17 @@ def test_parse_tags():
 
 
 def test_normalize_payload_maps_category_and_preserves_provenance():
-    p = N.normalize_payload("pt-1", _light("User prefers Qdrant", "preference", importance=0.8),
-                            now_iso="2026-06-02T00:00:00")
+    p = N.normalize_payload(
+        "pt-1",
+        _light("User prefers Qdrant", "preference", importance=0.8),
+        now_iso="2026-06-02T00:00:00",
+    )
     assert p["pattern_id"] == "pt-1"
-    assert p["pattern_type"] == "workflow-pattern"   # preference -> workflow-pattern
-    assert p["confidence"] == 0.8                     # denorm = importance
-    assert p["succ"] == 0.0 and p["fail"] == 0.0      # no fabricated evidence (seed=0)
+    assert p["pattern_type"] == "workflow-pattern"  # preference -> workflow-pattern
+    assert p["confidence"] == 0.8  # denorm = importance
+    assert p["succ"] == 0.0 and p["fail"] == 0.0  # no fabricated evidence (seed=0)
     assert p["content"] == "User prefers Qdrant"
-    assert p["tags"] == []                            # "[]" string -> real list
+    assert p["tags"] == []  # "[]" string -> real list
     assert p["metadata"]["original_category"] == "preference"
     assert p["metadata"]["original_importance"] == 0.8
     assert p["metadata"]["original_id"] == "orig-1"
@@ -68,22 +77,30 @@ def test_normalize_payload_maps_category_and_preserves_provenance():
 
 
 def test_normalize_payload_skips_unmapped_category():
-    assert N.normalize_payload("x", _light("Session 2026...", "session_summary"),
-                               now_iso="2026-06-02T00:00:00") is None
+    assert (
+        N.normalize_payload(
+            "x", _light("Session 2026...", "session_summary"), now_iso="2026-06-02T00:00:00"
+        )
+        is None
+    )
 
 
 def test_seed_importance_injects_evidence():
     # seed_importance>0 -> succ/fail reflect the importance ratio (synthetic pseudo-obs)
-    p = N.normalize_payload("x", _light("c", "decision", importance=0.75),
-                            now_iso="2026-06-02T00:00:00", seed_importance=4)
-    assert p["succ"] == pytest.approx(3.0)   # 0.75 * 4
-    assert p["fail"] == pytest.approx(1.0)   # 0.25 * 4
+    p = N.normalize_payload(
+        "x",
+        _light("c", "decision", importance=0.75),
+        now_iso="2026-06-02T00:00:00",
+        seed_importance=4,
+    )
+    assert p["succ"] == pytest.approx(3.0)  # 0.75 * 4
+    assert p["fail"] == pytest.approx(1.0)  # 0.25 * 4
 
 
 def test_build_plan_counts():
     pts = [
         SimpleNamespace(id="a", payload=_light("x", "decision")),
-        SimpleNamespace(id="b", payload=_light("y", "session_summary")),       # skip
+        SimpleNamespace(id="b", payload=_light("y", "session_summary")),  # skip
         SimpleNamespace(id="c", payload={"pattern_id": "c", "content": "z"}),  # rich, untouched
     ]
     plan = N.build_plan(pts, now_iso="2026-06-02T00:00:00", seed_importance=0)

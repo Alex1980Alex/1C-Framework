@@ -339,7 +339,10 @@ def maybe_auto_rollback(report: dict[str, Any]) -> dict[str, Any]:
     try:
         proc = subprocess.run(
             [sys.executable, str(TUNER_SCRIPT), "rollback", "--apply"],
-            capture_output=True, text=True, timeout=30, cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(PROJECT_ROOT),
         )
         outcome["applied"] = proc.returncode == 0
         outcome["stdout"] = (proc.stdout or "").strip()[:200]
@@ -371,7 +374,8 @@ def main() -> int:
     ap.add_argument("--stamp", default=None, help="override report timestamp (tests)")
     ap.add_argument("--print", action="store_true", help="print markdown to stdout, skip files")
     ap.add_argument(
-        "--auto-rollback", action="store_true",
+        "--auto-rollback",
+        action="store_true",
         help="on a config-attributable regression + existing promotion snapshot, "
         "revert the surfacing config (apply gated by MEMORY_AUTOTUNE_ROLLBACK_APPLY=1)",
     )

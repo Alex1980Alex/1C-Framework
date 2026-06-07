@@ -688,26 +688,35 @@ class AutoGitSave(BaseHook):
             commits = []  # list of (label, result)
             if tracked_files:
                 commits.append(
-                    ("tracked", perform_sync_commit(
-                        tracked_files, timeout=calculate_timeout(len(tracked_files))
-                    ))
+                    (
+                        "tracked",
+                        perform_sync_commit(
+                            tracked_files, timeout=calculate_timeout(len(tracked_files))
+                        ),
+                    )
                 )
             if drift_files:
                 commits.append(
-                    ("drift", perform_sync_commit(
-                        drift_files,
-                        timeout=calculate_timeout(len(drift_files)),
-                        prefix="chore: sweep unrelated drift",
-                    ))
+                    (
+                        "drift",
+                        perform_sync_commit(
+                            drift_files,
+                            timeout=calculate_timeout(len(drift_files)),
+                            prefix="chore: sweep unrelated drift",
+                        ),
+                    )
                 )
             # Fallback: split produced nothing to commit (e.g. tracked file already
             # committed by the debounce hook, no drift) — preserve legacy behavior.
             if not commits:
                 files_to_commit = all_uncommitted if all_uncommitted else modified_data["files"]
                 commits.append(
-                    ("fallback", perform_sync_commit(
-                        files_to_commit, timeout=calculate_timeout(len(files_to_commit))
-                    ))
+                    (
+                        "fallback",
+                        perform_sync_commit(
+                            files_to_commit, timeout=calculate_timeout(len(files_to_commit))
+                        ),
+                    )
                 )
             log.debug(f"commit results: {commits}")
 

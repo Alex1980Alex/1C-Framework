@@ -175,7 +175,9 @@ def analyze_read(rows: list[dict[str, Any]]) -> dict[str, Any]:
     searches = [r for r in rows if r.get("event") == "search"]
     total = len(searches)
     hits = sum(1 for r in searches if (r.get("final") or 0) > 0)
-    lat = [float(r["latency_ms"]) for r in searches if isinstance(r.get("latency_ms"), (int, float))]
+    lat = [
+        float(r["latency_ms"]) for r in searches if isinstance(r.get("latency_ms"), (int, float))
+    ]
     arm: dict[str, list[int]] = defaultdict(lambda: [0, 0])  # source -> [hit_queries, queries]
     for r in searches:
         ah = r.get("arm_hits")
@@ -238,8 +240,13 @@ def analyze_freshness(now: datetime, stale_hours: float) -> list[dict[str, Any]]
     for label, path in known_sinks(PROJECT_ROOT):
         if not path.exists():
             out.append(
-                {"source": label, "status": "missing", "last_ts": None,
-                 "age_hours": None, "events": 0}
+                {
+                    "source": label,
+                    "status": "missing",
+                    "last_ts": None,
+                    "age_hours": None,
+                    "events": 0,
+                }
             )
             continue
         rows = read_window(path, None)
@@ -250,8 +257,13 @@ def analyze_freshness(now: datetime, stale_hours: float) -> list[dict[str, Any]]
                 last_ts = ts  # chronological file: last wins
         if not rows or not last_ts:
             out.append(
-                {"source": label, "status": "empty", "last_ts": last_ts,
-                 "age_hours": None, "events": len(rows)}
+                {
+                    "source": label,
+                    "status": "empty",
+                    "last_ts": last_ts,
+                    "age_hours": None,
+                    "events": len(rows),
+                }
             )
             continue
         try:
@@ -260,8 +272,13 @@ def analyze_freshness(now: datetime, stale_hours: float) -> list[dict[str, Any]]
             age = None
         status = "stale" if (age is not None and age > stale_hours) else "fresh"
         out.append(
-            {"source": label, "status": status, "last_ts": last_ts,
-             "age_hours": round(age, 1) if age is not None else None, "events": len(rows)}
+            {
+                "source": label,
+                "status": status,
+                "last_ts": last_ts,
+                "age_hours": round(age, 1) if age is not None else None,
+                "events": len(rows),
+            }
         )
     return out
 
@@ -405,8 +422,10 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"> ⚠ **{len(report['regressions'])} observability regression(s)** — these sinks "
             "were logging and went silent past the staleness threshold:",
         ]
-        lines += [f">   - `{r['source']}` (last {r['last_ts']}, {r['age_hours']}h ago)"
-                  for r in report["regressions"]]
+        lines += [
+            f">   - `{r['source']}` (last {r['last_ts']}, {r['age_hours']}h ago)"
+            for r in report["regressions"]
+        ]
     else:
         lines += ["", "> No observability regressions (no stale sinks past threshold)."]
     lines += [
@@ -423,8 +442,12 @@ def main() -> int:
     ap.add_argument("--since", default=None, help="window: '24h', '7d', or ISO timestamp")
     ap.add_argument("--out-dir", default=str(OUT_DIR))
     ap.add_argument("--stamp", default=None, help="override report timestamp (tests)")
-    ap.add_argument("--stale-hours", type=float, default=DEFAULT_STALE_HOURS,
-                    help="age past which a sink counts as a regression")
+    ap.add_argument(
+        "--stale-hours",
+        type=float,
+        default=DEFAULT_STALE_HOURS,
+        help="age past which a sink counts as a regression",
+    )
     ap.add_argument("--print", action="store_true", help="print markdown to stdout, skip files")
     args = ap.parse_args()
 
@@ -447,8 +470,10 @@ def main() -> int:
     latest.write_text(md, encoding="utf-8")
     print(f"Report: {md_path}")
     if report["regressions"]:
-        print(f"[REGRESSION] {len(report['regressions'])} stale sink(s): "
-              f"{[r['source'] for r in report['regressions']]}")
+        print(
+            f"[REGRESSION] {len(report['regressions'])} stale sink(s): "
+            f"{[r['source'] for r in report['regressions']]}"
+        )
     return 0
 
 

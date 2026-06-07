@@ -25,8 +25,13 @@ D = _load()
 
 
 def _pt(pid, content, *, pattern_id=False, created="2026-01-01", succ=0, fail=0, appc=0):
-    pl = {"content": content, "created_at": created, "succ": succ, "fail": fail,
-          "application_count": appc}
+    pl = {
+        "content": content,
+        "created_at": created,
+        "succ": succ,
+        "fail": fail,
+        "application_count": appc,
+    }
     if pattern_id:
         pl["pattern_id"] = pid
     return {"id": pid, "payload": pl}

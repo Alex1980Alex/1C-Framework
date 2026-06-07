@@ -182,8 +182,11 @@ def main() -> int:
             "summary": summary,
             "store_errors": errors,
             "cross_store_dups": [
-                {"content_hash": h, "stores": sorted({r.store for r in recs}),
-                 "items": [{"store": r.store, "id": r.item_id} for r in recs]}
+                {
+                    "content_hash": h,
+                    "stores": sorted({r.store for r in recs}),
+                    "items": [{"store": r.store, "id": r.item_id} for r in recs],
+                }
                 for h, recs in dups
             ],
         }
@@ -197,11 +200,15 @@ def main() -> int:
 
     # ASCII-safe stdout (cyrillic previews stay in the UTF-8 report file).
     print("# cross-store content_hash index")
-    print(f"total={summary['total_records']} unique_hashes={summary['unique_hashes']} "
-          f"by_store={summary['by_store']}")
-    print(f"intra_store_dups={summary['intra_store_dups']} "
-          f"cross_store_dups={summary['cross_store_dup_count']} "
-          f"rate={summary['cross_store_dup_rate']}")
+    print(
+        f"total={summary['total_records']} unique_hashes={summary['unique_hashes']} "
+        f"by_store={summary['by_store']}"
+    )
+    print(
+        f"intra_store_dups={summary['intra_store_dups']} "
+        f"cross_store_dups={summary['cross_store_dup_count']} "
+        f"rate={summary['cross_store_dup_rate']}"
+    )
     if errors:
         print(f"skipped (fail-soft): {errors}")
     if not args.no_report:

@@ -50,7 +50,9 @@ class TestBuildPlan:
         pts = [_point("p1", {"content": "eps"}), _point("p2", {"content": "zeta"})]
         plan1 = build_plan(pts)
         for u in plan1["to_update"]:
-            next(p for p in pts if p["id"] == u["id"])["payload"]["content_hash"] = u["content_hash"]
+            next(p for p in pts if p["id"] == u["id"])["payload"]["content_hash"] = u[
+                "content_hash"
+            ]
         plan2 = build_plan(pts)
         assert plan2["to_update"] == []
         assert plan2["already_ok"] == 2

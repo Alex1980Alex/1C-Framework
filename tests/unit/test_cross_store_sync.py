@@ -130,5 +130,10 @@ class TestSummaryAndReport:
         assert "dry-run" in out
 
     def test_report_applied_marker(self):
-        out = render_sync_report({"links": [], "conflicts": [], "skipped": []}, summarize_plan({"links": [], "conflicts": [], "skipped": []}), "ts", applied=True)
+        out = render_sync_report(
+            {"links": [], "conflicts": [], "skipped": []},
+            summarize_plan({"links": [], "conflicts": [], "skipped": []}),
+            "ts",
+            applied=True,
+        )
         assert "APPLIED" in out

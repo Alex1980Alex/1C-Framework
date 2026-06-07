@@ -89,6 +89,7 @@ def _clamp_ranges() -> dict[str, Any]:
 
 def clamp_config(config: dict[str, Any], ranges: dict[str, Any]) -> dict[str, Any]:
     """Clamp a config to the tuning file's clamp_ranges (defence in depth vs the hook)."""
+
     def _c(value: float, key: str) -> float:
         rng = ranges.get(key)
         if isinstance(rng, list) and len(rng) == 2:
@@ -107,8 +108,12 @@ def build_grid(base_weights: dict[str, Any]) -> list[dict[str, Any]]:
     """Cartesian product of GRID -> list of full config dicts (weights merged onto base)."""
     configs: list[dict[str, Any]] = []
     combos = itertools.product(
-        GRID["skill"], GRID["pattern_dense"], GRID["pattern_lexical"],
-        GRID["min_surface_conf"], GRID["conf_floor"], GRID["rrf_k"],
+        GRID["skill"],
+        GRID["pattern_dense"],
+        GRID["pattern_lexical"],
+        GRID["min_surface_conf"],
+        GRID["conf_floor"],
+        GRID["rrf_k"],
     )
     for skill, p_dense, p_lex, min_conf, floor, k in combos:
         weights = dict(base_weights)
@@ -141,8 +146,10 @@ def sweep(
             {
                 "config": config,
                 "score": target_score(report, alpha),
-                "metrics": {m: report[m] for m in
-                            ("hit_rate", "precision_at_k", "recall_at_k", "ndcg_at_k", "mrr")},
+                "metrics": {
+                    m: report[m]
+                    for m in ("hit_rate", "precision_at_k", "recall_at_k", "ndcg_at_k", "mrr")
+                },
             }
         )
     results.sort(key=lambda r: -r["score"])
@@ -195,7 +202,9 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     golden = H.load_golden(split=args.split)
     captures = H.load_captures()
     if not golden or not captures:
-        print("Need golden-set + captures (run: memory_golden_harness.py capture).", file=sys.stderr)
+        print(
+            "Need golden-set + captures (run: memory_golden_harness.py capture).", file=sys.stderr
+        )
         return 1
     ranked = sweep(golden, captures, args.k, args.alpha)
     current = H.load_tuning_config()
@@ -203,26 +212,38 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     cur_score = target_score(cur_report, args.alpha)
 
     print(f"# Sweep (split={args.split}, n={len(golden)}, k={args.k}, alpha={args.alpha})")
-    print(f"current config score={cur_score} {dict((m, cur_report[m]) for m in ('hit_rate', 'ndcg_at_k'))}")
+    print(
+        f"current config score={cur_score} {dict((m, cur_report[m]) for m in ('hit_rate', 'ndcg_at_k'))}"
+    )
     print(f"grid size: {len(ranked)} configs\n")
     for i, r in enumerate(ranked[: args.top], start=1):
         w = r["config"]["surface_rrf_weights"]
-        print(f"{i}. score={r['score']} hit={r['metrics']['hit_rate']} ndcg={r['metrics']['ndcg_at_k']} "
-              f"| skill={w['skill']} dense={w['pattern_dense']} lex={w['pattern_lexical']} "
-              f"min_conf={r['config']['min_surface_conf']} k={r['config']['rrf_k']}")
+        print(
+            f"{i}. score={r['score']} hit={r['metrics']['hit_rate']} ndcg={r['metrics']['ndcg_at_k']} "
+            f"| skill={w['skill']} dense={w['pattern_dense']} lex={w['pattern_lexical']} "
+            f"min_conf={r['config']['min_surface_conf']} k={r['config']['rrf_k']}"
+        )
 
     best = ranked[0]
     SWEEP_RESULT.parent.mkdir(parents=True, exist_ok=True)
     SWEEP_RESULT.write_text(
         json.dumps(
-            {"split": args.split, "k": args.k, "alpha": args.alpha,
-             "current_score": cur_score, "best": best},
-            ensure_ascii=False, indent=2,
+            {
+                "split": args.split,
+                "k": args.k,
+                "alpha": args.alpha,
+                "current_score": cur_score,
+                "best": best,
+            },
+            ensure_ascii=False,
+            indent=2,
         ),
         encoding="utf-8",
     )
     delta = round(best["score"] - cur_score, 4)
-    print(f"\nbest score={best['score']} (current={cur_score}, delta={delta:+}) -> {SWEEP_RESULT.name} (dry-run)")
+    print(
+        f"\nbest score={best['score']} (current={cur_score}, delta={delta:+}) -> {SWEEP_RESULT.name} (dry-run)"
+    )
     return 0
 
 
@@ -256,13 +277,22 @@ def cmd_promote(args: argparse.Namespace) -> int:
     print(f"gate {'PASS' if gate_ok else 'FAIL'}; mode={'APPLY' if apply else 'DRY-RUN'}")
 
     if not gate_ok:
-        _audit("surfacing_tune_skip", improvement=improvement, no_regression=no_reg,
-               eval_split=args.eval_split, applied=False)
+        _audit(
+            "surfacing_tune_skip",
+            improvement=improvement,
+            no_regression=no_reg,
+            eval_split=args.eval_split,
+            applied=False,
+        )
         print("-> not promoting (gate failed).")
         return 0
     if not apply:
-        _audit("surfacing_tune_dryrun", improvement=improvement,
-               eval_split=args.eval_split, applied=False)
+        _audit(
+            "surfacing_tune_dryrun",
+            improvement=improvement,
+            eval_split=args.eval_split,
+            applied=False,
+        )
         print("-> gate passed; dry-run (use --apply or MEMORY_AUTOTUNE_APPLY=1 to write).")
         return 0
 
@@ -271,9 +301,15 @@ def cmd_promote(args: argparse.Namespace) -> int:
         PREV_FILE.write_text(TUNING_FILE.read_text(encoding="utf-8"), encoding="utf-8")
     clamped = clamp_config(best_config, _clamp_ranges())
     write_tuning(clamped, note=f"B2 promotion improvement={improvement:+} split={args.eval_split}")
-    _audit("surfacing_tune_apply", improvement=improvement, eval_split=args.eval_split,
-           applied=True, new_weights=clamped["surface_rrf_weights"],
-           min_surface_conf=clamped["min_surface_conf"], rrf_k=clamped["rrf_k"])
+    _audit(
+        "surfacing_tune_apply",
+        improvement=improvement,
+        eval_split=args.eval_split,
+        applied=True,
+        new_weights=clamped["surface_rrf_weights"],
+        min_surface_conf=clamped["min_surface_conf"],
+        rrf_k=clamped["rrf_k"],
+    )
     print(f"-> PROMOTED. Snapshot: {PREV_FILE.name}. Hook picks it up on next import.")
     return 0
 

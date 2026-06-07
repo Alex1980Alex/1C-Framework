@@ -51,8 +51,8 @@ CANDIDATES_FILE = GOLDEN_DIR / "candidates.json"
 TUNING_FILE = PROJECT_ROOT / "data" / "memory" / "surfacing_tuning.json"
 
 # Fixed (non-tuned) fusion constants -- mirror the hook so replay is faithful.
-SCORE_THRESHOLD = 0.3   # min lexical token-overlap to keep a learned_patterns hit
-LEXICAL_LIMIT = 10      # search_qdrant passes limit=10 to the lexical arm
+SCORE_THRESHOLD = 0.3  # min lexical token-overlap to keep a learned_patterns hit
+LEXICAL_LIMIT = 10  # search_qdrant passes limit=10 to the lexical arm
 ARM_KEYS = ("skill", "experience", "conversation", "pattern_dense", "pattern_lexical")
 
 # Default config == current hardcoded hook constants (also the surfacing_tuning.json defaults).
@@ -290,9 +290,7 @@ def _import_live():
         sys.path.insert(0, str(hooks_dir))
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location(
-        "mfh", str(hooks_dir / "memory-first-hook.py")
-    )
+    spec = importlib.util.spec_from_file_location("mfh", str(hooks_dir / "memory-first-hook.py"))
     assert spec and spec.loader
     mfh = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mfh)
@@ -334,8 +332,11 @@ def capture_query(query: str, mfh, embed_fn, search_fn) -> dict[str, Any]:
                         }
                     )
                 else:
-                    arm = {"skill": "skill", "experience": "experience",
-                           "conversation": "conversation"}.get(ctype, "skill")
+                    arm = {
+                        "skill": "skill",
+                        "experience": "experience",
+                        "conversation": "conversation",
+                    }.get(ctype, "skill")
                     arms[arm].append(
                         {"content": content, "dense_score": round(hit.get("score", 0.0), 4)}
                     )
@@ -348,8 +349,10 @@ def capture_query(query: str, mfh, embed_fn, search_fn) -> dict[str, Any]:
         # more would let replay see lexical candidates the hook never would once the
         # collection exceeds 100 points (no effect at the current 44).
         points, _ = client.scroll(
-            collection_name="learned_patterns", limit=100,
-            with_payload=True, with_vectors=False,
+            collection_name="learned_patterns",
+            limit=100,
+            with_payload=True,
+            with_vectors=False,
         )
         for point in points:
             payload = point.payload or {}
@@ -416,8 +419,11 @@ def main() -> int:
     ev.add_argument("--split", default=None, help="train | heldout (default: all)")
     ev.add_argument("--k", type=int, default=5)
     ev.add_argument("--captures", default=str(CANDIDATES_FILE))
-    ev.add_argument("--default-config", action="store_true",
-                    help="use built-in defaults instead of surfacing_tuning.json")
+    ev.add_argument(
+        "--default-config",
+        action="store_true",
+        help="use built-in defaults instead of surfacing_tuning.json",
+    )
     ev.add_argument("--print", action="store_true")
 
     args = ap.parse_args()
@@ -433,8 +439,7 @@ def main() -> int:
             json.dumps(bundle, ensure_ascii=False, indent=1), encoding="utf-8"
         )
         arms_nonempty = sum(
-            1 for q in bundle["queries"].values()
-            if any(q.get(a) for a in ARM_KEYS)
+            1 for q in bundle["queries"].values() if any(q.get(a) for a in ARM_KEYS)
         )
         print(f"Captured {bundle['n']} queries ({arms_nonempty} with >=1 arm) -> {args.out}")
         return 0

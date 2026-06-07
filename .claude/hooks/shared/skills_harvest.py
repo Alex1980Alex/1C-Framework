@@ -193,7 +193,10 @@ def harvest_skills(
     if not state.get("seeded"):
         _save_state(
             state_file,
-            {"seeded": True, "skills": {n: {"hash": d["hash"], "file": d["file"]} for n, d in found.items()}},
+            {
+                "seeded": True,
+                "skills": {n: {"hash": d["hash"], "file": d["file"]} for n, d in found.items()},
+            },
         )
         stats["seeded"] = True
         stats["items"] = sorted(found.keys())
@@ -231,7 +234,9 @@ def harvest_skills(
                 collection_name=COLLECTION,
                 points=[
                     qmodels.PointStruct(
-                        id=_point_id(name), vector=vec, payload=_build_payload(name, meta, d["file"])
+                        id=_point_id(name),
+                        vector=vec,
+                        payload=_build_payload(name, meta, d["file"]),
                     )
                 ],
             )

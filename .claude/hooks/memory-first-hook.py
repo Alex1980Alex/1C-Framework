@@ -57,9 +57,7 @@ SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 # useless → persist to disk. A repeated query (same normalized tokens) within TTL
 # returns the cached fused result, skipping TEI-embed + Qdrant + RRF + rerank (~2s).
 # Reinforcement side-effect (record_surfaced) is replayed on hit so §22 P1 still works.
-SURFACE_CACHE_FILE = (
-    PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing-cache.json"
-)
+SURFACE_CACHE_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing-cache.json"
 SURFACE_CACHE_ENABLED = os.environ.get("MEMORY_SURFACE_CACHE_DISABLE") != "1"
 # TTL tradeoff: a pattern archived / confidence-dropped mid-TTL stays surfaced (and
 # re-reinforced) for up to this window. Bounded to 5 min; lower it or key on a
@@ -108,8 +106,8 @@ SEMANTIC_COLLECTIONS = [
 ]
 
 # §24 P0 — confidence gating thresholds
-MIN_SURFACE_CONF = 0.15   # hard noise floor: below this → never surface
-CONF_FLOOR = 0.30          # soft floor for floored-multiply score adjustment
+MIN_SURFACE_CONF = 0.15  # hard noise floor: below this → never surface
+CONF_FLOOR = 0.30  # soft floor for floored-multiply score adjustment
 
 
 def _load_surfacing_tuning() -> None:
@@ -146,9 +144,8 @@ def _load_surfacing_tuning() -> None:
             CONF_FLOOR = float(_clamp(data["conf_floor"], "conf_floor"))
         if isinstance(data.get("rrf_k"), (int, float)):
             SURFACE_RRF_K = int(data["rrf_k"])
-        if (
-            "MEMORY_SURFACE_CACHE_TTL" not in os.environ
-            and isinstance(data.get("surface_cache_ttl_seconds"), (int, float))
+        if "MEMORY_SURFACE_CACHE_TTL" not in os.environ and isinstance(
+            data.get("surface_cache_ttl_seconds"), (int, float)
         ):
             SURFACE_CACHE_TTL = float(
                 _clamp(data["surface_cache_ttl_seconds"], "surface_cache_ttl_seconds")
@@ -181,12 +178,10 @@ TOTAL_BUDGET = 3.0  # Hook timeout 5s, budget 3s (TEI faster than Ollama)
 # (skippable — §24.2.6 "rerank after fusion, top-N"). Keep Ollama warm to stay ~2.5s.
 RERANK_ENABLED = os.environ.get("MEMORY_RERANK") == "1"
 RERANK_MODEL = os.environ.get("MEMORY_RERANK_MODEL", "qwen2.5-coder:7b")
-RERANK_ENDPOINT = os.environ.get(
-    "MEMORY_RERANK_ENDPOINT", "http://localhost:11434/api/generate"
-)
-RERANK_MIN_CANDIDATES = 3   # below this nothing to reorder meaningfully
-RERANK_HARD_TIMEOUT = 5.0   # mirror settings.json hook timeout (hard-kill ceiling)
-RERANK_SAFETY = 0.5         # margin before hard-kill so the hook still emits
+RERANK_ENDPOINT = os.environ.get("MEMORY_RERANK_ENDPOINT", "http://localhost:11434/api/generate")
+RERANK_MIN_CANDIDATES = 3  # below this nothing to reorder meaningfully
+RERANK_HARD_TIMEOUT = 5.0  # mirror settings.json hook timeout (hard-kill ceiling)
+RERANK_SAFETY = 0.5  # margin before hard-kill so the hook still emits
 _RERANK_TIMEOUT_WARNED = False  # one-shot stderr warning guard (env/timeout desync)
 
 # Russian suffix stemming (29 suffixes, ordered by length desc)
@@ -411,6 +406,7 @@ def _pattern_effective_confidence(payload: dict) -> float:
             # `from shared.pattern_reinforce import ...` for the whole process.
             sys.path.append(src_path)
         from memory.vector_memory.confidence import payload_effective_confidence
+
         return payload_effective_confidence(payload)
     except Exception:
         return float(payload.get("confidence", 0.5))
@@ -423,13 +419,13 @@ def _pattern_score_gate(payload: dict, base_score: float) -> "float | None":
     """
     if payload.get("expired_at") and os.environ.get("MEMORY_INCLUDE_ARCHIVED") != "1":
         _trace_gate("archived")
-        return None                                        # archived → hard-exclude (§24.2.4)
+        return None  # archived → hard-exclude (§24.2.4)
     eff = _pattern_effective_confidence(payload)
     if eff < MIN_SURFACE_CONF:
         _trace_gate("below_floor")
-        return None                                        # noise floor (§24.2.3 hard)
+        return None  # noise floor (§24.2.3 hard)
     _trace_gate("passed")
-    return base_score * max(CONF_FLOOR, eff)              # floored-multiply (§24.2.3 soft)
+    return base_score * max(CONF_FLOOR, eff)  # floored-multiply (§24.2.3 soft)
 
 
 def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> list:
@@ -765,10 +761,10 @@ def _surface_log(outcome: str, t0: float, **extra: Any) -> None:
                 SURFACE_LOG_FILE.exists()
                 and SURFACE_LOG_FILE.stat().st_size > SURFACE_LOG_CAP_BYTES
             ):
-                data = SURFACE_LOG_FILE.read_bytes()[-(SURFACE_LOG_CAP_BYTES // 2):]
+                data = SURFACE_LOG_FILE.read_bytes()[-(SURFACE_LOG_CAP_BYTES // 2) :]
                 nl = data.find(b"\n")
                 if nl != -1:
-                    data = data[nl + 1:]
+                    data = data[nl + 1 :]
                 import tempfile
 
                 fd, tmp = tempfile.mkstemp(
@@ -809,6 +805,7 @@ def _confidence_epoch() -> float:
         if src_path not in sys.path:
             sys.path.append(src_path)  # append, NOT insert(0): else src/shared shadows hooks/shared
         from memory.vector_memory.epoch import read as _read_epoch
+
         return _read_epoch()
     except Exception:
         return 0.0
@@ -821,9 +818,7 @@ def _surface_cache_key(query_tokens: set[str]) -> str:
     epoch -> different key -> instant cache miss -> recompute (§24 stale-window fix).
     """
     payload = f"{_confidence_epoch()!r}|{' '.join(sorted(query_tokens))}"
-    return hashlib.sha256(
-        payload.encode("utf-8", errors="replace")
-    ).hexdigest()[:32]
+    return hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()[:32]
 
 
 def _surface_cache_get(key: str) -> dict[str, Any] | None:
@@ -872,9 +867,7 @@ def _surface_cache_put(key: str, results: list[Any], pids: list[Any]) -> None:
         # other's in-flight write; os.replace is atomic on the same filesystem.
         import tempfile
 
-        fd, tmp_name = tempfile.mkstemp(
-            dir=str(SURFACE_CACHE_FILE.parent), suffix=".tmp"
-        )
+        fd, tmp_name = tempfile.mkstemp(dir=str(SURFACE_CACHE_FILE.parent), suffix=".tmp")
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 fh.write(json.dumps(data, ensure_ascii=False))
@@ -1068,6 +1061,7 @@ class MemoryFirstHook(BaseHook):
             # Replay reinforcement so §22 P1 still counts surfaced patterns on hits.
             try:
                 from shared.pattern_reinforce import record_surfaced
+
                 record_surfaced(
                     inp.session_id or "",
                     [tuple(p) for p in cached.get("pids", [])],
@@ -1102,11 +1096,13 @@ class MemoryFirstHook(BaseHook):
             else []
         )
         pids = [
-            (r["id"], r["score"]) for r in qdrant_results
+            (r["id"], r["score"])
+            for r in qdrant_results
             if r.get("_collection") == "learned_patterns" and r.get("id")
         ]
         try:
             from shared.pattern_reinforce import record_surfaced
+
             record_surfaced(inp.session_id or "", pids)
         except Exception:
             pass

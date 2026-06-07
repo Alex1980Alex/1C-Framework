@@ -87,8 +87,10 @@ def main() -> int:
     plan = build_plan(points)
 
     print(f"# learned_patterns content_hash backfill (apply={args.apply})")
-    print(f"total={plan['total']} already_stamped={plan['already_ok']} "
-          f"to_update={len(plan['to_update'])} empty_content={plan['empty_content']}")
+    print(
+        f"total={plan['total']} already_stamped={plan['already_ok']} "
+        f"to_update={len(plan['to_update'])} empty_content={plan['empty_content']}"
+    )
 
     if not plan["to_update"]:
         print("-> nothing to do (all points already carry the correct content_hash).")

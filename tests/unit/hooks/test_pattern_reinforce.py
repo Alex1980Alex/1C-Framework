@@ -111,24 +111,36 @@ class TestRecordAndLoad:
 
 class TestDetectSessionSuccess:
     def test_commits_present(self):
-        assert pr.detect_session_success(
-            {"commits": ["abc123"], "completed_tasks": [], "files_changed": []}
-        ) is True
+        assert (
+            pr.detect_session_success(
+                {"commits": ["abc123"], "completed_tasks": [], "files_changed": []}
+            )
+            is True
+        )
 
     def test_completed_tasks_present(self):
-        assert pr.detect_session_success(
-            {"commits": [], "completed_tasks": ["do something"], "files_changed": []}
-        ) is True
+        assert (
+            pr.detect_session_success(
+                {"commits": [], "completed_tasks": ["do something"], "files_changed": []}
+            )
+            is True
+        )
 
     def test_both_present(self):
-        assert pr.detect_session_success(
-            {"commits": ["x"], "completed_tasks": ["t"], "files_changed": []}
-        ) is True
+        assert (
+            pr.detect_session_success(
+                {"commits": ["x"], "completed_tasks": ["t"], "files_changed": []}
+            )
+            is True
+        )
 
     def test_both_empty(self):
-        assert pr.detect_session_success(
-            {"commits": [], "completed_tasks": [], "files_changed": ["f.py"]}
-        ) is False
+        assert (
+            pr.detect_session_success(
+                {"commits": [], "completed_tasks": [], "files_changed": ["f.py"]}
+            )
+            is False
+        )
 
     def test_missing_keys(self):
         assert pr.detect_session_success({}) is False
@@ -142,11 +154,14 @@ class TestDetectSessionSuccess:
 class TestReinforceSession:
     def test_applies_patterns_above_threshold(self, monkeypatch, tmp_path):
         _redirect_cache(monkeypatch, tmp_path)
-        pr.record_surfaced("s1", [
-            ("high", 0.9),
-            ("border", 0.3),   # exactly at threshold — should be included
-            ("low", 0.29),     # just below — excluded
-        ])
+        pr.record_surfaced(
+            "s1",
+            [
+                ("high", 0.9),
+                ("border", 0.3),  # exactly at threshold — should be included
+                ("low", 0.29),  # just below — excluded
+            ],
+        )
         calls: list[tuple[str, bool]] = []
         result = pr.reinforce_session("s1", True, reinforce_fn=_fake_reinforce(calls))
         assert result["status"] == "ok"
@@ -161,9 +176,7 @@ class TestReinforceSession:
         items = [(f"pid-{i}", float(i) / 100) for i in range(60)]
         pr.record_surfaced("s-cap", items)
         calls: list[tuple[str, bool]] = []
-        result = pr.reinforce_session(
-            "s-cap", True, cap=10, reinforce_fn=_fake_reinforce(calls)
-        )
+        result = pr.reinforce_session("s-cap", True, cap=10, reinforce_fn=_fake_reinforce(calls))
         assert result["status"] == "ok"
         assert result["applied"] <= 10
         assert len(calls) <= 10
@@ -226,9 +239,7 @@ class TestCooldown:
             "patterns": {"pid-cool": recent_ts},
         }
         sentinel_path = tmp_path / "p1-reinforcement-state.json"
-        sentinel_path.write_text(
-            json.dumps(sentinel_data), encoding="utf-8"
-        )
+        sentinel_path.write_text(json.dumps(sentinel_data), encoding="utf-8")
 
         pr.record_surfaced("cool-sess", [("pid-cool", 0.9), ("pid-fresh", 0.8)])
         calls: list[tuple[str, bool]] = []
@@ -240,8 +251,8 @@ class TestCooldown:
         )
         assert result["status"] == "ok"
         pids_called = {pid for pid, _ in calls}
-        assert "pid-cool" not in pids_called   # still in cooldown
-        assert "pid-fresh" in pids_called       # no prior record → applied
+        assert "pid-cool" not in pids_called  # still in cooldown
+        assert "pid-fresh" in pids_called  # no prior record → applied
         assert result["skipped"] == 1
         assert result["applied"] == 1
 

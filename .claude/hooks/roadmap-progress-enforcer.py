@@ -151,7 +151,10 @@ def _roadmap_touched_this_session(session_id: str) -> bool:
     try:
         r = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain"],
-            capture_output=True, text=True, encoding="utf-8", timeout=3,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=3,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:
@@ -168,7 +171,10 @@ def _roadmap_touched_this_session(session_id: str) -> bool:
     try:
         r = subprocess.run(
             ["git", "log", f"--since={since}", "--name-only", "--pretty=format:"],
-            capture_output=True, text=True, encoding="utf-8", timeout=4,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=4,
             cwd=str(PROJECT_ROOT),
         )
         if r.returncode == 0:

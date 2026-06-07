@@ -83,6 +83,7 @@ except Exception:  # pragma: no cover
     def _hash_content(text: str) -> str:
         return hashlib.sha256((text or "").encode("utf-8", "replace")).hexdigest()[:16]
 
+
 try:  # pragma: no cover
     from memory.vector_memory.confidence import derive_confidence as _derive_conf
 except Exception:  # pragma: no cover
@@ -169,7 +170,9 @@ def iter_confirmed_drafts(drafts_dir: Path = DRAFTS_DIR) -> list[HarvestItem]:
         except Exception:
             continue
         meta, body = _split_frontmatter(md)
-        status = str(((meta.get("metadata") or {}) if isinstance(meta, dict) else {}).get("status", "")).lower()
+        status = str(
+            ((meta.get("metadata") or {}) if isinstance(meta, dict) else {}).get("status", "")
+        ).lower()
         if status not in ("confirmed", "approved"):
             continue
         rule = _field(body, "Правило") or _field(body, "Rule")
@@ -349,8 +352,11 @@ def _emit_ingest_stats(stats: dict[str, Any], harvester: str | None) -> None:
             for ch in hashes:
                 try:
                     record_ingest(
-                        "learned_patterns", action,
-                        content_hash=ch, pattern_id=_point_id(ch), harvester=h,
+                        "learned_patterns",
+                        action,
+                        content_hash=ch,
+                        pattern_id=_point_id(ch),
+                        harvester=h,
                     )
                 except Exception:
                     pass
@@ -509,6 +515,11 @@ def harvest(
     if "skill_learning" in sources:
         candidates += iter_confirmed_skill_patterns(skill_learning_file)
     return ingest_items(
-        candidates, cap=cap, dry_run=dry_run, client=client, embed=embed, now=now,
+        candidates,
+        cap=cap,
+        dry_run=dry_run,
+        client=client,
+        embed=embed,
+        now=now,
         harvester="patterns",
     )

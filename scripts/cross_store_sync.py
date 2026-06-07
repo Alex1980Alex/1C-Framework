@@ -97,7 +97,11 @@ def main() -> int:
             "applied": applied_stats,
             "conflicts": plan["conflicts"],
             "links": [
-                {"mirror": lk.mirror_uid, "canonical": lk.canonical_uid, "content_hash": lk.content_hash}
+                {
+                    "mirror": lk.mirror_uid,
+                    "canonical": lk.canonical_uid,
+                    "content_hash": lk.content_hash,
+                }
                 for lk in plan["links"]
             ],
         }

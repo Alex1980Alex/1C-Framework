@@ -31,12 +31,22 @@ M = _load_module()
 
 def test_analyze_surfacing_aggregates():
     rows = [
-        {"outcome": "injected", "cache": "miss", "tei": "ok",
-         "gate": {"archived": 1, "below_floor": 2, "passed": 7},
-         "arms": {"pattern_dense": 1, "pattern_lexical": 3}, "duration_ms": 100.0},
-        {"outcome": "no-results", "cache": "miss", "tei": "down",
-         "gate": {"archived": 0, "below_floor": 0, "passed": 0},
-         "arms": {"pattern_dense": 0, "pattern_lexical": 0}, "duration_ms": 200.0},
+        {
+            "outcome": "injected",
+            "cache": "miss",
+            "tei": "ok",
+            "gate": {"archived": 1, "below_floor": 2, "passed": 7},
+            "arms": {"pattern_dense": 1, "pattern_lexical": 3},
+            "duration_ms": 100.0,
+        },
+        {
+            "outcome": "no-results",
+            "cache": "miss",
+            "tei": "down",
+            "gate": {"archived": 0, "below_floor": 0, "passed": 0},
+            "arms": {"pattern_dense": 0, "pattern_lexical": 0},
+            "duration_ms": 200.0,
+        },
         {"outcome": "injected-cached", "cache": "hit", "duration_ms": 5.0},
     ]
     s = M.analyze_surfacing(rows)
@@ -118,14 +128,19 @@ def test_read_jsonl_skips_corrupt_lines(tmp_path):
 
 # --- §25 B2 auto-rollback ---------------------------------------------------
 
+
 def _surf_with(no_results=0, gate_archived=0, gate_passed=10, tei_down=0, total=10):
     rows = []
     for i in range(total):
-        rows.append({
-            "outcome": "no-results" if i < no_results else "injected",
-            "tei": "down" if i < tei_down else "ok",
-            "gate": {"archived": gate_archived, "below_floor": 0, "passed": gate_passed} if i == 0 else {},
-        })
+        rows.append(
+            {
+                "outcome": "no-results" if i < no_results else "injected",
+                "tei": "down" if i < tei_down else "ok",
+                "gate": {"archived": gate_archived, "below_floor": 0, "passed": gate_passed}
+                if i == 0
+                else {},
+            }
+        )
     return M.analyze_surfacing(rows)
 
 
@@ -155,7 +170,9 @@ def test_maybe_auto_rollback_dryrun_does_not_call_subprocess(tmp_path, monkeypat
     monkeypatch.setattr(M, "TUNING_PREV_FILE", snap)
     monkeypatch.delenv("MEMORY_AUTOTUNE_ROLLBACK_APPLY", raising=False)
     called = {"n": 0}
-    monkeypatch.setattr(M.subprocess, "run", lambda *a, **k: called.__setitem__("n", called["n"] + 1))
+    monkeypatch.setattr(
+        M.subprocess, "run", lambda *a, **k: called.__setitem__("n", called["n"] + 1)
+    )
     report = {"surfacing": _surf_with(no_results=6, total=10)}
     out = M.maybe_auto_rollback(report)
     assert out["triggered"] is True

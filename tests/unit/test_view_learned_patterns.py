@@ -64,8 +64,18 @@ def test_build_rows_filters_and_sorts():
 
 def test_render_preview_vs_full():
     long = "x" * 500
-    rows = [{"id": "abcdef12", "type": "t", "confidence": 0.6, "effective_confidence": 0.7,
-             "application_count": 0, "created_at": "2026-01-01", "archived": False, "content": long}]
+    rows = [
+        {
+            "id": "abcdef12",
+            "type": "t",
+            "confidence": 0.6,
+            "effective_confidence": 0.7,
+            "application_count": 0,
+            "created_at": "2026-01-01",
+            "archived": False,
+            "content": long,
+        }
+    ]
     preview = V.render(rows, 1, full=False, label="L")
     full = V.render(rows, 1, full=True, label="L")
     assert "…" in preview and len(long) > 300
@@ -74,8 +84,18 @@ def test_render_preview_vs_full():
 
 
 def test_render_archived_flag():
-    rows = [{"id": "abcdef12", "type": "t", "confidence": None, "effective_confidence": None,
-             "application_count": 1, "created_at": "2026-01-01", "archived": True, "content": "c"}]
+    rows = [
+        {
+            "id": "abcdef12",
+            "type": "t",
+            "confidence": None,
+            "effective_confidence": None,
+            "application_count": 1,
+            "created_at": "2026-01-01",
+            "archived": True,
+            "content": "c",
+        }
+    ]
     out = V.render(rows, 1, full=True, label="L")
     assert "[ARCHIVED]" in out
     assert "eff_conf=—" in out  # None confidence renders as dash

@@ -64,22 +64,58 @@ SOURCE_LABELS: tuple[str, ...] = tuple(CACHE_LOGS.values()) + (AUDIT_LABEL,)
 # e.g. ``outcome`` would error whenever no record happened to carry it. Seeding
 # the core guarantees every column the query views reference always exists.
 CORE_KEYS = (
-    "ts", "source", "type", "correlation_id", "content_hash", "pattern_id",
-    "store", "action", "outcome", "latency_ms", "success",
+    "ts",
+    "source",
+    "type",
+    "correlation_id",
+    "content_hash",
+    "pattern_id",
+    "store",
+    "action",
+    "outcome",
+    "latency_ms",
+    "success",
 )
 
 # Scalar metadata projected verbatim for the generic (trace_log-style) sinks.
 # Bodies / dicts-of-bodies are intentionally excluded; small dict/list metadata
 # (e.g. arm_hits, targets) is kept since it is counts-only.
 _GENERIC_PASSTHROUGH = (
-    "store", "action", "harvester", "reason", "size",
-    "latency_ms", "circuit", "old", "new", "method", "targets",
-    "final", "min_score", "rrf", "arm_hits", "sources_searched", "sources_failed",
-    "entities_updated", "cascades_prevented", "final_depth",
-    "failure_count", "total_failures", "applied", "outcome",
-    "pattern_id", "old_confidence", "new_confidence", "application_count",
-    "total_facts", "cross_store_dup_rate", "forget", "jobs", "store_sizes",
-    "pid", "collection",
+    "store",
+    "action",
+    "harvester",
+    "reason",
+    "size",
+    "latency_ms",
+    "circuit",
+    "old",
+    "new",
+    "method",
+    "targets",
+    "final",
+    "min_score",
+    "rrf",
+    "arm_hits",
+    "sources_searched",
+    "sources_failed",
+    "entities_updated",
+    "cascades_prevented",
+    "final_depth",
+    "failure_count",
+    "total_failures",
+    "applied",
+    "outcome",
+    "pattern_id",
+    "old_confidence",
+    "new_confidence",
+    "application_count",
+    "total_facts",
+    "cross_store_dup_rate",
+    "forget",
+    "jobs",
+    "store_sizes",
+    "pid",
+    "collection",
 )
 
 

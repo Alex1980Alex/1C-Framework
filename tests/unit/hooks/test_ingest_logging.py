@@ -82,11 +82,10 @@ class TestEmitIngestStats:
         # §27 P3 D3.2 — per-item hashes thread the fact key into the ingestion sink.
         monkeypatch.setenv("CLAUDE_CACHE_DIR", str(tmp_path))
         ch = "a" * 64
-        ph._emit_ingest_stats(
-            {"created": 1, "created_hashes": [ch], "skipped_dup": 0}, "patterns"
-        )
+        ph._emit_ingest_stats({"created": 1, "created_hashes": [ch], "skipped_dup": 0}, "patterns")
         saved = [
-            e for e in _read_log(tmp_path)
+            e
+            for e in _read_log(tmp_path)
             if e.get("event") == "ingest" and e.get("action") == "saved"
         ]
         assert len(saved) == 1

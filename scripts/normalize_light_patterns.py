@@ -162,8 +162,14 @@ def build_plan(points: list[Any], now_iso: str, seed_importance: int) -> dict[st
         if new is None:
             skipped.append({"id": str(p.id), "category": pl.get("category", "?")})
         else:
-            normalized.append({"id": str(p.id), "category": pl.get("category"),
-                               "pattern_type": new["pattern_type"], "payload": new})
+            normalized.append(
+                {
+                    "id": str(p.id),
+                    "category": pl.get("category"),
+                    "pattern_type": new["pattern_type"],
+                    "payload": new,
+                }
+            )
     return {
         "total": len(points),
         "rich_untouched": rich,
@@ -182,8 +188,10 @@ def write_backup(client, stamp: str) -> Path:
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     pts, _ = client.scroll(COLLECTION, limit=10000, with_payload=True, with_vectors=True)
     blob = json.dumps(
-        {"collection": COLLECTION,
-         "points": [{"id": str(p.id), "vector": p.vector, "payload": p.payload} for p in pts]},
+        {
+            "collection": COLLECTION,
+            "points": [{"id": str(p.id), "vector": p.vector, "payload": p.payload} for p in pts],
+        },
         ensure_ascii=False,
     )
     path = BACKUP_DIR / f"{COLLECTION}_{stamp}_normalize.json"
@@ -203,8 +211,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="normalize light learned_patterns into full schema")
     ap.add_argument("--apply", action="store_true", help="execute (default: dry-run)")
     ap.add_argument("--no-backup", action="store_true")
-    ap.add_argument("--seed-importance", type=int, default=0,
-                    help="inject N synthetic pseudo-observations at importance ratio (default 0)")
+    ap.add_argument(
+        "--seed-importance",
+        type=int,
+        default=0,
+        help="inject N synthetic pseudo-observations at importance ratio (default 0)",
+    )
     ap.add_argument("--stamp", default=None)
     args = ap.parse_args()
 
@@ -220,11 +232,17 @@ def main() -> int:
     now_iso = args.stamp or datetime.now().isoformat()
     plan = build_plan(points, now_iso, args.seed_importance)
 
-    print(f"# normalize light patterns (apply={args.apply}, seed_importance={args.seed_importance})")
-    print(f"total={plan['total']} rich_untouched={plan['rich_untouched']} "
-          f"to_normalize={len(plan['normalize'])} skipped={len(plan['skipped'])}")
+    print(
+        f"# normalize light patterns (apply={args.apply}, seed_importance={args.seed_importance})"
+    )
+    print(
+        f"total={plan['total']} rich_untouched={plan['rich_untouched']} "
+        f"to_normalize={len(plan['normalize'])} skipped={len(plan['skipped'])}"
+    )
     for n in plan["normalize"]:
-        print(f"  NORMALIZE {n['id'][:8]} category={n['category']} -> pattern_type={n['pattern_type']}")
+        print(
+            f"  NORMALIZE {n['id'][:8]} category={n['category']} -> pattern_type={n['pattern_type']}"
+        )
     for s in plan["skipped"]:
         print(f"  SKIP      {s['id'][:8]} category={s['category']} (not a pattern -> left as-is)")
 
@@ -248,8 +266,10 @@ def main() -> int:
         bump()
     except Exception:
         pass
-    print(f"-> NORMALIZED {len(plan['normalize'])} records "
-          f"(restore: dedupe_learned_patterns.py --restore <backup> --apply)")
+    print(
+        f"-> NORMALIZED {len(plan['normalize'])} records "
+        f"(restore: dedupe_learned_patterns.py --restore <backup> --apply)"
+    )
     return 0
 
 

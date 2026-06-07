@@ -1616,7 +1616,7 @@ def main() -> None:
         # ratio active during the run. Range guard mirrors the ValueError
         # in `_make_char_windows` (overlap must be < window).
         if not 0.0 <= args.sliding_overlap < 1.0:
-            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got " f"{args.sliding_overlap}")
+            print(f"ERROR: --sliding-overlap must be in [0.0, 1.0), got {args.sliding_overlap}")
             sys.exit(1)
         Qwen3STEmbedder.DEFAULT_SLIDING_OVERLAP_RATIO = args.sliding_overlap
         _evt("sliding_overlap_override", ratio=args.sliding_overlap)
@@ -1822,16 +1822,16 @@ def main() -> None:
         print(f"[{mode}] delete-stale: {cleaned} files cleaned")
 
     elapsed = time.time() - t0
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("REINDEX COMPLETE")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"  Files:    {len(bsl_files)}")
     print(f"  Symbols:  {total_symbols}")
     print(f"  Chunks:   {total_chunks}")
     print(f"  Errors:   {errors}")
-    print(f"  Time:     {elapsed:.1f}s ({elapsed/max(len(bsl_files),1):.2f}s/file)")
+    print(f"  Time:     {elapsed:.1f}s ({elapsed / max(len(bsl_files), 1):.2f}s/file)")
     print(f"  Collection: {args.collection}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     embedder.close()
     # roadmap 260518 follow-up — final summary lands in JSONL run_end record;

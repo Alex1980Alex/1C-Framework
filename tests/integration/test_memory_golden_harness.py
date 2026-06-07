@@ -55,11 +55,16 @@ def test_assemble_arms_gating():
         "pattern_dense": [
             {"content": "p-keep", "eff_conf": 0.6, "archived": False},
             {"content": "p-lowconf", "eff_conf": 0.05, "archived": False},  # below floor
-            {"content": "p-archived", "eff_conf": 0.9, "archived": True},   # archived
+            {"content": "p-archived", "eff_conf": 0.9, "archived": True},  # archived
         ],
         "pattern_lexical": [
             {"content": "lex-strong", "overlap": 0.8, "eff_conf": 0.6, "archived": False},
-            {"content": "lex-weak", "overlap": 0.1, "eff_conf": 0.6, "archived": False},  # < SCORE_THRESHOLD
+            {
+                "content": "lex-weak",
+                "overlap": 0.1,
+                "eff_conf": 0.6,
+                "archived": False,
+            },  # < SCORE_THRESHOLD
         ],
     }
     config = dict(H.DEFAULT_CONFIG)

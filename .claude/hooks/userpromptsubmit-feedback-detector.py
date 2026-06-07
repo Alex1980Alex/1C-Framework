@@ -22,7 +22,6 @@ from shared.feedback_draft import create_draft, detect_feedback
 
 
 class FeedbackDetector(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "UserPromptSubmit":
             return None

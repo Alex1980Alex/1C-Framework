@@ -20,7 +20,6 @@ from shared.feedback_draft import list_pending_drafts
 
 
 class FeedbackDraftAggregator(BaseHook):
-
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
             return None
@@ -36,7 +35,9 @@ class FeedbackDraftAggregator(BaseHook):
         extra = "" if len(drafts) <= 5 else f"\n…и ещё {len(drafts) - 5}"
         return HookOutput().system_message(
             f"[FEEDBACK-DRAFT] Черновики курируемой памяти на подтверждение ({len(drafts)}):\n"
-            + "\n".join(lines) + extra + "\n"
+            + "\n".join(lines)
+            + extra
+            + "\n"
             "Подтверждённые перенеси в memory/feedback_*.md + MEMORY.md; неактуальные удали из data/memory_drafts/."
         )
 

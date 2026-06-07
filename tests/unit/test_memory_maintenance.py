@@ -24,8 +24,15 @@ pytestmark = pytest.mark.unit
 NOW = datetime(2026, 6, 5, 12, 0, 0)
 
 
-def _pt(pid: str, *, succ: float, fail: float, age_days: int = 0,
-        pattern_type: str = "workflow-pattern", expired: bool = False) -> dict:
+def _pt(
+    pid: str,
+    *,
+    succ: float,
+    fail: float,
+    age_days: int = 0,
+    pattern_type: str = "workflow-pattern",
+    expired: bool = False,
+) -> dict:
     payload = {
         "succ": succ,
         "fail": fail,

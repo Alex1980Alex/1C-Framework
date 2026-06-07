@@ -182,9 +182,7 @@ def extract_from_events(events: list[dict[str, Any]], git_ctx: dict[str, Any]) -
 
     # impl: filter auto-save noise from commits; cap files to 30
     raw_commits: list[str] = git_ctx.get("commits") or []
-    filtered_commits = [
-        c for c in raw_commits if not c.lower().startswith(_AUTO_SAVE_PREFIX)
-    ]
+    filtered_commits = [c for c in raw_commits if not c.lower().startswith(_AUTO_SAVE_PREFIX)]
     raw_files: list[str] = git_ctx.get("files") or []
     impl: dict[str, Any] = {
         "commits": filtered_commits,
@@ -198,12 +196,7 @@ def extract_from_events(events: list[dict[str, Any]], git_ctx: dict[str, Any]) -
     }
 
     # substantive gate: skip trivial Q&A with no commit/research/verdict
-    substantive: bool = (
-        bool(impl["commits"])
-        or bool(research)
-        or bool(review)
-        or bool(verify)
-    )
+    substantive: bool = bool(impl["commits"]) or bool(research) or bool(review) or bool(verify)
 
     return {
         "research": research,

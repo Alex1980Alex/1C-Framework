@@ -27,7 +27,9 @@ _HOOKS_DIR = Path(__file__).resolve().parents[3] / ".claude" / "hooks"
 def _load() -> Any:
     if str(_HOOKS_DIR) not in sys.path:
         sys.path.insert(0, str(_HOOKS_DIR))
-    spec = importlib.util.spec_from_file_location("reflection_mod", _HOOKS_DIR / "shared" / "reflection.py")
+    spec = importlib.util.spec_from_file_location(
+        "reflection_mod", _HOOKS_DIR / "shared" / "reflection.py"
+    )
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = mod
@@ -57,22 +59,51 @@ def _embed(_t: str) -> list[float]:
 def _rows(*specs: tuple[str, str, float]) -> list[dict[str, Any]]:
     """Build episodic rows: (id, content, importance) with category 'decision'."""
     return [
-        {"id": rid, "content": content, "importance": imp, "category": "decision", "created_at": "2099"}
+        {
+            "id": rid,
+            "content": content,
+            "importance": imp,
+            "category": "decision",
+            "created_at": "2099",
+        }
         for rid, content, imp in specs
     ]
 
 
 def test_four_same_topic_episodes_consolidate_to_one_with_links() -> None:
     rows = _rows(
-        ("e1", "always read attribute via ОбщегоНазначения helper not direct reference access", 0.6),
-        ("e2", "read attribute via ОбщегоНазначения helper avoid direct reference object load", 0.7),
-        ("e3", "attribute read should use ОбщегоНазначения helper not direct reference access path", 0.8),
-        ("e4", "use ОбщегоНазначения helper for attribute read avoid direct reference loading", 0.5),
+        (
+            "e1",
+            "always read attribute via ОбщегоНазначения helper not direct reference access",
+            0.6,
+        ),
+        (
+            "e2",
+            "read attribute via ОбщегоНазначения helper avoid direct reference object load",
+            0.7,
+        ),
+        (
+            "e3",
+            "attribute read should use ОбщегоНазначения helper not direct reference access path",
+            0.8,
+        ),
+        (
+            "e4",
+            "use ОбщегоНазначения helper for attribute read avoid direct reference loading",
+            0.5,
+        ),
     )
     client = FakeClient()
     links: list[tuple[str, str]] = []
-    stats = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=False,
-                       link_fn=lambda pid, sid: links.append((pid, sid)), min_cluster=3, sim_threshold=0.3)
+    stats = rf.reflect(
+        rows=rows,
+        client=client,
+        embed=_embed,
+        dry_run=False,
+        link_fn=lambda pid, sid: links.append((pid, sid)),
+        min_cluster=3,
+        sim_threshold=0.3,
+    )
     assert stats["clusters_triggered"] == 1
     assert stats["created"] == 1  # one pattern, not four
     assert len(client.store) == 1
@@ -87,7 +118,9 @@ def test_below_min_cluster_not_triggered() -> None:
         ("e2", "topic alpha shared tokens here for overlap matching test alpha too", 0.5),
     )
     client = FakeClient()
-    stats = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3)
+    stats = rf.reflect(
+        rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3
+    )
     assert stats["clusters_triggered"] == 0
     assert stats["created"] == 0
 
@@ -98,8 +131,15 @@ def test_theta_importance_trigger() -> None:
         ("e2", "topic beta with enough shared overlap tokens beta beta example", 0.9),
     )
     client = FakeClient()
-    stats = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=False,
-                       min_cluster=5, importance_theta=1.5, sim_threshold=0.3)
+    stats = rf.reflect(
+        rows=rows,
+        client=client,
+        embed=_embed,
+        dry_run=False,
+        min_cluster=5,
+        importance_theta=1.5,
+        sim_threshold=0.3,
+    )
     assert stats["clusters_triggered"] == 1  # size<5 but sum importance 1.8 >= 1.5
     assert stats["created"] == 1
 
@@ -112,8 +152,15 @@ def test_dry_run_no_writes_no_links() -> None:
     )
     client = FakeClient()
     links: list[Any] = []
-    stats = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=True,
-                       link_fn=lambda p, s: links.append((p, s)), min_cluster=3, sim_threshold=0.3)
+    stats = rf.reflect(
+        rows=rows,
+        client=client,
+        embed=_embed,
+        dry_run=True,
+        link_fn=lambda p, s: links.append((p, s)),
+        min_cluster=3,
+        sim_threshold=0.3,
+    )
     assert stats["created"] == 1  # planned
     assert len(client.store) == 0  # nothing written
     assert len(links) == 0  # links only on real upsert
@@ -126,8 +173,12 @@ def test_rerun_idempotent() -> None:
         ("e3", "delta topic overlap tokens delta delta words another here now", 0.6),
     )
     client = FakeClient()
-    s1 = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3)
-    s2 = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3)
+    s1 = rf.reflect(
+        rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3
+    )
+    s2 = rf.reflect(
+        rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3
+    )
     assert s1["created"] == 1 and s2["created"] == 0 and s2["skipped_dup"] == 1
 
 
@@ -140,7 +191,9 @@ def test_distinct_topics_separate_clusters() -> None:
         ("b2", "rocket space launch orbit fuel rocket rocket payload booster now", 0.6),
     )
     client = FakeClient()
-    stats = rf.reflect(rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3)
+    stats = rf.reflect(
+        rows=rows, client=client, embed=_embed, dry_run=False, min_cluster=3, sim_threshold=0.3
+    )
     assert stats["clusters_found"] == 2  # apple + rocket
     assert stats["clusters_triggered"] == 1  # only apple has >=3
     assert stats["created"] == 1
@@ -155,10 +208,14 @@ def test_session_summary_excluded(tmp_path: Path) -> None:
         "CREATE TABLE important_messages (id TEXT, content TEXT, importance REAL, "
         "category TEXT, created_at TEXT, updated_at TEXT, metadata TEXT, tags TEXT)"
     )
-    conn.execute("INSERT INTO important_messages (id, content, importance, category) VALUES (?,?,?,?)",
-                 ("s1", "Session 2099 did stuff", 0.7, "session_summary"))
-    conn.execute("INSERT INTO important_messages (id, content, importance, category) VALUES (?,?,?,?)",
-                 ("f1", "a real decision fact here", 0.7, "decision"))
+    conn.execute(
+        "INSERT INTO important_messages (id, content, importance, category) VALUES (?,?,?,?)",
+        ("s1", "Session 2099 did stuff", 0.7, "session_summary"),
+    )
+    conn.execute(
+        "INSERT INTO important_messages (id, content, importance, category) VALUES (?,?,?,?)",
+        ("f1", "a real decision fact here", 0.7, "decision"),
+    )
     conn.commit()
     conn.close()
     eps = rf.read_episodes(db_path=db)

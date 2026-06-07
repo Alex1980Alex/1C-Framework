@@ -131,8 +131,10 @@ def main() -> int:
 
         client = QdrantClient(host="127.0.0.1", port=6333, timeout=30)
         points, _ = client.scroll(
-            collection_name=args.collection, limit=args.limit,
-            with_payload=True, with_vectors=False,
+            collection_name=args.collection,
+            limit=args.limit,
+            with_payload=True,
+            with_vectors=False,
         )
     except Exception as exc:
         print(f"Qdrant unavailable ({args.collection}): {exc}", file=sys.stderr)

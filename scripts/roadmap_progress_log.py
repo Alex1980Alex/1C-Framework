@@ -166,9 +166,7 @@ def extract_wikilinks(text: str) -> list[str]:
 
 def build_skeleton(d: str, summary: str, pr: str | None = None) -> str:
     """Build a skeleton §18 entry block for the `append` subcommand."""
-    pr_line = (
-        f" (PR [#{pr}](https://github.com/Alex1980Alex/1C-Framework/pull/{pr}))" if pr else ""
-    )
+    pr_line = f" (PR [#{pr}](https://github.com/Alex1980Alex/1C-Framework/pull/{pr}))" if pr else ""
     return (
         f"### {d} — {summary}\n\n"
         f"**Outcome:** _<TODO: что достигнуто>_{pr_line}\n\n"
@@ -227,7 +225,10 @@ def _git_show(ref: str, rel_path: str) -> str | None:
     try:
         r = subprocess.run(
             ["git", "show", f"{ref}:{rel_path}"],
-            capture_output=True, text=True, encoding="utf-8", timeout=10,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=10,
             cwd=str(PROJECT_ROOT),
         )
         return r.stdout if r.returncode == 0 else None
@@ -239,11 +240,7 @@ def _git_show(ref: str, rel_path: str) -> str | None:
 
 
 def cmd_lint(args: argparse.Namespace) -> int:
-    today = (
-        date.today()
-        if args.today is None
-        else datetime.strptime(args.today, "%Y-%m-%d").date()
-    )
+    today = date.today() if args.today is None else datetime.strptime(args.today, "%Y-%m-%d").date()
     files = _roadmap_files()
     report: dict[str, list[str]] = {}
     rc = 0
@@ -364,7 +361,9 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     lp = sub.add_parser("lint", help="validate §18 structure (+ optional PR freshness)")
-    lp.add_argument("--base", default="", help="git ref to compare for freshness (e.g. origin/master)")
+    lp.add_argument(
+        "--base", default="", help="git ref to compare for freshness (e.g. origin/master)"
+    )
     lp.add_argument("--no-freshness", action="store_true", help="structural checks only")
     lp.add_argument("--today", default=None, help="override today's date (YYYY-MM-DD, for tests)")
     lp.add_argument("--json", action="store_true")
@@ -374,12 +373,18 @@ def main(argv: list[str] | None = None) -> int:
     apnd.add_argument("--date", default=None, help="entry date YYYY-MM-DD (default: today)")
     apnd.add_argument("--summary", required=True, help="one-line entry title")
     apnd.add_argument("--pr", default=None, help="PR number to link")
-    apnd.add_argument("--roadmap", default=None, help="target roadmap file (default: the sole §18 roadmap)")
+    apnd.add_argument(
+        "--roadmap", default=None, help="target roadmap file (default: the sole §18 roadmap)"
+    )
     apnd.add_argument("--apply", action="store_true", help="write the file (default: dry-run)")
     apnd.set_defaults(func=cmd_append)
 
     lk = sub.add_parser("links", help="validate [[name]] memory wikilinks (advisory)")
-    lk.add_argument("--memory-dir", default=None, help="memory store dir (default: ~/.claude/projects/C--1--Framework/memory)")
+    lk.add_argument(
+        "--memory-dir",
+        default=None,
+        help="memory store dir (default: ~/.claude/projects/C--1--Framework/memory)",
+    )
     lk.add_argument("--strict", action="store_true", help="exit 1 on broken links")
     lk.add_argument("--json", action="store_true")
     lk.set_defaults(func=cmd_links)

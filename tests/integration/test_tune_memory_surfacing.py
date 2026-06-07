@@ -45,8 +45,12 @@ def test_target_score_composite():
 def test_build_grid_size_and_shape():
     grid = T.build_grid(H.DEFAULT_CONFIG["surface_rrf_weights"])
     expected = (
-        len(T.GRID["skill"]) * len(T.GRID["pattern_dense"]) * len(T.GRID["pattern_lexical"])
-        * len(T.GRID["min_surface_conf"]) * len(T.GRID["conf_floor"]) * len(T.GRID["rrf_k"])
+        len(T.GRID["skill"])
+        * len(T.GRID["pattern_dense"])
+        * len(T.GRID["pattern_lexical"])
+        * len(T.GRID["min_surface_conf"])
+        * len(T.GRID["conf_floor"])
+        * len(T.GRID["rrf_k"])
     )
     assert len(grid) == expected
     cfg = grid[0]
@@ -56,7 +60,11 @@ def test_build_grid_size_and_shape():
 
 
 def test_clamp_config_bounds():
-    ranges = {"rrf_weight": [0.1, 1.0], "min_surface_conf": [0.05, 0.40], "conf_floor": [0.10, 0.50]}
+    ranges = {
+        "rrf_weight": [0.1, 1.0],
+        "min_surface_conf": [0.05, 0.40],
+        "conf_floor": [0.10, 0.50],
+    }
     cfg = {
         "surface_rrf_weights": {"skill": 5.0, "pattern_dense": 0.3},
         "min_surface_conf": 0.99,
@@ -64,8 +72,8 @@ def test_clamp_config_bounds():
         "rrf_k": 60,
     }
     out = T.clamp_config(cfg, ranges)
-    assert out["surface_rrf_weights"]["skill"] == 1.0   # clamped down
-    assert out["min_surface_conf"] == 0.40              # clamped down
+    assert out["surface_rrf_weights"]["skill"] == 1.0  # clamped down
+    assert out["min_surface_conf"] == 0.40  # clamped down
 
 
 def test_no_regression_guard():
@@ -82,13 +90,21 @@ def test_no_regression_guard():
 def test_sweep_ranks_best_first():
     # One pattern target. A config weighting pattern_lexical should rank the target top.
     golden = [
-        {"id": "q1", "kind": "pattern",
-         "relevant": [{"hash": _hash("the target pattern"), "grade": 2}]},
+        {
+            "id": "q1",
+            "kind": "pattern",
+            "relevant": [{"hash": _hash("the target pattern"), "grade": 2}],
+        },
     ]
     captures = {
         "q1": {
             "pattern_lexical": [
-                {"content": "the target pattern", "overlap": 0.9, "eff_conf": 0.6, "archived": False}
+                {
+                    "content": "the target pattern",
+                    "overlap": 0.9,
+                    "eff_conf": 0.6,
+                    "archived": False,
+                }
             ],
         }
     }
@@ -110,7 +126,9 @@ def test_promote_apply_then_rollback(tmp_path, monkeypatch):
     # Seed an initial (baseline) tuning.json == defaults.
     base_cfg = {
         "surface_rrf_weights": dict(H.DEFAULT_CONFIG["surface_rrf_weights"]),
-        "min_surface_conf": 0.15, "conf_floor": 0.30, "rrf_k": 60,
+        "min_surface_conf": 0.15,
+        "conf_floor": 0.30,
+        "rrf_k": 60,
     }
     T.write_tuning(base_cfg, note="baseline")
     assert tuning.exists()
@@ -119,26 +137,33 @@ def test_promote_apply_then_rollback(tmp_path, monkeypatch):
     # A clearly-better candidate (heavier lexical weight surfaces the target).
     best_cfg = {
         "surface_rrf_weights": dict(H.DEFAULT_CONFIG["surface_rrf_weights"], pattern_lexical=0.9),
-        "min_surface_conf": 0.15, "conf_floor": 0.30, "rrf_k": 60,
+        "min_surface_conf": 0.15,
+        "conf_floor": 0.30,
+        "rrf_k": 60,
     }
     sweep_result.write_text(
         __import__("json").dumps({"best": {"config": best_cfg}}), encoding="utf-8"
     )
 
     # Golden where current config misses but the candidate hits (forces gate PASS).
-    golden = [{"id": "q1", "kind": "pattern",
-               "relevant": [{"hash": _hash("answer"), "grade": 2}]}]
-    captures = {"q1": {
-        # current (default) lexical weight 0.7 vs candidate 0.9 -> with a single arm both
-        # surface the answer; ensure hit so improvement is non-negative & no regression.
-        "pattern_lexical": [{"content": "answer", "overlap": 0.9, "eff_conf": 0.6, "archived": False}],
-    }}
+    golden = [{"id": "q1", "kind": "pattern", "relevant": [{"hash": _hash("answer"), "grade": 2}]}]
+    captures = {
+        "q1": {
+            # current (default) lexical weight 0.7 vs candidate 0.9 -> with a single arm both
+            # surface the answer; ensure hit so improvement is non-negative & no regression.
+            "pattern_lexical": [
+                {"content": "answer", "overlap": 0.9, "eff_conf": 0.6, "archived": False}
+            ],
+        }
+    }
     monkeypatch.setattr(H, "load_golden", lambda split=None: golden)
     monkeypatch.setattr(H, "load_captures", lambda *a, **k: captures)
 
     # Force a gate pass by lowering the improvement threshold to <= 0 and stubbing current
     # to score lower than best.
-    args = argparse.Namespace(eval_split="heldout", k=5, alpha=0.5, min_improvement=-1.0, apply=True)
+    args = argparse.Namespace(
+        eval_split="heldout", k=5, alpha=0.5, min_improvement=-1.0, apply=True
+    )
     rc = T.cmd_promote(args)
     assert rc == 0
     after = __import__("json").loads(tuning.read_text(encoding="utf-8"))

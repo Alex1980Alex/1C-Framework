@@ -101,7 +101,9 @@ def read_episodes(
                 {
                     "id": rid,
                     "content": str(content),
-                    "importance": float(importance) if isinstance(importance, (int, float)) else 0.5,
+                    "importance": float(importance)
+                    if isinstance(importance, (int, float))
+                    else 0.5,
                     "category": category or "",
                     "created_at": created_at or "",
                 }
@@ -112,7 +114,9 @@ def read_episodes(
     return rows
 
 
-def cluster_episodes(rows: list[dict[str, Any]], sim_threshold: float) -> list[list[dict[str, Any]]]:
+def cluster_episodes(
+    rows: list[dict[str, Any]], sim_threshold: float
+) -> list[list[dict[str, Any]]]:
     """Union-find clustering by token-overlap (Jaccard ≥ threshold)."""
     n = len(rows)
     parent = list(range(n))

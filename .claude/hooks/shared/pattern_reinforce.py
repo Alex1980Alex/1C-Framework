@@ -34,6 +34,7 @@ from typing import Any
 _THIS_FILE = Path(__file__).resolve()
 _PROJECT_ROOT = _THIS_FILE.parents[3]  # shared/ -> hooks/ -> .claude/ -> root
 
+
 # Allow env override (used by tests via monkeypatch or CLAUDE_CACHE_DIR)
 def _resolve_cache_dir() -> Path:
     override = os.environ.get("CLAUDE_CACHE_DIR")
@@ -70,6 +71,7 @@ def _log_lifecycle(event: str, **fields: Any) -> None:
         log_event(event, **fields)
     except Exception:
         pass
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -224,6 +226,7 @@ def reinforce_session(
             if src_path not in sys.path:
                 sys.path.insert(0, src_path)
             from memory.vector_memory.reinforce import reinforce_pattern
+
             reinforce_fn = reinforce_pattern
 
         # --- Filter + sort surfaced patterns ---

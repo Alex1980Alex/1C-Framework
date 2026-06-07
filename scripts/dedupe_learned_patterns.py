@@ -92,10 +92,11 @@ def pick_survivor(group: list[dict[str, Any]]) -> dict[str, Any]:
 
     Falls back to the earliest created_at overall, then to the first element.
     """
+
     def sort_key(pt: dict[str, Any]) -> tuple:
         pl = pt["payload"]
-        is_rich = 0 if pl.get("pattern_id") else 1   # prefer pattern_id schema
-        created = str(pl.get("created_at") or "~")    # "~" sorts after ISO dates
+        is_rich = 0 if pl.get("pattern_id") else 1  # prefer pattern_id schema
+        created = str(pl.get("created_at") or "~")  # "~" sorts after ISO dates
         return (is_rich, created)
 
     return sorted(group, key=sort_key)[0]
@@ -165,8 +166,10 @@ def _client():
 
 def fetch_points(client, with_vectors: bool = False) -> list[dict[str, Any]]:
     points, _ = client.scroll(
-        collection_name=COLLECTION, limit=10000,
-        with_payload=True, with_vectors=with_vectors,
+        collection_name=COLLECTION,
+        limit=10000,
+        with_payload=True,
+        with_vectors=with_vectors,
     )
     out = []
     for p in points:
@@ -210,8 +213,10 @@ def apply_plan(client, plan: dict[str, Any]) -> None:
         client.set_payload(
             collection_name=COLLECTION,
             payload={
-                "succ": upd["succ"], "fail": upd["fail"],
-                "application_count": upd["application_count"], "confidence": upd["confidence"],
+                "succ": upd["succ"],
+                "fail": upd["fail"],
+                "application_count": upd["application_count"],
+                "confidence": upd["confidence"],
             },
             points=[upd["id"]],
         )
@@ -247,8 +252,10 @@ def main() -> int:
     plan = build_plan(points, drop_test=args.drop_test)
 
     print(f"# learned_patterns dedupe (apply={args.apply}, drop_test={args.drop_test})")
-    print(f"total={plan['total']} unique_content_groups={plan['unique_groups']} "
-          f"dup_groups={plan['dup_groups']}")
+    print(
+        f"total={plan['total']} unique_content_groups={plan['unique_groups']} "
+        f"dup_groups={plan['dup_groups']}"
+    )
     print(f"dup copies to delete: {len(plan['dup_delete_ids'])}")
     print(f"survivor stat-merges: {len(plan['survivor_updates'])}")
     print(f"test records to delete: {len(plan['test_delete_ids'])}")
@@ -264,8 +271,10 @@ def main() -> int:
         print(f"\nbackup: {bpath}")
     apply_plan(client, plan)
     remaining = len(fetch_points(client))
-    print(f"-> DONE. collection now has {remaining} points "
-          f"(restore: --restore {BACKUP_DIR / (COLLECTION + '_' + stamp + '.json')} --apply)")
+    print(
+        f"-> DONE. collection now has {remaining} points "
+        f"(restore: --restore {BACKUP_DIR / (COLLECTION + '_' + stamp + '.json')} --apply)"
+    )
     return 0
 
 

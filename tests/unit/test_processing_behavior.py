@@ -128,9 +128,7 @@ async def test_version_manager_incremental_and_checkpoints(
     await mgr.save_version(path, "d", chunks)
     assert await mgr.check_status(path) == "unchanged"
 
-    delta = await mgr.compute_delta(
-        path, [DocumentChunk(id="c2", content="beta", document_id="d")]
-    )
+    delta = await mgr.compute_delta(path, [DocumentChunk(id="c2", content="beta", document_id="d")])
     assert isinstance(delta, ChunkDelta)
     assert "c2" in delta.added and "c1" in delta.removed
 
@@ -186,7 +184,9 @@ def test_proposition_splitter_parses_str_content() -> None:
     from src.pdf_framework.processing.splitters.proposition import PropositionSplitter
 
     llm = MagicMock()
-    llm.invoke = MagicMock(return_value=MagicMock(content="1. First fact\n2. Second fact\n3. Third"))
+    llm.invoke = MagicMock(
+        return_value=MagicMock(content="1. First fact\n2. Second fact\n3. Third")
+    )
     splitter = PropositionSplitter(llm=llm, min_propositions=2)
 
     props = splitter.split_text("This is a sufficiently long input sentence to trigger splitting.")
@@ -201,7 +201,9 @@ def test_proposition_splitter_survives_list_content() -> None:
     llm.invoke = MagicMock(return_value=MagicMock(content=[{"type": "text", "text": "x"}]))
     splitter = PropositionSplitter(llm=llm)
     # Long text → goes through _extract_propositions → str(list).strip(); must not raise.
-    result = splitter.split_text("A long enough sentence to exceed the fifty character threshold here.")
+    result = splitter.split_text(
+        "A long enough sentence to exceed the fifty character threshold here."
+    )
     assert result and isinstance(result[0], str)
 
 

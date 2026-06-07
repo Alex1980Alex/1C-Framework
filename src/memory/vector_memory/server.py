@@ -57,7 +57,9 @@ _APPLY_CASCADE_MAX = 10  # max neighbours nudged per apply (rate-limit; mirrors 
 _APPLY_CASCADE_BASE = 1.0  # base pseudo-observation magnitude, then decayed
 
 
-def _cascade_confidence(client: Any, pattern_id: str, success: bool, now: datetime) -> dict[str, int]:
+def _cascade_confidence(
+    client: Any, pattern_id: str, success: bool, now: datetime
+) -> dict[str, int]:
     """Propagate an apply's confidence delta to directly-linked neighbour patterns.
 
     Mirrors PropagationEngine decay — ``link_strength × distance(0.5^1) × time(max(0.5,1−days/365))``

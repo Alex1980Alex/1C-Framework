@@ -32,11 +32,15 @@ def main() -> int:
     except Exception:
         pass
 
-    ap = argparse.ArgumentParser(description="Reflect episodic facts into semantic patterns (§26 P2 D2.1)")
+    ap = argparse.ArgumentParser(
+        description="Reflect episodic facts into semantic patterns (§26 P2 D2.1)"
+    )
     ap.add_argument("--apply", action="store_true", help="execute (default: dry-run)")
     ap.add_argument("--min-cluster", type=int, default=3, help="min cluster size to consolidate")
     ap.add_argument("--sim", type=float, default=0.5, help="Jaccard token-overlap threshold")
-    ap.add_argument("--theta", type=float, default=None, help="alt trigger: summed importance >= theta")
+    ap.add_argument(
+        "--theta", type=float, default=None, help="alt trigger: summed importance >= theta"
+    )
     ap.add_argument("--cap", type=int, default=10, help="max patterns created per run")
     args = ap.parse_args()
 
@@ -50,7 +54,9 @@ def main() -> int:
         link_fn=link_fn,
     )
 
-    print(f"# reflection (apply={args.apply}, min_cluster={args.min_cluster}, sim={args.sim}, theta={args.theta})")
+    print(
+        f"# reflection (apply={args.apply}, min_cluster={args.min_cluster}, sim={args.sim}, theta={args.theta})"
+    )
     print(
         f"clusters_found={stats['clusters_found']} clusters_triggered={stats['clusters_triggered']} "
         f"created={stats['created']} skipped_dup={stats['skipped_dup']} "
