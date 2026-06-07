@@ -46,7 +46,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MEMORY_DIR = Path(
     os.environ.get(
         "CLAUDE_MEMORY_DIR",
-        Path.home() / ".claude" / "projects" / "D--1--Framework" / "memory",
+        Path.home() / ".claude" / "projects" / "C--1--Framework" / "memory",
     )
 )
 COOLDOWN_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-cooldown.json"
