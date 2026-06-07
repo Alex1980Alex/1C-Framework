@@ -137,6 +137,9 @@ def build_sync_plan(
             skipped.append(content_hash)
             continue
         for _rec, uid in mapped:
+            # `uid is None` is dead post-filter (uid-truthy filter above); kept so mypy
+            # narrows uid to str for MirrorLink and to guard a future refactor of that
+            # filter from silently reintroducing None into the constructor.
             if uid is None or uid == canon_uid:
                 continue
             links.append(
