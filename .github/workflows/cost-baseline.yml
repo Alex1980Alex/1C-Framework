@@ -44,6 +44,10 @@ jobs:
           OBSERVABILITY__LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           OBSERVABILITY__LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
           OBSERVABILITY__LANGFUSE_ENABLED: 'true'
+          # No Langfuse secrets configured -> skip gracefully instead of failing the
+          # weekly run (the job spams a failure every Sunday otherwise). Remove this
+          # once LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY repo secrets are set.
+          COST_BASELINE_SKIP_IF_NO_CREDS: '1'
         run: python scripts/analyze_langfuse_cost.py
 
       - name: Open / update PR with refreshed baseline

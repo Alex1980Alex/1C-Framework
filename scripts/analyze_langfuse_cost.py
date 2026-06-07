@@ -481,11 +481,17 @@ def main(
 
     client = _get_langfuse_client()
     if client is None:
-        typer.secho(
+        msg = (
             "Langfuse not enabled or creds missing. "
-            "Check .env (OBSERVABILITY__LANGFUSE_*) or repo secrets.",
-            fg=typer.colors.RED,
+            "Check .env (OBSERVABILITY__LANGFUSE_*) or repo secrets."
         )
+        # The scheduled CI job sets this flag so a missing-creds environment skips
+        # gracefully (exit 0) instead of failing the weekly run; local/intentional
+        # invocations still fail loud (default).
+        if os.environ.get("COST_BASELINE_SKIP_IF_NO_CREDS") == "1":
+            typer.secho(f"SKIP: {msg}", fg=typer.colors.YELLOW)
+            raise typer.Exit(0)
+        typer.secho(msg, fg=typer.colors.RED)
         raise typer.Exit(1)
 
     typer.secho(
