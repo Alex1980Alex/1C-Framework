@@ -56,10 +56,10 @@ def log_ingest(event: str, **fields: Any) -> None:
         # Atomic size-rotation before append (keep the newest half).
         try:
             if path.exists() and path.stat().st_size > _LOG_CAP_BYTES:
-                data = path.read_bytes()[-(_LOG_CAP_BYTES // 2):]
+                data = path.read_bytes()[-(_LOG_CAP_BYTES // 2) :]
                 idx = data.find(b"\n")
                 if idx != -1:
-                    data = data[idx + 1:]  # drop partial first line
+                    data = data[idx + 1 :]  # drop partial first line
                 fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp", prefix="inglog-")
                 try:
                     with os.fdopen(fd, "wb") as fh:

@@ -1326,3 +1326,6 @@ src/mcp_server/server.py:0: error: Function is missing a return type annotation 
 src/mcp_server/server.py:0: note: Use "-> None" if function does not return a value
 src/mcp_server/server.py:0: error: Call to untyped function "main" in typed context  [no-untyped-call]
 src/api/app.py:0: error: Function is missing a return type annotation  [no-untyped-def]
+src/api/routes/jobs.py:0: error: Unused "type: ignore" comment  [unused-ignore]
+src/api/routes/jobs.py:0: error: Unused "type: ignore" comment  [unused-ignore]
+src/api/routes/documents.py:0: error: Unused "type: ignore" comment  [unused-ignore]

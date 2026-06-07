@@ -108,7 +108,9 @@ def render_dashboard(dash: dict[str, Any], stamp: str) -> str:
     if ls:
         lines.append("")
         lines.append("## Links")
-        lines.append(f"- total_links: {ls.get('total_links', 0)} · by_type: {ls.get('by_type', {})}")
+        lines.append(
+            f"- total_links: {ls.get('total_links', 0)} · by_type: {ls.get('by_type', {})}"
+        )
 
     jobs = dash.get("jobs") or {}
     if jobs:
