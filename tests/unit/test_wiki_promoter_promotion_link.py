@@ -9,6 +9,10 @@ from __future__ import annotations
 
 import pytest
 
+# WikiPromoter transitively imports qdrant_client; skip the whole module when the
+# optional qdrant extra is not installed (e.g. minimal CI unit-test env).
+pytest.importorskip("qdrant_client")
+
 from src.memory.librarian.wiki_promoter import WikiPromoter
 from src.memory.orchestrator.link_registry import LinkRegistry, LinkType
 
