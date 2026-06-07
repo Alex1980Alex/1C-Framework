@@ -132,8 +132,12 @@ def build_sync_plan(
             continue
         canon, canon_store = choose_canonical([r for r, _ in mapped], resolver)
         canon_uid = unified_id_for(canon)
+        if canon_uid is None:
+            # canon came from a uid-filtered set, so this is defensive; skip group.
+            skipped.append(content_hash)
+            continue
         for _rec, uid in mapped:
-            if uid == canon_uid:
+            if uid is None or uid == canon_uid:
                 continue
             links.append(
                 MirrorLink(mirror_uid=uid, canonical_uid=canon_uid, content_hash=content_hash)

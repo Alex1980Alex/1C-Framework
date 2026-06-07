@@ -114,7 +114,9 @@ class ImageDescriber:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {
+                            # media_type is a runtime str ("image/<fmt>"), not the SDK's
+                            # Literal type, so the image block trips [list-item] under strict mypy.
+                            {  # type: ignore[list-item]
                                 "type": "image",
                                 "source": {
                                     "type": "base64",
