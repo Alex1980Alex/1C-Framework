@@ -22,6 +22,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+# QdrantVectorStore (imported below) transitively requires qdrant_client, which is
+# not installed in the unit-test CI env (.[dev,morphology]); skip when absent.
+pytest.importorskip("qdrant_client")
+
 from src.pdf_framework.config import VectorStoreSettings
 from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
 
