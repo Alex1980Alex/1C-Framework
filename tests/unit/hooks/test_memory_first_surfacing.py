@@ -27,6 +27,10 @@ from pathlib import Path
 
 import pytest
 
+# Several tests import qdrant_client directly; skip the module when the qdrant
+# extra is not installed (unit-test CI env).
+pytest.importorskip("qdrant_client")
+
 pytestmark = pytest.mark.unit
 
 # ---------------------------------------------------------------------------

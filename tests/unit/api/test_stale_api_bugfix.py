@@ -16,6 +16,11 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
+
+# Endpoints under test import api.routes.jobs, which requires arq (not in the
+# unit-test CI env); skip the module when arq is unavailable.
+pytest.importorskip("arq")
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
