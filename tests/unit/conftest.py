@@ -83,9 +83,7 @@ def _load_stale_nodeids() -> set[str]:
 _STALE_NODEIDS = _load_stale_nodeids()
 
 
-def pytest_collection_modifyitems(
-    config: pytest.Config, items: list[pytest.Item]
-) -> None:
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     stale = pytest.mark.skip(
         reason="stale: asserts on removed/redesigned API; rewrite pending "
         "(tests/unit/stale_tests.txt, roadmap 260608)"
