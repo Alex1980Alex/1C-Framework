@@ -5,6 +5,13 @@ description: "Unified Memory System — кросс-системная памят
 
 # Unified Memory System
 
+> **⚠ Test debt (2026-06-08):** many memory-subsystem unit tests
+> (`tests/unit/hooks/`, `vector_store/test_qdrant*`, `processing/`, `agents/`) are
+> temporarily skipped pending rewrite against current APIs — see
+> [roadmap 260608](../../../docs/roadmap/260608_ROADMAP_UNIT_TEST_REMEDIATION.md)
+> and [`tests/unit/conftest.py`](../../../tests/unit/conftest.py). Green CI ≠ full
+> coverage for these areas until the listed tests are rewritten.
+
 ## When to use
 - "memory", "unified id", "link registry", "federated search"
 - "pattern learning", "confidence decay", "evidence"
