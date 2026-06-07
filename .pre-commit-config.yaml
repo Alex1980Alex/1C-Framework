@@ -22,6 +22,10 @@
 # - docs/documentation/   imported third-party documentation (LangChain/MCP/
 #                         Claude Code translated docs) — whitespace preserved
 #                         deliberately for parity with upstream.
+# - .obsidian/            Obsidian app-managed vault config (rewritten by the app
+#                         without trailing newline → perpetual eof-fixer churn).
+# - .claude/**/cache/     generated knowledge/skill caches (_index.json etc) —
+#                         tool-written, not hand-edited.
 exclude: |
   (?x)^(
     tools/.*|
@@ -39,7 +43,9 @@ exclude: |
     ReadMe\.txt|
     data/analyze-1c-research/.*|
     docs/documentation/.*|
-    tmp/.*
+    tmp/.*|
+    \.obsidian/.*|
+    \.claude/.*/cache/.*
   )$
 
 repos:
