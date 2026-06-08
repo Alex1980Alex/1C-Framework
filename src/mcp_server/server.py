@@ -29,7 +29,7 @@ logger = logging.getLogger("pdf-vector-graph")
 server = Server("pdf-vector-graph")
 _components: Components | None = None
 _init_lock: asyncio.Lock | None = None
-_init_task: "asyncio.Task[Components] | None" = None
+_init_task: asyncio.Task[Components] | None = None
 
 
 def _configure_logging() -> None:
