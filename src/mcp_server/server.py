@@ -667,8 +667,25 @@ async def main():
     """Run the MCP server with stdio transport."""
     _configure_logging()
     logger.info("MCP server pdf-vector-graph: starting stdio transport")
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
+
+    # S1: warm up Components in the background at startup so the heavy ML-stack
+    # import (slow under session-start contention) overlaps with idle time and
+    # the first real tool call is not cold. Detached from any request, so a
+    # client tool-call timeout cannot abort it.
+    async def _warmup() -> None:
+        try:
+            await _get_components()
+        except Exception:
+            logger.exception("Background warmup failed; will retry on first tool call")
+
+    warmup_task = asyncio.create_task(_warmup())  # keep ref (RUF006); lives for server lifetime
+
+    try:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(read_stream, write_stream, server.create_initialization_options())
+    finally:
+        if not warmup_task.done():
+            warmup_task.cancel()
 
 
 if __name__ == "__main__":
