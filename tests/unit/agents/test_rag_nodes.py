@@ -1,205 +1,669 @@
 """Unit tests for RAG Agent nodes (F2.9).
 
 Tests:
-- F2.9.1: Test RAG agent node: grader
-- F2.9.2: Test RAG agent node: rewriter
+- F2.9.1: Test RAG agent node: grader (grade_documents)
+- F2.9.1b: Test RAG agent node: hallucination checker (check_hallucination)
+- F2.9.2: Test RAG agent node: rewriter (rewrite_query)
 - F2.9.3: Test StreamingRAGRunner event types
 """
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.messages import AIMessage
+
+pytestmark = pytest.mark.unit
 
 
-@pytest.mark.unit
-class TestRAGAgentNodes:
-    """Test RAG agent node functions."""
+# ---------------------------------------------------------------------------
+# Helpers: build minimal RAGState-compatible dicts and schema objects
+# ---------------------------------------------------------------------------
 
-    async def test_grader_relevance_check(self):
-        """F2.9.1: Grader should check document relevance."""
+def _make_chunk(chunk_id: str, content: str) -> Any:
+    from src.pdf_framework.schemas.documents import DocumentChunk
+
+    return DocumentChunk(id=chunk_id, content=content, document_id="doc1")
+
+
+def _make_search_result(chunk_id: str, content: str, score: float) -> Any:
+    from src.pdf_framework.schemas.documents import SearchResult
+
+    return SearchResult(chunk=_make_chunk(chunk_id, content), score=score)
+
+
+def _make_search_response(results: list) -> Any:
+    from src.pdf_framework.schemas.documents import SearchResponse
+
+    return SearchResponse(query="test", results=results)
+
+
+def _make_settings(**overrides):
+    from src.pdf_framework.config import SelfRAGSettings
+
+    return SelfRAGSettings(**overrides)
+
+
+def _make_llm(response_text: str) -> MagicMock:
+    """Return a mock ChatAnthropic whose ainvoke returns an AIMessage with given text.
+
+    Uses a real AIMessage so that StrOutputParser.invoke() receives a proper
+    string-typed .content attribute and does not raise a Pydantic validation error.
+    """
+    llm = MagicMock()
+    llm.ainvoke = AsyncMock(return_value=AIMessage(content=response_text))
+    return llm
+
+
+# ---------------------------------------------------------------------------
+# TestGradeDocuments
+# ---------------------------------------------------------------------------
+
+
+class TestGradeDocuments:
+    """F2.9.1: grade_documents node behavior."""
+
+    @pytest.mark.asyncio
+    async def test_returns_relevant_flag_for_yes_response(self):
+        """LLM returning 'yes' marks document as relevant."""
         from src.pdf_framework.agents.rag.nodes.grader import grade_documents
 
-        query = "What is 1С?"
-        documents = [
-            {"content": "1С is a platform", "id": "1"},
-            {"content": "Python is a language", "id": "2"},
-        ]
+        llm = _make_llm("yes - contains definition of 1С")
+        settings = _make_settings(score_prefilter_threshold=0.0)
+        state: dict = {
+            "question": "What is 1С?",
+            "search_response": _make_search_response(
+                [_make_search_result("doc1", "1С is a platform", 0.9)]
+            ),
+        }
 
-        graded = await grade_documents(query, documents)
+        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+            result = await grade_documents(state, llm, settings)
 
-        # Should score first doc higher
-        assert graded[0]["id"] == "1"
-        assert graded[0]["score"] > graded[1]["score"]
+        assert "graded_documents" in result
+        assert len(result["graded_documents"]) == 1
+        assert result["graded_documents"][0]["is_relevant"] is True
 
-    async def test_grader_threshold_filtering(self):
-        """F2.9.1: Grader should filter below threshold."""
+    @pytest.mark.asyncio
+    async def test_returns_not_relevant_for_no_response(self):
+        """LLM returning 'no' marks document as not relevant."""
         from src.pdf_framework.agents.rag.nodes.grader import grade_documents
 
-        query = "What is 1С?"
-        documents = [
-            {"content": "1С is a platform", "id": "1"},
-            {"content": "Recipe for cake", "id": "2"},
-        ]
+        llm = _make_llm("no - unrelated topic")
+        settings = _make_settings(score_prefilter_threshold=0.0)
+        state: dict = {
+            "question": "What is 1С?",
+            "search_response": _make_search_response(
+                [_make_search_result("doc2", "Recipe for cake", 0.9)]
+            ),
+        }
 
-        graded = await grade_documents(query, documents, threshold=0.5)
+        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+            result = await grade_documents(state, llm, settings)
 
-        # Second doc should be filtered
-        assert len(graded) == 1
-        assert graded[0]["id"] == "1"
+        assert result["graded_documents"][0]["is_relevant"] is False
 
-    async def test_grader_hallucination_check(self):
-        """F2.9.1: Grader should detect hallucination."""
-        from src.pdf_framework.agents.rag.nodes.grader import check_hallucination
+    @pytest.mark.asyncio
+    async def test_prefilter_auto_rejects_low_score_docs(self):
+        """Documents below score_prefilter_threshold are auto-rejected without LLM call."""
+        from src.pdf_framework.agents.rag.nodes.grader import grade_documents
 
-        document = {"content": "1С was created in 2050", "id": "1"}
-        context = [{"content": "1С was created in 1991"}]
+        llm = _make_llm("yes")
+        settings = _make_settings(score_prefilter_threshold=0.5)
+        state: dict = {
+            "question": "What is 1С?",
+            "search_response": _make_search_response(
+                [
+                    _make_search_result("high", "1С is a platform", 0.9),
+                    _make_search_result("low", "Unrelated content", 0.1),
+                ]
+            ),
+        }
 
-        is_hallucination = await check_hallucination(document, context)
+        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+            result = await grade_documents(state, llm, settings)
 
-        # Should detect inconsistency
-        assert is_hallucination is True
+        graded = result["graded_documents"]
+        assert len(graded) == 2
+        # Low-score doc is auto-rejected (no LLM call), high-score doc graded via LLM
+        low_doc = next(g for g in graded if g["chunk_id"] == "low")
+        high_doc = next(g for g in graded if g["chunk_id"] == "high")
+        assert low_doc["is_relevant"] is False
+        assert high_doc["is_relevant"] is True
+        # LLM should only be called once (for the high-score doc)
+        assert llm.ainvoke.call_count == 1
 
-    async def test_rewriter_query_expansion(self):
-        """F2.9.2: Rewriter should expand query for better retrieval."""
+    @pytest.mark.asyncio
+    async def test_relevance_ratio_calculated(self):
+        """relevance_ratio reflects fraction of relevant documents."""
+        from src.pdf_framework.agents.rag.nodes.grader import grade_documents
+
+        # Two docs above threshold, LLM says yes/no alternately
+        call_count = 0
+
+        async def side_effect(messages):
+            nonlocal call_count
+            call_count += 1
+            return AIMessage(content="yes" if call_count == 1 else "no - irrelevant")
+
+        llm = MagicMock()
+        llm.ainvoke = AsyncMock(side_effect=side_effect)
+        settings = _make_settings(score_prefilter_threshold=0.0)
+        state: dict = {
+            "question": "test",
+            "search_response": _make_search_response(
+                [
+                    _make_search_result("a", "relevant doc", 0.8),
+                    _make_search_result("b", "irrelevant doc", 0.7),
+                ]
+            ),
+        }
+
+        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+            result = await grade_documents(state, llm, settings)
+
+        assert result["relevance_ratio"] == pytest.approx(0.5)
+
+    @pytest.mark.asyncio
+    async def test_empty_search_response(self):
+        """Empty search results return empty graded_documents and ratio 0."""
+        from src.pdf_framework.agents.rag.nodes.grader import grade_documents
+
+        llm = _make_llm("yes")
+        settings = _make_settings()
+        state: dict = {
+            "question": "test",
+            "search_response": _make_search_response([]),
+        }
+
+        result = await grade_documents(state, llm, settings)
+
+        assert result["graded_documents"] == []
+        assert result["relevance_ratio"] == 0.0
+
+    @pytest.mark.asyncio
+    async def test_missing_search_response_in_state(self):
+        """No search_response key in state returns safe defaults."""
+        from src.pdf_framework.agents.rag.nodes.grader import grade_documents
+
+        llm = _make_llm("yes")
+        settings = _make_settings()
+        state: dict = {"question": "test"}
+
+        result = await grade_documents(state, llm, settings)
+
+        assert result["graded_documents"] == []
+        assert result["relevance_ratio"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# TestCheckHallucination
+# ---------------------------------------------------------------------------
+
+
+class TestCheckHallucination:
+    """F2.9.1b: check_hallucination node behavior."""
+
+    @pytest.mark.asyncio
+    async def test_detects_hallucination_when_not_grounded(self):
+        """LLM returning 'not_grounded' sets is_hallucinated=True."""
+        from src.pdf_framework.agents.rag.nodes.hallucination_checker import check_hallucination
+
+        llm = _make_llm("not_grounded: answer mentions 2050 but context says 1991")
+        settings = _make_settings(hallucination_check_enabled=True)
+        state: dict = {
+            "answer": "1С was created in 2050",
+            "context": "1С was created in 1991",
+        }
+
+        with patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_dspy_available", return_value=False):
+            result = await check_hallucination(state, llm, settings)
+
+        assert result["is_hallucinated"] is True
+        assert "hallucination_reason" in result
+
+    @pytest.mark.asyncio
+    async def test_grounded_answer_not_hallucinated(self):
+        """LLM returning 'grounded' sets is_hallucinated=False."""
+        from src.pdf_framework.agents.rag.nodes.hallucination_checker import check_hallucination
+
+        llm = _make_llm("grounded")
+        settings = _make_settings(hallucination_check_enabled=True)
+        state: dict = {
+            "answer": "1С was created in 1991",
+            "context": "1С (1C) was founded in 1991 by Boris Nuraliev.",
+        }
+
+        with patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_dspy_available", return_value=False):
+            result = await check_hallucination(state, llm, settings)
+
+        assert result["is_hallucinated"] is False
+
+    @pytest.mark.asyncio
+    async def test_disabled_check_skips_llm(self):
+        """When hallucination_check_enabled=False, LLM is never called."""
+        from src.pdf_framework.agents.rag.nodes.hallucination_checker import check_hallucination
+
+        llm = _make_llm("should not be called")
+        settings = _make_settings(hallucination_check_enabled=False)
+        state: dict = {
+            "answer": "some answer",
+            "context": "some context",
+        }
+
+        result = await check_hallucination(state, llm, settings)
+
+        assert result["is_hallucinated"] is False
+        llm.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_no_context_means_potential_hallucination(self):
+        """Without context, result is is_hallucinated=True (cannot verify)."""
+        from src.pdf_framework.agents.rag.nodes.hallucination_checker import check_hallucination
+
+        llm = _make_llm("grounded")
+        settings = _make_settings(hallucination_check_enabled=True)
+        state: dict = {
+            "answer": "some answer",
+            "context": "",
+        }
+
+        result = await check_hallucination(state, llm, settings)
+
+        assert result["is_hallucinated"] is True
+
+    @pytest.mark.asyncio
+    async def test_no_answer_returns_not_hallucinated(self):
+        """Without an answer to verify, returns is_hallucinated=False."""
+        from src.pdf_framework.agents.rag.nodes.hallucination_checker import check_hallucination
+
+        llm = _make_llm("grounded")
+        settings = _make_settings(hallucination_check_enabled=True)
+        state: dict = {
+            "answer": "",
+            "context": "some context",
+        }
+
+        result = await check_hallucination(state, llm, settings)
+
+        assert result["is_hallucinated"] is False
+
+
+# ---------------------------------------------------------------------------
+# TestRewriteQuery
+# ---------------------------------------------------------------------------
+
+
+class TestRewriteQuery:
+    """F2.9.2: rewrite_query node behavior."""
+
+    @pytest.mark.asyncio
+    async def test_rewrites_query_via_llm(self):
+        """LLM produces a rewritten question different from original."""
         from src.pdf_framework.agents.rag.nodes.rewriter import rewrite_query
 
-        original_query = "справочники"
+        rewritten_text = "справочники в 1С: типы, структура и использование"
+        llm = _make_llm(rewritten_text)
+        settings = _make_settings()
+        state: dict = {
+            "question": "справочники",
+            "retry_count": 0,
+        }
 
-        rewritten = await rewrite_query(original_query)
+        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+            result = await rewrite_query(state, llm, settings)
 
-        # Should produce a different, more specific query
-        assert rewritten != original_query
-        assert len(rewritten) > 0
+        assert result["question"] == rewritten_text
+        assert result["retry_count"] == 1
 
-    async def test_rewriter_preserves_intent(self):
-        """F2.9.2: Rewriter should preserve original query intent."""
+    @pytest.mark.asyncio
+    async def test_increments_retry_count(self):
+        """retry_count is incremented on each rewrite call."""
         from src.pdf_framework.agents.rag.nodes.rewriter import rewrite_query
 
-        original_query = "какие есть регистры в 1С?"
+        llm = _make_llm("регистры накопления в 1С Предприятие")
+        settings = _make_settings()
+        state: dict = {
+            "question": "регистры",
+            "retry_count": 1,
+            "original_question": "регистры",
+        }
 
-        rewritten = await rewrite_query(original_query)
+        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+            result = await rewrite_query(state, llm, settings)
 
-        # Should still be about registers in 1C
-        assert "регистр" in rewritten.lower() or "register" in rewritten.lower()
+        assert result["retry_count"] == 2
 
-    async def test_rewriter_multi_turn(self):
-        """F2.9.2: Rewriter should support multi-turn refinement."""
+    @pytest.mark.asyncio
+    async def test_returns_search_strategy_key(self):
+        """Result always contains search_strategy key."""
         from src.pdf_framework.agents.rag.nodes.rewriter import rewrite_query
 
-        query = "справочники"
+        llm = _make_llm("регистры накопления")
+        settings = _make_settings()
+        state: dict = {
+            "question": "регистры",
+            "retry_count": 0,
+            "search_strategy": "vector",
+        }
 
-        # Multiple rewrites should improve specificity
-        rewrite1 = await rewrite_query(query, turn=1)
-        rewrite2 = await rewrite_query(query, turn=2)
+        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+            result = await rewrite_query(state, llm, settings)
 
-        # Later turns should be more specific
-        assert len(rewrite2) >= len(rewrite1)
+        assert "search_strategy" in result
 
-    def test_rewriter_max_length(self):
-        """F2.9.2: Rewriter should respect max query length."""
+    @pytest.mark.asyncio
+    async def test_strategy_escalation_on_second_retry(self):
+        """Strategy escalates from 'vector' to 'hybrid' on second retry."""
         from src.pdf_framework.agents.rag.nodes.rewriter import rewrite_query
 
-        # Set short max length
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.MAX_QUERY_LENGTH", 50):
-            import asyncio
+        llm = _make_llm("more specific query about registers")
+        settings = _make_settings(strategy_escalation_enabled=True)
+        state: dict = {
+            "question": "регистры",
+            "retry_count": 1,  # next call makes retry_count=2 -> escalation
+            "original_question": "регистры",
+            "search_strategy": "vector",
+        }
 
-            async def test():
-                result = await rewrite_query("Very long query about many things")
-                return len(result) <= 50
+        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+            result = await rewrite_query(state, llm, settings)
 
-            assert asyncio.run(test())
+        # retry_count will become 2 -> strategy should escalate from vector to hybrid
+        assert result["search_strategy"] == "hybrid"
+
+    @pytest.mark.asyncio
+    async def test_no_strategy_escalation_on_first_retry(self):
+        """Strategy stays the same on the first retry (retry_count=0 -> 1)."""
+        from src.pdf_framework.agents.rag.nodes.rewriter import rewrite_query
+
+        llm = _make_llm("справочники 1С: типы объектов метаданных")
+        settings = _make_settings(strategy_escalation_enabled=True)
+        state: dict = {
+            "question": "справочники",
+            "retry_count": 0,
+            "search_strategy": "vector",
+        }
+
+        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+            result = await rewrite_query(state, llm, settings)
+
+        # retry_count=1, escalation only triggers at >=2
+        assert result["search_strategy"] == "vector"
+
+    @pytest.mark.asyncio
+    async def test_fallback_to_original_when_llm_returns_empty(self):
+        """When LLM returns empty/identical response, original question is used."""
+        from src.pdf_framework.agents.rag.nodes.rewriter import rewrite_query
+
+        # Return identical text (the rewriter validates and falls back)
+        llm = _make_llm("справочники")
+        settings = _make_settings()
+        state: dict = {
+            "question": "справочники",
+            "retry_count": 0,
+            "original_question": "справочники",
+        }
+
+        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
+             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+            result = await rewrite_query(state, llm, settings)
+
+        # Falls back to original_question when all rewrites are identical
+        assert result["question"] == "справочники"
+        assert result["retry_count"] == 1
 
 
-@pytest.mark.unit
+# ---------------------------------------------------------------------------
+# TestStreamingRAGRunner
+# ---------------------------------------------------------------------------
+
+
+async def _make_async_events(*events):
+    """Async generator that yields the given event dicts."""
+    for ev in events:
+        yield ev
+
+
 class TestStreamingRAGRunner:
-    """Test StreamingRAGRunner event types (F2.9.3)."""
+    """F2.9.3: StreamingRAGRunner event types."""
 
-    async def test_streaming_events(self):
-        """F2.9.3: Should emit streaming events."""
+    def _make_runner(self, graph_events: list) -> Any:
+        """Build a StreamingRAGRunner with a mocked graph."""
         from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
 
-        runner = StreamingRAGRunner()
+        graph = MagicMock()
+
+        async def fake_astream_events(state, version="v2"):
+            for ev in graph_events:
+                yield ev
+
+        graph.astream_events = fake_astream_events
+        return StreamingRAGRunner(graph=graph, show_status=True, show_sources=True)
+
+    @pytest.mark.asyncio
+    async def test_emits_status_and_done_events(self):
+        """Runner always emits STATUS (searching) and DONE even with no graph output."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        runner = self._make_runner([])  # graph yields nothing
 
         events = []
+        async for ev in runner.stream("test query"):
+            events.append(ev)
 
-        async def collect_events():
-            async for event in runner.stream("test query"):
-                events.append(event)
+        types = [ev.type for ev in events]
+        assert StreamEventType.STATUS in types
+        assert StreamEventType.DONE in types
 
-        await collect_events()
+    @pytest.mark.asyncio
+    async def test_emits_token_events_from_generate_node(self):
+        """on_chat_model_stream from 'generate' node yields TOKEN events."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-        # Should have events
-        assert len(events) > 0
+        chunk = MagicMock()
+        chunk.content = "Hello"
+        graph_events = [
+            {
+                "event": "on_chat_model_stream",
+                "name": "generate",
+                "metadata": {"langgraph_node": "generate"},
+                "data": {"chunk": chunk},
+            }
+        ]
+        runner = self._make_runner(graph_events)
 
-    async def test_event_types(self):
-        """F2.9.3: Should emit correct event types."""
-        from src.pdf_framework.agents.rag.streaming import EventType, StreamingRAGRunner
+        events = []
+        async for ev in runner.stream("test"):
+            events.append(ev)
 
-        runner = StreamingRAGRunner()
+        token_events = [ev for ev in events if ev.type == StreamEventType.TOKEN]
+        assert len(token_events) == 1
+        assert token_events[0].data == "Hello"
 
-        event_types = []
+    @pytest.mark.asyncio
+    async def test_non_generate_nodes_not_yielded_as_tokens(self):
+        """Tokens from grader/rewriter nodes are filtered out."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-        async def collect_types():
-            async for event in runner.stream("test"):
-                event_types.append(event.type)
+        chunk = MagicMock()
+        chunk.content = "grading..."
+        graph_events = [
+            {
+                "event": "on_chat_model_stream",
+                "name": "grader",
+                "metadata": {"langgraph_node": "grader"},
+                "data": {"chunk": chunk},
+            }
+        ]
+        runner = self._make_runner(graph_events)
 
-        await collect_types()
+        events = []
+        async for ev in runner.stream("test"):
+            events.append(ev)
 
-        # Should have key event types
-        assert EventType.QUERY_START in event_types
-        assert EventType.QUERY_END in event_types
+        token_events = [ev for ev in events if ev.type == StreamEventType.TOKEN]
+        assert len(token_events) == 0
 
-    async def test_event_progress(self):
-        """F2.9.3: Events should track progress."""
+    @pytest.mark.asyncio
+    async def test_emits_source_events_when_chain_end_has_sources(self):
+        """on_chain_end with sources key yields SOURCE events."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        graph_events = [
+            {
+                "event": "on_chain_end",
+                "name": "search",
+                "data": {"output": {"sources": ["doc_a.pdf", "doc_b.pdf"]}},
+            }
+        ]
+        runner = self._make_runner(graph_events)
+
+        events = []
+        async for ev in runner.stream("test"):
+            events.append(ev)
+
+        source_events = [ev for ev in events if ev.type == StreamEventType.SOURCE]
+        assert len(source_events) == 1
+        # source data is a list of formatted dicts
+        assert isinstance(source_events[0].data, list)
+        assert len(source_events[0].data) == 2
+
+    @pytest.mark.asyncio
+    async def test_emits_generating_status_after_search_node(self):
+        """After a 'search' chain_end event, a STATUS 'generating' event is emitted."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        graph_events = [
+            {
+                "event": "on_chain_end",
+                "name": "search",
+                "data": {"output": {}},
+            }
+        ]
+        runner = self._make_runner(graph_events)
+
+        events = []
+        async for ev in runner.stream("test"):
+            events.append(ev)
+
+        status_events = [ev for ev in events if ev.type == StreamEventType.STATUS]
+        status_data = [ev.data for ev in status_events]
+        assert "generating" in status_data
+
+    @pytest.mark.asyncio
+    async def test_done_event_has_answer_length_metadata(self):
+        """DONE event metadata contains answer_length and sources_count."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        chunk = MagicMock()
+        chunk.content = "The answer is 42."
+        graph_events = [
+            {
+                "event": "on_chat_model_stream",
+                "name": "generate",
+                "metadata": {"langgraph_node": "generate"},
+                "data": {"chunk": chunk},
+            }
+        ]
+        runner = self._make_runner(graph_events)
+
+        done_events = []
+        async for ev in runner.stream("test"):
+            if ev.type == StreamEventType.DONE:
+                done_events.append(ev)
+
+        assert len(done_events) == 1
+        meta = done_events[0].metadata
+        assert "answer_length" in meta
+        assert meta["answer_length"] == len("The answer is 42.")
+        assert "sources_count" in meta
+
+    @pytest.mark.asyncio
+    async def test_error_event_emitted_on_graph_exception(self):
+        """If graph raises, an ERROR event is yielded instead of propagating."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        graph = MagicMock()
+
+        async def failing_astream_events(state, version="v2"):
+            raise RuntimeError("Graph failed")
+            yield  # make it a generator
+
+        graph.astream_events = failing_astream_events
+
         from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
 
-        runner = StreamingRAGRunner()
+        runner = StreamingRAGRunner(graph=graph)
 
-        progress_values = []
+        events = []
+        async for ev in runner.stream("test"):
+            events.append(ev)
 
-        async def collect_progress():
-            async for event in runner.stream("test"):
-                if hasattr(event, "progress"):
-                    progress_values.append(event.progress)
+        error_events = [ev for ev in events if ev.type == StreamEventType.ERROR]
+        assert len(error_events) == 1
+        assert "Graph failed" in str(error_events[0].data)
 
-        await collect_progress()
+    @pytest.mark.asyncio
+    async def test_to_sse_produces_valid_sse_format(self):
+        """stream_to_sse yields strings in SSE 'data: {...}\\n\\n' format."""
+        runner = self._make_runner([])
 
-        # Progress should increase
-        assert all(
-            progress_values[i] <= progress_values[i + 1] for i in range(len(progress_values) - 1)
-        )
+        lines = []
+        async for line in runner.stream_to_sse("test"):
+            lines.append(line)
 
-    async def test_event_chunk_delivery(self):
-        """F2.9.3: Should deliver response chunks."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+        assert len(lines) > 0
+        for line in lines:
+            assert line.startswith("data: ")
+            assert line.endswith("\n\n")
 
-        runner = StreamingRAGRunner()
+    @pytest.mark.asyncio
+    async def test_stream_event_to_dict(self):
+        """StreamEvent.to_dict() returns proper keys."""
+        from src.pdf_framework.agents.rag.streaming import StreamEvent, StreamEventType
 
-        chunks = []
+        ev = StreamEvent(type=StreamEventType.TOKEN, data="hello", metadata={"k": "v"})
+        d = ev.to_dict()
 
-        async def collect_chunks():
-            async for event in runner.stream("test"):
-                if event.type == "chunk":
-                    chunks.append(event.content)
+        assert d["type"] == "token"
+        assert d["data"] == "hello"
+        assert d["metadata"] == {"k": "v"}
 
-        await collect_chunks()
+    @pytest.mark.asyncio
+    async def test_non_dict_graph_events_are_ignored(self):
+        """Non-dict objects yielded by graph (LangGraph 1.0.x markers) are skipped."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-        # Should have content chunks
-        assert len(chunks) > 0
-        assert any(len(c) > 0 for c in chunks)
+        # Mix non-dict markers with a real event
+        chunk = MagicMock()
+        chunk.content = "ok"
+        graph_events = [
+            "some_string_marker",
+            None,
+            {
+                "event": "on_chat_model_stream",
+                "name": "generate",
+                "metadata": {"langgraph_node": "generate"},
+                "data": {"chunk": chunk},
+            },
+        ]
+        runner = self._make_runner(graph_events)
 
-    async def test_streaming_error_handling(self):
-        """F2.9.3: Should handle errors in streaming gracefully."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+        events = []
+        async for ev in runner.stream("test"):
+            events.append(ev)
 
-        runner = StreamingRAGRunner()
-
-        # Mock generator that raises error
-        async def failing_generator():
-            yield {"type": "start"}
-            raise ValueError("Test error")
-
-        with patch.object(runner, "_stream", failing_generator):
-            with pytest.raises(ValueError):
-                async for _ in runner.stream("test"):
-                    pass
+        token_events = [ev for ev in events if ev.type == StreamEventType.TOKEN]
+        assert len(token_events) == 1

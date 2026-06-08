@@ -1,213 +1,358 @@
-"""Unit tests for Qdrant Vector Store (F2.7).
+"""Unit tests for Qdrant Vector Store — current public API.
 
-Tests:
-- F2.7.1: Test Qdrant _to_qdrant_id determinism
-- F2.7.2: Test Qdrant hybrid_search RRF merge
-- F2.7.3: Test Qdrant MMR with named vectors
+Covers:
+- F2.7.1: _to_qdrant_id module-level function (determinism, uniqueness, UUID format)
+- F2.7.2: QdrantVectorStore.search_mmr — MMR selection logic (mocked client)
+- F2.7.3: QdrantVectorStore._point_to_search_result — payload → SearchResult mapping
+- F2.7.4: QdrantVectorStore.supports_native_bm25 / hybrid_search fallback
 """
 
-from unittest.mock import MagicMock
+import uuid
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
 
-@pytest.mark.unit
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _make_settings(**overrides):
+    """Build a VectorStoreSettings without touching the real env / .env file."""
+    from src.pdf_framework.config.vector_store import VectorStoreSettings
+
+    defaults = dict(
+        provider="qdrant",
+        dimensions=4,  # tiny — fast numpy ops
+        qdrant_url="http://localhost:6333",
+        qdrant_api_key="",
+        collection_name="test_collection",
+        qdrant_bm25_enabled=False,
+    )
+    defaults.update(overrides)
+    # pydantic-settings: pass values directly, bypass env
+    return VectorStoreSettings.model_construct(**defaults)
+
+
+def _make_store(**settings_overrides):
+    """Return an uninitialised QdrantVectorStore with mocked settings."""
+    from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+
+    settings = _make_settings(**settings_overrides)
+    store = QdrantVectorStore(settings=settings)
+    return store
+
+
+def _make_scored_point(point_id: str, score: float, vector=None, payload=None):
+    """Build a minimal mock ScoredPoint compatible with _point_to_search_result / search_mmr."""
+    p = MagicMock()
+    p.id = point_id
+    p.score = score
+    p.vector = vector  # None, list[float], or dict
+    p.payload = payload or {
+        "original_id": point_id,
+        "content": f"content of {point_id}",
+        "document_id": "doc1",
+        "page_number": 1,
+        "section": "intro",
+        "chunk_index": 0,
+    }
+    return p
+
+
+# ---------------------------------------------------------------------------
+# F2.7.1 — _to_qdrant_id  (module-level function)
+# ---------------------------------------------------------------------------
+
 class TestQdrantIDMapping:
-    """Test Qdrant ID determinism (F2.7.1)."""
+    """Test _to_qdrant_id determinism and format (F2.7.1)."""
 
-    def test_to_qdrant_id_deterministic(self):
-        """F2.7.1: Same string ID should produce same Qdrant ID."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+    def test_to_qdrant_id_is_deterministic(self):
+        """Same string should always produce the same UUID."""
+        from src.pdf_framework.vector_store.providers.qdrant import _to_qdrant_id
 
-        store = QdrantVectorStore()
+        assert _to_qdrant_id("test_chunk_123") == _to_qdrant_id("test_chunk_123")
 
-        id1 = store._to_qdrant_id("test_chunk_123")
-        id2 = store._to_qdrant_id("test_chunk_123")
+    def test_to_qdrant_id_unique_for_different_inputs(self):
+        """100 distinct strings should produce 100 distinct UUIDs."""
+        from src.pdf_framework.vector_store.providers.qdrant import _to_qdrant_id
 
-        assert id1 == id2
-
-    def test_to_qdrant_id_unique_for_different_ids(self):
-        """F2.7.1: Different IDs should produce different Qdrant IDs."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
-
-        store = QdrantVectorStore()
-
-        ids = [store._to_qdrant_id(f"chunk_{i}") for i in range(100)]
-
+        ids = [_to_qdrant_id(f"chunk_{i}") for i in range(100)]
         assert len(set(ids)) == 100
 
-    def test_to_qdrant_id_format_is_uuid(self):
-        """F2.7.1: Qdrant ID should be valid UUID format."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+    def test_to_qdrant_id_returns_valid_uuid_format(self):
+        """Result must be a valid UUID string (parseable by uuid.UUID)."""
+        from src.pdf_framework.vector_store.providers.qdrant import _to_qdrant_id
 
-        store = QdrantVectorStore()
+        result = _to_qdrant_id("arbitrary_string_id")
+        parsed = uuid.UUID(result)  # raises if invalid
+        assert str(parsed) == result
 
-        qdrant_id = store._to_qdrant_id("test_id")
+    def test_to_qdrant_id_passthrough_valid_uuid(self):
+        """If input is already a valid UUID string, it must be returned as-is."""
+        from src.pdf_framework.vector_store.providers.qdrant import _to_qdrant_id
 
-        # Should be UUID-like (hex string with dashes)
-        assert "-" in qdrant_id
-        assert len(qdrant_id) == 36  # Standard UUID length
+        valid_uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        assert _to_qdrant_id(valid_uuid) == valid_uuid
 
-    def test_from_qdrant_id_reversibility(self):
-        """F2.7.1: Round-trip conversion should preserve original ID."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+    def test_to_qdrant_id_non_uuid_string_yields_deterministic_uuid5(self):
+        """Non-UUID strings must be converted via UUID5 (deterministic namespace)."""
+        from src.pdf_framework.vector_store.providers.qdrant import _QDRANT_NS, _to_qdrant_id
 
-        store = QdrantVectorStore()
-
-        original_id = "test_chunk_123"
-        qdrant_id = store._to_qdrant_id(original_id)
-        recovered_id = store._from_qdrant_id(qdrant_id)
-
-        assert recovered_id == original_id
-
-
-@pytest.mark.unit
-class TestQdrantRRF:
-    """Test Qdrant RRF merge (F2.7.2)."""
-
-    def test_rrf_merge_combines_results(self):
-        """F2.7.2: RRF should combine results from multiple sources."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
-
-        store = QdrantVectorStore()
-
-        # Mock results from dense and sparse search
-        dense_results = [
-            MagicMock(id="chunk_1", score=0.9),
-            MagicMock(id="chunk_3", score=0.7),
-        ]
-
-        sparse_results = [
-            MagicMock(id="chunk_2", score=0.8),
-            MagicMock(id="chunk_3", score=0.6),
-        ]
-
-        merged = store._rrf_merge(dense_results, sparse_results, k=60)
-
-        # Should contain all unique chunks
-        merged_ids = [r.id for r in merged]
-        assert "chunk_1" in merged_ids
-        assert "chunk_2" in merged_ids
-        assert "chunk_3" in merged_ids
-
-    def test_rrf_formula_weights_scores(self):
-        """F2.7.2: RRF formula should properly weight and rank."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
-
-        store = QdrantVectorStore()
-
-        # Higher rank should contribute more
-        results1 = [MagicMock(id="a"), MagicMock(id="b"), MagicMock(id="c")]
-        results2 = [MagicMock(id="b"), MagicMock(id="a"), MagicMock(id="c")]
-
-        merged = store._rrf_merge(results1, results2, k=60)
-
-        # Find 'a' position (rank 1 in results1, rank 2 in results2)
-        # RRF = 1/(k+1) + 1/(k+2) = 1/61 + 1/62 ≈ 0.0328
-        a_scores = [r.score for r in merged if r.id == "a"]
-        assert len(a_scores) > 0
-
-    def test_rrf_k_parameter_affects_weighting(self):
-        """F2.7.2: Different k values should produce different rankings."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
-
-        store = QdrantVectorStore()
-
-        results1 = [MagicMock(id="a"), MagicMock(id="b")]
-        results2 = [MagicMock(id="b"), MagicMock(id="a")]
-
-        merged_k60 = store._rrf_merge(results1, results2, k=60)
-        merged_k100 = store._rrf_merge(results1, results2, k=100)
-
-        # Rankings should differ
-        assert len(merged_k60) == 2
-        assert len(merged_k100) == 2
+        string_id = "pdf_doc_page_42"
+        expected = str(uuid.uuid5(_QDRANT_NS, string_id))
+        assert _to_qdrant_id(string_id) == expected
 
 
-@pytest.mark.unit
+# ---------------------------------------------------------------------------
+# F2.7.2 — search_mmr  (async, mocked qdrant client)
+# ---------------------------------------------------------------------------
+
 class TestQdrantMMR:
-    """Test Qdrant MMR with named vectors (F2.7.3)."""
+    """Test MMR selection behaviour in search_mmr (F2.7.2)."""
 
-    def test_mmr_diversifies_results(self):
-        """F2.7.3: MMR should promote diverse results."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+    def _make_initialized_store(self, has_sparse: bool = False):
+        store = _make_store()
+        store._initialized = True
+        store._has_sparse = has_sparse
+        store._client = AsyncMock()
+        return store
 
-        store = QdrantVectorStore()
+    @pytest.mark.asyncio
+    async def test_mmr_returns_k_results_when_enough_candidates(self):
+        """search_mmr must return exactly k results when fetch_k > k candidates exist."""
+        import numpy as np
 
-        # Mock embeddings (similar vectors)
-        embeddings = [
-            [1.0, 0.0, 0.0],
-            [0.95, 0.0, 0.0],  # Very similar to first
-            [0.0, 1.0, 0.0],  # Diverse
-            [0.9, 0.0, 0.0],  # Similar to first
+        store = self._make_initialized_store()
+
+        # 6 candidate points, each with a 4-dim dense vector
+        candidates = [
+            _make_scored_point(f"p{i}", float(6 - i), vector=[1.0 - i * 0.1, 0.0, 0.0, 0.0])
+            for i in range(6)
+        ]
+        # Normalize vectors to unit length manually for clean cosine sims
+        for p in candidates:
+            v = np.array(p.vector, dtype=float)
+            nv = v / (np.linalg.norm(v) + 1e-10)
+            p.vector = nv.tolist()
+
+        mock_result = MagicMock()
+        mock_result.points = candidates
+        store._client.query_points = AsyncMock(return_value=mock_result)
+
+        query = [1.0, 0.0, 0.0, 0.0]
+        results = await store.search_mmr(query_embedding=query, k=3, fetch_k=6, lambda_mult=0.5)
+
+        assert len(results) == 3
+
+    @pytest.mark.asyncio
+    async def test_mmr_diversifies_by_selecting_orthogonal_vector(self):
+        """With lambda=0, diversity wins — orthogonal vector should be selected."""
+        store = self._make_initialized_store()
+
+        # 3 candidates: two near-identical, one orthogonal
+        near1 = [1.0, 0.0, 0.0, 0.0]
+        near2 = [0.99, 0.14, 0.0, 0.0]
+        orth = [0.0, 0.0, 1.0, 0.0]
+
+        candidates = [
+            _make_scored_point("near1", 0.99, vector=near1),
+            _make_scored_point("near2", 0.98, vector=near2),
+            _make_scored_point("orth", 0.50, vector=orth),
         ]
 
-        diverse_results = store._mmr_diversify(
-            embeddings,
-            lambda_query=[1.0, 0.0, 0.0],
-            lambda_value=0.5,
-            top_k=3,
-        )
+        mock_result = MagicMock()
+        mock_result.points = candidates
+        store._client.query_points = AsyncMock(return_value=mock_result)
 
-        # Should include the diverse vector
-        assert 2 in diverse_results  # Index of [0.0, 1.0, 0.0]
+        query = [1.0, 0.0, 0.0, 0.0]
+        # lambda=0 → pure diversity after first pick
+        results = await store.search_mmr(query_embedding=query, k=2, fetch_k=3, lambda_mult=0.0)
 
-    def test_mmr_lambda_parameter(self):
-        """F2.7.3: Lambda controls relevance vs diversity tradeoff."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+        ids = [r.chunk.id for r in results]
+        # First pick is most-relevant (near1), second should be orthogonal
+        assert ids[0] == "near1"
+        assert ids[1] == "orth"
 
-        store = QdrantVectorStore()
+    @pytest.mark.asyncio
+    async def test_mmr_returns_all_when_candidates_leq_k(self):
+        """If candidates <= k, all are returned without MMR selection."""
+        store = self._make_initialized_store()
 
-        embeddings = [
-            [1.0, 0.0, 0.0],
-            [0.9, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
+        candidates = [
+            _make_scored_point("a", 0.9, vector=[1.0, 0.0, 0.0, 0.0]),
+            _make_scored_point("b", 0.8, vector=[0.0, 1.0, 0.0, 0.0]),
         ]
 
-        # High lambda = more relevance, less diversity
-        relevant_results = store._mmr_diversify(
-            embeddings,
-            lambda_query=[1.0, 0.0, 0.0],
-            lambda_value=0.9,
-            top_k=2,
+        mock_result = MagicMock()
+        mock_result.points = candidates
+        store._client.query_points = AsyncMock(return_value=mock_result)
+
+        results = await store.search_mmr(
+            query_embedding=[1.0, 0.0, 0.0, 0.0], k=5, fetch_k=10
         )
 
-        # Should prioritize similar vectors
-        assert 0 in relevant_results  # [1.0, 0.0, 0.0]
-        assert 1 in relevant_results  # [0.9, 0.0, 0.0]
+        assert len(results) == 2
 
-    def test_mmr_with_named_vectors(self):
-        """F2.7.3: Should handle named vectors (dense, sparse)."""
-        from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
+    @pytest.mark.asyncio
+    async def test_mmr_handles_named_vectors_dict(self):
+        """MMR must extract 'dense' key from named-vector dict (BM25 collection layout)."""
+        store = self._make_initialized_store(has_sparse=True)
 
-        store = QdrantVectorStore()
+        dense_a = [1.0, 0.0, 0.0, 0.0]
+        dense_b = [0.0, 1.0, 0.0, 0.0]
+        dense_c = [0.0, 0.0, 1.0, 0.0]
 
-        # Mock results with named vectors
-        results = [
-            {"id": "chunk_1", "score": 0.9, "vector": {"dense": [1.0, 0.0], "sparse": {1: 0.5}}},
-            {"id": "chunk_2", "score": 0.8, "vector": {"dense": [0.9, 0.0], "sparse": {1: 0.3}}},
+        candidates = [
+            _make_scored_point("a", 0.9, vector={"dense": dense_a, "bm25": {}}),
+            _make_scored_point("b", 0.7, vector={"dense": dense_b, "bm25": {}}),
+            _make_scored_point("c", 0.5, vector={"dense": dense_c, "bm25": {}}),
         ]
 
-        # MMR should work with named vector structure
-        mmr_results = store._mmr_named_vectors(
-            results,
-            lambda_value=0.5,
-            top_k=2,
+        mock_result = MagicMock()
+        mock_result.points = candidates
+        store._client.query_points = AsyncMock(return_value=mock_result)
+
+        results = await store.search_mmr(
+            query_embedding=dense_a, k=2, fetch_k=3, lambda_mult=0.5
         )
 
-        assert len(mmr_results) <= 2
+        assert len(results) == 2
+        # Result objects should be valid SearchResults
+        from src.pdf_framework.schemas.documents import SearchResult
 
-    def test_mmr_empty_results(self):
-        """F2.7.3: MMR should handle empty results gracefully."""
+        assert all(isinstance(r, SearchResult) for r in results)
+
+
+# ---------------------------------------------------------------------------
+# F2.7.3 — _point_to_search_result  (sync helper, no I/O)
+# ---------------------------------------------------------------------------
+
+class TestPointToSearchResult:
+    """Test payload→SearchResult mapping (F2.7.3)."""
+
+    def test_full_payload_maps_correctly(self):
+        """All standard fields must be present in the returned SearchResult."""
+        from src.pdf_framework.schemas.documents import SearchResult
         from src.pdf_framework.vector_store.providers.qdrant import QdrantVectorStore
 
-        store = QdrantVectorStore()
-
-        result = store._mmr_diversify(
-            [],
-            lambda_query=[1.0, 0.0],
-            lambda_value=0.5,
-            top_k=5,
+        store = _make_store()
+        point = _make_scored_point(
+            "chunk_42",
+            score=0.87,
+            payload={
+                "original_id": "chunk_42",
+                "content": "hello world",
+                "document_id": "doc_001",
+                "page_number": 3,
+                "section": "abstract",
+                "chunk_index": 7,
+                "extra_meta": "foo",
+            },
         )
 
-        assert result == []
+        result = store._point_to_search_result(point)
+
+        assert isinstance(result, SearchResult)
+        assert result.score == pytest.approx(0.87)
+        assert result.source == "qdrant"
+        assert result.chunk.id == "chunk_42"
+        assert result.chunk.content == "hello world"
+        assert result.chunk.document_id == "doc_001"
+        assert result.chunk.page_number == 3
+        assert result.chunk.section == "abstract"
+        assert result.chunk.chunk_index == 7
+        # Extra fields land in metadata, not in standard fields
+        assert result.chunk.metadata.get("extra_meta") == "foo"
+
+    def test_missing_original_id_falls_back_to_point_id(self):
+        """If payload has no original_id, point.id is used as chunk id."""
+        store = _make_store()
+        point = MagicMock()
+        point.id = "qdrant-uuid-xyz"
+        point.score = 0.5
+        point.payload = {"content": "text", "document_id": "d"}
+
+        result = store._point_to_search_result(point)
+
+        assert result.chunk.id == "qdrant-uuid-xyz"
+
+    def test_zero_page_number_becomes_none(self):
+        """page_number=0 in payload should yield chunk.page_number=None."""
+        store = _make_store()
+        point = _make_scored_point(
+            "x",
+            0.5,
+            payload={"original_id": "x", "content": "", "document_id": "", "page_number": 0},
+        )
+
+        result = store._point_to_search_result(point)
+
+        assert result.chunk.page_number is None
+
+    def test_standard_payload_fields_excluded_from_metadata(self):
+        """Standard fields (content, document_id, etc.) must NOT appear in chunk.metadata."""
+        from src.pdf_framework.vector_store.providers.qdrant import _STANDARD_PAYLOAD_FIELDS
+
+        store = _make_store()
+        payload = {
+            "original_id": "id1",
+            "content": "text",
+            "document_id": "doc",
+            "page_number": 1,
+            "section": "s",
+            "chunk_index": 0,
+            "custom_tag": "keep_me",
+        }
+        point = _make_scored_point("id1", 0.6, payload=payload)
+
+        result = store._point_to_search_result(point)
+
+        for field in _STANDARD_PAYLOAD_FIELDS:
+            assert field not in result.chunk.metadata
+        assert result.chunk.metadata.get("custom_tag") == "keep_me"
+
+
+# ---------------------------------------------------------------------------
+# F2.7.4 — supports_native_bm25 + hybrid_search fallback
+# ---------------------------------------------------------------------------
+
+class TestQdrantBM25Support:
+    """Test BM25 flag and hybrid fallback (F2.7.4)."""
+
+    def test_supports_native_bm25_false_by_default(self):
+        """Fresh (uninitialised) store has _has_sparse=False."""
+        store = _make_store()
+        assert store.supports_native_bm25() is False
+
+    def test_supports_native_bm25_true_after_flag_set(self):
+        """If _has_sparse is set to True, supports_native_bm25() must return True."""
+        store = _make_store()
+        store._has_sparse = True
+        assert store.supports_native_bm25() is True
+
+    @pytest.mark.asyncio
+    async def test_hybrid_search_falls_back_to_dense_when_no_sparse(self):
+        """hybrid_search must delegate to search() when _has_sparse is False."""
+        store = _make_store()
+        store._initialized = True
+        store._has_sparse = False
+        store._client = AsyncMock()
+
+        dense_results = [_make_scored_point("a", 0.9)]
+        mock_result = MagicMock()
+        mock_result.points = dense_results
+        store._client.query_points = AsyncMock(return_value=mock_result)
+
+        results = await store.hybrid_search(
+            query_embedding=[1.0, 0.0, 0.0, 0.0],
+            query_text="hello",
+            k=5,
+        )
+
+        # Should have called query_points (via search()) and returned results
+        assert store._client.query_points.called
+        assert len(results) == 1
+        assert results[0].chunk.id == "a"

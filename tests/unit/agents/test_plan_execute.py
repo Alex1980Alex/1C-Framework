@@ -182,7 +182,7 @@ class TestPlannerNode:
 
     @pytest.mark.asyncio
     async def test_create_plan_basic(self, mock_llm):
-        """Should create plan from LLM response."""
+        """Should create plan from LLM response (real PLANNER_PROMPT)."""
         planner = create_plan(mock_llm)
         state = PlanExecuteState(query="test query")
 
@@ -198,10 +198,10 @@ class TestPlannerNode:
     async def test_create_plan_multiple_steps(self, mock_llm):
         """Should create plan with multiple steps."""
         mock_llm.ainvoke.return_value = MagicMock(
-            content="""{"steps": [
-                {"step_id": "1", "description": "Step 1", "tool": "search", "query": "q1"},
-                {"step_id": "2", "description": "Step 2", "tool": "calculate", "query": "q2"}
-            ]}"""
+            content='{"steps": ['
+            '{"step_id": "1", "description": "Step 1", "tool": "search", "query": "q1"},'
+            '{"step_id": "2", "description": "Step 2", "tool": "calculate", "query": "q2"}'
+            "]}"
         )
 
         planner = create_plan(mock_llm)
@@ -215,7 +215,7 @@ class TestPlannerNode:
 
     @pytest.mark.asyncio
     async def test_create_plan_json_error_fallback(self, mock_llm):
-        """Should fallback to single step on JSON error."""
+        """Should fallback to single search step when LLM returns invalid JSON."""
         mock_llm.ainvoke.return_value = MagicMock(content="This is not valid JSON")
 
         planner = create_plan(mock_llm)
@@ -223,14 +223,14 @@ class TestPlannerNode:
 
         result = await planner(state)
 
-        # Should create fallback step
+        # Fallback: single search step whose query mirrors the original query
         assert len(result["plan"]) == 1
         assert result["plan"][0].tool == "search"
         assert result["plan"][0].query == "test query"
 
     @pytest.mark.asyncio
     async def test_create_plan_initializes_counters(self, mock_llm):
-        """Should initialize current_step and iterations."""
+        """Should reset current_step and iterations to 0 on each new plan."""
         planner = create_plan(mock_llm)
         state = PlanExecuteState(query="test", iterations=10, current_step=5)
 
@@ -238,6 +238,20 @@ class TestPlannerNode:
 
         assert result["current_step"] == 0
         assert result["iterations"] == 0
+
+    @pytest.mark.asyncio
+    async def test_planner_prompt_substitutes_query(self, mock_llm):
+        """Regression: PLANNER_PROMPT contains literal JSON braces, so substitution
+        must use .replace (not .format) — the query must reach the LLM and no
+        ``{query}`` placeholder may remain."""
+        planner = create_plan(mock_llm)
+        state = PlanExecuteState(query="UNIQUE_QUERY_MARKER_42")
+
+        await planner(state)
+
+        sent_content = mock_llm.ainvoke.call_args[0][0][0]["content"]
+        assert "UNIQUE_QUERY_MARKER_42" in sent_content
+        assert "{query}" not in sent_content
 
 
 # ============================================================================
@@ -260,11 +274,21 @@ class TestExecutorNode:
 
     @pytest.fixture
     def mock_tools(self):
-        """Mock tools."""
+        """Mock tools.
+
+        executor calls tool.ainvoke(...) for graph_query, calculate, web_search,
+        so each entry must expose an AsyncMock on .ainvoke.
+        """
+        calc = MagicMock()
+        calc.ainvoke = AsyncMock(return_value=42)
+
+        graph = MagicMock()
+        graph.ainvoke = AsyncMock(return_value="graph result")
+
         return {
             "search": AsyncMock(return_value="search result"),
-            "graph_query": AsyncMock(return_value="graph result"),
-            "calculate": MagicMock(return_value=42),
+            "graph_query": graph,
+            "calculate": calc,
             "web_search": AsyncMock(return_value="web result"),
         }
 
@@ -286,7 +310,7 @@ class TestExecutorNode:
 
     @pytest.mark.asyncio
     async def test_execute_calculate_step(self, mock_search_manager, mock_tools):
-        """Should execute calculate step."""
+        """Should execute calculate step via tool.ainvoke and mark it completed."""
         executor = execute_step(mock_search_manager, mock_tools)
 
         state = PlanExecuteState(
@@ -296,12 +320,16 @@ class TestExecutorNode:
 
         result = await executor(state)
 
+        # Step marked completed; executor returns dict with tool/query/result keys
         assert result["plan"][0].status == "completed"
-        assert result["plan"][0].result == 4
+        step_result = result["plan"][0].result
+        assert isinstance(step_result, dict)
+        assert step_result["tool"] == "calculate"
+        assert step_result["result"] == 42  # value returned by mock calc.ainvoke
 
     @pytest.mark.asyncio
     async def test_execute_graph_query_step(self, mock_search_manager, mock_tools):
-        """Should execute graph_query step."""
+        """Should execute graph_query step via tool.ainvoke and mark it completed."""
         executor = execute_step(mock_search_manager, mock_tools)
 
         state = PlanExecuteState(
@@ -312,7 +340,11 @@ class TestExecutorNode:
         result = await executor(state)
 
         assert result["plan"][0].status == "completed"
-        mock_tools["graph_query"].assert_called_once()
+        # executor calls graph_query.ainvoke({"query": ...})
+        mock_tools["graph_query"].ainvoke.assert_called_once_with({"query": "entity:Document"})
+        step_result = result["plan"][0].result
+        assert isinstance(step_result, dict)
+        assert step_result["tool"] == "graph_query"
 
     @pytest.mark.asyncio
     async def test_execute_skips_completed_steps(self, mock_search_manager, mock_tools):
@@ -475,7 +507,12 @@ class TestAgentCreation:
         }
 
     def test_create_plan_execute_agent(self, mock_llm, mock_search_manager, mock_tools):
-        """Should create compiled agent."""
+        """Should build a real LangGraph agent whose graph compiles and exposes ainvoke.
+
+        Regression: the graph wiring referenced a non-existent node ``execute`` (the
+        node is registered as ``executor``), which made ``StateGraph.compile()`` raise.
+        This test uses the real StateGraph so a recurrence is caught here.
+        """
         agent = create_plan_execute_agent(
             llm=mock_llm,
             search_manager=mock_search_manager,
@@ -484,13 +521,12 @@ class TestAgentCreation:
         )
 
         assert agent is not None
-        # Compiled agent should have invoke methods
         assert hasattr(agent, "ainvoke")
 
     def test_create_agent_with_custom_max_iterations(
         self, mock_llm, mock_search_manager, mock_tools
     ):
-        """Should respect custom max_iterations."""
+        """Should accept a custom max_iterations and still return a compiled agent."""
         agent = create_plan_execute_agent(
             llm=mock_llm,
             search_manager=mock_search_manager,
@@ -499,6 +535,7 @@ class TestAgentCreation:
         )
 
         assert agent is not None
+        assert hasattr(agent, "ainvoke")
 
 
 # ============================================================================

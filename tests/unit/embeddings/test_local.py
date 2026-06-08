@@ -1,33 +1,51 @@
-"""Unit tests for Local Embedding Provider (F2.4.1-F2.4.2)."""
+"""Unit tests for Local Embedding Engine (F2.4.1-F2.4.2) and EmbeddingCache (F2.4.3)."""
 
+from unittest.mock import MagicMock, patch
+
+import numpy as np
 import pytest
+
+from src.pdf_framework.config import EmbeddingSettings
+
+
+def _local_settings(**overrides) -> EmbeddingSettings:
+    defaults = {
+        "provider": "local",
+        "model": "intfloat/multilingual-e5-large",
+        "dimensions": 1024,
+        "device": "cpu",
+        "batch_size": 2,
+    }
+    defaults.update(overrides)
+    return EmbeddingSettings(**defaults)
 
 
 @pytest.mark.unit
 class TestLocalEmbeddingProvider:
-    """Test LocalEmbeddingProvider initialization and batching."""
+    """Test LocalEmbeddingEngine initialization and settings."""
 
     def test_local_provider_init(self):
-        """F2.4.1: LocalEmbeddingProvider should initialize with model."""
-        from src.pdf_framework.embeddings.providers.local import LocalEmbeddingProvider
+        """F2.4.1: LocalEmbeddingEngine initialises with EmbeddingSettings without loading weights."""
+        from src.pdf_framework.embeddings.providers.local import LocalEmbeddingEngine
 
-        provider = LocalEmbeddingProvider(
-            model="intfloat/multilingual-e5-large",
-            device="cpu",
-        )
+        settings = _local_settings()
+        engine = LocalEmbeddingEngine(settings=settings)
 
-        assert provider.model_name == "intfloat/multilingual-e5-large"
-        assert provider.device == "cpu"
+        # Model is lazy-loaded; _model must be None until first embed call
+        assert engine._model is None
+        assert engine.get_model_name() == "intfloat/multilingual-e5-large"
+        assert engine.get_dimensions() == 1024
+        # E5 models need prefix handling — flag must be set
+        assert engine._is_e5 is True
 
     @pytest.mark.skip(reason="Requires model download")
     def test_embed_batch_chunking(self):
         """F2.4.2: embed_batch should respect batch_size."""
-        from src.pdf_framework.embeddings.providers.local import LocalEmbeddingProvider
+        from src.pdf_framework.embeddings.providers.local import LocalEmbeddingEngine
 
-        provider = LocalEmbeddingProvider(batch_size=2)
-
+        engine = LocalEmbeddingEngine(settings=_local_settings(batch_size=2))
         texts = [f"text {i}" for i in range(10)]
-        embeddings = provider.embed_batch(texts)
+        embeddings = engine.embed_batch(texts)
 
         assert len(embeddings) == 10
         assert all(len(e) == 1024 for e in embeddings)
@@ -35,30 +53,32 @@ class TestLocalEmbeddingProvider:
 
 @pytest.mark.unit
 class TestEmbeddingCache:
-    """Test SQLite embedding cache (F2.4.3)."""
+    """Test async SQLite embedding cache (F2.4.3)."""
 
-    def test_cache_hit(self, tmp_path):
-        """F2.4.3: SQLite cache should return cached embeddings."""
-        from src.pdf_framework.embeddings.cache.sqlite_cache import SQLiteEmbeddingCache
+    @pytest.mark.asyncio
+    async def test_cache_hit(self, tmp_path):
+        """F2.4.3: EmbeddingCache.get returns the vector stored via set (cache hit)."""
+        from src.pdf_framework.embeddings.cache.sqlite_cache import EmbeddingCache
 
-        cache = SQLiteEmbeddingCache(db_path=tmp_path / "cache.db")
+        cache = EmbeddingCache(db_path=tmp_path / "cache.db")
+        model = "intfloat/multilingual-e5-large"
+        vector = [0.1] * 1024
 
-        # Cache an embedding
-        cache.put("test_key", [0.1] * 1024)
+        await cache.set("hello world", model, vector)
+        result = await cache.get("hello world", model)
 
-        # Retrieve it
-        cached = cache.get("test_key")
+        assert result is not None
+        assert len(result) == 1024
+        assert result[0] == pytest.approx(0.1)
+        assert cache.get_stats().hits == 1
 
-        assert cached is not None
-        assert len(cached) == 1024
-        assert cached[0] == 0.1
+    @pytest.mark.asyncio
+    async def test_cache_miss(self, tmp_path):
+        """Cache returns None for a key that was never stored."""
+        from src.pdf_framework.embeddings.cache.sqlite_cache import EmbeddingCache
 
-    def test_cache_miss(self, tmp_path):
-        """Cache should return None for missing keys."""
-        from src.pdf_framework.embeddings.cache.sqlite_cache import SQLiteEmbeddingCache
+        cache = EmbeddingCache(db_path=tmp_path / "cache.db")
+        result = await cache.get("nonexistent text", "some-model")
 
-        cache = SQLiteEmbeddingCache(db_path=tmp_path / "cache.db")
-
-        cached = cache.get("nonexistent_key")
-
-        assert cached is None
+        assert result is None
+        assert cache.get_stats().misses == 1

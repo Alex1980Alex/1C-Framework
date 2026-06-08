@@ -275,11 +275,14 @@ class TestBGEM3Errors:
                 _ = provider.model
 
     def test_model_load_failure_propagates(self):
-        """Model load failures should propagate."""
+        """Model load failures should propagate (BGEM3FlagModel is a local import)."""
+        import sys
+
         provider = BGEM3Provider()
 
-        with patch("src.pdf_framework.embeddings.providers.bgem3.BGEM3FlagModel") as mock_class:
-            mock_class.side_effect = RuntimeError("CUDA OOM")
+        mock_flag = MagicMock()
+        mock_flag.BGEM3FlagModel = MagicMock(side_effect=RuntimeError("CUDA OOM"))
 
+        with patch.dict(sys.modules, {"FlagEmbedding": mock_flag}):
             with pytest.raises(RuntimeError, match="CUDA OOM"):
                 _ = provider.model

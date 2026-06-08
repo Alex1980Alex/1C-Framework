@@ -58,9 +58,10 @@ def create_plan(llm: Any):
         """Generate initial execution plan."""
         logger.info(f"[PLANNER] Creating plan for: {state.query[:50]}...")
 
-        # Generate plan
+        # Generate plan. Use .replace (not .format): PLANNER_PROMPT contains literal
+        # JSON braces in its example, which str.format would misparse as fields.
         response = await llm.ainvoke(
-            [{"role": "user", "content": PLANNER_PROMPT.format(query=state.query)}]
+            [{"role": "user", "content": PLANNER_PROMPT.replace("{query}", state.query)}]
         )
 
         # Parse JSON response

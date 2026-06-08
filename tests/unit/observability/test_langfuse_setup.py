@@ -21,12 +21,20 @@ LANGFUSE_INSTALLED = importlib.util.find_spec("langfuse") is not None
 @pytest.mark.unit
 class TestIsLangfuseEnabled:
     def test_default_disabled(self):
-        """Real settings — langfuse_enabled defaults to False (config/observability.py:23)."""
-        from src.pdf_framework.observability.langfuse_setup import is_langfuse_enabled
+        """With default settings (langfuse_enabled=False) and no opt-out env, returns False."""
+        from src.pdf_framework.observability import langfuse_setup
 
-        # Default config has langfuse_enabled=False, expect False
-        # If user .env enables it locally, this test would fail — acceptable for unit gate
-        assert is_langfuse_enabled() is False
+        class _Obs:
+            langfuse_enabled = False
+
+        class _Settings:
+            observability = _Obs()
+
+        with (
+            patch("src.pdf_framework.config.get_settings", return_value=_Settings()),
+            patch.dict("os.environ", {}, clear=True),
+        ):
+            assert langfuse_setup.is_langfuse_enabled() is False
 
     def test_returns_true_when_patched_enabled(self):
         from src.pdf_framework.observability import langfuse_setup
