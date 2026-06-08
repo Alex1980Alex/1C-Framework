@@ -24,42 +24,36 @@ from src.pdf_framework.indexing.wiki_exporter import (
 from src.pdf_framework.schemas.entities import Entity, Relation
 
 
-def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
-
-
 @pytest.fixture
-def graph_store(tmp_path):
+async def graph_store(tmp_path):
     from src.pdf_framework.config import GraphStoreSettings
 
     settings = GraphStoreSettings(persist_dir=tmp_path / "graph")
     store = NetworkXGraphStore(settings)
-    _run(store.initialize())
+    await store.initialize()
     return store
 
 
 @pytest.fixture
-def populated_store(graph_store):
+async def populated_store(graph_store):
     e1 = Entity(id="e1", name="Python AsyncIO", entity_type="CONCEPT", confidence=0.95)
     e2 = Entity(id="e2", name="Event Loop", entity_type="CONCEPT", confidence=0.90)
     e3 = Entity(id="e3", name="Web Framework", entity_type="TECHNOLOGY", confidence=0.88)
     for e in [e1, e2, e3]:
-        _run(graph_store.add_entity(e))
-    _run(
-        graph_store.add_relation(
-            Relation(id="r1", source_entity_id="e1", target_entity_id="e2", relation_type="uses"),
-        )
+        await graph_store.add_entity(e)
+    await graph_store.add_relation(
+        Relation(id="r1", source_entity_id="e1", target_entity_id="e2", relation_type="uses"),
     )
     return graph_store
 
 
 @pytest.fixture
-def exporter(graph_store, tmp_path):
+async def exporter(graph_store, tmp_path):
     return WikiExporter(graph_store, WikiExportConfig(output_dir=tmp_path / "wiki"))
 
 
 @pytest.fixture
-def pop_exp(populated_store, tmp_path):
+async def pop_exp(populated_store, tmp_path):
     return WikiExporter(populated_store, WikiExportConfig(output_dir=tmp_path / "wiki"))
 
 
@@ -198,7 +192,8 @@ class TestReverseSyncService:
             debounce_s=debounce_s,
         )
 
-    def test_parse_extracts_frontmatter_and_links(self, graph_store, tmp_path):
+    @pytest.mark.asyncio
+    async def test_parse_extracts_frontmatter_and_links(self, graph_store, tmp_path):
         page = tmp_path / "e1.md"
         page.write_text(
             "---\nunified_id: 019e\nstatus: active\n---\n\n"
@@ -212,14 +207,16 @@ class TestReverseSyncService:
         assert change.frontmatter == {"unified_id": "019e", "status": "active"}
         assert change.added_links == ["e2", "e3"]
 
-    def test_parse_invalid_frontmatter_raises(self, graph_store, tmp_path):
+    @pytest.mark.asyncio
+    async def test_parse_invalid_frontmatter_raises(self, graph_store, tmp_path):
         page = tmp_path / "bad.md"
         page.write_text("---\nkey: : : invalid yaml\n---\nbody\n", encoding="utf-8")
         svc = self._make_service(graph_store, tmp_path)
         with pytest.raises(WikiParseError):
             svc._parse_wiki_page(page)
 
-    def test_parse_no_frontmatter_yields_empty_dict(self, graph_store, tmp_path):
+    @pytest.mark.asyncio
+    async def test_parse_no_frontmatter_yields_empty_dict(self, graph_store, tmp_path):
         page = tmp_path / "plain.md"
         page.write_text("Just body with [[link]].\n", encoding="utf-8")
         svc = self._make_service(graph_store, tmp_path)

@@ -9,28 +9,22 @@ Coverage:
 
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
 from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
 from src.pdf_framework.schemas.entities import Entity, Relation
 
 
-def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
-
-
 @pytest.fixture
-def store(tmp_path):
+async def store(tmp_path):
     from src.pdf_framework.config import GraphStoreSettings
 
     settings = GraphStoreSettings(persist_dir=tmp_path / "graph")
     s = NetworkXGraphStore(settings)
-    _run(s.initialize())
-    _run(s.add_entity(Entity(id="a", name="A", entity_type="CONCEPT")))
-    _run(s.add_entity(Entity(id="b", name="B", entity_type="CONCEPT")))
-    _run(s.add_entity(Entity(id="c", name="C", entity_type="CONCEPT")))
+    await s.initialize()
+    await s.add_entity(Entity(id="a", name="A", entity_type="CONCEPT"))
+    await s.add_entity(Entity(id="b", name="B", entity_type="CONCEPT"))
+    await s.add_entity(Entity(id="c", name="C", entity_type="CONCEPT"))
     return s
 
 

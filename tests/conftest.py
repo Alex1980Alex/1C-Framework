@@ -233,7 +233,7 @@ def mock_settings() -> Generator[MagicMock, None, None]:
     mock.cache.type = "memory"
     mock.log_level = "DEBUG"
 
-    with patch("src.pdf_framework.config.settings.get_settings", return_value=mock):
+    with patch("src.pdf_framework.config.get_settings", return_value=mock):
         yield mock
 
 

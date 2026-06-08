@@ -43,7 +43,7 @@ def event_bus():
 
 
 @pytest.fixture
-def graph_store():
+async def graph_store():
     import tempfile
 
     from src.pdf_framework.config import GraphStoreSettings
@@ -52,17 +52,17 @@ def graph_store():
     with tempfile.TemporaryDirectory() as tmp:
         settings = GraphStoreSettings(persist_dir=tmp)
         store = NetworkXGraphStore(settings)
-        asyncio.get_event_loop().run_until_complete(store.initialize())
+        await store.initialize()
         yield store
 
 
 @pytest.fixture
-def exporter(graph_store, tmp_path):
+async def exporter(graph_store, tmp_path):
     return WikiExporter(graph_store, WikiExportConfig(output_dir=tmp_path / "wiki"))
 
 
 @pytest.fixture
-def forward_sync(graph_store, exporter):
+async def forward_sync(graph_store, exporter):
     return ForwardSyncService(graph_store, exporter)
 
 
