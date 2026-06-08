@@ -54,35 +54,64 @@ def _configure_logging() -> None:
     root.addHandler(file_handler)
 
 
+def _init_task_failed(task: asyncio.Task[Components]) -> bool:
+    """True if a finished init task ended in cancellation or error (→ restart)."""
+    if not task.done():
+        return False
+    if task.cancelled():
+        return True
+    return task.exception() is not None
+
+
+async def _do_init() -> Components:
+    """Heavy ML-stack import + ``Components.initialize()``.
+
+    Runs inside a long-lived background task (see ``_get_components``) so a
+    client tool-call timeout/cancellation cannot abort it midway. The slow part
+    is the transitive import of the ML stack (torch/transformers/LightRAG),
+    which under session-start contention can take minutes; detaching it from the
+    request lifecycle prevents the restart-from-scratch spiral.
+    """
+    global _components
+    logger.info("Lazy-init Components: starting")
+    t0 = time.monotonic()
+    from src.api.dependencies.components import Components
+
+    instance = Components()
+    await instance.initialize()
+    _components = instance
+    logger.info("Lazy-init Components: ready in %.2fs", time.monotonic() - t0)
+    return instance
+
+
 async def _get_components() -> Components:
-    global _components, _components_lock
-    if _components_lock is None:
-        _components_lock = asyncio.Lock()
-    async with _components_lock:
+    """Return the shared ``Components``, lazily initialising it exactly once.
+
+    The actual init runs in a single module-level ``asyncio.Task``; callers
+    ``await asyncio.shield(task)`` it, so a cancelled tool call detaches the
+    caller without killing the in-flight init (it keeps running and is reused by
+    the next call). A task that ends in error/cancellation is restarted on the
+    next call; a successful one caches ``_components`` for instant reuse.
+    """
+    global _components, _init_lock, _init_task
+    if _components is not None:
+        return _components
+    if _init_lock is None:
+        _init_lock = asyncio.Lock()
+    async with _init_lock:
         if _components is not None:
             return _components
-        logger.info("Lazy-init Components: starting")
-        t0 = time.monotonic()
-        from src.api.dependencies.components import Components
-
-        instance = Components()
-        try:
-            await instance.initialize()
-        except asyncio.CancelledError:
-            logger.warning(
-                "Lazy-init Components: cancelled at %.2fs, leaving _components=None for retry",
-                time.monotonic() - t0,
-            )
-            raise
-        except Exception:
-            logger.exception(
-                "Lazy-init Components: failed at %.2fs, leaving _components=None for retry",
-                time.monotonic() - t0,
-            )
-            raise
-        _components = instance
-        logger.info("Lazy-init Components: ready in %.2fs", time.monotonic() - t0)
-        return _components
+        if _init_task is None or _init_task_failed(_init_task):
+            _init_task = asyncio.create_task(_do_init())
+        task = _init_task
+    try:
+        return await asyncio.shield(task)
+    except asyncio.CancelledError:
+        logger.warning("Lazy-init Components: request cancelled; init continues in background")
+        raise
+    except Exception:
+        logger.exception("Lazy-init Components: init failed; will retry on next call")
+        raise
 
 
 @server.list_tools()
