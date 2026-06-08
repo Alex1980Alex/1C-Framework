@@ -28,7 +28,7 @@ from src.pdf_framework.config import (
 class TestSettingsLoading:
     """Test Settings loading from environment variables."""
 
-    def test_settings_load_default_values(self, mock_settings):
+    def test_settings_load_default_values(self):
         """Settings should load with default values."""
         settings = Settings()
 

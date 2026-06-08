@@ -218,25 +218,6 @@ def test_settings(temp_data_dir: Path) -> Generator[None, None, None]:
     os.environ.update(original_env)
 
 
-@pytest.fixture
-def mock_settings() -> Generator[MagicMock, None, None]:
-    """Completely mock settings object for fast unit tests."""
-    mock = MagicMock()
-    mock.data_dir = Path("/tmp/test_data")
-    mock.vector_store.provider = "qdrant"
-    mock.vector_store.qdrant_url = "http://localhost:6333"
-    mock.embedding.model = "test-model"
-    mock.embedding.dimensions = 1024
-    mock.embedding.device = "cpu"
-    mock.search.bm25_weight = 0.3
-    mock.cache.enabled = True
-    mock.cache.type = "memory"
-    mock.log_level = "DEBUG"
-
-    with patch("src.pdf_framework.config.get_settings", return_value=mock):
-        yield mock
-
-
 # =============================================================================
 # Async Test Fixtures
 # =============================================================================

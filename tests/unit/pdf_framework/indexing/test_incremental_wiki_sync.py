@@ -16,6 +16,8 @@ from src.pdf_framework.indexing.wiki_exporter import (
 )
 from src.pdf_framework.schemas.entities import Entity
 
+pytestmark = pytest.mark.unit
+
 
 def _make_updater(graph_store, event_bus=None):
     """Create IncrementalGraphUpdater without graspologic dependency."""

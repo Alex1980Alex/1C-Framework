@@ -23,6 +23,8 @@ from src.pdf_framework.indexing.wiki_exporter import (
 )
 from src.pdf_framework.schemas.entities import Entity, Relation
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 async def graph_store(tmp_path):

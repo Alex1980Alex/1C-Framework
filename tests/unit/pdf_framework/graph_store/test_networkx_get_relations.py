@@ -14,6 +14,8 @@ import pytest
 from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
 from src.pdf_framework.schemas.entities import Entity, Relation
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 async def store(tmp_path):
