@@ -41,7 +41,10 @@ HOOK_TODOS_FILE = PROJECT_ROOT / ".claude" / "cache" / "hook-todos.json"
 
 # Candidate cap per run, aligned with the hook timeout (each reinforce is up
 # to one Qdrant retrieve + set_payload, 2s client timeout each worst-case).
-REINFORCE_CAP = int(os.environ.get("REINFORCE_CAP", "10"))
+try:
+    REINFORCE_CAP = int(os.environ.get("REINFORCE_CAP", "10"))
+except ValueError:
+    REINFORCE_CAP = 10
 
 
 def _read_json(path: Path):
