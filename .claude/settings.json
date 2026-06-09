@@ -538,6 +538,12 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pattern-reinforce-stop.py",
+            "timeout": 15,
+            "async": true
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/patterns-harvester.py",
             "timeout": 8
           },
