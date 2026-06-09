@@ -36,7 +36,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from base import BaseHook, HookInput, HookOutput
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-SESSION_STATE_FILE = PROJECT_ROOT / ".claude" / "data" / "session-skills.json"
 HOOK_TODOS_FILE = PROJECT_ROOT / ".claude" / "cache" / "hook-todos.json"
 
 # Candidate cap per run, aligned with the hook timeout (each reinforce is up
@@ -88,7 +87,11 @@ class PatternReinforceStop(BaseHook):
         if os.getenv("P1_REINFORCE_DISABLE") == "1":
             return None
 
-        session_id = inp.session_id or _read_json(SESSION_STATE_FILE).get("session_id", "")
+        # session_id strictly from the Stop payload: surfaced-patterns files are
+        # named by memory-first-hook's payload session_id, while the id in
+        # session-skills.json is a separately generated os.urandom hex — a
+        # fallback to it would never match a surfaced file.
+        session_id = inp.session_id
         if not session_id:
             return None
 
