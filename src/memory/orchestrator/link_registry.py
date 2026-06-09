@@ -9,6 +9,7 @@ Migrated from D:\\1C-Enterprise_Framework\\memory-orchestrator\\src\\link_regist
 """
 
 import json
+import os
 import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
