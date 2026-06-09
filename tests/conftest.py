@@ -1,11 +1,33 @@
 """Shared test fixtures for PDF Vector & Graph Framework."""
 
 import os
+import tempfile
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+# =============================================================================
+# Memory sink isolation (roadmap 260609 P0.2)
+# =============================================================================
+# Tests must never write to the production observability sinks
+# (.claude/cache/confidence-lifecycle.log, memory-*.log, epoch, surfaced files)
+# or to data/link_registry.db: 27 pytest runs left 183 fixture events in the
+# real lifecycle log and 5 garbage edges in the real link graph (see
+# docs/roadmap/260609_ROADMAP_MEMORY_REMEDIATION.md, A2).
+#
+# All memory writers honor these env overrides (lifecycle_log, epoch,
+# trace_log, ingest_metrics, pattern_reinforce, LinkRegistry). They are set at
+# conftest import time — BEFORE test modules import memory code — because some
+# modules (shared/pattern_reinforce.py) resolve paths into module-level
+# constants at import. Opt-out: MEMORY_TEST_ISOLATION_DISABLE=1.
+if os.environ.get("MEMORY_TEST_ISOLATION_DISABLE") != "1":
+    _mem_iso_root = Path(tempfile.mkdtemp(prefix="memtest-sinks-"))
+    _mem_iso_cache = _mem_iso_root / "cache"
+    _mem_iso_cache.mkdir(parents=True, exist_ok=True)
+    os.environ["CLAUDE_CACHE_DIR"] = str(_mem_iso_cache)
+    os.environ["LINK_REGISTRY_PATH"] = str(_mem_iso_root / "link_registry.db")
 
 # =============================================================================
 # Basic Fixtures

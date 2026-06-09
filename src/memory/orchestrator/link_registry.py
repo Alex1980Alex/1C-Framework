@@ -195,6 +195,10 @@ class LinkRegistry:
 
     def __init__(self, db_path: str | None = None):
         if db_path is None:
+            # Env override (roadmap 260609 P0.2): lets tests redirect the
+            # default registry away from the production data/link_registry.db.
+            db_path = os.environ.get("LINK_REGISTRY_PATH")
+        if db_path is None:
             data_dir = Path(__file__).parent.parent.parent.parent / "data"
             data_dir.mkdir(parents=True, exist_ok=True)
             db_path = str(data_dir / "link_registry.db")
