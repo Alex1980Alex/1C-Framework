@@ -220,15 +220,6 @@ def reinforce_session(
         if session_id in state["sessions"]:
             return {"status": "already-processed", "session_id": session_id}
 
-        # --- Resolve reinforce_fn lazily ---
-        if reinforce_fn is None:
-            src_path = str(_PROJECT_ROOT / "src")
-            if src_path not in sys.path:
-                sys.path.insert(0, src_path)
-            from memory.vector_memory.reinforce import reinforce_pattern
-
-            reinforce_fn = reinforce_pattern
-
         # --- Filter + sort surfaced patterns ---
         surfaced = load_surfaced(session_id)
         candidates = sorted(
@@ -236,6 +227,17 @@ def reinforce_session(
             key=lambda t: t[1],
             reverse=True,
         )[:cap]
+
+        # --- Resolve reinforce_fn lazily — only when there is work to do ---
+        # (roadmap 260609 P0.1: the qdrant_client import costs ~1s inside a
+        # Stop-hook budget; skip it entirely for empty-candidate sessions)
+        if reinforce_fn is None and candidates:
+            src_path = str(_PROJECT_ROOT / "src")
+            if src_path not in sys.path:
+                sys.path.insert(0, src_path)
+            from memory.vector_memory.reinforce import reinforce_pattern
+
+            reinforce_fn = reinforce_pattern
 
         # --- Per-pattern cooldown + reinforce ---
         now = datetime.now()
