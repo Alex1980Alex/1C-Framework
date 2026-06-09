@@ -15,8 +15,8 @@ This hook does ONE thing within its own budget: detect session success
 surfacing hook recorded via record_surfaced().
 
 Key properties:
-  - session_id comes from the Stop payload (same source memory-first-hook used
-    to name the surfaced-patterns file) with session-skills.json as fallback;
+  - session_id comes strictly from the Stop payload (the same source
+    memory-first-hook used to name the surfaced-patterns file);
   - early-exit BEFORE any Qdrant/src import when there is nothing surfaced;
   - candidate cap aligned with the hook budget (REINFORCE_CAP, default 10);
   - failures are logged as `session_error` to confidence-lifecycle.log — never
