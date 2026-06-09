@@ -486,6 +486,19 @@ def ingest_items(
 
     if not dry_run:
         _emit_ingest_stats(stats, harvester)
+        if stats["created"]:
+            # §24 cache invalidation (roadmap 260609 P1.5): without a bump,
+            # freshly harvested patterns stay invisible to the surfacing hook
+            # for up to the full cache TTL.
+            try:
+                src_dir = str(PROJECT_ROOT / "src")
+                if src_dir not in sys.path:
+                    sys.path.append(src_dir)
+                from memory.vector_memory import epoch
+
+                epoch.bump()
+            except Exception:
+                pass
     return stats
 
 
