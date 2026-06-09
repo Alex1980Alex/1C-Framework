@@ -105,7 +105,7 @@ class PatternReinforceStop(BaseHook):
                 f"applied={result.get('applied', 0)} skipped={result.get('skipped', 0)} "
                 f"errors={result.get('errors', 0)}"
             )
-            return HookOutput(system_message=msg)
+            return HookOutput().system_message(msg)
         if status == "error":
             # reinforce_session already wrote session_error to the lifecycle log.
             sys.stderr.write(f"[REINFORCE] error: {result.get('error', '')[:160]}\n")
