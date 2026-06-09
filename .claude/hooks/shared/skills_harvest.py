@@ -260,4 +260,19 @@ def harvest_skills(
         stats["deleted"] += 1
 
     _save_state(state_file, {"seeded": True, "skills": new_skills})
+    if stats["upserted"] or stats["deleted"]:
+        # §24 cache invalidation (roadmap 260609 P1.5): surfacing's skill arm
+        # reads skill_library through the same execution cache — bump so a
+        # changed/removed skill is visible on the next prompt.
+        try:
+            import sys
+
+            src_dir = str(PROJECT_ROOT / "src")
+            if src_dir not in sys.path:
+                sys.path.append(src_dir)
+            from memory.vector_memory import epoch
+
+            epoch.bump()
+        except Exception:
+            pass
     return stats
