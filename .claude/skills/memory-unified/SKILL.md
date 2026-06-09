@@ -175,6 +175,17 @@ Examples:
   - Writes to `data/memory_ai.db` (category: `session_summary`)
   - Also appends brief summary to `docs/wiki/log.md` (Hermes Phase 2)
   - Dedup by session_id or date, auto-importance (0.5-0.95), auto-tags
+  - ⚠ §22 reinforce здесь БОЛЬШЕ НЕ живёт (roadmap 260609 P0.1) — см. следующий хук
+- `pattern-reinforce-stop.py` (Stop, timeout 15s async) — §22 reinforcement bridge (roadmap 260609 P0.1, 2026-06-09)
+  - Выделен из session-memory-save: там вызов стоял ПОСЛЕ early-return'ов `is_meaningful`/`already_saved` и в 5s-бюджете → **0 production-reinforce за всю историю** (все события в lifecycle-логе были pytest-фикстурами)
+  - session_id строго из Stop-payload (тот же источник, которым memory-first-hook именует `surfaced-patterns-<sid>.json`)
+  - Early-exit через `load_surfaced()` ДО импорта Qdrant; cap `REINFORCE_CAP=10`; ошибки → `session_error` в lifecycle-лог (не `except: pass`)
+  - Первый production-прогон 2026-06-09: `session=1bab9bcd applied=10 errors=0`
+  - Opt-out: `P1_REINFORCE_DISABLE=1`
+
+### Test isolation (roadmap 260609 P0.2)
+
+`tests/conftest.py` на import-time уводит memory-sinks в tmp: `CLAUDE_CACHE_DIR` (lifecycle/epoch/trace/ingest/surfaced) + `LINK_REGISTRY_PATH` (env-override в `LinkRegistry.__init__`). Раньше pytest писал фикстуры в production `confidence-lifecycle.log` и `data/link_registry.db`. Чистка остатков: `scripts/cleanup_memory_test_pollution.py` (dry-run default). Opt-out: `MEMORY_TEST_ISOLATION_DISABLE=1`.
 
 
 ## Незадокументированные memory_subsystem
