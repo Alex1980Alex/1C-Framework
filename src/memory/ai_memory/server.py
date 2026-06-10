@@ -11,6 +11,7 @@ Adapted: uses project-local data/memory_ai.db instead of hardcoded path.
 import asyncio
 import json
 import logging
+import os
 import sqlite3
 import sys
 from datetime import datetime
