@@ -208,6 +208,7 @@ class TestPropagationEngine:
         engine = PropagationEngine(
             link_registry,
             PropagationConfig(enable_background_processing=False, max_depth=3),
+            update_handlers=_TEST_HANDLERS,
         )
         result = await engine.propagate("semantic:vector-memory:a", 0.1)
         assert len(result.entities_updated) >= 1
