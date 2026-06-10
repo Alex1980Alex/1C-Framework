@@ -533,8 +533,42 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     from qdrant_client.http import models as qmodels
 
     client = _get_qdrant()
-    pattern_id = str(uuid.uuid4())
     now = datetime.now()
+
+    # §26 P1.3 write-contract: deterministic content-derived id so re-saving the
+    # SAME content is an idempotent no-op (action=dup) rather than a duplicate
+    # point — and so a manually-saved pattern collides with the harvested one.
+    content_hash = _hash_content(args["content"])
+    pattern_id = _content_point_id(content_hash)
+
+    try:
+        existing = client.retrieve(collection_name=COLLECTION_NAME, ids=[pattern_id])
+    except Exception:
+        existing = []
+    if existing:
+        # Idempotent: the fact is already stored — do NOT overwrite (would reset the
+        # accrued succ/fail counts). Report it honestly as a dedup, not a fresh save.
+        _record_ingest(
+            "learned_patterns",
+            "dup",
+            content_hash=content_hash,
+            pattern_id=pattern_id,
+            harvester="save_pattern",
+        )
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "success": True,
+                        "action": "dup",
+                        "pattern_id": pattern_id,
+                        "content_hash": content_hash,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        ]
 
     evidence = []
     for e in args.get("evidence_sources", []):
