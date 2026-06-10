@@ -29,9 +29,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger("memory-ai")
 
-# Database path — project-local
+# Database path — project-local; MEMORY_AI_DB_PATH overrides (test isolation,
+# same env var the orchestrator's propagation handler honors).
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-DB_PATH = _PROJECT_ROOT / "data" / "memory_ai.db"
+DB_PATH = Path(os.environ.get("MEMORY_AI_DB_PATH") or _PROJECT_ROOT / "data" / "memory_ai.db")
 
 
 def ensure_db():

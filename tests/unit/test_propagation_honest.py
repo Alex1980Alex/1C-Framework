@@ -139,3 +139,63 @@ async def test_memory_ai_handler_clamps_importance(tmp_path, monkeypatch):
     ).fetchone()[0]
     conn.close()
     assert imp == pytest.approx(1.0, abs=1e-6)
+
+
+async def test_orchestrator_propagate_is_sync_and_repeatable(tmp_path, monkeypatch):
+    """Production MCP path returns the real result, twice in a row.
+
+    Pins the lazy-init config: with the engine defaults the first call would
+    come back ``reason="queued_for_background_processing"`` with
+    ``entities_updated=[]`` (hiding the honest result behind the queue), and
+    event dedup would silently skip the second call for the same entity.
+    """
+    calls: list[str] = []
+
+    async def _ok(entity_id: str, delta: float) -> bool:
+        calls.append(entity_id)
+        return True
+
+    orch = MemoryOrchestrator()
+    orch._link_registry = _linked_registry(tmp_path)
+    monkeypatch.setattr(
+        orch,
+        "_build_propagation_handlers",
+        lambda: {SourceServer.VECTOR_MEMORY: _ok},
+    )
+
+    for _ in range(2):
+        resp = await orch.propagate_update("semantic:vector-memory:a", delta=0.1)
+        assert resp["success"] is True
+        result = resp["result"]
+        assert result["reason"] != "queued_for_background_processing"
+        assert result["entities_updated"] == ["semantic:vector-memory:b"]
+
+    # Both invocations reached the handler — no duplicate_event swallowing.
+    assert calls == ["semantic:vector-memory:b"] * 2
+
+    await orch._propagation_engine.stop()
+
+
+async def test_vector_handler_bumps_epoch(tmp_path, monkeypatch):
+    """§24 invariant: the vector-memory propagation handler is a confidence
+    writer, so a successful mutation must bump the surfacing-cache epoch."""
+    from types import SimpleNamespace
+
+    from src.memory.vector_memory import epoch
+    from src.memory.vector_memory import server as vm_server
+
+    monkeypatch.setenv("CLAUDE_CACHE_DIR", str(tmp_path / "cache"))
+    assert epoch.read() == 0.0
+
+    class _FakeQdrant:
+        def retrieve(self, collection_name, ids, with_payload):
+            return [SimpleNamespace(payload={"succ": 1.0, "fail": 0.0, "confidence": 0.7})]
+
+        def set_payload(self, collection_name, payload, points):
+            pass
+
+    monkeypatch.setattr(vm_server, "_get_qdrant", lambda: _FakeQdrant())
+
+    handler = MemoryOrchestrator()._build_propagation_handlers()[SourceServer.VECTOR_MEMORY]
+    assert await handler("semantic:vector-memory:p1", 1.0) is True
+    assert epoch.read() > 0.0
