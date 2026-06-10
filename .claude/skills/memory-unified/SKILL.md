@@ -194,6 +194,12 @@ Examples:
 - **Surfacing cache-key редизайн (P1.2):** `_surface_cache_key` ослаблен с exact-token-set до top-K (8) salient-stem токенов (длинные = content-bearing в RU/BSL) → промпты на одну тему с разным filler'ом хитуют; epoch по-прежнему вшит (мгновенная инвалидация). TTL 300→900s; empty-результаты на коротком `SURFACE_CACHE_EMPTY_TTL` (180s). Env-knobs: `MEMORY_SURFACE_CACHE_KEY_TOPK`, `MEMORY_SURFACE_CACHE_EMPTY_TTL`, `MEMORY_SURFACE_LEXICAL_SCROLL` (100→50). Per-stage timing (`sqlite/qdrant/md/rerank`) в surfacing-log для профилирования (P1.1).
 - **Тесты:** `tests/unit/test_write_contract.py` (11), `tests/unit/test_surfacing_cache.py` (4). ⚠ Production-acceptance P1.1 (латентность) / P1.2 (hit-rate) подтвердятся накоплением surfacing-лога после reconnect.
 
+### PropagationEngine wired + стабы восстановлены (roadmap 260609 P2.2/P2.3, 2026-06-10)
+
+- **P2.3 — `propagate_update` реально мутирует:** `PropagationEngine._apply_update` честный (handler→`bool(result)`, no-handler→`False` — конец «simulate success», больше нет фантомных `entities_updated`). `MemoryOrchestrator._build_propagation_handlers()` подключает реальные handlers: **vector-memory** (нудж Beta `succ/fail` по знаку delta → `derive_confidence` → `set_payload` на тёплом `_get_qdrant`), **memory-ai** (`importance ± delta` clamp `[0,1]` в SQLite; env `MEMORY_AI_DB_PATH` для изоляции тестов). `success` сворачивается в знак delta. Сосуществует с server-side `_cascade_confidence` (синхронный каскад на горячем `apply_pattern`) — два разных входа, не конфликтуют. ⚠ MCP-side → нужен `/mcp reconnect`.
+- **P2.2 — стабы B1 восстановлены (L5-план):** `session-memory-save.py` снова пишет `docs/wiki/log.md` (`save_to_wiki_log`, UTF-8 + trim 500), делегирует промоут `export_graph_to_wiki promote-patterns` (`try_promote_patterns`, = §26 P4 cadence job, opt-out `SESSION_MEMORY_NO_PROMOTE=1`), эмитит Langfuse-span (`_emit_langfuse_span`, graceful no-op без Langfuse). Восстановлено из git `7bc57e463`.
+- **Тесты:** `tests/unit/test_propagation_honest.py` (6) + 2 BFS-теста в `test_p1_infrastructure.py` (dummy success-handler). 6 unit + 8 engine + 18 orchestrator integration PASS.
+
 
 ## Незадокументированные memory_subsystem
 
