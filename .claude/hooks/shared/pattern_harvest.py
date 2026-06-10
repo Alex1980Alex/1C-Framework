@@ -315,7 +315,18 @@ def _build_payload(item: HarvestItem, content_hash: str, now: datetime) -> dict[
         "content": item.content,
         "content_hash": content_hash,
         "confidence": _derive_conf(0.0, 0.0),  # Beta(7,3) prior = 0.70
-        "evidence_sources": [{"source": item.source}],
+        # Full EvidenceSource schema — bare {"source": ...} broke
+        # EvidenceSource.from_dict (KeyError 'source_type') and with it the whole
+        # search_patterns response (F6, roadmap 260610).
+        "evidence_sources": [
+            {
+                "source_type": "harvester",
+                "reference": item.source,
+                "weight": 1.0,
+                "timestamp": None,
+                "metadata": {},
+            }
+        ],
         "created_at": iso,
         "updated_at": iso,
         "last_applied": None,
