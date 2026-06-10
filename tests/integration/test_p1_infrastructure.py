@@ -39,10 +39,29 @@ from src.memory.orchestrator.propagation_engine import (
     PropagationConfig,
     PropagationEngine,
 )
+from src.memory.orchestrator.unified_id import SourceServer
 from src.memory.skill_learning.merge_patterns import (
     ConflictStrategy,
     PatternMerger,
 )
+
+
+async def _always_apply(entity_id: str, delta: float) -> bool:
+    """Dummy update handler that reports a successful mutation.
+
+    Roadmap 260609 P2.3 made ``PropagationEngine._apply_update`` honest: with no
+    handler it returns False (no fabricated updates). Tests that exercise the
+    BFS/decay/rate-limit machinery itself supply this handler so traversal
+    proceeds and ``entities_updated`` reflects real (here, stubbed) writes.
+    """
+    return True
+
+
+# Handlers for the two receiver source types used in these tests.
+_TEST_HANDLERS = {
+    SourceServer.VECTOR_MEMORY: _always_apply,
+    SourceServer.MEMORY_AI: _always_apply,
+}
 
 # =============================================================================
 # CircuitBreaker Tests
