@@ -247,11 +247,35 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
     now = datetime.now().isoformat()
     require_confirmation = args.get("require_confirmation", True)
 
+    # §26 P1.3 write-contract: stamp content_hash + skip re-captures of content
+    # already pending/saved (anti-flood) + emit an ingestion event.
+    content_hash = _content_hash(args["content"])
+    if content_hash:
+        existing = _existing_hashes().get(content_hash)
+        if existing is not None:
+            _record_ingest("dup", content_hash)
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "success": True,
+                            "action": "dup",
+                            "pattern_id": existing or pattern_id,
+                            "status": "dup",
+                            "name": args["name"],
+                        },
+                        ensure_ascii=False,
+                    ),
+                )
+            ]
+
     pattern = {
         "pattern_id": pattern_id,
         "pattern_type": args["pattern_type"],
         "name": args["name"],
         "content": args["content"],
+        "content_hash": content_hash,
         "description": args.get("description", ""),
         "confidence": args.get("confidence", 0.7),
         "tags": args.get("tags", []),
@@ -274,6 +298,7 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
         _update_stats_on_save(pattern)
         status = "saved"
 
+    _record_ingest("saved" if status == "saved" else "skipped", content_hash, reason=status)
     logger.info(f"Captured pattern {pattern_id}: {pattern['name']} (status={status})")
     return [
         TextContent(
@@ -281,6 +306,7 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
             text=json.dumps(
                 {
                     "success": True,
+                    "action": status,
                     "pattern_id": pattern_id,
                     "status": status,
                     "name": pattern["name"],
