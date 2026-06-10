@@ -385,6 +385,10 @@ def _pattern_to_payload(pattern: LearnedPattern) -> dict[str, Any]:
         "name": pattern.name,
         "description": pattern.description,
         "content": pattern.content,
+        # §26 cross-store idempotency key — lets cross_store_sync / fact-trace match
+        # this fact against the same content in other stores, and the §26 dedup path
+        # detect re-saves. Stamped on every save path (mirrors the harvester payload).
+        "content_hash": _hash_content(pattern.content),
         "confidence": pattern.confidence,
         "evidence_sources": [e.to_dict() for e in pattern.evidence_sources],
         "created_at": pattern.created_at.isoformat(),
