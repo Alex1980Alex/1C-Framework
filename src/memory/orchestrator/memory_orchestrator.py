@@ -542,12 +542,21 @@ class MemoryOrchestrator:
         except Exception:
             pass
 
-        # Save to each target
+        # Save to each target. A target that fails (raises or returns None) must
+        # NOT be silently swallowed into a success:true response (roadmap 260609
+        # P1.4 / §26 A6): callers cannot retry or alert on a loss they can't see.
         saved_entities = []
+        failed_targets: list[str] = []
         for target in decision.targets:
-            entity_id = await self._save_to_target(target, content, metadata)
+            try:
+                entity_id = await self._save_to_target(target, content, metadata)
+            except Exception as e:  # noqa: BLE001 — per-target isolation, recorded below
+                logger.warning(f"route_and_save: target {target} raised: {e}")
+                entity_id = None
             if entity_id:
                 saved_entities.append({"target": target, "entity_id": entity_id})
+            else:
+                failed_targets.append(target)
 
         # Create cross-links between saved entities
         if self.config.enable_link_creation and len(saved_entities) > 1:
