@@ -577,8 +577,11 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
         _trace_set("tei", "down")
         _trace_set("tei_error", f"{type(exc).__name__}: {exc}"[:160])
 
-    # §24 P1: lexical arm — ALWAYS-ON (not fallback), catches BSL exact-term/CamelCase
-    arms["pattern_lexical"] = _search_learned_patterns(query_tokens, start, limit)
+    # §24 P1: lexical arm — ALWAYS-ON (not fallback), catches BSL exact-term/CamelCase.
+    # Own clock: sharing `start` with the dense block starved this arm to 0 hits
+    # whenever the TEI attempt ate the QDRANT_TIMEOUT budget — i.e. exactly when
+    # lexical was supposed to be the sole survivor (F11, roadmap 260610 D5).
+    arms["pattern_lexical"] = _search_learned_patterns(query_tokens, time.monotonic(), limit)
 
     # Per-arm hit counts before fusion — shows which signals actually fired.
     _trace_set("arms", {k: len(v) for k, v in arms.items()})
