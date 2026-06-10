@@ -569,9 +569,15 @@ async def propagate_update(
     base_delta: float,
     link_registry: "LinkRegistry",
     config: PropagationConfig | None = None,
+    update_handlers: "dict[SourceServer, Callable] | None" = None,
 ) -> PropagationResult:
-    """One-shot propagation without managing engine lifecycle."""
-    engine = PropagationEngine(link_registry, config)
+    """One-shot propagation without managing engine lifecycle.
+
+    Pass ``update_handlers`` to actually mutate the backing stores; without
+    them the engine reports zero updates (honest, roadmap 260609 P2.3) rather
+    than simulating success.
+    """
+    engine = PropagationEngine(link_registry, config, update_handlers=update_handlers)
     return await engine.propagate(entity_id, base_delta)
 
 
