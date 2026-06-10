@@ -347,6 +347,28 @@ def try_promote_patterns() -> None:
         pass
 
 
+def _langfuse_configured() -> bool:
+    """Cheap pre-gate: is a Langfuse public key plausibly configured?
+
+    ``emit_observation`` self-disables when unconfigured, but its gate goes
+    through pydantic ``get_settings()`` — ~2s per fresh hook process for a
+    no-op, which the 5-15s Stop budget cannot afford on every path. Probe the
+    env and the .env file directly instead; only on a hit do we pay the real
+    import + settings load.
+    """
+    if os.environ.get("MEMORY_HOOK_NO_LANGFUSE") == "1":
+        return False
+    if os.environ.get("LANGFUSE_PUBLIC_KEY"):
+        return True
+    try:
+        env_file = PROJECT_ROOT / ".env"
+        return env_file.exists() and "LANGFUSE_PUBLIC_KEY" in env_file.read_text(
+            encoding="utf-8", errors="replace"
+        )
+    except OSError:
+        return False
+
+
 def _emit_langfuse_span(ctx: dict, status: str) -> None:
     """Emit a standalone Langfuse observation (roadmap §5c.4). Never blocks the hook.
 
@@ -354,8 +376,13 @@ def _emit_langfuse_span(ctx: dict, status: str) -> None:
     Langfuse is not configured/installed, so this degrades to a silent no-op
     rather than forcing a dependency.
     """
+    if not _langfuse_configured():
+        return
     try:
-        sys.path.insert(0, str(PROJECT_ROOT))
+        if str(PROJECT_ROOT) not in sys.path:
+            # append, not insert(0): repo root must not shadow hooks-local
+            # modules ([[feedback-hook-src-shared-collision]]).
+            sys.path.append(str(PROJECT_ROOT))
         from src.pdf_framework.observability.langfuse_setup import emit_observation
 
         emit_observation(
