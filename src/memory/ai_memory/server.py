@@ -214,6 +214,34 @@ async def get_important_messages(args: dict) -> list[TextContent]:
     ]
 
 
+def _content_hash(content: str) -> str:
+    """Fail-soft canonical content_hash (§26 P1.3). Empty string on import failure."""
+    try:
+        src = str(_PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.content_hash import hash_content
+
+        return hash_content(content)
+    except Exception:
+        return ""
+
+
+def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
+    """Fail-soft §26 ingestion-metrics emit; never breaks the MCP handler."""
+    try:
+        src = str(_PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(
+            "memory_ai", action, content_hash=content_hash, harvester="save_important_message", **kw
+        )
+    except Exception:
+        pass
+
+
 async def save_important_message(args: dict) -> list[TextContent]:
     content = args.get("content")
     if not content:
@@ -223,24 +251,56 @@ async def save_important_message(args: dict) -> list[TextContent]:
     category = args.get("category", "general")
     tags = args.get("tags", [])
 
+    # §26 P1.3 write-contract: stamp content_hash, dedup on identical content (no
+    # second row for a re-save), and emit an ingestion event for observability.
+    content_hash = _content_hash(content)
     msg_id = str(uuid4())
     now = datetime.now().isoformat()
 
     with sqlite3.connect(str(DB_PATH)) as conn:
         cursor = conn.cursor()
+        existing = cursor.execute(
+            "SELECT id FROM important_messages WHERE content = ? LIMIT 1", (content,)
+        ).fetchone()
+        if existing:
+            _record_ingest("dup", content_hash)
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"success": True, "action": "dup", "id": existing[0]}, ensure_ascii=False
+                    ),
+                )
+            ]
         cursor.execute(
             "INSERT INTO important_messages (id, content, importance, category, tags, created_at, updated_at, metadata) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (msg_id, content, importance, category, json.dumps(tags), now, now, json.dumps({})),
+            (
+                msg_id,
+                content,
+                importance,
+                category,
+                json.dumps(tags),
+                now,
+                now,
+                json.dumps({"content_hash": content_hash}),
+            ),
         )
         conn.commit()
 
+    _record_ingest("saved", content_hash)
     logger.info(f"Saved message {msg_id} with importance {importance}")
     return [
         TextContent(
             type="text",
             text=json.dumps(
-                {"success": True, "id": msg_id, "importance": importance, "category": category},
+                {
+                    "success": True,
+                    "action": "saved",
+                    "id": msg_id,
+                    "importance": importance,
+                    "category": category,
+                },
                 ensure_ascii=False,
             ),
         )
