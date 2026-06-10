@@ -1385,6 +1385,33 @@ class MemoryOrchestrator:
     ) -> str | None:
         """Save content to a specific subsystem. Returns entity ID or None."""
         entity_id = str(uuid4())
+        # §26 P1.3 write-contract: stamp the cross-store idempotency key on every
+        # path and emit an ingestion event (saved/dup/error) so these direct writes
+        # are visible to cross_store_sync / fact-trace, not just the harvesters.
+        try:
+            from .content_hash import hash_content
+
+            content_hash = hash_content(content)
+        except Exception:
+            content_hash = ""
+        # target string -> cross-store canonical store name (matches cross_store_index).
+        _store_name = {
+            "memory-ai": "memory_ai",
+            "vector-memory": "learned_patterns",
+            "skill-learning": "skill_learning",
+            "wiki": "wiki",
+        }.get(target, target)
+
+        def _ingest(action: str, **kw: Any) -> None:
+            try:
+                from .ingest_metrics import record_ingest
+
+                record_ingest(
+                    _store_name, action, content_hash=content_hash, harvester="route_and_save", **kw
+                )
+            except Exception:
+                pass
+
         try:
             if target == "memory-ai":
                 import sqlite3
