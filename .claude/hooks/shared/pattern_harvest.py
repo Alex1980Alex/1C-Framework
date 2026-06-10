@@ -70,13 +70,15 @@ _LESSON_NOISE_RE = re.compile(
 # Unfilled draft placeholders → draft is not actually confirmed yet.
 _PLACEHOLDER_RE = re.compile(r"<[^>\n]{2,40}>")
 
-# --- content_hash: reuse canonical helper, inline fallback (fail-soft) ---
+# --- content_hash + point_id: reuse canonical helpers, inline fallback (fail-soft) ---
+_shared_point_id = None
 try:  # pragma: no cover - import path depends on layout
     import sys
 
     if str(PROJECT_ROOT / "src") not in sys.path:
         sys.path.insert(0, str(PROJECT_ROOT / "src"))
     from memory.orchestrator.content_hash import hash_content as _hash_content
+    from memory.orchestrator.content_hash import point_id as _shared_point_id
 except Exception:  # pragma: no cover
     import hashlib
 
