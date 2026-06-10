@@ -732,7 +732,10 @@ class MemoryOrchestrator:
         from ..vector_memory.confidence import derive_confidence, seed_counts_from_legacy
         from .unified_id import SourceServer, UnifiedID
 
-        ai_db = str(_PROJECT_ROOT / "data" / "memory_ai.db")
+        # Env-override keeps tests off the production DB (P0.2 isolation spirit).
+        ai_db = os.environ.get("MEMORY_AI_DB_PATH") or str(
+            _PROJECT_ROOT / "data" / "memory_ai.db"
+        )
 
         async def _vector_memory_handler(entity_id: str, delta: float) -> bool:
             def _apply() -> bool:
