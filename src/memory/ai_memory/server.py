@@ -263,7 +263,7 @@ async def save_important_message(args: dict) -> list[TextContent]:
     if not content:
         return [TextContent(type="text", text="Error: content is required")]
 
-    importance = args.get("importance", 0.7)
+    importance = _coerce_importance(args.get("importance", 0.7))
     category = args.get("category", "general")
     tags = args.get("tags", [])
 
