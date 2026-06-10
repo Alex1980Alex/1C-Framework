@@ -604,6 +604,13 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
 
     _bump_epoch()  # §24: new/updated pattern -> invalidate surfacing cache
     _log_lifecycle("save", pattern_id=pattern_id, confidence=round(float(pattern.confidence), 4))
+    _record_ingest(
+        "learned_patterns",
+        "saved",
+        content_hash=content_hash,
+        pattern_id=pattern_id,
+        harvester="save_pattern",
+    )
     logger.info(f"Saved pattern {pattern_id}: {pattern.name} (confidence={pattern.confidence})")
     return [
         TextContent(
@@ -611,9 +618,11 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
             text=json.dumps(
                 {
                     "success": True,
+                    "action": "saved",
                     "pattern_id": pattern_id,
                     "name": pattern.name,
                     "confidence": pattern.confidence,
+                    "content_hash": content_hash,
                 },
                 ensure_ascii=False,
             ),
