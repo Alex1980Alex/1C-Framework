@@ -740,6 +740,7 @@ class MemoryOrchestrator:
 
         async def _vector_memory_handler(entity_id: str, delta: float) -> bool:
             def _apply() -> bool:
+                from ..vector_memory.epoch import bump as _bump_epoch
                 from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
 
                 try:
@@ -831,6 +832,17 @@ class MemoryOrchestrator:
         if self._propagation_engine is None:
             self._propagation_engine = PropagationEngine(
                 self._link_registry,
+                # Synchronous request/response semantics for the MCP tool:
+                # - background queueing would return entities_updated=[] with
+                #   reason="queued_for_background_processing", hiding the very
+                #   result P2.3 made honest (depth-3 BFS over the sqlite registry
+                #   plus a few set_payload calls is sub-second, so awaiting is fine);
+                # - event dedup would silently skip a legitimate repeat
+                #   propagate_update for the same entity within process lifetime.
+                PropagationConfig(
+                    enable_background_processing=False,
+                    enable_event_deduplication=False,
+                ),
                 update_handlers=self._build_propagation_handlers(),
             )
             await self._propagation_engine.start()
