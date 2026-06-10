@@ -187,6 +187,13 @@ Examples:
 
 `tests/conftest.py` на import-time уводит memory-sinks в tmp: `CLAUDE_CACHE_DIR` (lifecycle/epoch/trace/ingest/surfaced) + `LINK_REGISTRY_PATH` (env-override в `LinkRegistry.__init__`). Раньше pytest писал фикстуры в production `confidence-lifecycle.log` и `data/link_registry.db`. Чистка остатков: `scripts/cleanup_memory_test_pollution.py` (dry-run default). Opt-out: `MEMORY_TEST_ISOLATION_DISABLE=1`.
 
+### Write-contract + cache redesign (roadmap 260609 P1, 2026-06-10)
+
+- **§26 write-contract в прямых писателях (P1.3):** `content_hash` + skip-on-exists dedup + `record_ingest` теперь во ВСЕХ прямых писателях, не только харвестерах — `save_pattern`, `route_and_save._save_to_target` (4 target'а), `save_important_message` (content-equality dedup), `capture_pattern` (dedup по pending+saved). Общий [`content_hash.point_id()`](../../../src/memory/orchestrator/content_hash.py) (UUID5, namespace харвестера) делает id детерминированным от контента → повторный save = `action=dup`, новой точки нет, и manual-write коллапсит в ту же точку, что harvest. Записи видны `cross_store_sync` / `fact-trace`. ⚠ MCP-side → нужен `/mcp reconnect`.
+- **Честный `route_and_save` (P1.4):** partial-fail target'ов → `success:false` + `saved_partial:true` + `failed_targets[]` (раньше — всегда `success:true`, потери молча).
+- **Surfacing cache-key редизайн (P1.2):** `_surface_cache_key` ослаблен с exact-token-set до top-K (8) salient-stem токенов (длинные = content-bearing в RU/BSL) → промпты на одну тему с разным filler'ом хитуют; epoch по-прежнему вшит (мгновенная инвалидация). TTL 300→900s; empty-результаты на коротком `SURFACE_CACHE_EMPTY_TTL` (180s). Env-knobs: `MEMORY_SURFACE_CACHE_KEY_TOPK`, `MEMORY_SURFACE_CACHE_EMPTY_TTL`, `MEMORY_SURFACE_LEXICAL_SCROLL` (100→50). Per-stage timing (`sqlite/qdrant/md/rerank`) в surfacing-log для профилирования (P1.1).
+- **Тесты:** `tests/unit/test_write_contract.py` (11), `tests/unit/test_surfacing_cache.py` (4). ⚠ Production-acceptance P1.1 (латентность) / P1.2 (hit-rate) подтвердятся накоплением surfacing-лога после reconnect.
+
 
 ## Незадокументированные memory_subsystem
 
