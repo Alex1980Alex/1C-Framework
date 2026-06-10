@@ -104,6 +104,17 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 ---
 
+## 2026-06-11 — Auto-promoted: [CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `[CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/chain-test-b2-----deprecated-.md`
+
+**Status:** Pending review
+
+---
+
 ## Format Template
 
 ```
@@ -401,3 +412,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: code-verify, task-protocol, evaluation-benchmark, learn:fastapi-framework
 - Files changed: 2
 - Summary: Session 2026-05-23. Skills: code-verify, task-protocol, evaluation-benchmark, learn:fastapi-framework. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260522 PR-automation migration to dev-master discovery. Commit: docs(CLAUDE.md): document P3.2 gap-close + encoding fix + live PR #3 test
+
+## 2026-06-11 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: task-protocol, qdrant-operations
+- Files changed: 3
+- Summary: Session 2026-06-11. Skills: task-protocol, qdrant-operations. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, docs/wiki, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260610 цепочечное тестирование Unified Memory — P0-P4 прогнаны, 5 production-фиксов. Commit: chore: auto-save memory-first-hook.py. Commit: chore: auto-save export_graph_to_wiki.py
+
