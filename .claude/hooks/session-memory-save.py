@@ -314,29 +314,36 @@ def try_promote_patterns() -> None:
     """
     if os.environ.get("SESSION_MEMORY_NO_PROMOTE") == "1":
         return
+    # Detached fire-and-forget (post-indexing-analyzer pattern): the hook's
+    # Stop budget must not pay for a Qdrant scroll (~1.6s typical, unbounded
+    # when Qdrant is slow). The CLI logs promotions itself (WikiPromoter), so
+    # there is nothing to collect here; output goes to a log for diagnostics.
+    creationflags = 0
+    if sys.platform == "win32":
+        # DETACHED_PROCESS (0x00000008) | CREATE_NO_WINDOW (0x08000000)
+        creationflags = 0x00000008 | 0x08000000
     try:
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "scripts.export_graph_to_wiki",
-                "promote-patterns",
-            ],
-            capture_output=True,
-            text=True,
-            # 4s leaves margin under the 5s Stop-hook timeout (per docstring).
-            # If Qdrant scroll + dedup takes longer, promotion is skipped — the
-            # next Stop will retry. Drafts/ is advisory; missing run is fine.
-            timeout=4,
-            cwd=str(PROJECT_ROOT),
-            encoding="utf-8",
-            errors="replace",
-        )
-        if result.returncode == 0 and "Promoted" in (result.stdout or ""):
-            # Surface successful promotions via wiki log; the CLI itself already
-            # appends per-pattern entries through WikiPromoter._append_log.
-            pass
-    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        log_path = PROJECT_ROOT / ".claude" / "cache" / "session-promote.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_fh = log_path.open("a", encoding="utf-8")
+        try:
+            subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "scripts.export_graph_to_wiki",
+                    "promote-patterns",
+                ],
+                stdout=log_fh,
+                stderr=log_fh,
+                cwd=str(PROJECT_ROOT),
+                creationflags=creationflags,
+                close_fds=True,
+            )
+        finally:
+            # Child inherits its own duplicated FD; release the parent's copy.
+            log_fh.close()
+    except OSError:
         pass
 
 

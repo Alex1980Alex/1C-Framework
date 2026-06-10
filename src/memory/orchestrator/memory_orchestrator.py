@@ -776,6 +776,10 @@ class MemoryOrchestrator:
                     },
                     points=[pid],
                 )
+                # §24 invariant: every confidence writer bumps the epoch so the
+                # surfacing cache (memory-first-hook) invalidates instantly
+                # instead of serving the stale value until TTL.
+                _bump_epoch()
                 return True
 
             return await asyncio.to_thread(_apply)
