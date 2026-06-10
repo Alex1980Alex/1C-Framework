@@ -63,7 +63,7 @@ from .memory_router import (
     RouterConfig,
     RoutingDecision,
 )
-from .propagation_engine import PropagationEngine, PropagationResult
+from .propagation_engine import PropagationConfig, PropagationEngine, PropagationResult
 from .tools.id_management import IDManagementTool
 from .tools.research import ResearchTool
 from .tools.surprise import SurpriseTool
