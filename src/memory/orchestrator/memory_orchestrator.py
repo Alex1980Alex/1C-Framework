@@ -571,10 +571,16 @@ class MemoryOrchestrator:
                 except Exception as e:
                     logger.warning(f"Failed to create cross-link: {e}")
 
+        # success only when EVERY routed target persisted; saved_partial flags the
+        # mixed case (some saved, some lost) so the caller can distinguish it from a
+        # total failure (nothing saved) or a clean success.
+        all_saved = not failed_targets
         result = {
-            "success": True,
+            "success": all_saved,
+            "saved_partial": bool(saved_entities) and bool(failed_targets),
             "routing": decision.to_dict(),
             "saved_entities": saved_entities,
+            "failed_targets": failed_targets,
             "cross_links_created": max(0, len(saved_entities) - 1),
         }
         await self._emit_event(
