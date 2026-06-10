@@ -60,9 +60,19 @@ SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 SURFACE_CACHE_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing-cache.json"
 SURFACE_CACHE_ENABLED = os.environ.get("MEMORY_SURFACE_CACHE_DISABLE") != "1"
 # TTL tradeoff: a pattern archived / confidence-dropped mid-TTL stays surfaced (and
-# re-reinforced) for up to this window. Bounded to 5 min; lower it or key on a
-# confidence-store epoch if staleness ever matters.
-SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "300"))  # 5 min
+# re-reinforced) for up to this window. The confidence-store epoch is folded into the
+# key (see _surface_cache_key), so any reinforce/apply/decay/archive instantly
+# invalidates — that decouples freshness from TTL, letting us raise it (roadmap 260609
+# P1.2: 300→900s) for a meaningfully higher hit-rate without staleness risk.
+SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "900"))  # 15 min
+# Empty results get a SHORTER TTL: "nothing matched" is the outcome most likely to
+# flip as new patterns/lessons are harvested, so we don't want to cache a miss for the
+# full 15 min and starve a freshly-relevant pattern of its first surfacing.
+SURFACE_CACHE_EMPTY_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_EMPTY_TTL", "180"))  # 3 min
+# Cache-key relaxation (P1.2): key on the K most salient query tokens, not the full
+# token set — exact-set matching gave a ~0.4% hit-rate (real prompts rarely repeat
+# verbatim). See _surface_cache_key.
+SURFACE_CACHE_KEY_TOPK = int(os.environ.get("MEMORY_SURFACE_CACHE_KEY_TOPK", "8"))
 SURFACE_CACHE_CAP = 200  # max distinct query hashes retained (FIFO by timestamp)
 
 # §24.4 acceptance "логирование всех процессов" — structured per-invocation trace.
