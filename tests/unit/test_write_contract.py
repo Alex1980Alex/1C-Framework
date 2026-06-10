@@ -76,6 +76,7 @@ def test_pattern_to_payload_has_content_hash():
         name="n",
         description="",
         content="hash me please",
+        confidence=0.7,
     )
     payload = _pattern_to_payload(p)
     assert payload["content_hash"] == hash_content("hash me please")
