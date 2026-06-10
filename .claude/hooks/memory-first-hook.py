@@ -822,12 +822,23 @@ def _confidence_epoch() -> float:
 
 
 def _surface_cache_key(query_tokens: set[str]) -> str:
-    """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases).
+    """Relaxed, order-insensitive hash of the retrieval input (P1.2 redesign).
 
-    Keyed on (confidence-epoch, query_tokens): a confidence mutation bumps the
-    epoch -> different key -> instant cache miss -> recompute (§24 stale-window fix).
+    Keyed on (confidence-epoch, top-K salient tokens):
+      - **Relaxation:** an exact token-set key matched verbatim repeats only — a
+        ~0.4% hit-rate in production. Instead we key on the K longest (most
+        content-bearing) stemmed tokens; in RU/BSL the long tokens are the domain
+        terms while function words are short, so two prompts about the same topic
+        with different filler collide and share a cached result. Prompts with <=K
+        tokens keep their full set (still effectively exact — low over-collision
+        risk for short queries).
+      - **Freshness:** the confidence-epoch stays folded in, so any reinforce /
+        apply / decay / archive bumps the epoch -> different key -> instant miss.
+      Over-collision is low-harm here: surfacing is advisory ("trust current code")
+      and bounded by TTL + epoch.
     """
-    payload = f"{_confidence_epoch()!r}|{' '.join(sorted(query_tokens))}"
+    salient = sorted(query_tokens, key=lambda t: (-len(t), t))[:SURFACE_CACHE_KEY_TOPK]
+    payload = f"{_confidence_epoch()!r}|{' '.join(sorted(salient))}"
     return hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()[:32]
 
 
