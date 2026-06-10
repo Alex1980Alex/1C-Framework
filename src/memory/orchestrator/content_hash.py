@@ -55,4 +55,15 @@ def content_key(payload: dict[str, Any]) -> str:
     return hash_content(content_text(payload))
 
 
-__all__ = ["HASH_WIDTH", "content_key", "content_text", "hash_content"]
+def point_id(content_hash: str) -> str:
+    """Deterministic Qdrant point id (UUID5) from a content_hash.
+
+    Stable across processes and stores: the same content always maps to the same
+    id. Every writer into ``learned_patterns`` uses this so re-saving identical
+    content is a no-op dedup (``retrieve(id)`` finds the existing point) instead
+    of plopping a duplicate. Mirrors the patterns-harvester ``_point_id``.
+    """
+    return str(uuid.uuid5(_POINT_NAMESPACE, content_hash))
+
+
+__all__ = ["HASH_WIDTH", "content_key", "content_text", "hash_content", "point_id"]
