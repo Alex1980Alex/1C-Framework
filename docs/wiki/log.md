@@ -71,6 +71,39 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 ---
 
+## 2026-06-11 — Auto-promoted: [CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `[CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/chain-test-b2-----deprecated-.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-11 — Auto-promoted: [CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `[CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/chain-test-b2-----deprecated-.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-11 — Auto-promoted: [CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `[CHAIN-TEST] B2-донор: БСП-обёртки вместо deprecated глобальных` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/chain-test-b2-----deprecated-.md`
+
+**Status:** Pending review
+
+---
+
 ## Format Template
 
 ```
