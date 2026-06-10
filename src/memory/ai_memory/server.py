@@ -34,6 +34,20 @@ logger = logging.getLogger("memory-ai")
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 DB_PATH = Path(os.environ.get("MEMORY_AI_DB_PATH") or _PROJECT_ROOT / "data" / "memory_ai.db")
 
+# Importance may arrive as a str label ("high") via loosely-typed callers;
+# SQLite TEXT affinity would store it as-is and break float comparisons on read.
+_IMPORTANCE_LABELS = {"critical": 1.0, "high": 0.9, "medium": 0.6, "normal": 0.5, "low": 0.3}
+
+
+def _coerce_importance(value: object, default: float = 0.7) -> float:
+    """Coerce an importance value to float clamped to [0, 1]."""
+    if isinstance(value, str):
+        value = _IMPORTANCE_LABELS.get(value.strip().lower(), value)
+    try:
+        return max(0.0, min(1.0, float(value)))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+
 
 def ensure_db():
     """Ensure database and tables exist."""

@@ -815,7 +815,7 @@ class MemoryOrchestrator:
                     ).fetchone()
                     if row is None:
                         return False
-                    new_imp = max(0.0, min(1.0, float(row[0] or 0.5) + delta))
+                    new_imp = max(0.0, min(1.0, _coerce_importance(row[0], default=0.5) + delta))
                     conn.execute(
                         "UPDATE important_messages SET importance = ?, updated_at = ? "
                         "WHERE id = ?",
@@ -1558,7 +1558,7 @@ class MemoryOrchestrator:
                 import sqlite3
 
                 db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
-                importance = (metadata or {}).get("importance", 0.7)
+                importance = _coerce_importance((metadata or {}).get("importance", 0.7))
                 category = (metadata or {}).get("category", "general")
                 tags = (metadata or {}).get("tags", [])
 
