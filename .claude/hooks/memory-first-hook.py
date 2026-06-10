@@ -1134,14 +1134,18 @@ class MemoryFirstHook(BaseHook):
         _trace_set("cache", "miss")
         deadline = t0 + TOTAL_BUDGET
 
+        _st = time.monotonic()
         sqlite_results = (
             search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
         )
+        _trace_time("sqlite", (time.monotonic() - _st) * 1000)
+        _st = time.monotonic()
         qdrant_results = (
             search_qdrant(query_tokens, limit=10, prompt=prompt)
             if time.monotonic() < deadline
             else []
         )
+        _trace_time("qdrant", (time.monotonic() - _st) * 1000)
         pids = [
             (r["id"], r["score"])
             for r in qdrant_results
