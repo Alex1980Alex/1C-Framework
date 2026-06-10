@@ -14,7 +14,6 @@ import json
 import logging
 import os
 import sys
-import uuid
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
