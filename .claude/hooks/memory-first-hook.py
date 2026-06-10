@@ -721,9 +721,22 @@ _TRACE: dict[str, Any] = {}
 
 
 def _trace_reset() -> None:
-    """Start a fresh trace for this invocation. Seeds nested gating counters."""
+    """Start a fresh trace for this invocation. Seeds nested gating + timing maps."""
     _TRACE.clear()
     _TRACE["gate"] = {"archived": 0, "below_floor": 0, "passed": 0}
+    # P1.1: per-stage wall-clock so over-budget runs can be profiled by stage from
+    # the surfacing log (was: total duration only → no way to see WHERE time went).
+    _TRACE["timings"] = {}
+
+
+def _trace_time(stage: str, ms: float) -> None:
+    """Record a per-stage millisecond timing. Fail-soft; never raises."""
+    try:
+        t = _TRACE.get("timings")
+        if isinstance(t, dict):
+            t[stage] = round(ms, 1)
+    except Exception:
+        pass
 
 
 def _trace_set(key: str, value: Any) -> None:
