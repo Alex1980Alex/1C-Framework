@@ -880,7 +880,13 @@ def _surface_cache_put(key: str, results: list[Any], pids: list[Any]) -> None:
             except Exception:
                 data = {}
         entries = data.get("entries") or {}
-        entries[key] = {"ts": time.time(), "results": results, "pids": pids}
+        # `empty` drives the shorter empty-result TTL on read (P1.2).
+        entries[key] = {
+            "ts": time.time(),
+            "results": results,
+            "pids": pids,
+            "empty": not bool(results),
+        }
         # FIFO cap: drop oldest by timestamp when over capacity.
         if len(entries) > SURFACE_CACHE_CAP:
             ordered = sorted(entries, key=lambda k: entries[k].get("ts", 0))
