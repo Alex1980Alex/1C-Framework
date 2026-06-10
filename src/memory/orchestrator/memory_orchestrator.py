@@ -87,6 +87,21 @@ logger = logging.getLogger("memory-orchestrator")
 # Project root for data paths
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
+# Legacy rows / route_and_save metadata may carry importance as a str label
+# ("high") or numeric string — SQLite TEXT affinity stores it as-is, after
+# which float comparisons in the search adapter raise TypeError.
+_IMPORTANCE_LABELS = {"critical": 1.0, "high": 0.9, "medium": 0.6, "normal": 0.5, "low": 0.3}
+
+
+def _coerce_importance(value: object, default: float = 0.7) -> float:
+    """Coerce an importance value to float clamped to [0, 1]."""
+    if isinstance(value, str):
+        value = _IMPORTANCE_LABELS.get(value.strip().lower(), value)
+    try:
+        return max(0.0, min(1.0, float(value)))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+
 
 # =============================================================================
 # Configuration
