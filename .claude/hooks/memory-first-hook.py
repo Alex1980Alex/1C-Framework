@@ -457,7 +457,7 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
         client = QdrantClient(host="127.0.0.1", port=6333, timeout=1)
         scroll_result = client.scroll(
             collection_name="learned_patterns",
-            limit=100,
+            limit=LEXICAL_SCROLL_LIMIT,
             with_payload=True,
             with_vectors=False,
         )
