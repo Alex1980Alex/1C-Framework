@@ -194,6 +194,34 @@
         "bsl-platform-context"
       ]
     },
+    "pdf-preview-fajl-dokumenta-izmenen-bug": {
+      "title": "«Файл документа изменён» при ПолеPDFДокумента — баг платформы 8.3.27.1859…1936 (фикс 1964)",
+      "file": "pdf-preview-fajl-dokumenta-izmenen-bug.md",
+      "created": "2026-06-10",
+      "last_verified": "2026-06-10",
+      "keywords": [
+        "Файл документа изменен",
+        "ПолеPDFДокумента",
+        "ДокументPDF",
+        "предпросмотр PDF на форме",
+        "критическая ошибка Завершить работу Перезапустить",
+        "баг платформы 8.3.27.1859",
+        "исправлено 8.3.27.1964",
+        "серверный вызов в ПриОткрытии",
+        "клиент-серверный SQL",
+        "присоединённые файлы PDF",
+        "PDF.js ПолеHTMLДокумента",
+        "GKSTCPLK-2573"
+      ],
+      "sources": [
+        "forum.mista.ru/topic/901532",
+        "infostart.ru/1c/tools/2097757",
+        "infostart.ru/1c/tools/1844363",
+        "infostart.ru/1c/tools/1299501",
+        "infostart.ru/public/290899",
+        "live СистемнаяИнформация 8.3.27.1936"
+      ]
+    },
     "integration-1c-do": {
       "title": "Интеграция с 1С:Документооборот — настройка подключения",
       "keywords": [
