@@ -493,16 +493,27 @@ class PropagationEngine:
         return delta
 
     async def _apply_update(self, entity_id: str, delta: float) -> bool:
-        """Apply update to entity via registered handler."""
+        """Apply update to entity via registered handler.
+
+        Honest semantics (roadmap 260609 P2.3): an update is counted *only* when
+        a handler is registered for the entity's source **and** that handler
+        reports a real mutation (truthy return). With no handler the engine
+        cannot mutate anything, so it returns ``False`` instead of fabricating
+        success — callers therefore never see phantom ``entities_updated``.
+
+        In production the orchestrator wires real handlers
+        (``MemoryOrchestrator._build_propagation_handlers``: vector-memory Beta
+        succ/fail nudge + memory-ai importance nudge). A handler-less engine
+        (e.g. an isolated unit test of the BFS/decay machinery) reports zero
+        updates unless the test supplies its own handlers.
+        """
         try:
             uid = UnifiedID.parse(entity_id)
             handler = self.update_handlers.get(uid.source)
-            if handler:
-                await handler(entity_id, delta)
-                return True
-            # No handler — simulate success
-            logger.debug("No handler for %s, simulating update", entity_id)
-            return True
+            if handler is None:
+                logger.debug("No update handler for %s; not counting as updated", entity_id)
+                return False
+            return bool(await handler(entity_id, delta))
         except Exception as e:
             logger.error("Error applying update to %s: %s", entity_id, e)
             return False
