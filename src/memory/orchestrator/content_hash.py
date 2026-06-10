@@ -15,6 +15,7 @@ Why a dedicated module instead of importing from the script:
 from __future__ import annotations
 
 import hashlib
+import uuid
 from typing import Any
 
 # Number of hex chars kept from the sha256 digest. 16 hex = 64 bits — collision
@@ -22,6 +23,13 @@ from typing import Any
 # key is convenient as a Qdrant payload filter value. Matches the historical
 # dedupe key width; DO NOT change without a migration (re-stamps every store).
 HASH_WIDTH = 16
+
+# Fixed namespace for deriving a deterministic Qdrant point id from a content_hash.
+# Identical to the patterns-harvester namespace (.claude/hooks/shared/pattern_harvest.py
+# `_NS`) so a manually-saved pattern (save_pattern / route_and_save) and a harvested
+# pattern with the same content collapse onto the SAME point id — cross-path
+# idempotency. DO NOT change without a migration (re-stamps every learned_patterns id).
+_POINT_NAMESPACE = uuid.UUID("a1b2c3d4-1111-2222-3333-444455556666")
 
 
 def content_text(payload: dict[str, Any]) -> str:
