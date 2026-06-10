@@ -231,6 +231,8 @@ memory-ai (EPISODIC, SQLite) · vector-memory (SEMANTIC, Qdrant `learned_pattern
 | Дата | Событие | Детали |
 |---|---|---|
 | 2026-06-10 | Roadmap создан | Анализ мастер-схемы 27.12 §10 → 29 цепочек (A12/B5/C5/D7), фазы P0–P5, метрики эффективности. Базис: 27.12.7 (рельсы потоков + точки разрыва), ремедиации 260609 P0.1/P1/P2 как объекты подтверждения |
+| 2026-06-10 | **P0 PASS** | Health: orchestrator/skill-learning/vector-memory green (1-й health_check vector-memory timeout 60s — cold-start, retry OK, count=28), TEI+Qdrant Up 2 days healthy. Observability 7d: 8 sinks fresh / 0 stale / 2 cold (`read`, `circuit` — закроются P1/P4). **Baseline:** learned_patterns=28, memory_ai=104 (avg_imp 0.71), skill_learning saved=1; links=28 (`mirrors` 25, `supports` 2, `derives_from` 1, `promoted_to` **0**); ingestion 7d: 566 attempts, dup_rate 34.4%; surfacing injected 83.4%, TEI-down 42.2%; reinforce apply-rate 66% |
+| 2026-06-10 | **Inventory (по [[project-roadmap-audit-pattern]])** | **A12 PASS по production-логам без прогона**: `memory-ingestion.log` — re-harvest того же `content_hash:9897eb26…` → `action=dup`, тот же UUID5 `pattern_id` ×8 за день (идемпотентность). **B1 production-метрика PASS досрочно**: `confidence-lifecycle.log` — события `session` applied=3 ×2 (cf61d36f, dc1ae682) + applied=0 skipped=5 (dedup повторного reinforce работает); полная контролируемая пятёрка B1 — в P2 |
 
 ---
 
