@@ -234,9 +234,12 @@ class TestPropagationEngine:
                 distance_decay_per_level=1.0,  # no distance decay
                 enable_time_decay=False,
             ),
+            update_handlers=_TEST_HANDLERS,
         )
         result = await engine.propagate(ids[0], 0.1)
         assert result.final_depth <= 2
+        # With handlers wired, the chain is genuinely traversed up to the limit.
+        assert result.final_depth >= 1
 
     @pytest.mark.asyncio
     async def test_delta_threshold(self, link_registry):
