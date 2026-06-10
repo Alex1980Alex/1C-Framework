@@ -1511,6 +1511,7 @@ class MemoryOrchestrator:
                     "pattern_type": (metadata or {}).get("pattern_type", "workflow-pattern"),
                     "name": (metadata or {}).get("name", content[:50]),
                     "content": content,
+                    "content_hash": content_hash,
                     "description": (metadata or {}).get("description", ""),
                     "confidence": (metadata or {}).get("confidence", 0.7),
                     "tags": (metadata or {}).get("tags", []),
@@ -1525,6 +1526,7 @@ class MemoryOrchestrator:
                         f.write(json.dumps(pattern, ensure_ascii=False) + "\n")
 
                 await asyncio.to_thread(_append)
+                _ingest("saved")
 
             elif target == "wiki":
                 from .memcube import ContentType as CType
