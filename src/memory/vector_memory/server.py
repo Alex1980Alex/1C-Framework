@@ -24,7 +24,8 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
-from ..orchestrator.content_hash import hash_content, point_id
+from ..orchestrator.content_hash import hash_content as _hash_content
+from ..orchestrator.content_hash import point_id as _content_point_id
 from .confidence import (
     apply_to_payload,
     decay_counts,
