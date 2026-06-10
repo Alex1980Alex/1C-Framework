@@ -1438,7 +1438,7 @@ class MemoryOrchestrator:
                                 json.dumps(tags),
                                 now,
                                 now,
-                                json.dumps({}),
+                                json.dumps({"content_hash": content_hash}),
                             ),
                         )
                         conn.commit()
@@ -1446,11 +1446,30 @@ class MemoryOrchestrator:
                         conn.close()
 
                 await asyncio.to_thread(_save)
+                _ingest("saved")
 
             elif target == "vector-memory":
                 from ..vector_memory.server import _get_embedding, _get_qdrant
+                from .content_hash import point_id as _point_id
 
                 client = await asyncio.to_thread(_get_qdrant)
+
+                # Deterministic content-derived id → re-routing identical content
+                # dedups (no duplicate point) and collides with save_pattern/harvest.
+                if content_hash:
+                    entity_id = _point_id(content_hash)
+                    try:
+                        existing = await asyncio.to_thread(
+                            client.retrieve,
+                            collection_name="learned_patterns",
+                            ids=[entity_id],
+                        )
+                    except Exception:
+                        existing = []
+                    if existing:
+                        _ingest("dup", pattern_id=entity_id)
+                        return entity_id
+
                 vector = await _get_embedding(content)
 
                 from qdrant_client.http import models as qmodels
@@ -1462,6 +1481,7 @@ class MemoryOrchestrator:
                     "name": (metadata or {}).get("name", content[:50]),
                     "description": (metadata or {}).get("description", ""),
                     "content": content,
+                    "content_hash": content_hash,
                     "confidence": (metadata or {}).get("confidence", 0.7),
                     "evidence_sources": [],
                     "created_at": now.isoformat(),
@@ -1479,6 +1499,7 @@ class MemoryOrchestrator:
                     collection_name="learned_patterns",
                     points=[qmodels.PointStruct(id=entity_id, vector=vector, payload=payload)],
                 )
+                _ingest("saved", pattern_id=entity_id)
 
             elif target == "skill-learning":
                 storage_dir = _PROJECT_ROOT / "data" / "skill_learning"
