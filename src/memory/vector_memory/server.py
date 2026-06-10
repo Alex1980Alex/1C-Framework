@@ -24,6 +24,7 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from ..orchestrator.content_hash import hash_content, point_id
 from .confidence import (
     apply_to_payload,
     decay_counts,
@@ -34,6 +35,16 @@ from .confidence import (
     stability_adjusted_rate,
 )
 from .epoch import bump as _bump_epoch  # §24: surfacing-cache invalidation signal
+
+
+def _record_ingest(store: str, action: str, **fields: Any) -> None:
+    """Fail-soft §26 ingestion-metrics emit; never breaks an MCP handler."""
+    try:
+        from ..orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(store, action, **fields)
+    except Exception:
+        pass
 
 
 def _log_lifecycle(event: str, **fields: Any) -> None:
