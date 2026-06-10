@@ -292,11 +292,15 @@ async def cmd_promote_patterns(args: argparse.Namespace) -> int:
     from qdrant_client import QdrantClient
 
     from src.memory.librarian.wiki_promoter import WikiPromoter
+    from src.memory.orchestrator.link_registry import LinkRegistry
 
     api_key = args.qdrant_api_key or os.environ.get("QDRANT__API_KEY")
     client = QdrantClient(url=args.qdrant_url, api_key=api_key)
+    # link_registry is opt-in in WikiPromoter; without it _create_promotion_link
+    # no-ops and the PROMOTED_TO provenance edge is silently lost (F7, roadmap 260610 C3).
     promoter = WikiPromoter(
         qdrant_client=client,
+        link_registry=LinkRegistry(),
         wiki_drafts_dir=args.drafts_dir,
         confidence_threshold=args.min_confidence,
         usage_threshold=args.min_usage,
