@@ -711,6 +711,103 @@ class MemoryOrchestrator:
             "related": [r.to_dict() for r in related],
         }
 
+    def _build_propagation_handlers(self) -> dict:
+        """Real update handlers wiring PropagationEngine to the backing stores
+        (roadmap 260609 P2.3). Without these the engine could only *simulate*
+        updates; with them ``propagate_update`` actually mutates:
+
+        - **vector-memory** (``semantic:vector-memory:<uuid>``): nudge the
+          pattern's Beta succ/fail counts by ``|delta|`` (sign = direction) and
+          re-derive confidence — mirrors ``vector_memory.server._cascade_confidence``
+          but for a single explicitly-propagated node. Reuses the warm Qdrant
+          client (``_get_qdrant``) pre-warmed in :meth:`start`.
+        - **memory-ai** (``episodic:memory-ai:<id>``): nudge the message's
+          importance by ``delta`` (clamped to ``[0, 1]``) in SQLite.
+
+        Each handler returns ``True`` only on a real mutation (entity found and
+        written), ``False`` otherwise — so a missing entity is *not* counted as
+        ``entities_updated``. Blocking store I/O runs in a worker thread.
+        """
+        from ..vector_memory.confidence import derive_confidence, seed_counts_from_legacy
+        from .unified_id import SourceServer, UnifiedID
+
+        ai_db = str(_PROJECT_ROOT / "data" / "memory_ai.db")
+
+        async def _vector_memory_handler(entity_id: str, delta: float) -> bool:
+            def _apply() -> bool:
+                from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
+
+                try:
+                    pid = UnifiedID.parse(entity_id).identifier
+                except ValueError:
+                    return False
+                client = _get_qdrant()
+                pts = client.retrieve(
+                    collection_name=COLLECTION_NAME, ids=[pid], with_payload=True
+                )
+                if not pts:
+                    return False  # not a learned_pattern → honest no-op
+                pay = pts[0].payload or {}
+                succ, fail = pay.get("succ"), pay.get("fail")
+                if succ is None or fail is None:
+                    succ, fail = seed_counts_from_legacy(
+                        float(pay.get("confidence", 0.70)),
+                        int(pay.get("application_count", 0) or 0),
+                    )
+                succ, fail = float(succ), float(fail)
+                if delta >= 0:
+                    succ += abs(delta)
+                else:
+                    fail += abs(delta)
+                now_iso = datetime.now().isoformat()
+                client.set_payload(
+                    collection_name=COLLECTION_NAME,
+                    payload={
+                        "succ": round(succ, 6),
+                        "fail": round(fail, 6),
+                        "confidence": round(derive_confidence(succ, fail), 6),
+                        "updated_at": now_iso,
+                    },
+                    points=[pid],
+                )
+                return True
+
+            return await asyncio.to_thread(_apply)
+
+        async def _memory_ai_handler(entity_id: str, delta: float) -> bool:
+            def _apply() -> bool:
+                try:
+                    mid = UnifiedID.parse(entity_id).identifier
+                except ValueError:
+                    return False
+                try:
+                    conn = sqlite3.connect(ai_db, timeout=2)
+                except sqlite3.Error:
+                    return False
+                try:
+                    row = conn.execute(
+                        "SELECT importance FROM important_messages WHERE id = ?", (mid,)
+                    ).fetchone()
+                    if row is None:
+                        return False
+                    new_imp = max(0.0, min(1.0, float(row[0] or 0.5) + delta))
+                    conn.execute(
+                        "UPDATE important_messages SET importance = ?, updated_at = ? "
+                        "WHERE id = ?",
+                        (round(new_imp, 4), datetime.now().isoformat(), mid),
+                    )
+                    conn.commit()
+                    return True
+                finally:
+                    conn.close()
+
+            return await asyncio.to_thread(_apply)
+
+        return {
+            SourceServer.VECTOR_MEMORY: _vector_memory_handler,
+            SourceServer.MEMORY_AI: _memory_ai_handler,
+        }
+
     async def propagate_update(
         self,
         entity_id: str,
@@ -723,14 +820,22 @@ class MemoryOrchestrator:
         if not self._link_registry:
             raise SubsystemUnavailableError("Link registry not initialized")
 
-        # Lazy-init propagation engine
+        # Lazy-init propagation engine with real store-backed update handlers
+        # (roadmap 260609 P2.3) so propagated updates actually mutate the stores
+        # instead of simulating success.
         if self._propagation_engine is None:
-            self._propagation_engine = PropagationEngine(self._link_registry)
+            self._propagation_engine = PropagationEngine(
+                self._link_registry,
+                update_handlers=self._build_propagation_handlers(),
+            )
             await self._propagation_engine.start()
 
+        # Sign carries the direction: the BFS uses the delta's sign (positive =
+        # boost, negative = penalty), so fold `success` into it.
+        signed_delta = abs(delta) if success else -abs(delta)
         result: PropagationResult = await self._propagation_engine.propagate(
             entity_id=entity_id,
-            base_delta=delta,
+            base_delta=signed_delta,
             success=success,
             metadata=metadata,
         )
