@@ -93,6 +93,10 @@ MIN_PROMPT_LEN = 20
 COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
 MAX_RESULTS = 5
+# Lexical arm scroll cap (P1.1): how many learned_patterns to scan for token-overlap.
+# Lowered 100→50 — the collection is small and the full scan + payload transfer is on
+# the hot path. Reversible knob (raise if recall on the lexical arm ever regresses).
+LEXICAL_SCROLL_LIMIT = int(os.environ.get("MEMORY_SURFACE_LEXICAL_SCROLL", "50"))
 
 LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
 SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
