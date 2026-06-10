@@ -550,7 +550,7 @@ class MemoryOrchestrator:
         for target in decision.targets:
             try:
                 entity_id = await self._save_to_target(target, content, metadata)
-            except Exception as e:  # noqa: BLE001 — per-target isolation, recorded below
+            except Exception as e:  # per-target isolation — failure recorded below
                 logger.warning(f"route_and_save: target {target} raised: {e}")
                 entity_id = None
             if entity_id:
