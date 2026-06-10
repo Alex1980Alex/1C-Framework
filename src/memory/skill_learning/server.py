@@ -103,6 +103,46 @@ def _update_stats_on_save(pattern: dict[str, Any]):
     _save_stats(stats)
 
 
+# ========== §26 P1.3 write-contract helpers (content_hash + dedup + ingest) ==========
+def _content_hash(content: str) -> str:
+    """Fail-soft canonical content_hash. Empty string on import failure."""
+    try:
+        src = str(_PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.content_hash import hash_content
+
+        return hash_content(content)
+    except Exception:
+        return ""
+
+
+def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
+    """Fail-soft §26 ingestion-metrics emit; never breaks the MCP handler."""
+    try:
+        src = str(_PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(
+            "skill_learning", action, content_hash=content_hash, harvester="capture_pattern", **kw
+        )
+    except Exception:
+        pass
+
+
+def _existing_hashes() -> dict[str, str]:
+    """Map content_hash -> pattern_id across pending + saved silos (for dedup)."""
+    out: dict[str, str] = {}
+    for path in (PENDING_FILE, SAVED_FILE):
+        for rec in _read_jsonl(path):
+            ch = rec.get("content_hash") or _content_hash(rec.get("content") or "")
+            if ch and ch not in out:
+                out[ch] = rec.get("pattern_id", "")
+    return out
+
+
 # ========== MCP Server ==========
 
 app = Server("skill-learning")
