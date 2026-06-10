@@ -1157,7 +1157,9 @@ class MemoryFirstHook(BaseHook):
             record_surfaced(inp.session_id or "", pids)
         except Exception:
             pass
+        _st = time.monotonic()
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
+        _trace_time("md", (time.monotonic() - _st) * 1000)
         wiki_results = search_wiki(query_tokens, limit=10) if time.monotonic() < deadline else []
 
         layer_counts = {
