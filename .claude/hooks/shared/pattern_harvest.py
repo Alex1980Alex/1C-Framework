@@ -109,6 +109,11 @@ class HarvestItem:
 
 
 def _point_id(content_hash: str) -> str:
+    # Delegate to the shared helper (single source of truth) when importable; the
+    # local _NS fallback produces byte-identical ids (same namespace) so a harvest
+    # run with a degraded import path still dedups against save_pattern writes.
+    if _shared_point_id is not None:
+        return _shared_point_id(content_hash)
     return str(uuid.uuid5(_NS, content_hash))
 
 
