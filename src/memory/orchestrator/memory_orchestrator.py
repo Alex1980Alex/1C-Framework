@@ -1558,6 +1558,7 @@ class MemoryOrchestrator:
                     draft_path.write_text(wiki_md, encoding="utf-8")
 
                 await asyncio.to_thread(_write_draft)
+                _ingest("saved")
 
             else:
                 logger.warning(f"Unknown target: {target}")
@@ -1567,6 +1568,7 @@ class MemoryOrchestrator:
 
         except Exception as e:
             logger.error(f"Failed to save to {target}: {e}")
+            _ingest("error", reason=f"{type(e).__name__}")
             return None
 
     async def _get_entity(self, unified_id: str) -> dict[str, Any] | None:
