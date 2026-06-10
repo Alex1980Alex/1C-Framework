@@ -90,7 +90,14 @@ def _cascade_confidence(
 
         # Forward-correlation links only — CONTRADICTS has inverse semantics (excluded for v1).
         link_types = [LinkType.SUPPORTS, LinkType.EXTENDS, LinkType.BASED_ON, LinkType.DERIVES_FROM]
-        links = LinkRegistry().get_links_from(pattern_id, link_types=link_types)
+        registry = LinkRegistry()
+        links = registry.get_links_from(pattern_id, link_types=link_types)
+        # Orchestrator's create_link stores unified IDs ("semantic:vector-memory:<pid>");
+        # without this second lookup such edges are invisible to the cascade
+        # (F4, roadmap 260610 B2). seen-dedup below collapses bare/unified duplicates.
+        links += registry.get_links_from(
+            f"semantic:vector-memory:{pattern_id}", link_types=link_types
+        )
         if not links:
             return stats  # cheap no-op for an empty/unlinked graph
         stats["final_depth"] = 1
@@ -100,6 +107,12 @@ def _cascade_confidence(
                 stats["cascades_prevented"] += 1
                 continue
             nid = link.target_id
+            if nid.startswith("semantic:vector-memory:"):
+                nid = nid.rsplit(":", 1)[-1]
+            elif ":" in nid:
+                # cross-store neighbour — PropagationEngine's territory, not same-store cascade
+                stats["cascades_prevented"] += 1
+                continue
             if nid == pattern_id or nid in seen:
                 continue
             seen.add(nid)
