@@ -857,7 +857,10 @@ def _surface_cache_get(key: str) -> dict[str, Any] | None:
         entry = (data.get("entries") or {}).get(key)
         if not entry:
             return None
-        if (time.time() - float(entry.get("ts", 0))) >= SURFACE_CACHE_TTL:
+        # Empty ("no results") entries expire faster than populated ones (P1.2): a
+        # miss is the outcome most likely to flip as new patterns are harvested.
+        ttl = SURFACE_CACHE_EMPTY_TTL if entry.get("empty") else SURFACE_CACHE_TTL
+        if (time.time() - float(entry.get("ts", 0))) >= ttl:
             return None  # expired → treat as miss (lazy; overwritten on next put)
         return entry
     except Exception:
