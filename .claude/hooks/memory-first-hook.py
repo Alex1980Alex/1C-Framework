@@ -1183,7 +1183,9 @@ class MemoryFirstHook(BaseHook):
 
         # §24 P2: optional LLM rerank of the final top-N (opt-in, skippable, bounded).
         if merged:
+            _st = time.monotonic()
             merged = _rerank_results(prompt, merged, t0)
+            _trace_time("rerank_ms", (time.monotonic() - _st) * 1000)
 
         # §24 execution cache: store fused result + surfaced pattern ids (empty cached
         # too → avoids re-running the pipeline for queries that yield nothing).
