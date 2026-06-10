@@ -198,7 +198,7 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
                 tags_lower = (row[4] or "").lower()
                 matched = sum(1 for t in tokens if t in content_lower or t in tags_lower)
                 match_ratio = matched / len(tokens) if tokens else 0.0
-                importance = min(row[2] or 0.0, 1.0)
+                importance = _coerce_importance(row[2], default=0.0)
                 combined = min(match_ratio * 0.5 + importance * 0.5, 1.0)
                 scored.append((combined, match_ratio, row))
 
