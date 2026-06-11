@@ -47,7 +47,7 @@ description: "Используй этот скилл для понимания �
 | `code-skill-enforcer.py` | WebSearch\|WebFetch | Research cache reminder (уровень D) |
 | `code-skill-enforcer.py` | Write\|Edit | Post-verification + LEARN phase (уровни E-F) |
 | `factory-enforcer.py` | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация |
-| `docs-change-tracker.py` | Write\|Edit | Код изменился → напоминание обновить docs/ + skills/ |
+| `docs-change-tracker.py` | Write\|Edit | Код изменился → mandatory-задача обновить docs/ + skills/ (маппинг `_CODE_TO_DOCS_SKILLS`; паттерн — строка или кортеж альтернатив). Самозакрытие: правка целевого дока/скилла (`_try_complete_tasks`) или git-время целей новее `code_changed_at` (`_sync_zombie_tasks`). Memory-хуки маппятся на 27.13 Changelog + `memory-unified` (2026-06-11). ⚠ Метаданные задачи передавать через `add_task(metadata=…)`, НЕ `update_task_metadata(created_by=…)` — последняя штампует ВСЕ pending-задачи хука и затирает `code_changed_at` ранних задач → zombie (исправлено 2026-06-11) |
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |

@@ -196,8 +196,16 @@ def add_task(
     created_by: str = "unknown-hook",
     description: str = "",
     session_id: str = "",
+    metadata: dict[str, Any] | None = None,
 ) -> bool:
-    """Add a new pending task. Returns True if added, False if duplicate."""
+    """Add a new pending task. Returns True if added, False if duplicate.
+
+    Pass per-task ``metadata`` here instead of a follow-up
+    ``update_task_metadata(created_by=...)`` — the latter stamps ALL pending
+    tasks of the hook and clobbers earlier tasks' metadata (root cause of
+    docs-change-tracker zombie tasks: a fresh ``code_changed_at`` overwrote
+    older tasks, so already-updated docs looked stale forever).
+    """
     data = _read_todos()
     todos = data.get("todos", [])
 
@@ -221,6 +229,8 @@ def add_task(
     }
     if session_id:
         task["sessionId"] = session_id
+    if metadata:
+        task["metadata"] = metadata
     todos.append(task)
     data["todos"] = todos
     _write_todos(data)
