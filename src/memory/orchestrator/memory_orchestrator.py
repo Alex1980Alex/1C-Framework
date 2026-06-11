@@ -1565,6 +1565,121 @@ class MemoryOrchestrator:
 
     # ----- Private helpers -----
 
+    async def _version_write(
+        self,
+        entity_id: str,
+        content: dict[str, Any],
+        change_type: ChangeType,
+        summary: str = "",
+    ) -> None:
+        """ADR-V wire-minimal (roadmap 260611 P2.1, F8): snapshot an
+        orchestrator-mediated mutation into the versioning store.
+
+        Boundary: only orchestrator-process writers version (route_and_save,
+        propagation handlers, rollback). Direct MCP-server writers
+        (save_pattern, save_important_message, …) are out of scope — the JSONL
+        store is not concurrent-safe across processes. Fail-soft: a versioning
+        problem must never fail the primary write.
+        """
+        if not self._versioning_service:
+            return
+        try:
+            await self._versioning_service.create_version(
+                entity_id=entity_id,
+                content=content,
+                change_type=change_type,
+                created_by="orchestrator",
+                change_summary=summary,
+            )
+        except Exception as e:
+            logger.warning(f"versioning skipped for {entity_id}: {e}")
+
+    async def _apply_version_to_store(
+        self, entity_id: str, content: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Write a version snapshot's known fields back to the backing store
+        (rollback writeback, roadmap 260611 P2.1 D3: «чтение видит старый контент»).
+
+        Supported: memory-ai (content/importance via SQLite UPDATE),
+        vector-memory (payload fields via set_payload — the dense vector is NOT
+        re-embedded, flagged in the response). Other sources → honest skip.
+        """
+        try:
+            uid = UnifiedID.parse(entity_id)
+        except ValueError:
+            return {"applied": False, "reason": "unparseable_entity_id"}
+
+        if uid.source == SourceServer.MEMORY_AI:
+            fields: dict[str, Any] = {}
+            if isinstance(content.get("content"), str):
+                fields["content"] = content["content"]
+            if isinstance(content.get("importance"), int | float):
+                fields["importance"] = float(content["importance"])
+            if not fields:
+                return {"applied": False, "reason": "no_supported_fields"}
+            db_path = os.environ.get("MEMORY_AI_DB_PATH") or str(
+                _PROJECT_ROOT / "data" / "memory_ai.db"
+            )
+
+            def _writeback() -> int:
+                conn = sqlite3.connect(db_path, timeout=2)
+                try:
+                    assignments = ", ".join(f"{k} = ?" for k in fields)
+                    cur = conn.execute(
+                        f"UPDATE important_messages SET {assignments}, updated_at = ? "
+                        "WHERE id = ?",
+                        (*fields.values(), datetime.now().isoformat(), uid.identifier),
+                    )
+                    conn.commit()
+                    return cur.rowcount
+                finally:
+                    conn.close()
+
+            rowcount = await asyncio.to_thread(_writeback)
+            if rowcount == 0:
+                return {"applied": False, "reason": "not_found"}
+            return {"applied": True, "fields": sorted(fields)}
+
+        if uid.source == SourceServer.VECTOR_MEMORY:
+            payload = {
+                k: content[k]
+                for k in ("content", "name", "description", "confidence", "succ", "fail")
+                if k in content
+            }
+            if not payload:
+                return {"applied": False, "reason": "no_supported_fields"}
+
+            def _writeback() -> bool:
+                from ..vector_memory.epoch import bump as _bump_epoch
+                from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
+
+                client = _get_qdrant()
+                existing = client.retrieve(
+                    collection_name=COLLECTION_NAME, ids=[uid.identifier]
+                )
+                if not existing:
+                    return False
+                client.set_payload(
+                    collection_name=COLLECTION_NAME,
+                    payload={**payload, "updated_at": datetime.now().isoformat()},
+                    points=[uid.identifier],
+                )
+                if "confidence" in payload:
+                    _bump_epoch()  # §24: confidence writer invalidates surfacing cache
+                return True
+
+            ok = await asyncio.to_thread(_writeback)
+            if not ok:
+                return {"applied": False, "reason": "not_found"}
+            return {
+                "applied": True,
+                "fields": sorted(payload),
+                # honest limitation: payload restored, dense vector left as-is
+                "vector_reembedded": False,
+            }
+
+        return {"applied": False, "reason": f"unsupported_source:{uid.source.value}"}
+
     async def _save_to_target(
         self, target: str, content: str, metadata: dict[str, Any] | None
     ) -> str | None:
