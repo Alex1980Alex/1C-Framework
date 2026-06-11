@@ -213,7 +213,10 @@ Examples:
 - **TTL (F9):** `memory_ttl_cleanup` исполняет до store'ов: vector → archive (`expired_at`, §22 invalidate-not-delete + epoch bump), memory-ai → delete; ответ `{removed_ledger, store_actions{archived/deleted/skipped}, failed}`.
 - **WikiPromoter (F13):** идемпотентен — `promoted_to` пишется на source-точку (`_mark_promoted`), pre-filter по нему до векторного dedup, `_append_log` дедупит по упоминанию `drafts/{slug}.md`.
 - **F5/F14:** `get_pattern` отдаёт согласованные `archived`/`expired_at`; reinforce-мост считает `not_found`-miss в `missing` (не `errors`) — `[REINFORCE]`-баннер не врёт.
-- ⚠ Всё MCP-side (кроме F14-моста и F13-скрипта) → `/mcp reconnect` после правок. Тесты: `test_propagation_honest.py` (10), `test_governance_wiring.py` (7), `test_unified_search_honest.py` (2), `test_quick_fixes_260611.py` (3).
+- **§18 live re-run follow-ups (2026-06-11, после прогона D2–D5 живыми MCP-tools):**
+  - **F16**: `_apply_version_to_store` (MEMORY_AI) разворачивает `metadata.importance` из CREATE-снапшотов `route_and_save` — rollback к v1 восстанавливает importance, не только content (top-level приоритетен, UPDATE-снапшоты propagation не задеты). Открытый N2-гэп: vector-ветка rollback-to-CREATE восстанавливает только `content` (не `metadata.confidence/name/description`) — ответ честный (`fields`), чинить при появлении live-пути.
+  - **Cold-start warmup**: `vector_memory/server.py` — daemon-поток `_warmup_qdrant` при старте сервера пре-оплачивает импорт `qdrant_client` (под contention одновременного старта MCP-серверов первый tool-вызов сгорал на 60s client-timeout); fail-soft, opt-out `MEMORY_VECTOR_NO_WARMUP=1`; `_get_qdrant` под double-checked lock, глобал публикуется только после успешного `_ensure_collection(client)` (упавший init ретраится следующим вызовом).
+- ⚠ Всё MCP-side (кроме F14-моста и F13-скрипта) → `/mcp reconnect` после правок. Тесты: `test_propagation_honest.py` (10), `test_governance_wiring.py` (8), `test_unified_search_honest.py` (2), `test_quick_fixes_260611.py` (5).
 
 ## Незадокументированные memory_subsystem
 
