@@ -1,4 +1,4 @@
-"""Quick fixes F5 + F13 — roadmap 260611 P3.
+"""Quick fixes F5 + F13 — roadmap 260611 P3 (+ §18 live re-run follow-ups).
 
 F5: ``_pattern_from_payload`` maps ``expired_at`` payload → model, so
 ``get_pattern`` no longer answers ``archived:true`` with ``expired_at:null``.
@@ -6,6 +6,10 @@ F5: ``_pattern_from_payload`` maps ``expired_at`` payload → model, so
 F13: WikiPromoter is idempotent — promotion stamps ``promoted_to`` on the
 source point (the marker finally has a writer), re-runs pre-filter on it, and
 ``_append_log`` skips drafts already mentioned in log.md.
+
+Cold-start warmup (§18 live re-run finding): ``_warmup_qdrant`` pre-pays the
+qdrant_client import at server start (fail-soft), and ``_get_qdrant`` lazy
+init is lock-guarded against the warmup thread racing the first tool call.
 """
 
 from __future__ import annotations
