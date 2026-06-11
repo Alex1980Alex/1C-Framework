@@ -199,6 +199,12 @@ class WikiPromoter:
         try:
             if self.wiki_log_path.exists():
                 content = self.wiki_log_path.read_text(encoding="utf-8")
+                # F13: idempotent log — a draft already mentioned in log.md is a
+                # re-promote; don't append an identical block again. (If the old
+                # mention was trimmed past the 500-line cap, a rare duplicate is
+                # accepted as harmless.)
+                if f"docs/wiki/drafts/{slug}.md" in content:
+                    return
                 # Insert before "## Format Template" section
                 marker = "\n## Format Template"
                 if marker in content:
