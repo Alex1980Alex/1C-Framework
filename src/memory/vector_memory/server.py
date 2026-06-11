@@ -383,6 +383,12 @@ def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPatt
         succ=succ,
         fail=fail,
         last_decay_at=last_decay_at,
+        # F5 (roadmap 260611 P3.1): without this mapping the model always
+        # carried expired_at=None while the get_pattern response built
+        # `archived` from the payload — archived:true with expired_at:null.
+        expired_at=datetime.fromisoformat(payload["expired_at"])
+        if payload.get("expired_at")
+        else None,
         version=payload.get("version", 1),
         tags=payload.get("tags", []),
         metadata=payload.get("metadata", {}),
