@@ -116,3 +116,53 @@ def test_append_log_skips_existing_mention(tmp_path):
 
     log_text = (tmp_path / "log.md").read_text(encoding="utf-8")
     assert log_text.count("docs/wiki/drafts/some-slug.md") == 1
+
+
+# ---------------------------------------------------------------------------
+# Cold-start warmup (§18 live re-run finding)
+# ---------------------------------------------------------------------------
+
+
+def test_warmup_is_fail_soft(monkeypatch):
+    """Qdrant down at server start must not kill the warmup thread/server."""
+    from src.memory.vector_memory import server as vm_server
+
+    def _boom():
+        raise ConnectionError("qdrant down")
+
+    monkeypatch.setattr(vm_server, "_get_qdrant", _boom)
+    vm_server._warmup_qdrant()  # must not raise
+
+
+def test_get_qdrant_lazy_init_is_single_under_concurrency(monkeypatch):
+    """Warmup thread racing the first tool call → exactly one client + one
+    _ensure_collection (the init lock holds)."""
+    import threading
+
+    from src.memory.vector_memory import server as vm_server
+
+    created = []
+
+    class _FakeClient:
+        def __init__(self, *a, **kw):
+            created.append(self)
+
+        def get_collections(self):
+            return SimpleNamespace(
+                collections=[SimpleNamespace(name=vm_server.COLLECTION_NAME)]
+            )
+
+    import qdrant_client as qc
+
+    monkeypatch.setattr(qc, "QdrantClient", _FakeClient)
+    monkeypatch.setattr(vm_server, "_qdrant_client", None)
+
+    threads = [threading.Thread(target=vm_server._get_qdrant) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert len(created) == 1
+    assert vm_server._qdrant_client is created[0]
+    monkeypatch.setattr(vm_server, "_qdrant_client", None)  # leave global clean
