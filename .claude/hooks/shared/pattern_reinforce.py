@@ -243,6 +243,7 @@ def reinforce_session(
         now = datetime.now()
         applied = 0
         skipped = 0
+        missing = 0
         errors = 0
 
         for pid, _score in candidates:
@@ -261,6 +262,12 @@ def reinforce_session(
                 if result.get("success"):
                     state["patterns"][pid] = now.isoformat()
                     applied += 1
+                elif "not found" in str(result.get("error", "")).lower():
+                    # F14 (roadmap 260611 P3.3): miss ≠ error. A legitimately
+                    # deleted pattern (cleanup) surfaces as reinforce_miss
+                    # reason:not_found in the lifecycle log — counting it into
+                    # errors produced false alarms in the [REINFORCE] banner.
+                    missing += 1
                 else:
                     errors += 1
             except Exception:
