@@ -246,6 +246,7 @@ class PropagationEngine:
         self._stats = {
             "events_processed": 0,
             "entities_updated": 0,
+            "entities_failed": 0,
             "cascades_prevented": 0,
             "total_processing_time_ms": 0.0,
         }
@@ -350,6 +351,7 @@ class PropagationEngine:
         # Update stats
         self._stats["events_processed"] += 1
         self._stats["entities_updated"] += len(result.entities_updated)
+        self._stats["entities_failed"] += len(result.failed_entities)
         self._stats["cascades_prevented"] += result.cascades_prevented
         self._stats["total_processing_time_ms"] += result.processing_time_ms
 
