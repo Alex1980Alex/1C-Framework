@@ -1036,6 +1036,8 @@ async def main() -> None:
     # MCP code actually (re)loaded -- makes the "/mcp reconnect needed" caveat
     # observable instead of silent. pid distinguishes pre/post-reconnect processes.
     _log_lifecycle("server_start", pid=os.getpid(), collection=COLLECTION_NAME)
+    if os.environ.get("MEMORY_VECTOR_NO_WARMUP") != "1":
+        threading.Thread(target=_warmup_qdrant, name="qdrant-warmup", daemon=True).start()
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
 

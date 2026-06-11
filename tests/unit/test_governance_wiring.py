@@ -135,6 +135,39 @@ async def test_rollback_writes_back_to_memory_ai(tmp_path, monkeypatch):
     assert hist["count"] == 3
 
 
+async def test_rollback_create_snapshot_unwraps_metadata_importance(tmp_path, monkeypatch):
+    """F16 (260611 §18 live re-run): route_and_save CREATE-snapshots keep
+    importance under metadata — rollback to v1 must restore it, not only content."""
+    db = tmp_path / "memory_ai.db"
+    _make_memory_ai_db(db, [("m1", "original content", 0.40)])
+    monkeypatch.setenv("MEMORY_AI_DB_PATH", str(db))
+
+    orch = _orch(tmp_path, with_versions=True)
+    eid = "episodic:memory-ai:m1"
+
+    # v1 in route_and_save's shape: importance nested in metadata.
+    await orch._versioning_service.create_version(
+        eid,
+        {
+            "content": "original content",
+            "metadata": {"importance": 0.40, "category": "test"},
+            "target": "memory-ai",
+        },
+        ChangeType.CREATE,
+    )
+    # Propagation nudge mutates the store + writes the UPDATE snapshot.
+    conn = sqlite3.connect(str(db))
+    conn.execute("UPDATE important_messages SET importance = 0.4225 WHERE id = 'm1'")
+    conn.commit()
+    conn.close()
+    await orch._versioning_service.create_version(eid, {"importance": 0.4225}, ChangeType.UPDATE)
+
+    resp = await orch.memory_version_rollback(eid, target_version=1)
+    assert resp["success"] is True
+    assert sorted(resp["store_writeback"]["fields"]) == ["content", "importance"]
+    assert _row(db, "m1") == ("original content", pytest.approx(0.40))
+
+
 async def test_rollback_unsupported_source_is_honest(tmp_path):
     orch = _orch(tmp_path, with_versions=True)
     eid = "learning:skill-learning:p1"
