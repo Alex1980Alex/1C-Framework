@@ -453,6 +453,7 @@ class PropagationEngine:
                 source_entity_id=event.entity_id,
                 entities_updated=entities_updated,
                 updates_applied=updates_applied,
+                failed_entities=failed_entities,
                 cascades_prevented=cascades_prevented,
                 final_depth=max_depth_seen,
                 processing_time_ms=elapsed,
