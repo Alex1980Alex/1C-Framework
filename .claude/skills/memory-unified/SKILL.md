@@ -181,6 +181,7 @@ Examples:
   - session_id строго из Stop-payload (тот же источник, которым memory-first-hook именует `surfaced-patterns-<sid>.json`)
   - Early-exit через `load_surfaced()` ДО импорта Qdrant; cap `REINFORCE_CAP=10`; ошибки → `session_error` в lifecycle-лог (не `except: pass`)
   - Первый production-прогон 2026-06-09: `session=1bab9bcd applied=10 errors=0`
+  - F14 (260611): `not_found`-miss считается в `missing` (не `errors`) — паттерн легитимно удалён cleanup'ом; баннер `[REINFORCE] ... missing=N` и lifecycle-событие `session` несут отдельный счётчик
   - Opt-out: `P1_REINFORCE_DISABLE=1`
 
 ### Test isolation (roadmap 260609 P0.2)
