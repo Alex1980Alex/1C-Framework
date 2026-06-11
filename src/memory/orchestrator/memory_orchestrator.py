@@ -1707,8 +1707,15 @@ class MemoryOrchestrator:
             fields: dict[str, Any] = {}
             if isinstance(content.get("content"), str):
                 fields["content"] = content["content"]
-            if isinstance(content.get("importance"), int | float):
-                fields["importance"] = float(content["importance"])
+            importance = content.get("importance")
+            if not isinstance(importance, int | float):
+                # F16 (roadmap 260611): CREATE-snapshots from route_and_save keep
+                # importance nested under metadata — unwrap it so a rollback to v1
+                # restores importance too, not only content.
+                meta = content.get("metadata")
+                importance = meta.get("importance") if isinstance(meta, dict) else None
+            if isinstance(importance, int | float):
+                fields["importance"] = float(importance)
             if not fields:
                 return {"applied": False, "reason": "no_supported_fields"}
             db_path = os.environ.get("MEMORY_AI_DB_PATH") or str(
