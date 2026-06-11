@@ -1363,12 +1363,95 @@ class MemoryOrchestrator:
         return stats
 
     async def memory_ttl_cleanup(self) -> dict[str, Any]:
-        """Remove expired TTL entries. Returns list of removed entity IDs."""
+        """Remove expired TTL entries from the ledger AND enforce on the stores.
+
+        roadmap 260611 P2.2 (F9): the TTLService only ever touched its own
+        JSONL ledger — entities stayed readable forever. Now each removed
+        entity is dispatched by source:
+
+        - vector-memory → **archive** (``expired_at`` payload flag, consistent
+          with §22 invalidate-not-delete; archived-exclude in search does the rest);
+        - memory-ai → ``DELETE`` row;
+        - other sources → honest skip with reason.
+
+        Honest response (same pattern as P1.1 failed_entities): ledger count,
+        per-store actions and ``failed{entity: reason}`` — nothing is silently
+        swallowed.
+        """
         self._track("memory_ttl_cleanup")
         if not self._ttl_service:
             raise SubsystemUnavailableError("TTL service not initialized")
         removed = await self._ttl_service.cleanup_expired()
-        return {"success": True, "removed_count": len(removed), "removed": removed}
+
+        store_actions: dict[str, Any] = {"archived": [], "deleted": [], "skipped": {}}
+        failed: dict[str, str] = {}
+
+        for eid in removed:
+            try:
+                uid = UnifiedID.parse(eid)
+            except ValueError:
+                store_actions["skipped"][eid] = "unparseable_id"
+                continue
+            try:
+                if uid.source == SourceServer.VECTOR_MEMORY:
+
+                    def _archive(pid: str = uid.identifier) -> bool:
+                        from ..vector_memory.epoch import bump as _bump_epoch
+                        from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
+
+                        client = _get_qdrant()
+                        existing = client.retrieve(
+                            collection_name=COLLECTION_NAME, ids=[pid]
+                        )
+                        if not existing:
+                            return False
+                        client.set_payload(
+                            collection_name=COLLECTION_NAME,
+                            payload={"expired_at": datetime.now().isoformat()},
+                            points=[pid],
+                        )
+                        _bump_epoch()  # §24: archive state changed → invalidate cache
+                        return True
+
+                    if await asyncio.to_thread(_archive):
+                        store_actions["archived"].append(eid)
+                    else:
+                        store_actions["skipped"][eid] = "not_found"
+
+                elif uid.source == SourceServer.MEMORY_AI:
+                    db_path = os.environ.get("MEMORY_AI_DB_PATH") or str(
+                        _PROJECT_ROOT / "data" / "memory_ai.db"
+                    )
+
+                    def _delete(mid: str = uid.identifier, db: str = db_path) -> int:
+                        conn = sqlite3.connect(db, timeout=2)
+                        try:
+                            cur = conn.execute(
+                                "DELETE FROM important_messages WHERE id = ?", (mid,)
+                            )
+                            conn.commit()
+                            return cur.rowcount
+                        finally:
+                            conn.close()
+
+                    if await asyncio.to_thread(_delete) > 0:
+                        store_actions["deleted"].append(eid)
+                    else:
+                        store_actions["skipped"][eid] = "not_found"
+
+                else:
+                    store_actions["skipped"][eid] = f"unsupported_source:{uid.source.value}"
+            except Exception as e:
+                failed[eid] = type(e).__name__
+
+        return {
+            "success": not failed,
+            "removed_count": len(removed),  # back-compat
+            "removed_ledger": len(removed),
+            "removed": removed,
+            "store_actions": store_actions,
+            "failed": failed,
+        }
 
     async def memory_version_history(
         self,
