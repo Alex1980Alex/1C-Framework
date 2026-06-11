@@ -74,16 +74,36 @@ class WikiPromoter:
             # an apply() revives them, after which they become promotable again.
             if payload.get("expired_at"):
                 continue
+            # F13 (roadmap 260611 P3.2): idempotency pre-filter — a pattern that
+            # already carries its own promoted_to marker was promoted earlier;
+            # skip it before the (expensive) vector dedup so re-runs don't
+            # silently rewrite the draft and re-append to log.md.
+            if payload.get("promoted_to"):
+                continue
             vector = self._extract_vector(point, payload)
             existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
                 slug = await self._create_draft(payload)
+                self._mark_promoted(str(point.id), slug)
                 self._create_promotion_link(str(point.id), slug)
                 await self._publish_event(
                     "wiki.draft.created", {"slug": slug, "source_id": str(point.id)}
                 )
                 created.append(slug)
         return created
+
+    def _mark_promoted(self, source_point_id: str, slug: str) -> None:
+        """Stamp promoted_to on the source point (F13: the marker finally gets
+        a writer — _dedup_check reads it on neighbours, the pre-filter reads it
+        on the candidate itself). Best-effort: never blocks the draft."""
+        try:
+            self.client.set_payload(
+                collection_name="learned_patterns",
+                payload={"promoted_to": slug},
+                points=[source_point_id],
+            )
+        except Exception:
+            pass
 
     @staticmethod
     def _extract_vector(point, payload: dict) -> list[float] | None:
