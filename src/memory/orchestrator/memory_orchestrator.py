@@ -229,51 +229,52 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
         return "vector-memory"
 
     async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]:
+        # roadmap 260611 P1.3 (F12): no blanket except here — adapter failures
+        # (TEI down, Qdrant down) must propagate to UnifiedSearchEngine.search,
+        # which records them in sources_failed[] instead of silently degrading
+        # this arm to an empty result. The ai-memory arm already behaves so.
         min_confidence = kwargs.get("min_confidence", 0.3)
         results = []
 
-        try:
-            from ..vector_memory.server import _get_embedding, _get_qdrant, _pattern_from_payload
+        from ..vector_memory.server import _get_embedding, _get_qdrant, _pattern_from_payload
 
-            client = await asyncio.to_thread(_get_qdrant)
-            vector = await _get_embedding(query)
+        client = await asyncio.to_thread(_get_qdrant)
+        vector = await _get_embedding(query)
 
-            from qdrant_client.http import models as qmodels
+        from qdrant_client.http import models as qmodels
 
-            conditions = [
-                qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))
-            ]
-            qresults = await asyncio.to_thread(
-                client.query_points,
-                collection_name="learned_patterns",
-                query=vector,
-                query_filter=qmodels.Filter(must=conditions),
-                limit=limit,
-                with_payload=True,
-            )
+        conditions = [
+            qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))
+        ]
+        qresults = await asyncio.to_thread(
+            client.query_points,
+            collection_name="learned_patterns",
+            query=vector,
+            query_filter=qmodels.Filter(must=conditions),
+            limit=limit,
+            with_payload=True,
+        )
 
-            for point in qresults.points:
-                payload = point.payload or {}
-                pattern = _pattern_from_payload(str(point.id), payload)
-                similarity = point.score or 0.0
-                results.append(
-                    SearchResultItem(
-                        unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
-                        source=SourceServer.VECTOR_MEMORY,
-                        memory_type=MemoryType.SEMANTIC,
-                        content=pattern.content,
-                        title=pattern.name,
-                        raw_score=similarity * pattern.confidence,
-                        created_at=pattern.created_at,
-                        tags=pattern.tags,
-                        metadata={
-                            "pattern_type": pattern.pattern_type.value,
-                            "confidence": pattern.confidence,
-                        },
-                    )
+        for point in qresults.points:
+            payload = point.payload or {}
+            pattern = _pattern_from_payload(str(point.id), payload)
+            similarity = point.score or 0.0
+            results.append(
+                SearchResultItem(
+                    unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
+                    source=SourceServer.VECTOR_MEMORY,
+                    memory_type=MemoryType.SEMANTIC,
+                    content=pattern.content,
+                    title=pattern.name,
+                    raw_score=similarity * pattern.confidence,
+                    created_at=pattern.created_at,
+                    tags=pattern.tags,
+                    metadata={
+                        "pattern_type": pattern.pattern_type.value,
+                        "confidence": pattern.confidence,
+                    },
                 )
-        except Exception as e:
-            logger.warning(f"Vector memory search failed: {e}")
+            )
 
         return results
 
