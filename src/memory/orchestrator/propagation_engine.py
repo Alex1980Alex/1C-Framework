@@ -208,12 +208,22 @@ class PropagationEngine:
         link_registry: "LinkRegistry",  # type: ignore[name-defined]
         config: PropagationConfig | None = None,
         update_handlers: dict[SourceServer, Callable] | None = None,
+        breaker_registry: CircuitBreakerRegistry | None = None,
     ):
         self.link_registry = link_registry
         self.config = config or PropagationConfig()
         self.update_handlers = update_handlers or {}
+        # roadmap 260611 P1.2 (F10): named per-source breakers around handler
+        # calls. Handler exceptions are the real failure signal (Qdrant down,
+        # SQLite locked) — they trip "propagation:<source>" breakers in this
+        # registry, which the orchestrator shares with memory_circuit_status /
+        # memory_circuit_reset.
+        self.breaker_registry = breaker_registry
 
-        # Circuit breaker
+        # Engine-level breaker. NOTE: it can never auto-trip — _process_propagation
+        # catches all exceptions internally — so it acts only as a fail-fast guard
+        # when opened externally (kept for that contract; real failure tracking
+        # lives in the per-source breakers above).
         self._circuit_breaker: CircuitBreaker | None = None
         if self.config.circuit_breaker_enabled:
             self._circuit_breaker = CircuitBreaker(
