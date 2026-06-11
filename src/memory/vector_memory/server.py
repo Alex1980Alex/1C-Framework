@@ -200,6 +200,9 @@ MIN_CONFIDENCE = float(os.getenv("LEARNING_MIN_CONFIDENCE", "0.3"))
 
 # Lazy-initialized clients
 _qdrant_client: Any | None = None
+# Guards lazy init against the warmup thread racing the first tool call
+# (double client / _ensure_collection on a half-built global).
+_qdrant_init_lock = threading.Lock()
 # `_embedding_fn` is either the sentinel string "async" (use _embedding_provider)
 # or a callable producing pseudo-embeddings (offline opt-in hash fallback).
 _embedding_fn: str | Callable[[list[str]], list[list[float]]] | None = None
@@ -210,15 +213,33 @@ def _get_qdrant() -> Any:
     """Lazy-init Qdrant client. Uses shared Qdrant at localhost:6333."""
     global _qdrant_client
     if _qdrant_client is None:
-        from qdrant_client import QdrantClient
+        with _qdrant_init_lock:
+            if _qdrant_client is None:
+                from qdrant_client import QdrantClient
 
-        _qdrant_client = QdrantClient(
-            url=QDRANT_URL,
-            grpc_port=6334,
-            prefer_grpc=True,
-        )
-        _ensure_collection()
+                _qdrant_client = QdrantClient(
+                    url=QDRANT_URL,
+                    grpc_port=6334,
+                    prefer_grpc=True,
+                )
+                _ensure_collection()
     return _qdrant_client
+
+
+def _warmup_qdrant() -> None:
+    """S1-warmup (260611 §18, cold-start finding): pre-pay the heavy lazy import
+    (`qdrant_client` → pydantic/grpc) + client init at server start, in a daemon
+    thread. Post-`/mcp reconnect` many MCP servers import their stacks at once;
+    under that contention the first tool call was burning its whole 60s client
+    budget on import. Fail-soft: Qdrant being down must not kill the server —
+    the next tool call retries via the same lazy path. Opt-out:
+    MEMORY_VECTOR_NO_WARMUP=1.
+    """
+    try:
+        _get_qdrant()
+        logger.info("warmup: qdrant client ready (pid %d)", os.getpid())
+    except Exception as exc:
+        logger.warning("warmup skipped: %s", exc)
 
 
 def _ensure_collection() -> None:
