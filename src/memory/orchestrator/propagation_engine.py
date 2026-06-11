@@ -468,6 +468,8 @@ class PropagationEngine:
                     disable_env="MEMORY_PROPAGATION_LOG_DISABLE",
                     source=event.entity_id,
                     entities_updated=len(entities_updated),
+                    failed=len(failed_entities),
+                    failed_reasons=sorted(set(failed_entities.values())),
                     cascades_prevented=cascades_prevented,
                     final_depth=max_depth_seen,
                     latency_ms=round(elapsed, 1),
@@ -523,31 +525,64 @@ class PropagationEngine:
 
         return delta
 
-    async def _apply_update(self, entity_id: str, delta: float) -> bool:
+    async def _apply_update(self, entity_id: str, delta: float) -> str:
         """Apply update to entity via registered handler.
 
-        Honest semantics (roadmap 260609 P2.3): an update is counted *only* when
-        a handler is registered for the entity's source **and** that handler
-        reports a real mutation (truthy return). With no handler the engine
-        cannot mutate anything, so it returns ``False`` instead of fabricating
-        success — callers therefore never see phantom ``entities_updated``.
+        Tri-state return (roadmap 260611 P1.1, F10):
 
-        In production the orchestrator wires real handlers
-        (``MemoryOrchestrator._build_propagation_handlers``: vector-memory Beta
-        succ/fail nudge + memory-ai importance nudge). A handler-less engine
-        (e.g. an isolated unit test of the BFS/decay machinery) reports zero
-        updates unless the test supplies its own handlers.
+        - ``"applied"`` — handler ran and reported a real mutation;
+        - ``"skipped_no_handler"`` / ``"skipped_noop"`` — quiet skip: no handler
+          registered for the source, or the handler honestly reported no-op
+          (entity absent etc.). Not an error;
+        - ``"failed:<reason>"`` — handler raised (reason = exception type) or
+          the per-source circuit breaker is OPEN (reason = ``circuit_open``).
+
+        Honest semantics (roadmap 260609 P2.3 + 260611 P1.1): a handler
+        exception is no longer collapsed into the same ``False`` as an honest
+        no-op — callers see it in ``PropagationResult.failed_entities``.
+
+        P1.2: when the orchestrator shares its ``CircuitBreakerRegistry``, each
+        handler call goes through a named ``propagation:<source>`` breaker —
+        repeated failures (threshold from config) trip it OPEN and subsequent
+        calls fail fast with ``failed:circuit_open`` until reset/half-open.
         """
         try:
             uid = UnifiedID.parse(entity_id)
-            handler = self.update_handlers.get(uid.source)
-            if handler is None:
-                logger.debug("No update handler for %s; not counting as updated", entity_id)
-                return False
-            return bool(await handler(entity_id, delta))
+        except ValueError:
+            return "failed:invalid_entity_id"
+
+        handler = self.update_handlers.get(uid.source)
+        if handler is None:
+            logger.debug("No update handler for %s; not counting as updated", entity_id)
+            return "skipped_no_handler"
+
+        breaker = None
+        if self.breaker_registry is not None:
+            breaker = self.breaker_registry.get_or_create(
+                f"propagation:{uid.source.value}",
+                CircuitBreakerConfig(
+                    failure_threshold=self.config.circuit_breaker_threshold,
+                    reset_timeout=self.config.circuit_breaker_timeout,
+                ),
+            )
+
+        try:
+            if breaker is not None:
+                result = await breaker.call_async(handler(entity_id, delta))
+            else:
+                result = await handler(entity_id, delta)
+        except CircuitBreakerError:
+            logger.warning(
+                "Circuit 'propagation:%s' OPEN — update rejected for %s",
+                uid.source.value,
+                entity_id,
+            )
+            return "failed:circuit_open"
         except Exception as e:
             logger.error("Error applying update to %s: %s", entity_id, e)
-            return False
+            return f"failed:{type(e).__name__}"
+
+        return "applied" if result else "skipped_noop"
 
     def _error_result(self, event: PropagationEvent, reason: str) -> PropagationResult:
         return PropagationResult(
