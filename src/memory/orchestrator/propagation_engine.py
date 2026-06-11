@@ -369,6 +369,7 @@ class PropagationEngine:
 
                 self._stats["events_processed"] += 1
                 self._stats["entities_updated"] += len(result.entities_updated)
+                self._stats["entities_failed"] += len(result.failed_entities)
                 self._stats["cascades_prevented"] += result.cascades_prevented
 
             except TimeoutError:
@@ -392,6 +393,7 @@ class PropagationEngine:
             # BFS traversal
             entities_updated: list[str] = []
             updates_applied: dict[str, float] = {}
+            failed_entities: dict[str, str] = {}
             cascades_prevented = 0
             max_depth_seen = 0
 
@@ -429,13 +431,21 @@ class PropagationEngine:
                         cascades_prevented += 1
                         continue
 
-                    if await self._apply_update(link.target_id, new_delta):
+                    status = await self._apply_update(link.target_id, new_delta)
+                    if status == "applied":
                         entities_updated.append(link.target_id)
                         updates_applied[link.target_id] = new_delta
 
                         if link.target_id not in visited:
                             visited.add(link.target_id)
                             queue.append((link.target_id, new_delta, depth + 1))
+                    elif status.startswith("failed:"):
+                        # F10: a handler failure (raise / circuit OPEN) is no
+                        # longer indistinguishable from an honest no-op — the
+                        # entity surfaces in failed_entities instead of silently
+                        # dropping out of entities_updated.
+                        failed_entities[link.target_id] = status[len("failed:") :]
+                    # "skipped_*" (no handler / honest no-op) stays a quiet skip.
 
             elapsed = (datetime.now() - start_time).total_seconds() * 1000
             result = PropagationResult(
