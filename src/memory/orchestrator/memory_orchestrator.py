@@ -87,6 +87,14 @@ logger = logging.getLogger("memory-orchestrator")
 # Project root for data paths
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
+# route_and_save target string -> UnifiedID source (ADR-V / TTL store dispatch)
+_TARGET_TO_SOURCE = {
+    "memory-ai": SourceServer.MEMORY_AI,
+    "vector-memory": SourceServer.VECTOR_MEMORY,
+    "skill-learning": SourceServer.SKILL_LEARNING,
+    "wiki": SourceServer.OBSIDIAN_VAULT,
+}
+
 # Legacy rows / route_and_save metadata may carry importance as a str label
 # ("high") or numeric string — SQLite TEXT affinity stores it as-is, after
 # which float comparisons in the search adapter raise TypeError.
@@ -573,6 +581,22 @@ class MemoryOrchestrator:
                 entity_id = None
             if entity_id:
                 saved_entities.append({"target": target, "entity_id": entity_id})
+                # ADR-V wire-minimal (roadmap 260611 P2.1, F8): every
+                # orchestrator-mediated save snapshots a CREATE version. Direct
+                # MCP-server writers (save_pattern etc.) stay outside — the
+                # JSONL version store is not concurrent-safe across processes.
+                src = _TARGET_TO_SOURCE.get(target)
+                if src is not None:
+                    try:
+                        uid = UnifiedID.from_original(src, entity_id).unified
+                    except Exception:
+                        uid = f"{target}:{entity_id}"
+                    await self._version_write(
+                        uid,
+                        {"content": content, "metadata": metadata or {}, "target": target},
+                        ChangeType.CREATE,
+                        summary="route_and_save",
+                    )
             else:
                 failed_targets.append(target)
 
