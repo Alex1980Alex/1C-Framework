@@ -89,6 +89,111 @@ async def test_handler_returning_true_is_counted(tmp_path):
     assert seen[0][1] > 0  # positive delta propagated (boost direction)
 
 
+async def test_handler_raise_lands_in_failed_entities(tmp_path):
+    """roadmap 260611 P1.1 (F10): a handler exception is not an honest no-op —
+    the entity must surface in failed_entities with the exception type."""
+
+    async def _boom(entity_id: str, delta: float) -> bool:
+        raise ConnectionError("qdrant down")
+
+    engine = _sync_engine(
+        _linked_registry(tmp_path),
+        update_handlers={SourceServer.VECTOR_MEMORY: _boom},
+    )
+    result = await engine.propagate("semantic:vector-memory:a", 0.1)
+    assert result.entities_updated == []
+    assert result.failed_entities == {"semantic:vector-memory:b": "ConnectionError"}
+    assert result.to_dict()["failed_entities"] == result.failed_entities
+    assert engine.get_stats()["entities_failed"] == 1
+
+
+async def test_mixed_success_and_failure(tmp_path):
+    """vector arm fails, memory-ai arm applies — both visible, neither lost."""
+    reg = LinkRegistry(db_path=str(tmp_path / "links.db"))
+    reg.create_link(
+        "semantic:vector-memory:a",
+        "semantic:vector-memory:b",
+        LinkType.SUPPORTS,
+        strength=0.9,
+    )
+    reg.create_link(
+        "semantic:vector-memory:a",
+        "episodic:memory-ai:m1",
+        LinkType.SUPPORTS,
+        strength=0.9,
+    )
+
+    async def _boom(entity_id: str, delta: float) -> bool:
+        raise ConnectionError("qdrant down")
+
+    async def _ok(entity_id: str, delta: float) -> bool:
+        return True
+
+    engine = _sync_engine(
+        reg,
+        update_handlers={
+            SourceServer.VECTOR_MEMORY: _boom,
+            SourceServer.MEMORY_AI: _ok,
+        },
+    )
+    result = await engine.propagate("semantic:vector-memory:a", 0.1)
+    assert result.entities_updated == ["episodic:memory-ai:m1"]
+    assert result.failed_entities == {"semantic:vector-memory:b": "ConnectionError"}
+
+
+async def test_named_breaker_opens_and_fails_fast(tmp_path):
+    """roadmap 260611 P1.2 (F10): handler failures trip the named per-source
+    breaker; once OPEN, updates fail fast with failed:circuit_open and the
+    handler is no longer invoked. Reset returns it to CLOSED."""
+    from src.memory.infrastructure.circuit_breaker import (
+        CircuitBreakerRegistry,
+        CircuitState,
+    )
+
+    calls: list[str] = []
+
+    async def _boom(entity_id: str, delta: float) -> bool:
+        calls.append(entity_id)
+        raise ConnectionError("qdrant down")
+
+    registry = CircuitBreakerRegistry()
+    reg = _linked_registry(tmp_path)
+    engine = PropagationEngine(
+        reg,
+        PropagationConfig(
+            enable_background_processing=False,
+            enable_event_deduplication=False,
+            enable_time_decay=False,
+            circuit_breaker_threshold=3,
+            # Large reset_timeout → no flaky HALF_OPEN transition mid-test.
+            circuit_breaker_timeout=3600.0,
+        ),
+        update_handlers={SourceServer.VECTOR_MEMORY: _boom},
+        breaker_registry=registry,
+    )
+
+    # 3 failing propagations trip the breaker (threshold=3, 1 handler call each).
+    for _ in range(3):
+        result = await engine.propagate("semantic:vector-memory:a", 0.1)
+        assert result.failed_entities["semantic:vector-memory:b"] == "ConnectionError"
+
+    breaker = registry.get("propagation:vector-memory")
+    assert breaker is not None
+    assert breaker.state == CircuitState.OPEN
+
+    # OPEN → fail-fast, handler NOT called again.
+    calls_before = len(calls)
+    result = await engine.propagate("semantic:vector-memory:a", 0.1)
+    assert result.failed_entities == {"semantic:vector-memory:b": "circuit_open"}
+    assert len(calls) == calls_before
+
+    # Reset → CLOSED → handler invoked again.
+    breaker.reset()
+    assert breaker.state == CircuitState.CLOSED
+    result = await engine.propagate("semantic:vector-memory:a", 0.1)
+    assert len(calls) == calls_before + 1
+
+
 def _make_memory_ai_db(path) -> None:
     conn = sqlite3.connect(str(path))
     conn.execute(
