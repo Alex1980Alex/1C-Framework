@@ -620,6 +620,7 @@ class PropagationEngine:
         self._stats = {
             "events_processed": 0,
             "entities_updated": 0,
+            "entities_failed": 0,
             "cascades_prevented": 0,
             "total_processing_time_ms": 0.0,
         }
