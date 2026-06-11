@@ -779,20 +779,20 @@ class MemoryOrchestrator:
         )
 
         async def _vector_memory_handler(entity_id: str, delta: float) -> bool:
-            def _apply() -> bool:
+            def _apply() -> dict[str, Any] | None:
                 from ..vector_memory.epoch import bump as _bump_epoch
                 from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
 
                 try:
                     pid = UnifiedID.parse(entity_id).identifier
                 except ValueError:
-                    return False
+                    return None
                 client = _get_qdrant()
                 pts = client.retrieve(
                     collection_name=COLLECTION_NAME, ids=[pid], with_payload=True
                 )
                 if not pts:
-                    return False  # not a learned_pattern → honest no-op
+                    return None  # not a learned_pattern → honest no-op
                 pay = pts[0].payload or {}
                 succ, fail = pay.get("succ"), pay.get("fail")
                 if succ is None or fail is None:
@@ -806,40 +806,48 @@ class MemoryOrchestrator:
                 else:
                     fail += abs(delta)
                 now_iso = datetime.now().isoformat()
+                updates = {
+                    "succ": round(succ, 6),
+                    "fail": round(fail, 6),
+                    "confidence": round(derive_confidence(succ, fail), 6),
+                    "updated_at": now_iso,
+                }
                 client.set_payload(
                     collection_name=COLLECTION_NAME,
-                    payload={
-                        "succ": round(succ, 6),
-                        "fail": round(fail, 6),
-                        "confidence": round(derive_confidence(succ, fail), 6),
-                        "updated_at": now_iso,
-                    },
+                    payload=updates,
                     points=[pid],
                 )
                 # §24 invariant: every confidence writer bumps the epoch so the
                 # surfacing cache (memory-first-hook) invalidates instantly
                 # instead of serving the stale value until TTL.
                 _bump_epoch()
-                return True
+                return updates
 
-            return await asyncio.to_thread(_apply)
+            snapshot = await asyncio.to_thread(_apply)
+            if snapshot is None:
+                return False
+            # ADR-V wire-minimal (roadmap 260611 P2.1): snapshot the mutation.
+            await self._version_write(
+                entity_id, snapshot, ChangeType.UPDATE, summary="propagation"
+            )
+            return True
 
         async def _memory_ai_handler(entity_id: str, delta: float) -> bool:
-            def _apply() -> bool:
+            def _apply() -> dict[str, Any] | None:
                 try:
                     mid = UnifiedID.parse(entity_id).identifier
                 except ValueError:
-                    return False
+                    return None
                 try:
                     conn = sqlite3.connect(ai_db, timeout=2)
                 except sqlite3.Error:
-                    return False
+                    return None
                 try:
                     row = conn.execute(
                         "SELECT importance FROM important_messages WHERE id = ?", (mid,)
                     ).fetchone()
                     if row is None:
-                        return False
+                        return None
                     new_imp = max(0.0, min(1.0, _coerce_importance(row[0], default=0.5) + delta))
                     conn.execute(
                         "UPDATE important_messages SET importance = ?, updated_at = ? "
@@ -847,11 +855,17 @@ class MemoryOrchestrator:
                         (round(new_imp, 4), datetime.now().isoformat(), mid),
                     )
                     conn.commit()
-                    return True
+                    return {"importance": round(new_imp, 4)}
                 finally:
                     conn.close()
 
-            return await asyncio.to_thread(_apply)
+            snapshot = await asyncio.to_thread(_apply)
+            if snapshot is None:
+                return False
+            await self._version_write(
+                entity_id, snapshot, ChangeType.UPDATE, summary="propagation"
+            )
+            return True
 
         return {
             SourceServer.VECTOR_MEMORY: _vector_memory_handler,
