@@ -311,6 +311,7 @@ def reinforce_session(
             success=success,
             applied=applied,
             skipped=skipped,
+            missing=missing,
             errors=errors,
             candidates=len(candidates),
         )
@@ -320,6 +321,7 @@ def reinforce_session(
             "success": success,
             "applied": applied,
             "skipped": skipped,
+            "missing": missing,
             "errors": errors,
         }
 

@@ -109,7 +109,7 @@ class PatternReinforceStop(BaseHook):
             msg = (
                 f"[REINFORCE] session={session_id[:8]} success={result.get('success')} "
                 f"applied={result.get('applied', 0)} skipped={result.get('skipped', 0)} "
-                f"errors={result.get('errors', 0)}"
+                f"missing={result.get('missing', 0)} errors={result.get('errors', 0)}"
             )
             return HookOutput().system_message(msg)
         if status == "error":
