@@ -2,6 +2,34 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "predefined-data-name-binding": {
+      "title": "Привязка предопределённых данных (ИмяПредопределённыхДанных) при DontAutoUpdate + ошибка «Предопределённый элемент отсутствует в данных»",
+      "file": "predefined-data-name-binding.md",
+      "created": "2026-06-11",
+      "last_verified": "2026-06-11",
+      "keywords": [
+        "ИмяПредопределённыхДанных",
+        "УстановитьИмяПредопределённыхДанных",
+        "Предопределённый элемент отсутствует в данных",
+        "predefinedDataUpdate",
+        "DontAutoUpdate",
+        "Не обновлять автоматически",
+        "привязка предопределённого по имени",
+        "НайтиПоКоду установить имя",
+        "обработка установки предопределённых",
+        "три пространства кодов декларация данные ТЗ",
+        "tools_ui_1c cpr1c"
+      ],
+      "sources": [
+        "its.1c.ru/db/metod8dev i8105367",
+        "infostart.ru/1c/tools/1252487",
+        "infostart.ru/1c/tools/305892",
+        "infostart.ru/1c/tools/809406",
+        "infostart.ru/1c/articles/310542",
+        "github.com/cpr1c/tools_ui_1c",
+        "live GKSTCPLK-2528 ИБTransportManagementDevelop 2026-06-11"
+      ]
+    },
     "1c-ui-automation-options": {
       "title": "Варианты UI-автоматизации 1С (нативный механизм / Vanessa / xUnit / WinAppDriver) + debug-совместимость",
       "file": "1c-ui-automation-options.md",
