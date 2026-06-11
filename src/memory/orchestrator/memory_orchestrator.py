@@ -41,7 +41,7 @@ from mcp.types import TextContent, Tool
 
 from ..ai_memory.services.audit_service import AuditAction, AuditQuery, AuditService
 from ..ai_memory.services.ttl_service import TTLPolicy, TTLService
-from ..ai_memory.services.versioning_service import VersioningService
+from ..ai_memory.services.versioning_service import ChangeType, VersioningService
 from ..infrastructure.cache import LRUCache
 from ..infrastructure.circuit_breaker import (
     CircuitBreakerRegistry,
