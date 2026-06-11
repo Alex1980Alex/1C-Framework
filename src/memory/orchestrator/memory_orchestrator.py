@@ -1494,13 +1494,21 @@ class MemoryOrchestrator:
                 "success": False,
                 "error": f"Version {target_version} not found for entity {entity_id}",
             }
+        # roadmap 260611 P2.1 (D3): a rollback must be visible to readers —
+        # write the rolled-back snapshot's fields back to the backing store,
+        # not only into the version ledger.
+        store_writeback = await self._apply_version_to_store(entity_id, result.content)
         await self._audit(
             AuditAction.ROLLBACK,
             "memory",
             resource_id=entity_id,
             metadata={"target_version": target_version, "rollback_by": rollback_by},
         )
-        return {"success": True, "new_version": result.to_dict()}
+        return {
+            "success": True,
+            "new_version": result.to_dict(),
+            "store_writeback": store_writeback,
+        }
 
     async def memory_version_compare(
         self,
