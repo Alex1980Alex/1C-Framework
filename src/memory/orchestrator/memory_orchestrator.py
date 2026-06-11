@@ -1672,10 +1672,13 @@ class MemoryOrchestrator:
         store is not concurrent-safe across processes. Fail-soft: a versioning
         problem must never fail the primary write.
         """
-        if not self._versioning_service:
+        # getattr: tolerate partially-constructed orchestrators (tests stub the
+        # instance without running start()/__init__ side state).
+        svc = getattr(self, "_versioning_service", None)
+        if not svc:
             return
         try:
-            await self._versioning_service.create_version(
+            await svc.create_version(
                 entity_id=entity_id,
                 content=content,
                 change_type=change_type,
