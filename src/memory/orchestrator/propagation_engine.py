@@ -114,6 +114,11 @@ class PropagationResult:
     cascades_prevented: int
     final_depth: int
     processing_time_ms: float
+    # roadmap 260611 P1.1 (F10): entity_id -> reason for every handler that
+    # FAILED (raised / circuit OPEN). A failed entity is distinguishable from
+    # an honest no-op skip — it never lands in entities_updated, but it is no
+    # longer silently dropped either.
+    failed_entities: dict[str, str] = field(default_factory=dict)
     reason: str = ""
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -123,6 +128,7 @@ class PropagationResult:
             "source_entity_id": self.source_entity_id,
             "entities_updated": self.entities_updated,
             "updates_applied": self.updates_applied,
+            "failed_entities": self.failed_entities,
             "cascades_prevented": self.cascades_prevented,
             "final_depth": self.final_depth,
             "processing_time_ms": round(self.processing_time_ms, 2),
@@ -133,6 +139,7 @@ class PropagationResult:
     def __str__(self) -> str:
         return (
             f"PropagationResult(updated={len(self.entities_updated)}, "
+            f"failed={len(self.failed_entities)}, "
             f"prevented={self.cascades_prevented}, depth={self.final_depth})"
         )
 
