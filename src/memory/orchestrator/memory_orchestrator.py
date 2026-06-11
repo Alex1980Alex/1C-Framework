@@ -863,6 +863,11 @@ class MemoryOrchestrator:
                     enable_event_deduplication=False,
                 ),
                 update_handlers=self._build_propagation_handlers(),
+                # roadmap 260611 P1.2 (F10): share the orchestrator registry so
+                # handler failures trip real named breakers
+                # ("propagation:<source>") visible via memory_circuit_status
+                # and resettable via memory_circuit_reset.
+                breaker_registry=self._circuit_registry,
             )
             await self._propagation_engine.start()
 
