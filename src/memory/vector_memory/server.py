@@ -218,12 +218,17 @@ def _get_qdrant() -> Any:
             if _qdrant_client is None:
                 from qdrant_client import QdrantClient
 
-                _qdrant_client = QdrantClient(
+                client = QdrantClient(
                     url=QDRANT_URL,
                     grpc_port=6334,
                     prefer_grpc=True,
                 )
-                _ensure_collection()
+                _ensure_collection(client)
+                # Publish only after ensure succeeded: a failed init leaves the
+                # global None so the next call retries the full lazy path, and
+                # fast-path readers outside the lock never see a client whose
+                # collection isn't verified yet.
+                _qdrant_client = client
     return _qdrant_client
 
 
