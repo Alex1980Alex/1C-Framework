@@ -30,6 +30,7 @@ from ..infrastructure.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerError,
+    CircuitBreakerRegistry,
 )
 from .link_registry import LinkType
 from .unified_id import SourceServer, UnifiedID
