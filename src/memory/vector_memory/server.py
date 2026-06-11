@@ -248,12 +248,9 @@ def _warmup_qdrant() -> None:
         logger.warning("warmup skipped: %s", exc)
 
 
-def _ensure_collection() -> None:
+def _ensure_collection(client: Any) -> None:
     """Ensure learned_patterns collection exists with cosine 1024d vectors."""
     from qdrant_client.http import models as qmodels
-
-    client = _qdrant_client
-    assert client is not None, "_ensure_collection called before _get_qdrant init"
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
         client.create_collection(
