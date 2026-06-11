@@ -202,6 +202,18 @@ Examples:
 - **Post-review remediation (2026-06-10, та же сессия):** (1) lazy-init движка в оркестраторе получил `PropagationConfig(enable_background_processing=False, enable_event_deduplication=False)` — иначе production-вызов возвращал `entities_updated=[]` / `reason="queued_for_background_processing"` (честный результат прятался за очередью), а dedup молча глотал повторный `propagate_update` по тому же entity; (2) vector-handler бампит §24 epoch после `set_payload` (инвариант: каждый писатель confidence инвалидирует surfacing-кэш); (3) `try_promote_patterns` → detached `Popen` (паттерн post-indexing-analyzer, лог `.claude/cache/session-promote.log`) — Stop-бюджет не платит за Qdrant-scroll; (4) `_emit_langfuse_span` — дешёвый pre-gate `_langfuse_configured()` (env/`.env` probe ДО импорта `src.*`; в этом окружении Langfuse реально включён — `OBSERVABILITY__LANGFUSE_ENABLED=true`, span стоит ~2.3s network-flush, emit последний в `execute()`); (5) timeout хука 5→15s в `settings.json`; (6) `ai_memory/server.py` `DB_PATH` теперь тоже уважает `MEMORY_AI_DB_PATH`. +2 теста-пина: sync+repeatable orchestrator-путь, epoch-bump handler'а.
 
 
+### Honest-failure & governance wiring (roadmap 260611, 2026-06-11)
+
+Контракт «ошибка доезжает до ответа/лога, а не глотается» — закрывает F5/F8/F9/F10/F12/F13/F14 из chain-testing 260610:
+
+- **`propagate_update` (F10):** `PropagationResult.failed_entities{entity→reason}` — handler-исключение больше не схлопывается в тихий skip; tri-state `_apply_update` (`applied` / `skipped_*` / `failed:<ExcType>`). Named breakers **`propagation:<source>`** вокруг handler-вызовов (реестр оркестратора): 5 фейлов → OPEN → `failed:circuit_open` fail-fast; `memory_circuit_status`/`memory_circuit_reset` управляют реальными breakers, transitions пишутся в `memory-circuit.log` (sink ожил, observability 10/10).
+- **`unified_search` (F12):** vector-плечо больше не глотает исключения — TEI/Qdrant-outage виден в `sources_failed[]` (как у ai-плеча); потребители читают `results`, не падая на непустом `sources_failed`.
+- **Versioning (F8, ADR-V wire-minimal):** снапшотятся только orchestrator-mediated мутации — `route_and_save` (CREATE), propagation-handlers (UPDATE), rollback (ROLLBACK + **store-writeback**: memory-ai content/importance, vector payload-поля без re-embed `vector_reembedded:false`). Прямые писатели MCP-серверов вне версионирования (JSONL не concurrent-safe между процессами).
+- **TTL (F9):** `memory_ttl_cleanup` исполняет до store'ов: vector → archive (`expired_at`, §22 invalidate-not-delete + epoch bump), memory-ai → delete; ответ `{removed_ledger, store_actions{archived/deleted/skipped}, failed}`.
+- **WikiPromoter (F13):** идемпотентен — `promoted_to` пишется на source-точку (`_mark_promoted`), pre-filter по нему до векторного dedup, `_append_log` дедупит по упоминанию `drafts/{slug}.md`.
+- **F5/F14:** `get_pattern` отдаёт согласованные `archived`/`expired_at`; reinforce-мост считает `not_found`-miss в `missing` (не `errors`) — `[REINFORCE]`-баннер не врёт.
+- ⚠ Всё MCP-side (кроме F14-моста и F13-скрипта) → `/mcp reconnect` после правок. Тесты: `test_propagation_honest.py` (10), `test_governance_wiring.py` (7), `test_unified_search_honest.py` (2), `test_quick_fixes_260611.py` (3).
+
 ## Незадокументированные memory_subsystem
 
 - `LinkType` (src\memory\orchestrator\link_registry.py)

@@ -102,8 +102,14 @@ class WikiPromoter:
                 payload={"promoted_to": slug},
                 points=[source_point_id],
             )
-        except Exception:
-            pass
+        except Exception as e:
+            # Marker write failed → next run will re-promote (draft rewrite);
+            # log it so the failure reaches a log, not silence.
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "wiki_promoter: failed to stamp promoted_to on %s: %s", source_point_id, e
+            )
 
     @staticmethod
     def _extract_vector(point, payload: dict) -> list[float] | None:
