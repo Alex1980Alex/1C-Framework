@@ -20,6 +20,7 @@ Safety: **dry-run by default** (reviewable plan, no writes); content_hash dedup
 
 from __future__ import annotations
 
+import os
 import re
 import sqlite3
 from collections.abc import Callable

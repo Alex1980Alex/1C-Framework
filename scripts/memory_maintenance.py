@@ -50,7 +50,8 @@ from scripts.cross_store_index import run_scan
 PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 REPORTS_DIR = PROJECT_ROOT / "data" / "reports" / "memory"
 INGEST_LOG = PROJECT_ROOT / ".claude" / "cache" / "memory-ingestion.log"
-MEMORY_AI_DB = PROJECT_ROOT / "data" / "memory_ai.db"
+# MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
+MEMORY_AI_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data" / "memory_ai.db")
 SKILL_JSONL = PROJECT_ROOT / "data" / "skill_learning" / "patterns.jsonl"
 SL_PENDING = PROJECT_ROOT / "data" / "skill_learning" / "pending_patterns.jsonl"
 SL_REJECTED = PROJECT_ROOT / "data" / "skill_learning" / "rejected_patterns.jsonl"

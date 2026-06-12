@@ -50,7 +50,8 @@ MEMORY_DIR = Path(
     )
 )
 COOLDOWN_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-cooldown.json"
-SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
+# MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
+SQLITE_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data" / "memory_ai.db")
 
 # §24 execution cache — memoize the surfacing pipeline by hash(query_tokens).
 # The hook spawns a fresh process per UserPromptSubmit, so an in-process cache is
