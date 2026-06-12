@@ -450,9 +450,7 @@ class MemoryOrchestrator:
 
         # Search Engine with adapters
         self._search_engine = UnifiedSearchEngine(self._link_registry)
-        self._search_engine.register_adapter(
-            AiMemorySearchAdapter(_PROJECT_ROOT / "data" / "memory_ai.db")
-        )
+        self._search_engine.register_adapter(AiMemorySearchAdapter(_memory_ai_db_path()))
         self._search_engine.register_adapter(VectorMemorySearchAdapter())
         self._search_engine.register_adapter(
             SkillLearningSearchAdapter(_PROJECT_ROOT / "data" / "skill_learning")
