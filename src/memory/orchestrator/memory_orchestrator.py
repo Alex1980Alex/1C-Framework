@@ -1905,7 +1905,34 @@ class MemoryOrchestrator:
             elif target == "skill-learning":
                 storage_dir = _PROJECT_ROOT / "data" / "skill_learning"
                 storage_dir.mkdir(parents=True, exist_ok=True)
-                patterns_file = storage_dir / "patterns.jsonl"
+                # P0.4 (roadmap 260611): routed-контент идёт в карантин pending,
+                # а не напрямую в saved; явный auto_confirm от вызывающего —
+                # единственный способ миновать модерацию.
+                auto_confirm = bool((metadata or {}).get("auto_confirm"))
+                target_file = storage_dir / (
+                    "patterns.jsonl" if auto_confirm else "pending_patterns.jsonl"
+                )
+
+                # Dedup против всех трёх silo (pending/saved/rejected) — rejected
+                # как негативный сигнал, симметрично capture_pattern P0.2.
+                if content_hash:
+                    for silo, fname in (
+                        ("pending", "pending_patterns.jsonl"),
+                        ("saved", "patterns.jsonl"),
+                        ("rejected", "rejected_patterns.jsonl"),
+                    ):
+                        silo_path = storage_dir / fname
+                        if not silo_path.exists():
+                            continue
+                        dup_id = await asyncio.to_thread(
+                            _find_jsonl_hash, silo_path, content_hash
+                        )
+                        if dup_id is not None:
+                            _ingest(
+                                "dup",
+                                **({"reason": "rejected"} if silo == "rejected" else {}),
+                            )
+                            return dup_id or entity_id
 
                 pattern = {
                     "pattern_id": entity_id,
@@ -1916,18 +1943,23 @@ class MemoryOrchestrator:
                     "description": (metadata or {}).get("description", ""),
                     "confidence": (metadata or {}).get("confidence", 0.7),
                     "tags": (metadata or {}).get("tags", []),
+                    "evidence_sources": [],
+                    "metadata": {"routed": True},
                     "application_count": 0,
+                    "success_count": 0,
+                    "failure_count": 0,
                     "created_at": datetime.now().isoformat(),
                     "updated_at": datetime.now().isoformat(),
                     "version": 1,
+                    "archived": False,
                 }
 
                 def _append():
-                    with open(patterns_file, "a", encoding="utf-8") as f:
+                    with open(target_file, "a", encoding="utf-8") as f:
                         f.write(json.dumps(pattern, ensure_ascii=False) + "\n")
 
                 await asyncio.to_thread(_append)
-                _ingest("saved")
+                _ingest("saved" if auto_confirm else "skipped", reason="pending")
 
             elif target == "wiki":
                 from .memcube import ContentType as CType

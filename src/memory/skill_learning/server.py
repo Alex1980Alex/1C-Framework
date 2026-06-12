@@ -475,9 +475,13 @@ async def handle_reject(args: dict) -> list[TextContent]:
 
 
 async def handle_stats(args: dict) -> list[TextContent]:
-    stats = _load_stats()
-    pending_count = len(_read_jsonl(PENDING_FILE))
-    stats["pending_count"] = pending_count
+    stats = _derive_stats()
+    stats["pending_count"] = len(_read_jsonl(PENDING_FILE))
+    stats["rejected_count"] = len(_read_jsonl(REJECTED_FILE))
+    try:
+        _save_stats({k: stats[k] for k in ("total_patterns", "by_type", "by_confidence")})
+    except OSError:
+        pass
     return [TextContent(type="text", text=json.dumps(stats, ensure_ascii=False, indent=2))]
 
 
