@@ -52,6 +52,10 @@ REPORTS_DIR = PROJECT_ROOT / "data" / "reports" / "memory"
 INGEST_LOG = PROJECT_ROOT / ".claude" / "cache" / "memory-ingestion.log"
 MEMORY_AI_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 SKILL_JSONL = PROJECT_ROOT / "data" / "skill_learning" / "patterns.jsonl"
+SL_PENDING = PROJECT_ROOT / "data" / "skill_learning" / "pending_patterns.jsonl"
+SL_REJECTED = PROJECT_ROOT / "data" / "skill_learning" / "rejected_patterns.jsonl"
+# P3.1 (roadmap 260611): pending старше TTL без подтверждения → auto-reject
+PENDING_TTL_DAYS = int(os.environ.get("SKILL_PENDING_TTL_DAYS", "30"))
 WIKI_DRAFTS = PROJECT_ROOT / "docs" / "wiki" / "drafts"
 COLLECTION = "learned_patterns"
 
@@ -140,6 +144,86 @@ def run_forget(apply: bool, now: datetime) -> dict[str, Any]:
                 _epoch_bump()
             except Exception:
                 pass
+    return summary
+
+
+def run_review_pending(apply: bool, now: datetime) -> dict[str, Any]:
+    """P3.1 (roadmap 260611): модерация pending-карантина skill-learning.
+
+    Pending старше ``PENDING_TTL_DAYS`` без подтверждения → auto-reject
+    (``reject_reason=ttl_expired``) в rejected-silo, который блокирует повторный
+    авто-захват (P0.2 dedup). Dry-run по умолчанию (только план); ``--apply``
+    переносит записи (atomic rewrite pending: tmp + os.replace). Fail-soft.
+    """
+    try:
+        lines = (
+            SL_PENDING.read_text(encoding="utf-8").splitlines() if SL_PENDING.exists() else []
+        )
+    except OSError as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    remaining: list[dict[str, Any]] = []
+    expired: list[dict[str, Any]] = []
+    for ln in lines:
+        ln = ln.strip()
+        if not ln:
+            continue
+        try:
+            rec = json.loads(ln)
+        except json.JSONDecodeError:
+            continue
+        age_days: float | None = None
+        try:
+            age_days = (now - datetime.fromisoformat(rec.get("created_at", ""))).days
+        except ValueError:
+            pass
+        # Записи без валидного created_at не auto-reject'ятся (честный skip).
+        if age_days is not None and age_days > PENDING_TTL_DAYS:
+            expired.append(rec)
+        else:
+            remaining.append(rec)
+
+    summary: dict[str, Any] = {
+        "pending": len(remaining) + len(expired),
+        "expired": len(expired),
+        "ttl_days": PENDING_TTL_DAYS,
+        "applied": False,
+    }
+    if not (apply and expired):
+        return summary
+
+    try:
+        SL_REJECTED.parent.mkdir(parents=True, exist_ok=True)
+        with SL_REJECTED.open("a", encoding="utf-8") as fh:
+            for rec in expired:
+                rec["rejected_at"] = now.isoformat()
+                rec["reject_reason"] = "ttl_expired"
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        # atomic rewrite pending (P0.1 contract: tmp + os.replace, kill-safe)
+        tmp = SL_PENDING.with_name(SL_PENDING.name + ".tmp")
+        with tmp.open("w", encoding="utf-8") as fh:
+            for rec in remaining:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        os.replace(tmp, SL_PENDING)
+    except OSError as exc:
+        summary["error"] = f"{type(exc).__name__}: {exc}"
+        return summary
+
+    summary["applied"] = True
+    # observability: per-item rejected event, общий content_hash fact-key
+    try:
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        for rec in expired:
+            record_ingest(
+                "skill_learning",
+                "rejected",
+                content_hash=rec.get("content_hash", ""),
+                reason="ttl_expired",
+                harvester="review_pending",
+            )
+    except Exception:
+        pass
     return summary
 
 
