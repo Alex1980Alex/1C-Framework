@@ -305,7 +305,9 @@ def collect_link_stats() -> dict[str, Any]:
 def main() -> int:
     ap = argparse.ArgumentParser(description="memory maintenance cadence (§26 P4)")
     ap.add_argument("--apply", action="store_true", help="run jobs + archive (default: dry-run)")
-    ap.add_argument("--skip", default="", help="comma list: reflect,sync,promote,forget")
+    ap.add_argument(
+        "--skip", default="", help="comma list: reflect,sync,promote,forget,review_pending"
+    )
     ap.add_argument("--no-report", action="store_true", help="do not write dashboard file")
     ap.add_argument("--stamp", default=None, help="override timestamp (tests)")
     args = ap.parse_args()
