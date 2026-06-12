@@ -57,10 +57,12 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def _write_jsonl(path: Path, items: list[dict[str, Any]]):
-    """Write list of dicts to JSONL file."""
-    with open(path, "w", encoding="utf-8") as f:
+    """Atomically rewrite JSONL file: tmp + os.replace, kill-safe (P0.1, roadmap 260611)."""
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         for item in items:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    os.replace(tmp, path)
 
 
 def _append_jsonl(path: Path, item: dict[str, Any]):
@@ -133,14 +135,23 @@ def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
         pass
 
 
-def _existing_hashes() -> dict[str, str]:
-    """Map content_hash -> pattern_id across pending + saved silos (for dedup)."""
-    out: dict[str, str] = {}
-    for path in (PENDING_FILE, SAVED_FILE):
+def _existing_hashes() -> dict[str, tuple[str, str]]:
+    """Map content_hash -> (pattern_id, silo) across pending/saved/rejected silos.
+
+    P0.2 (roadmap 260611): rejected участвует в dedup как негативный сигнал —
+    повторный capture отклонённого контента не создаёт pending. pending/saved
+    идут первыми, чтобы обычный dup не маскировался под dup_rejected.
+    """
+    out: dict[str, tuple[str, str]] = {}
+    for silo, path in (
+        ("pending", PENDING_FILE),
+        ("saved", SAVED_FILE),
+        ("rejected", REJECTED_FILE),
+    ):
         for rec in _read_jsonl(path):
             ch = rec.get("content_hash") or _content_hash(rec.get("content") or "")
             if ch and ch not in out:
-                out[ch] = rec.get("pattern_id", "")
+                out[ch] = (rec.get("pattern_id", ""), silo)
     return out
 
 
