@@ -408,8 +408,13 @@ def _detach_confirm_harvest(pattern: dict[str, Any]) -> None:
             spec = importlib.util.spec_from_file_location("_sl_confirm_harvest", ph_path)
             if spec is None or spec.loader is None:
                 return
-            ph = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(ph)
+            ph = sys.modules.get("_sl_confirm_harvest")
+            if ph is None:
+                ph = importlib.util.module_from_spec(spec)
+                # регистрация ДО exec_module обязательна: @dataclass внутри модуля
+                # резолвит sys.modules[__module__] и падает на незарегистрированном
+                sys.modules["_sl_confirm_harvest"] = ph
+                spec.loader.exec_module(ph)
 
             tags = pattern.get("tags") if isinstance(pattern.get("tags"), list) else []
             item = ph.HarvestItem(
