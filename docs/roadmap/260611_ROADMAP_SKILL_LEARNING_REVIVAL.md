@@ -1,6 +1,6 @@
 # 260611 — Roadmap: оживление skill-learning (JSONL pending/saved/rejected) как рабочего контура Claude
 
-> Статус: PROPOSED · Создан: 2026-06-11 · Источник: анализ блока `skill-learning` карты
+> Статус: IMPLEMENTED 2026-06-12 (P0–P3 код, P4 — acceptance-наблюдение 2 недели) · Создан: 2026-06-11 · Источник: анализ блока `skill-learning` карты
 > [27.12 §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md)
 > Связанные: [260609 P1 write-contract](260609_ROADMAP_MEMORY_PIPELINE_HARDENING.md), [260611 governance wiring](260611_ROADMAP_MEMORY_GOVERNANCE_WIRING.md), §26 P2 D2.2 (harvest confirmed)
 
@@ -87,3 +87,10 @@ P2.2+P2.3 (1d) → P1.2 (ADR + 1d) → P3 (1d) → P4 (наблюдение). У
 | Дата | Событие | Детали |
 |------|---------|--------|
 | 2026-06-11 | Roadmap создан | Анализ блока: вход/выход мертвы (saved=1, pending=0); карта фаз P0–P4 |
+| 2026-06-12 | P0 DONE | `server.py`: атомарный `_write_jsonl` (tmp+`os.replace`), rejected в `_existing_hashes` → `dup_rejected`+`record_ingest(reason="rejected")`, stats derive-on-read (дрейф 2→1 устранён); `route_and_save` → pending (`metadata.routed:true`) + dedup vs 3 silo + `auto_confirm` opt-out (`_find_jsonl_hash` helper). Smoke оба PASS |
+| 2026-06-12 | P1.1+P1.3 DONE | SKILL.md `task-protocol` шаг 6 CAPTURE (после verify PASS, medium/complex) + `code-verify` (после PASS — capture блок); негативный вход: capture(0.3)+reject. Инструкция-уровень, 0 кода |
+| 2026-06-12 | P2.1 DONE | Хук [`skill-learning-pending-on-start.py`](../../.claude/hooks/skill-learning-pending-on-start.py) (SessionStart, timeout 3s, fail-soft, opt-out `SKILL_LEARNING_PENDING_DISABLE=1`), регистрация в settings.json. Smoke: пустой→silent, 2 pending→баннер с oldest-age и top-именами |
+| 2026-06-12 | P2.2+P2.3 DONE | `memory-first-hook`: плечо `skill_learning` (weight 0.4, saved+pending, pending ×0.7 damp + метка `[pending]`/`sl/pending`, opt-out `MEMORY_SURFACE_SKILL_LEARNING_DISABLE=1`); `SkillLearningSearchAdapter` → `_sl_tokenize` (casefold + RU-суффиксы) — морфоформы матчатся (smoke: exact-overlap 1 общий токен → normalized match) |
+| 2026-06-12 | P1.2 DONE | `pattern_harvest.py`: `HarvestItem.confidence` (drafts/skill-learning confirmed=0.85, lessons=0.7), `harvest()` split по `PATTERNS_QUARANTINE_THRESHOLD=0.8`, `quarantine_items()` (схема capture_pattern, dedup vs 3 silo + vs `learned_patterns` по point_id), opt-out `PATTERNS_QUARANTINE_DISABLE=1`; баннер harvester показывает quarantined. ADR: дополнить, не заменять — принят |
+| 2026-06-12 | P3.1+P3.2 DONE | `memory_maintenance.py` job `review_pending` (TTL `SKILL_PENDING_TTL_DAYS=30`, dry-run default, no-`created_at` → честный skip, ingest-события `rejected/ttl_expired`); `handle_confirm` → детач-harvest daemon-потоком (`ingest_items`, идемпотентный point_id, epoch.bump; sys.modules-регистрация до exec_module — фикс `@dataclass` краша). Live smoke: confirm → created=1 в Qdrant (тест-точка удалена) |
+| 2026-06-12 | P4 тесты+observability | +15 unit ([`test_skill_learning_revival.py`](../../tests/unit/test_skill_learning_revival.py)), все PASS; `record_ingest(skill_learning, rejected/skipped)` нормализуется `event_envelope` (store/action/content_hash → fact-trace тредит capture→confirm→harvest→reject). ⚠ `/mcp reconnect` для server.py+orchestrator. **Открыто: acceptance-окно 2 недели (§ P4)** |

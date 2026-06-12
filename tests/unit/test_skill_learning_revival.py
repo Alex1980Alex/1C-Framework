@@ -371,3 +371,16 @@ def test_review_pending_dry_run_then_apply(maintenance):
         for line in mm.SL_PENDING.read_text(encoding="utf-8").splitlines()
     }
     assert left == {"new1", "nodate"}  # no created_at → честный skip, не auto-reject
+
+
+def test_review_pending_null_created_at_is_fail_soft(maintenance):
+    # B2 pin: "created_at": null давал неперехваченный TypeError (ловился только
+    # ValueError) и ронял весь maintenance-ран
+    mm = maintenance
+    now = datetime.now()
+    mm.SL_PENDING.write_text(
+        json.dumps({"pattern_id": "nullts", "content_hash": "h", "created_at": None}) + "\n",
+        encoding="utf-8",
+    )
+    s = mm.run_review_pending(True, now)
+    assert s["expired"] == 0 and s["pending"] == 1  # skip, не crash и не reject
