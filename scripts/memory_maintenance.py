@@ -374,7 +374,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="memory maintenance cadence (§26 P4)")
     ap.add_argument("--apply", action="store_true", help="run jobs + archive (default: dry-run)")
     ap.add_argument(
-        "--skip", default="", help="comma list: reflect,sync,promote,forget,review_pending"
+        "--skip",
+        default="",
+        help="comma list: reflect,sync,promote,forget,review_pending,archive_episodic",
     )
     ap.add_argument("--no-report", action="store_true", help="do not write dashboard file")
     ap.add_argument("--stamp", default=None, help="override timestamp (tests)")
@@ -393,6 +395,10 @@ def main() -> int:
         {"skipped": True} if "review_pending" in skip else run_review_pending(args.apply, now)
     )
     jobs["review_pending"] = review_pending
+    # P3.2/P3.3 (roadmap 260612): после reflect — эпизодика консолидирована, можно в архив
+    jobs["archive_episodic"] = (
+        {"skipped": True} if "archive_episodic" in skip else run_archive_episodic(args.apply, now)
+    )
 
     cross_store = collect_cross_store()
     dash = build_dashboard(

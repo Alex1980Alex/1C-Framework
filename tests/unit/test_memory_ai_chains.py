@@ -268,6 +268,127 @@ def test_a8_concurrent_writers_no_lost_rows(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# B4 / P2.G2 — search_messages matches Cyrillic morphoforms (was bare LIKE)
+# ---------------------------------------------------------------------------
+async def test_b4_search_matches_morphoforms(tmp_path, monkeypatch):
+    ai, _db = _make_server(tmp_path, monkeypatch)
+    await ai.save_important_message(
+        {"content": "Решения по блокировке транспорта на разгрузке", "category": "decision"}
+    )
+
+    # Different morphoforms + different case — old `LIKE %q%` found nothing here.
+    found = json.loads((await ai.search_messages({"query": "решение блокировка"}))[0].text)
+    assert found["count"] == 1
+
+    # Exact-substring legacy behaviour still works (fallback path sanity).
+    found2 = json.loads((await ai.search_messages({"query": "разгрузке"}))[0].text)
+    assert found2["count"] == 1
+
+    miss = json.loads((await ai.search_messages({"query": "квантовый телепорт"}))[0].text)
+    assert miss["count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# B2/P2.G6 + P3.1 — adapter ranks by effective importance (lazy decay)
+# ---------------------------------------------------------------------------
+async def test_g6_recency_decay_ranks_fresh_over_stale(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta
+
+    import src.memory.ai_memory.server as ai
+
+    db = tmp_path / "memory_ai.db"
+    monkeypatch.setattr(ai, "DB_PATH", db)
+    ai.ensure_db()
+
+    conn = sqlite3.connect(str(db))
+    old = (datetime.now() - timedelta(days=365)).isoformat()
+    new = datetime.now().isoformat()
+    conn.execute(
+        "INSERT INTO important_messages "
+        "(id, content, importance, category, tags, created_at, updated_at, metadata) "
+        "VALUES ('old-1', 'индексация qdrant коллекции', 0.9, 'session_summary', "
+        "'[]', ?, ?, '{}')",
+        (old, old),
+    )
+    conn.execute(
+        "INSERT INTO important_messages "
+        "(id, content, importance, category, tags, created_at, updated_at, metadata) "
+        "VALUES ('new-1', 'индексация qdrant коллекции свежая', 0.7, 'session_summary', "
+        "'[]', ?, ?, '{}')",
+        (new, new),
+    )
+    conn.commit()
+    conn.close()
+
+    from src.memory.orchestrator.memory_orchestrator import AiMemorySearchAdapter
+
+    items = await AiMemorySearchAdapter(db).search("индексация qdrant", limit=5)
+    assert [i.unified_id.split(":")[-1] for i in items[:2]] == ["new-1", "old-1"], (
+        "year-old session_summary (0.9) must rank below fresh one (0.7) via lazy decay"
+    )
+
+    # Invariant category is NOT decayed: same age, still full weight.
+    from src.memory.ai_memory.retention import effective_importance
+
+    assert effective_importance(0.9, "decision", old) == pytest.approx(0.9)
+    assert effective_importance(0.9, "session_summary", old) < 0.06  # ~4 half-lives
+
+
+# ---------------------------------------------------------------------------
+# P3.2 — archive_episodic job: stamp + readers filter; curated categories safe
+# ---------------------------------------------------------------------------
+async def test_p32_archive_job_and_reader_filter(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta
+
+    import src.memory.ai_memory.server as ai
+
+    db = tmp_path / "memory_ai.db"
+    monkeypatch.setattr(ai, "DB_PATH", db)
+    ai.ensure_db()
+
+    old = (datetime.now() - timedelta(days=200)).isoformat()
+    conn = sqlite3.connect(str(db))
+    for rid, cat, imp in [
+        ("ep-old", "session_summary", 0.6),
+        ("dec-old", "decision", 0.6),
+        ("ep-strong", "session_summary", 0.9),
+    ]:
+        conn.execute(
+            "INSERT INTO important_messages "
+            "(id, content, importance, category, tags, created_at, updated_at, metadata) "
+            "VALUES (?, 'архивный кандидат разгрузка', ?, ?, '[]', ?, ?, '{}')",
+            (rid, imp, cat, old, old),
+        )
+    conn.commit()
+    conn.close()
+
+    import scripts.memory_maintenance as mm
+
+    monkeypatch.setattr(mm, "MEMORY_AI_DB", db)
+    summary = mm.run_archive_episodic(apply=True, now=datetime.now())
+    assert summary["candidates"] == 1 and summary["archived"] == 1
+
+    rows = {r["id"]: r for r in _rows(db)}
+    assert json.loads(rows["ep-old"]["metadata"]).get("archived_at")
+    assert not json.loads(rows["dec-old"]["metadata"]).get("archived_at"), (
+        "curated categories must never age-archive"
+    )
+    assert not json.loads(rows["ep-strong"]["metadata"]).get("archived_at")
+
+    # Idempotent: second run finds nothing new.
+    again = mm.run_archive_episodic(apply=True, now=datetime.now())
+    assert again["candidates"] == 0
+
+    # Reader filter: archived row invisible to the unified-search arm.
+    from src.memory.orchestrator.memory_orchestrator import AiMemorySearchAdapter
+
+    items = await AiMemorySearchAdapter(db).search("архивный кандидат", limit=10)
+    ids = {i.unified_id.split(":")[-1] for i in items}
+    assert "ep-old" not in ids
+    assert {"dec-old", "ep-strong"} <= ids
+
+
+# ---------------------------------------------------------------------------
 # C2 — malformed rows do not break readers
 # ---------------------------------------------------------------------------
 async def test_c2_malformed_rows_skip_not_crash(tmp_path, monkeypatch):
