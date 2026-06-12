@@ -641,16 +641,31 @@ class MemoryOrchestrator:
             else:
                 failed_targets.append(target)
 
-        # Create cross-links between saved entities
+        # Create cross-links between saved entities.
+        # P1 W4-fix (roadmap 260612 LinkRegistry): концы — unified-ID, не сырые
+        # store-id (исторические raw-UUID рёбра L2 создал именно этот блок;
+        # registry теперь отклоняет не-unified вход — P0.1 валидация).
+        cross_links_created = 0
         if self.config.enable_link_creation and len(saved_entities) > 1:
-            for i in range(len(saved_entities) - 1):
+            link_ids: list[str] = []
+            for ent in saved_entities:
+                src = _TARGET_TO_SOURCE.get(ent["target"])
+                if src is None:
+                    continue
+                try:
+                    link_ids.append(UnifiedID.from_original(src, ent["entity_id"]).unified)
+                except Exception:
+                    continue
+            for i in range(len(link_ids) - 1):
                 try:
                     self._link_registry.create_link(
-                        source_id=saved_entities[i]["entity_id"],
-                        target_id=saved_entities[i + 1]["entity_id"],
+                        source_id=link_ids[i],
+                        target_id=link_ids[i + 1],
                         link_type=LinkType.SESSION_CONTEXT,
                         strength=0.7,
+                        created_by="route-and-save",
                     )
+                    cross_links_created += 1
                 except Exception as e:
                     logger.warning(f"Failed to create cross-link: {e}")
 
@@ -664,7 +679,7 @@ class MemoryOrchestrator:
             "routing": decision.to_dict(),
             "saved_entities": saved_entities,
             "failed_targets": failed_targets,
-            "cross_links_created": max(0, len(saved_entities) - 1),
+            "cross_links_created": cross_links_created,
         }
         await self._emit_event(
             "memory.save",
@@ -2376,7 +2391,7 @@ async def list_tools() -> list[Tool]:
                     "link_type": {
                         "type": "string",
                         "default": "supports",
-                        "description": "based_on, supports, contradicts, extends, derives_from, session_context",
+                        "description": "supports, contradicts, extends, derives_from, session_context, promoted_to, superseded_by, mirrors",
                     },
                     "strength": {"type": "number", "default": 0.8},
                     "bidirectional": {"type": "boolean", "default": False},

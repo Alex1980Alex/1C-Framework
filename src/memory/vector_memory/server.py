@@ -89,8 +89,9 @@ def _cascade_confidence(
 
         from .confidence import derive_confidence, seed_counts_from_legacy
 
-        # Forward-correlation links only — CONTRADICTS has inverse semantics (excluded for v1).
-        link_types = [LinkType.SUPPORTS, LinkType.EXTENDS, LinkType.BASED_ON, LinkType.DERIVES_FROM]
+        # Forward-correlation links only — CONTRADICTS has inverse semantics
+        # (excluded for v1). BASED_ON ретирован 2026-06-12 (ADR-L1).
+        link_types = [LinkType.SUPPORTS, LinkType.EXTENDS, LinkType.DERIVES_FROM]
         registry = LinkRegistry()
         links = registry.get_links_from(pattern_id, link_types=link_types)
         # Orchestrator's create_link stores unified IDs ("semantic:vector-memory:<pid>");
@@ -100,6 +101,19 @@ def _cascade_confidence(
             f"semantic:vector-memory:{pattern_id}", link_types=link_types
         )
         if not links:
+            # P3.2 (roadmap 260612 LinkRegistry, L5): пустой каскад больше не
+            # невидим — голодание графа видно в observability.
+            try:
+                from memory.infrastructure.trace_log import write_trace
+
+                write_trace(
+                    "memory-links.log",
+                    "cascade_empty",
+                    disable_env="MEMORY_LINKS_LOG_DISABLE",
+                    pattern_id=pattern_id,
+                )
+            except Exception:
+                pass
             return stats  # cheap no-op for an empty/unlinked graph
         stats["final_depth"] = 1
         seen: set[str] = set()

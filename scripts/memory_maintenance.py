@@ -428,6 +428,18 @@ def collect_link_stats() -> dict[str, Any]:
         return {}
 
 
+def run_rebuild_link_stats(apply: bool) -> dict[str, Any] | str:
+    """P0.2 roadmap 260612 LinkRegistry: idempotent-пересчёт link_stats
+    из entity_links в каденсе — рассинхрон (orphan-строки после удалений
+    легаси-путями) не накапливается. Apply-only: дефолт каденса READ-ONLY."""
+    if not apply:
+        return "skipped (dry-run)"
+    try:
+        return LinkRegistry().rebuild_stats()
+    except Exception as exc:  # fail-soft: каденс не прерывается
+        return {"error": type(exc).__name__}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="memory maintenance cadence (§26 P4)")
     ap.add_argument("--apply", action="store_true", help="run jobs + archive (default: dry-run)")
@@ -460,6 +472,10 @@ def main() -> int:
     # "skipped" / 0 (исполнился) / -1 (error) — acceptance-критерий archive_ran на этом стоит.
     jobs["archive_episodic"] = (
         "skipped" if "archive_episodic" in skip else run_archive_episodic(args.apply, now)
+    )
+    # P0.2 roadmap 260612 LinkRegistry: stats-гигиена перед сборкой дашборда
+    jobs["rebuild_link_stats"] = (
+        "skipped" if "rebuild_link_stats" in skip else run_rebuild_link_stats(args.apply)
     )
 
     cross_store = collect_cross_store()

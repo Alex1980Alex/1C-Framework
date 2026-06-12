@@ -148,8 +148,8 @@ class PropagationResult:
 # Directional Propagation Rules
 # =============================================================================
 
+# BASED_ON ретирован 2026-06-12 (ADR-L1 roadmap 260612 LinkRegistry)
 FORWARD_PROPAGATION_LINKS = {
-    LinkType.BASED_ON,
     LinkType.SUPPORTS,
     LinkType.CONTRADICTS,
     LinkType.EXTENDS,

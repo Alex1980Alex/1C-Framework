@@ -76,7 +76,7 @@ class TestLinkRegistryNewTypes:
         assert LinkType.MIRRORS.value == "mirrors"
 
     def test_graph_node(self):
-        assert LinkType.GRAPH_NODE.value == "graph_node"
+        assert not hasattr(LinkType, "GRAPH_NODE")  # ретирован ADR-L1 260612
 
 
 # ===== 0.3: MemoryCube wiki round-trip =====

@@ -201,7 +201,7 @@ class TestPropagationEngine:
         link_registry.create_link(
             "semantic:vector-memory:b",
             "episodic:memory-ai:c",
-            LinkType.BASED_ON,
+            LinkType.DERIVES_FROM,
             strength=0.6,
         )
 

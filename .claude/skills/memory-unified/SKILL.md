@@ -52,20 +52,26 @@ Examples:
 - `docs:pdf-docs:a1b2c3d4e5f67890`
 - `learning:skill-learning:770g0600-g41d-63f6-c938-668877662222`
 
-### Link Types
+### Link Types (8 — ADR-L1, roadmap 260612 LinkRegistry)
 
-| Type | Description |
-|------|-------------|
-| `based_on` | Pattern based on documentation |
-| `supports` | Entity supports another |
-| `contradicts` | Entity contradicts another |
-| `extends` | Pattern extends another |
-| `derives_from` | Fact derived from another (§26 P2 reflection: semantic→episodic sources) |
-| `session_context` | Message in session context |
-| `promoted_to` | Learned pattern promoted to wiki page (§26 P3: WikiPromoter auto-creates) |
-| `mirrors` | Same fact in another store (§26 P3: cross_store_sync, mirror→canonical) |
-| `superseded_by` | Entity superseded by a newer version |
-| `graph_node` | Entity corresponds to a graph node |
+**Авто-писатели:**
+
+| Type | Писатель |
+|------|----------|
+| `mirrors` | cross_store_sync (mirror→canonical, §26 P3) |
+| `derives_from` | reflection (§26 P2: semantic→episodic sources) |
+| `session_context` | route_and_save multi-target (unified-ID концы с 2026-06-12) |
+| `promoted_to` | WikiPromoter (проведён F7; выстрелит на первом промоуте) |
+
+**Ручной словарь `create_link`:** `supports`, `contradicts`, `extends`, `superseded_by`
+(участвуют в весах propagation/каскада).
+
+**Ретированы 2026-06-12 (ADR-L1):** `based_on` (non-goal по ADR-D2/D4 pdf-docs,
+0 рёбер за историю), `graph_node` (ни писателя, ни читателя, 0 рёбер).
+`create_link` принимает ТОЛЬКО unified-ID `type:source:identifier` (P0.1 —
+сырые UUID отклоняются ValueError); CRUD эмитит `link_create`/`link_delete`
+в sink `memory-links.log` (§27, P3.1), пустой каскад виден событием
+`cascade_empty` (P3.2). Acceptance: `scripts/link_registry_acceptance.py`.
 
 **§26 P3 cross-store sync (auto-links).** [`scripts/cross_store_sync.py`](../../../scripts/cross_store_sync.py) + [`src/memory/orchestrator/cross_store_sync.py`](../../../src/memory/orchestrator/cross_store_sync.py) консолидируют дубли (из [`cross_store_index`](../../../src/memory/orchestrator/cross_store_index.py), D3.1): `ConflictResolver(SOURCE_PRIORITY)` выбирает canonical store (`wiki > learned_patterns > skill_learning > memory_ai`) и создаёт `MIRRORS`-связи (mirror→canonical) в link_registry — **idempotent, dry-run default, additive/reversible** (`--apply` для записи). [`WikiPromoter`](../../../src/memory/librarian/wiki_promoter.py) создаёт `PROMOTED_TO` при promotion learned→wiki (opt-in `link_registry`, fail-soft). `unified_search` `Deduplicator` уже коллапсит идентичный контент при запросе; `MIRRORS` добавляет персистентную провенанс-связь. См. [roadmap §26 P3](../../../docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md).
 

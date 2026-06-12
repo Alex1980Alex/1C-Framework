@@ -125,7 +125,7 @@ class TestLinkRegistry:
         return LinkRegistry(db_path=str(tmp_path / "test_links.db"))
 
     def test_create_and_get_link(self, registry):
-        link = registry.create_link("a:b:1", "a:b:2", LinkType.BASED_ON, 0.9)
+        link = registry.create_link("a:b:1", "a:b:2", LinkType.EXTENDS, 0.9)
         assert link.link_id is not None
         fetched = registry.get_link(link.link_id)
         assert fetched.source_id == "a:b:1"
@@ -148,7 +148,7 @@ class TestLinkRegistry:
     def test_get_links_from_to(self, registry):
         registry.create_link("a:b:src", "a:b:t1", LinkType.SUPPORTS, 0.8)
         registry.create_link("a:b:src", "a:b:t2", LinkType.EXTENDS, 0.6)
-        registry.create_link("a:b:other", "a:b:src", LinkType.BASED_ON, 0.7)
+        registry.create_link("a:b:other", "a:b:src", LinkType.CONTRADICTS, 0.7)
         assert len(registry.get_links_from("a:b:src")) == 2
         assert len(registry.get_links_to("a:b:src")) == 1
 

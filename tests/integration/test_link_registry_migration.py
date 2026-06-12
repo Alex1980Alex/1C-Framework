@@ -35,14 +35,16 @@ class TestNewLinkTypes:
             LinkType.PROMOTED_TO,
             LinkType.SUPERSEDED_BY,
             LinkType.MIRRORS,
-            LinkType.GRAPH_NODE,
         ],
     )
     def test_new_link_type_exists(self, lt: LinkType):
-        assert lt.value in ("promoted_to", "superseded_by", "mirrors", "graph_node")
+        assert lt.value in ("promoted_to", "superseded_by", "mirrors")
 
     def test_total_link_types(self):
-        assert len(LinkType) == 10
+        # ADR-L1 (roadmap 260612 LinkRegistry): based_on/graph_node ретированы
+        assert len(LinkType) == 8
+        assert not hasattr(LinkType, "BASED_ON")
+        assert not hasattr(LinkType, "GRAPH_NODE")
 
 
 # ===== CHECK constraint =====
@@ -53,8 +55,8 @@ class TestCheckConstraint:
         registry, _ = tmp_db
         for lt in LinkType:
             link_id = registry.create_link(
-                source_id=f"src-{lt.value}",
-                target_id=f"tgt-{lt.value}",
+                source_id=f"t:src:{lt.value}",
+                target_id=f"t:tgt:{lt.value}",
                 link_type=lt,
             )
             assert link_id is not None
@@ -97,20 +99,21 @@ class TestMigrationScript:
 class TestNewTypeOperations:
     def test_promoted_to_round_trip(self, tmp_db):
         registry, _ = tmp_db
-        registry.create_link("mem:1", "wiki:page-1", LinkType.PROMOTED_TO)
-        links = registry.get_links_from("mem:1")
-        assert any(r.target_id == "wiki:page-1" for r in links)
+        registry.create_link("semantic:vector-memory:1", "wiki:obsidian-vault:page-1", LinkType.PROMOTED_TO)
+        links = registry.get_links_from("semantic:vector-memory:1")
+        assert any(r.target_id == "wiki:obsidian-vault:page-1" for r in links)
 
-    def test_graph_node_round_trip(self, tmp_db):
+    def test_superseded_by_round_trip(self, tmp_db):
+        # GRAPH_NODE ретирован (ADR-L1 260612); проверяем живой ручной тип
         registry, _ = tmp_db
-        registry.create_link("mem:2", "graph:entity-42", LinkType.GRAPH_NODE)
-        links = registry.get_links_from("mem:2")
-        assert any(r.target_id == "graph:entity-42" for r in links)
+        registry.create_link("episodic:memory-ai:2", "episodic:memory-ai:42", LinkType.SUPERSEDED_BY)
+        links = registry.get_links_from("episodic:memory-ai:2")
+        assert any(r.target_id == "episodic:memory-ai:42" for r in links)
 
     def test_mirrors_bidirectional(self, tmp_db):
         registry, _ = tmp_db
-        result = registry.create_link("a", "b", LinkType.MIRRORS, bidirectional=True)
+        result = registry.create_link("t:s:a", "t:s:b", LinkType.MIRRORS, bidirectional=True)
         assert result is not None
-        forward = registry.get_links_from("a")
-        assert any(r.target_id == "b" for r in forward)
+        forward = registry.get_links_from("t:s:a")
+        assert any(r.target_id == "t:s:b" for r in forward)
         assert forward[0].bidirectional is True
