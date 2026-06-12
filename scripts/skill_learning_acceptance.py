@@ -129,14 +129,7 @@ def evaluate(m: dict[str, Any]) -> dict[str, bool]:
 
 
 def render(m: dict[str, Any], crit: dict[str, bool], final: bool) -> str:
-    verdict = (
-        ("PASS" if all(crit.values()) else "FAIL")
-        if (final or m["window_closed"])
-        else "PENDING (окно открыто)"
-    )
-    lines = [
-        f"# skill-learning acceptance — день {m['day']}/14 ({m['window']})",
-        "",
+    detail = [
         f"- Снято: {m['now']}; silo: {m['counts']}",
         f"- captures: {m['captures']} (новых записей {m['captures_new_records']}"
         f" + dup {m['dup_events']}) — цель >={CAPTURE_TARGET}",
@@ -145,19 +138,15 @@ def render(m: dict[str, Any], crit: dict[str, bool], final: bool) -> str:
         f"- surfacing arm=skill_learning: fired {m['surfacing_arm_fired']}"
         f"/{m['surfacing_arm_invocations']} invocations — цель >0",
         f"- dup-события (dedup работает): {m['dup_events']} — цель >0",
-        "",
-        "| Критерий | Статус |",
-        "|---|---|",
     ]
-    for k, ok in crit.items():
-        lines.append(f"| {k} | {'PASS' if ok else 'FAIL'} |")
-    lines += ["", f"**Вердикт: {verdict}**"]
-    if verdict in ("PASS", "FAIL"):
-        lines.append(
-            "\nЗафиксировать вердикт в §18 "
-            "docs/roadmap/260611_ROADMAP_SKILL_LEARNING_REVIVAL.md."
-        )
-    return "\n".join(lines)
+    return render_acceptance(
+        f"# skill-learning acceptance — день {m['day']}/14 ({m['window']})",
+        m,
+        crit,
+        final=final,
+        detail_lines=detail,
+        roadmap_rel="docs/roadmap/260611_ROADMAP_SKILL_LEARNING_REVIVAL.md",
+    )
 
 
 def main() -> int:
