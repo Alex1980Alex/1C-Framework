@@ -27,6 +27,13 @@ from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+
+# Общий каркас acceptance-скриптов (260612 §P4): JSONL/даты/рендер/emit — единые.
+from acceptance_common import emit as _emit
+from acceptance_common import parse_dt as _parse_dt
+from acceptance_common import read_jsonl as _read_jsonl
+from acceptance_common import render_acceptance, window_day
 
 SL_DIR = PROJECT_ROOT / "data" / "skill_learning"
 PENDING = SL_DIR / "pending_patterns.jsonl"
