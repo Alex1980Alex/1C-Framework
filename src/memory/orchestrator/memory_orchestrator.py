@@ -353,7 +353,9 @@ class SkillLearningSearchAdapter(BaseSearchAdapter):
         if not self._patterns_file.exists():
             return []
 
-        query_lower = query.lower()
+        # P2.3 (roadmap 260611): casefold + RU-stem нормализация вместо точного
+        # word-overlap — кириллические морфоформы («паттерна»/«паттерны») матчатся.
+        query_words = _sl_tokenize(query)
         results: list[SearchResultItem] = []
 
         def _search():
@@ -370,10 +372,8 @@ class SkillLearningSearchAdapter(BaseSearchAdapter):
 
             scored = []
             for item in items:
-                text = f"{item.get('name', '')} {item.get('content', '')} {item.get('description', '')}".lower()
-                # Simple keyword overlap scoring
-                query_words = set(query_lower.split())
-                content_words = set(text.split())
+                text = f"{item.get('name', '')} {item.get('content', '')} {item.get('description', '')}"
+                content_words = _sl_tokenize(text)
                 overlap = len(query_words & content_words)
                 if overlap > 0:
                     score = overlap / max(len(query_words), 1)
