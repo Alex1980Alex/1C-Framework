@@ -297,6 +297,7 @@ def save_to_sqlite(ctx):
     )
     conn.commit()
     conn.close()
+    _record_ingest("saved", content_hash)
     return True
 
 
