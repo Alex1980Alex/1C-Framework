@@ -85,25 +85,35 @@ def _save_stats(stats: dict[str, Any]):
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
 
+def _derive_stats() -> dict[str, Any]:
+    """Derive stats from the saved silo (source of truth) — P0.3, roadmap 260611.
+
+    learning_stats.json остаётся write-through кэшем, не источником истины:
+    инкрементный счётчик дрейфовал от фактических строк patterns.jsonl.
+    """
+    saved = _read_jsonl(SAVED_FILE)
+    stats: dict[str, Any] = {
+        "total_patterns": len(saved),
+        "by_type": {},
+        "by_confidence": {"high": 0, "medium": 0, "low": 0},
+    }
+    for pattern in saved:
+        ptype = pattern.get("pattern_type", "unknown")
+        stats["by_type"][ptype] = stats["by_type"].get(ptype, 0) + 1
+
+        confidence = pattern.get("confidence", 0.5)
+        if confidence >= 0.7:
+            stats["by_confidence"]["high"] += 1
+        elif confidence >= 0.4:
+            stats["by_confidence"]["medium"] += 1
+        else:
+            stats["by_confidence"]["low"] += 1
+    return stats
+
+
 def _update_stats_on_save(pattern: dict[str, Any]):
-    """Update stats when a pattern is saved."""
-    stats = _load_stats()
-    stats["total_patterns"] = stats.get("total_patterns", 0) + 1
-
-    ptype = pattern.get("pattern_type", "unknown")
-    stats.setdefault("by_type", {})
-    stats["by_type"][ptype] = stats["by_type"].get(ptype, 0) + 1
-
-    confidence = pattern.get("confidence", 0.5)
-    stats.setdefault("by_confidence", {"high": 0, "medium": 0, "low": 0})
-    if confidence >= 0.7:
-        stats["by_confidence"]["high"] += 1
-    elif confidence >= 0.4:
-        stats["by_confidence"]["medium"] += 1
-    else:
-        stats["by_confidence"]["low"] += 1
-
-    _save_stats(stats)
+    """Refresh the stats cache after a save (derive-on-read, cache write-through)."""
+    _save_stats(_derive_stats())
 
 
 # ========== §26 P1.3 write-contract helpers (content_hash + dedup + ingest) ==========
@@ -265,16 +275,22 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
     if content_hash:
         existing = _existing_hashes().get(content_hash)
         if existing is not None:
-            _record_ingest("dup", content_hash)
+            existing_id, silo = existing
+            action = "dup_rejected" if silo == "rejected" else "dup"
+            if silo == "rejected":
+                _record_ingest("dup", content_hash, reason="rejected")
+            else:
+                _record_ingest("dup", content_hash)
             return [
                 TextContent(
                     type="text",
                     text=json.dumps(
                         {
                             "success": True,
-                            "action": "dup",
-                            "pattern_id": existing or pattern_id,
-                            "status": "dup",
+                            "action": action,
+                            "pattern_id": existing_id or pattern_id,
+                            "status": action,
+                            "silo": silo,
                             "name": args["name"],
                         },
                         ensure_ascii=False,
