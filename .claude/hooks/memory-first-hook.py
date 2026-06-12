@@ -138,6 +138,14 @@ SEMANTIC_COLLECTIONS = [
 MIN_SURFACE_CONF = 0.15  # hard noise floor: below this → never surface
 CONF_FLOOR = 0.30  # soft floor for floored-multiply score adjustment
 
+# 260612 Skill System P2.2 (S4): absolute cosine floor for the skill_library arm.
+# Without it the arm returns its top-5 for ANY prompt (generic skills like
+# task-protocol/learning-loop sit at ~0.45-0.49 cosine for unrelated prompts and
+# eat [MEMORY CONTEXT] slots from real patterns). Live calibration 2026-06-12:
+# relevant hits cluster at 0.56-0.62, irrelevant at 0.45-0.49 → 0.55 floor.
+# Rollback knob: MEMORY_SURFACE_SKILL_MIN_SCORE=0 disables the gate.
+SKILL_SURFACE_MIN_SCORE = float(os.environ.get("MEMORY_SURFACE_SKILL_MIN_SCORE", "0.55"))
+
 
 def _load_surfacing_tuning() -> None:
     """§25 B1: overlay tunable surfacing constants from surfacing_tuning.json.
@@ -675,6 +683,11 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                         }
                         arms["pattern_dense"].append(entry)
                     else:
+                        # 260612 P2.2 (S4): cut sub-floor skill hits — the arm
+                        # otherwise fills banner slots with noise for any prompt.
+                        if base_score < SKILL_SURFACE_MIN_SCORE:
+                            _trace_gate("skill_below_floor")
+                            continue
                         entry = {
                             "source": "qdrant",
                             "id": hit.get("id", ""),

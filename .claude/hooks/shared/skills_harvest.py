@@ -147,15 +147,35 @@ def _scan_skills(skills_dir: Path) -> dict[str, dict[str, str]]:
     return found
 
 
-def _build_payload(name: str, meta: dict, rel_path: str) -> dict[str, Any]:
+def _build_payload(name: str, meta: dict, rel_path: str, content_hash: str = "") -> dict[str, Any]:
     return {
         "skill_name": name,
         "file_path": rel_path,
         "description": meta.get("description", ""),
         "triggers": meta.get("triggers", ""),
         "content_preview": meta.get("content_preview", "")[:500],
+        # §26 write-contract (roadmap 260612 P0.2): cross-store idempotency key —
+        # sha256(SKILL.md)[:16], same algorithm as orchestrator content_hash.
+        "content_hash": content_hash,
         "indexed_at": datetime.now(UTC).isoformat(),
     }
+
+
+def _record_ingest(action: str, *, content_hash: str = "", harvester: str, **extra: Any) -> None:
+    """§26 write-contract: log the write attempt to memory-ingestion.log. Fail-soft."""
+    try:
+        import sys
+
+        src_dir = str(PROJECT_ROOT / "src")
+        if src_dir not in sys.path:
+            sys.path.append(src_dir)  # append, NOT insert(0) — src/shared must not shadow hooks
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(
+            "skill_library", action, content_hash=content_hash, harvester=harvester, **extra
+        )
+    except Exception:
+        pass
 
 
 def harvest_skills(
@@ -226,6 +246,13 @@ def harvest_skills(
         vec = embed(embed_input or d["content"][:1000])
         if not vec:
             stats["errors"] += 1
+            _record_ingest(
+                "error",
+                content_hash=d["hash"],
+                harvester="skills-harvester",
+                skill=name,
+                reason="embed_failed",
+            )
             continue
         try:
             from qdrant_client import models as qmodels
@@ -236,16 +263,24 @@ def harvest_skills(
                     qmodels.PointStruct(
                         id=_point_id(name),
                         vector=vec,
-                        payload=_build_payload(name, meta, d["file"]),
+                        payload=_build_payload(name, meta, d["file"], content_hash=d["hash"]),
                     )
                 ],
             )
         except Exception:
             stats["errors"] += 1
+            _record_ingest(
+                "error",
+                content_hash=d["hash"],
+                harvester="skills-harvester",
+                skill=name,
+                reason="qdrant_upsert",
+            )
             continue
         new_skills[name] = {"hash": d["hash"], "file": d["file"]}
         stats["upserted"] += 1
         stats["items"].append(name)
+        _record_ingest("saved", content_hash=d["hash"], harvester="skills-harvester", skill=name)
 
     # 2. stale-cleanup: skills in state but no longer on disk
     for name in list(prev.keys()):
@@ -258,21 +293,196 @@ def harvest_skills(
             continue
         new_skills.pop(name, None)
         stats["deleted"] += 1
+        _record_ingest("pruned", harvester="skills-harvester", skill=name, reason="skill_removed")
 
     _save_state(state_file, {"seeded": True, "skills": new_skills})
     if stats["upserted"] or stats["deleted"]:
-        # §24 cache invalidation (roadmap 260609 P1.5): surfacing's skill arm
-        # reads skill_library through the same execution cache — bump so a
-        # changed/removed skill is visible on the next prompt.
+        _bump_epoch()
+    return stats
+
+
+def _bump_epoch() -> None:
+    """§24 cache invalidation (roadmap 260609 P1.5): surfacing's skill arm reads
+    skill_library through the execution cache — bump so a changed/removed skill
+    is visible on the next prompt. Fail-soft."""
+    try:
+        import sys
+
+        src_dir = str(PROJECT_ROOT / "src")
+        if src_dir not in sys.path:
+            sys.path.append(src_dir)
+        from memory.vector_memory import epoch
+
+        epoch.bump()
+    except Exception:
+        pass
+
+
+def mirror_skill_library(
+    *,
+    skills_dir: Path = SKILLS_DIR,
+    state_file: Path = STATE_FILE,
+    client: Any = None,
+    embed: Callable[[str], list[float] | None] | None = None,
+    apply: bool = False,
+    snapshot: bool = True,
+) -> dict[str, Any]:
+    """Full mirror of the skills catalog into skill_library (roadmap 260612 P0.1).
+
+    Unlike the incremental ``harvest_skills`` (state-file diff — blind to points
+    that predate the state file), this reconciles against the COLLECTION itself:
+
+      - **ghosts** (point exists, skill dir gone — e.g. deprecated `1c-mcp-toolkit`)
+        are pruned; a collection snapshot is taken first (prune is irreversible);
+      - **drift** (skill on disk, no point) and **changed** skills (payload
+        content_hash != disk hash, incl. legacy points without content_hash)
+        are re-embedded and upserted under the §26 write-contract
+        (payload ``content_hash`` + ``record_ingest``);
+      - unchanged points are left alone (no re-embed);
+      - the harvester state file is resynced so the incremental path agrees.
+
+    ``_archived/<skill>/SKILL.md`` never matches the ``*/SKILL.md`` scan glob,
+    so archived skills count as removed — exactly the prune semantics we want.
+
+    Dry-run (``apply=False``) returns the plan without touching anything.
+    Fail-soft per item: errors counted + ingest-logged, never raises.
+    """
+    embed = embed or (lambda t: _passage_embed(t, timeout=30.0))
+    stats: dict[str, Any] = {
+        "applied": apply,
+        "catalog": 0,
+        "library": 0,
+        "upserted": 0,
+        "unchanged": 0,
+        "pruned": 0,
+        "errors": 0,
+        "ghosts": [],
+        "to_upsert": [],
+        "snapshot": None,
+    }
+
+    found = _scan_skills(skills_dir)
+    stats["catalog"] = len(found)
+
+    if client is None:
         try:
-            import sys
+            from qdrant_client import QdrantClient
 
-            src_dir = str(PROJECT_ROOT / "src")
-            if src_dir not in sys.path:
-                sys.path.append(src_dir)
-            from memory.vector_memory import epoch
-
-            epoch.bump()
+            client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, timeout=20)
         except Exception:
-            pass
+            stats["errors"] += 1
+            return stats
+
+    # Reconcile against the live collection (not the state file).
+    lib: dict[str, dict[str, Any]] = {}  # skill_name -> {point_id, content_hash}
+    try:
+        offset = None
+        while True:
+            points, offset = client.scroll(
+                collection_name=COLLECTION,
+                limit=256,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for p in points:
+                payload = p.payload or {}
+                sname = payload.get("skill_name")
+                if sname:
+                    lib[sname] = {"id": p.id, "content_hash": payload.get("content_hash", "")}
+            if offset is None:
+                break
+    except Exception:
+        stats["errors"] += 1
+        return stats
+    stats["library"] = len(lib)
+
+    stats["ghosts"] = sorted(set(lib) - set(found))
+    stats["to_upsert"] = sorted(
+        name
+        for name, d in found.items()
+        if lib.get(name, {}).get("content_hash") != d["hash"]
+    )
+    stats["unchanged"] = len(found) - len(stats["to_upsert"])
+
+    if not apply:
+        return stats
+
+    # Prune is irreversible — snapshot first ([[reference-qdrant-collection-aliases]]).
+    if stats["ghosts"] and snapshot:
+        try:
+            snap = client.create_snapshot(collection_name=COLLECTION)
+            stats["snapshot"] = getattr(snap, "name", None) or str(snap)
+        except Exception:
+            stats["snapshot"] = "snapshot_failed"
+
+    for name in stats["ghosts"]:
+        try:
+            client.delete(collection_name=COLLECTION, points_selector=[lib[name]["id"]])
+            stats["pruned"] += 1
+            _record_ingest(
+                "pruned",
+                content_hash=lib[name].get("content_hash", ""),
+                harvester="reindex_skill_library",
+                skill=name,
+                reason="ghost_no_catalog_dir",
+            )
+        except Exception:
+            stats["errors"] += 1
+            _record_ingest(
+                "error", harvester="reindex_skill_library", skill=name, reason="qdrant_delete"
+            )
+
+    for name in stats["to_upsert"]:
+        d = found[name]
+        meta = parse_frontmatter(d["content"])
+        embed_input = f"{meta.get('description', '')}\n{meta.get('triggers', '')}".strip()
+        vec = embed(embed_input or d["content"][:1000])
+        if not vec:
+            stats["errors"] += 1
+            _record_ingest(
+                "error",
+                content_hash=d["hash"],
+                harvester="reindex_skill_library",
+                skill=name,
+                reason="embed_failed",
+            )
+            continue
+        try:
+            from qdrant_client import models as qmodels
+
+            client.upsert(
+                collection_name=COLLECTION,
+                points=[
+                    qmodels.PointStruct(
+                        id=_point_id(name),
+                        vector=vec,
+                        payload=_build_payload(name, meta, d["file"], content_hash=d["hash"]),
+                    )
+                ],
+            )
+            stats["upserted"] += 1
+            _record_ingest(
+                "saved", content_hash=d["hash"], harvester="reindex_skill_library", skill=name
+            )
+        except Exception:
+            stats["errors"] += 1
+            _record_ingest(
+                "error",
+                content_hash=d["hash"],
+                harvester="reindex_skill_library",
+                skill=name,
+                reason="qdrant_upsert",
+            )
+
+    # Resync the incremental harvester's state so both paths agree on hashes.
+    _save_state(
+        state_file,
+        {
+            "seeded": True,
+            "skills": {n: {"hash": d["hash"], "file": d["file"]} for n, d in found.items()},
+        },
+    )
+    if stats["upserted"] or stats["pruned"]:
+        _bump_epoch()
     return stats

@@ -355,7 +355,11 @@ jobs:
   skill-router-eval:
     name: Skill Router Evaluation
     runs-on: ubuntu-latest
-    continue-on-error: true  # eval requires ground-truth data not in repo
+    # Advisory gate (260612 S5): job-фейл виден в run-аннотациях, но не блокирует
+    # workflow, пока роутер не дотянут до F1>=0.75 (первый честный вердикт после
+    # вскрытия silent-skip: F1=0.69 на 73 кейсах). Ground-truth теперь tracked —
+    # skip-ветки «not in repo» больше нет: нет файла = честный fail, не SUCCESS.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -380,29 +384,41 @@ jobs:
 
       - name: Run skill-router evaluation
         run: |
-          if [ -f data/skill-router-ground-truth.jsonl ]; then
-            python scripts/eval-skill-router.py --json > eval-result.json 2>&1 || true
-          else
-            echo '{"skill_metrics":{"f1":0,"precision":0,"recall":0},"bundle_metrics":{"f1":0},"skipped":"ground-truth not in repo"}' > eval-result.json
-            echo "SKIP: ground-truth data not available in CI"
+          # 260612 C3: нет ground-truth = честный fail. Никаких stub-JSON со
+          # "skipped" — именно эта ветка годами маскировала неработающий eval.
+          if [ ! -f data/skill-router-ground-truth.jsonl ]; then
+            echo "::error::ground-truth data/skill-router-ground-truth.jsonl missing in checkout"
+            exit 1
           fi
+          python scripts/eval-skill-router.py --json > eval-result.json
 
       - name: Check F1 threshold
         run: |
           python -c "
-          import json, sys
+          import json, os, sys
           r = json.load(open('eval-result.json'))
-          if 'skipped' in r:
-              print('SKIP: ' + r['skipped'])
-              sys.exit(0)
           f1 = r['skill_metrics']['f1']
           p = r['skill_metrics']['precision']
           recall = r['skill_metrics']['recall']
           bf1 = r['bundle_metrics']['f1']
+          n = r['total_samples']
+          lines = [
+              f'## Skill Router Eval ({n} samples)',
+              f'| metric | value |',
+              f'|--------|-------|',
+              f'| Skill precision | {p:.4f} |',
+              f'| Skill recall | {recall:.4f} |',
+              f'| Skill F1 | {f1:.4f} |',
+              f'| Bundle F1 | {bf1:.4f} |',
+          ]
+          summary = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary:
+              with open(summary, 'a') as fh:
+                  fh.write('\n'.join(lines) + '\n')
           print(f'Skill  — Precision: {p:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}')
           print(f'Bundle — F1: {bf1:.4f}')
           if f1 < 0.75:
-              print(f'FAIL: Skill F1 {f1:.4f} < 0.75 threshold')
+              print(f'::error::Skill F1 {f1:.4f} < 0.75 threshold')
               sys.exit(1)
           print(f'PASS: Skill F1 {f1:.4f} >= 0.75 threshold')
           "

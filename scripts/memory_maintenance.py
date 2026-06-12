@@ -78,6 +78,27 @@ SUBPROCESS_JOBS: dict[str, tuple[list[str], bool, bool]] = {
         False,
         True,  # apply-only: пишет в production wiki_pages_v1
     ),
+    # 260612 Skill System A5: mirror каталога .claude/skills/ -> skill_library
+    # (upsert drift/changed, prune ghosts со снапшотом) — drift сходится к 0
+    # каждым каденсом; дешёво при отсутствии правок (content_hash skip).
+    "reindex_skill_library": (
+        ["scripts/reindex_skill_library.py"],
+        True,
+        True,  # apply-only: пишет в production skill_library
+    ),
+    # 260612 Skill System P2.3 (S6): потребитель skill-accuracy.jsonl — отчёт
+    # «review candidates» (high-waste / router-miss / never-used / no-traffic).
+    "skill_review": (
+        [
+            "scripts/skill-health-analyzer.py",
+            "--no-eval",
+            "--exit-zero",
+            "--output",
+            "data/reports/skills/skill-health-report.md",
+        ],
+        False,
+        False,  # read-only отчёт — безопасен и в dry-run каденсе
+    ),
 }
 
 
@@ -446,7 +467,10 @@ def main() -> int:
     ap.add_argument(
         "--skip",
         default="",
-        help="comma list: reflect,sync,promote,forget,review_pending,archive_episodic",
+        help=(
+            "comma list: reflect,sync,promote,reindex_wiki,reindex_skill_library,"
+            "skill_review,forget,review_pending,archive_episodic,rebuild_link_stats"
+        ),
     )
     ap.add_argument("--no-report", action="store_true", help="do not write dashboard file")
     ap.add_argument("--stamp", default=None, help="override timestamp (tests)")
@@ -458,8 +482,10 @@ def main() -> int:
 
     jobs: dict[str, Any] = {}
     # reindex_wiki СРАЗУ после promote (260612 P3.3): export wiki .md и индексация
-    # wiki_pages_v1 — один пайплайн, иначе дрейф .md <-> Qdrant
-    for name in ("reflect", "sync", "promote", "reindex_wiki"):
+    # wiki_pages_v1 — один пайплайн, иначе дрейф .md <-> Qdrant.
+    # reindex_skill_library + skill_review (260612 Skill System A5/P2.3): зеркало
+    # каталога скиллов в skill_library + отчёт review-кандидатов из метрик.
+    for name in ("reflect", "sync", "promote", "reindex_wiki", "reindex_skill_library", "skill_review"):
         jobs[name] = "skipped" if name in skip else _run_subprocess(name, args.apply)
     forget = {"skipped": True} if "forget" in skip else run_forget(args.apply, now)
     # P3.1 (roadmap 260611): pending-карантин не должен гнить — TTL auto-reject
