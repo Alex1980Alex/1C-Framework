@@ -2011,7 +2011,10 @@ class MemoryOrchestrator:
                         f.write(json.dumps(pattern, ensure_ascii=False) + "\n")
 
                 await asyncio.to_thread(_append)
-                _ingest("saved" if auto_confirm else "skipped", reason="pending")
+                if auto_confirm:
+                    _ingest("saved")
+                else:
+                    _ingest("skipped", reason="pending")
 
             elif target == "wiki":
                 from .memcube import ContentType as CType
