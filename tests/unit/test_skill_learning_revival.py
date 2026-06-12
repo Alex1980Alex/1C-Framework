@@ -150,12 +150,18 @@ async def test_route_and_save_skill_learning_rejected_blocks(orchestrator):
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def pattern_harvest():
-    hooks_dir = str(PROJECT_ROOT / ".claude" / "hooks")
-    if hooks_dir not in sys.path:
-        sys.path.insert(0, hooks_dir)
-    from shared import pattern_harvest as ph
-
-    return ph
+    # importlib file-load, НЕ `from shared import ...`: src/shared (real package)
+    # затеняет .claude/hooks/shared при полном прогоне ([[feedback-hook-src-shared-collision]])
+    name = "_ph_test_revival"
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(
+        name, PROJECT_ROOT / ".claude" / "hooks" / "shared" / "pattern_harvest.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod  # до exec_module: @dataclass резолвит sys.modules[__module__]
+    spec.loader.exec_module(mod)
+    return mod
 
 
 class _StubClient:
