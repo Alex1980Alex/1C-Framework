@@ -57,7 +57,7 @@ def _coerce_importance(value: object, default: float = 0.7) -> float:
 def ensure_db():
     """Ensure database and tables exist."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS important_messages (
@@ -191,7 +191,7 @@ async def get_important_messages(args: dict) -> list[TextContent]:
     min_importance = args.get("min_importance", 0.5)
     category = args.get("category")
 
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
 
         if category:
@@ -278,7 +278,7 @@ async def save_important_message(args: dict) -> list[TextContent]:
     msg_id = str(uuid4())
     now = datetime.now().isoformat()
 
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
         existing = cursor.execute(
             "SELECT id FROM important_messages WHERE content = ? LIMIT 1", (content,)
@@ -332,7 +332,7 @@ async def search_messages(args: dict) -> list[TextContent]:
     query = args.get("query", "")
     limit = args.get("limit", 10)
 
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, content, importance, category, tags, created_at "
@@ -372,7 +372,7 @@ async def delete_message(args: dict) -> list[TextContent]:
     if not msg_id:
         return [TextContent(type="text", text="Error: message_id is required")]
 
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM important_messages WHERE id = ?", (msg_id,))
         deleted = cursor.rowcount
@@ -382,7 +382,7 @@ async def delete_message(args: dict) -> list[TextContent]:
 
 
 async def get_categories(args: dict) -> list[TextContent]:
-    with sqlite3.connect(str(DB_PATH)) as conn:
+    with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT category, COUNT(*) as count, AVG(importance) as avg_importance "
