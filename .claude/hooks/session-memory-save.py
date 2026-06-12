@@ -28,7 +28,8 @@ from base import BaseHook, HookInput, HookOutput
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
+# MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
+SQLITE_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data" / "memory_ai.db")
 SESSION_STATE_FILE = PROJECT_ROOT / ".claude" / "data" / "session-skills.json"
 HOOK_TODOS_FILE = PROJECT_ROOT / ".claude" / "cache" / "hook-todos.json"
 WIKI_LOG = PROJECT_ROOT / "docs" / "wiki" / "log.md"
