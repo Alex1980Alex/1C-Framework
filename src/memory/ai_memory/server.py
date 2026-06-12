@@ -372,9 +372,20 @@ async def delete_message(args: dict) -> list[TextContent]:
 
     with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
+        row = cursor.execute(
+            "SELECT metadata FROM important_messages WHERE id = ?", (msg_id,)
+        ).fetchone()
         cursor.execute("DELETE FROM important_messages WHERE id = ?", (msg_id,))
         deleted = cursor.rowcount
         conn.commit()
+
+    if deleted:
+        # W6 observability (roadmap 260612 P4): deletes were invisible to fact-trace.
+        try:
+            content_hash = (json.loads(row[0]) or {}).get("content_hash", "") if row else ""
+        except (json.JSONDecodeError, TypeError):
+            content_hash = ""
+        _record_ingest("deleted", content_hash)
 
     return [TextContent(type="text", text=json.dumps({"success": deleted > 0, "deleted": deleted}))]
 
