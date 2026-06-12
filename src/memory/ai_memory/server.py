@@ -409,6 +409,37 @@ async def search_messages(args: dict) -> list[TextContent]:
     ]
 
 
+def _cleanup_links(msg_id: str) -> int:
+    """P2.G5 (roadmap 260612): drop link_registry edges referencing a deleted row.
+
+    Direct SQL on the registry DB — importing LinkRegistry would pull the heavy
+    orchestrator package into this server. Fail-soft: a locked/absent registry
+    must not break the delete itself.
+    """
+    try:
+        import os
+        import sqlite3
+
+        lr_path = Path(
+            os.environ.get("LINK_REGISTRY_PATH")
+            or _PROJECT_ROOT / "data" / "link_registry.db"
+        )
+        if not lr_path.exists():
+            return 0
+        uid = f"episodic:memory-ai:{msg_id}"
+        conn = sqlite3.connect(str(lr_path), timeout=2)
+        try:
+            cur = conn.execute(
+                "DELETE FROM entity_links WHERE source_id = ? OR target_id = ?", (uid, uid)
+            )
+            conn.commit()
+            return cur.rowcount
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
 async def delete_message(args: dict) -> list[TextContent]:
     msg_id = args.get("message_id")
     if not msg_id:
@@ -423,7 +454,9 @@ async def delete_message(args: dict) -> list[TextContent]:
         deleted = cursor.rowcount
         conn.commit()
 
+    links_removed = 0
     if deleted:
+        links_removed = _cleanup_links(msg_id)
         # W6 observability (roadmap 260612 P4): deletes were invisible to fact-trace.
         try:
             content_hash = (json.loads(row[0]) or {}).get("content_hash", "") if row else ""
@@ -431,7 +464,14 @@ async def delete_message(args: dict) -> list[TextContent]:
             content_hash = ""
         _record_ingest("deleted", content_hash, harvester="delete_message")
 
-    return [TextContent(type="text", text=json.dumps({"success": deleted > 0, "deleted": deleted}))]
+    return [
+        TextContent(
+            type="text",
+            text=json.dumps(
+                {"success": deleted > 0, "deleted": deleted, "links_removed": links_removed}
+            ),
+        )
+    ]
 
 
 async def get_categories(args: dict) -> list[TextContent]:
