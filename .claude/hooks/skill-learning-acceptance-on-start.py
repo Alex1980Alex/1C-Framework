@@ -53,9 +53,10 @@ def _verdict_logged() -> bool:
     подстрока встречается в §18 в тексте, описывающем сам механизм (code-verify
     finding: false self-termination до показа вердикта)."""
     try:
+        # (?!/) отсекает инструкционную форму «PASS/FAIL» (не зафиксированный итог)
         return (
             re.search(
-                rf"{FINAL_MARKER}:\s*(PASS|FAIL)", ROADMAP.read_text(encoding="utf-8")
+                rf"{FINAL_MARKER}:\s*(PASS|FAIL)\b(?!/)", ROADMAP.read_text(encoding="utf-8")
             )
             is not None
         )

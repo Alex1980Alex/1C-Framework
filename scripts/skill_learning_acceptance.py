@@ -66,7 +66,8 @@ def _parse_dt(raw: Any) -> datetime | None:
     if not raw or not isinstance(raw, str):
         return None
     try:
-        return datetime.fromisoformat(raw)
+        # naive-нормализация: tz-aware метка сломала бы сравнение с naive WINDOW_START
+        return datetime.fromisoformat(raw).replace(tzinfo=None)
     except ValueError:
         return None
 
