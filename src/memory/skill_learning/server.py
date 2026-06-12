@@ -388,6 +388,49 @@ async def handle_get_pending(args: dict) -> list[TextContent]:
     ]
 
 
+def _detach_confirm_harvest(pattern: dict[str, Any]) -> None:
+    """P3.2 (roadmap 260611): confirm → немедленный harvest в learned_patterns.
+
+    Daemon-поток (TEI embed ~1s не должен держать MCP-ответ). Переиспользует
+    ``ingest_items`` из hooks-shared ``pattern_harvest`` — детерминированный
+    ``content_hash.point_id`` делает upsert идемпотентным со Stop-харвестом,
+    + epoch.bump внутри → surfacing видит паттерн сразу. Загрузка модуля через
+    importlib по file-path: ``src/shared`` (real package) затенил бы
+    ``.claude/hooks/shared`` при обычном import ([[feedback-hook-src-shared-collision]]).
+    Fail-soft: любая ошибка → лог, Stop-харвест подберёт паттерн позже.
+    """
+
+    def _run() -> None:
+        try:
+            import importlib.util
+
+            ph_path = _PROJECT_ROOT / ".claude" / "hooks" / "shared" / "pattern_harvest.py"
+            spec = importlib.util.spec_from_file_location("_sl_confirm_harvest", ph_path)
+            if spec is None or spec.loader is None:
+                return
+            ph = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ph)
+
+            tags = pattern.get("tags") if isinstance(pattern.get("tags"), list) else []
+            item = ph.HarvestItem(
+                content=str(pattern.get("content") or ""),
+                name=str(pattern.get("name") or "")[:60],
+                description=str(pattern.get("description") or "")[:200],
+                pattern_type=str(pattern.get("pattern_type") or "workflow-pattern"),
+                source=f"skill-learning:{pattern.get('pattern_id', '')}",
+                tags=[*tags, "harvested", "skill-learning"],
+                confidence=0.85,
+            )
+            stats = ph.ingest_items([item], cap=1, harvester="confirm_pattern")
+            logger.info(f"confirm-harvest: {stats}")
+        except Exception as exc:
+            logger.warning(f"confirm-harvest failed (Stop-harvest will retry): {exc}")
+
+    import threading
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
 async def handle_confirm(args: dict) -> list[TextContent]:
     pattern_id = args["pattern_id"]
     pending = _read_jsonl(PENDING_FILE)
@@ -416,6 +459,9 @@ async def handle_confirm(args: dict) -> list[TextContent]:
     # Remove from pending
     _write_jsonl(PENDING_FILE, remaining)
 
+    # P3.2: confirm = пропуск в learned_patterns — немедленный детач-harvest
+    _detach_confirm_harvest(found)
+
     logger.info(f"Confirmed pattern {pattern_id}: {found.get('name', '')}")
     return [
         TextContent(
@@ -425,6 +471,7 @@ async def handle_confirm(args: dict) -> list[TextContent]:
                     "success": True,
                     "pattern_id": pattern_id,
                     "name": found.get("name", ""),
+                    "harvest": "detached",
                 },
                 ensure_ascii=False,
             ),
