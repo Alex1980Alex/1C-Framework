@@ -107,7 +107,15 @@ SURFACE_RRF_WEIGHTS: dict = {
     "skill": 0.5,
     "pattern_dense": 0.3,
     "pattern_lexical": 0.7,
+    "skill_learning": 0.4,
 }
+
+# P2.2 (roadmap 260611): lexical arm over skill-learning JSONL silos — confirmed
+# patterns (patterns.jsonl) + pending quarantine candidates (pending_patterns.jsonl,
+# damped + помечены status=pending) видны в surfacing ДО подтверждения (early signal).
+SKILL_LEARNING_DIR = PROJECT_ROOT / "data" / "skill_learning"
+SKILL_LEARNING_ARM_ENABLED = os.environ.get("MEMORY_SURFACE_SKILL_LEARNING_DISABLE") != "1"
+SKILL_LEARNING_PENDING_DAMP = 0.7  # pending = кандидат, ранжируется ниже confirmed
 SURFACE_RRF_K = 60  # RRF k constant for the surfacing fusion (tunable, §25 B1)
 
 # Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
