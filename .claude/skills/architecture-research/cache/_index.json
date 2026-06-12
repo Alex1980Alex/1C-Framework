@@ -1168,6 +1168,21 @@
         "github-copilot-memory"
       ],
       "last_verified": "2026-06-12"
+    },
+    {
+      "file": "skill-library-lifecycle-testing-2026.md",
+      "keywords": [
+        "skill-library",
+        "lifecycle",
+        "testing",
+        "evaluation",
+        "voyager",
+        "claude-code-skills",
+        "verification",
+        "provenance",
+        "superpowers"
+      ],
+      "last_verified": "2026-06-12"
     }
   ]
 }
