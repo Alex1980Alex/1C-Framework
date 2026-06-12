@@ -46,6 +46,14 @@ LIFECYCLE_DIR = PROJECT_ROOT / "data" / "lifecycle"
 # §26 P2 D2.2: skill-learning silo — confirmed patterns live in patterns.jsonl
 # (pending_patterns.jsonl is awaiting review; confirm = move into this file).
 SKILL_LEARNING_FILE = PROJECT_ROOT / "data" / "skill_learning" / "patterns.jsonl"
+# P1.2 (roadmap 260611): quarantine silos — low-confidence auto-captured candidates
+# land in pending (NOT straight into Qdrant); rejected blocks re-capture (P0.2).
+SL_PENDING_FILE = PROJECT_ROOT / "data" / "skill_learning" / "pending_patterns.jsonl"
+SL_REJECTED_FILE = PROJECT_ROOT / "data" / "skill_learning" / "rejected_patterns.jsonl"
+# Candidates below this confidence go to the pending quarantine instead of the
+# direct Qdrant route. Confirmed (human-reviewed) sources sit above it → "как сейчас".
+QUARANTINE_THRESHOLD = float(os.environ.get("PATTERNS_QUARANTINE_THRESHOLD", "0.8"))
+QUARANTINE_ENABLED = os.environ.get("PATTERNS_QUARANTINE_DISABLE") != "1"
 
 COLLECTION = os.environ.get("LEARNING_COLLECTION_NAME", "learned_patterns")
 QDRANT_HOST = os.environ.get("QDRANT_HOST", "127.0.0.1")
