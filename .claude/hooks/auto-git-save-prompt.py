@@ -166,12 +166,25 @@ def _auto_commit(files: list[str]) -> dict:
         if staged == 0:
             return {"success": False, "error": "git add failed"}
 
-        # Commit
-        from shared.auto_save_core import format_commit_message
+        # Commit (amend-absorb 2026-06-12: незапушенный auto-commit HEAD
+        # того же prefix поглощается --amend; гейты в auto_save_core)
+        from shared.auto_save_core import (
+            format_commit_message,
+            get_amendable_head,
+            merge_for_message,
+        )
 
-        msg = format_commit_message(staged_files, prefix="chore: auto-commit")
+        head_files = get_amendable_head(str(PROJECT_ROOT), prefix="chore: auto-commit")
+        if head_files is not None:
+            msg = format_commit_message(
+                merge_for_message(head_files, staged_files), prefix="chore: auto-commit"
+            )
+            commit_cmd = ["git", "commit", "--amend", "-m", msg]
+        else:
+            msg = format_commit_message(staged_files, prefix="chore: auto-commit")
+            commit_cmd = ["git", "commit", "-m", msg]
         commit = subprocess.run(
-            ["git", "commit", "-m", msg],
+            commit_cmd,
             timeout=10,
             capture_output=True,
             text=True,

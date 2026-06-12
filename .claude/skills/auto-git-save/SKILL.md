@@ -106,6 +106,27 @@ Remove-Item .claude/cache/auto-git-save.paused
 
 При неудаче: создаёт mandatory задачу для ручного коммита. Частичный успех (один коммит прошёл, другой нет) → `[AUTO-GIT-SAVE OK] ... | не закоммичено: ...` + задача.
 
+### 1.5 Amend-absorb (2026-06-12)
+
+Все три коммит-пути (`auto-git-save.py`, `posttooluse-auto-git-save.py`,
+`auto-git-save-prompt.py`) перед коммитом вызывают
+`auto_save_core.get_amendable_head(project_root, prefix)`: если HEAD — **незапушенный**
+auto-save коммит **того же prefix'а**, новый auto-save выполняет `git commit --amend`
+с объединённым сообщением (`merge_for_message` — union файлов HEAD + новых, дедуп
+по basename) вместо стопки `chore: auto-save` коммитов.
+
+**Safety-гейты** (любой не пройден → обычный новый коммит):
+1. subject HEAD начинается с того же prefix (auto-save / sweep-drift / auto-commit НЕ смешиваются — split-commit разделение концернов сохранено);
+2. HEAD отсутствует на всех remote (`git branch -r --contains HEAD` пуст) — амендить запушенное нельзя, иначе divergence;
+3. нет merge/rebase/cherry-pick in progress (маркеры `MERGE_HEAD`/`rebase-merge`/`rebase-apply`/`CHERRY_PICK_HEAD` в `.git/`).
+
+**Поглощение осмысленным коммитом** (закрывает [[feedback-auto-git-save-preempt]]):
+так как незапушенные auto-save'ы схлопываются в один HEAD-коммит, подготовленный
+структурированный коммит поглощает его штатно: `git add <файлы>` →
+`git commit --amend -m "feat(...): ..."`. Для хвоста из НЕСКОЛЬКИХ auto-save'ов
+(legacy/смешанные prefix'ы): `git reset --soft <последний-запушенный>` → один
+осмысленный коммит. Регресс: [tests/unit/test_auto_save_amend.py](../../../tests/unit/test_auto_save_amend.py) (7 тестов, throwaway-репо).
+
 ### 2. Zombie Task Prevention
 
 `sync_pending_tasks_with_git()` вызывается на **каждый** PostToolUse. Проверяет:

@@ -124,18 +124,23 @@ def _git_commit(files: list[str]) -> bool:
         )
         if not result.stdout.strip():
             return False
-        # Commit
-        file_list = ", ".join(os.path.basename(f) for f in files[:3])
-        if len(files) > 3:
-            file_list += f" +{len(files) - 3} more"
+        # Commit (amend-absorb 2026-06-12: незапушенный auto-save HEAD
+        # поглощается --amend вместо стопки коммитов; гейты в auto_save_core)
+        from shared.auto_save_core import (
+            format_commit_message,
+            get_amendable_head,
+            merge_for_message,
+        )
+
+        head_files = get_amendable_head(project_dir)
+        if head_files is not None:
+            msg = format_commit_message(merge_for_message(head_files, files))
+            commit_cmd = ["git", "commit", "--amend", "-m", msg, "--no-verify"]
+        else:
+            msg = format_commit_message(files)
+            commit_cmd = ["git", "commit", "-m", msg, "--no-verify"]
         subprocess.run(
-            [
-                "git",
-                "commit",
-                "-m",
-                f"chore: auto-save {file_list}",
-                "--no-verify",
-            ],
+            commit_cmd,
             capture_output=True,
             timeout=15,
             cwd=project_dir,
