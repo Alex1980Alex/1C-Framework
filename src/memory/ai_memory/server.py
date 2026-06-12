@@ -362,7 +362,7 @@ async def search_messages(args: dict) -> list[TextContent]:
                 "content": row[1],
                 "importance": row[2],
                 "category": row[3],
-                "tags": json.loads(row[4]) if row[4] else [],
+                "tags": _safe_json(row[4], fallback_wrap=True),
                 "created_at": row[5],
             }
         )
