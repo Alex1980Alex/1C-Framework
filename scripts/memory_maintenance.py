@@ -228,6 +228,73 @@ def run_review_pending(apply: bool, now: datetime) -> dict[str, Any]:
     return summary
 
 
+def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
+    """P3.2 (roadmap 260612): bounded growth для эпизодики — archive-stamp.
+
+    Decay-категории (``session_summary``/``general``) старше
+    ``ARCHIVE_AFTER_DAYS`` с importance ниже порога получают
+    ``metadata.archived_at`` (invalidate-not-delete, инвариант §22 P3);
+    читатели R1/R2 фильтруют archived. Курируемые категории
+    (decision/preference/feedback/...) не архивируются по возрасту.
+
+    P3.3: job стоит ПОСЛЕ reflect в каденсе — кластеры успевают
+    консолидироваться в semantic до ухода эпизодов в архив.
+    """
+    try:
+        from memory.ai_memory.retention import is_archived, should_archive
+    except Exception as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    candidates: list[tuple[str, str, dict[str, Any]]] = []
+    try:
+        conn = sqlite3.connect(str(MEMORY_AI_DB))
+        try:
+            rows = conn.execute(
+                "SELECT id, category, created_at, importance, metadata "
+                "FROM important_messages"
+            ).fetchall()
+            for rid, category, created_at, importance, raw_md in rows:
+                try:
+                    md = json.loads(raw_md) if raw_md else {}
+                except (json.JSONDecodeError, TypeError):
+                    md = {}
+                if not isinstance(md, dict) or is_archived(md):
+                    continue
+                if should_archive(category, created_at, float(importance or 0.0), now):
+                    candidates.append((rid, raw_md or "{}", md))
+            archived = 0
+            if apply and candidates:
+                for rid, _raw, md in candidates:
+                    md["archived_at"] = now.isoformat()
+                    conn.execute(
+                        "UPDATE important_messages SET metadata = ? WHERE id = ?",
+                        (json.dumps(md, ensure_ascii=False), rid),
+                    )
+                    archived += 1
+                conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:  # fail-soft: cadence survives a broken episodic DB
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    summary = {"candidates": len(candidates), "archived": archived if apply else 0,
+               "applied": bool(apply and candidates)}
+    if apply and candidates:
+        try:
+            from memory.orchestrator.ingest_metrics import record_ingest
+
+            for _rid, _raw, md in candidates:
+                record_ingest(
+                    "memory_ai",
+                    "archived",
+                    content_hash=md.get("content_hash", ""),
+                    harvester="archive_episodic",
+                )
+        except Exception:
+            pass
+    return summary
+
+
 def collect_store_sizes() -> dict[str, Any]:
     """Cheap point/row/line/file counts per store (fail-soft per store)."""
     sizes: dict[str, Any] = {}
