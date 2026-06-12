@@ -1151,6 +1151,23 @@
       "last_verified": "2026-05-22",
       "domain": "devops-git-workflow",
       "description": "17 GitHub projects analyzed. Native auto-merge / Actions / OSS bots / SaaS comparison. 15 best practices. Mapping to PDF Framework auto-git-save + post-task-push-pr hooks."
+    },
+    {
+      "file": "curated-memory-event-store-sync-2026.md",
+      "keywords": [
+        "curated-memory",
+        "human-in-the-loop",
+        "write-gate",
+        "promotion",
+        "event-sourcing",
+        "event-store",
+        "audit",
+        "replay",
+        "CQRS",
+        "tiered-memory",
+        "github-copilot-memory"
+      ],
+      "last_verified": "2026-06-12"
     }
   ]
 }
