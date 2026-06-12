@@ -1473,6 +1473,16 @@ class MemoryOrchestrator:
 
                     if await asyncio.to_thread(_delete) > 0:
                         store_actions["deleted"].append(eid)
+                        # P2.G5 (roadmap 260612): cascade link cleanup — a deleted
+                        # episodic row must not leave dangling MIRRORS/DERIVES_FROM.
+                        try:
+                            removed = self._link_registry.delete_links_for_entity(eid)
+                            if removed:
+                                store_actions.setdefault("links_removed", {})[eid] = removed
+                        except Exception as link_exc:
+                            store_actions.setdefault("link_cleanup_failed", {})[eid] = type(
+                                link_exc
+                            ).__name__
                     else:
                         store_actions["skipped"][eid] = "not_found"
 
