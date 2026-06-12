@@ -245,6 +245,18 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
 
             scored.sort(key=lambda x: x[0], reverse=True)
             for combined, _match_ratio, row in scored[:limit]:
+                # C2 (roadmap 260612): malformed tags/created_at in a single
+                # legacy row must not fail the whole memory-ai arm.
+                try:
+                    row_tags = json.loads(row[4]) if row[4] else []
+                    if not isinstance(row_tags, list):
+                        row_tags = [str(row_tags)]
+                except (json.JSONDecodeError, TypeError):
+                    row_tags = []
+                try:
+                    created = datetime.fromisoformat(row[5]) if row[5] else None
+                except ValueError:
+                    created = None
                 results.append(
                     SearchResultItem(
                         unified_id=f"episodic:memory-ai:{row[0]}",
@@ -252,8 +264,8 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
                         memory_type=MemoryType.EPISODIC,
                         content=row[1],
                         raw_score=combined,
-                        created_at=datetime.fromisoformat(row[5]) if row[5] else None,
-                        tags=json.loads(row[4]) if row[4] else [],
+                        created_at=created,
+                        tags=row_tags,
                     )
                 )
 
