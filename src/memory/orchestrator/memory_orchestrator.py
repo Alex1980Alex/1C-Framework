@@ -1766,12 +1766,10 @@ class MemoryOrchestrator:
                 fields["importance"] = float(importance)
             if not fields:
                 return {"applied": False, "reason": "no_supported_fields"}
-            db_path = os.environ.get("MEMORY_AI_DB_PATH") or str(
-                _PROJECT_ROOT / "data" / "memory_ai.db"
-            )
+            db_path = str(_memory_ai_db_path())
 
             def _writeback() -> int:
-                conn = sqlite3.connect(db_path, timeout=2)
+                conn = _ai_db_connect(db_path, timeout=2)
                 try:
                     assignments = ", ".join(f"{k} = ?" for k in fields)
                     cur = conn.execute(
@@ -1863,15 +1861,13 @@ class MemoryOrchestrator:
 
         try:
             if target == "memory-ai":
-                import sqlite3
-
-                db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+                db_path = _memory_ai_db_path()
                 importance = _coerce_importance((metadata or {}).get("importance", 0.7))
                 category = (metadata or {}).get("category", "general")
                 tags = (metadata or {}).get("tags", [])
 
                 def _save():
-                    conn = sqlite3.connect(str(db_path))
+                    conn = _ai_db_connect(db_path)
                     try:
                         cursor = conn.cursor()
                         now = datetime.now().isoformat()
