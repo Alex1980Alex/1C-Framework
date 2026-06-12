@@ -152,6 +152,22 @@ _CODE_TO_DOCS_SKILLS = [
         "- Обнови описание entity extraction\n- Проверь LLM prompt, entity types",
     ),
     (
+        # ВАЖНО: специфичнее общего "src/pdf_framework/vector_store/" ниже.
+        # DocumentIndexer — оркестратор индексации, его доки = 03/34, а не
+        # Hybrid Search; matcher собирает ВСЕ совпадения, и автозакрытие
+        # (_try_complete_tasks) срабатывает по ЛЮБОМУ target-доку, поэтому
+        # без этой записи правка правильных доков не закрывала задачу
+        # (инцидент D7-сессии 2026-06-12: задача требовала только 04.2).
+        "src/pdf_framework/vector_store/indexing/",
+        [
+            f"{_FD}/03_ИНДЕКСАЦИЯ/03.1_Загрузка_PDF.md",
+            f"{_FD}/34_KNOWLEDGE_BASE/34.1_Обзор.md",
+        ],
+        ["indexing-pipeline"],
+        "- DocumentIndexer изменён: обнови шаги index_chunks (батчи, checkpoint, registry)\n"
+        "- Проверь секцию регистрации документа (D7) в 34.1",
+    ),
+    (
         "src/pdf_framework/indexing/delta_indexer",
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.4_Инкрементальная_индексация.md"],
         ["indexing-pipeline"],
