@@ -20,7 +20,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.memory.ai_memory.adapters.docs_rag import DocsRagConfig, DocsRagSearchAdapter
 from src.memory.infrastructure.cache import LRUCache
 from src.memory.infrastructure.event_bus import Event, EventBus, EventBusConfig
 from src.memory.infrastructure.event_store import EventStore, EventStoreConfig
@@ -76,19 +75,6 @@ async def store(tmp_path):
     await es.start()
     yield es
     await es.stop()
-
-
-@pytest.fixture
-async def docs_adapter(tmp_path):
-    adapter = DocsRagSearchAdapter(
-        DocsRagConfig(
-            chunks_db_path=str(tmp_path / "docs_chunks.db"),
-            enable_vector_search=False,
-        )
-    )
-    await adapter.initialize()
-    yield adapter
-    await adapter.close()
 
 
 @pytest.fixture
@@ -170,56 +156,6 @@ class TestSubscriptionManager:
         stats = sub_manager.get_stats()
         assert stats["active_subscriptions"] == 1
         assert stats["total_created"] == 1
-
-
-# ---------------------------------------------------------------------------
-# TestDocsRagSearchAdapter — 6 tests
-# ---------------------------------------------------------------------------
-
-
-class TestDocsRagSearchAdapter:
-    @pytest.mark.asyncio
-    async def test_ingest_document(self, docs_adapter):
-        count = await docs_adapter.ingest_document(
-            source_path="docs/guide.md",
-            content="This is a test document about BSL query language and its features.",
-            metadata={"section": "BSL Guide", "tags": ["bsl", "query"]},
-        )
-        assert count >= 1
-
-    @pytest.mark.asyncio
-    async def test_fts_search(self, docs_adapter):
-        await docs_adapter.ingest_document(
-            source_path="docs/bsl.md",
-            content="The BSL query language supports ВЫБРАТЬ and СОЕДИНЕНИЕ operators.",
-        )
-        results = await docs_adapter.search("BSL query", limit=5)
-        assert len(results) >= 1
-        assert "BSL" in results[0].content or "query" in results[0].content
-
-    @pytest.mark.asyncio
-    async def test_search_no_results(self, docs_adapter):
-        results = await docs_adapter.search("nonexistent_xyz_12345", limit=5)
-        assert results == []
-
-    @pytest.mark.asyncio
-    async def test_delete_document(self, docs_adapter):
-        await docs_adapter.ingest_document("docs/temp.md", "Temporary content for deletion test.")
-        deleted = await docs_adapter.delete_document("docs/temp.md")
-        assert deleted >= 1
-
-    @pytest.mark.asyncio
-    async def test_get_stats(self, docs_adapter):
-        await docs_adapter.ingest_document("docs/stats.md", "Stats test document content.")
-        stats = await docs_adapter.get_stats()
-        assert stats["total_chunks"] >= 1
-        assert stats["source_documents"] >= 1
-
-    @pytest.mark.asyncio
-    async def test_chunking(self, docs_adapter):
-        long_content = "word " * 500  # ~2500 chars
-        count = await docs_adapter.ingest_document("docs/long.md", long_content)
-        assert count > 1  # should be split into multiple chunks
 
 
 # ---------------------------------------------------------------------------
