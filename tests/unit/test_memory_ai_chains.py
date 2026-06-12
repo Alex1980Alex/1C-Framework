@@ -206,11 +206,11 @@ async def test_a7_delete_cleans_link_registry(tmp_path, monkeypatch):
     )
     uid = f"episodic:memory-ai:{r['id']}"
 
-    from src.memory.orchestrator.link_registry import LinkRegistry
+    from src.memory.orchestrator.link_registry import LinkRegistry, LinkType
 
     registry = LinkRegistry(db_path=str(lr))
-    registry.create_link(uid, "semantic:vector-memory:abc", "mirrors")
-    registry.create_link("semantic:vector-memory:def", uid, "derives_from")
+    registry.create_link(uid, "semantic:vector-memory:abc", LinkType.MIRRORS)
+    registry.create_link("semantic:vector-memory:def", uid, LinkType.DERIVES_FROM)
 
     d = json.loads((await ai.delete_message({"message_id": r["id"]}))[0].text)
     assert d["success"] is True
