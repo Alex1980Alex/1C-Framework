@@ -76,6 +76,9 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
     ("src/pdf_framework/graph_store/", "03_ИНДЕКСАЦИЯ", "graph-operations"),
     ("src/pdf_framework/embeddings/", "02_БЫСТРЫЙ_СТАРТ", "embedding-models"),
+    # Специфичный префикс ДО общего vector_store/ (first-match-wins, break ниже):
+    # DocumentIndexer = индексация (03/34), не Hybrid Search (инцидент 2026-06-12).
+    ("src/pdf_framework/vector_store/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
     ("src/pdf_framework/vector_store/", "04_ПОИСК", "qdrant-operations"),
     ("src/pdf_framework/config/", "02_БЫСТРЫЙ_СТАРТ", "framework-config"),
     ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
