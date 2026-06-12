@@ -630,6 +630,12 @@
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-learning-pending-on-start.py",
             "timeout": 3,
             "statusMessage": "skill-learning-pending"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-learning-acceptance-on-start.py",
+            "timeout": 5,
+            "statusMessage": "skill-learning-acceptance"
           }
         ]
       }
