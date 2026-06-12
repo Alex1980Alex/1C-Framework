@@ -311,6 +311,9 @@ def iter_confirmed_skill_patterns(jsonl_file: Path = SKILL_LEARNING_FILE) -> lis
                 pattern_type=str(rec.get("pattern_type") or "workflow-pattern"),
                 source=f"skill-learning:{pid}",
                 tags=[*tags, "harvested", "skill-learning"],
+                # уже прошли карантин (capture→pending→confirm) — прямой путь,
+                # иначе P1.2 закрутил бы их обратно в pending (петля)
+                confidence=0.85,
             )
         )
     return items
@@ -532,6 +535,165 @@ def ingest_items(
     return stats
 
 
+def _silo_hashes(
+    pending_file: Path = SL_PENDING_FILE,
+    saved_file: Path = SKILL_LEARNING_FILE,
+    rejected_file: Path = SL_REJECTED_FILE,
+) -> set[str]:
+    """content_hash set across pending/saved/rejected silos (P1.2 quarantine dedup).
+
+    Rejected включён как негативный сигнал (P0.2): отклонённый контент не может
+    быть авто-захвачен заново.
+    """
+    hashes: set[str] = set()
+    for path in (pending_file, saved_file, rejected_file):
+        if not path.exists():
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            continue
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            ch = rec.get("content_hash")
+            if ch:
+                hashes.add(ch)
+    return hashes
+
+
+def quarantine_items(
+    items: list[HarvestItem],
+    *,
+    cap: int | None = None,
+    dry_run: bool = False,
+    client: Any = None,
+    now: datetime | None = None,
+    pending_file: Path = SL_PENDING_FILE,
+    saved_file: Path = SKILL_LEARNING_FILE,
+    rejected_file: Path = SL_REJECTED_FILE,
+) -> dict[str, Any]:
+    """P1.2 (roadmap 260611): route low-confidence auto-captured candidates into the
+    skill-learning pending quarantine instead of straight into Qdrant.
+
+    Mirrors capture_pattern's record schema + dedup contract:
+      - dedup vs pending/saved/rejected silos (rejected = негативный сигнал, P0.2);
+      - dedup vs learned_patterns (детерминированный ``_point_id(content_hash)``
+        retrieve) — уроки, уже собранные старым прямым маршрутом, не дублируются
+        в pending; Qdrant down → проверка скипается (fail-soft, карантин дешевле дубля);
+      - per-run cap; ingestion events в store ``skill_learning``.
+    Pure fail-soft — never raises.
+    """
+    cap = DEFAULT_CAP if cap is None else cap
+    now = now or datetime.now()
+    stats: dict[str, Any] = {
+        "quarantined": 0,
+        "skipped_dup": 0,
+        "skipped_cap": 0,
+        "errors": 0,
+        "items": [],
+        "dry_run": dry_run,
+    }
+    if not items:
+        return stats
+
+    def _ri(action: str, ch: str, **kw: Any) -> None:
+        try:
+            import sys as _sys
+
+            src_dir = str(PROJECT_ROOT / "src")
+            if src_dir not in _sys.path:
+                _sys.path.append(src_dir)
+            from memory.orchestrator.ingest_metrics import record_ingest
+
+            record_ingest(
+                "skill_learning", action, content_hash=ch, harvester="patterns-quarantine", **kw
+            )
+        except Exception:
+            pass
+
+    existing = _silo_hashes(pending_file, saved_file, rejected_file)
+
+    # lazy Qdrant client — only to skip items already in learned_patterns
+    if client is None and not dry_run:
+        try:
+            from qdrant_client import QdrantClient
+
+            client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT, timeout=2)
+        except Exception:
+            client = None  # fail-soft: quarantine anyway
+
+    seen_local: set[str] = set()
+    for it in items:
+        ch = it.content_hash
+        if ch in seen_local:
+            continue
+        seen_local.add(ch)
+        if ch in existing:
+            stats["skipped_dup"] += 1
+            _ri("dup", ch)
+            continue
+        if client is not None:
+            try:
+                if client.retrieve(collection_name=COLLECTION, ids=[_point_id(ch)]):
+                    stats["skipped_dup"] += 1
+                    _ri("dup", ch, reason="learned_patterns")
+                    continue
+            except Exception:
+                pass
+        if stats["quarantined"] >= cap:
+            stats["skipped_cap"] += 1
+            continue
+        if dry_run:
+            stats["quarantined"] += 1
+            stats["items"].append(it.name)
+            continue
+        iso = now.isoformat()
+        rec = {
+            "pattern_id": str(uuid.uuid4()),
+            "pattern_type": it.pattern_type,
+            "name": it.name,
+            "content": it.content,
+            "content_hash": ch,
+            "description": it.description,
+            "confidence": it.confidence,
+            "tags": it.tags,
+            "evidence_sources": [
+                {
+                    "source_type": "harvester",
+                    "reference": it.source,
+                    "weight": 1.0,
+                    "timestamp": None,
+                    "metadata": {},
+                }
+            ],
+            "metadata": {"auto_captured": True, "harvest_source": it.source},
+            "application_count": 0,
+            "success_count": 0,
+            "failure_count": 0,
+            "created_at": iso,
+            "updated_at": iso,
+            "version": 1,
+            "archived": False,
+        }
+        try:
+            pending_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(pending_file, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        except Exception:
+            stats["errors"] += 1
+            continue
+        stats["quarantined"] += 1
+        stats["items"].append(it.name)
+        _ri("skipped", ch, reason="pending")
+    return stats
+
+
 def harvest(
     *,
     drafts_dir: Path = DRAFTS_DIR,
@@ -546,8 +708,10 @@ def harvest(
     lesson_max_age_hours: int = 48,
 ) -> dict[str, Any]:
     """Harvest confirmed drafts + session-lessons + confirmed skill-learning patterns
-    into learned_patterns (§26 P1 D1.1 + P2 D2.2). Delegates to ``ingest_items``.
-    Pure fail-soft.
+    (§26 P1 D1.1 + P2 D2.2). P1.2 (roadmap 260611): кандидаты с confidence ниже
+    QUARANTINE_THRESHOLD идут в pending-карантин skill-learning (``quarantine_items``),
+    остальные — прямым маршрутом в learned_patterns (``ingest_items``, как раньше).
+    Opt-out карантина: PATTERNS_QUARANTINE_DISABLE=1. Pure fail-soft.
     """
     now = now or datetime.now()
     candidates: list[HarvestItem] = []
@@ -557,8 +721,15 @@ def harvest(
         candidates += iter_session_lessons(lifecycle_dir, lesson_max_age_hours, now)
     if "skill_learning" in sources:
         candidates += iter_confirmed_skill_patterns(skill_learning_file)
-    return ingest_items(
-        candidates,
+
+    if QUARANTINE_ENABLED:
+        direct = [c for c in candidates if c.confidence >= QUARANTINE_THRESHOLD]
+        low = [c for c in candidates if c.confidence < QUARANTINE_THRESHOLD]
+    else:
+        direct, low = candidates, []
+
+    stats = ingest_items(
+        direct,
         cap=cap,
         dry_run=dry_run,
         client=client,
@@ -566,3 +737,8 @@ def harvest(
         now=now,
         harvester="patterns",
     )
+    if low:
+        qstats = quarantine_items(low, cap=cap, dry_run=dry_run, client=client, now=now)
+        stats["quarantined"] = qstats["quarantined"]
+        stats["quarantine"] = qstats
+    return stats
