@@ -196,50 +196,53 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
         return "memory-ai"
 
     async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]:
-        # Tokenize query: split on whitespace, keep tokens >= 3 chars.
-        # Fallback to full query if no tokens survive filter (short/CJK queries).
-        tokens = [t.lower() for t in query.split() if len(t) >= 3]
+        # P2.G2 (roadmap 260612): casefold + RU-stem token overlap instead of the
+        # old LOWER(...) LIKE — SQLite LOWER is ASCII-only, so Cyrillic morphoforms
+        # never matched. Candidate window is importance/recency-ordered and scored
+        # Python-side.
+        tokens = _sl_tokenize(query)
         if not tokens:
-            tokens = [query.lower()]
+            return []
 
         results = []
 
         def _do_search():
+            from ..ai_memory.retention import effective_importance, is_archived
+
             conn = _ai_db_connect(self._db_path)
             try:
                 cursor = conn.cursor()
-                # OR-join LIKE for each token across content + tags (case-insensitive).
-                where_parts = ["(LOWER(content) LIKE ? OR LOWER(tags) LIKE ?)"] * len(tokens)
-                params: list = []
-                for t in tokens:
-                    params.extend([f"%{t}%", f"%{t}%"])
-                # Fetch more than limit for reranking by match ratio.
-                fetch_limit = max(limit * 3, 30)
-                params.append(fetch_limit)
+                fetch_limit = max(limit * 3, 200)
                 cursor.execute(
-                    "SELECT id, content, importance, category, tags, created_at "
+                    "SELECT id, content, importance, category, tags, created_at, metadata "
                     "FROM important_messages "
-                    f"WHERE {' OR '.join(where_parts)} "
-                    "ORDER BY importance DESC LIMIT ?",
-                    params,
+                    "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                    (fetch_limit,),
                 )
                 rows = cursor.fetchall()
             finally:
                 conn.close()
 
-            # Python-side rerank: score = 0.5 * match_ratio + 0.5 * importance.
+            # Python-side rerank: score = 0.5 * match_ratio + 0.5 * effective
+            # importance (P3.1 lazy decay — stale session_summary ranks lower).
             scored = []
             for row in rows:
-                content_lower = (row[1] or "").lower()
-                tags_lower = (row[4] or "").lower()
-                matched = sum(1 for t in tokens if t in content_lower or t in tags_lower)
-                match_ratio = matched / len(tokens) if tokens else 0.0
+                try:
+                    md = json.loads(row[6]) if row[6] else {}
+                except (json.JSONDecodeError, TypeError):
+                    md = {}
+                if is_archived(md if isinstance(md, dict) else None):
+                    continue  # P3.2: archived rows are invisible to readers
+                row_tokens = _sl_tokenize(f"{row[1] or ''} {row[4] or ''}")
+                matched = len(tokens & row_tokens)
+                if not matched:
+                    continue
+                match_ratio = matched / len(tokens)
                 importance = _coerce_importance(row[2], default=0.0)
-                combined = min(match_ratio * 0.5 + importance * 0.5, 1.0)
+                eff = effective_importance(importance, row[3], row[5])
+                combined = min(match_ratio * 0.5 + eff * 0.5, 1.0)
                 scored.append((combined, match_ratio, row))
 
-            # Sort by combined score, keep only items with at least one token match.
-            scored = [s for s in scored if s[1] > 0.0]
             scored.sort(key=lambda x: x[0], reverse=True)
             for combined, _match_ratio, row in scored[:limit]:
                 results.append(
