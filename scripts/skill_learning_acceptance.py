@@ -51,34 +51,6 @@ CAPTURE_TARGET = 10
 MEDIAN_AGE_TARGET_DAYS = 7.0
 
 
-def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        return []
-    out: list[dict[str, Any]] = []
-    try:
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                out.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    except OSError:
-        return out
-    return out
-
-
-def _parse_dt(raw: Any) -> datetime | None:
-    if not raw or not isinstance(raw, str):
-        return None
-    try:
-        # naive-нормализация: tz-aware метка сломала бы сравнение с naive WINDOW_START
-        return datetime.fromisoformat(raw).replace(tzinfo=None)
-    except ValueError:
-        return None
-
-
 def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     now = now or datetime.now()
     pending = _read_jsonl(PENDING)
@@ -130,7 +102,7 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     return {
         "now": now.isoformat(timespec="seconds"),
         "window": f"{WINDOW_START.date()} → {WINDOW_END.date()}",
-        "day": max(1, min((now - WINDOW_START).days + 1, 14)),
+        "day": window_day(now, WINDOW_START),
         "window_closed": now >= WINDOW_END,
         "counts": {"pending": len(pending), "saved": len(saved), "rejected": len(rejected)},
         "captures": len(captured) + dup_events,
