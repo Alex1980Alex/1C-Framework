@@ -18,6 +18,7 @@ from src.pdf_framework.schemas.responses import IndexResult
 from src.pdf_framework.vector_store.base import BaseVectorStore
 
 if TYPE_CHECKING:
+    from src.pdf_framework.knowledge_base.document_registry import DocumentRegistry
     from src.pdf_framework.processing.versioning import DocumentVersionManager
     from src.pdf_framework.search.bm25_store import BM25Store
 
@@ -42,10 +43,16 @@ class DocumentIndexer:
         embedding_engine: BaseEmbeddingEngine,
         vector_store: BaseVectorStore,
         bm25_store: BM25Store | None = None,
+        document_registry: DocumentRegistry | None = None,
     ):
         self._embedding_engine = embedding_engine
         self._vector_store = vector_store
         self._bm25_store = bm25_store
+        # Phase 32 registry wiring (roadmap 260612 D7): registering here — at the
+        # common bottom of indexing — covers every entry point (CLI, MCP, API,
+        # scripts) instead of only the REST routes. Public: Components attaches
+        # the registry after construction (created later in its init sequence).
+        self.document_registry = document_registry
 
     async def index_chunks(
         self,
@@ -211,6 +218,27 @@ class DocumentIndexer:
                     document_id=document_id,
                     total_chunks=len(chunks),
                 )
+
+            # 7. Register document in the registry (Phase 32 / D7 wiring).
+            # Best-effort: a registry failure must never fail the indexing run.
+            if self.document_registry is not None and (document_id or chunks):
+                try:
+                    pages = (
+                        c.metadata.get("page_number") or c.metadata.get("page") or 0
+                        for c in chunks
+                    )
+                    page_count = max((p for p in pages if isinstance(p, int)), default=0)
+                    await self.document_registry.register(
+                        document_id=document_id or chunks[0].document_id,
+                        source_path=source_path
+                        or chunks[0].metadata.get("source", ""),
+                        # len(chunks), not total_stored: on checkpoint-resume the
+                        # earlier batches were stored in a previous run.
+                        chunk_count=len(chunks),
+                        page_count=page_count,
+                    )
+                except Exception as reg_exc:
+                    logger.warning("[INDEXER] Registry registration failed: %s", reg_exc)
 
             total_elapsed = time.time() - indexing_start
             logger.info(

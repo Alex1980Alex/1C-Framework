@@ -190,7 +190,46 @@ def main() -> int:
     logger.info(
         "Final collection: %d points × %dd", info.points_count, info.config.params.vectors.size
     )
+
+    # D7 wiring (roadmap 260612): mirror the upsert into document_registry so
+    # list_documents reflects this writer too. Best-effort — registry failure
+    # must not fail the reindex.
+    try:
+        _register_documents(chunks)
+    except Exception as exc:
+        logger.warning("Registry registration failed (reindex OK): %s", exc)
     return 0
+
+
+def _register_documents(chunks: list[dict]) -> None:
+    """Aggregate chunks per source PDF and register in document_registry.db."""
+    import asyncio
+    from collections import defaultdict
+
+    from src.pdf_framework.knowledge_base.document_registry import DocumentRegistry
+    from src.pdf_framework.utils.id_generator import generate_document_id
+
+    agg: dict[str, dict] = defaultdict(lambda: {"chunks": 0, "max_page": 0})
+    for c in chunks:
+        p = c["payload"]
+        a = agg[p["source"]]
+        a["chunks"] += 1
+        a["max_page"] = max(a["max_page"], int(p.get("page") or 0))
+
+    async def _run() -> None:
+        registry = DocumentRegistry(db_path=PROJECT_ROOT / "data" / "document_registry.db")
+        for source, a in agg.items():
+            await registry.register(
+                document_id=generate_document_id(str(PROJECT_ROOT / source)),
+                source_path=source,
+                chunk_count=a["chunks"],
+                page_count=a["max_page"],
+            )
+            logger.info(
+                "Registered %s (%d chunks, %d pages)", source, a["chunks"], a["max_page"]
+            )
+
+    asyncio.run(_run())
 
 
 if __name__ == "__main__":

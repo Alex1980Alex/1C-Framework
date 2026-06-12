@@ -305,6 +305,10 @@ class Components:
         self.document_registry: DocumentRegistry = DocumentRegistry(
             db_path=self.settings.data_dir / "document_registry.db",
         )
+        # D7 wiring (roadmap 260612): attach to the indexer so every entry point
+        # (CLI / MCP index_pdf / API / scripts) registers documents, not just the
+        # REST routes. Registry is constructed after the indexer, hence post-init.
+        self.indexer.document_registry = self.document_registry
         _step("CollectionStore+DocumentRegistry (Phase 32)")
 
         # Phase 37: Web Search + Source Fusion
