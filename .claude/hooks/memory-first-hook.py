@@ -99,7 +99,13 @@ MAX_RESULTS = 5
 LEXICAL_SCROLL_LIMIT = int(os.environ.get("MEMORY_SURFACE_LEXICAL_SCROLL", "50"))
 
 LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
-SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
+SOURCE_LABELS = {
+    "sqlite": "SQLite",
+    "qdrant": "Qdrant",
+    "md": ".md",
+    "wiki": "Wiki",
+    "skill-learning": "SkillLearning",
+}
 
 # §24 P1 ADR-D6: per-arm RRF weights for hybrid surfacing inside search_qdrant.
 # lexical > dense for BSL (CamelCase/Cyrillic dense recall-collapse, §24.2.2).
@@ -505,6 +511,65 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
         return out[:limit]
 
 
+def _search_skill_learning(query_tokens: set, limit: int = 10) -> list:
+    """P2.2 (roadmap 260611): lexical arm over skill-learning JSONL silos.
+
+    Scans patterns.jsonl (confirmed) + pending_patterns.jsonl (quarantine candidates)
+    with token-overlap scoring. Pending hits are damped (×SKILL_LEARNING_PENDING_DAMP)
+    and помечены status=pending в content — кандидат виден ДО подтверждения (early
+    signal), но ранжируется ниже confirmed. Pure local file read (<50ms), no network.
+    Fail-soft → []. Opt-out: MEMORY_SURFACE_SKILL_LEARNING_DISABLE=1.
+    """
+    out: list = []
+    if not SKILL_LEARNING_ARM_ENABLED or not query_tokens:
+        return out
+    try:
+        for status, fname in (
+            ("saved", "patterns.jsonl"),
+            ("pending", "pending_patterns.jsonl"),
+        ):
+            path = SKILL_LEARNING_DIR / fname
+            if not path.exists():
+                continue
+            with open(path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        item = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    text = " ".join(
+                        str(item.get(k) or "") for k in ("name", "content", "description")
+                    )
+                    content_tokens = set(tokenize(text))
+                    overlap = query_tokens & content_tokens
+                    if not overlap:
+                        continue
+                    score = len(overlap) / max(len(query_tokens), 1)
+                    if score < SCORE_THRESHOLD:
+                        continue
+                    if status == "pending":
+                        score *= SKILL_LEARNING_PENDING_DAMP
+                    prefix = "[pending] " if status == "pending" else ""
+                    content = item.get("content") or item.get("description") or ""
+                    out.append(
+                        {
+                            "source": "skill-learning",
+                            "id": item.get("pattern_id", ""),
+                            "content": (prefix + content)[:200],
+                            "category": f"sl/{status}",
+                            "score": round(score, 4),
+                            "status": status,
+                        }
+                    )
+        out.sort(key=lambda x: -x["score"])
+        return out[:limit]
+    except Exception:
+        return out[:limit]
+
+
 def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     """Hybrid RRF search across SEMANTIC_COLLECTIONS + always-on lexical arm (§24 P1).
 
@@ -513,6 +578,8 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
       - "pattern_dense": learned_patterns semantic hits (§24 ADR-D6 gated, _collection tagged).
       - "pattern_lexical": token-overlap on learned_patterns — ALWAYS-ON (not fallback).
         Catches CamelCase/Cyrillic/exact-term where dense underperforms (BSL recall-collapse).
+      - "skill_learning": lexical arm over skill-learning JSONL (saved + pending,
+        P2.2 roadmap 260611) — кандидаты карантина в выдаче с пометкой [pending].
 
     Weights (SURFACE_RRF_WEIGHTS): lexical 0.7 > dense 0.3 for BSL arms.
     RRF dedup by content-hash: pattern in both arms fuses → boosted rank (correct behaviour).
