@@ -26,7 +26,6 @@ Adapted: Direct function calls instead of HTTP, 3 target servers, MCP server.
 import asyncio
 import json
 import logging
-import re
 import sqlite3
 import sys
 from dataclasses import dataclass, field
