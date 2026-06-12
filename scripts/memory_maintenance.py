@@ -395,9 +395,11 @@ def main() -> int:
         {"skipped": True} if "review_pending" in skip else run_review_pending(args.apply, now)
     )
     jobs["review_pending"] = review_pending
-    # P3.2/P3.3 (roadmap 260612): после reflect — эпизодика консолидирована, можно в архив
+    # P3.2/P3.3 (roadmap 260612): после reflect — эпизодика консолидирована, можно в архив.
+    # Skip — строкой (конвенция reflect/sync/promote): trace-маппинг jobs→rc различает
+    # "skipped" / 0 (исполнился) / -1 (error) — acceptance-критерий archive_ran на этом стоит.
     jobs["archive_episodic"] = (
-        {"skipped": True} if "archive_episodic" in skip else run_archive_episodic(args.apply, now)
+        "skipped" if "archive_episodic" in skip else run_archive_episodic(args.apply, now)
     )
 
     cross_store = collect_cross_store()
