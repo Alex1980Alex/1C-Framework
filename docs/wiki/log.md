@@ -377,3 +377,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 3
 - Summary: Session 2026-06-11. Skills: task-protocol, qdrant-operations. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, docs/wiki, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260610 цепочечное тестирование Unified Memory — P0-P4 прогнаны, 5 production-фиксов. Commit: chore: auto-save memory-first-hook.py. Commit: chore: auto-save export_graph_to_wiki.py
 
+
+## 2026-06-12 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-12. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(memory): 260611 skill-learning revival — pending/saved/rejected как рабочий контур (P0-P3 + тесты). Commit: chore: auto-save memory_maintenance.py, test_skill_learning_revival.py. Commit: chore: auto-save memory_orchestrator.py
+
