@@ -89,6 +89,8 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/guardrails/", "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
     ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    # DI-контейнер Components (был UNMAPPED → блокировал Stop, 2026-06-12)
+    ("src/api/dependencies/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
