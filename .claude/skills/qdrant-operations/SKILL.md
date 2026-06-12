@@ -24,7 +24,7 @@ description: "Qdrant Operations — управление коллекциями 
 | `graph_embeddings` | — | 4096d | **36 590** | SQ int8 only |
 | `learned_patterns` | — | 4096d | 44 | none (too small) |
 | `skill_library` | — | 4096d | 80 | Phase 9.1 memory subsystem |
-| `*_4096_backup` (×3) | — | 4096d | varies | rollback snapshots (framework/pdf/wiki) |
+| `*_4096_backup` (×3) | — | 4096d | varies | **канонический источник re-embed** (framework/pdf/wiki), см. политику ниже |
 
 **MRL aliases** (post §4.1.6/8/10): `framework_code_v1`, `pdf_documents`, `wiki_pages_v1` — **alias-only**, физический collection с suffix `_mrl_1024`. Client читает имя alias, Qdrant resolve transparently. **CAVEAT:** `delete_collection(alias)` НЕ работает в Qdrant 1.7+ — нужен `resolve_physical_collection()` helper (см. [src/framework_search/indexer.py](../../../src/framework_search/indexer.py)).
 
