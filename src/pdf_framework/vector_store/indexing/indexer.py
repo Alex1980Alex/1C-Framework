@@ -224,14 +224,12 @@ class DocumentIndexer:
             if self.document_registry is not None and (document_id or chunks):
                 try:
                     pages = (
-                        c.metadata.get("page_number") or c.metadata.get("page") or 0
-                        for c in chunks
+                        c.metadata.get("page_number") or c.metadata.get("page") or 0 for c in chunks
                     )
                     page_count = max((p for p in pages if isinstance(p, int)), default=0)
                     await self.document_registry.register(
                         document_id=document_id or chunks[0].document_id,
-                        source_path=source_path
-                        or chunks[0].metadata.get("source", ""),
+                        source_path=source_path or chunks[0].metadata.get("source", ""),
                         # len(chunks), not total_stored: on checkpoint-resume the
                         # earlier batches were stored in a previous run.
                         chunk_count=len(chunks),

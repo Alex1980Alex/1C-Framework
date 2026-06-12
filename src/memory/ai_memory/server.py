@@ -421,8 +421,7 @@ def _cleanup_links(msg_id: str) -> int:
         import sqlite3
 
         lr_path = Path(
-            os.environ.get("LINK_REGISTRY_PATH")
-            or _PROJECT_ROOT / "data" / "link_registry.db"
+            os.environ.get("LINK_REGISTRY_PATH") or _PROJECT_ROOT / "data" / "link_registry.db"
         )
         if not lr_path.exists():
             return 0

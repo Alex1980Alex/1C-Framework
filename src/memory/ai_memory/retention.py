@@ -68,10 +68,7 @@ def should_archive(
     """Archive gate for the maintenance job — age + importance, decayables only."""
     if (category or "general") not in DECAY_CATEGORIES:
         return False
-    return (
-        _age_days(created_at, now) > ARCHIVE_AFTER_DAYS
-        and importance < ARCHIVE_IMPORTANCE_BELOW
-    )
+    return _age_days(created_at, now) > ARCHIVE_AFTER_DAYS and importance < ARCHIVE_IMPORTANCE_BELOW
 
 
 __all__ = [

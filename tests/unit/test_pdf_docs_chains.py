@@ -23,6 +23,10 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+# CI unit-job ставит только .[dev,morphology] — qdrant_client отсутствует,
+# а scripts/eval_* импортируют его на module-level → collection error.
+pytest.importorskip("qdrant_client")
+
 from scripts.eval_hermes_phase4 import wiki_page_payload, wiki_page_point_id
 from scripts.eval_pdf_docs_golden import truncate_renorm
 from src.framework_search.indexer import (

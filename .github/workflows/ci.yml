@@ -125,13 +125,14 @@ jobs:
         run: uv pip install --system -e ".[dev,qdrant,morphology]"
 
       # Ratchet gate: fails if mypy total error count grows or if any error
-      # not present in mypy-baseline.txt is introduced. Exclude pattern mirrors
-      # .pre-commit-config.yaml mypy hook (see roadmap 260514). Re-sync the
-      # baseline via:
+      # not present in mypy-baseline.txt is introduced. Re-sync the baseline
+      # with the SAME exclude as the filter step below (2026-06-12: dropped
+      # stray src/api/auth/ from this recipe — sync from a SUBSET produced a
+      # baseline that the superset filter failed on):
       #   mypy src/ --ignore-missing-imports --warn-return-any \
-      #     --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$|src/api/auth/)' \
+      #     --exclude '(tests/|docs/|scripts/|src/pdf_framework/quick\.py$)' \
       #     | python -m mypy_baseline sync
-      # then commit mypy-baseline.txt with the reduction.
+      # then commit mypy-baseline.txt.
       - name: mypy-baseline filter
         run: |
           # NO pipefail: mypy itself exits non-zero (many errors), but

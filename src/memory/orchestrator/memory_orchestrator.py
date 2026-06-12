@@ -827,9 +827,7 @@ class MemoryOrchestrator:
                 except ValueError:
                     return None
                 client = _get_qdrant()
-                pts = client.retrieve(
-                    collection_name=COLLECTION_NAME, ids=[pid], with_payload=True
-                )
+                pts = client.retrieve(collection_name=COLLECTION_NAME, ids=[pid], with_payload=True)
                 if not pts:
                     return None  # not a learned_pattern → honest no-op
                 pay = pts[0].payload or {}
@@ -866,9 +864,7 @@ class MemoryOrchestrator:
             if snapshot is None:
                 return False
             # ADR-V wire-minimal (roadmap 260611 P2.1): snapshot the mutation.
-            await self._version_write(
-                entity_id, snapshot, ChangeType.UPDATE, summary="propagation"
-            )
+            await self._version_write(entity_id, snapshot, ChangeType.UPDATE, summary="propagation")
             return True
 
         async def _memory_ai_handler(entity_id: str, delta: float) -> bool:
@@ -889,8 +885,7 @@ class MemoryOrchestrator:
                         return None
                     new_imp = max(0.0, min(1.0, _coerce_importance(row[0], default=0.5) + delta))
                     conn.execute(
-                        "UPDATE important_messages SET importance = ?, updated_at = ? "
-                        "WHERE id = ?",
+                        "UPDATE important_messages SET importance = ?, updated_at = ? WHERE id = ?",
                         (round(new_imp, 4), datetime.now().isoformat(), mid),
                     )
                     conn.commit()
@@ -901,9 +896,7 @@ class MemoryOrchestrator:
             snapshot = await asyncio.to_thread(_apply)
             if snapshot is None:
                 return False
-            await self._version_write(
-                entity_id, snapshot, ChangeType.UPDATE, summary="propagation"
-            )
+            await self._version_write(entity_id, snapshot, ChangeType.UPDATE, summary="propagation")
             return True
 
         return {
@@ -1439,9 +1432,7 @@ class MemoryOrchestrator:
                         from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
 
                         client = _get_qdrant()
-                        existing = client.retrieve(
-                            collection_name=COLLECTION_NAME, ids=[pid]
-                        )
+                        existing = client.retrieve(collection_name=COLLECTION_NAME, ids=[pid])
                         if not existing:
                             return False
                         client.set_payload(
@@ -1772,8 +1763,7 @@ class MemoryOrchestrator:
                 try:
                     assignments = ", ".join(f"{k} = ?" for k in fields)
                     cur = conn.execute(
-                        f"UPDATE important_messages SET {assignments}, updated_at = ? "
-                        "WHERE id = ?",
+                        f"UPDATE important_messages SET {assignments}, updated_at = ? WHERE id = ?",
                         (*fields.values(), datetime.now().isoformat(), uid.identifier),
                     )
                     conn.commit()
@@ -1800,9 +1790,7 @@ class MemoryOrchestrator:
                 from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
 
                 client = _get_qdrant()
-                existing = client.retrieve(
-                    collection_name=COLLECTION_NAME, ids=[uid.identifier]
-                )
+                existing = client.retrieve(collection_name=COLLECTION_NAME, ids=[uid.identifier])
                 if not existing:
                     return False
                 client.set_payload(
@@ -1967,9 +1955,7 @@ class MemoryOrchestrator:
                         silo_path = storage_dir / fname
                         if not silo_path.exists():
                             continue
-                        dup_id = await asyncio.to_thread(
-                            _find_jsonl_hash, silo_path, content_hash
-                        )
+                        dup_id = await asyncio.to_thread(_find_jsonl_hash, silo_path, content_hash)
                         if dup_id is not None:
                             _ingest(
                                 "dup",

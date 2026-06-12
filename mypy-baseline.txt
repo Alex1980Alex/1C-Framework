@@ -47,6 +47,7 @@ src/ui/pages/hook_dashboard.py:0: error: Function is missing a return type annot
 src/shared/mcp_oauth/models.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/shared/mcp_oauth/models.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/shared/mcp_oauth/models.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
+src/memory/ai_memory/retention.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/lsp_subprocess.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/lsp_subprocess.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/bsl/semantic_search/refactor/lsp_subprocess.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
@@ -275,6 +276,7 @@ src/memory/orchestrator/propagation_engine.py:0: error: Item "None" of "Queue[Pr
 src/memory/orchestrator/propagation_engine.py:0: error: Incompatible types in assignment (expression has type "dict[str, Any]", target has type "float")  [assignment]
 src/memory/orchestrator/propagation_engine.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/orchestrator/propagation_engine.py:0: note: Use "-> None" if function does not return a value
+src/memory/orchestrator/propagation_engine.py:0: error: Missing type arguments for generic type "Callable"  [type-arg]
 src/pdf_framework/agents/cache.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/pdf_framework/agents/cache.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/pdf_framework/agents/cache.py:0: error: Returning Any from function declared to return "str | None"  [no-any-return]
@@ -359,7 +361,6 @@ src/pdf_framework/agents/memory/backends.py:0: error: Incompatible return value 
 src/pdf_framework/agents/memory/backends.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/pdf_framework/loaders/image_extractor.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/pdf_framework/loaders/image_extractor.py:0: note: Use "-> None" if function does not return a value
-src/pdf_framework/embeddings/vision.py:0: error: List item 1 has incompatible type "dict[str, Collection[str]]"; expected "TextBlockParam | ImageBlockParam | DocumentBlockParam | SearchResultBlockParam | ThinkingBlockParam | <23 more items>"  [list-item]
 src/pdf_framework/embeddings/vision.py:0: error: Item "ThinkingBlock" of "TextBlock | ThinkingBlock | RedactedThinkingBlock | ToolUseBlock | ServerToolUseBlock | <7 more items>" has no attribute "text"  [union-attr]
 src/pdf_framework/embeddings/vision.py:0: error: Item "RedactedThinkingBlock" of "TextBlock | ThinkingBlock | RedactedThinkingBlock | ToolUseBlock | ServerToolUseBlock | <7 more items>" has no attribute "text"  [union-attr]
 src/pdf_framework/embeddings/vision.py:0: error: Item "ToolUseBlock" of "TextBlock | ThinkingBlock | RedactedThinkingBlock | ToolUseBlock | ServerToolUseBlock | <7 more items>" has no attribute "text"  [union-attr]
@@ -569,6 +570,8 @@ src/memory/skill_learning/server.py:0: error: Function is missing a return type 
 src/memory/skill_learning/server.py:0: error: Returning Any from function declared to return "dict[str, Any]"  [no-any-return]
 src/memory/skill_learning/server.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/skill_learning/server.py:0: error: Function is missing a return type annotation  [no-untyped-def]
+src/memory/skill_learning/server.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
+src/memory/skill_learning/server.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/memory/skill_learning/server.py:0: error: Call to untyped function "list_tools" in typed context  [no-untyped-call]
 src/memory/skill_learning/server.py:0: error: Untyped decorator makes function "list_tools" untyped  [untyped-decorator]
 src/memory/skill_learning/server.py:0: error: Untyped decorator makes function "call_tool" untyped  [untyped-decorator]
@@ -576,6 +579,7 @@ src/memory/skill_learning/server.py:0: error: Missing type arguments for generic
 src/memory/skill_learning/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/skill_learning/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/skill_learning/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
+src/memory/skill_learning/server.py:0: error: Expected iterable as variadic argument  [misc]
 src/memory/skill_learning/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/skill_learning/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/skill_learning/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
@@ -584,6 +588,7 @@ src/memory/skill_learning/server.py:0: error: Function is missing a return type 
 src/memory/skill_learning/server.py:0: note: Use "-> None" if function does not return a value
 src/memory/skill_learning/server.py:0: error: Call to untyped function "main" in typed context  [no-untyped-call]
 src/memory/ai_memory/server.py:0: error: Function is missing a return type annotation  [no-untyped-def]
+src/memory/ai_memory/server.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/ai_memory/server.py:0: note: Use "-> None" if function does not return a value
 src/memory/ai_memory/server.py:0: error: Call to untyped function "ensure_db" in typed context  [no-untyped-call]
 src/memory/ai_memory/server.py:0: error: Call to untyped function "list_tools" in typed context  [no-untyped-call]
@@ -591,6 +596,8 @@ src/memory/ai_memory/server.py:0: error: Untyped decorator makes function "list_
 src/memory/ai_memory/server.py:0: error: Untyped decorator makes function "call_tool" untyped  [untyped-decorator]
 src/memory/ai_memory/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/ai_memory/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
+src/memory/ai_memory/server.py:0: error: Returning Any from function declared to return "str"  [no-any-return]
+src/memory/ai_memory/server.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/memory/ai_memory/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/ai_memory/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/ai_memory/server.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
@@ -905,9 +912,9 @@ src/pdf_framework/multitenancy/tenant_store.py:0: error: Item "None" of "TenantQ
 src/pdf_framework/multitenancy/tenant_store.py:0: error: Item "None" of "TenantQuota | None" has no attribute "max_storage_mb"  [union-attr]
 src/pdf_framework/multitenancy/tenant_store.py:0: error: Item "None" of "TenantQuota | None" has no attribute "max_queries_per_day"  [union-attr]
 src/pdf_framework/multitenancy/tenant_store.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
+src/memory/orchestrator/memory_orchestrator.py:0: error: Returning Any from function declared to return "str | None"  [no-any-return]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/memory/orchestrator/memory_orchestrator.py:0: error: Missing type arguments for generic type "list"  [type-arg]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a type annotation for one or more parameters  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Argument "must" to "Filter" has incompatible type "list[FieldCondition]"; expected "list[FieldCondition | IsEmptyCondition | IsNullCondition | HasIdCondition | HasVectorCondition | NestedCondition | Filter] | FieldCondition | IsEmptyCondition | IsNullCondition | HasIdCondition | HasVectorCondition | NestedCondition | Filter | None"  [arg-type]
 src/memory/orchestrator/memory_orchestrator.py:0: note: "list" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance
@@ -920,9 +927,17 @@ src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a r
 src/memory/orchestrator/memory_orchestrator.py:0: note: Use "-> None" if function does not return a value
 src/memory/orchestrator/memory_orchestrator.py:0: error: Call to untyped function "stop" in typed context  [no-untyped-call]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Item "None" of "LinkRegistry | None" has no attribute "create_link"  [union-attr]
+src/memory/orchestrator/memory_orchestrator.py:0: error: Missing type arguments for generic type "dict"  [type-arg]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Call to untyped function "start" in typed context  [no-untyped-call]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Incompatible types in assignment (expression has type "list[TTLEntry]", variable has type "bool")  [assignment]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Value of type "bool" is not indexable  [index]
+src/memory/orchestrator/memory_orchestrator.py:0: error: Item "None" of "LinkRegistry | None" has no attribute "delete_links_for_entity"  [union-attr]
+src/memory/orchestrator/memory_orchestrator.py:0: error: Incompatible types in assignment (expression has type "int | Any", variable has type "list[str]")  [assignment]
+src/memory/orchestrator/memory_orchestrator.py:0: error: All conditional function variants must have identical signatures  [misc]
+src/memory/orchestrator/memory_orchestrator.py:0: note: Original:
+src/memory/orchestrator/memory_orchestrator.py:0: note: def _writeback() -> int
+src/memory/orchestrator/memory_orchestrator.py:0: note: Redefinition:
+src/memory/orchestrator/memory_orchestrator.py:0: note: def _writeback() -> bool
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: note: Use "-> None" if function does not return a value
 src/memory/orchestrator/memory_orchestrator.py:0: error: Function is missing a return type annotation  [no-untyped-def]
@@ -1320,6 +1335,3 @@ src/mcp_server/server.py:0: error: Function is missing a return type annotation 
 src/mcp_server/server.py:0: note: Use "-> None" if function does not return a value
 src/mcp_server/server.py:0: error: Call to untyped function "main" in typed context  [no-untyped-call]
 src/api/app.py:0: error: Function is missing a return type annotation  [no-untyped-def]
-src/api/routes/jobs.py:0: error: Unused "type: ignore" comment  [unused-ignore]
-src/api/routes/jobs.py:0: error: Unused "type: ignore" comment  [unused-ignore]
-src/api/routes/documents.py:0: error: Unused "type: ignore" comment  [unused-ignore]

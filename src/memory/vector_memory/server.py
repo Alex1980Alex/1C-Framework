@@ -251,6 +251,7 @@ def _warmup_qdrant() -> None:
 def _ensure_collection(client: Any) -> None:
     """Ensure learned_patterns collection exists with cosine 1024d vectors."""
     from qdrant_client.http import models as qmodels
+
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
         client.create_collection(
