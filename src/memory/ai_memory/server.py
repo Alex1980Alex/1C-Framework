@@ -246,7 +246,9 @@ def _content_hash(content: str) -> str:
         return ""
 
 
-def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
+def _record_ingest(
+    action: str, content_hash: str = "", harvester: str = "save_important_message", **kw
+) -> None:
     """Fail-soft §26 ingestion-metrics emit; never breaks the MCP handler."""
     try:
         src = str(_PROJECT_ROOT / "src")
@@ -254,9 +256,7 @@ def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
             sys.path.insert(0, src)
         from memory.orchestrator.ingest_metrics import record_ingest
 
-        record_ingest(
-            "memory_ai", action, content_hash=content_hash, harvester="save_important_message", **kw
-        )
+        record_ingest("memory_ai", action, content_hash=content_hash, harvester=harvester, **kw)
     except Exception:
         pass
 
