@@ -385,7 +385,7 @@ async def delete_message(args: dict) -> list[TextContent]:
             content_hash = (json.loads(row[0]) or {}).get("content_hash", "") if row else ""
         except (json.JSONDecodeError, TypeError):
             content_hash = ""
-        _record_ingest("deleted", content_hash)
+        _record_ingest("deleted", content_hash, harvester="delete_message")
 
     return [TextContent(type="text", text=json.dumps({"success": deleted > 0, "deleted": deleted}))]
 
