@@ -627,6 +627,12 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-curation-candidates-on-start.py",
+            "timeout": 8,
+            "statusMessage": "curation-candidates"
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/gh-notif-intake-on-start.py",
             "timeout": 8,
             "statusMessage": "gh-notif-intake"

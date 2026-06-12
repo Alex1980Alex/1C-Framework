@@ -1,7 +1,12 @@
 {
   "description": "Architecture Decision Records — решения по PDF Framework",
   "format": "ADR (Context → Decision → Consequences → Alternatives)",
-  "lifecycle": ["proposed", "accepted", "superseded", "deprecated"],
+  "lifecycle": [
+    "proposed",
+    "accepted",
+    "superseded",
+    "deprecated"
+  ],
   "records": [
     {
       "id": "ADR-001",
@@ -10,7 +15,12 @@
       "status": "accepted",
       "date": "2026-02-14",
       "research": "../cache/haystack-vs-langchain-architecture.md",
-      "tags": ["framework-choice", "langchain", "haystack", "langgraph"]
+      "tags": [
+        "framework-choice",
+        "langchain",
+        "haystack",
+        "langgraph"
+      ]
     },
     {
       "id": "ADR-002",
@@ -19,7 +29,12 @@
       "status": "accepted",
       "date": "2026-02-14",
       "research": "../cache/knowledge-organization-patterns.md",
-      "tags": ["knowledge-management", "zettelkasten", "adr", "architecture"]
+      "tags": [
+        "knowledge-management",
+        "zettelkasten",
+        "adr",
+        "architecture"
+      ]
     },
     {
       "id": "ADR-003",
@@ -28,7 +43,13 @@
       "status": "accepted",
       "date": "2026-02-14",
       "research": "../cache/knowledge-organization-patterns.md",
-      "tags": ["pattern", "structural", "triad-factory", "q6", "adr"]
+      "tags": [
+        "pattern",
+        "structural",
+        "triad-factory",
+        "q6",
+        "adr"
+      ]
     },
     {
       "id": "ADR-004",
@@ -37,7 +58,14 @@
       "status": "accepted",
       "date": "2026-02-14",
       "research": "../cache/knowledge-organization-patterns.md",
-      "tags": ["pattern", "creational", "gof", "abstract-factory", "builder", "triad-factory"]
+      "tags": [
+        "pattern",
+        "creational",
+        "gof",
+        "abstract-factory",
+        "builder",
+        "triad-factory"
+      ]
     },
     {
       "id": "ADR-005",
@@ -46,7 +74,13 @@
       "status": "accepted",
       "date": "2026-02-12",
       "research": "../cache/project-structure-best-practices.md",
-      "tags": ["project-structure", "layer-based", "clean-architecture", "service-layer", "god-object"]
+      "tags": [
+        "project-structure",
+        "layer-based",
+        "clean-architecture",
+        "service-layer",
+        "god-object"
+      ]
     },
     {
       "id": "ADR-006",
@@ -55,7 +89,14 @@
       "status": "accepted",
       "date": "2026-02-12",
       "research": "../cache/core-vs-framework-separation.md",
-      "tags": ["core-framework", "separation", "user-level", "project-level", "claude-code", "portability"]
+      "tags": [
+        "core-framework",
+        "separation",
+        "user-level",
+        "project-level",
+        "claude-code",
+        "portability"
+      ]
     },
     {
       "id": "ADR-007",
@@ -64,7 +105,12 @@
       "status": "accepted",
       "date": "2026-02-24",
       "research": "../cache/skill-delegated-subagent-pattern.md",
-      "tags": ["skill", "subagent", "knowledge-delegation", "prompt-pattern"]
+      "tags": [
+        "skill",
+        "subagent",
+        "knowledge-delegation",
+        "prompt-pattern"
+      ]
     },
     {
       "id": "ADR-008",
@@ -73,7 +119,16 @@
       "status": "accepted",
       "date": "2026-04-30",
       "research": "../cache/embedding-deployment-fa2-tei-chunking.md",
-      "tags": ["embedding-model", "qwen3", "late-chunking", "bsl-retrieval", "phase-8-12", "production-switchover", "tei", "ollama"]
+      "tags": [
+        "embedding-model",
+        "qwen3",
+        "late-chunking",
+        "bsl-retrieval",
+        "phase-8-12",
+        "production-switchover",
+        "tei",
+        "ollama"
+      ]
     },
     {
       "id": "ADR-009",
@@ -82,7 +137,15 @@
       "status": "proposed",
       "date": "2026-05-09",
       "research": null,
-      "tags": ["eval", "deepeval", "ci-gate", "rag-quality", "faithfulness", "hallucination", "phase-3-9"]
+      "tags": [
+        "eval",
+        "deepeval",
+        "ci-gate",
+        "rag-quality",
+        "faithfulness",
+        "hallucination",
+        "phase-3-9"
+      ]
     },
     {
       "id": "ADR-010",
@@ -91,7 +154,31 @@
       "status": "proposed",
       "date": "2026-05-09",
       "research": null,
-      "tags": ["observability", "langfuse", "tracing", "production", "phase-5c", "monitoring", "cost-tracking"]
+      "tags": [
+        "observability",
+        "langfuse",
+        "tracing",
+        "production",
+        "phase-5c",
+        "monitoring",
+        "cost-tracking"
+      ]
+    },
+    {
+      "id": "ADR-011",
+      "file": "011-curated-memory-sync-model.md",
+      "title": "Модель синхронизации курируемой памяти и Event Store с авто-store'ами",
+      "status": "accepted",
+      "date": "2026-06-12",
+      "research": "../cache/curated-memory-event-store-sync-2026.md",
+      "tags": [
+        "memory",
+        "curated-memory",
+        "hitl",
+        "write-gate",
+        "event-store",
+        "non-goal"
+      ]
     }
   ]
 }
