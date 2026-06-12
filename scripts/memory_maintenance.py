@@ -320,6 +320,11 @@ def main() -> int:
     for name in ("reflect", "sync", "promote"):
         jobs[name] = "skipped" if name in skip else _run_subprocess(name, args.apply)
     forget = {"skipped": True} if "forget" in skip else run_forget(args.apply, now)
+    # P3.1 (roadmap 260611): pending-карантин не должен гнить — TTL auto-reject
+    review_pending = (
+        {"skipped": True} if "review_pending" in skip else run_review_pending(args.apply, now)
+    )
+    jobs["review_pending"] = review_pending
 
     cross_store = collect_cross_store()
     dash = build_dashboard(
@@ -365,6 +370,7 @@ def main() -> int:
     print("# memory maintenance cadence", "(APPLY)" if args.apply else "(dry-run)")
     print(f"store_sizes={dash['store_sizes']} total_facts={dash['total_facts']}")
     print(f"forget={forget}")
+    print(f"review_pending={review_pending}")
     print(f"jobs={ {k: (v.get('rc') if isinstance(v, dict) else v) for k, v in jobs.items()} }")
     if isinstance(cross_store, dict):
         print(f"cross_store_dup_rate={cross_store.get('cross_store_dup_rate')}")
