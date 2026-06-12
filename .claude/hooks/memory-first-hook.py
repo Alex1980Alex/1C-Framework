@@ -337,19 +337,45 @@ def update_cooldown():
 # ---------------------------------------------------------------------------
 # Layer 1 — SQLite search
 # ---------------------------------------------------------------------------
+def _retention():
+    """Fail-soft import of the shared episodic retention policy (260612 P3.1).
+
+    ``append`` (not ``insert(0)``) — see feedback-hook-src-shared-collision.
+    """
+    try:
+        src = str(PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.append(src)
+        from memory.ai_memory.retention import effective_importance, is_archived
+
+        return effective_importance, is_archived
+    except Exception:
+        return (lambda imp, _cat, _created: imp), (lambda _md: False)
+
+
 def search_sqlite(query_tokens: set, limit: int = 10) -> list:
-    """Search SQLite important_messages: top-200 by importance, rank by token overlap."""
+    """Search SQLite important_messages, rank by token overlap.
+
+    260612 P2.G6: candidate window is importance+recency ordered (was pure
+    importance — a fresh low-importance fact behind 200 older rows was
+    invisible) and raised to SQLITE_SCAN_LIMIT; stale session_summary rows are
+    demoted via lazy importance-decay (P3.1) and archived rows skipped (P3.2).
+    The hard SQLITE_TIMEOUT budget check in the loop is unchanged.
+    """
     if not query_tokens or not SQLITE_DB.exists():
         return []
     start = time.monotonic()
     results = []
+    effective_importance, is_archived = _retention()
+    scan_limit = int(os.environ.get("MEMORY_SQLITE_SCAN_LIMIT", "500"))
     try:
         conn = sqlite3.connect(str(SQLITE_DB), timeout=0.5)
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
-            "SELECT id, content, importance, category, tags "
+            "SELECT id, content, importance, category, tags, created_at, metadata "
             "FROM important_messages "
-            "ORDER BY importance DESC LIMIT 200"
+            "ORDER BY importance DESC, created_at DESC LIMIT ?",
+            (scan_limit,),
         )
         rows = cursor.fetchall()
         conn.close()
@@ -359,9 +385,17 @@ def search_sqlite(query_tokens: set, limit: int = 10) -> list:
                 break
             content = row["content"] or ""
             tags_str = (row["tags"] or "").lower()
-            importance = row["importance"] or 0.0
             category = row["category"] or "general"
             row_id = row["id"] or ""
+            try:
+                md = json.loads(row["metadata"]) if row["metadata"] else {}
+            except (json.JSONDecodeError, TypeError):
+                md = {}
+            if is_archived(md if isinstance(md, dict) else None):
+                continue
+            importance = effective_importance(
+                row["importance"] or 0.0, category, row["created_at"]
+            )
 
             content_tokens = set(tokenize(content))
             overlap = query_tokens & content_tokens
