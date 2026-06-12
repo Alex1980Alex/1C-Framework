@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-12T12:41:35",
+  "generated_at": "2026-06-12T12:54:31",
   "golden_version": "v2.4",
   "top_k": 10,
   "collections": {
@@ -16,7 +16,7 @@
       "dim": 1024,
       "items_total": 20,
       "items_with_gt": 16,
-      "ndcg_at_10": 0.6877,
+      "ndcg_at_10": 0.6856,
       "chunk_recall_at_10": 0.8125,
       "keyword_recall_at_10": 0.3042,
       "errors": []

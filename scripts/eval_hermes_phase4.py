@@ -317,19 +317,26 @@ def wiki_page_point_id(name: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
 
 
+def clean_wiki_content(raw_content: str) -> str:
+    """Strip frontmatter + unwrap wikilinks (pure). Пустая страница → ''."""
+    import re
+
+    content = re.sub(r"^---\n.*?\n---\n", "", raw_content, flags=re.DOTALL)
+    content = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", content)
+    content = re.sub(r"\[\[([^\]]+)\]\]", r"\1", content)
+    return content.strip()
+
+
 def wiki_page_payload(raw_content: str, stem: str, file_path: str) -> dict[str, Any] | None:
     """Payload-контракт wiki-точки: name / entity_type / text / file_path.
 
     Чистая функция (без I/O) — закреплена unit-тестами
     tests/unit/test_pdf_docs_chains.py (roadmap 260612 P1 / A2).
     Возвращает None для пустых страниц (только frontmatter/whitespace).
+    `text` в payload обрезан до 2000 (контракт старого индексера);
+    для ЭМБЕДДИНГА используется полный clean_wiki_content (см. cmd_index_wiki).
     """
-    import re
-
-    content = re.sub(r"^---\n.*?\n---\n", "", raw_content, flags=re.DOTALL)
-    content = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", content)
-    content = re.sub(r"\[\[([^\]]+)\]\]", r"\1", content)
-    content = content.strip()
+    content = clean_wiki_content(raw_content)
     if not content:
         return None
 
@@ -415,14 +422,14 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
                 payloads: list[dict[str, Any]] = []
 
                 for fp in batch_files:
-                    payload = wiki_page_payload(
-                        fp.read_text(encoding="utf-8"), fp.stem, str(fp)
-                    )
+                    raw = fp.read_text(encoding="utf-8")
+                    payload = wiki_page_payload(raw, fp.stem, str(fp))
                     if payload is None:
                         skipped_empty += 1
                         continue
-                    # TEI MAX_INPUT_LENGTH=4096 tokens ≈ 16k chars
-                    texts.append(payload["text"][:16000])
+                    # Эмбеддим ПОЛНЫЙ контент (как старый индексер), не payload-обрезок;
+                    # cap 16k chars ≈ TEI MAX_INPUT_LENGTH=4096 tokens
+                    texts.append(clean_wiki_content(raw)[:16000])
                     payloads.append(payload)
 
                 if not texts:

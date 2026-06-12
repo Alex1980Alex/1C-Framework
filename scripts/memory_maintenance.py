@@ -367,7 +367,7 @@ def collect_docs_freshness() -> dict[str, Any]:
                 if '"run_end"' not in ln:
                     continue
                 for coll in DOCS_COLLECTIONS:
-                    if coll in ln or (coll == "pdf_documents" and "pdf_documents" in ln):
+                    if coll in ln:
                         try:
                             ts = json.loads(ln).get("ts")
                         except json.JSONDecodeError:
