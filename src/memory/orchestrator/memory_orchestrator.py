@@ -826,9 +826,7 @@ class MemoryOrchestrator:
         from .unified_id import SourceServer, UnifiedID
 
         # Env-override keeps tests off the production DB (P0.2 isolation spirit).
-        ai_db = os.environ.get("MEMORY_AI_DB_PATH") or str(
-            _PROJECT_ROOT / "data" / "memory_ai.db"
-        )
+        ai_db = str(_memory_ai_db_path())
 
         async def _vector_memory_handler(entity_id: str, delta: float) -> bool:
             def _apply() -> dict[str, Any] | None:
@@ -1471,12 +1469,10 @@ class MemoryOrchestrator:
                         store_actions["skipped"][eid] = "not_found"
 
                 elif uid.source == SourceServer.MEMORY_AI:
-                    db_path = os.environ.get("MEMORY_AI_DB_PATH") or str(
-                        _PROJECT_ROOT / "data" / "memory_ai.db"
-                    )
+                    db_path = str(_memory_ai_db_path())
 
                     def _delete(mid: str = uid.identifier, db: str = db_path) -> int:
-                        conn = sqlite3.connect(db, timeout=2)
+                        conn = _ai_db_connect(db, timeout=2)
                         try:
                             cur = conn.execute(
                                 "DELETE FROM important_messages WHERE id = ?", (mid,)
