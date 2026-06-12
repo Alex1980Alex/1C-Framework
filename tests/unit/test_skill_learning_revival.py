@@ -121,13 +121,22 @@ async def test_route_and_save_skill_learning_goes_to_pending(orchestrator):
     assert len(pend.read_text(encoding="utf-8").splitlines()) == 1
 
 
-async def test_route_and_save_skill_learning_auto_confirm(orchestrator):
+async def test_route_and_save_skill_learning_auto_confirm(orchestrator, monkeypatch):
     orch, root = orchestrator
+    # B1 pin: auto_confirm эмитит saved БЕЗ reason="pending" (мусор в fact-trace)
+    import src.memory.orchestrator.ingest_metrics as im
+
+    events: list[dict] = []
+    monkeypatch.setattr(
+        im, "record_ingest", lambda store, action, **kw: events.append({"action": action, **kw})
+    )
     await orch._save_to_target(
         "skill-learning", "явно подтверждённый контент", {"name": "a", "auto_confirm": True}
     )
     saved = root / "data" / "skill_learning" / "patterns.jsonl"
     assert len(saved.read_text(encoding="utf-8").splitlines()) == 1
+    saved_events = [e for e in events if e["action"] == "saved"]
+    assert saved_events and saved_events[0].get("reason") is None
 
 
 async def test_route_and_save_skill_learning_rejected_blocks(orchestrator):

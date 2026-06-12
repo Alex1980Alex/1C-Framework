@@ -175,7 +175,7 @@ def run_review_pending(apply: bool, now: datetime) -> dict[str, Any]:
         age_days: float | None = None
         try:
             age_days = (now - datetime.fromisoformat(rec.get("created_at", ""))).days
-        except ValueError:
+        except (TypeError, ValueError):  # null / malformed created_at → честный skip
             pass
         # Записи без валидного created_at не auto-reject'ятся (честный skip).
         if age_days is not None and age_days > PENDING_TTL_DAYS:
