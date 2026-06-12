@@ -131,16 +131,16 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     except sqlite3.Error:
         pass
 
-    # archive_episodic исполнился (maintenance-runs trace, не "skipped")
+    # archive_episodic исполнился успешно: trace-маппинг jobs→rc даёт 0 (success),
+    # -1 (error), "skipped" (skip) — считаем строго rc==0 (code-verify finding:
+    # `!= "skipped"` был вакуумно-истинным на None/-1).
     archive_runs = 0
     for rec in read_jsonl(MAINTENANCE_RUNS):
         dt = parse_dt(rec.get("ts") or rec.get("timestamp"))
         if dt is None or dt < WINDOW_START:
             continue
         jobs = rec.get("jobs")
-        if isinstance(jobs, dict) and "archive_episodic" in jobs and (
-            jobs["archive_episodic"] != "skipped"
-        ):
+        if isinstance(jobs, dict) and jobs.get("archive_episodic") == 0:
             archive_runs += 1
 
     return {

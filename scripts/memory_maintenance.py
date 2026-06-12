@@ -243,7 +243,7 @@ def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
     try:
         from memory.ai_memory.retention import is_archived, should_archive
     except Exception as exc:
-        return {"error": f"{type(exc).__name__}: {exc}"}
+        return {"rc": -1, "error": f"{type(exc).__name__}: {exc}"}
 
     candidates: list[tuple[str, str, dict[str, Any]]] = []
     try:
@@ -275,9 +275,9 @@ def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
         finally:
             conn.close()
     except Exception as exc:  # fail-soft: cadence survives a broken episodic DB
-        return {"error": f"{type(exc).__name__}: {exc}"}
+        return {"rc": -1, "error": f"{type(exc).__name__}: {exc}"}
 
-    summary = {"candidates": len(candidates), "archived": archived if apply else 0,
+    summary = {"rc": 0, "candidates": len(candidates), "archived": archived if apply else 0,
                "applied": bool(apply and candidates)}
     if apply and candidates:
         try:
