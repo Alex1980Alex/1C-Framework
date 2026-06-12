@@ -107,9 +107,29 @@ Task(
 ```
 Вердикт ревьюера:
   PASS    → продолжить workflow (CREATE в Learning Loop, commit и т.д.)
+            + capture паттерна в skill-learning (см. ниже)
   PARTIAL → оркестратор исправляет конкретные проблемы → продолжить
   FAIL    → Ralph Wiggum Loop (итеративный retry, макс 3)
 ```
+
+### После PASS — capture паттерна (skill-learning, roadmap 260611 P1.1)
+
+После verify PASS **нетривиальной** задачи (medium/complex; trivial — пропустить)
+зафиксируй переиспользуемый паттерн в карантин pending:
+
+```
+mcp__skill-learning__capture_pattern(
+  pattern_type = "workflow-pattern" | "bsl-pattern" | "error-fix",  # из факта работы
+  name         = краткое имя паттерна,
+  content      = суть приёма (1-3 предложения: проблема → решение),
+  evidence_sources = [{"session": <session_id>, "files": [затронутые файлы]}],
+  require_confirmation = true,   # карантин: подтверждение отдельным шагом
+)
+```
+
+- Капчурить **приём**, не дифф: что переносимо на следующую похожую задачу.
+- Дубль (`action=dup`/`dup_rejected`) — это нормально и значит «уже знаем»; не повторять.
+- НЕ капчурить: типовые правки без новизны, конфигурационные изменения, docs-only.
 
 ---
 
