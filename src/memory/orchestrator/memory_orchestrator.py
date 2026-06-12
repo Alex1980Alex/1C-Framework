@@ -2061,12 +2061,10 @@ class MemoryOrchestrator:
 
         try:
             if uid.source == SourceServer.MEMORY_AI:
-                import sqlite3
-
-                db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+                db_path = _memory_ai_db_path()
 
                 def _get():
-                    conn = sqlite3.connect(str(db_path))
+                    conn = _ai_db_connect(db_path)
                     try:
                         cursor = conn.cursor()
                         cursor.execute(
@@ -2132,12 +2130,10 @@ class MemoryOrchestrator:
         return None
 
     async def _get_entity_by_raw_id(self, raw_id: str) -> dict[str, Any] | None:
-        import sqlite3
-
-        db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+        db_path = _memory_ai_db_path()
         connection = None
         try:
-            connection = sqlite3.connect(str(db_path), timeout=1)
+            connection = _ai_db_connect(db_path, timeout=1)
             cursor = connection.cursor()
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at "
@@ -2164,12 +2160,10 @@ class MemoryOrchestrator:
         """Get stats from each subsystem."""
         stats: dict[str, Any] = {}
         try:
-            import sqlite3
-
-            db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+            db_path = _memory_ai_db_path()
 
             def _ai_stats():
-                conn = sqlite3.connect(str(db_path))
+                conn = _ai_db_connect(db_path)
                 try:
                     cursor = conn.cursor()
                     cursor.execute("SELECT COUNT(*) FROM important_messages")
