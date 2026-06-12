@@ -3,13 +3,16 @@ Integration tests for Memory System P3 — Deferred components.
 
 Tests:
 - SubscriptionManager: create, remove, heartbeat, get_events, stale cleanup (8 tests)
-- DocsRagSearchAdapter: ingest, FTS search, delete, stats (6 tests)
 - IDManagementTool: generate, resolve, conflict, batch, stats (6 tests)
 - SurpriseTool: score novel, score known, empty, batch (5 tests)
 - WarmupTool: recent, pattern, stats (4 tests)
 - ResearchTool: relationships, anomalies, clusters, summary (4 tests)
 
-Total: 33 tests.
+Total: 27 tests.
+
+DocsRagSearchAdapter tests removed 2026-06-12: адаптер ретирован в
+scripts/attic/docs_rag.py (roadmap 260612 pdf-docs P0.1 / D1 — мёртвый контур,
+production-RAG живёт в pdf_framework).
 """
 
 import asyncio
