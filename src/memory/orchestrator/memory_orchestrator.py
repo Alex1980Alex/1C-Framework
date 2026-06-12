@@ -219,8 +219,6 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
         return "memory-ai"
 
     async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]:
-        import sqlite3
-
         # Tokenize query: split on whitespace, keep tokens >= 3 chars.
         # Fallback to full query if no tokens survive filter (short/CJK queries).
         tokens = [t.lower() for t in query.split() if len(t) >= 3]
@@ -230,7 +228,7 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
         results = []
 
         def _do_search():
-            conn = sqlite3.connect(str(self._db_path))
+            conn = _ai_db_connect(self._db_path)
             try:
                 cursor = conn.cursor()
                 # OR-join LIKE for each token across content + tags (case-insensitive).
