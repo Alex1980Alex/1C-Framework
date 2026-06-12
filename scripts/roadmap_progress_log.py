@@ -50,8 +50,15 @@ _WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)")
 # type prefix (feedback/project/reference/user) + `-`/`_` separator. Scoping to this
 # convention avoids false-positives from doc syntax examples (`[[overview]]`,
 # `[[page-name]]`), code artifacts (`[[Callable[..., Any]`), and concept mentions
-# (`[[wikilinks]]`), while still catching real refs AND hyphen/underscore drift
-# (e.g. `[[feedback-bsl-...]]` → file is `feedback_bsl_...md`).
+# (`[[wikilinks]]`).
+# Resolution (2026-06-12, наблюдение §18 roadmap 260612 LinkRegistry): ссылка
+# резолвится по КАНОНИЧЕСКОМУ слагу, а не по имени файла. Канон записи памяти —
+# kebab-слаг из frontmatter `name:` (контракт памяти велит линковать `[[слаг]]`),
+# файлы же исторически именованы с подчёркиваниями. Раньше валидатор сверял
+# буквальное имя файла и считал «drift'ом» любую корректную kebab-ссылку на
+# underscore-файл — 100% репортов были ложными. Теперь индекс = file-stem +
+# frontmatter name, всё нормализовано к dash-lower; битой считается ссылка,
+# которой нет ни в одной форме.
 _MEMORY_NAME_RE = re.compile(r"^(feedback|project|reference|user)[-_][\w-]+$")
 # Default memory store (Claude Code project memory dir). Overridable via --memory-dir.
 _DEFAULT_MEMORY_DIR = Path.home() / ".claude" / "projects" / "C--1--Framework" / "memory"
@@ -152,6 +159,39 @@ def freshness_problem(base_text: str, head_text: str) -> str | None:
         "entry was rewritten) — the Progress Log is append-only (§19). Add a new "
         "`### YYYY-MM-DD — title` entry on top instead of editing history, or revert."
     )
+
+
+_FRONTMATTER_NAME_RE = re.compile(r"^name:\s*[\"']?([\w-]+)", re.MULTILINE)
+
+
+def _canon(slug: str) -> str:
+    """Каноническая форма идентификатора памяти: dash-lower."""
+    return slug.strip().replace("_", "-").lower()
+
+
+def memory_slug_index(mem_dir: Path) -> set[str]:
+    """Резолвируемые идентификаторы memory-записей (канонизированные).
+
+    Источники: stem каждого файла + слаг из frontmatter `name:` (канонический
+    идентификатор по контракту памяти). Tolerant: нечитаемый файл — пропуск.
+    """
+    slugs: set[str] = set()
+    for p in mem_dir.glob("*.md"):
+        slugs.add(_canon(p.stem))
+        try:
+            head = p.read_text(encoding="utf-8", errors="replace")[:500]
+        except OSError:
+            continue
+        # name: ищем ТОЛЬКО внутри frontmatter-блока (review rec: `name:` в
+        # начале строки body не должен порождать ложный слаг)
+        if not head.startswith("---"):
+            continue
+        end = head.find("\n---", 3)
+        fm = head[: end + 1] if end != -1 else head
+        m = _FRONTMATTER_NAME_RE.search(fm)
+        if m:
+            slugs.add(_canon(m.group(1)))
+    return slugs
 
 
 def extract_wikilinks(text: str) -> list[str]:
@@ -328,11 +368,12 @@ def cmd_links(args: argparse.Namespace) -> int:
         return 0
 
     files = sorted(ROADMAP_DIR.glob("*.md")) if ROADMAP_DIR.exists() else []
+    slugs = memory_slug_index(mem_dir)
     broken: dict[str, list[str]] = {}
     for p in files:
         rel = p.relative_to(PROJECT_ROOT).as_posix()
         mem_links = [n for n in extract_wikilinks(_read(p)) if _MEMORY_NAME_RE.match(n)]
-        bad = [n for n in mem_links if not (mem_dir / f"{n}.md").exists()]
+        bad = [n for n in mem_links if _canon(n) not in slugs]
         if bad:
             broken[rel] = bad
 
@@ -344,7 +385,9 @@ def cmd_links(args: argparse.Namespace) -> int:
         for rel, names in broken.items():
             print(f"[roadmap-links] {rel}: {len(names)} broken `[[...]]`")
             for n in names:
-                print(f"    - [[{n}]] → missing {n}.md")
+                print(
+                    f"    - [[{n}]] → не резолвится (ни file-stem, ни frontmatter name:)"
+                )
 
     return 1 if (broken and args.strict) else 0
 
