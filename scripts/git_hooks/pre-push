@@ -41,13 +41,13 @@ done)
 
 echo "[pre-push] gate: ruff check + compileall ($(printf '%s\n' "$files" | wc -l) py-files)"
 
-# shellcheck disable=SC2086
-if ! printf '%s\n' "$files" | xargs "$PY" -m ruff check --quiet; then
+# NUL-разделитель: py-пути с пробелами не дробятся xargs'ом
+if ! printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 "$PY" -m ruff check --quiet; then
     echo "[pre-push] BLOCKED: ruff check failed. Fix or bypass: PREPUSH_SKIP=1 git push" >&2
     exit 1
 fi
 
-if ! printf '%s\n' "$files" | xargs "$PY" -m compileall -q; then
+if ! printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 "$PY" -m compileall -q; then
     echo "[pre-push] BLOCKED: compileall failed (syntax). Bypass: PREPUSH_SKIP=1 git push" >&2
     exit 1
 fi
