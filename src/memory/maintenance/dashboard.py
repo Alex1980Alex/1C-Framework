@@ -11,6 +11,7 @@ Roadmap: ``docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md`` (§26 P4, D4.3
 from __future__ import annotations
 
 from collections import Counter
+from datetime import datetime
 from typing import Any
 
 
@@ -41,6 +42,49 @@ def aggregate_ingest_events(events: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def compute_docs_freshness(
+    last_run_end: dict[str, str | None],
+    points: dict[str, Any],
+    *,
+    now: datetime,
+    max_age_days: int = 30,
+) -> dict[str, Any]:
+    """Staleness-метрика docs-индексов (roadmap 260612 P3.2, pure).
+
+    Args:
+        last_run_end: collection -> ISO-timestamp последнего ``run_end`` из
+            ``data/indexing-progress.jsonl`` (None = run_end отсутствует вовсе).
+        points: collection -> points_count (None = Qdrant недоступен).
+        now: момент оценки (aware, если timestamps с offset'ом).
+        max_age_days: порог алерта (default 30).
+
+    Returns:
+        collection -> {points, last_run_end, age_days, stale}. Отсутствие
+        run_end = stale (дрейф невидим, что и есть алерт-условие D5).
+    """
+    out: dict[str, Any] = {}
+    for coll, ts in last_run_end.items():
+        age_days: float | None = None
+        stale = True
+        if ts:
+            try:
+                dt = datetime.fromisoformat(ts)
+                ref = now if dt.tzinfo is None else now.astimezone()
+                if dt.tzinfo is None and ref.tzinfo is not None:
+                    ref = ref.replace(tzinfo=None)
+                age_days = round((ref - dt).total_seconds() / 86400.0, 1)
+                stale = age_days > max_age_days
+            except (ValueError, TypeError):
+                pass
+        out[coll] = {
+            "points": points.get(coll),
+            "last_run_end": ts,
+            "age_days": age_days,
+            "stale": stale,
+        }
+    return out
+
+
 def build_dashboard(
     *,
     store_sizes: dict[str, Any],
@@ -49,6 +93,7 @@ def build_dashboard(
     ingest: dict[str, Any] | None = None,
     forget: dict[str, Any] | None = None,
     jobs: dict[str, Any] | None = None,
+    docs_freshness: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Assemble the maintenance dashboard payload (pure)."""
     total = sum(v for v in store_sizes.values() if isinstance(v, (int, float)))
@@ -60,6 +105,7 @@ def build_dashboard(
         "ingest": ingest or {},
         "forget": forget or {},
         "jobs": jobs or {},
+        "docs_freshness": docs_freshness or {},
     }
 
 
@@ -75,6 +121,17 @@ def render_dashboard(dash: dict[str, Any], stamp: str) -> str:
     for store, size in dash.get("store_sizes", {}).items():
         lines.append(f"- {store}: {size}")
     lines.append(f"- **total facts: {dash.get('total_facts', 0)}**")
+
+    df = dash.get("docs_freshness") or {}
+    if df:
+        lines.append("")
+        lines.append("## Docs freshness (260612 P3.2)")
+        lines.append("")
+        for coll, st in df.items():
+            age = st.get("age_days")
+            age_s = f"{age}d" if age is not None else "no run_end in progress-log"
+            mark = " ⚠ STALE" if st.get("stale") else ""
+            lines.append(f"- {coll}: {st.get('points')} pts · last index {age_s}{mark}")
 
     cs = dash.get("cross_store") or {}
     if cs:

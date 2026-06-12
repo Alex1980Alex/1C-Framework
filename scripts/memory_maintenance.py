@@ -59,12 +59,25 @@ SL_REJECTED = PROJECT_ROOT / "data" / "skill_learning" / "rejected_patterns.json
 PENDING_TTL_DAYS = int(os.environ.get("SKILL_PENDING_TTL_DAYS", "30"))
 WIKI_DRAFTS = PROJECT_ROOT / "docs" / "wiki" / "drafts"
 COLLECTION = "learned_patterns"
+# Docs freshness (roadmap 260612 P3.2): возраст последнего run_end per коллекция
+PROGRESS_LOG = PROJECT_ROOT / "data" / "indexing-progress.jsonl"
+DOCS_COLLECTIONS = ("pdf_documents", "wiki_pages_v1")
+DOCS_STALE_DAYS = int(os.environ.get("DOCS_STALE_DAYS", "30"))
 
 # name -> (argv after python, supports --apply, apply-only)
+# reindex_wiki (260612 P3.3): генерация wiki .md (export_graph_to_wiki в promote)
+# и индексация СВЯЗАНЫ в одном каденсе — реиндекс после promote, иначе
+# расщеплённый мозг wiki .md <-> wiki_pages_v1. pdf_documents — ручной триггер
+# (корпус статичный, см. §18 роадмапа 260612).
 SUBPROCESS_JOBS: dict[str, tuple[list[str], bool, bool]] = {
     "reflect": (["scripts/reflect_memory.py"], True, False),
     "sync": (["scripts/cross_store_sync.py", "--no-report"], True, False),
     "promote": (["-m", "scripts.export_graph_to_wiki", "promote-patterns"], False, True),
+    "reindex_wiki": (
+        ["scripts/eval_hermes_phase4.py", "index-wiki", "--prune"],
+        False,
+        True,  # apply-only: пишет в production wiki_pages_v1
+    ),
 }
 
 
@@ -321,6 +334,13 @@ def collect_store_sizes() -> dict[str, Any]:
         sizes["wiki"] = len(list(WIKI_DRAFTS.glob("*.md"))) if WIKI_DRAFTS.exists() else 0
     except Exception:
         pass
+    # D6 (roadmap 260612 P4): docs-коллекции считаются ТОЧКАМИ в Qdrant,
+    # а не drafts на диске (раньше при 3k живых точек store_sizes видел 0)
+    for coll in DOCS_COLLECTIONS:
+        try:
+            sizes[coll] = _qdrant_client().count(collection_name=coll).count
+        except Exception:
+            pass
     # §27 P0 D0.1: persist store sizes to memory-ingestion.log for bounded-growth tracking
     try:
         from memory.orchestrator.ingest_metrics import record_store_size
@@ -331,6 +351,44 @@ def collect_store_sizes() -> dict[str, Any]:
     except Exception:
         pass
     return sizes
+
+
+def collect_docs_freshness() -> dict[str, Any]:
+    """Возраст последнего run_end per docs-коллекция (roadmap 260612 P3.2).
+
+    Скан data/indexing-progress.jsonl терпим к битым строкам; матчинг —
+    подстрока имени коллекции в run_end-строке (run_end summary index_wiki
+    несёт collection; исторический pdf — имя скрипта reindex_pdf_documents).
+    """
+    last_run_end: dict[str, str | None] = dict.fromkeys(DOCS_COLLECTIONS)
+    try:
+        with PROGRESS_LOG.open(encoding="utf-8", errors="replace") as fh:
+            for ln in fh:
+                if '"run_end"' not in ln:
+                    continue
+                for coll in DOCS_COLLECTIONS:
+                    if coll in ln or (coll == "pdf_documents" and "pdf_documents" in ln):
+                        try:
+                            ts = json.loads(ln).get("ts")
+                        except json.JSONDecodeError:
+                            continue
+                        if ts:
+                            last_run_end[coll] = ts  # файл хронологический — последняя побеждает
+    except OSError:
+        pass
+
+    points: dict[str, Any] = {}
+    for coll in DOCS_COLLECTIONS:
+        try:
+            points[coll] = _qdrant_client().count(collection_name=coll).count
+        except Exception:
+            points[coll] = None
+
+    from memory.maintenance.dashboard import compute_docs_freshness
+
+    return compute_docs_freshness(
+        last_run_end, points, now=datetime.now().astimezone(), max_age_days=DOCS_STALE_DAYS
+    )
 
 
 def collect_cross_store() -> dict[str, Any]:
@@ -387,7 +445,9 @@ def main() -> int:
     stamp = args.stamp or now.strftime("%Y%m%d_%H%M%S")
 
     jobs: dict[str, Any] = {}
-    for name in ("reflect", "sync", "promote"):
+    # reindex_wiki СРАЗУ после promote (260612 P3.3): export wiki .md и индексация
+    # wiki_pages_v1 — один пайплайн, иначе дрейф .md <-> Qdrant
+    for name in ("reflect", "sync", "promote", "reindex_wiki"):
         jobs[name] = "skipped" if name in skip else _run_subprocess(name, args.apply)
     forget = {"skipped": True} if "forget" in skip else run_forget(args.apply, now)
     # P3.1 (roadmap 260611): pending-карантин не должен гнить — TTL auto-reject
@@ -403,6 +463,7 @@ def main() -> int:
     )
 
     cross_store = collect_cross_store()
+    docs_freshness = collect_docs_freshness()
     dash = build_dashboard(
         store_sizes=collect_store_sizes(),
         cross_store=cross_store,
@@ -410,6 +471,7 @@ def main() -> int:
         ingest=collect_ingest(),
         forget=forget,
         jobs=jobs,
+        docs_freshness=docs_freshness,
     )
 
     if not args.no_report:
@@ -448,6 +510,8 @@ def main() -> int:
     print(f"forget={forget}")
     print(f"review_pending={review_pending}")
     print(f"jobs={ {k: (v.get('rc') if isinstance(v, dict) else v) for k, v in jobs.items()} }")
+    stale = [c for c, st in docs_freshness.items() if st.get("stale")]
+    print(f"docs_freshness={docs_freshness}" + (f" ALERT stale={stale}" if stale else ""))
     if isinstance(cross_store, dict):
         print(f"cross_store_dup_rate={cross_store.get('cross_store_dup_rate')}")
     if not args.no_report:

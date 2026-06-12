@@ -137,6 +137,56 @@ class TestMrlTruncatePassagePath:
         assert all(x == 0.0 for x in out[0])
 
 
+class TestDocsFreshness:
+    """P3.2 staleness-метрика (compute_docs_freshness, pure)."""
+
+    def test_fresh_and_stale(self):
+        from datetime import datetime
+
+        from src.memory.maintenance.dashboard import compute_docs_freshness
+
+        now = datetime.fromisoformat("2026-06-12T12:00:00+03:00")
+        out = compute_docs_freshness(
+            {
+                "pdf_documents": "2026-05-22T01:00:00+03:00",  # 21.5d
+                "wiki_pages_v1": "2026-04-01T00:00:00+03:00",  # 72d
+            },
+            {"pdf_documents": 830, "wiki_pages_v1": 2822},
+            now=now,
+            max_age_days=30,
+        )
+        assert out["pdf_documents"]["stale"] is False
+        assert out["pdf_documents"]["age_days"] == pytest.approx(21.5, abs=0.1)
+        assert out["wiki_pages_v1"]["stale"] is True
+        assert out["pdf_documents"]["points"] == 830
+
+    def test_missing_run_end_is_stale(self):
+        from datetime import datetime
+
+        from src.memory.maintenance.dashboard import compute_docs_freshness
+
+        out = compute_docs_freshness(
+            {"wiki_pages_v1": None},
+            {},
+            now=datetime(2026, 6, 12),
+        )
+        assert out["wiki_pages_v1"]["stale"] is True
+        assert out["wiki_pages_v1"]["age_days"] is None
+        assert out["wiki_pages_v1"]["points"] is None
+
+    def test_malformed_timestamp_is_stale(self):
+        from datetime import datetime
+
+        from src.memory.maintenance.dashboard import compute_docs_freshness
+
+        out = compute_docs_freshness(
+            {"pdf_documents": "not-a-date"},
+            {"pdf_documents": 1},
+            now=datetime(2026, 6, 12),
+        )
+        assert out["pdf_documents"]["stale"] is True
+
+
 class TestMrlTruncateQueryPath:
     def test_truncates_and_renorms(self):
         vec = [float(i % 7) for i in range(4096)]

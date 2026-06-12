@@ -523,7 +523,7 @@ def find_stale_domains(session_files: set[str]) -> list[dict[str, Any]]:
 
 
 def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | None:
-    """Suggest a documentation chapter via wiki_pages_v1 Qdrant similarity.
+    """Suggest a documentation chapter via framework_code_v1 Qdrant similarity.
 
     Phase C2 closure (2026-05-15, roadmap 260515): additive — used ONLY for
     ad-hoc CLI lookup of unmapped files. NOT wired into the Stop critical path
@@ -579,6 +579,16 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
         from qdrant_client.models import FieldCondition, Filter, MatchText
 
         client = QdrantClient(url="http://localhost:6333", timeout=timeout_s / 2)
+        # MRL: framework_code_v1 -> *_mrl_1024 (1024d), TEI отдаёт 4096d —
+        # без truncate+renorm Qdrant отвечает 400 и suggest молча умирал
+        # (починено 2026-06-12, roadmap 260612 pdf-docs P2.B3)
+        info = client.get_collection("framework_code_v1")
+        cfg = info.config.params.vectors
+        target_dim = int(cfg.size) if cfg is not None and not isinstance(cfg, dict) else None
+        if target_dim and target_dim < len(emb):
+            arr = emb[:target_dim]
+            norm = sum(x * x for x in arr) ** 0.5
+            emb = [x / norm for x in arr] if norm > 0 else arr
         # Use framework_code_v1 with filter to scope to docs chapters only.
         # Wiki_pages_v1 indexes Cyrillic entity slugs (no chapter info in payload);
         # framework_code_v1 has `relative_path` containing

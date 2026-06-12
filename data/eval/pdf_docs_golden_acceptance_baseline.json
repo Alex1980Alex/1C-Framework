@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-06-12T12:41:35",
+  "golden_version": "v2.4",
+  "top_k": 10,
+  "collections": {
+    "pdf_documents": {
+      "dim": 1024,
+      "items_total": 22,
+      "items_with_gt": 18,
+      "ndcg_at_10": 0.4205,
+      "chunk_recall_at_10": 0.6481,
+      "keyword_recall_at_10": 0.447,
+      "errors": []
+    },
+    "wiki_pages_v1": {
+      "dim": 1024,
+      "items_total": 20,
+      "items_with_gt": 16,
+      "ndcg_at_10": 0.6877,
+      "chunk_recall_at_10": 0.8125,
+      "keyword_recall_at_10": 0.3042,
+      "errors": []
+    }
+  }
+}
