@@ -185,12 +185,46 @@ async def test_a7_delete_message_honest(tmp_path, monkeypatch):
     )
 
     d1 = json.loads((await ai.delete_message({"message_id": r["id"]}))[0].text)
-    assert d1 == {"success": True, "deleted": 1}
+    assert d1["success"] is True and d1["deleted"] == 1
     assert not _rows(db)
 
     # Second delete of the same id → honest failure, not silent success.
     d2 = json.loads((await ai.delete_message({"message_id": r["id"]}))[0].text)
-    assert d2 == {"success": False, "deleted": 0}
+    assert d2["success"] is False and d2["deleted"] == 0
+
+
+# ---------------------------------------------------------------------------
+# A7 / P2.G5 — delete cascades into link_registry (no dangling edges)
+# ---------------------------------------------------------------------------
+async def test_a7_delete_cleans_link_registry(tmp_path, monkeypatch):
+    ai, db = _make_server(tmp_path, monkeypatch)
+    lr = tmp_path / "link_registry.db"
+    monkeypatch.setenv("LINK_REGISTRY_PATH", str(lr))
+
+    r = json.loads(
+        (await ai.save_important_message({"content": "linked episodic fact"}))[0].text
+    )
+    uid = f"episodic:memory-ai:{r['id']}"
+
+    from src.memory.orchestrator.link_registry import LinkRegistry
+
+    registry = LinkRegistry(db_path=str(lr))
+    registry.create_link(uid, "semantic:vector-memory:abc", "mirrors")
+    registry.create_link("semantic:vector-memory:def", uid, "derives_from")
+
+    d = json.loads((await ai.delete_message({"message_id": r["id"]}))[0].text)
+    assert d["success"] is True
+    assert d["links_removed"] == 2
+
+    conn = sqlite3.connect(str(lr))
+    try:
+        left = conn.execute(
+            "SELECT COUNT(*) FROM entity_links WHERE source_id = ? OR target_id = ?",
+            (uid, uid),
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    assert left == 0, "dangling edges must not survive a delete"
 
 
 # ---------------------------------------------------------------------------
