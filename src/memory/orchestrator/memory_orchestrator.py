@@ -111,6 +111,35 @@ def _coerce_importance(value: object, default: float = 0.7) -> float:
         return default
 
 
+# P2.3 (roadmap 260611): лёгкая RU-нормализация для лексического поиска по
+# skill-learning JSONL — casefold + срез частотных суффиксов, чтобы кириллические
+# морфоформы матчились (та же идея, что stem_token в memory-first-hook /
+# top-K salient cache-key P1.2). Не полноценный стеммер — дешёвый и достаточный.
+_SL_RU_SUFFIXES = (
+    # 3-char first (longest-match), then 2-, then 1-char
+    "ами", "ями", "ого", "его", "ому", "ему", "ыми", "ими",
+    "ать", "ять", "ить", "ует", "ных", "ной", "ную", "ном",
+    "ов", "ев", "ам", "ям", "ом", "ем", "ах", "ях", "ий", "ый", "ой", "ие", "ые",
+    "ы", "и", "а", "я", "е", "у", "ю", "о",
+)
+
+
+def _sl_stem(token: str) -> str:
+    """Strip a common Russian suffix; English/short tokens pass through."""
+    if len(token) < 4 or not any("Ѐ" <= c <= "ӿ" for c in token):
+        return token
+    for suf in _SL_RU_SUFFIXES:
+        if token.endswith(suf) and len(token) - len(suf) >= 3:
+            return token[: -len(suf)]
+    return token
+
+
+def _sl_tokenize(text: str) -> set[str]:
+    """Casefold + tokenize + RU-stem → normalized token set for overlap scoring."""
+    tokens = re.findall(r"[a-zA-Zа-яА-ЯёЁ0-9_\-]+", text.casefold())
+    return {_sl_stem(t) for t in tokens if len(t) >= 2}
+
+
 def _find_jsonl_hash(path: Path, content_hash: str) -> str | None:
     """Return pattern_id of the first JSONL record matching content_hash, else None.
 

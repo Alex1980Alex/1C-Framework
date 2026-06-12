@@ -659,6 +659,9 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     # lexical was supposed to be the sole survivor (F11, roadmap 260610 D5).
     arms["pattern_lexical"] = _search_learned_patterns(query_tokens, time.monotonic(), limit)
 
+    # P2.2 (roadmap 260611): skill-learning JSONL arm — local file read, no network.
+    arms["skill_learning"] = _search_skill_learning(query_tokens, limit)
+
     # Per-arm hit counts before fusion — shows which signals actually fired.
     _trace_set("arms", {k: len(v) for k, v in arms.items()})
 
