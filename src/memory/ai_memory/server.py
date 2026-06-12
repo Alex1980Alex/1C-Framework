@@ -340,19 +340,49 @@ async def save_important_message(args: dict) -> list[TextContent]:
     ]
 
 
+def _tokenize(text: str) -> set[str]:
+    """casefold + RU-stem tokens (P2.G2); empty set if text_norm unavailable."""
+    try:
+        from ..text_norm import tokenize
+
+        return tokenize(text)
+    except Exception:
+        return set()
+
+
 async def search_messages(args: dict) -> list[TextContent]:
     query = args.get("query", "")
     limit = args.get("limit", 10)
 
+    # P2.G2 (roadmap 260612): bare ``LIKE %q%`` missed Cyrillic morphoforms
+    # (SQLite LOWER is ASCII-only). Scan an importance/recency-ordered window and
+    # rank by stemmed token overlap; fall back to legacy LIKE when the query
+    # yields no tokens (emoji/CJK) or text_norm is unavailable.
+    tokens = _tokenize(query)
     with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT id, content, importance, category, tags, created_at "
-            "FROM important_messages WHERE content LIKE ? OR tags LIKE ? "
-            "ORDER BY importance DESC, created_at DESC LIMIT ?",
-            (f"%{query}%", f"%{query}%", limit),
-        )
-        rows = cursor.fetchall()
+        if tokens:
+            cursor.execute(
+                "SELECT id, content, importance, category, tags, created_at "
+                "FROM important_messages "
+                "ORDER BY importance DESC, created_at DESC LIMIT 2000"
+            )
+            scored = []
+            for row in cursor.fetchall():
+                row_tokens = _tokenize(f"{row[1] or ''} {row[4] or ''}")
+                matched = len(tokens & row_tokens)
+                if matched:
+                    scored.append((matched / len(tokens), row))
+            scored.sort(key=lambda x: x[0], reverse=True)
+            rows = [row for _score, row in scored[:limit]]
+        else:
+            cursor.execute(
+                "SELECT id, content, importance, category, tags, created_at "
+                "FROM important_messages WHERE content LIKE ? OR tags LIKE ? "
+                "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                (f"%{query}%", f"%{query}%", limit),
+            )
+            rows = cursor.fetchall()
 
     messages = []
     for row in rows:
