@@ -37,9 +37,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from memory.ai_memory.db import connect as ai_connect  # noqa: E402
-from memory.ai_memory.db import resolve_db_path  # noqa: E402
-from memory.orchestrator.content_hash import hash_content  # noqa: E402
+from memory.ai_memory.db import connect as ai_connect
+from memory.ai_memory.db import resolve_db_path
+from memory.orchestrator.content_hash import hash_content
 
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
 COLLECTION = "learned_patterns"
