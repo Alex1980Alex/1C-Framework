@@ -50,7 +50,8 @@ class PyMuPDF4LLMLoader(BaseLoader):
         offset = 0
         for chunk in page_chunks:
             meta: Any = chunk["metadata"]
-            page_num = int(meta["page"])  # already 1-based
+            # pymupdf4llm <1.0 -> "page"; >=1.0 (PyMuPDF-aligned versioning) -> "page_number"
+            page_num = int(meta["page"] if "page" in meta else meta["page_number"])  # 1-based
             text: str = chunk.get("text", "") or ""
             page_texts.append(text)
             page_offsets.append((offset, page_num))

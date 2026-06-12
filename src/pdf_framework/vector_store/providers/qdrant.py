@@ -64,6 +64,9 @@ class QdrantVectorStore(BaseVectorStore):
         self._collection_name = settings.collection_name
         self._initialized = False
         self._has_sparse = False
+        # Layout marker: True = named vectors ({"dense": ...}), False = legacy
+        # unnamed single vector (e.g. pdf_documents_mrl_1024, wiki_pages_v1_mrl_1024)
+        self._has_named_dense = False
 
     async def initialize(self) -> None:
         """Initialize async Qdrant connection and create collection if needed."""
@@ -157,12 +160,16 @@ class QdrantVectorStore(BaseVectorStore):
             info = await self._client.get_collection(self._collection_name)
             count = info.points_count
 
-            # Determine sparse support after init
+            # Determine sparse support + vector layout after init.
+            # Upsert/search must match the ACTUAL collection layout: named dict
+            # for {"dense": ...} collections, flat list for legacy unnamed ones —
+            # otherwise Qdrant rejects with "Not existing vector name error: dense".
             sparse_config = info.config.params.sparse_vectors
             self._has_sparse = bool(
                 sparse_config
                 and "bm25" in (sparse_config if isinstance(sparse_config, dict) else {})
             )
+            self._has_named_dense = isinstance(info.config.params.vectors, dict)
 
             status = f"{count} points"
             if self._has_sparse:
@@ -229,10 +236,14 @@ class QdrantVectorStore(BaseVectorStore):
                     if k not in _STANDARD_PAYLOAD_FIELDS:
                         payload[k] = v
 
-                # Build vector dict: always include dense; add BM25 if supported
-                vector: dict | list = {"dense": embedding}
-                if bm25_doc_fn is not None:
-                    vector["bm25"] = bm25_doc_fn(chunk.content)
+                # Vector shape follows collection layout: named dict only for
+                # named-vector collections; flat list for legacy unnamed ones
+                if self._has_named_dense:
+                    vector: dict | list = {"dense": embedding}
+                    if bm25_doc_fn is not None:
+                        vector["bm25"] = bm25_doc_fn(chunk.content)
+                else:
+                    vector = embedding
 
                 points.append(PointStruct(id=qdrant_id, vector=vector, payload=payload))
 
@@ -275,7 +286,7 @@ class QdrantVectorStore(BaseVectorStore):
             search_filter = Filter(must=conditions)
 
         # Use named vector "dense" if collection has named config
-        using = "dense" if self._has_sparse else None
+        using = "dense" if self._has_named_dense else None
 
         result = await self._client.query_points(
             collection_name=self._collection_name,
@@ -318,7 +329,7 @@ class QdrantVectorStore(BaseVectorStore):
             search_filter = Filter(must=conditions)
 
         # Fetch more candidates with their vectors
-        using = "dense" if self._has_sparse else None
+        using = "dense" if self._has_named_dense else None
         result = await self._client.query_points(
             collection_name=self._collection_name,
             query=query_embedding,
