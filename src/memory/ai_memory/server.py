@@ -42,6 +42,20 @@ DB_PATH = resolve_db_path()
 _IMPORTANCE_LABELS = {"critical": 1.0, "high": 0.9, "medium": 0.6, "normal": 0.5, "low": 0.3}
 
 
+def _safe_json(raw: object, fallback_wrap: bool = False):
+    """Parse a stored JSON column fail-soft (chain C2, roadmap 260612).
+
+    Malformed legacy rows (hand-edited tags, NULL metadata) must degrade to an
+    empty/wrapped value instead of blowing up every reader that scans the table.
+    """
+    if not raw:
+        return [] if fallback_wrap else {}
+    try:
+        return json.loads(raw)  # type: ignore[arg-type]
+    except (json.JSONDecodeError, TypeError):
+        return [str(raw)] if fallback_wrap else {}
+
+
 def _coerce_importance(value: object, default: float = 0.7) -> float:
     """Coerce an importance value to float clamped to [0, 1]."""
     if isinstance(value, str):
