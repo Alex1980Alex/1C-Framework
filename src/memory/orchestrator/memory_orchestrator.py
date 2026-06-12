@@ -40,6 +40,8 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from ..ai_memory.db import connect as _ai_db_connect
+from ..ai_memory.db import resolve_db_path as _memory_ai_db_path
 from ..ai_memory.services.audit_service import AuditAction, AuditQuery, AuditService
 from ..ai_memory.services.ttl_service import TTLPolicy, TTLService
 from ..ai_memory.services.versioning_service import ChangeType, VersioningService
