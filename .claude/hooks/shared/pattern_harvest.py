@@ -110,6 +110,9 @@ class HarvestItem:
     pattern_type: str
     source: str
     tags: list[str] = field(default_factory=list)
+    # P1.2: routing signal — >=QUARANTINE_THRESHOLD goes straight to Qdrant
+    # (human-confirmed sources), below it lands in the pending quarantine.
+    confidence: float = 0.7
 
     @property
     def content_hash(self) -> str:
@@ -213,6 +216,7 @@ def iter_confirmed_drafts(drafts_dir: Path = DRAFTS_DIR) -> list[HarvestItem]:
                 pattern_type="code-convention",
                 source=f"feedback-draft:{path.name}",
                 tags=["feedback", "harvested"],
+                confidence=0.85,  # human-confirmed → direct route (P1.2)
             )
         )
     return items
