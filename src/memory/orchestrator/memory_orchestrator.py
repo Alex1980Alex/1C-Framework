@@ -111,6 +111,28 @@ def _coerce_importance(value: object, default: float = 0.7) -> float:
         return default
 
 
+def _find_jsonl_hash(path: Path, content_hash: str) -> str | None:
+    """Return pattern_id of the first JSONL record matching content_hash, else None.
+
+    Lightweight line-scan (skill-learning silos are small); malformed lines skipped.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get("content_hash") == content_hash:
+                    return rec.get("pattern_id", "")
+    except OSError:
+        return None
+    return None
+
+
 # =============================================================================
 # Configuration
 # =============================================================================
