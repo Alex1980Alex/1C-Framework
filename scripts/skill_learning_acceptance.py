@@ -159,22 +159,14 @@ def main() -> int:
     m = collect_metrics()
     crit = evaluate(m)
     if args.json:
-        out = json.dumps(
-            {**m, "criteria": crit, "all_pass": all(crit.values())}, ensure_ascii=False
+        _emit(
+            json.dumps({**m, "criteria": crit, "all_pass": all(crit.values())}, ensure_ascii=False)
         )
-        sys.stdout.buffer.write(out.encode("utf-8") + b"\n")
         return 0
-    text = render(m, crit, args.final)
-    sys.stdout.buffer.write(text.encode("utf-8") + b"\n")
-    if not args.no_report:
-        try:
-            REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-            stamp = datetime.now().strftime("%Y%m%d")
-            (REPORTS_DIR / f"skill_learning_acceptance_{stamp}.md").write_text(
-                text, encoding="utf-8"
-            )
-        except OSError:
-            pass
+    _emit(
+        render(m, crit, args.final),
+        report_name=None if args.no_report else "skill_learning_acceptance",
+    )
     return 0
 
 
