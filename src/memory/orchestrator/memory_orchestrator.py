@@ -26,7 +26,6 @@ Adapted: Direct function calls instead of HTTP, 3 target servers, MCP server.
 import asyncio
 import json
 import logging
-import os
 import re
 import sqlite3
 import sys
@@ -2217,7 +2216,7 @@ class MemoryOrchestrator:
 
         if subsystems is None or "memory-ai" in subsystems:
             try:
-                db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+                db_path = _memory_ai_db_path()
                 checks["memory-ai"] = {
                     "status": "healthy" if db_path.exists() else "no_data",
                     "db_path": str(db_path),
