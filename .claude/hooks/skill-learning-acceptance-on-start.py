@@ -49,8 +49,16 @@ def _mark_ran() -> None:
 
 
 def _verdict_logged() -> bool:
+    """Маркер считается только в форме «Acceptance вердикт: PASS|FAIL» — голая
+    подстрока встречается в §18 в тексте, описывающем сам механизм (code-verify
+    finding: false self-termination до показа вердикта)."""
     try:
-        return FINAL_MARKER in ROADMAP.read_text(encoding="utf-8")
+        return (
+            re.search(
+                rf"{FINAL_MARKER}:\s*(PASS|FAIL)", ROADMAP.read_text(encoding="utf-8")
+            )
+            is not None
+        )
     except Exception:
         return False
 
@@ -66,7 +74,10 @@ class SkillLearningAcceptance(BaseHook):
             return None  # прогресс — не чаще раза в день
 
         try:
-            sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+            # append, не insert(0): не затенять hooks-local пакеты ([[feedback-hook-src-shared-collision]])
+            scripts_dir = str(PROJECT_ROOT / "scripts")
+            if scripts_dir not in sys.path:
+                sys.path.append(scripts_dir)
             import skill_learning_acceptance as sla
 
             m = sla.collect_metrics()
