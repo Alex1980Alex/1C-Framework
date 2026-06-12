@@ -600,6 +600,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
         "skill": [],
         "pattern_dense": [],
         "pattern_lexical": [],
+        "skill_learning": [],
     }
 
     try:
