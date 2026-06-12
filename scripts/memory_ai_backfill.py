@@ -124,6 +124,16 @@ def merge_duplicates(conn: sqlite3.Connection, apply: bool) -> list[dict]:
                         "DELETE FROM entity_links WHERE source_id = ? AND target_id = ?",
                         (survivor_uid, survivor_uid),
                     )
+                    # Re-pointing can collide with an identical existing edge —
+                    # keep the oldest of each (source,target,type) group.
+                    lr_conn.execute(
+                        "DELETE FROM entity_links WHERE link_id NOT IN ("
+                        "  SELECT MIN(link_id) FROM entity_links"
+                        "  WHERE source_id = ? OR target_id = ?"
+                        "  GROUP BY source_id, target_id, link_type"
+                        ") AND (source_id = ? OR target_id = ?)",
+                        (survivor_uid, survivor_uid, survivor_uid, survivor_uid),
+                    )
                 conn.execute(
                     "UPDATE important_messages SET importance = ?, indexed_in_qdrant = ? "
                     "WHERE id = ?",
