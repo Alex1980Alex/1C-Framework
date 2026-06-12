@@ -22,6 +22,9 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from .db import connect as _connect
+from .db import resolve_db_path
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -30,9 +33,11 @@ logging.basicConfig(
 logger = logging.getLogger("memory-ai")
 
 # Database path — project-local; MEMORY_AI_DB_PATH overrides (test isolation,
-# same env var the orchestrator's propagation handler honors).
+# same env var the orchestrator's propagation handler honors). Resolution and
+# connection setup (WAL + busy_timeout, P0.4) live in .db — shared with the
+# orchestrator, hooks and scripts.
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-DB_PATH = Path(os.environ.get("MEMORY_AI_DB_PATH") or _PROJECT_ROOT / "data" / "memory_ai.db")
+DB_PATH = resolve_db_path()
 
 # Importance may arrive as a str label ("high") via loosely-typed callers;
 # SQLite TEXT affinity would store it as-is and break float comparisons on read.
