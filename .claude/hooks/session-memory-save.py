@@ -222,6 +222,38 @@ def extract_tags(ctx):
     return sorted(tags)[:10]
 
 
+def _content_hash(content):
+    """Fail-soft canonical content_hash (§26 write-contract, roadmap 260612 P1).
+
+    ``append`` (not ``insert(0)``) keeps hooks-local ``shared.*`` ahead of
+    ``src/shared`` — see feedback-hook-src-shared-collision.
+    """
+    try:
+        src = str(PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.append(src)
+        from memory.orchestrator.content_hash import hash_content
+
+        return hash_content(content)
+    except Exception:
+        return ""
+
+
+def _record_ingest(action, content_hash=""):
+    """Fail-soft §26 ingestion-metrics emit (W2 was invisible to fact-trace)."""
+    try:
+        src = str(PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.append(src)
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(
+            "memory_ai", action, content_hash=content_hash, harvester="session-memory-save"
+        )
+    except Exception:
+        pass
+
+
 def save_to_sqlite(ctx):
     """Write session summary to SQLite memory_ai.db."""
     if not SQLITE_DB.exists():
@@ -231,6 +263,7 @@ def save_to_sqlite(ctx):
     importance = calculate_importance(ctx)
     tags = extract_tags(ctx)
     now = datetime.now().isoformat()
+    content_hash = _content_hash(content)
     metadata = {
         "session_id": ctx["session_id"],
         "session_date": date.today().isoformat(),
@@ -239,9 +272,14 @@ def save_to_sqlite(ctx):
         "skills_count": len(ctx["skills"]),
         "skills": ctx["skills"][:10],
         "top_files": ctx["files_changed"][:20],
+        "content_hash": content_hash,
     }
 
     conn = sqlite3.connect(str(SQLITE_DB), timeout=2)
+    try:
+        conn.execute("PRAGMA busy_timeout=5000")
+    except sqlite3.Error:
+        pass
     conn.execute(
         "INSERT INTO important_messages "
         "(id, content, importance, category, tags, created_at, updated_at, metadata) "
