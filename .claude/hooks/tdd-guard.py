@@ -19,9 +19,11 @@ Write/Edit** — минимизирует риск; hard-block рассматр�
 """
 
 import glob
+import json
 import os
 import re
 import sys
+from datetime import UTC, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -29,9 +31,27 @@ from base import BaseHook, HookInput, HookOutput
 
 _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(_HOOK_DIR))  # .claude/hooks -> repo root
+_EVENTS_LOG = os.path.join(PROJECT_ROOT, ".claude", "cache", "tdd-guard-events.jsonl")
 
 # Сигнатура «новой логики, достойной теста» — добавление функции/класса.
 _DEF_RE = re.compile(r"^\s*(?:async\s+def|def|class)\s+\w", re.MULTILINE)
+
+
+def _log_event(file_rel: str, module: str) -> None:
+    """260613 4.3: кеш advisory-событий для авто-валидации (tdd_guard_validation.py).
+    Fail-soft, UTF-8 байты (cp1251-pipe safe)."""
+    try:
+        os.makedirs(os.path.dirname(_EVENTS_LOG), exist_ok=True)
+        rec = {
+            "ts": datetime.now(UTC).isoformat(),
+            "file": file_rel,
+            "module": module,
+            "event": "advisory_no_test",
+        }
+        with open(_EVENTS_LOG, "ab") as f:
+            f.write((json.dumps(rec, ensure_ascii=False) + "\n").encode("utf-8"))
+    except Exception:
+        pass
 
 
 class TddGuard(BaseHook):
@@ -74,7 +94,8 @@ class TddGuard(BaseHook):
             if glob.glob(pat, recursive=True):
                 return None  # тест есть — ок
 
-        # 5. ADVISORY (НЕ блок)
+        # 5. ADVISORY (НЕ блок) + кеш события для авто-валидации (4.3)
+        _log_event(fp, modstem)
         return HookOutput().system_message(
             f"[TDD-GUARD] Нет теста для модуля '{stem}' "
             f"(искал tests/**/test_{modstem}.py). TDD: напиши failing-тест ПЕРЕД "

@@ -13,9 +13,19 @@
 > будущее усиление). Smoke PASS: OFF=no-op / ON+нет-теста=advisory / ON+тест-есть=тихо
 > / non-src=тихо; compile+ruff clean.
 > **НЕ зарегистрирован в settings.json** (surgical/non-breaking — harness-критичный
-> файл не трогаем ради dormant-хука; `simplicity-discipline`). **Включение (старт
-> недели валидации 4.3):** (1) добавить PreToolUse `Write|Edit` entry с `tdd-guard.py`
-> в `.claude/settings.json`; (2) `TDD_GUARD_ENABLE=1`. Реверс = снять оба.
+> файл не трогаем ради dormant-хука; `simplicity-discipline`).
+>
+> **Авто-валидация (260613 Этап 4.3, реализовано):** полный observe→cache→monitor→
+> decide контур: tdd-guard кеширует advisory в `.claude/cache/tdd-guard-events.jsonl`;
+> [`scripts/tdd_guard_validation.py`](../../../../scripts/tdd_guard_validation.py)
+> (acceptance_common-consumer, окно 06-13→06-20) считает advisories/follow_rate и
+> **авто-решает** hard-block (low-noise + follow_rate≥0.5) vs keep-advisory;
+> SessionStart-баннер [`tdd-guard-validation-on-start.py`](../../../../.claude/hooks/tdd-guard-validation-on-start.py)
+> эмитит прогресс+рекомендацию раз/день. **Включено локально** (`settings.local.json`
+> — per-user, gitignored: PreToolUse `tdd-guard.py` + SessionStart-баннер +
+> `TDD_GUARD_ENABLE=1`); team `settings.json` НЕ тронут. Активируется со след. сессии
+> (settings читаются на старте). Реверс = снять записи из `settings.local.json`.
+> На закрытии окна авто-рекомендация → решение hard-block vs advisory (обновит этот ADR).
 
 ## Контекст
 Ресёрч для шага тестирования: tdd-guard (red-first enforcement), Playwright MCP
