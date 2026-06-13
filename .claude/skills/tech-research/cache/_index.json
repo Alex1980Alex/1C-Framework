@@ -10,7 +10,7 @@
     "search",
     "tools"
   ],
-  "last_updated": "2026-06-01",
+  "last_updated": "2026-06-13",
   "topics": {
     "memory-surfacing-ranking-2026": {
       "file": "memory-surfacing-ranking-2026.md",
@@ -521,6 +521,25 @@
         "generative-agents",
         "bounded-memory",
         "cross-store-sync"
+      ]
+    },
+    "duckdb-jsonl-analytics-2026": {
+      "file": "duckdb-jsonl-analytics-2026.md",
+      "domain": "tools",
+      "category": "tool",
+      "created": "2026-06-13",
+      "last_verified": "2026-06-13",
+      "version": "DuckDB >=1.1.x",
+      "summary": "DuckDB SQL-аналитика над JSONL/Parquet логами без миграции: read_json_auto, union_by_name, approx_quantile, pre-clean паттерн, issue #14259 pitfall, экспорт в Parquet.",
+      "keywords": [
+        "duckdb",
+        "read_json_auto",
+        "jsonl",
+        "union_by_name",
+        "approx_quantile",
+        "parquet",
+        "in-memory sql",
+        "newline_delimited"
       ]
     }
   }
