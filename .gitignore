@@ -35,6 +35,9 @@ coverage.xml
 # Data (all DB files and large data)
 data/
 !data/.gitkeep
+# 260612 S5: ground-truth должен доезжать до CI checkout — иначе skill-router-eval
+# вечно идёт по skip-ветке, маскируя вердикт (job был SUCCESS при фактическом F1<0.75)
+!data/skill-router-ground-truth.jsonl
 
 # IDE
 .idea/
