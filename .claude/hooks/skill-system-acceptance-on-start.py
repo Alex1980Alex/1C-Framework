@@ -26,7 +26,7 @@ from shared.acceptance_watch import acceptance_banner
 def _progress(m: dict, _crit: dict) -> str:
     return (
         f"ghosts={m['ghosts']}, drift={m['drift']}, changed={m['changed']}, "
-        f"ingest={m['ingest_events']}, F1(held-out)={m['router_f1']}, "
+        f"ingest={m['ingest_events']}, F1(pooled action)={m['router_f1']}, "
         f"floor_gated={m['floor_gated']}, arm_fired={m['arm_fired']}/{m['invocations']}, "
         f"health_age={m['health_age_days']}d"
     )
