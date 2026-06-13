@@ -280,6 +280,23 @@
         "approval-gate",
         "artifact-handoff"
       ]
+    },
+    {
+      "id": "ADR-018",
+      "file": "018-mandatory-auto-pipeline-protocol.md",
+      "title": "Обязательная авто-пайплайн парадигма — self-driven, hard-block для всех задач",
+      "status": "accepted",
+      "date": "2026-06-13",
+      "research": "../cache/sdlc-pipeline-orchestration-patterns.md",
+      "tags": [
+        "pipeline",
+        "sdlc",
+        "mandatory",
+        "hard-block",
+        "hooks",
+        "self-driven",
+        "extends-adr-017"
+      ]
     }
   ]
 }
