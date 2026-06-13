@@ -215,6 +215,15 @@
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
       "tags": ["tooling-adoption", "testing", "tdd-guard", "playwright", "security", "sdlc-step-4"]
+    },
+    {
+      "id": "ADR-016",
+      "file": "016-tooling-adoption-eval-tail-verdicts.md",
+      "title": "Tooling Adoption EVAL-хвост — Pyright SKIP / Playwright DEFER / ToB SKIP / Grill Me SKIP",
+      "status": "accepted",
+      "date": "2026-06-13",
+      "research": "../cache/claude-code-ecosystem-tools-2026.md",
+      "tags": ["tooling-adoption", "eval", "pyright", "playwright", "trail-of-bits", "grill-me", "skip", "defer"]
     }
   ]
 }
