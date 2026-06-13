@@ -1,9 +1,15 @@
 # ADR-013: Дизайн — architecture-research ядро + simplicity-discipline; frontend/Figma SKIP
 
 **Дата:** 2026-06-13
-**Статус:** accepted
+**Статус:** accepted (реализовано 2026-06-13 — Этап 2.2)
 **Исследование:** ../cache/claude-code-ecosystem-tools-2026.md
 **Шаг SDLC:** 2. Дизайн
+
+> **Реализация (260613 Этап 2.2):** из двух опций («секция в architecture-research» vs
+> «отдельный skill») выбран **отдельный skill** [`simplicity-discipline`](../../simplicity-discipline/SKILL.md)
+> (4 правила Karpathy + чеклист). **БЕЗ router-bundle записи** → нулевой regress
+> `action_f1` (роутер не эмитит скилл вне бандла — структурно невозможно), доступен
+> явным `Skill()` + semantic-surfacing (skill_library, floor-гейт 0.55). Реверс = удалить каталог.
 
 ## Контекст
 Ресёрч предложил design-skills: Vercel (Web Design / React / Composition), Andrej
