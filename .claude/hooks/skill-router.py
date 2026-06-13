@@ -377,13 +377,9 @@ class SkillRouter(BaseHook):
                 scores["research-1c"] = scores.get("research-1c", 0) + 3
         # Буквальное имя скилла в промпте — сильнейший сигнал (FN-класс
         # «1c-debug-hmr переключись на...»: одиночный кейворд не пробивал min_score).
-        # 260613 F3: матч ТОЛЬКО как целое слово (\b...\b). Подстрочный `in` ловил
-        # однословные родовые имена (`deployment`, `autoresearch`) внутри несвязанных
-        # слов/путей ("redeployment", "deployments") и форсил бандл (+4 >> min_score).
         for name, bundle in bundles.items():
             for skill in bundle.get("skills", []):
-                sk = skill.lower()
-                if len(sk) >= 6 and re.search(rf"\b{re.escape(sk)}\b", prompt_lower):
+                if len(skill) >= 6 and skill.lower() in prompt_lower:
                     scores[name] = scores.get(name, 0) + 4
                     break
 
