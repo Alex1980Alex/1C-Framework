@@ -1,95 +1,95 @@
-{"prompt": "создай langgraph агента для RAG", "expected_skills": ["langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action"}
-{"prompt": "как настроить qdrant для sparse vectors", "expected_skills": ["qdrant-operations", "embedding-models"], "expected_bundles": ["data-stores"], "intent": "action"}
-{"prompt": "добавь обработку проведения в документ Заказ", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "что такое RAG?", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "/help", "expected_skills": [], "expected_bundles": [], "intent": "system"}
-{"prompt": "настрой .env файл для production", "expected_skills": ["framework-config"], "expected_bundles": ["framework-ops"], "intent": "action"}
-{"prompt": "создай новый hook для автокоммита", "expected_skills": ["create-hook", "hooks-skills-mcp-triad"], "expected_bundles": ["creation"], "intent": "action"}
-{"prompt": "индексируй PDF документ", "expected_skills": ["indexing-pipeline"], "expected_bundles": ["indexing"], "intent": "action"}
-{"prompt": "отладка поиска: результаты нерелевантные", "expected_skills": ["search-pipeline-debug", "pdf-search"], "expected_bundles": ["search"], "intent": "action"}
-{"prompt": "как работает embedding model e5?", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "добавь langchain агента с create_agent", "expected_skills": ["langchain-core"], "expected_bundles": ["langchain-core"], "intent": "action"}
-{"prompt": "реализуй REST API endpoint для загрузки PDF", "expected_skills": ["framework-api", "framework-cli"], "expected_bundles": ["framework-use"], "intent": "action"}
-{"prompt": "сделай docker compose для production", "expected_skills": ["deployment"], "expected_bundles": ["deploy"], "intent": "action"}
-{"prompt": "реализуй streaming через SSE для langgraph", "expected_skills": ["langchain-streaming", "langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action"}
-{"prompt": "настрой multi-agent с supervisor pattern", "expected_skills": ["langchain-multiagent", "langchain-core"], "expected_bundles": ["langchain-core"], "intent": "action"}
-{"prompt": "добавь retry с exponential backoff для API вызовов", "expected_skills": ["tenacity-retry"], "expected_bundles": ["tenacity-retry"], "intent": "action"}
-{"prompt": "регистр сведений запись данных в 1С", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "переименуй переменную x в total", "expected_skills": [], "expected_bundles": [], "intent": "action"}
-{"prompt": "git status", "expected_skills": [], "expected_bundles": [], "intent": "system"}
-{"prompt": "объясни архитектуру проекта", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "хук не работает, не срабатывает PostToolUse", "expected_skills": ["hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action"}
-{"prompt": "как подключить MCP сервер к langchain", "expected_skills": ["langchain-mcp-tools", "langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action"}
-{"prompt": "проверь код на соответствие", "expected_skills": ["code-verify"], "expected_bundles": ["code-verify"], "intent": "action"}
-{"prompt": "аудит документации проекта", "expected_skills": ["audit-docs"], "expected_bundles": ["docs"], "intent": "action"}
-{"prompt": "создай плагин для Claude Code", "expected_skills": ["claude-code-plugins", "claude-code-subagents", "claude-code-programmatic"], "expected_bundles": ["claude-code-dev"], "intent": "action"}
-{"prompt": "настрой подагента для делегирования задач", "expected_skills": ["claude-code-subagents", "claude-code-plugins", "claude-code-programmatic"], "expected_bundles": ["claude-code-dev"], "intent": "action"}
-{"prompt": "запусти RAGAS benchmark для оценки качества", "expected_skills": ["evaluation-benchmark"], "expected_bundles": ["eval-benchmark"], "intent": "action"}
-{"prompt": "построй граф знаний из документов", "expected_skills": ["graph-operations"], "expected_bundles": ["graph"], "intent": "action"}
-{"prompt": "оптимизируй промпты через DSPy", "expected_skills": ["prompt-engineering", "agent-orchestration"], "expected_bundles": ["agents"], "intent": "action"}
-{"prompt": "добавь BM25 hybrid search в pipeline", "expected_skills": ["tech-research"], "expected_bundles": ["research-tech"], "intent": "action"}
-{"prompt": "настрой github actions для PR review", "expected_skills": ["claude-code-github-actions", "claude-code-admin"], "expected_bundles": ["claude-code-ops"], "intent": "action"}
-{"prompt": "запусти claude в headless режиме с -p", "expected_skills": ["claude-code-programmatic", "claude-code-plugins", "claude-code-subagents"], "expected_bundles": ["claude-code-dev"], "intent": "action"}
-{"prompt": "конвертируй документацию в кеш скиллов", "expected_skills": ["doc-to-cache", "audit-docs"], "expected_bundles": ["docs"], "intent": "action"}
-{"prompt": "придумай архитектуру для нового модуля авторизации", "expected_skills": ["task-evaluation"], "expected_bundles": ["workflow"], "intent": "action"}
-{"prompt": "исследуй и предложи лучший подход к кешированию", "expected_skills": ["task-evaluation"], "expected_bundles": ["workflow"], "intent": "action"}
-{"prompt": "ошибка при запуске сервера timeout", "expected_skills": ["framework-troubleshooting", "framework-config"], "expected_bundles": ["framework-ops", "framework-troubleshoot"], "intent": "action"}
-{"prompt": "привет", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "настрой семантический кеш для запросов", "expected_skills": ["framework-caching", "framework-config"], "expected_bundles": ["framework-ops", "framework-cache"], "intent": "action"}
-{"prompt": "добавь CLI команду для переиндексации", "expected_skills": ["framework-cli"], "expected_bundles": ["framework-use"], "intent": "action"}
-{"prompt": "покажи архитектуру хуков в проекте", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "добавь поддержку табличной части в обработку документа 1С", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "реализуй deep research agent с планированием", "expected_skills": ["agent-orchestration"], "expected_bundles": ["agents"], "intent": "action"}
-{"prompt": "что делает фабрика триады?", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "реализуй MCP server и Gradio UI", "expected_skills": ["framework-mcp-ui", "framework-cli"], "expected_bundles": ["framework-use"], "intent": "action"}
-{"prompt": "хук не находит python на Windows, обратные слеши", "expected_skills": ["windows-hooks-paths", "hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action"}
-{"prompt": "настрой checkpointer для langgraph с persistence", "expected_skills": ["langgraph-memory-persistence", "langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action"}
-{"prompt": "добавь monitoring с OpenTelemetry для Claude Code", "expected_skills": ["claude-code-admin"], "expected_bundles": ["claude-code-ops"], "intent": "action"}
-{"prompt": "реализуй learning loop для нового домена", "expected_skills": ["learning-loop"], "expected_bundles": ["learning-loop"], "intent": "action"}
-{"prompt": "настрой CLAUDE.md и settings.json для проекта", "expected_skills": ["claude-code-settings"], "expected_bundles": ["claude-code-config"], "intent": "action"}
-{"prompt": "как установить фреймворк с нуля", "expected_skills": ["framework-quickstart", "framework-cli"], "expected_bundles": ["framework-use"], "intent": "action"}
-{"prompt": "используй ColPali для visual embeddings", "expected_skills": ["embedding-models"], "expected_bundles": ["data-stores"], "intent": "action"}
-{"prompt": "добавь git status parsing с porcelain форматом", "expected_skills": ["git-porcelain-parsing"], "expected_bundles": ["git-parsing"], "intent": "action"}
-{"prompt": "реализуй enforcer pattern для stop хука", "expected_skills": ["hook-enforcement-pattern", "hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action"}
-{"prompt": "расскажи как работает триада hook + skill + mcp", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "добавь hotkeys и vim mode в CLI", "expected_skills": ["claude-code-cli-interactive", "claude-code-settings"], "expected_bundles": ["claude-code-config"], "intent": "action"}
-{"prompt": "настрой chrome интеграцию и statusline", "expected_skills": ["claude-code-terminal-ux"], "expected_bundles": [], "intent": "action"}
-{"prompt": "расскажи про RAG agent tutorial в langchain", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "настрой VS Code extension для Claude Code", "expected_skills": ["claude-code-vscode"], "expected_bundles": [], "intent": "action"}
-{"prompt": "добавь вебхук для Streamlit dashboard", "expected_skills": [], "expected_bundles": [], "intent": "action"}
-{"prompt": "проверь покрытие документации", "expected_skills": ["audit-docs"], "expected_bundles": ["docs"], "intent": "action"}
-{"prompt": "добавь записи в регистр накопления Продажи", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "покажи все таски", "expected_skills": [], "expected_bundles": [], "intent": "system"}
-{"prompt": "что нового в langgraph 0.3?", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
-{"prompt": "сделай скилл из документации по FastAPI", "expected_skills": ["doc-to-skill"], "expected_bundles": [], "intent": "action"}
-{"prompt": "помоги с индексацией документов", "expected_skills": ["indexing-pipeline"], "expected_bundles": ["indexing"], "intent": "action"}
-{"prompt": "извлеки связи между концепциями из статей", "expected_skills": ["graph-operations"], "expected_bundles": ["graph"], "intent": "action"}
-{"prompt": "автоматически повторяй неудачные сетевые запросы с задержками", "expected_skills": ["tenacity-retry"], "expected_bundles": ["tenacity-retry"], "intent": "action"}
-{"prompt": "запусти помощника из скрипта без UI", "expected_skills": ["claude-code-programmatic", "claude-code-plugins", "claude-code-subagents"], "expected_bundles": ["claude-code-dev"], "intent": "action"}
-{"prompt": "проверь все ли фичи описаны в документации", "expected_skills": ["audit-docs"], "expected_bundles": ["docs"], "intent": "action"}
-{"prompt": "разверни систему в контейнерах для продакшна", "expected_skills": ["deployment"], "expected_bundles": ["deploy"], "intent": "action"}
-{"prompt": "построй граф с узлами и условными рёбрами для агента", "expected_skills": ["langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action"}
-{"prompt": "измерь качество нашего поиска по документам", "expected_skills": ["evaluation-benchmark"], "expected_bundles": ["eval-benchmark"], "intent": "action"}
-{"prompt": "мой скрипт автоматизации не срабатывает", "expected_skills": ["hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action"}
-{"prompt": "как включается механизм с занесением сертификатов", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "НачалоПериода КонецПериода должен заполняться через период", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "проверь как заполняеться пункт погрузки", "expected_skills": ["1c-doc-research", "bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "таличная часть перестала заполняться", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "данные в запросе получаються проблемма в выводе", "expected_skills": ["bsl-development", "1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "ЗаписьЖурналаРегистрации не рекомендуется передавать в качестве параметра функцию что делать", "expected_skills": ["1c-doc-research", "bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "список базб при открытии 1С пуст для выбора", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "а как реализован обмен в документе Документ.гкс_ОснованиеДляДвиженияЗапасов", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "нужно открывать форму не в отдельном окне а поверх текущего", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "давай вернем открытие формы не по верх текущей а в отдельном окне как было", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "при двойным клике срабатывает процедура ФайлыВыбор если это pdf документ открыть просмотр", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "Процедура ЗаполнитьТабличныйДокументАктВозврата не вижу что бы ты заполнял", "expected_skills": ["bsl-development", "code-verify"], "expected_bundles": ["research-1c", "code-verify"], "intent": "action"}
-{"prompt": "ДолжностьКладовщика как заполняеться и Кладовщик", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "Srvr=\"DESKTOP-TNU600C\";Ref=\"ИБTransportManagementDevelop\" конфигурация не запускается", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "1c-debug-hmr  переключсь на тестирование всех проецессво с максимальной автамтизацией", "expected_skills": ["1c-debug-hmr"], "expected_bundles": ["1c-debug-hmr"], "intent": "action"}
-{"prompt": "Это race: arm_next_rphost дренит только один первый halt, а быстрый JOB успел стать вторым", "expected_skills": ["1c-debug-hmr"], "expected_bundles": ["1c-debug-hmr"], "intent": "action"}
-{"prompt": "сделай анализ примечания на скриншоте и твоего макета на соответсвие", "expected_skills": ["code-verify", "1c-doc-research"], "expected_bundles": ["code-verify", "research-1c"], "intent": "action"}
-{"prompt": "предлогаю с момоерта когда мы перенесли чтение pdf с сервера на клиент окатить назад", "expected_skills": ["bsl-development", "1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action"}
-{"prompt": "resume: investigate docs-change-enforcer sentinel and clear the two pending docs", "expected_skills": ["hook-debugging"], "expected_bundles": ["hooks"], "intent": "action"}
-{"prompt": "docs/roadmap/260611_ROADMAP_MEMORY_GOVERNANCE_WIRING.md приступай к реализации", "expected_skills": ["memory-unified"], "expected_bundles": ["memory"], "intent": "action"}
-{"prompt": "lazy-mcp failed в чем проблемма?", "expected_skills": [], "expected_bundles": [], "intent": "action"}
-{"prompt": "Канал нестабилен как усидить стабильность?", "expected_skills": [], "expected_bundles": [], "intent": "informational"}
+{"prompt": "создай langgraph агента для RAG", "expected_skills": ["langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "как настроить qdrant для sparse vectors", "expected_skills": ["qdrant-operations", "embedding-models"], "expected_bundles": ["data-stores"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "добавь обработку проведения в документ Заказ", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "что такое RAG?", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "train"}
+{"prompt": "/help", "expected_skills": [], "expected_bundles": [], "intent": "system", "source": "spec", "split": "test"}
+{"prompt": "настрой .env файл для production", "expected_skills": ["framework-config"], "expected_bundles": ["framework-ops"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "создай новый hook для автокоммита", "expected_skills": ["create-hook", "hooks-skills-mcp-triad"], "expected_bundles": ["creation"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "индексируй PDF документ", "expected_skills": ["indexing-pipeline"], "expected_bundles": ["indexing"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "отладка поиска: результаты нерелевантные", "expected_skills": ["search-pipeline-debug", "pdf-search"], "expected_bundles": ["search"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "как работает embedding model e5?", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "test"}
+{"prompt": "добавь langchain агента с create_agent", "expected_skills": ["langchain-core"], "expected_bundles": ["langchain-core"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "реализуй REST API endpoint для загрузки PDF", "expected_skills": ["framework-api", "framework-cli"], "expected_bundles": ["framework-use"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "сделай docker compose для production", "expected_skills": ["deployment"], "expected_bundles": ["deploy"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "реализуй streaming через SSE для langgraph", "expected_skills": ["langchain-streaming", "langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "настрой multi-agent с supervisor pattern", "expected_skills": ["langchain-multiagent", "langchain-core"], "expected_bundles": ["langchain-core"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "добавь retry с exponential backoff для API вызовов", "expected_skills": ["tenacity-retry"], "expected_bundles": ["tenacity-retry"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "регистр сведений запись данных в 1С", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "переименуй переменную x в total", "expected_skills": [], "expected_bundles": [], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "git status", "expected_skills": [], "expected_bundles": [], "intent": "system", "source": "spec", "split": "train"}
+{"prompt": "объясни архитектуру проекта", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "test"}
+{"prompt": "хук не работает, не срабатывает PostToolUse", "expected_skills": ["hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "как подключить MCP сервер к langchain", "expected_skills": ["langchain-mcp-tools", "langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "проверь код на соответствие", "expected_skills": ["code-verify"], "expected_bundles": ["code-verify"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "аудит документации проекта", "expected_skills": ["audit-docs"], "expected_bundles": ["docs"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "создай плагин для Claude Code", "expected_skills": ["claude-code-plugins", "claude-code-subagents", "claude-code-programmatic"], "expected_bundles": ["claude-code-dev"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "настрой подагента для делегирования задач", "expected_skills": ["claude-code-subagents", "claude-code-plugins", "claude-code-programmatic"], "expected_bundles": ["claude-code-dev"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "запусти RAGAS benchmark для оценки качества", "expected_skills": ["evaluation-benchmark"], "expected_bundles": ["eval-benchmark"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "построй граф знаний из документов", "expected_skills": ["graph-operations"], "expected_bundles": ["graph"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "оптимизируй промпты через DSPy", "expected_skills": ["prompt-engineering", "agent-orchestration"], "expected_bundles": ["agents"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "добавь BM25 hybrid search в pipeline", "expected_skills": ["tech-research"], "expected_bundles": ["research-tech"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "настрой github actions для PR review", "expected_skills": ["claude-code-github-actions", "claude-code-admin"], "expected_bundles": ["claude-code-ops"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "запусти claude в headless режиме с -p", "expected_skills": ["claude-code-programmatic", "claude-code-plugins", "claude-code-subagents"], "expected_bundles": ["claude-code-dev"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "конвертируй документацию в кеш скиллов", "expected_skills": ["doc-to-cache", "audit-docs"], "expected_bundles": ["docs"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "придумай архитектуру для нового модуля авторизации", "expected_skills": ["task-evaluation"], "expected_bundles": ["workflow"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "исследуй и предложи лучший подход к кешированию", "expected_skills": ["task-evaluation"], "expected_bundles": ["workflow"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "ошибка при запуске сервера timeout", "expected_skills": ["framework-troubleshooting", "framework-config"], "expected_bundles": ["framework-ops", "framework-troubleshoot"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "привет", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "train"}
+{"prompt": "настрой семантический кеш для запросов", "expected_skills": ["framework-caching", "framework-config"], "expected_bundles": ["framework-ops", "framework-cache"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "добавь CLI команду для переиндексации", "expected_skills": ["framework-cli"], "expected_bundles": ["framework-use"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "покажи архитектуру хуков в проекте", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "train"}
+{"prompt": "добавь поддержку табличной части в обработку документа 1С", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "реализуй deep research agent с планированием", "expected_skills": ["agent-orchestration"], "expected_bundles": ["agents"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "что делает фабрика триады?", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "train"}
+{"prompt": "реализуй MCP server и Gradio UI", "expected_skills": ["framework-mcp-ui", "framework-cli"], "expected_bundles": ["framework-use"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "хук не находит python на Windows, обратные слеши", "expected_skills": ["windows-hooks-paths", "hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "настрой checkpointer для langgraph с persistence", "expected_skills": ["langgraph-memory-persistence", "langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "добавь monitoring с OpenTelemetry для Claude Code", "expected_skills": ["claude-code-admin"], "expected_bundles": ["claude-code-ops"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "реализуй learning loop для нового домена", "expected_skills": ["learning-loop"], "expected_bundles": ["learning-loop"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "настрой CLAUDE.md и settings.json для проекта", "expected_skills": ["claude-code-settings"], "expected_bundles": ["claude-code-config"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "как установить фреймворк с нуля", "expected_skills": ["framework-quickstart", "framework-cli"], "expected_bundles": ["framework-use"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "используй ColPali для visual embeddings", "expected_skills": ["embedding-models"], "expected_bundles": ["data-stores"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "добавь git status parsing с porcelain форматом", "expected_skills": ["git-porcelain-parsing"], "expected_bundles": ["git-parsing"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "реализуй enforcer pattern для stop хука", "expected_skills": ["hook-enforcement-pattern", "hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "расскажи как работает триада hook + skill + mcp", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "test"}
+{"prompt": "добавь hotkeys и vim mode в CLI", "expected_skills": ["claude-code-cli-interactive", "claude-code-settings"], "expected_bundles": ["claude-code-config"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "настрой chrome интеграцию и statusline", "expected_skills": ["claude-code-terminal-ux"], "expected_bundles": [], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "расскажи про RAG agent tutorial в langchain", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "train"}
+{"prompt": "настрой VS Code extension для Claude Code", "expected_skills": ["claude-code-vscode"], "expected_bundles": [], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "добавь вебхук для Streamlit dashboard", "expected_skills": [], "expected_bundles": [], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "проверь покрытие документации", "expected_skills": ["audit-docs"], "expected_bundles": ["docs"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "добавь записи в регистр накопления Продажи", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "покажи все таски", "expected_skills": [], "expected_bundles": [], "intent": "system", "source": "spec", "split": "train"}
+{"prompt": "что нового в langgraph 0.3?", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "spec", "split": "train"}
+{"prompt": "сделай скилл из документации по FastAPI", "expected_skills": ["doc-to-skill"], "expected_bundles": [], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "помоги с индексацией документов", "expected_skills": ["indexing-pipeline"], "expected_bundles": ["indexing"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "извлеки связи между концепциями из статей", "expected_skills": ["graph-operations"], "expected_bundles": ["graph"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "автоматически повторяй неудачные сетевые запросы с задержками", "expected_skills": ["tenacity-retry"], "expected_bundles": ["tenacity-retry"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "запусти помощника из скрипта без UI", "expected_skills": ["claude-code-programmatic", "claude-code-plugins", "claude-code-subagents"], "expected_bundles": ["claude-code-dev"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "проверь все ли фичи описаны в документации", "expected_skills": ["audit-docs"], "expected_bundles": ["docs"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "разверни систему в контейнерах для продакшна", "expected_skills": ["deployment"], "expected_bundles": ["deploy"], "intent": "action", "source": "spec", "split": "test"}
+{"prompt": "построй граф с узлами и условными рёбрами для агента", "expected_skills": ["langgraph-core"], "expected_bundles": ["langchain-infra"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "измерь качество нашего поиска по документам", "expected_skills": ["evaluation-benchmark"], "expected_bundles": ["eval-benchmark"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "мой скрипт автоматизации не срабатывает", "expected_skills": ["hook-debugging", "claude-code-hooks-bugs"], "expected_bundles": ["hooks"], "intent": "action", "source": "spec", "split": "train"}
+{"prompt": "как включается механизм с занесением сертификатов", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "НачалоПериода КонецПериода должен заполняться через период", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "проверь как заполняеться пункт погрузки", "expected_skills": ["1c-doc-research", "bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "таличная часть перестала заполняться", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "данные в запросе получаються проблемма в выводе", "expected_skills": ["bsl-development", "1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "ЗаписьЖурналаРегистрации не рекомендуется передавать в качестве параметра функцию что делать", "expected_skills": ["1c-doc-research", "bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "список базб при открытии 1С пуст для выбора", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "а как реализован обмен в документе Документ.гкс_ОснованиеДляДвиженияЗапасов", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "нужно открывать форму не в отдельном окне а поверх текущего", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "давай вернем открытие формы не по верх текущей а в отдельном окне как было", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "при двойным клике срабатывает процедура ФайлыВыбор если это pdf документ открыть просмотр", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "Процедура ЗаполнитьТабличныйДокументАктВозврата не вижу что бы ты заполнял", "expected_skills": ["bsl-development", "code-verify"], "expected_bundles": ["research-1c", "code-verify"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "ДолжностьКладовщика как заполняеться и Кладовщик", "expected_skills": ["bsl-development"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "Srvr=\"DESKTOP-TNU600C\";Ref=\"ИБTransportManagementDevelop\" конфигурация не запускается", "expected_skills": ["1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "1c-debug-hmr  переключсь на тестирование всех проецессво с максимальной автамтизацией", "expected_skills": ["1c-debug-hmr"], "expected_bundles": ["1c-debug-hmr"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "Это race: arm_next_rphost дренит только один первый halt, а быстрый JOB успел стать вторым", "expected_skills": ["1c-debug-hmr"], "expected_bundles": ["1c-debug-hmr"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "сделай анализ примечания на скриншоте и твоего макета на соответсвие", "expected_skills": ["code-verify", "1c-doc-research"], "expected_bundles": ["code-verify", "research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "предлогаю с момоерта когда мы перенесли чтение pdf с сервера на клиент окатить назад", "expected_skills": ["bsl-development", "1c-doc-research"], "expected_bundles": ["research-1c"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "resume: investigate docs-change-enforcer sentinel and clear the two pending docs", "expected_skills": ["hook-debugging"], "expected_bundles": ["hooks"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "docs/roadmap/260611_ROADMAP_MEMORY_GOVERNANCE_WIRING.md приступай к реализации", "expected_skills": ["memory-unified"], "expected_bundles": ["memory"], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "lazy-mcp failed в чем проблемма?", "expected_skills": [], "expected_bundles": [], "intent": "action", "source": "transcript-router", "split": "quarantine"}
+{"prompt": "Канал нестабилен как усидить стабильность?", "expected_skills": [], "expected_bundles": [], "intent": "informational", "source": "transcript-router", "split": "quarantine"}
