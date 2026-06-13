@@ -357,6 +357,7 @@ def mirror_skill_library(
         "pruned": 0,
         "errors": 0,
         "ghosts": [],
+        "missing": [],
         "to_upsert": [],
         "snapshot": None,
     }
@@ -398,6 +399,9 @@ def mirror_skill_library(
     stats["library"] = len(lib)
 
     stats["ghosts"] = sorted(set(lib) - set(found))
+    # missing = на диске есть, точки нет (drift в терминах roadmap 260612);
+    # to_upsert шире — включает changed (content_hash mismatch), это штатный churn.
+    stats["missing"] = sorted(set(found) - set(lib))
     stats["to_upsert"] = sorted(
         name
         for name, d in found.items()

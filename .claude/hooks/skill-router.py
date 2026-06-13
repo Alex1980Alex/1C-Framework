@@ -266,6 +266,15 @@ class SkillRouter(BaseHook):
     # Regex to strip file paths from prompt (prevents false matches on paths)
     _PATH_RE = re.compile(r"[a-zA-Z]:\\[^\s>]*|/[^\s>]*\.\w+")
 
+    # --- Layer A2: 1C domain signal detectors (260612 P2.1 follow-up) ---
+    # Разговорные 1С-промпты несут сигнал не в словаре, а в ФОРМЕ текста:
+    # CamelCase-кириллица (НачалоПериода), префиксы метаданных (гкс_, Документ.),
+    # строка соединения (Srvr=/Ref="). Keyword-слой это не выражает — GT-классы
+    # FN bsl-development/1c-doc-research закрываются детекторами.
+    _BSL_IDENT_RE = re.compile(r"\b[А-ЯЁ][а-яё0-9]+[А-ЯЁ][а-яёА-ЯЁ0-9]*")
+    _BSL_META_RE = re.compile(r"гкс_|\b(?:Документ|Справочник|РегистрСведений|Обработка)\.")
+    _CONN_STR_RE = re.compile(r"Srvr=|Ref=\"")
+
     # Intent classification markers
     _INFO_MARKERS = [
         "что такое",
@@ -284,6 +293,8 @@ class SkillRouter(BaseHook):
         "зачем",
         "в чем разница",
         "what's the difference",
+        "что нового",
+        "what's new",
     ]
     _SYSTEM_PREFIXES = ("/", "!!", "git ", "cd ")
 
@@ -353,6 +364,24 @@ class SkillRouter(BaseHook):
                 if kw.lower() in prompt_lower:
                     score += weight
             scores[name] = score
+
+        # --- Layer A2: 1C domain signals + literal skill-name mention ---
+        # Детекторы работают по СЫРОМУ промпту (CamelCase требует регистра).
+        if self._BSL_IDENT_RE.search(prompt) or self._BSL_META_RE.search(prompt):
+            if "bsl-dev" in bundles:
+                scores["bsl-dev"] = scores.get("bsl-dev", 0) + 3
+            if "research-1c" in bundles:
+                scores["research-1c"] = scores.get("research-1c", 0) + 1
+        if self._CONN_STR_RE.search(prompt):
+            if "research-1c" in bundles:
+                scores["research-1c"] = scores.get("research-1c", 0) + 3
+        # Буквальное имя скилла в промпте — сильнейший сигнал (FN-класс
+        # «1c-debug-hmr переключись на...»: одиночный кейворд не пробивал min_score).
+        for name, bundle in bundles.items():
+            for skill in bundle.get("skills", []):
+                if len(skill) >= 6 and skill.lower() in prompt_lower:
+                    scores[name] = scores.get(name, 0) + 4
+                    break
 
         # --- Layer B: Fuzzy single-word matching ---
         fuzzy = _get_fuzzy_matcher(all_keywords)
@@ -455,7 +484,7 @@ class SkillRouter(BaseHook):
         optional_skills: list[str] = []
         matched_bundle_names: list[str] = []
 
-        for name, _score in top_bundles:
+        for idx, (name, _score) in enumerate(top_bundles):
             matched_bundle_names.append(name)
             bundle = bundles[name]
 
@@ -463,9 +492,12 @@ class SkillRouter(BaseHook):
                 if skill not in required_skills:
                     required_skills.append(skill)
 
-            for skill in bundle.get("optional", []):
-                if skill not in optional_skills and skill not in required_skills:
-                    optional_skills.append(skill)
+            # Optional — только от top-1 бандла (260612 P2.1: optional всех
+            # сматченных бандлов раздувал выдачу и ронял precision).
+            if idx == 0:
+                for skill in bundle.get("optional", []) or []:
+                    if skill not in optional_skills and skill not in required_skills:
+                        optional_skills.append(skill)
 
         # Final dedup: remove from optional anything that ended up in required
         optional_skills = [s for s in optional_skills if s not in required_skills]

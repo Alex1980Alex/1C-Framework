@@ -108,6 +108,12 @@ def main():
     parser.add_argument(
         "--save-fp", action="store_true", help="Save FP/FN details to data/skill-router-fp.jsonl"
     )
+    parser.add_argument(
+        "--save-report",
+        action="store_true",
+        help="Persist report to data/reports/skills/skill-router-eval-latest.json"
+        " (источник F1 для skill_system_acceptance, roadmap 260612 P4)",
+    )
     args = parser.parse_args()
 
     gt_path = Path(args.ground_truth)
@@ -220,6 +226,18 @@ def main():
         "top_fps": fps_list[:5],
         "top_fns": fns_list[:5],
     }
+
+    if args.save_report:
+        report_path = PROJECT_DIR / "data" / "reports" / "skills" / "skill-router-eval-latest.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(
+                {"ts": datetime.now().isoformat(), "ground_truth": str(gt_path), **report},
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
+        print(f"Saved report to {report_path}", file=sys.stderr)
 
     # Save FP/FN tracking file
     if args.save_fp and (fps_list or fns_list):
