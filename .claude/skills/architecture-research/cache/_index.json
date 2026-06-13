@@ -3,6 +3,31 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "claude-code-ecosystem-tools-2026.md",
+      "title": "Claude Code ecosystem — skills/plugins/subagents/MCP по SDLC-шагам (планирование/дизайн/кодирование/тестирование), 2026",
+      "keywords": [
+        "claude-code",
+        "plugins",
+        "skills",
+        "subagents",
+        "mcp",
+        "spec-driven-development",
+        "spec-kit",
+        "bmad",
+        "openspec",
+        "superpowers",
+        "tdd-guard",
+        "code-review",
+        "playwright",
+        "context7",
+        "architecture-planning",
+        "implementation-design",
+        "coding",
+        "testing"
+      ],
+      "last_verified": "2026-06-13"
+    },
+    {
       "file": "agent-memory-ingestion-consolidation-2026.md",
       "title": "Agent memory — ingestion, consolidation (episodic→semantic), cross-store sync",
       "keywords": [
