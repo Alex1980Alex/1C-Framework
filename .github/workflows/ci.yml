@@ -370,11 +370,15 @@ jobs:
   skill-router-eval:
     name: Skill Router Evaluation
     runs-on: ubuntu-latest
-    # ADVISORY CHECK, НЕ блокирующий гейт (260612 S5 / 260613 F2): job-фейл виден
-    # в run-аннотациях, но `continue-on-error` не блокирует merge. Порог держим
-    # advisory, пока роутер не дотянут до честного held-out F1>=0.75 (260613 P0/P1;
-    # текущий honest action_f1 заметно ниже padded macro-F1). Ground-truth tracked:
-    # нет файла = честный fail (C3), не SUCCESS-маскировка.
+    # ADVISORY CHECK (260613 D3 — РЕШЕНО, осознанно advisory). Honest gate ДОСТИГНУТ:
+    # pooled action_f1=0.7708 >= 0.75 после Фазы C; semantic-independent (с
+    # SKILL_ROUTER_NO_SEMANTIC=1, как в CI без TEI/Qdrant, число ИДЕНТИЧНО → CI==local),
+    # CV(k=5) mean 0.779. Остаётся advisory ОСОЗНАННО: GT мал (95) и эволюционирует
+    # (A7-рост test до >=30 action ещё pending) → блокирующий порог фолс-трипал бы на
+    # ЛЕГИТИМНОМ росте GT (трудные кейсы законно тянут число вниз). Авторитетный
+    # honest-гейт = ЛОКАЛЬНЫЙ acceptance-харнесс (scripts/skill_system_acceptance.py,
+    # all_pass=True, полное окружение). Нет GT = честный fail (C3). Флип на blocking —
+    # одна строка (убрать continue-on-error), когда GT стабилизируется.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
