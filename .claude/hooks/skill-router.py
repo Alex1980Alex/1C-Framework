@@ -248,8 +248,15 @@ def _detect_skill_activations(prompt: str, session_id: str) -> None:
 
 
 def _load_config() -> dict | None:
-    """Load skill-router-config.json from known locations."""
-    for path in _CONFIG_LOCATIONS:
+    """Load skill-router-config.json from known locations.
+
+    260613 B5: honors the SKILL_ROUTER_CONFIG env var (absolute path) FIRST — lets
+    the offline weight-optimizer (scripts/tune_skill_router.py) inject candidate
+    `a2_signals` without touching the production config. No env → unchanged behavior.
+    """
+    override = os.environ.get("SKILL_ROUTER_CONFIG")
+    locations = [override, *_CONFIG_LOCATIONS] if override else _CONFIG_LOCATIONS
+    for path in locations:
         abs_path = os.path.abspath(path)
         if os.path.isfile(abs_path):
             try:
