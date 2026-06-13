@@ -386,3 +386,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 2
 - Summary: Session 2026-06-12. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(memory): 260611 skill-learning revival — pending/saved/rejected как рабочий контур (P0-P3 + тесты). Commit: chore: auto-save memory_maintenance.py, test_skill_learning_revival.py. Commit: chore: auto-save memory_orchestrator.py
 
+
+## 2026-06-13 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-13. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260612 Skill System P1-A3 + P4 acceptance — закрытие открытых пунктов. Commit: chore: auto-save SKILL.md, skill-router-config.json, skill_ingest_trend.py. Commit: chore: auto-commit skill-router.py, skill-router-config.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +1 more
+
