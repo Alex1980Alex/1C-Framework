@@ -57,7 +57,8 @@
       "code-verify",
       "learning-loop",
       "task-protocol",
-      "obsidian-vault"
+      "obsidian-vault",
+      "duckdb"
     ]
   },
   "affinities": {
@@ -85,6 +86,38 @@
     ]
   },
   "bundles": {
+    "duckdb": {
+      "keywords": [
+        "duckdb",
+        "read_json_auto",
+        "union_by_name",
+        "approx_quantile",
+        "read_parquet",
+        "jsonl",
+        "in-memory sql"
+      ],
+      "weighted_keywords": {
+        "duckdb": 5,
+        "read_json_auto": 5,
+        "approx_quantile": 4,
+        "union_by_name": 4,
+        "read_parquet": 4,
+        "copy to parquet": 4,
+        "sql по jsonl": 3,
+        "аналитика по логам": 3
+      },
+      "utterances": [
+        "посчитай метрики по jsonl логу",
+        "p95 латентность из лога хуков",
+        "запрос sql по newline-delimited json",
+        "экспортируй лог в parquet",
+        "агрегация событий по дням из лога"
+      ],
+      "skills": [
+        "duckdb-analytics"
+      ],
+      "optional": []
+    },
     "research-1c": {
       "keywords": [
         "модуль объекта",
