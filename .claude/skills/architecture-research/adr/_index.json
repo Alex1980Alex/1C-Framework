@@ -202,7 +202,7 @@
       "id": "ADR-014",
       "file": "014-coding-adopt-context7-eval-pyright.md",
       "title": "Кодирование — ADOPT Context7 MCP (lazy-load); Pyright EVAL; language-experts SKIP",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
       "tags": ["tooling-adoption", "coding", "context7", "mcp", "lazy-mcp", "pyright", "sdlc-step-3"]

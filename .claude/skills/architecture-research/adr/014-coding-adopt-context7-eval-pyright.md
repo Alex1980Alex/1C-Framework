@@ -1,9 +1,15 @@
 # ADR-014: Кодирование — ADOPT Context7 MCP (lazy-load); Pyright EVAL; language-experts SKIP
 
 **Дата:** 2026-06-13
-**Статус:** proposed
+**Статус:** accepted (Context7 внедрён + smoke-verified 2026-06-13; Pyright — остаётся EVAL)
 **Исследование:** ../cache/claude-code-ecosystem-tools-2026.md
 **Шаг SDLC:** 3. Кодирование (решение фиксируется в Дизайне)
+
+> **Реализация (260613 Этап 3.1-3.3):** Context7 добавлен в `.mcp/lazy-mcp-config.json`
+> (категория `documentation`, on-demand `cmd /c npx @upstash/context7-mcp@3.2.0`, НЕ в
+> `.mcp.json`). Smoke PASS: живой MCP-handshake → `serverInfo: Context7 v3.2.0` + tool
+> `resolve-library-id`; основной `.mcp.json` (21 сервер) не тронут → cold-start не вырос.
+> Интегрирован в `tech-research` Фаза 1 (Context7 → fallback WebSearch).
 
 ## Контекст
 Ресёрч для шага кодирования: Context7 MCP (актуальные version-specific доки в
