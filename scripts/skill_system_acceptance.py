@@ -9,8 +9,10 @@
                                drift = SKILL.md без точки; changed-churn не в счёт)
   2. ingest events > 0       — события store=skill_library в memory-ingestion.log
                                в окне (поток виден write-contract'у §26)
-  3. router F1 >= 0.75       — последний сохранённый отчёт eval-skill-router
-                               (`--save-report`), снятый в окне
+  3. router F1 >= 0.75       — POOLED action_f1 последнего eval-отчёта
+                               (`--save-report`) в окне (без silence-padding);
+                               in-sample legacy macro-F1 и шумный test-сплит
+                               НЕ принимаются (260613 F1)
   4. surfacing: floor режет  — gate.skill_below_floor > 0 в surfacing-логе окна
                                (шум отсекается живьём)
   5. surfacing: сигнал жив   — arms.skill > 0 хотя бы в одной инвокации окна
@@ -62,8 +64,14 @@ F1_TARGET = 0.75
 HEALTH_FRESH_DAYS = 7.0
 
 
-def _mirror_dry_run() -> tuple[int | None, int | None]:
-    """(ghosts, drift) из live dry-run зеркала; Qdrant down → (None, None)."""
+def _mirror_dry_run() -> tuple[int | None, int | None, int | None]:
+    """(ghosts, drift, changed) из live dry-run зеркала; Qdrant down → (None,None,None).
+
+    drift   = SKILL.md без точки вовсе (presence-gap).
+    changed = точка есть, но content_hash разошёлся с диском (260613 F4 — protux
+              по контенту; presence-критерий 1 его не ловил → «зеркало» могло быть
+              устаревшим по содержимому при drift=0).
+    """
     try:
         shared_dir = str(PROJECT_ROOT / ".claude" / "hooks" / "shared")
         # append, не insert(0): не затенять hooks-local пакеты
@@ -74,26 +82,50 @@ def _mirror_dry_run() -> tuple[int | None, int | None]:
 
         stats = skills_harvest.mirror_skill_library(apply=False, snapshot=False)
         if stats.get("errors"):
-            return None, None
-        return len(stats.get("ghosts", [])), len(stats.get("missing", []))
+            return None, None, None
+        missing = stats.get("missing", [])
+        to_upsert = stats.get("to_upsert", [])
+        # to_upsert ⊇ missing; changed = present-but-stale = to_upsert \ missing.
+        changed = max(0, len(to_upsert) - len(missing))
+        return len(stats.get("ghosts", [])), len(missing), changed
     except Exception:
-        return None, None
+        return None, None, None
 
 
-def _router_f1() -> tuple[float | None, str | None]:
-    """(f1, ts) последнего сохранённого eval-отчёта; нет/не в окне → (None, ts)."""
+def _router_f1() -> dict[str, Any]:
+    """Честные числа из последнего eval-отчёта в окне (260613 F1).
+
+    Гейт (`gate`) читает POOLED `honest_metrics.action_f1` (без silence-padding),
+    НЕ in-sample legacy macro-F1 и НЕ крошечный test-сплит. Train/test тут
+    диагностический: роутер НЕ обучается на GT в eval-time (A2-веса захардкожены
+    оффлайн), поэтому сплит не отражает обобщение — лишь подсвечивает шум/малость
+    GT (мелкий test инвертирует vs train). Реальный held-out появится, только когда
+    A2 переотобран на train-only. Старый отчёт без `honest_metrics` → gate=None →
+    критерий 3 честно не проходит.
+    """
+    out: dict[str, Any] = {"gate": None, "legacy": None, "test": None, "train": None, "ts": None}
     try:
         rep = json.loads(ROUTER_REPORT.read_text(encoding="utf-8"))
     except Exception:
-        return None, None
-    ts = rep.get("ts")
-    dt = _parse_dt(ts)
+        return out
+    out["ts"] = rep.get("ts")
+    dt = _parse_dt(out["ts"])
     if dt is None or dt < WINDOW_START:
-        return None, ts  # отчёт устарел — число вне окна не принимается
-    try:
-        return float(rep["skill_metrics"]["f1"]), ts
-    except (KeyError, TypeError, ValueError):
-        return None, ts
+        return out  # отчёт устарел — число вне окна не принимается (gate=None)
+
+    def _f(v: Any) -> float | None:
+        try:
+            return float(v) if v is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    out["legacy"] = _f((rep.get("skill_metrics") or {}).get("f1"))
+    hm = rep.get("honest_metrics") or {}
+    splits = hm.get("splits") or {}
+    out["gate"] = _f(hm.get("action_f1"))  # pooled — стабильное число (gate)
+    out["test"] = _f((splits.get("test") or {}).get("action_f1"))
+    out["train"] = _f((splits.get("train") or {}).get("action_f1"))
+    return out
 
 
 def _grep(path: Path, needle: str) -> bool:
@@ -103,9 +135,25 @@ def _grep(path: Path, needle: str) -> bool:
         return False
 
 
+def _ci_honest_fail() -> bool:
+    """260613 F6: проверяем ФАКТ ветки `exit 1` при отсутствии ground-truth, а не
+    текст echo (старый греп `"ground-truth.jsonl missing"` совпадал случайно — по
+    хвосту имени файла; перефраз сообщения молча ронял критерий). Ищем guard-условие
+    на skill-router-ground-truth.jsonl и `exit 1` в пределах нескольких строк."""
+    try:
+        lines = CI_YML.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return False
+    for i, ln in enumerate(lines):
+        if "-f data/skill-router-ground-truth.jsonl" in ln:
+            if any("exit 1" in x for x in lines[i : i + 5]):
+                return True
+    return False
+
+
 def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     now = now or datetime.now()
-    ghosts, drift = _mirror_dry_run()
+    ghosts, drift, changed = _mirror_dry_run()
 
     ingest_events = 0
     for rec in _read_jsonl(INGEST_LOG):
@@ -129,7 +177,7 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
         if arms.get("skill", 0) > 0:
             arm_fired += 1
 
-    f1, f1_ts = _router_f1()
+    rf = _router_f1()
 
     health_age_days: float | None = None
     if HEALTH_REPORT.exists():
@@ -144,14 +192,18 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
         "window_closed": now >= WINDOW_END,
         "ghosts": ghosts,
         "drift": drift,
+        "changed": changed,
         "ingest_events": ingest_events,
-        "router_f1": f1,
-        "router_f1_ts": f1_ts,
+        "router_f1": rf["gate"],
+        "router_f1_legacy": rf["legacy"],
+        "router_f1_test": rf["test"],
+        "router_f1_train": rf["train"],
+        "router_f1_ts": rf["ts"],
         "floor_gated": floor_gated,
         "arm_fired": arm_fired,
         "invocations": invocations,
         "health_age_days": health_age_days,
-        "ci_honest_fail": _grep(CI_YML, "ground-truth.jsonl missing"),
+        "ci_honest_fail": _ci_honest_fail(),
         "phantom_guard": _grep(ENFORCER, "_skill_exists"),
     }
 
@@ -159,6 +211,7 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
 def evaluate(m: dict[str, Any]) -> dict[str, bool]:
     return {
         "ghosts==0 & drift==0": m["ghosts"] == 0 and m["drift"] == 0,
+        "library_content_fresh": m["changed"] == 0,  # 260613 F4: точки не устарели по контенту
         "ingest_events>0": m["ingest_events"] > 0,
         f"router_f1>={F1_TARGET}": m["router_f1"] is not None and m["router_f1"] >= F1_TARGET,
         "floor_gates_noise": m["floor_gated"] > 0,
@@ -173,10 +226,13 @@ def evaluate(m: dict[str, Any]) -> dict[str, bool]:
 def render(m: dict[str, Any], crit: dict[str, bool], final: bool) -> str:
     detail = [
         f"- Снято: {m['now']}",
-        f"- зеркало (live dry-run): ghosts={m['ghosts']}, drift={m['drift']}"
-        " — цель 0/0 (None = Qdrant недоступен)",
+        f"- зеркало (live dry-run): ghosts={m['ghosts']}, drift={m['drift']},"
+        f" changed={m['changed']} — цель 0/0/0 (None = Qdrant недоступен)",
         f"- ingestion-события skill_library в окне: {m['ingest_events']} — цель >0",
-        f"- router F1: {m['router_f1']} (отчёт {m['router_f1_ts']}) — цель >={F1_TARGET}",
+        f"- router action F1 (gate, pooled): {m['router_f1']} — цель >={F1_TARGET}"
+        f" | train {m['router_f1_train']} / test {m['router_f1_test']} (диагностика,"
+        f" малый GT, не held-out) | legacy padded {m['router_f1_legacy']}"
+        f" (отчёт {m['router_f1_ts']})",
         f"- surfacing: floor отрезал {m['floor_gated']} skill-хитов,"
         f" arm fired {m['arm_fired']}/{m['invocations']} инвокаций — цель >0 и >0",
         f"- skill-health-report возраст: {m['health_age_days']}d — цель <{HEALTH_FRESH_DAYS:.0f}d",

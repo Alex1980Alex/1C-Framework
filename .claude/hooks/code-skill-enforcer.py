@@ -346,6 +346,12 @@ class CodeSkillEnforcer(BaseHook):
         if not SessionState:
             return None
 
+        # 260613 F7: Level A.1 форсит Skill('learning-loop'). Тот же phantom-block
+        # guard, что и для A/B/C — если каталог learning-loop отсутствует, честная
+        # CONFIG ERROR без блока вместо неудовлетворимого требования.
+        if not self._skill_exists("learning-loop"):
+            return self._phantom_config_error("learning-loop", "research_protocol (Level A.1)")
+
         label = match.get("label", "unknown")
         domain = match.get("domain", "tech")
         pattern = match.get("pattern", "")

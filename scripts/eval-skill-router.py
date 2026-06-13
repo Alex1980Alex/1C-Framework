@@ -5,6 +5,7 @@ Reads ground truth, runs each prompt through skill-router, computes precision/re
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -100,6 +101,32 @@ def compute_metrics(expected, predicted):
     return {"precision": p, "recall": r, "f1": f1, "tp": tp, "fp": fp, "fn": fn}
 
 
+def _split_of(prompt, sample):
+    """Deterministic train/test split (260613 H1). Honors an explicit per-sample
+    `split` field; else hashes the prompt (sha1 % 5 -> ~20% test). Stable across
+    runs — NOT Python's salted hash()."""
+    s = sample.get("split")
+    if s in ("train", "test"):
+        return s
+    h = int(hashlib.sha1(prompt.encode("utf-8")).hexdigest(), 16)
+    return "test" if h % 5 == 0 else "train"
+
+
+def _action_f1(rows):
+    """Macro-F1 over ACTION samples only (expected_skills != []). Excludes the
+    silence-credit padding — empty-expected samples that score f1=1.0 just for
+    staying silent (260613 F5)."""
+    vals = [r["f1"] for r in rows if r["is_action"]]
+    return round(sum(vals) / len(vals), 4) if vals else None
+
+
+def _silence_accuracy(rows):
+    """Fraction of empty-expected samples on which the router correctly stayed
+    silent. Reported SEPARATELY from action_f1 so the two don't pad each other."""
+    vals = [r for r in rows if not r["is_action"]]
+    return round(sum(1 for r in vals if r["silent_ok"]) / len(vals), 4) if vals else None
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate skill-router accuracy")
     parser.add_argument("--verbose", "-v", action="store_true")
@@ -141,6 +168,7 @@ def main():
     skill_all, skill_req_all, bundle_all = [], [], []
     intent_results = defaultdict(lambda: {"correct": 0, "total": 0})
     fps_list, fns_list = [], []
+    per_sample = []  # 260613: split + action/silence classification per sample
 
     for i, sample in enumerate(samples):
         prompt = sample["prompt"]
@@ -161,6 +189,14 @@ def main():
         skill_all.append(sm)
         skill_req_all.append(sm_req)
         bundle_all.append(bm)
+        per_sample.append(
+            {
+                "split": _split_of(prompt, sample),
+                "is_action": bool(exp_skills),
+                "f1": sm["f1"],
+                "silent_ok": len(pred_skills) == 0,
+            }
+        )
 
         if intent in ("informational", "system"):
             ok = len(pred_skills) == 0
@@ -190,8 +226,38 @@ def main():
         v = [m[k] for m in ml]
         return sum(v) / len(v) if v else 0.0
 
+    # 260613 F1/F5 — honest metrics. `skill_metrics.f1` below is the legacy macro-F1
+    # over ALL samples (padded by empty-expected samples scoring 1.0 for silence).
+    # `action_f1` (POOLED, action samples only) strips that padding and is the number
+    # the acceptance gate reads. The train/test split is DIAGNOSTIC only: the router
+    # does NOT train on the GT at eval-time (A2 weights are hardcoded offline), so a
+    # split says nothing about generalization — it just exposes GT noise/size (tiny
+    # test folds invert vs train). A real held-out needs A2 re-derived on `train` only;
+    # until then pooled action_f1 is the honest, stable signal.
+    honest_metrics = {
+        "action_f1": _action_f1(per_sample),
+        "silence_accuracy": _silence_accuracy(per_sample),
+        "n_action": sum(1 for r in per_sample if r["is_action"]),
+        "n_silence": sum(1 for r in per_sample if not r["is_action"]),
+        "split_method": "field|sha1mod5",
+        "splits": {
+            sp: {
+                "action_f1": _action_f1([r for r in per_sample if r["split"] == sp]),
+                "silence_accuracy": _silence_accuracy(
+                    [r for r in per_sample if r["split"] == sp]
+                ),
+                "n": sum(1 for r in per_sample if r["split"] == sp),
+                "n_action": sum(
+                    1 for r in per_sample if r["split"] == sp and r["is_action"]
+                ),
+            }
+            for sp in ("train", "test")
+        },
+    }
+
     report = {
         "total_samples": len(samples),
+        "honest_metrics": honest_metrics,
         "skill_metrics": {
             "precision": round(avg(skill_all, "precision"), 4),
             "recall": round(avg(skill_all, "recall"), 4),
@@ -281,6 +347,22 @@ def main():
         print(f"  Recall:    {sm['recall']:.4f}")
         print(f"  F1:        {sm['f1']:.4f}")
         print(f"  TP={sm['total_tp']} FP={sm['total_fp']} FN={sm['total_fn']}")
+        hm = report["honest_metrics"]
+        ht, htr = hm["splits"]["test"], hm["splits"]["train"]
+        print("\nHonest Metrics (260613 — action-only, no silence-credit padding):")
+        print(
+            f"  action F1 (pooled): {hm['action_f1']} over {hm['n_action']} action samples"
+            "  <- GATE metric"
+        )
+        print(f"  action F1 (train):  {htr['action_f1']} (n_action={htr['n_action']})")
+        print(
+            f"  action F1 (test):   {ht['action_f1']} (n_action={ht['n_action']})"
+            "  <- diagnostic only (tiny split, noisy)"
+        )
+        print(
+            f"  silence accuracy:  {hm['silence_accuracy']} "
+            f"over {hm['n_silence']} empty-expected samples"
+        )
         print("\nBundle Metrics:")
         print(f"  Precision: {bm['precision']:.4f}")
         print(f"  Recall:    {bm['recall']:.4f}")

@@ -355,10 +355,11 @@ jobs:
   skill-router-eval:
     name: Skill Router Evaluation
     runs-on: ubuntu-latest
-    # Advisory gate (260612 S5): job-фейл виден в run-аннотациях, но не блокирует
-    # workflow, пока роутер не дотянут до F1>=0.75 (первый честный вердикт после
-    # вскрытия silent-skip: F1=0.69 на 73 кейсах). Ground-truth теперь tracked —
-    # skip-ветки «not in repo» больше нет: нет файла = честный fail, не SUCCESS.
+    # ADVISORY CHECK, НЕ блокирующий гейт (260612 S5 / 260613 F2): job-фейл виден
+    # в run-аннотациях, но `continue-on-error` не блокирует merge. Порог держим
+    # advisory, пока роутер не дотянут до честного held-out F1>=0.75 (260613 P0/P1;
+    # текущий honest action_f1 заметно ниже padded macro-F1). Ground-truth tracked:
+    # нет файла = честный fail (C3), не SUCCESS-маскировка.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -392,33 +393,37 @@ jobs:
           fi
           python scripts/eval-skill-router.py --json > eval-result.json
 
-      - name: Check F1 threshold
+      - name: Check F1 threshold (advisory)
         run: |
           python -c "
           import json, os, sys
           r = json.load(open('eval-result.json'))
-          f1 = r['skill_metrics']['f1']
-          p = r['skill_metrics']['precision']
-          recall = r['skill_metrics']['recall']
-          bf1 = r['bundle_metrics']['f1']
+          hm = r.get('honest_metrics') or {}
+          test = (hm.get('splits') or {}).get('test') or {}
+          # 260613 F1/F5: порог на POOLED action_f1 (без silence-padding); test-сплит
+          # слишком мал/шумен для гейта (роутер не учится на GT → сплит диагностический).
+          ta = test.get('action_f1')
+          pa = hm.get('action_f1')
+          sa = hm.get('silence_accuracy')
+          legacy = r['skill_metrics']['f1']
+          f1 = pa if pa is not None else legacy
           n = r['total_samples']
           lines = [
               f'## Skill Router Eval ({n} samples)',
-              f'| metric | value |',
-              f'|--------|-------|',
-              f'| Skill precision | {p:.4f} |',
-              f'| Skill recall | {recall:.4f} |',
-              f'| Skill F1 | {f1:.4f} |',
-              f'| Bundle F1 | {bf1:.4f} |',
+              '| metric | value |',
+              '|--------|-------|',
+              f'| pooled action F1 (GATE) | {pa} |',
+              f'| test action F1 (diagnostic) | {ta} |',
+              f'| silence accuracy | {sa} |',
+              f'| legacy macro-F1 (padded) | {legacy:.4f} |',
           ]
           summary = os.environ.get('GITHUB_STEP_SUMMARY')
           if summary:
               with open(summary, 'a') as fh:
                   fh.write('\n'.join(lines) + '\n')
-          print(f'Skill  — Precision: {p:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}')
-          print(f'Bundle — F1: {bf1:.4f}')
-          if f1 < 0.75:
-              print(f'::error::Skill F1 {f1:.4f} < 0.75 threshold')
+          print(f'pooled action F1 (gate): {pa}  test(diag): {ta}  legacy(padded): {legacy:.4f}')
+          if f1 is None or f1 < 0.75:
+              print(f'::error::honest router F1 {f1} < 0.75 (advisory; roadmap 260613 P0/P1)')
               sys.exit(1)
-          print(f'PASS: Skill F1 {f1:.4f} >= 0.75 threshold')
+          print(f'PASS: honest router F1 {f1:.4f} >= 0.75')
           "
