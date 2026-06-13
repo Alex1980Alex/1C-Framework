@@ -66,8 +66,13 @@ def acceptance_banner(
     script_rel: str,
     banner_tag: str,
     progress_line: Callable[[dict[str, Any], dict[str, bool]], str],
+    window_days: int = 14,
 ) -> str | None:
-    """Вернуть текст баннера для systemMessage или None (молчание)."""
+    """Вернуть текст баннера для systemMessage или None (молчание).
+
+    ``window_days`` — длина окна для знаменателя «день N/{window_days}». Default 14
+    (memory-ai / skill-learning / skill-system); tdd-guard передаёт 7.
+    """
     if os.environ.get(disable_env) == "1":
         return None
     roadmap = PROJECT_ROOT / roadmap_rel
@@ -102,7 +107,7 @@ def acceptance_banner(
             f"зафиксировать строку «{FINAL_MARKER}: {verdict}» в §18 {roadmap_rel} "
             f"(после этого баннер замолчит)"
         )
-    return f"[{banner_tag}] день {m['day']}/14: {progress_line(m, crit)} | {status}"
+    return f"[{banner_tag}] день {m['day']}/{window_days}: {progress_line(m, crit)} | {status}"
 
 
 __all__ = ["FINAL_MARKER", "acceptance_banner"]

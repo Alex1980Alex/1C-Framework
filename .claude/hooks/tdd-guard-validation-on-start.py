@@ -41,6 +41,7 @@ class TddGuardValidation(BaseHook):
             script_rel="scripts/tdd_guard_validation.py",
             banner_tag="TDD-GUARD-VALIDATION",
             progress_line=_progress,
+            window_days=7,  # окно 06-13→06-20 = 7 дней (≠ дефолтных 14)
         )
         return HookOutput().system_message(msg) if msg else None
 
