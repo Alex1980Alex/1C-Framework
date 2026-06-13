@@ -590,15 +590,16 @@ class SkillRouter(BaseHook):
             required_skills = []
             optional_skills = []
             matched_bundle_names = []
-            for name, _s in top_bundles:
+            for idx, (name, _s) in enumerate(top_bundles):
                 matched_bundle_names.append(name)
                 bundle = bundles[name]
                 for skill in bundle.get("skills", []):
                     if skill not in required_skills:
                         required_skills.append(skill)
-                for skill in bundle.get("optional", []):
-                    if skill not in optional_skills and skill not in required_skills:
-                        optional_skills.append(skill)
+                if idx == 0:
+                    for skill in bundle.get("optional", []) or []:
+                        if skill not in optional_skills and skill not in required_skills:
+                            optional_skills.append(skill)
 
         # --- Build stdout output (Phase 11: stdout instead of systemMessage) ---
         parts = [
