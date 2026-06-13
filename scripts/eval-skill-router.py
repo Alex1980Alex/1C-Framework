@@ -127,6 +127,28 @@ def _silence_accuracy(rows):
     return round(sum(1 for r in vals if r["silent_ok"]) / len(vals), 4) if vals else None
 
 
+def _cv_action_f1(rows, k):
+    """260613 B4: k-fold CV over ACTION rows. Deterministic sha1(prompt)%k partition;
+    action_f1 per non-empty fold → {k, mean, std, folds}. For a FIXED router (no
+    per-fold tuning) mean≈pooled — it surfaces variance / GT-size noise, and becomes
+    a real held-out estimate once weights are tuned per-fold (Фаза C). None if k<2 or
+    too few action rows. NB: CV folds (sha1%k) are INDEPENDENT of the train/test
+    `split` field (sha1%5) — different axes, not nested."""
+    action = [r for r in rows if r["is_action"]]
+    if k < 2 or len(action) < k:
+        return None
+    folds: list[list[float]] = [[] for _ in range(k)]
+    for r in action:
+        h = int(hashlib.sha1(r["prompt"].encode("utf-8")).hexdigest(), 16)
+        folds[h % k].append(r["f1"])
+    per_fold = [round(sum(f) / len(f), 4) for f in folds if f]
+    if not per_fold:
+        return None
+    mean = sum(per_fold) / len(per_fold)
+    var = sum((x - mean) ** 2 for x in per_fold) / len(per_fold)
+    return {"k": k, "mean": round(mean, 4), "std": round(var**0.5, 4), "folds": per_fold}
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate skill-router accuracy")
     parser.add_argument("--verbose", "-v", action="store_true")
@@ -140,6 +162,21 @@ def main():
         action="store_true",
         help="Persist report to data/reports/skills/skill-router-eval-latest.json"
         " (источник F1 для skill_system_acceptance, roadmap 260612 P4)",
+    )
+    parser.add_argument(
+        "--split",
+        choices=["train", "test", "all"],
+        default="all",
+        help="260613 B3: оценивать только train/test-сплит (all = весь чистый набор);"
+        " quarantine исключается всегда",
+    )
+    parser.add_argument(
+        "--cv",
+        type=int,
+        default=0,
+        metavar="K",
+        help="260613 B4: k-fold CV по action-семплам — mean±std action_f1 (стабильнее"
+        " единичного test-сплита на малом GT; для fixed-роутера mean≈pooled)",
     )
     args = parser.parse_args()
 
@@ -163,6 +200,9 @@ def main():
     _n_quar = _n_all - len(samples)
     if _n_quar:
         print(f"Excluded {_n_quar} quarantine cases (leakage-suspect)", file=sys.stderr)
+    if args.split in ("train", "test"):  # 260613 B3
+        samples = [s for s in samples if s.get("split") == args.split]
+        print(f"--split {args.split}: {len(samples)} samples", file=sys.stderr)
     print(f"Loaded {len(samples)} scored ground truth samples", file=sys.stderr)
     print(f"Router: {ROUTER_SCRIPT}", file=sys.stderr)
     print(file=sys.stderr)
@@ -199,6 +239,7 @@ def main():
         bundle_all.append(bm)
         per_sample.append(
             {
+                "prompt": prompt,
                 "split": _split_of(prompt, sample),
                 "is_action": bool(exp_skills),
                 "f1": sm["f1"],
@@ -262,6 +303,8 @@ def main():
             for sp in ("train", "test")
         },
     }
+    if args.cv:  # 260613 B4
+        honest_metrics["cv_action_f1"] = _cv_action_f1(per_sample, args.cv)
 
     report = {
         "total_samples": len(samples),
@@ -371,6 +414,12 @@ def main():
             f"  silence accuracy:  {hm['silence_accuracy']} "
             f"over {hm['n_silence']} empty-expected samples"
         )
+        cv = hm.get("cv_action_f1")
+        if cv:
+            print(
+                f"  CV action F1 (k={cv['k']}): mean={cv['mean']} std={cv['std']} "
+                f"folds={cv['folds']}"
+            )
         print("\nBundle Metrics:")
         print(f"  Precision: {bm['precision']:.4f}")
         print(f"  Recall:    {bm['recall']:.4f}")

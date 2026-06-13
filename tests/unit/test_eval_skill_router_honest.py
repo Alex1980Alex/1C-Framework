@@ -87,3 +87,48 @@ def test_literal_skill_name_is_word_boundary_not_substring():
     assert not _literal_match("deployment", "это redeployment стратегия")
     assert not _literal_match("deployment", "несколько deployments подряд")
     assert not _literal_match("autoresearch", "this is not autoresearchable")
+
+
+# --- B4: k-fold CV over action samples ---
+
+
+def _action_rows(n, f1=0.8):
+    return [
+        {"prompt": f"p{i}", "is_action": True, "f1": f1, "silent_ok": False} for i in range(n)
+    ]
+
+
+def test_cv_none_when_k_lt_2_or_too_few_action():
+    assert ev._cv_action_f1(_action_rows(5), 1) is None  # k<2
+    assert ev._cv_action_f1(_action_rows(2), 3) is None  # 2 action < k=3
+
+
+def test_cv_structure_and_bounds():
+    rows = [
+        {"prompt": f"p{i}", "is_action": True, "f1": 1.0 if i % 2 == 0 else 0.0, "silent_ok": False}
+        for i in range(10)
+    ]
+    cv = ev._cv_action_f1(rows, 2)
+    assert cv is not None
+    assert cv["k"] == 2
+    assert 0.0 <= cv["mean"] <= 1.0
+    assert cv["std"] >= 0.0
+    assert cv["folds"] and all(0.0 <= f <= 1.0 for f in cv["folds"])
+
+
+def test_cv_ignores_silence_rows():
+    rows = _action_rows(6, f1=0.8) + [
+        {"prompt": f"s{i}", "is_action": False, "f1": 1.0, "silent_ok": True} for i in range(6)
+    ]
+    cv = ev._cv_action_f1(rows, 3)
+    # every action f1 == 0.8 → every fold mean 0.8 → overall mean 0.8 (silence ignored)
+    assert cv["mean"] == 0.8
+    assert cv["std"] == 0.0
+
+
+def test_cv_deterministic():
+    rows = [
+        {"prompt": f"prompt-{i}", "is_action": True, "f1": (i % 3) / 2, "silent_ok": False}
+        for i in range(12)
+    ]
+    assert ev._cv_action_f1(rows, 4) == ev._cv_action_f1(rows, 4)

@@ -367,24 +367,31 @@ class SkillRouter(BaseHook):
 
         # --- Layer A2: 1C domain signals + literal skill-name mention ---
         # Детекторы работают по СЫРОМУ промпту (CamelCase требует регистра).
+        # 260613 B1: веса вынесены в config["a2_signals"] (tunable без правки кода;
+        # дефолты == исторические значения → поведение без секции не меняется).
+        a2 = config.get("a2_signals") or {}  # `or {}` — null-safe (ручная порча JSON)
+        bsl_weights = a2.get("bsl_signal_weights", {"bsl-dev": 3, "research-1c": 1})
+        conn_weights = a2.get("conn_str_weights", {"research-1c": 3})
+        lit_weight = a2.get("literal_name_weight", 4)
+        lit_min_len = a2.get("literal_name_min_len", 6)
         if self._BSL_IDENT_RE.search(prompt) or self._BSL_META_RE.search(prompt):
-            if "bsl-dev" in bundles:
-                scores["bsl-dev"] = scores.get("bsl-dev", 0) + 3
-            if "research-1c" in bundles:
-                scores["research-1c"] = scores.get("research-1c", 0) + 1
+            for bname, w in bsl_weights.items():
+                if bname in bundles:
+                    scores[bname] = scores.get(bname, 0) + w
         if self._CONN_STR_RE.search(prompt):
-            if "research-1c" in bundles:
-                scores["research-1c"] = scores.get("research-1c", 0) + 3
+            for bname, w in conn_weights.items():
+                if bname in bundles:
+                    scores[bname] = scores.get(bname, 0) + w
         # Буквальное имя скилла в промпте — сильнейший сигнал (FN-класс
         # «1c-debug-hmr переключись на...»: одиночный кейворд не пробивал min_score).
         # 260613 F3: матч ТОЛЬКО как целое слово (\b...\b). Подстрочный `in` ловил
         # однословные родовые имена (`deployment`, `autoresearch`) внутри несвязанных
-        # слов/путей ("redeployment", "deployments") и форсил бандл (+4 >> min_score).
+        # слов/путей ("redeployment", "deployments") и форсил бандл.
         for name, bundle in bundles.items():
             for skill in bundle.get("skills", []):
                 sk = skill.lower()
-                if len(sk) >= 6 and re.search(rf"\b{re.escape(sk)}\b", prompt_lower):
-                    scores[name] = scores.get(name, 0) + 4
+                if len(sk) >= lit_min_len and re.search(rf"\b{re.escape(sk)}\b", prompt_lower):
+                    scores[name] = scores.get(name, 0) + lit_weight
                     break
 
         # --- Layer B: Fuzzy single-word matching ---
