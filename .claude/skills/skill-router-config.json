@@ -269,9 +269,7 @@
         "bsl-development"
       ],
       "optional": [
-        "1c-doc-research",
-        "analyze-1c-task-v2",
-        "implement-1c-task"
+        "1c-doc-research"
       ]
     },
     "research-tech": {
@@ -1272,8 +1270,7 @@
       ],
       "optional": [
         "windows-hooks-paths",
-        "hook-enforcement-pattern",
-        "multi-level-hook-architecture"
+        "hook-enforcement-pattern"
       ],
       "weighted_keywords": {
         "хук не работает": 4,
@@ -1700,8 +1697,7 @@
         "learning-loop"
       ],
       "optional": [
-        "doc-to-skill",
-        "triad-factory"
+        "doc-to-skill"
       ],
       "weighted_keywords": {
         "learning loop": 5,
