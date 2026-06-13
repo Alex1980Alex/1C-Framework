@@ -109,6 +109,11 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pipeline-gate.py",
+            "timeout": 4
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/userpromptsubmit-feedback-detector.py",
             "timeout": 3
           },

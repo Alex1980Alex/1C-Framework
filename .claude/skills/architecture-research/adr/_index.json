@@ -187,7 +187,15 @@
       "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
-      "tags": ["tooling-adoption", "planning", "spec-driven", "openspec", "spec-kit", "bmad", "sdlc-step-1"]
+      "tags": [
+        "tooling-adoption",
+        "planning",
+        "spec-driven",
+        "openspec",
+        "spec-kit",
+        "bmad",
+        "sdlc-step-1"
+      ]
     },
     {
       "id": "ADR-013",
@@ -196,7 +204,14 @@
       "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
-      "tags": ["tooling-adoption", "design", "karpathy", "simplicity", "architecture-research", "sdlc-step-2"]
+      "tags": [
+        "tooling-adoption",
+        "design",
+        "karpathy",
+        "simplicity",
+        "architecture-research",
+        "sdlc-step-2"
+      ]
     },
     {
       "id": "ADR-014",
@@ -205,7 +220,15 @@
       "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
-      "tags": ["tooling-adoption", "coding", "context7", "mcp", "lazy-mcp", "pyright", "sdlc-step-3"]
+      "tags": [
+        "tooling-adoption",
+        "coding",
+        "context7",
+        "mcp",
+        "lazy-mcp",
+        "pyright",
+        "sdlc-step-3"
+      ]
     },
     {
       "id": "ADR-015",
@@ -214,7 +237,14 @@
       "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
-      "tags": ["tooling-adoption", "testing", "tdd-guard", "playwright", "security", "sdlc-step-4"]
+      "tags": [
+        "tooling-adoption",
+        "testing",
+        "tdd-guard",
+        "playwright",
+        "security",
+        "sdlc-step-4"
+      ]
     },
     {
       "id": "ADR-016",
@@ -223,7 +253,33 @@
       "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
-      "tags": ["tooling-adoption", "eval", "pyright", "playwright", "trail-of-bits", "grill-me", "skip", "defer"]
+      "tags": [
+        "tooling-adoption",
+        "eval",
+        "pyright",
+        "playwright",
+        "trail-of-bits",
+        "grill-me",
+        "skip",
+        "defer"
+      ]
+    },
+    {
+      "id": "ADR-017",
+      "file": "017-generic-4stage-pipeline-slash-state.md",
+      "title": "Generic 4-stage SDLC Pipeline — слэш-команды + state-файл (артефакт-на-этап)",
+      "status": "accepted",
+      "date": "2026-06-13",
+      "research": "../cache/sdlc-pipeline-orchestration-patterns.md",
+      "tags": [
+        "pipeline",
+        "sdlc",
+        "orchestration",
+        "slash-commands",
+        "state-machine",
+        "approval-gate",
+        "artifact-handoff"
+      ]
     }
   ]
 }

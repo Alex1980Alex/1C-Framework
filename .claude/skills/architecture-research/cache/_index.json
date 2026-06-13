@@ -1208,6 +1208,21 @@
         "superpowers"
       ],
       "last_verified": "2026-06-12"
+    },
+    {
+      "file": "sdlc-pipeline-orchestration-patterns.md",
+      "keywords": [
+        "pipeline",
+        "sdlc",
+        "orchestration",
+        "state-machine",
+        "artifact-handoff",
+        "slash-commands",
+        "hooks",
+        "approval-gate",
+        "openspec"
+      ],
+      "last_verified": "2026-06-13"
     }
   ]
 }
