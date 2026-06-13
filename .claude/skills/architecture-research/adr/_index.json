@@ -179,6 +179,42 @@
         "event-store",
         "non-goal"
       ]
+    },
+    {
+      "id": "ADR-012",
+      "file": "012-planning-openspec-core-skip-speckit-bmad.md",
+      "title": "Планирование — OpenSpec ядро SDD; Spec Kit/BMAD SKIP; Grill Me опц.",
+      "status": "accepted",
+      "date": "2026-06-13",
+      "research": "../cache/claude-code-ecosystem-tools-2026.md",
+      "tags": ["tooling-adoption", "planning", "spec-driven", "openspec", "spec-kit", "bmad", "sdlc-step-1"]
+    },
+    {
+      "id": "ADR-013",
+      "file": "013-design-archresearch-core-simplicity-discipline.md",
+      "title": "Дизайн — architecture-research ядро + simplicity-discipline; frontend/Figma SKIP",
+      "status": "accepted",
+      "date": "2026-06-13",
+      "research": "../cache/claude-code-ecosystem-tools-2026.md",
+      "tags": ["tooling-adoption", "design", "karpathy", "simplicity", "architecture-research", "sdlc-step-2"]
+    },
+    {
+      "id": "ADR-014",
+      "file": "014-coding-adopt-context7-eval-pyright.md",
+      "title": "Кодирование — ADOPT Context7 MCP (lazy-load); Pyright EVAL; language-experts SKIP",
+      "status": "proposed",
+      "date": "2026-06-13",
+      "research": "../cache/claude-code-ecosystem-tools-2026.md",
+      "tags": ["tooling-adoption", "coding", "context7", "mcp", "lazy-mcp", "pyright", "sdlc-step-3"]
+    },
+    {
+      "id": "ADR-015",
+      "file": "015-testing-adopt-tddguard-optin-eval-playwright.md",
+      "title": "Тестирование — tdd-guard opt-in; Playwright/ToB EVAL; Sentry/Code-Review-plugin SKIP",
+      "status": "proposed",
+      "date": "2026-06-13",
+      "research": "../cache/claude-code-ecosystem-tools-2026.md",
+      "tags": ["tooling-adoption", "testing", "tdd-guard", "playwright", "security", "sdlc-step-4"]
     }
   ]
 }
