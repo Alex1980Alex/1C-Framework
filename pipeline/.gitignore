@@ -1,0 +1,5 @@
+# Transient working-state пайплайна (ADR-017) — НЕ deliverables.
+# Артефакты задач (0N-*.md) и .pipeline-state.json ТРЕКАЮТСЯ git'ом (постоянный архив).
+CURRENT
+*.tmp
+*/.pipeline-state.tmp
