@@ -162,6 +162,11 @@ SKIP_PATTERNS = [
     # skill-router eval ground-truth + README (versioned eval dataset, documented
     # in data/skill-router-ground-truth.README.md + roadmap 260613; not product code).
     "skill-router-ground-truth",
+    # ADR (Architecture Decision Records) — самодокументирующиеся decision-артефакты
+    # (Context→Decision→Consequences→Alternatives), НЕ product/infra-код; cache/ уже
+    # скипается через "/cache/" выше (260613).
+    "architecture-research/adr/",
+    "/adr/",
     # mypy ratchet baseline (auto-generated snapshot, roadmap 260514 Phase 0).
     # Re-synced opportunistically via `mypy src/ ... | python -m mypy_baseline sync`.
     # Not product code, no docs to maintain.
