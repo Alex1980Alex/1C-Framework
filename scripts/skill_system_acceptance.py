@@ -56,6 +56,7 @@ ROUTER_REPORT = PROJECT_ROOT / "data" / "reports" / "skills" / "skill-router-eva
 HEALTH_REPORT = PROJECT_ROOT / "data" / "reports" / "skills" / "skill-health-report.md"
 CI_YML = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
 ENFORCER = PROJECT_ROOT / ".claude" / "hooks" / "code-skill-enforcer.py"
+GT_PATH = PROJECT_ROOT / "data" / "skill-router-ground-truth.jsonl"
 
 WINDOW_START = datetime(2026, 6, 13)
 WINDOW_END = datetime(2026, 6, 27)
@@ -151,6 +152,30 @@ def _ci_honest_fail() -> bool:
     return False
 
 
+def _gt_counts() -> tuple[int, int]:
+    """(quarantined, test_action) из GT (260613 A5/A7 honesty-проводка).
+
+    quarantined > 0 → гейт PROVISIONAL: leakage-кандидаты (трудные разговорные
+    кейсы) изъяты из train/test, поэтому pooled action_f1 оптимистичен и не
+    отражает hard-когорту. Критерий `gate_representative` держит all_pass честным
+    (FAIL пока 22 не ре-верифицированы и не возвращены в гейт — A7). Ошибка → (-1,-1).
+    """
+    quar = test_action = 0
+    try:
+        for line in GT_PATH.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            r = json.loads(line)
+            if r.get("split") == "quarantine":
+                quar += 1
+            elif r.get("split") == "test" and r.get("expected_skills"):
+                test_action += 1
+    except (OSError, ValueError):
+        return -1, -1
+    return quar, test_action
+
+
 def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     now = now or datetime.now()
     ghosts, drift, changed = _mirror_dry_run()
@@ -178,6 +203,7 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
             arm_fired += 1
 
     rf = _router_f1()
+    quarantined, gt_test_action = _gt_counts()
 
     health_age_days: float | None = None
     if HEALTH_REPORT.exists():
@@ -199,6 +225,8 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
         "router_f1_test": rf["test"],
         "router_f1_train": rf["train"],
         "router_f1_ts": rf["ts"],
+        "quarantined": quarantined,
+        "gt_test_action": gt_test_action,
         "floor_gated": floor_gated,
         "arm_fired": arm_fired,
         "invocations": invocations,
@@ -214,6 +242,10 @@ def evaluate(m: dict[str, Any]) -> dict[str, bool]:
         "library_content_fresh": m["changed"] == 0,  # 260613 F4: точки не устарели по контенту
         "ingest_events>0": m["ingest_events"] > 0,
         f"router_f1>={F1_TARGET}": m["router_f1"] is not None and m["router_f1"] >= F1_TARGET,
+        # 260613 A5/A7 honesty: пока leakage-кандидаты в карантине, гейт меряет
+        # designed-subset → action_f1 оптимистичен. all_pass честно FAIL, пока 22
+        # не ре-верифицированы и не возвращены в гейт (A7). quarantined==0 → закрыто.
+        "gate_representative": m["quarantined"] == 0,
         "floor_gates_noise": m["floor_gated"] > 0,
         "skill_arm_alive": m["arm_fired"] > 0,
         f"health_report<{HEALTH_FRESH_DAYS:.0f}d": (
@@ -233,6 +265,9 @@ def render(m: dict[str, Any], crit: dict[str, bool], final: bool) -> str:
         f" | train {m['router_f1_train']} / test {m['router_f1_test']} (диагностика,"
         f" малый GT, не held-out) | legacy padded {m['router_f1_legacy']}"
         f" (отчёт {m['router_f1_ts']})",
+        f"- gate representativeness: quarantined={m['quarantined']} (leakage-кандидаты"
+        f" вне гейта), test action={m['gt_test_action']} — пока quarantined>0 гейт"
+        f" PROVISIONAL (designed-subset, hard 1С-когорта изъята; вернуть через A7)",
         f"- surfacing: floor отрезал {m['floor_gated']} skill-хитов,"
         f" arm fired {m['arm_fired']}/{m['invocations']} инвокаций — цель >0 и >0",
         f"- skill-health-report возраст: {m['health_age_days']}d — цель <{HEALTH_FRESH_DAYS:.0f}d",

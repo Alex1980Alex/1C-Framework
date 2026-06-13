@@ -352,6 +352,21 @@ jobs:
         run: pip-audit --strict
         continue-on-error: true  # advisory; fix CVSS >= 7.0 within 7 days, medium in next iteration
 
+  skill-router-gt-lint:
+    name: Skill Router GT Lint (schema + no-leakage — blocking)
+    runs-on: ubuntu-latest
+    # 260613 A9: leakage (transcript-router метка в train/test) = ошибка КОРРЕКТНОСТИ
+    # данных, блокирует независимо от advisory skill-router-eval ниже (это про
+    # качество разметки, не про F1). Pure stdlib — без uv/deps.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Lint ground-truth (schema + transcript-router not in train/test)
+        run: python scripts/lint_skill_router_gt.py
+
   skill-router-eval:
     name: Skill Router Evaluation
     runs-on: ubuntu-latest

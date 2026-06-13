@@ -155,7 +155,15 @@ def main():
             if line:
                 samples.append(json.loads(line))
 
-    print(f"Loaded {len(samples)} ground truth samples", file=sys.stderr)
+    # 260613 A5: quarantine-кейсы (transcript-router, leakage-кандидаты) исключены
+    # из метрик — их метки выведены из вывода роутера (contamination). Остаются в
+    # GT-файле для авторской ре-верификации; не влияют на честное число гейта.
+    _n_all = len(samples)
+    samples = [s for s in samples if s.get("split") != "quarantine"]
+    _n_quar = _n_all - len(samples)
+    if _n_quar:
+        print(f"Excluded {_n_quar} quarantine cases (leakage-suspect)", file=sys.stderr)
+    print(f"Loaded {len(samples)} scored ground truth samples", file=sys.stderr)
     print(f"Router: {ROUTER_SCRIPT}", file=sys.stderr)
     print(file=sys.stderr)
 
