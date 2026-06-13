@@ -1,9 +1,21 @@
 # ADR-015: Тестирование — tdd-guard opt-in; Playwright/ToB EVAL; Sentry/Code-Review-plugin SKIP
 
 **Дата:** 2026-06-13
-**Статус:** proposed
+**Статус:** accepted (tdd-guard hook создан+smoke-verified 2026-06-13; Playwright/ToB — EVAL)
 **Исследование:** ../cache/claude-code-ecosystem-tools-2026.md
 **Шаг SDLC:** 4. Тестирование (решение фиксируется в Дизайне)
+
+> **Реализация (260613 Этап 4.2):** [`tdd-guard.py`](../../../../.claude/hooks/tdd-guard.py)
+> создан — **advisory-only opt-in** (PreToolUse:Write|Edit). Default (env unset) =
+> чистый no-op; `TDD_GUARD_ENABLE=1` + правка `src/**.py` с новым def/class без
+> `tests/**/test_<mod>.py` → system_message-подсказка (`continue:true`, **НИКОГДА
+> не блокирует**). MVP = test-presence guard (НЕ полный run-tracked red-first —
+> будущее усиление). Smoke PASS: OFF=no-op / ON+нет-теста=advisory / ON+тест-есть=тихо
+> / non-src=тихо; compile+ruff clean.
+> **НЕ зарегистрирован в settings.json** (surgical/non-breaking — harness-критичный
+> файл не трогаем ради dormant-хука; `simplicity-discipline`). **Включение (старт
+> недели валидации 4.3):** (1) добавить PreToolUse `Write|Edit` entry с `tdd-guard.py`
+> в `.claude/settings.json`; (2) `TDD_GUARD_ENABLE=1`. Реверс = снять оба.
 
 ## Контекст
 Ресёрч для шага тестирования: tdd-guard (red-first enforcement), Playwright MCP

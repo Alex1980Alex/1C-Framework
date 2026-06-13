@@ -211,7 +211,7 @@
       "id": "ADR-015",
       "file": "015-testing-adopt-tddguard-optin-eval-playwright.md",
       "title": "Тестирование — tdd-guard opt-in; Playwright/ToB EVAL; Sentry/Code-Review-plugin SKIP",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-06-13",
       "research": "../cache/claude-code-ecosystem-tools-2026.md",
       "tags": ["tooling-adoption", "testing", "tdd-guard", "playwright", "security", "sdlc-step-4"]
