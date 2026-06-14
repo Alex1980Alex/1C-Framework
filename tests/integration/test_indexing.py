@@ -7,6 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+# The IndexingPipeline class these tests import was removed from src/; they exercise
+# deleted functionality and need a rewrite against the current indexer API
+# (DocumentIndexer). Quarantined (skip) until the integration-test remediation.
+pytestmark = pytest.mark.skip(
+    reason="IndexingPipeline removed; tests need rewrite vs current indexer API (remediation)"
+)
+
 
 @pytest.mark.integration
 class TestIndexingPipeline:
