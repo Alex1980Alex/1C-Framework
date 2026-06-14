@@ -2,6 +2,30 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "new-struktura-constructor-keys": {
+      "title": "Конструктор Новый Структура(<КлючиСтрокой>, <Значения…>) — разбор имён ключей, пробелы, порядок, эквивалентность Вставить",
+      "file": "new-struktura-constructor-keys.md",
+      "created": "2026-06-14",
+      "last_verified": "2026-06-14",
+      "keywords": [
+        "Новый Структура конструктор",
+        "ключи через запятую",
+        "первый параметр Структура",
+        "Структура Вставить перезапись",
+        "пробелы после запятых в ключах",
+        "имена свойств структуры",
+        "параметризованный конструктор Структура",
+        "анти-паттерн пустая структура заполнить",
+        "порядок ключей структуры",
+        "Структура.Свойство ведущий пробел"
+      ],
+      "sources": [
+        "live execution 8.3.27 ИБTransportManagementDevelop 2026-06-14",
+        "about1c.ru/v83/language-reference/working-with-structure",
+        "programmist1s.ru/rabota-so-strukturami-v-1s-8",
+        "studopedia.org/8-161912.html"
+      ]
+    },
     "predefined-data-name-binding": {
       "title": "Привязка предопределённых данных (ИмяПредопределённыхДанных) при DontAutoUpdate + ошибка «Предопределённый элемент отсутствует в данных»",
       "file": "predefined-data-name-binding.md",
