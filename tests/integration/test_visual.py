@@ -116,7 +116,9 @@ class TestVisualIndexer:
         assert page.page_number == 0
         assert page.embedding.shape[1] == 128
 
-    @pytest.mark.skip(reason="visual model mock passes a MagicMock into torch .to(device) — needs mock rewrite, roadmap 260614")
+    @pytest.mark.skip(
+        reason="visual model mock passes a MagicMock into torch .to(device) — needs mock rewrite, roadmap 260614"
+    )
     def test_search_indexed_pages(self, visual_indexer):
         """Test searching within indexed pages."""
         # Create mock indexed pages
@@ -245,7 +247,9 @@ class TestVisualSearchStrategy:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="visual model mock passes a MagicMock into torch .to(device) — needs mock rewrite, roadmap 260614")
+@pytest.mark.skip(
+    reason="visual model mock passes a MagicMock into torch .to(device) — needs mock rewrite, roadmap 260614"
+)
 async def test_end_to_end_visual_workflow(
     visual_indexer,
     mock_vector_store,
