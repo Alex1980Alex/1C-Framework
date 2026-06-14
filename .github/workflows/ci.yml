@@ -403,6 +403,11 @@ jobs:
         run: uv pip install --system -e ".[dev]"
 
       - name: Run skill-router evaluation
+        # CI has no TEI/Qdrant; force semantic-independent so the eval is
+        # deterministic (matches the documented gate assumption above). Without
+        # it the semantic arm yields nothing -> empty predictions -> action_f1 0.0.
+        env:
+          SKILL_ROUTER_NO_SEMANTIC: "1"
         run: |
           # 260612 C3: нет ground-truth = честный fail. Никаких stub-JSON со
           # "skipped" — именно эта ветка годами маскировала неработающий eval.
