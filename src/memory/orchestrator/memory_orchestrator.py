@@ -1482,9 +1482,11 @@ class MemoryOrchestrator:
                         # P2.G5 (roadmap 260612): cascade link cleanup — a deleted
                         # episodic row must not leave dangling MIRRORS/DERIVES_FROM.
                         try:
-                            removed = self._link_registry.delete_links_for_entity(eid)
-                            if removed:
-                                store_actions.setdefault("links_removed", {})[eid] = removed
+                            # NB: distinct name — must NOT shadow the `removed`
+                            # ledger (list) that the return below does len() on.
+                            links_removed = self._link_registry.delete_links_for_entity(eid)
+                            if links_removed:
+                                store_actions.setdefault("links_removed", {})[eid] = links_removed
                         except Exception as link_exc:
                             store_actions.setdefault("link_cleanup_failed", {})[eid] = type(
                                 link_exc

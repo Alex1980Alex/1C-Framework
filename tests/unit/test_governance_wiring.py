@@ -255,3 +255,40 @@ async def test_ttl_cleanup_honest_skip_and_fail(tmp_path, monkeypatch):
         "unsupported_source:"
     )
     assert resp["failed"] == {"semantic:vector-memory:p2": "ConnectionError"}
+
+
+async def test_ttl_cleanup_link_cleanup_does_not_clobber_ledger(tmp_path, monkeypatch):
+    """Regression: deleting a memory-ai entity with a WIRED LinkRegistry must not
+    rebind the ``removed`` ledger to the int link-delete count.
+
+    The cascade link-cleanup assigns ``delete_links_for_entity(eid) -> int``; if it
+    reuses the ``removed`` name, the final ``return`` does ``len(<int>)`` and the
+    whole tool crashes *after* the store was mutated. The existing F9 tests miss
+    this because ``_orch(with_ttl=True)`` leaves ``_link_registry=None`` (the call
+    raises before binding). Here the registry is wired and returns a count.
+    """
+    db = tmp_path / "memory_ai.db"
+    _make_memory_ai_db(db, [("m1", "ephemeral", 0.5)])
+    monkeypatch.setenv("MEMORY_AI_DB_PATH", str(db))
+
+    orch = _orch(tmp_path, with_ttl=True)
+
+    class _StubLinkRegistry:
+        def delete_links_for_entity(self, entity_id, *args, **kwargs) -> int:
+            return 2  # two edges removed for this entity
+
+    orch._link_registry = _StubLinkRegistry()
+    await orch._ttl_service.register(
+        "episodic:memory-ai:m1", policy=TTLPolicy.CUSTOM, ttl_seconds=-1
+    )
+
+    resp = await orch.memory_ttl_cleanup()  # must NOT raise `len(int)` TypeError
+
+    # Ledger reflects expired entities (1), NOT the link-delete count (2).
+    assert resp["removed_count"] == 1
+    assert resp["removed_ledger"] == 1
+    assert resp["removed"] == ["episodic:memory-ai:m1"]
+    assert resp["store_actions"]["deleted"] == ["episodic:memory-ai:m1"]
+    # Cascade link cleanup reported separately, not folded into the ledger.
+    assert resp["store_actions"]["links_removed"] == {"episodic:memory-ai:m1": 2}
+    assert _row(db, "m1") is None
