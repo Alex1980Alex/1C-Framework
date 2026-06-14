@@ -71,6 +71,17 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 ---
 
+## 2026-06-15 — Auto-promoted: GKSTCPLK-2573 (предпросмотр PDF на форме присоедин
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `GKSTCPLK-2573 (предпросмотр PDF на форме присоедин` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/gkstcplk-2573--pdf---.md`
+
+**Status:** Pending review
+
+---
+
 ## Format Template
 
 ```
@@ -403,3 +414,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
 - Files changed: 2
 - Summary: Session 2026-06-14. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(hooks): обязательная авто-пайплайн парадигма (ADR-018) — self-driven + hard-block. Commit: chore(pipeline): персистентная папка pipeline/ — README + .gitignore (постоянный архив задач). Commit: feat(pipeline): generic 4-stage SDLC pipeline (ADR-017) — слэш-команды + state + gate
+
+## 2026-06-15 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 3
+- Summary: Session 2026-06-15. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, pipeline/align-1c-commands-4stage, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): wire bsl_lint.py into implement-1c-task Этап 4 + Phase 9 tool→stage map. Commit: chore: auto-save implement-1c-task.md, SKILL.md, 020-phase9-1c-tooling-adoption-verified.md +1 more. Commit: chore: auto-commit 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, .pipeline-state.json, Конфигурация
+
