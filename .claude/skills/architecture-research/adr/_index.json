@@ -297,6 +297,24 @@
         "self-driven",
         "extends-adr-017"
       ]
+    },
+    {
+      "id": "ADR-019",
+      "file": "019-1c-commands-4stage-pipeline-alignment.md",
+      "title": "Приведение 1С-команд к generic 4-этапному пайплайну (профиль 1c в pipeline_state)",
+      "status": "proposed",
+      "date": "2026-06-14",
+      "research": "../cache/sdlc-pipeline-orchestration-patterns.md",
+      "tags": [
+        "pipeline",
+        "sdlc",
+        "1c",
+        "analyze-1c-task",
+        "implement-1c-task",
+        "pipeline-state-profiles",
+        "approval-gate",
+        "extends-adr-017"
+      ]
     }
   ]
 }

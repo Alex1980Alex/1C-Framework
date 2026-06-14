@@ -32,8 +32,10 @@ from shared.task_master import add_task, get_pending_tasks, has_recent_completio
 
 HOOK_ID = "factory-enforcer-hook"
 
-# Paths that are part of cache workflow (skip — handled elsewhere)
-SKIP_PATHS = ["/cache/", "\\cache\\", "_index.json", "_topic_template.md"]
+# Paths that are NOT new skills/hooks (skip — handled elsewhere or not skill artifacts):
+# cache facts (knowledge-cache-reminder), ADR decision records (created routinely per auto-ADR
+# convention — NOT new skills), index/template files.
+SKIP_PATHS = ["/cache/", "\\cache\\", "/adr/", "\\adr\\", "_index.json", "_topic_template.md"]
 
 
 class FactoryEnforcer(BaseHook):
