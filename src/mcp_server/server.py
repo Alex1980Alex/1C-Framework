@@ -686,6 +686,10 @@ async def main():
     finally:
         if not warmup_task.done():
             warmup_task.cancel()
+        # On shutdown also cancel the shielded init task — shield protects it from
+        # a cancelled *tool call*, not from server teardown (avoids orphaned task).
+        if _init_task is not None and not _init_task.done():
+            _init_task.cancel()
 
 
 if __name__ == "__main__":
