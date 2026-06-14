@@ -268,6 +268,22 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 - **Phase 9 — Adoption candidates → РЕАЛИЗОВАНО** ([ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md), verified 2026-06-14). Верификация скорректировала оптимистичные «High»: **Coverage41C ADOPT** (fix 9-байт stub→`Coverage41C-2.7.3/bin`), **bsl-ls 0.22.0→0.29.0 ADOPT** (bump, +~14 диагностик), **mcp-bsl-lsp-bridge EVAL** (Apache-2.0, но дубль bsl-semantic-search; gap=completion/hover), **sonar 1.16.1→1.18.1 DEFER** (нужен SonarQube ≥2025.4) + **fix** `config_manager.py` drift 1.0.0→1.16.1 (сделано), **claude-code-bsl-lsp SKIP** (плагин ⟂ SKIP-marketplace), **1c-mcp-metacode SKIP** (license:null + дубль GraphRAG), **1c-templates-mcp DEFER** (license:null). Adopt-исполнение (Coverage41C wiring, bsl-ls 94MB bump) — отложено до CI-runner/go-ahead.
 - **B.1 (опц.)** — гибридные обёртки `pl-*-1c` (C.3/C.5), если нужны канонические имена.
 
+## Интеграция Phase 9-инструментов в 1С-пайплайн
+
+> Принцип (по запросу): **каждый принятый инструмент должен ложиться в реализацию пайплайна задачи 1С** —
+> привязан к этапу 4-этапной модели и к конкретной точке в командах/скиллах, а не висеть отдельно.
+
+| Инструмент (ADR-020) | Этап | Точка интеграции в 1С-пайплайне | Статус |
+|---|---|---|---|
+| **`bsl_lint.py`** (bsl-ls) | Кодирование | [`implement-1c-task`](../../.claude/skills/implement-1c-task/SKILL.md) **Этап 4 Статанализ** — предпочтительный BSL-статанализ (OneScript `bsl_analyze` → fallback) | ✅ **WIRED** (skill v2.8) |
+| **bsl-ls 0.29 bump** | (база `bsl_lint.py`) | `tools/bsl-ls/bsl-language-server.jar` — апгрейд под `bsl_lint.py` | DEFER (94 МБ) |
+| **mcp-bsl-lsp-bridge** | Кодирование (live completion/hover) | при EVAL→ADOPT: `implement-1c-task` Этап 3/4 (live LSP-навигация/диагностика) | EVAL |
+| **Coverage41C** | Тестирование | [`run-1c-tests`](../../.claude/commands/run-1c-tests.md) / `implement-1c-task` **Этап 6** — coverage после YAxUnit/VA → `genericCoverage.xml` → SonarQube | DEFER (fix stub-jar + CI-runner + dbgs) |
+| **sonar-bsl-plugin 1.18.1** | Тестирование/QA | CI `ci-1c.yml` (после SonarQube ≥2025.4) + `config_manager.py` (drift fixed ✅) | DEFER |
+| **claude-code-bsl-lsp / 1c-mcp-metacode / 1c-templates-mcp** | — | НЕ интегрируются | SKIP/DEFER (плагин-конфликт / no-license / дубль) |
+
+Каждый DEFER-инструмент имеет **заданную точку интеграции** — встанет в пайплайн при снятии блокера (инфра/лицензия/версия сервера). Ближайшие срезы: Coverage41C → Этап 6 (после fix stub + появления CI-runner); EVAL lsp-bridge → Этап 3/4.
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
@@ -277,6 +293,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 | 2026-06-14 | Phase 0++ | Глубокий разбор Варианта C (D1–D5, 26 точек C1–C26, гибрид C+B, индустрия C-vs-B) + tool-census (drift T.1) + внешние кандидаты (T.2) + Phase 9; кеш ecosystem (4-агентное вн/внеш исследование) | секции «Глубокий разбор Варианта C» + «Инструменты» + [кеш ecosystem](../../.claude/skills/architecture-research/cache/1c-bsl-tooling-ecosystem-2026.md) |
 | 2026-06-14 | Phase 9 | РЕАЛИЗОВАНО: verified adopt/skip 5 кандидатов + версии (bsl-ls 0.22→0.29, sonar 1.16.1→1.18.1, Coverage41C 2.7.3 stub); fix config_manager.py drift; ADOPT-исполнение отложено до инфры | [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) + `config_manager.py` |
 | 2026-06-14 | Phase 9 | Foundation «своей bsl-ls обвязки» РЕАЛИЗОВАН+verified: `scripts/bsl_lint.py` (on-demand BSL-диагностики, EDT Axiom JDK auto-discovery, json/severity/fail-on-error). Открытие: bundled JRE = LFS-указатель (не выгружен) → Java из 1C:EDT | `scripts/bsl_lint.py` + ADR-020 |
+| 2026-06-15 | Phase 9 | Интеграция в пайплайн: `bsl_lint.py` WIRED в `implement-1c-task` Этап 4 (skill v2.8, предпочтительный статанализ); таблица «tool→этап→точка интеграции» для всех Phase 9-инструментов (DEFER-инструменты получили точки интеграции) | `implement-1c-task/SKILL.md` v2.8 + секция «Интеграция Phase 9» |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
