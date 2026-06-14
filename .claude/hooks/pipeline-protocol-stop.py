@@ -4,19 +4,27 @@ Hook: pipeline-protocol-stop
 Event: Stop
 Matcher: (none)
 Purpose: ADR-018 — hard-enforce обязательной пайплайн-парадигмы. Если в ЭТОЙ сессии
-  были правки кода/файлов (Write/Edit — сигнал «была задача») БЕЗ использования
-  пайплайна (ни один `pipeline/<slug>/.pipeline-state.json` не обновлён за сессию) →
-  block с инструкцией. Чистые вопросы (нет Write за сессию) → exempt (нет deadlock).
+  были правки кода/файлов БЕЗ использования пайплайна (ни один
+  `pipeline/<slug>/.pipeline-state.json` не обновлён за сессию) → block с инструкцией.
+  Чистые вопросы (нет правок за сессию) → exempt (нет deadlock).
 
-  Анти-deadlock: (1) opt-out env; (2) keyed на реальный Write-сигнал из invocation-лога,
-  а не на эвристику текста; (3) graceful degradation (исключение/нет данных → allow);
-  (4) выход всегда достижим — создать pipeline-артефакт и завершить снова.
+  Сигнал «была правка» — два независимых источника (ИЛИ):
+    (a) PreToolUse Write/Edit в invocation-логе (`data/hook-invocations.jsonl`);
+    (b) `_git_session_edit` — незакоммиченный файл, изменённый за сессию (git status +
+        mtime). Закрывает пробел инструментов без PreToolUse-матчера (MultiEdit/NotebookEdit),
+        НЕ трогая settings.json.
+
+  Анти-deadlock: (1) opt-out env; (2) keyed на реальный Write-сигнал из invocation-лога
+  (+ git-fallback с mtime-bound: pre-session грязь не считается); (3) graceful degradation
+  (исключение/нет данных → allow); (4) выход всегда достижим — создать pipeline-артефакт
+  и завершить снова.
 Timeout: 8s
 Opt-out: PIPELINE_PROTOCOL_DISABLE=1
 """
 
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -29,10 +37,16 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 INVOCATIONS = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 PIPELINE_DIR = PROJECT_ROOT / "pipeline"
 _TAIL_BYTES = 2_000_000  # ~5-6k последних записей (CloudEvents-конверт ~300-400 байт/строка)
-# NB: MultiEdit/NotebookEdit включены для будущего, но сейчас НЕ имеют PreToolUse-матчера
-# в settings.json → правки ими не логируются → enforcer их не видит (осознанный недо-блок,
-# безопасная сторона). При добавлении матчера на них детект заработает автоматически.
+# MultiEdit/NotebookEdit входят в набор «на будущее», но СЕЙЧАС не имеют PreToolUse-матчера
+# в settings.json → их правки не логируются. Этот пробел закрывает второй сигнал
+# `_git_session_edit` (git status + mtime >= старт сессии) — ловит файл-чейндж ЛЮБЫМ
+# инструментом, не трогая settings.json. Когда матчер на них добавят — log-сигнал (a) заработает сам.
 _WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
+
+# Файлы, авто-пишущиеся Stop-цепочкой ПОСЛЕ нас (session-memory-save → docs/wiki/log.md),
+# не считаем «правкой задачи»: иначе на повторном Stop-проходе git-сигнал ложно сработал бы
+# в чистом вопросе. Пути нормализованы к forward-slash.
+_GIT_SKIP = {"docs/wiki/log.md"}
 
 
 def _parse_dt(s: str) -> datetime | None:
@@ -78,6 +92,62 @@ def _session_writes_and_start(sid: str) -> tuple[bool, datetime | None]:
     return had_write, start
 
 
+def _git_session_edit(start: datetime | None) -> bool:
+    """Второй сигнал «была правка» — через git, независимо от инструмента.
+
+    Ловит правки инструментами без PreToolUse-матчера (MultiEdit/NotebookEdit) и любой
+    иной файл-чейндж, не попавший в invocation-лог. Считаем правкой незакоммиченный
+    *обычный* файл (не сабмодуль/каталог), изменённый ЗА сессию (mtime >= start) и не
+    входящий в denylist авто-артефактов. Fail-safe: нет start / ошибка git → False.
+
+    Корректность времени: лог-`ts` = ``datetime.now().isoformat()`` (naive-local), как и
+    ``st_mtime`` (epoch); ``naive.timestamp()`` трактует метку как local → одна шкала.
+    mtime-bound отсекает pre-session грязь (незавершённая прошлая сессия) → нет ложного блока.
+    """
+    if start is None:
+        return False
+    try:
+        r = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain",
+             "--ignore-submodules=all"],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
+        )
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+    if r.returncode != 0:
+        return False
+    start_ts = start.timestamp()
+    for line in r.stdout.splitlines():
+        if len(line) < 4:
+            continue
+        path = line[3:].strip().strip('"')
+        if " -> " in path:  # переименование "old -> new" → актуальный путь назначения
+            path = path.split(" -> ", 1)[1].strip().strip('"')
+        if path.replace("\\", "/") in _GIT_SKIP:
+            continue
+        try:
+            fp = PROJECT_ROOT / path
+            if fp.is_file():  # обычный файл (modified/staged/новый)
+                mtime = fp.stat().st_mtime
+            elif path.endswith("/") and fp.is_dir():
+                # untracked collapsed dir (`?? newdir/`): git схлопывает новый каталог в один
+                # entry. mtime каталога ловит файл, созданный инструментом в ранее не
+                # существовавшем каталоге. Сабмодуль-entry идёт БЕЗ trailing slash → сюда не
+                # попадает (остаётся пропуск ниже).
+                mtime = fp.stat().st_mtime
+            else:
+                continue  # сабмодуль/прочий каталог → пропуск
+            if mtime >= start_ts:
+                return True
+        except OSError:
+            continue
+    return False
+
+
 def _pipeline_used_since(start: datetime | None) -> bool:
     """Был ли хоть один pipeline/<slug>/.pipeline-state.json обновлён за сессию."""
     if not PIPELINE_DIR.is_dir():
@@ -103,6 +173,9 @@ class PipelineProtocolStop(BaseHook):
         if not sid:
             return None  # не можем привязать к сессии → allow (без deadlock)
         had_write, start = _session_writes_and_start(sid)
+        if not had_write:
+            # Второй сигнал: правки инструментами без PreToolUse-лога (MultiEdit/NotebookEdit и т.п.)
+            had_write = _git_session_edit(start)
         if not had_write:
             return None  # нет правок за сессию → не задача → exempt
         if _pipeline_used_since(start):

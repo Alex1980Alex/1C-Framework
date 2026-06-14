@@ -24,10 +24,13 @@ Stop-enforcer 6+ кейсов, инъектор, ruff/compile, валиднос�
 (создать pipeline-артефакт ИЛИ opt-out); любая аномалия → fail-OPEN (allow). Применены 2 правки
 (naive/aware `_parse_dt`, точность комментария).
 
-## Известное ограничение (документировано)
+## Известное ограничение → ЗАКРЫТО (2026-06-14)
 `MultiEdit`/`NotebookEdit` не имеют PreToolUse-матчера в settings.json → правки ими не логируются
-→ enforcer их не видит (недо-блок, безопасная сторона; репо использует Edit/Write). Закроется
-авто при добавлении матчера.
+→ enforcer их раньше не видел (недо-блок, безопасная сторона; репо использует Edit/Write).
+**Закрыто** вторым сигналом `_git_session_edit` (git status + mtime >= старт сессии) — ловит
+файл-чейндж любым инструментом, НЕ трогая settings.json (без побочки на чужие PreToolUse-хуки).
+mtime-bound отсекает pre-session грязь; авто-артефакты (docs/wiki/log.md) в denylist. См. пайплайн
+`pipeline/stop-enforcer-git-signal/` + регрессия `tests/unit/test_pipeline_protocol_git_signal.py`.
 
 ## Итог
 Реализация соответствует дизайну и выбору пользователя (все задачи, hard сразу). Готово к проду

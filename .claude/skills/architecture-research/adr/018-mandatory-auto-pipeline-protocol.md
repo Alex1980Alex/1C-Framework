@@ -17,8 +17,8 @@ enforced хуком. Явный выбор пользователя (2026-06-13)
 - **UPS-инъектор** [`pipeline-protocol.py`](../../../../.claude/hooks/pipeline-protocol.py): на каждый
   промпт инъектит mandatory-инструкцию вести задачи с правкой кода через `pipeline/<slug>/`. [own]
 - **Stop-enforcer** [`pipeline-protocol-stop.py`](../../../../.claude/hooks/pipeline-protocol-stop.py):
-  **hard-block** завершения, если в сессии были Write/Edit (сигнал «была задача» из invocation-лога)
-  БЕЗ использования пайплайна (ни один `.pipeline-state.json` не обновлён за сессию). Аналог
+  **hard-block** завершения, если в сессии были правки кода (сигнал «была задача») БЕЗ
+  использования пайплайна (ни один `.pipeline-state.json` не обновлён за сессию). Аналог
   `approval-gate.py`/`task-enforcer.py`. [exp]
 - **Охват = все задачи с правкой кода, вкл. trivial** (выбор пользователя). Глубина артефактов
   масштабируется: trivial → один компактный `pipeline.md` (дизайн авто-одобрен); medium/complex →
@@ -47,7 +47,19 @@ Write-gating'ом + opt-out + достижимым выходом); отступ
 - **Workflow-оркестратор гонит все этапы автономно** (ADR-017 опция №3) — отложен: ломает
   чекпоинт-ревью артефакта между этапами; остаётся опцией `/pl-run-all`.
 
+## Поправка 2026-06-14 — второй сигнал «была правка» через git
+Сигнал «была задача» теперь из **двух независимых источников (ИЛИ)**: (a) PreToolUse Write/Edit
+в invocation-логе; (b) `_git_session_edit` — незакоммиченный файл, изменённый ЗА сессию
+(`git status --porcelain --ignore-submodules=all` + `st_mtime >= старт сессии`). (b) закрывает
+пробел инструментов без PreToolUse-матчера в `settings.json` (MultiEdit/NotebookEdit), **НЕ трогая
+settings.json** (иначе на них навесились бы и прочие PreToolUse-хуки — цена > выгоды). Anti-deadlock:
+mtime-bound отсекает pre-session грязь; denylist авто-артефактов Stop-цепочки (`docs/wiki/log.md`);
+`--ignore-submodules=all` + skip не-файлов гасит submodule pointer-drift; ветка `?? dir/` ловит
+новый файл в новом untracked-каталоге; любая ошибка git/stat → allow. Регресс
+`tests/unit/test_pipeline_protocol_git_signal.py` (9 тестов).
+
 ## Связанные файлы
 `.claude/hooks/pipeline-protocol.py`, `.claude/hooks/pipeline-protocol-stop.py`,
 `.claude/settings.json` (UPS + Stop), `.claude/hooks/shared/pipeline_state.py` (ADR-017),
-`pipeline/README.md`, `CLAUDE.md` (Hooks Infrastructure).
+`pipeline/README.md`, `CLAUDE.md` (Hooks Infrastructure),
+`tests/unit/test_pipeline_protocol_git_signal.py`.

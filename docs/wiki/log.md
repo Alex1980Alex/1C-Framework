@@ -395,3 +395,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 2
 - Summary: Session 2026-06-13. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260612 Skill System P1-A3 + P4 acceptance — закрытие открытых пунктов. Commit: chore: auto-save SKILL.md, skill-router-config.json, skill_ingest_trend.py. Commit: chore: auto-commit skill-router.py, skill-router-config.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +1 more
 
+
+## 2026-06-14 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-14. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(hooks): обязательная авто-пайплайн парадигма (ADR-018) — self-driven + hard-block. Commit: chore(pipeline): персистентная папка pipeline/ — README + .gitignore (постоянный архив задач). Commit: feat(pipeline): generic 4-stage SDLC pipeline (ADR-017) — слэш-команды + state + gate
+
