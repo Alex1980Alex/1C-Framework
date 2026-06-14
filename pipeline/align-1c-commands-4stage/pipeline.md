@@ -20,6 +20,10 @@ relabel из A**. Решение → [ADR-019](../../.claude/skills/architecture
 - Доп. анализ (по запросу «есть ли ещё команды/решения»): 4-агентное исследование всего 1С-ландшафта →
   секция «Дополнительный анализ» в roadmap (3 пути реализации: direct/SDD/autonomous; 2 слоя тестов: VA BDD/YaXUnit;
   gaps G6–G15; Phases 0.5/7/8) + кеш-факты `architecture-research/cache/1c-task-implementation-landscape.md`.
+- Глубокий разбор Варианта C (по запросу): 4-агентное вн/внеш исследование → секции «Глубокий разбор Варианта C»
+  (D1–D5 спорные границы, 26 точек поломки C1–C26, гибрид C+B, индустрия strangler-fig/Spolsky/Brooks vs rewrite)
+  + «Инструменты» (drift T.1; внешние кандидаты T.2: claude-code-bsl-lsp/mcp-bsl-lsp-bridge/Coverage41C/1c-templates-mcp/
+  1c-mcp-metacode/comol-cursor_rules_1c; Phase 9) + кеш `cache/1c-bsl-tooling-ecosystem-2026.md`.
 - **Код фреймворка (Phase 1–6 roadmap) НЕ писался** — это отдельная будущая работа, ждёт ревью/одобрения roadmap.
 - Побочный bugfix (вне scope roadmap, найден при финализации): [`factory-enforcer.py`](../../.claude/hooks/factory-enforcer.py)
   ложно срабатывал на ADR-файлах (`skills/*/adr/*.md`) как на «создании нового skill» → добавлен `/adr/` в `SKIP_PATHS`

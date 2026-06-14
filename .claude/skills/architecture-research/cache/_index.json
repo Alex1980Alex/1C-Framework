@@ -3,6 +3,28 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "1c-bsl-tooling-ecosystem-2026.md",
+      "title": "Экосистема инструментов 1С/BSL (dev/test/CI/AI-MCP) + spec-driven/strangler-fig миграция — внешние факты GitHub 2026",
+      "keywords": [
+        "1c",
+        "bsl",
+        "tooling",
+        "mcp",
+        "yaxunit",
+        "coverage41c",
+        "bsl-language-server",
+        "claude-code-bsl-lsp",
+        "vanessa-runner",
+        "precommit1c",
+        "spec-kit",
+        "openspec",
+        "strangler-fig",
+        "branch-by-abstraction",
+        "rewrite-vs-migration"
+      ],
+      "last_verified": "2026-06-14"
+    },
+    {
       "file": "1c-task-implementation-landscape.md",
       "title": "Ландшафт реализации задач 1С — команды, 3 пути (direct/SDD/autonomous), 2 слоя тестов (VA BDD/YaXUnit), BSL-инструменты, 1С-хуки, drift-факты",
       "keywords": [
