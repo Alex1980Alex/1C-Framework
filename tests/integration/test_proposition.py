@@ -220,6 +220,7 @@ It was completed in 1889 and receives 7 million visitors annually.""",
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="references removed agents (RAGAgent / agents.conversation) — needs rewrite, roadmap 260614")
 async def test_end_to_end_proposition_workflow(proposition_splitter):
     """End-to-end test: full proposition splitting workflow."""
     # Simulate documents from PDF processing
