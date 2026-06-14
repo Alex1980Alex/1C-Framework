@@ -429,7 +429,7 @@ cd "D:/1С-Framework" && MSYS_NO_PATHCONV=1 \
   "C:/Tools/OneScript/bin/oscript.exe" \
   "C:/Tools/OneScript/lib/vanessa-runner/src/main.os" run \
   --ibconnection '/S"KOMPUTER\TestDB"' \
-  --db-user "a.terletskiy@sodru.com" --db-pwd "Alex80Alex" \
+  --db-user "a.terletskiy@sodru.com" --db-pwd "<ONEC_PASSWORD>" \
   --v8version "8.3.27.1859" \
   --command 'RunUnitTests=D:\1С-Framework\tools\yaxunit.json' --debuglog
 ```
