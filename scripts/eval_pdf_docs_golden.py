@@ -108,9 +108,7 @@ def run_eval(report_path: Path | None) -> dict[str, Any]:
                 expected = {str(x) for x in item.get("expected_chunk_ids") or []}
                 if expected:
                     ndcgs.append(ndcg_at_k(retrieved, expected))
-                    chunk_recalls.append(
-                        len(expected & set(retrieved)) / len(expected)
-                    )
+                    chunk_recalls.append(len(expected & set(retrieved)) / len(expected))
                 kw_recalls.append(keyword_recall(payloads, item.get("expected_keywords") or []))
 
             report["collections"][coll] = {
@@ -129,9 +127,7 @@ def run_eval(report_path: Path | None) -> dict[str, Any]:
 
     if report_path:
         report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(
-            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return report
 
 
@@ -142,9 +138,7 @@ def main() -> int:
     report = run_eval(args.report)
     out = json.dumps(report, ensure_ascii=False, indent=2)
     sys.stdout.buffer.write(out.encode("utf-8") + b"\n")
-    failed = any(
-        c["errors"] or c["items_with_gt"] == 0 for c in report["collections"].values()
-    )
+    failed = any(c["errors"] or c["items_with_gt"] == 0 for c in report["collections"].values())
     return 1 if failed else 0
 
 

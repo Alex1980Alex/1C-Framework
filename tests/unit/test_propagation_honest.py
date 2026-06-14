@@ -220,9 +220,7 @@ async def test_memory_ai_handler_mutates_importance(tmp_path, monkeypatch):
     # Existing message → importance nudged by delta, returns True.
     assert await ai_handler("episodic:memory-ai:m1", 0.2) is True
     conn = sqlite3.connect(str(db))
-    imp = conn.execute(
-        "SELECT importance FROM important_messages WHERE id = 'm1'"
-    ).fetchone()[0]
+    imp = conn.execute("SELECT importance FROM important_messages WHERE id = 'm1'").fetchone()[0]
     conn.close()
     assert imp == pytest.approx(0.70, abs=1e-6)
 
@@ -239,9 +237,7 @@ async def test_memory_ai_handler_clamps_importance(tmp_path, monkeypatch):
     # Large positive delta clamps at 1.0.
     assert await ai_handler("episodic:memory-ai:m1", 5.0) is True
     conn = sqlite3.connect(str(db))
-    imp = conn.execute(
-        "SELECT importance FROM important_messages WHERE id = 'm1'"
-    ).fetchone()[0]
+    imp = conn.execute("SELECT importance FROM important_messages WHERE id = 'm1'").fetchone()[0]
     conn.close()
     assert imp == pytest.approx(1.0, abs=1e-6)
 

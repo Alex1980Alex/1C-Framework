@@ -93,9 +93,7 @@ def test_literal_skill_name_is_word_boundary_not_substring():
 
 
 def _action_rows(n, f1=0.8):
-    return [
-        {"prompt": f"p{i}", "is_action": True, "f1": f1, "silent_ok": False} for i in range(n)
-    ]
+    return [{"prompt": f"p{i}", "is_action": True, "f1": f1, "silent_ok": False} for i in range(n)]
 
 
 def test_cv_none_when_k_lt_2_or_too_few_action():

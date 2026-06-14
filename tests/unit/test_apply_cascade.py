@@ -61,7 +61,13 @@ class TestApplyCascade:
         tmp_db = tmp_path / "link_registry.db"
         real_cls, LinkType = _registry_factory(tmp_db, monkeypatch)
         reg = real_cls(db_path=str(tmp_db))
-        _link(reg, "semantic:vector-memory:A", "semantic:vector-memory:B", LinkType.SUPPORTS, strength=0.8)
+        _link(
+            reg,
+            "semantic:vector-memory:A",
+            "semantic:vector-memory:B",
+            LinkType.SUPPORTS,
+            strength=0.8,
+        )
 
         client = _FakeClient(
             {"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0, "application_count": 0}}
@@ -80,7 +86,13 @@ class TestApplyCascade:
 
         tmp_db = tmp_path / "link_registry.db"
         real_cls, LinkType = _registry_factory(tmp_db, monkeypatch)
-        _link(real_cls(db_path=str(tmp_db)), "semantic:vector-memory:A", "semantic:vector-memory:B", LinkType.EXTENDS, strength=1.0)
+        _link(
+            real_cls(db_path=str(tmp_db)),
+            "semantic:vector-memory:A",
+            "semantic:vector-memory:B",
+            LinkType.EXTENDS,
+            strength=1.0,
+        )
 
         client = _FakeClient(
             {"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0, "application_count": 0}}
@@ -108,7 +120,12 @@ class TestApplyCascade:
 
         tmp_db = tmp_path / "link_registry.db"
         real_cls, LinkType = _registry_factory(tmp_db, monkeypatch)
-        _link(real_cls(db_path=str(tmp_db)), "semantic:vector-memory:A", "semantic:vector-memory:C", LinkType.SUPPORTS)
+        _link(
+            real_cls(db_path=str(tmp_db)),
+            "semantic:vector-memory:A",
+            "semantic:vector-memory:C",
+            LinkType.SUPPORTS,
+        )
 
         client = _FakeClient({})  # C absent → not a learned_pattern
         stats = _cascade_confidence(client, "A", success=True, now=datetime.now())
@@ -120,7 +137,12 @@ class TestApplyCascade:
 
         tmp_db = tmp_path / "link_registry.db"
         real_cls, LinkType = _registry_factory(tmp_db, monkeypatch)
-        _link(real_cls(db_path=str(tmp_db)), "semantic:vector-memory:A", "semantic:vector-memory:B", LinkType.SUPPORTS)
+        _link(
+            real_cls(db_path=str(tmp_db)),
+            "semantic:vector-memory:A",
+            "semantic:vector-memory:B",
+            LinkType.SUPPORTS,
+        )
         monkeypatch.setenv("MEMORY_APPLY_CASCADE_DISABLE", "1")
 
         client = _FakeClient({"B": {"confidence": 0.70, "succ": 0.0, "fail": 0.0}})

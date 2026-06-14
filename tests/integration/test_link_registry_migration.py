@@ -99,14 +99,18 @@ class TestMigrationScript:
 class TestNewTypeOperations:
     def test_promoted_to_round_trip(self, tmp_db):
         registry, _ = tmp_db
-        registry.create_link("semantic:vector-memory:1", "wiki:obsidian-vault:page-1", LinkType.PROMOTED_TO)
+        registry.create_link(
+            "semantic:vector-memory:1", "wiki:obsidian-vault:page-1", LinkType.PROMOTED_TO
+        )
         links = registry.get_links_from("semantic:vector-memory:1")
         assert any(r.target_id == "wiki:obsidian-vault:page-1" for r in links)
 
     def test_superseded_by_round_trip(self, tmp_db):
         # GRAPH_NODE ретирован (ADR-L1 260612); проверяем живой ручной тип
         registry, _ = tmp_db
-        registry.create_link("episodic:memory-ai:2", "episodic:memory-ai:42", LinkType.SUPERSEDED_BY)
+        registry.create_link(
+            "episodic:memory-ai:2", "episodic:memory-ai:42", LinkType.SUPERSEDED_BY
+        )
         links = registry.get_links_from("episodic:memory-ai:2")
         assert any(r.target_id == "episodic:memory-ai:42" for r in links)
 

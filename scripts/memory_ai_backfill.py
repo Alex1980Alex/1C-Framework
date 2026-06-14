@@ -46,9 +46,7 @@ COLLECTION = "learned_patterns"
 
 
 def _link_registry_path() -> Path:
-    return Path(
-        os.environ.get("LINK_REGISTRY_PATH") or PROJECT_ROOT / "data" / "link_registry.db"
-    )
+    return Path(os.environ.get("LINK_REGISTRY_PATH") or PROJECT_ROOT / "data" / "link_registry.db")
 
 
 def _load_rows(conn: sqlite3.Connection) -> list[sqlite3.Row]:
@@ -76,9 +74,7 @@ def backfill_hashes(conn: sqlite3.Connection, apply: bool) -> int:
             md["content_hash"] = hash_content(row["content"] or "")
             pending.append((json.dumps(md, ensure_ascii=False), row["id"]))
     if apply and pending:
-        conn.executemany(
-            "UPDATE important_messages SET metadata = ? WHERE id = ?", pending
-        )
+        conn.executemany("UPDATE important_messages SET metadata = ? WHERE id = ?", pending)
         conn.commit()
     return len(pending)
 
@@ -114,9 +110,7 @@ def merge_duplicates(conn: sqlite3.Connection, apply: bool) -> list[dict]:
                                 (survivor_uid, dup_uid),
                             )
                 if apply:
-                    conn.execute(
-                        "DELETE FROM important_messages WHERE id = ?", (dup["id"],)
-                    )
+                    conn.execute("DELETE FROM important_messages WHERE id = ?", (dup["id"],))
             if apply:
                 # Self-loops can appear when both endpoints were in-group.
                 if lr_conn is not None:
@@ -167,9 +161,7 @@ def _qdrant_existing(point_ids: list[str]) -> set[str] | None:
         return set()
     req = urllib.request.Request(
         f"{QDRANT_URL}/collections/{COLLECTION}/points",
-        data=json.dumps(
-            {"ids": point_ids, "with_payload": False, "with_vector": False}
-        ).encode(),
+        data=json.dumps({"ids": point_ids, "with_payload": False, "with_vector": False}).encode(),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
@@ -183,12 +175,8 @@ def _qdrant_existing(point_ids: list[str]) -> set[str] | None:
 
 def fix_index_flags(conn: sqlite3.Connection, apply: bool) -> dict:
     """Step 3 (G1): reset indexed_in_qdrant only for rows whose point is dead."""
-    rows = conn.execute(
-        "SELECT id FROM important_messages WHERE indexed_in_qdrant = 1"
-    ).fetchall()
-    row_to_point = {
-        r[0]: str(uuid.uuid5(uuid.NAMESPACE_URL, f"session:{r[0]}")) for r in rows
-    }
+    rows = conn.execute("SELECT id FROM important_messages WHERE indexed_in_qdrant = 1").fetchall()
+    row_to_point = {r[0]: str(uuid.uuid5(uuid.NAMESPACE_URL, f"session:{r[0]}")) for r in rows}
     existing = _qdrant_existing(list(row_to_point.values()))
     if existing is None:
         return {"flagged": len(rows), "alive": None, "reset": 0, "skipped": True}

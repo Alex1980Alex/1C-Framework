@@ -168,7 +168,9 @@ def main() -> int:
     m = collect_metrics()
     crit = evaluate(m)
     if args.json:
-        _emit(json.dumps({**m, "criteria": crit, "all_pass": all(crit.values())}, ensure_ascii=False))
+        _emit(
+            json.dumps({**m, "criteria": crit, "all_pass": all(crit.values())}, ensure_ascii=False)
+        )
         return 0
     _emit(
         render(m, crit, args.final),

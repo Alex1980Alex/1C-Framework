@@ -75,9 +75,7 @@ def collect_metrics() -> dict[str, Any]:
 
     m["link_types_count"] = len(LinkType)
     enum_values = {lt.value for lt in LinkType}
-    m["edges_outside_enum"] = sum(
-        c for t, c in m["by_type"].items() if t not in enum_values
-    )
+    m["edges_outside_enum"] = sum(c for t, c in m["by_type"].items() if t not in enum_values)
     m["links_sink_registered"] = "memory-links.log" in CACHE_LOGS
 
     # B1-инвариант: BFS по живому ребру (мигрированный semantic-конец)
@@ -99,8 +97,7 @@ def evaluate(m: dict[str, Any]) -> dict[str, bool]:
         "history_complete": "create" in actions
         and ("delete" in actions or "update" in actions)
         and not (actions - {"create", "delete", "update"}),
-        "typology_clean": m.get("link_types_count") == 8
-        and m.get("edges_outside_enum", 1) == 0,
+        "typology_clean": m.get("link_types_count") == 8 and m.get("edges_outside_enum", 1) == 0,
         "links_sink_registered": bool(m.get("links_sink_registered")),
         "live_chains_green": m.get("bfs_neighbours", 0) > 0,
     }

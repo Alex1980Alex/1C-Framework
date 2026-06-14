@@ -47,9 +47,7 @@ def _verdict_logged(roadmap: Path) -> bool:
     инструкционную форму «PASS/FAIL» (см. fix f08bf8096)."""
     try:
         return (
-            re.search(
-                rf"{FINAL_MARKER}:\s*(PASS|FAIL)\b(?!/)", roadmap.read_text(encoding="utf-8")
-            )
+            re.search(rf"{FINAL_MARKER}:\s*(PASS|FAIL)\b(?!/)", roadmap.read_text(encoding="utf-8"))
             is not None
         )
     except Exception:

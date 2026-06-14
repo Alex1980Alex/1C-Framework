@@ -66,9 +66,7 @@ def test_rebuild_stats_heals_drift(reg: LinkRegistry) -> None:
     reg.create_link(A, B, LinkType.SUPPORTS)
     # имитация легаси-дрейфа: orphan-строка + кривой счётчик
     conn = sqlite3.connect(reg.db_path)
-    conn.execute(
-        "INSERT OR REPLACE INTO link_stats VALUES ('ghost:x:y', 9, 9, 0.5, '2026-01-01')"
-    )
+    conn.execute("INSERT OR REPLACE INTO link_stats VALUES ('ghost:x:y', 9, 9, 0.5, '2026-01-01')")
     conn.execute("UPDATE link_stats SET outgoing_count = 42 WHERE entity_id = ?", (A,))
     conn.commit()
     conn.close()

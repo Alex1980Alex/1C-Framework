@@ -41,9 +41,7 @@ logger = logging.getLogger("backfill-registry")
 
 def collect_aggregates(client: QdrantClient, collection: str) -> dict[str, dict]:
     """Scroll the whole collection and aggregate per source document."""
-    agg: dict[str, dict] = defaultdict(
-        lambda: {"chunks": 0, "max_page": 0, "document_id": ""}
-    )
+    agg: dict[str, dict] = defaultdict(lambda: {"chunks": 0, "max_page": 0, "document_id": ""})
     offset = None
     scanned = 0
     while True:
@@ -102,9 +100,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Backfill document_registry.db from Qdrant")
     ap.add_argument("--qdrant-url", default="http://localhost:6333")
     ap.add_argument("--collection", default="pdf_documents")
-    ap.add_argument(
-        "--db-path", default=str(PROJECT_ROOT / "data" / "document_registry.db")
-    )
+    ap.add_argument("--db-path", default=str(PROJECT_ROOT / "data" / "document_registry.db"))
     ap.add_argument("--dry-run", action="store_true", help="Report only, no writes")
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
@@ -125,8 +121,11 @@ def main() -> int:
         return 0
 
     written = asyncio.run(backfill(agg, Path(args.db_path), args.dry_run))
-    logger.info("Done: %d document(s) %s", written if not args.dry_run else len(agg),
-                "registered" if not args.dry_run else "would be registered")
+    logger.info(
+        "Done: %d document(s) %s",
+        written if not args.dry_run else len(agg),
+        "registered" if not args.dry_run else "would be registered",
+    )
     return 0
 
 

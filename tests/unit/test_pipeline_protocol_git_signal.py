@@ -17,9 +17,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-_HOOK_PATH = (
-    Path(__file__).resolve().parents[2] / ".claude" / "hooks" / "pipeline-protocol-stop.py"
-)
+_HOOK_PATH = Path(__file__).resolve().parents[2] / ".claude" / "hooks" / "pipeline-protocol-stop.py"
 _spec = importlib.util.spec_from_file_location("pipeline_protocol_stop", _HOOK_PATH)
 mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mod)

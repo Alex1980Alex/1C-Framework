@@ -43,7 +43,11 @@ def _row(**kw):
 
 
 def test_clean_rows_pass():
-    rows = [_row(), _row(split="test"), _row(intent="informational", expected_skills=[], expected_bundles=[])]
+    rows = [
+        _row(),
+        _row(split="test"),
+        _row(intent="informational", expected_skills=[], expected_bundles=[]),
+    ]
     assert lint.lint_rows(rows, CATALOG) == []
 
 

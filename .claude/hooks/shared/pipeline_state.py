@@ -39,14 +39,38 @@ STATE_NAME = ".pipeline-state.json"
 
 # Этапы — единый источник истины (команда ↔ этап ↔ артефакт).
 STAGES = [
-    {"n": 1, "name": "architecture", "command": "pl-plan", "artifact": "01-architecture.md",
-     "title": "Планирование архитектуры", "delegates": "architecture-research"},
-    {"n": 2, "name": "design", "command": "pl-design", "artifact": "02-design.md",
-     "title": "Дизайн реализации", "delegates": "design-doc"},
-    {"n": 3, "name": "implementation", "command": "pl-code", "artifact": "03-implementation.md",
-     "title": "Кодирование", "delegates": "implementer"},
-    {"n": 4, "name": "testing", "command": "pl-test", "artifact": "04-testing.md",
-     "title": "Тестирование", "delegates": "code-verify"},
+    {
+        "n": 1,
+        "name": "architecture",
+        "command": "pl-plan",
+        "artifact": "01-architecture.md",
+        "title": "Планирование архитектуры",
+        "delegates": "architecture-research",
+    },
+    {
+        "n": 2,
+        "name": "design",
+        "command": "pl-design",
+        "artifact": "02-design.md",
+        "title": "Дизайн реализации",
+        "delegates": "design-doc",
+    },
+    {
+        "n": 3,
+        "name": "implementation",
+        "command": "pl-code",
+        "artifact": "03-implementation.md",
+        "title": "Кодирование",
+        "delegates": "implementer",
+    },
+    {
+        "n": 4,
+        "name": "testing",
+        "command": "pl-test",
+        "artifact": "04-testing.md",
+        "title": "Тестирование",
+        "delegates": "code-verify",
+    },
 ]
 _BY_COMMAND = {s["command"]: s for s in STAGES}
 PIPELINE_COMMANDS = tuple(s["command"] for s in STAGES)
@@ -115,15 +139,23 @@ def init_task(slug: str, title: str = "") -> dict:
     stages = []
     for s in STAGES:
         st = {
-            "n": s["n"], "name": s["name"], "command": s["command"],
-            "artifact": s["artifact"], "status": "pending", "completed_at": None,
+            "n": s["n"],
+            "name": s["name"],
+            "command": s["command"],
+            "artifact": s["artifact"],
+            "status": "pending",
+            "completed_at": None,
         }
         if s["n"] == APPROVAL_STAGE:
             st.update({"approved": False, "approved_by": None, "approved_at": None})
         stages.append(st)
     data = {
-        "task": slug, "title": title or slug, "created_at": now,
-        "updated_at": now, "current_stage": 1, "stages": stages,
+        "task": slug,
+        "title": title or slug,
+        "created_at": now,
+        "updated_at": now,
+        "current_stage": 1,
+        "stages": stages,
     }
     _save(slug, data)
     _set_current(slug)
@@ -191,20 +223,31 @@ def gate_check(command: str, slug: str | None = None) -> dict:
             )
             return {"ok": False, "hard": True, "reason": reason}
         if not design.get("approved"):
-            return {"ok": False, "hard": True,
-                    "reason": ("Дизайн (02-design.md) не одобрен. Отревьюй артефакт и одобри: "
-                               f"`python .claude/hooks/shared/pipeline_state.py approve {data['task']}`")}
+            return {
+                "ok": False,
+                "hard": True,
+                "reason": (
+                    "Дизайн (02-design.md) не одобрен. Отревьюй артефакт и одобри: "
+                    f"`python .claude/hooks/shared/pipeline_state.py approve {data['task']}`"
+                ),
+            }
         return {"ok": True, "hard": False, "reason": ""}
     # pl-design (2) / pl-test (4): advisory
     if not data:
-        return {"ok": False, "hard": False,
-                "reason": "Нет активного пайплайна. Начни с /pl-plan <задача>."}
+        return {
+            "ok": False,
+            "hard": False,
+            "reason": "Нет активного пайплайна. Начни с /pl-plan <задача>.",
+        }
     prev = _stage(data, n - 1)
     if not (prev and prev.get("status") == "done"):
         art = prev["artifact"] if prev else "?"
-        return {"ok": False, "hard": False,
-                "reason": f"Этап {n - 1} ещё не завершён (артефакт {art} отсутствует) — "
-                          "продолжаю, но проверь порядок."}
+        return {
+            "ok": False,
+            "hard": False,
+            "reason": f"Этап {n - 1} ещё не завершён (артефакт {art} отсутствует) — "
+            "продолжаю, но проверь порядок.",
+        }
     return {"ok": True, "hard": False, "reason": ""}
 
 
@@ -250,7 +293,9 @@ def _emit(obj: object) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     _setup_io()
-    ap = argparse.ArgumentParser(prog="pipeline_state", description="Generic 4-stage pipeline state")
+    ap = argparse.ArgumentParser(
+        prog="pipeline_state", description="Generic 4-stage pipeline state"
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("init", help="создать пайплайн для задачи")

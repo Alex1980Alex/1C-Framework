@@ -52,9 +52,7 @@ def _chunks() -> list[DocumentChunk]:
 
 async def test_index_chunks_registers_document() -> None:
     registry = FakeRegistry()
-    indexer = DocumentIndexer(
-        FakeEmbeddingEngine(), FakeVectorStore(), document_registry=registry
-    )
+    indexer = DocumentIndexer(FakeEmbeddingEngine(), FakeVectorStore(), document_registry=registry)
 
     result = await indexer.index_chunks(
         _chunks(), document_id="doc1", source_path="data/pdfs/x.pdf"

@@ -23,6 +23,7 @@ pytestmark = pytest.mark.unit
 # helpers
 # ---------------------------------------------------------------------------
 
+
 async def _make_store(tmp_path):
     """Return an initialized NetworkXGraphStore writing to tmp_path."""
     from src.pdf_framework.config import GraphStoreSettings
@@ -36,6 +37,7 @@ async def _make_store(tmp_path):
 
 def _entity(eid: str, etype: str = "CONCEPT", name: str = "", **props):
     from src.pdf_framework.schemas.entities import Entity
+
     return Entity(
         id=eid,
         name=name or eid,
@@ -46,13 +48,16 @@ def _entity(eid: str, etype: str = "CONCEPT", name: str = "", **props):
 
 def _relation(rid: str, src: str, tgt: str, rtype: str = "RELATED_TO", **kwargs):
     from src.pdf_framework.schemas.entities import Relation
-    return Relation(id=rid, source_entity_id=src, target_entity_id=tgt,
-                    relation_type=rtype, **kwargs)
+
+    return Relation(
+        id=rid, source_entity_id=src, target_entity_id=tgt, relation_type=rtype, **kwargs
+    )
 
 
 # ---------------------------------------------------------------------------
 # tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestNetworkXGraphStore:

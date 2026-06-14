@@ -14,6 +14,7 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_runner(graph_events, show_status=True, show_sources=True):
     """Return a StreamingRAGRunner backed by a deterministic fake graph."""
     from unittest.mock import MagicMock
@@ -113,9 +114,7 @@ class TestStreamingRAGRunner:
 
         types = [ev.type for ev in events]
         # At least one STATUS event must precede the first TOKEN
-        first_token_idx = next(
-            (i for i, t in enumerate(types) if t == StreamEventType.TOKEN), None
-        )
+        first_token_idx = next((i for i, t in enumerate(types) if t == StreamEventType.TOKEN), None)
         first_status_idx = next(
             (i for i, t in enumerate(types) if t == StreamEventType.STATUS), None
         )
@@ -238,10 +237,10 @@ class TestStreamingRAGRunner:
         for line in lines:
             assert line.startswith("data: ")
             assert line.endswith("\n\n")
-            payload = json.loads(line[len("data: "):].strip())
+            payload = json.loads(line[len("data: ") :].strip())
             assert "type" in payload
             assert "data" in payload
 
         # The last SSE line should be the DONE event
-        last_payload = json.loads(lines[-1][len("data: "):].strip())
+        last_payload = json.loads(lines[-1][len("data: ") :].strip())
         assert last_payload["type"] == StreamEventType.DONE.value

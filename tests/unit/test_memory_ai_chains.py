@@ -180,9 +180,7 @@ async def test_a4_save_to_target_memory_ai(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 async def test_a7_delete_message_honest(tmp_path, monkeypatch):
     ai, db = _make_server(tmp_path, monkeypatch)
-    r = json.loads(
-        (await ai.save_important_message({"content": "to be deleted"}))[0].text
-    )
+    r = json.loads((await ai.save_important_message({"content": "to be deleted"}))[0].text)
 
     d1 = json.loads((await ai.delete_message({"message_id": r["id"]}))[0].text)
     assert d1["success"] is True and d1["deleted"] == 1
@@ -201,9 +199,7 @@ async def test_a7_delete_cleans_link_registry(tmp_path, monkeypatch):
     lr = tmp_path / "link_registry.db"
     monkeypatch.setenv("LINK_REGISTRY_PATH", str(lr))
 
-    r = json.loads(
-        (await ai.save_important_message({"content": "linked episodic fact"}))[0].text
-    )
+    r = json.loads((await ai.save_important_message({"content": "linked episodic fact"}))[0].text)
     uid = f"episodic:memory-ai:{r['id']}"
 
     from src.memory.orchestrator.link_registry import LinkRegistry, LinkType

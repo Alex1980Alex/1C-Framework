@@ -39,9 +39,7 @@ GATE_SPLITS = ("train", "test")
 MIN_TEST_DOMAINS = 5
 
 
-def load_catalog(
-    router_config: Path = ROUTER_CONFIG, skills_dir: Path = SKILLS_DIR
-) -> set[str]:
+def load_catalog(router_config: Path = ROUTER_CONFIG, skills_dir: Path = SKILLS_DIR) -> set[str]:
     """Routable skills = union of bundle skills/optional in skill-router-config.json
     plus on-disk skill directory names. A GT expected_skill outside this set can
     never be produced by the router (guaranteed FN), so it is a real GT error."""
@@ -89,8 +87,7 @@ def lint_rows(rows: list[dict], catalog: set[str]) -> list[str]:
             )
         if intent in ("informational", "system") and r.get("expected_skills"):
             issues.append(
-                f"line {i}: intent={intent} but expected_skills nonempty "
-                f"{r.get('expected_skills')}"
+                f"line {i}: intent={intent} but expected_skills nonempty {r.get('expected_skills')}"
             )
         for sk in r.get("expected_skills", []):
             if sk not in catalog:

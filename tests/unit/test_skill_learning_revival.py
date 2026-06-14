@@ -270,7 +270,11 @@ def test_hook_arm_surfaces_pending_with_damp(mf_hook, tmp_path, monkeypatch):
     monkeypatch.setattr(mf_hook, "SKILL_LEARNING_DIR", tmp_path)
     (tmp_path / "patterns.jsonl").write_text(
         json.dumps(
-            {"pattern_id": "s1", "name": "атомарная запись", "content": "атомарная перезапись JSONL"},
+            {
+                "pattern_id": "s1",
+                "name": "атомарная запись",
+                "content": "атомарная перезапись JSONL",
+            },
             ensure_ascii=False,
         )
         + "\n",
@@ -278,7 +282,11 @@ def test_hook_arm_surfaces_pending_with_damp(mf_hook, tmp_path, monkeypatch):
     )
     (tmp_path / "pending_patterns.jsonl").write_text(
         json.dumps(
-            {"pattern_id": "p1", "name": "кандидат", "content": "кандидат про атомарную перезапись JSONL"},
+            {
+                "pattern_id": "p1",
+                "name": "кандидат",
+                "content": "кандидат про атомарную перезапись JSONL",
+            },
             ensure_ascii=False,
         )
         + "\n",
@@ -353,9 +361,12 @@ def test_review_pending_dry_run_then_apply(maintenance):
     old = (now - timedelta(days=45)).isoformat()
     fresh = (now - timedelta(days=5)).isoformat()
     mm.SL_PENDING.write_text(
-        json.dumps({"pattern_id": "old1", "content_hash": "h1", "created_at": old}) + "\n"
-        + json.dumps({"pattern_id": "new1", "content_hash": "h2", "created_at": fresh}) + "\n"
-        + json.dumps({"pattern_id": "nodate", "content_hash": "h3"}) + "\n",
+        json.dumps({"pattern_id": "old1", "content_hash": "h1", "created_at": old})
+        + "\n"
+        + json.dumps({"pattern_id": "new1", "content_hash": "h2", "created_at": fresh})
+        + "\n"
+        + json.dumps({"pattern_id": "nodate", "content_hash": "h3"})
+        + "\n",
         encoding="utf-8",
     )
     s1 = mm.run_review_pending(False, now)

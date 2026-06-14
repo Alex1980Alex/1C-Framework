@@ -20,6 +20,7 @@ pytestmark = pytest.mark.unit
 # Helpers: build minimal RAGState-compatible dicts and schema objects
 # ---------------------------------------------------------------------------
 
+
 def _make_chunk(chunk_id: str, content: str) -> Any:
     from src.pdf_framework.schemas.documents import DocumentChunk
 
@@ -77,8 +78,14 @@ class TestGradeDocuments:
             ),
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False
+            ),
+        ):
             result = await grade_documents(state, llm, settings)
 
         assert "graded_documents" in result
@@ -99,8 +106,14 @@ class TestGradeDocuments:
             ),
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False
+            ),
+        ):
             result = await grade_documents(state, llm, settings)
 
         assert result["graded_documents"][0]["is_relevant"] is False
@@ -122,8 +135,14 @@ class TestGradeDocuments:
             ),
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False
+            ),
+        ):
             result = await grade_documents(state, llm, settings)
 
         graded = result["graded_documents"]
@@ -162,8 +181,14 @@ class TestGradeDocuments:
             ),
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_cheap_llm_enabled", return_value=False
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.grader.is_dspy_available", return_value=False
+            ),
+        ):
             result = await grade_documents(state, llm, settings)
 
         assert result["relevance_ratio"] == pytest.approx(0.5)
@@ -220,8 +245,16 @@ class TestCheckHallucination:
             "context": "1С was created in 1991",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.hallucination_checker.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.hallucination_checker.is_dspy_available",
+                return_value=False,
+            ),
+        ):
             result = await check_hallucination(state, llm, settings)
 
         assert result["is_hallucinated"] is True
@@ -239,8 +272,16 @@ class TestCheckHallucination:
             "context": "1С (1C) was founded in 1991 by Boris Nuraliev.",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.hallucination_checker.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.hallucination_checker.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.hallucination_checker.is_dspy_available",
+                return_value=False,
+            ),
+        ):
             result = await check_hallucination(state, llm, settings)
 
         assert result["is_hallucinated"] is False
@@ -316,8 +357,15 @@ class TestRewriteQuery:
             "retry_count": 0,
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False
+            ),
+        ):
             result = await rewrite_query(state, llm, settings)
 
         assert result["question"] == rewritten_text
@@ -336,8 +384,15 @@ class TestRewriteQuery:
             "original_question": "регистры",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False
+            ),
+        ):
             result = await rewrite_query(state, llm, settings)
 
         assert result["retry_count"] == 2
@@ -355,8 +410,15 @@ class TestRewriteQuery:
             "search_strategy": "vector",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False
+            ),
+        ):
             result = await rewrite_query(state, llm, settings)
 
         assert "search_strategy" in result
@@ -375,8 +437,15 @@ class TestRewriteQuery:
             "search_strategy": "vector",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False
+            ),
+        ):
             result = await rewrite_query(state, llm, settings)
 
         # retry_count will become 2 -> strategy should escalate from vector to hybrid
@@ -395,8 +464,15 @@ class TestRewriteQuery:
             "search_strategy": "vector",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False
+            ),
+        ):
             result = await rewrite_query(state, llm, settings)
 
         # retry_count=1, escalation only triggers at >=2
@@ -416,8 +492,15 @@ class TestRewriteQuery:
             "original_question": "справочники",
         }
 
-        with patch("src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled", return_value=False), \
-             patch("src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False):
+        with (
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_cheap_llm_enabled",
+                return_value=False,
+            ),
+            patch(
+                "src.pdf_framework.agents.rag.nodes.rewriter.is_dspy_available", return_value=False
+            ),
+        ):
             result = await rewrite_query(state, llm, settings)
 
         # Falls back to original_question when all rewrites are identical

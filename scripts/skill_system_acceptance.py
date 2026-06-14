@@ -207,9 +207,7 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
 
     health_age_days: float | None = None
     if HEALTH_REPORT.exists():
-        health_age_days = round(
-            (now.timestamp() - HEALTH_REPORT.stat().st_mtime) / 86400, 1
-        )
+        health_age_days = round((now.timestamp() - HEALTH_REPORT.stat().st_mtime) / 86400, 1)
 
     return {
         "now": now.isoformat(timespec="seconds"),

@@ -370,11 +370,13 @@ class TestPipelines:
         bm25_hits = [("c1", 0.9), ("c2", 0.85), ("c3", 0.8)]
         bm25 = MagicMock()
         bm25.search_two_pass = AsyncMock(return_value=bm25_hits)
-        bm25.get_chunks_by_ids = AsyncMock(return_value=[
-            {"chunk_id": "c1", "section_title": "5.14.3. Регистры сведений"},
-            {"chunk_id": "c2", "section_title": "5.14.1. Структура"},
-            {"chunk_id": "c3", "section_title": "5.14.2. Ключи"},
-        ])
+        bm25.get_chunks_by_ids = AsyncMock(
+            return_value=[
+                {"chunk_id": "c1", "section_title": "5.14.3. Регистры сведений"},
+                {"chunk_id": "c2", "section_title": "5.14.1. Структура"},
+                {"chunk_id": "c3", "section_title": "5.14.2. Ключи"},
+            ]
+        )
 
         scoped_results = [_make_result("s1"), _make_result("s2"), _make_result("s3")]
         scoped_response = _make_response("регистры", scoped_results)

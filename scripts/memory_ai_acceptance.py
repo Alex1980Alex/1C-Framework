@@ -206,7 +206,9 @@ def main() -> int:
             json.dumps({**m, "criteria": crit, "all_pass": all(crit.values())}, ensure_ascii=False)
         )
         return 0
-    emit(render(m, crit, args.final), report_name=None if args.no_report else "memory_ai_acceptance")
+    emit(
+        render(m, crit, args.final), report_name=None if args.no_report else "memory_ai_acceptance"
+    )
     return 0
 
 

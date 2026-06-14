@@ -225,9 +225,7 @@ def _register_documents(chunks: list[dict]) -> None:
                 chunk_count=a["chunks"],
                 page_count=a["max_page"],
             )
-            logger.info(
-                "Registered %s (%d chunks, %d pages)", source, a["chunks"], a["max_page"]
-            )
+            logger.info("Registered %s (%d chunks, %d pages)", source, a["chunks"], a["max_page"])
 
     asyncio.run(_run())
 

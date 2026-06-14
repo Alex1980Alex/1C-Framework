@@ -403,9 +403,7 @@ def mirror_skill_library(
     # to_upsert шире — включает changed (content_hash mismatch), это штатный churn.
     stats["missing"] = sorted(set(found) - set(lib))
     stats["to_upsert"] = sorted(
-        name
-        for name, d in found.items()
-        if lib.get(name, {}).get("content_hash") != d["hash"]
+        name for name, d in found.items() if lib.get(name, {}).get("content_hash") != d["hash"]
     )
     stats["unchanged"] = len(found) - len(stats["to_upsert"])
 

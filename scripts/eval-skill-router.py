@@ -292,13 +292,9 @@ def main():
         "splits": {
             sp: {
                 "action_f1": _action_f1([r for r in per_sample if r["split"] == sp]),
-                "silence_accuracy": _silence_accuracy(
-                    [r for r in per_sample if r["split"] == sp]
-                ),
+                "silence_accuracy": _silence_accuracy([r for r in per_sample if r["split"] == sp]),
                 "n": sum(1 for r in per_sample if r["split"] == sp),
-                "n_action": sum(
-                    1 for r in per_sample if r["split"] == sp and r["is_action"]
-                ),
+                "n_action": sum(1 for r in per_sample if r["split"] == sp and r["is_action"]),
             }
             for sp in ("train", "test")
         },

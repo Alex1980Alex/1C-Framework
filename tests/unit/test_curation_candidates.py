@@ -69,9 +69,7 @@ def test_unrelated_slug_does_not_cover() -> None:
 
 def test_none_payload_values_do_not_crash() -> None:
     # review a6c1c581: payload с явным null не должен ронять отбор (fail-soft)
-    out = mod.select_candidates(
-        [_p(effective_confidence=None, application_count=None)], "", []
-    )
+    out = mod.select_candidates([_p(effective_confidence=None, application_count=None)], "", [])
     assert out == []  # None → 0 → отфильтрован порогами, не TypeError
 
 

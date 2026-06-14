@@ -191,9 +191,7 @@ def run_review_pending(apply: bool, now: datetime) -> dict[str, Any]:
     переносит записи (atomic rewrite pending: tmp + os.replace). Fail-soft.
     """
     try:
-        lines = (
-            SL_PENDING.read_text(encoding="utf-8").splitlines() if SL_PENDING.exists() else []
-        )
+        lines = SL_PENDING.read_text(encoding="utf-8").splitlines() if SL_PENDING.exists() else []
     except OSError as exc:
         return {"error": f"{type(exc).__name__}: {exc}"}
 
@@ -284,8 +282,7 @@ def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
         conn = sqlite3.connect(str(MEMORY_AI_DB))
         try:
             rows = conn.execute(
-                "SELECT id, category, created_at, importance, metadata "
-                "FROM important_messages"
+                "SELECT id, category, created_at, importance, metadata FROM important_messages"
             ).fetchall()
             for rid, category, created_at, importance, raw_md in rows:
                 try:
@@ -311,8 +308,12 @@ def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
     except Exception as exc:  # fail-soft: cadence survives a broken episodic DB
         return {"rc": -1, "error": f"{type(exc).__name__}: {exc}"}
 
-    summary = {"rc": 0, "candidates": len(candidates), "archived": archived if apply else 0,
-               "applied": bool(apply and candidates)}
+    summary = {
+        "rc": 0,
+        "candidates": len(candidates),
+        "archived": archived if apply else 0,
+        "applied": bool(apply and candidates),
+    }
     if apply and candidates:
         try:
             from memory.orchestrator.ingest_metrics import record_ingest
@@ -485,7 +486,14 @@ def main() -> int:
     # wiki_pages_v1 — один пайплайн, иначе дрейф .md <-> Qdrant.
     # reindex_skill_library + skill_review (260612 Skill System A5/P2.3): зеркало
     # каталога скиллов в skill_library + отчёт review-кандидатов из метрик.
-    for name in ("reflect", "sync", "promote", "reindex_wiki", "reindex_skill_library", "skill_review"):
+    for name in (
+        "reflect",
+        "sync",
+        "promote",
+        "reindex_wiki",
+        "reindex_skill_library",
+        "skill_review",
+    ):
         jobs[name] = "skipped" if name in skip else _run_subprocess(name, args.apply)
     forget = {"skipped": True} if "forget" in skip else run_forget(args.apply, now)
     # P3.1 (roadmap 260611): pending-карантин не должен гнить — TTL auto-reject

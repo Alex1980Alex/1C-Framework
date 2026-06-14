@@ -403,4 +403,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
 - Files changed: 2
 - Summary: Session 2026-06-14. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(hooks): обязательная авто-пайплайн парадигма (ADR-018) — self-driven + hard-block. Commit: chore(pipeline): персистентная папка pipeline/ — README + .gitignore (постоянный архив задач). Commit: feat(pipeline): generic 4-stage SDLC pipeline (ADR-017) — слэш-команды + state + gate
-

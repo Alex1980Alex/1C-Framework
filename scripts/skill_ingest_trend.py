@@ -164,9 +164,7 @@ def _run_query(con: object, sql: str, params: list[str]) -> None:
     out = sys.stdout.buffer
     out.write(("\t".join(cols) + "\n").encode("utf-8"))
     for row in result.fetchall():
-        out.write(
-            ("\t".join("" if v is None else str(v) for v in row) + "\n").encode("utf-8")
-        )
+        out.write(("\t".join("" if v is None else str(v) for v in row) + "\n").encode("utf-8"))
     out.flush()
 
 

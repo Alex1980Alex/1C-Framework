@@ -51,6 +51,7 @@ from src.pdf_framework.schemas.entities import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_chunk(content: str = "text", document_id: str = "doc1") -> DocumentChunk:
     return DocumentChunk(id=uuid.uuid4().hex[:12], content=content, document_id=document_id)
 

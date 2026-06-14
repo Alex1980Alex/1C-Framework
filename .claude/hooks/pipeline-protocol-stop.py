@@ -108,8 +108,14 @@ def _git_session_edit(start: datetime | None) -> bool:
         return False
     try:
         r = subprocess.run(
-            ["git", "-c", "core.quotepath=false", "status", "--porcelain",
-             "--ignore-submodules=all"],
+            [
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "status",
+                "--porcelain",
+                "--ignore-submodules=all",
+            ],
             cwd=str(PROJECT_ROOT),
             capture_output=True,
             text=True,

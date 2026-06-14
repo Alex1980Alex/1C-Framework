@@ -401,9 +401,7 @@ def search_sqlite(query_tokens: set, limit: int = 10) -> list:
                 md = {}
             if is_archived(md if isinstance(md, dict) else None):
                 continue
-            importance = effective_importance(
-                row["importance"] or 0.0, category, row["created_at"]
-            )
+            importance = effective_importance(row["importance"] or 0.0, category, row["created_at"])
 
             content_tokens = set(tokenize(content))
             overlap = query_tokens & content_tokens

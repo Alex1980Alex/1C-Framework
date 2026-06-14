@@ -19,6 +19,7 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_settings(**overrides):
     """Build a VectorStoreSettings without touching the real env / .env file."""
     from src.pdf_framework.config.vector_store import VectorStoreSettings
@@ -66,6 +67,7 @@ def _make_scored_point(point_id: str, score: float, vector=None, payload=None):
 # F2.7.1 — _to_qdrant_id  (module-level function)
 # ---------------------------------------------------------------------------
 
+
 class TestQdrantIDMapping:
     """Test _to_qdrant_id determinism and format (F2.7.1)."""
 
@@ -109,6 +111,7 @@ class TestQdrantIDMapping:
 # ---------------------------------------------------------------------------
 # F2.7.2 — search_mmr  (async, mocked qdrant client)
 # ---------------------------------------------------------------------------
+
 
 class TestQdrantMMR:
     """Test MMR selection behaviour in search_mmr (F2.7.2)."""
@@ -190,9 +193,7 @@ class TestQdrantMMR:
         mock_result.points = candidates
         store._client.query_points = AsyncMock(return_value=mock_result)
 
-        results = await store.search_mmr(
-            query_embedding=[1.0, 0.0, 0.0, 0.0], k=5, fetch_k=10
-        )
+        results = await store.search_mmr(query_embedding=[1.0, 0.0, 0.0, 0.0], k=5, fetch_k=10)
 
         assert len(results) == 2
 
@@ -215,9 +216,7 @@ class TestQdrantMMR:
         mock_result.points = candidates
         store._client.query_points = AsyncMock(return_value=mock_result)
 
-        results = await store.search_mmr(
-            query_embedding=dense_a, k=2, fetch_k=3, lambda_mult=0.5
-        )
+        results = await store.search_mmr(query_embedding=dense_a, k=2, fetch_k=3, lambda_mult=0.5)
 
         assert len(results) == 2
         # Result objects should be valid SearchResults
@@ -229,6 +228,7 @@ class TestQdrantMMR:
 # ---------------------------------------------------------------------------
 # F2.7.3 — _point_to_search_result  (sync helper, no I/O)
 # ---------------------------------------------------------------------------
+
 
 class TestPointToSearchResult:
     """Test payload→SearchResult mapping (F2.7.3)."""
@@ -318,6 +318,7 @@ class TestPointToSearchResult:
 # ---------------------------------------------------------------------------
 # F2.7.4 — supports_native_bm25 + hybrid_search fallback
 # ---------------------------------------------------------------------------
+
 
 class TestQdrantBM25Support:
     """Test BM25 flag and hybrid fallback (F2.7.4)."""

@@ -87,9 +87,7 @@ def emit(
         try:
             REPORTS_DIR.mkdir(parents=True, exist_ok=True)
             stamp = datetime.now().strftime("%Y%m%d")
-            (REPORTS_DIR / f"{report_name}_{stamp}.md").write_text(
-                text_or_json, encoding="utf-8"
-            )
+            (REPORTS_DIR / f"{report_name}_{stamp}.md").write_text(text_or_json, encoding="utf-8")
         except OSError:
             pass
 

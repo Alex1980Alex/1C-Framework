@@ -138,7 +138,15 @@ def get_amendable_head(
             return None
 
         shown = subprocess.run(
-            ["git", "-c", "core.quotepath=false", "show", "--pretty=format:", "--name-only", "HEAD"],
+            [
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "show",
+                "--pretty=format:",
+                "--name-only",
+                "HEAD",
+            ],
             timeout=timeout,
             capture_output=True,
             text=True,

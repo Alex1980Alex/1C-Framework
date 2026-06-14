@@ -56,9 +56,7 @@ class TestRecursiveSplitter:
         assert len(chunks) > 1, "Long text must be split into multiple chunks"
         for chunk in chunks:
             # LangChain may slightly exceed due to separators, allow 2× headroom
-            assert len(chunk.content) <= 600, (
-                f"Chunk too large: {len(chunk.content)} chars"
-            )
+            assert len(chunk.content) <= 600, f"Chunk too large: {len(chunk.content)} chars"
 
     def test_chunk_overlap_produces_shared_content(self):
         """F2.6.1: Consecutive chunks should share text due to overlap."""
@@ -201,19 +199,23 @@ class TestSemanticSplitter:
         cluster_b = np.zeros(dim)
         cluster_b[4] = 1.0
 
-        embeddings = np.array([
-            cluster_a, cluster_a, cluster_a,  # high similarity within group
-            cluster_b, cluster_b, cluster_b,  # high similarity within group
-        ])
+        embeddings = np.array(
+            [
+                cluster_a,
+                cluster_a,
+                cluster_a,  # high similarity within group
+                cluster_b,
+                cluster_b,
+                cluster_b,  # high similarity within group
+            ]
+        )
         # similarity between index 2→3 will be 0.0 (orthogonal) → below 0.75
 
         splitter._model.encode.return_value = embeddings
 
         result = splitter.split(doc)
 
-        assert len(result) >= 2, (
-            f"Expected split at semantic boundary, got {len(result)} chunk(s)"
-        )
+        assert len(result) >= 2, f"Expected split at semantic boundary, got {len(result)} chunk(s)"
 
     def test_find_breakpoints_returns_correct_indices(self):
         """F2.6.2: _find_breakpoints returns indices where similarity < threshold."""
@@ -339,6 +341,7 @@ class TestPipeline:
         ]
 
         from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
         result = ProcessingPipeline._assign_page_numbers(chunks, doc)
 
         assert result[0].page_number == 1
@@ -352,12 +355,13 @@ class TestPipeline:
         doc = self._make_doc_with_offsets(raw, page_offsets)
 
         chunks = [
-            self._make_chunk("A" * 20, text_offset=10),   # page 1
-            self._make_chunk("B" * 20, text_offset=60),   # page 2
+            self._make_chunk("A" * 20, text_offset=10),  # page 1
+            self._make_chunk("B" * 20, text_offset=60),  # page 2
             self._make_chunk("C" * 20, text_offset=110),  # page 3
         ]
 
         from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
         result = ProcessingPipeline._assign_page_numbers(chunks, doc)
 
         assert result[0].page_number == 1
@@ -382,6 +386,7 @@ class TestPipeline:
         )
 
         from src.pdf_framework.processing.pipeline import ProcessingPipeline
+
         result = ProcessingPipeline._assign_page_numbers([chunk], doc)
 
         assert result[0].page_number == 99  # not overwritten

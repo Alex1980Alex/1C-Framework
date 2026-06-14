@@ -60,9 +60,7 @@ def _collect_orphans() -> tuple[list[str], str | None]:
         with httpx.Client(timeout=10) as h:
             names = [
                 c["name"]
-                for c in h.get("http://localhost:6333/collections").json()["result"][
-                    "collections"
-                ]
+                for c in h.get("http://localhost:6333/collections").json()["result"]["collections"]
                 if c["name"].startswith(("pdf_documents", "wiki_pages_v1"))
             ]
         return [n for n in names if n not in ALLOWED_PHYSICAL], None
@@ -167,8 +165,11 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
 
 def evaluate(m: dict[str, Any]) -> dict[str, bool]:
     fresh = m["freshness"]
-    fresh_ok = isinstance(fresh, dict) and "error" not in fresh and fresh and all(
-        isinstance(st, dict) and not st.get("stale") for st in fresh.values()
+    fresh_ok = (
+        isinstance(fresh, dict)
+        and "error" not in fresh
+        and fresh
+        and all(isinstance(st, dict) and not st.get("stale") for st in fresh.values())
     )
     return {
         "orphans_zero": not m["orphans"] and m["orphan_check_error"] is None,

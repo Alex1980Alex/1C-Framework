@@ -151,7 +151,12 @@ def _seed_a2() -> dict:
     seed = copy.deepcopy(DEFAULT_A2)
     try:
         cfg_a2 = json.loads(CONFIG.read_text(encoding="utf-8")).get("a2_signals", {})
-        for k in ("bsl_signal_weights", "conn_str_weights", "literal_name_weight", "literal_name_min_len"):
+        for k in (
+            "bsl_signal_weights",
+            "conn_str_weights",
+            "literal_name_weight",
+            "literal_name_min_len",
+        ):
             if k in cfg_a2:
                 seed[k] = cfg_a2[k]
     except (OSError, json.JSONDecodeError):
@@ -168,7 +173,10 @@ def main() -> int:
 
     coords = [c.strip() for c in args.coords.split(",") if c.strip() in COORD_GRID]
     if not coords:
-        print(f"[tune] no valid coords in {args.coords!r} (allowed: {list(COORD_GRID)})", file=sys.stderr)
+        print(
+            f"[tune] no valid coords in {args.coords!r} (allowed: {list(COORD_GRID)})",
+            file=sys.stderr,
+        )
         return 2
 
     gt_hash = hashlib.sha1(GT.read_bytes()).hexdigest()[:12] if GT.exists() else "no-gt"

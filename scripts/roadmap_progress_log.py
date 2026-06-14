@@ -385,9 +385,7 @@ def cmd_links(args: argparse.Namespace) -> int:
         for rel, names in broken.items():
             print(f"[roadmap-links] {rel}: {len(names)} broken `[[...]]`")
             for n in names:
-                print(
-                    f"    - [[{n}]] → не резолвится (ни file-stem, ни frontmatter name:)"
-                )
+                print(f"    - [[{n}]] → не резолвится (ни file-stem, ни frontmatter name:)")
 
     return 1 if (broken and args.strict) else 0
 

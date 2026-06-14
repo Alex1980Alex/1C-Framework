@@ -93,9 +93,7 @@ def _fake_client(alias_pairs: list[tuple[str, str]], fail: bool = False):
         if fail:
             raise ConnectionError("qdrant down")
         return SimpleNamespace(
-            aliases=[
-                SimpleNamespace(alias_name=a, collection_name=c) for a, c in alias_pairs
-            ]
+            aliases=[SimpleNamespace(alias_name=a, collection_name=c) for a, c in alias_pairs]
         )
 
     return SimpleNamespace(get_aliases=get_aliases)

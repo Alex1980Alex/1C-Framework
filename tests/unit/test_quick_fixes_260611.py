@@ -148,9 +148,7 @@ def test_get_qdrant_lazy_init_is_single_under_concurrency(monkeypatch):
             created.append(self)
 
         def get_collections(self):
-            return SimpleNamespace(
-                collections=[SimpleNamespace(name=vm_server.COLLECTION_NAME)]
-            )
+            return SimpleNamespace(collections=[SimpleNamespace(name=vm_server.COLLECTION_NAME)])
 
     import qdrant_client as qc
 

@@ -272,7 +272,9 @@ def main() -> int:
     metrics_path = PROJECT_ROOT / "data" / "skill-accuracy.jsonl"
     # 260613 F8: дефолт на канон (acceptance критерий 6 + каденс читают именно его);
     # раньше дефолт был data/skill-health-report.md → ручной прогон клал отчёт мимо.
-    output_path = args.output or PROJECT_ROOT / "data" / "reports" / "skills" / "skill-health-report.md"
+    output_path = (
+        args.output or PROJECT_ROOT / "data" / "reports" / "skills" / "skill-health-report.md"
+    )
 
     events = load_accuracy_events(metrics_path, args.days)
     stats, prompt_count = compute_skill_stats(events)
