@@ -24,6 +24,10 @@ relabel из A**. Решение → [ADR-019](../../.claude/skills/architecture
   (D1–D5 спорные границы, 26 точек поломки C1–C26, гибрид C+B, индустрия strangler-fig/Spolsky/Brooks vs rewrite)
   + «Инструменты» (drift T.1; внешние кандидаты T.2: claude-code-bsl-lsp/mcp-bsl-lsp-bridge/Coverage41C/1c-templates-mcp/
   1c-mcp-metacode/comol-cursor_rules_1c; Phase 9) + кеш `cache/1c-bsl-tooling-ecosystem-2026.md`.
+- **Phase 9 РЕАЛИЗОВАНО** (по запросу «реализуй»): 2 verification-агента (gh api/WebFetch + инспекция bundled) →
+  [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md)
+  (Coverage41C/bsl-ls **ADOPT**, lsp-bridge **EVAL**, claude-code-bsl-lsp/metacode **SKIP**, templates/sonar **DEFER**)
+  + concrete fix `config_manager.py` drift 1.0.0→1.16.1. Adopt-исполнение (Coverage41C wiring, bsl-ls 94MB bump) — до инфры/go-ahead.
 - **Код фреймворка (Phase 1–6 roadmap) НЕ писался** — это отдельная будущая работа, ждёт ревью/одобрения roadmap.
 - Побочный bugfix (вне scope roadmap, найден при финализации): [`factory-enforcer.py`](../../.claude/hooks/factory-enforcer.py)
   ложно срабатывал на ADR-файлах (`skills/*/adr/*.md`) как на «создании нового skill» → добавлен `/adr/` в `SKIP_PATHS`

@@ -315,6 +315,26 @@
         "approval-gate",
         "extends-adr-017"
       ]
+    },
+    {
+      "id": "ADR-020",
+      "file": "020-phase9-1c-tooling-adoption-verified.md",
+      "title": "Phase 9 — adoption внешних 1С-инструментов (verified): Coverage41C/bsl-ls ADOPT, lsp-bridge EVAL, claude-code-bsl-lsp/metacode SKIP, templates DEFER",
+      "status": "accepted",
+      "date": "2026-06-14",
+      "research": "../cache/1c-bsl-tooling-ecosystem-2026.md",
+      "tags": [
+        "tooling-adoption",
+        "1c",
+        "bsl",
+        "coverage41c",
+        "bsl-language-server",
+        "sonar",
+        "mcp-bsl-lsp-bridge",
+        "supply-chain",
+        "phase-9",
+        "verified"
+      ]
     }
   ]
 }
