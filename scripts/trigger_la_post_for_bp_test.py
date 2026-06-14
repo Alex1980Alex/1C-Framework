@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 import time
 from typing import Any
@@ -18,7 +19,7 @@ import httpx
 
 URL = "http://localhost/transport/hs/mcp/rpc"
 USER = "a.terletskiy@sodrugestvo.ru"
-PASSWORD = "Alex80Alex"
+PASSWORD = os.environ.get("MCP_ONEC_PASSWORD", "")  # set in env; never hardcode (was leaked to public repo)
 DOC_GUID = "326d2e61-4a6f-11f1-a14d-dc567b7507dc"
 DOC_TYPE = "ДокументСсылка.гкс_ЛабораторныйАнализ"
 KEY_UID = "УникальныйИдентификатор"

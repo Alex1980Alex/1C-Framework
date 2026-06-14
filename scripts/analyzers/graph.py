@@ -53,7 +53,7 @@ TAIL_BYTES = 4 * 1024 * 1024
 DEFAULT_NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
 DEFAULT_NEO4J_AUTH = (
     os.environ.get("NEO4J_USER", "neo4j"),
-    os.environ.get("NEO4J_PASSWORD", "bsl-graph-2026"),
+    os.environ.get("NEO4J_PASSWORD", ""),  # no hardcoded default — set NEO4J_PASSWORD in env
 )
 
 # BSL platform stdlib — globals that have no symbol declaration in user code.

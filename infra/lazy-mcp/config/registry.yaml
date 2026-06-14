@@ -193,7 +193,7 @@ categories:
         command: "npx"
         args: ["-y", "@modelcontextprotocol/server-brave-search"]
         env:
-          BRAVE_API_KEY: "BSAf2bf7DurctyB_tspN8nw81MAjZqc"
+          BRAVE_API_KEY: "${BRAVE_API_KEY}"
         description: "Brave Web Search API (Native NPX)"
         type: "npx"
         timeout: 30000
