@@ -17,6 +17,12 @@ from pathlib import Path
 
 import pytest
 
+# tools/multilspy-fork is a git submodule NOT installed in Linux CI (checkout does
+# not recurse submodules) -> the BSL backend import below raises ModuleNotFoundError.
+# Skip cleanly when the dependency is absent instead of erroring; runs locally when
+# the submodule + package are present.
+pytest.importorskip("multilspy")
+
 pytestmark = [pytest.mark.slow, pytest.mark.integration]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
