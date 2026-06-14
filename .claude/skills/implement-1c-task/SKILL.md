@@ -1,7 +1,7 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.7.0
+version: 2.8.0
 updated: 2026-05-11
 tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-crud, bsl-debugger, 1c-debug-hmr]
 triggers:
@@ -11,9 +11,10 @@ triggers:
   - реализация по ANALYSIS-REPORT
 ---
 
-# Реализация задачи 1С — 8-этапный pipeline (v2.7)
+# Реализация задачи 1С — 8-этапный pipeline (v2.8)
 
 > **История версий:**
+> - **v2.8.0 (2026-06-15):** Этап 4 — `bsl_lint.py` (bsl-ls, 128+ диагностик) как **предпочтительный** BSL-статанализ (точнее OneScript `bsl_analyze`: нет false-positive на `#Если`/chained-call; OneScript → fallback). Интеграция Phase 9-инструмента (ADR-020) в пайплайн. Источник: [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
 > - **v2.7.0 (2026-05-11):** интеграция `1c-debug-hmr` в Этап 0 (preflight через `debug_health_check`) и Этап 5 (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки, regression diff через `debug_session_diff` против baseline `prev_session_id` из footer'а IMPLEMENTATION-PROGRESS.md). Capability matrix расширена осью `1c-debug-hmr` с новым режимом **Full (no-BP)** — pipeline работает при отсутствии debug-hmr, BP-verification SKIP. Шаблон IMPLEMENTATION-PROGRESS.md получил блок «Debug session» и footer-маркер `<!-- debug_session_id: <UUID> -->`. Этап 4 актуализирован: переход с `1c-debug` (plain) на `1c-debug-hmr` (default), plain оставлен через `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` для CI. Pre-existing rphost gap покрыт через `force_recycle_rphost=True` (Solution A) для dev и опциональный thin client `/Debug` (Solution C) для shared base. Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 (§3.1+§3.2+§3.3).
 > - **v2.6.2 (2026-05-08):** добавлено **Ограничение 3** в раздел «Известные ограничения 1c-mcp-crud» — `execute_code` запрещает `Возврат` вне процедуры/функции (фрагмент оборачивается в анонимный top-level блок, не тело функции). Workaround — переписывать ранние выходы через ветвление `Если/Иначе` с присваиванием `Результат` в каждой ветке. Источник — известное ограничение, обнаруженное в ходе e2e GKSTCPLK-2182-A 2026-05-07 ([roadmap §7](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md#7-validation-end-to-end-2026-05-07)). Никакого нового кода / decision gate / tools — только формулировка раздела ограничений.
 > - **v2.6.1 (2026-05-07):** follow-up к v2.6.0 после повторного e2e на той же сессии. **Этап 8 — переписан layout-блок** под точную 3-уровневую структуру. v2.6.0 описывала main как «tracks два submodule напрямую», но фактически **оба** submodule-пути проходят через обычную (не-git) подпапку: `configuration/` и `ИБTransportManagementDevelop/` — это level 2, регулярные директории main repo без своего `.git/`; submodule (gitlink) сидит на level 3 (`configuration/<TaskFolder>/`, `ИБTransportManagementDevelop/Конфигурация/`). Уточнено что path в индексе main хранится цельным (`"configuration/260304_GKSTCPLK-2182…"`, `"ИБTransportManagementDevelop/Конфигурация"`) и что `git add <subfolder>` без слеша/подсуба родителя — это **другая операция** (модификация level-2 директории), а не bump submodule. Diagnostic-пример обновлён ровно под этот layout. Никакого нового кода / нового decision gate / новых tools — только формулировка Этапа 8.
@@ -384,10 +385,18 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Шаги:**
 
-1. Для каждого изменённого модуля:
+1. **Для каждого изменённого модуля — точная BSL-диагностика через bsl-language-server** (ADR-020, предпочтительно):
+   ```
+   python scripts/bsl_lint.py <module.bsl> --severity error --fail-on-error
+     → bsl-ls (128+ диагностик): точнее OneScript bsl_analyze (нет false-positive на #Если/chained-call;
+       ловит InvalidCharacterInFile / IfElseIfEndsWithElse / Typo). Java auto-discovery (1C:EDT Axiom JDK 17).
+   ```
+   Реализация — [`scripts/bsl_lint.py`](../../../scripts/bsl_lint.py) (foundation «своей bsl-ls обвязки», ADR-020).
+
+   **Fallback** (Java/bsl-ls недоступны — bundled JRE = невыгруженный LFS-указатель / EDT не запущен):
    ```
    bsl-debug-server: bsl_analyze(file=<absolute_path>)
-     → получить предупреждения и ошибки линтера
+     → OneScript-линтер (известные false-positive'ы — см. ниже)
    ```
 
 2. **Если `bsl_analyze` падает с parse error** — проверить, попадает ли ошибка в список known false-positive'ов (см. ниже). Если да — фиксируем как tool-limitation и считаем этап пройденным (EDT-валидация в Этапе 3 уже подтвердила корректность кода). Если нет — есть реальная ошибка, исправлять через Этап 3.
@@ -431,7 +440,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Контрольная точка:**
 - EDT `get_project_errors(severity="ERRORS") = 0` (авторитетный источник для 1С) — ОБЯЗАТЕЛЬНО
-- `bsl_analyze` = 0 ошибок ИЛИ все ошибки попадают в known false-positive'ы
+- `bsl_lint.py --severity error` = 0 (предпочтительно, bsl-ls) ИЛИ `bsl_analyze` = 0 / только known false-positive'ы (fallback)
 
 **Known false-positive'ы `bsl_analyze` (OneScript-парсер ≠ 1С-компилятор):**
 

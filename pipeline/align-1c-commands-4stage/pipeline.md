@@ -29,6 +29,9 @@ relabel из A**. Решение → [ADR-019](../../.claude/skills/architecture
   (Coverage41C/bsl-ls **ADOPT**, lsp-bridge **EVAL**, claude-code-bsl-lsp/metacode **SKIP**, templates/sonar **DEFER**)
   + concrete fix `config_manager.py` drift 1.0.0→1.16.1. Adopt-исполнение (Coverage41C wiring, bsl-ls 94MB bump) — до инфры/go-ahead.
 - **«Следующий шаг» РЕАЛИЗОВАН** (по запросу): [`scripts/bsl_lint.py`](../../scripts/bsl_lint.py) — on-demand BSL-диагностики через bundled bsl-ls.jar + Java из 1C:EDT (Axiom JDK 17), foundation «своей bsl-ls обвязки» (ADR-020). Verified: json/human/severity/fail-on-error; нашёл реальные Error-диагностики. Открытие: bundled JRE = LFS-указатель (не выгружен).
+- **Интеграция в пайплайн** (по запросу «все инструменты должны ложиться в пайплайн»): `bsl_lint.py` WIRED в
+  `implement-1c-task` **Этап 4** (skill v2.8, предпочтительный BSL-статанализ; OneScript `bsl_analyze` → fallback) +
+  таблица «tool→этап→точка интеграции» для ВСЕХ Phase 9-инструментов в roadmap (DEFER получили точки интеграции).
 - **Код фреймворка (Phase 1–6 roadmap) НЕ писался** — это отдельная будущая работа, ждёт ревью/одобрения roadmap.
 - Побочный bugfix (вне scope roadmap, найден при финализации): [`factory-enforcer.py`](../../.claude/hooks/factory-enforcer.py)
   ложно срабатывал на ADR-файлах (`skills/*/adr/*.md`) как на «создании нового skill» → добавлен `/adr/` в `SKIP_PATHS`
