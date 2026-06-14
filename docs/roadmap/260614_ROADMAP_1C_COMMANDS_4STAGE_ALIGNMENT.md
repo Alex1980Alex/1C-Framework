@@ -188,7 +188,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 - **Phase 8 (NEW) — Автономный путь + единый Этап 4:** интеграция analyze-1c-research/Ralph state в pipeline-state; orphan `TEST-PLAN` (G10); единый вердикт тестирования (G9, G11).
 
 > Эти фазы — расширение, не замена. ADR-019 покрывает ядро (Вариант B); дивергенция кодирования и гейтов
-> (G6/G7) при реализации Phase 7 вероятно потребует отдельного **ADR-020**.
+> (G6/G7) при реализации Phase 7 вероятно потребует отдельного **ADR-021** (ADR-020 занят Phase 9 tooling-adoption).
 
 ## Глубокий разбор Варианта C (по запросу) + C-vs-B по индустрии
 
@@ -265,7 +265,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 - Ниша «авто-генератор YAxUnit-тестов» в индустрии пуста → наша ниша (LLM, у нас уже `autotestplan`).
 
 ### T.4 Новые фазы (надстройка)
-- **Phase 9 (NEW) — Adoption candidates:** оценить/внедрить High-кандидаты (claude-code-bsl-lsp, mcp-bsl-lsp-bridge, Coverage41C, 1c-templates-mcp, 1c-mcp-metacode) через ADR-формат (как ADR-012..016 tooling-adoption); сверить версии bsl-ls/sonar.
+- **Phase 9 — Adoption candidates → РЕАЛИЗОВАНО** ([ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md), verified 2026-06-14). Верификация скорректировала оптимистичные «High»: **Coverage41C ADOPT** (fix 9-байт stub→`Coverage41C-2.7.3/bin`), **bsl-ls 0.22.0→0.29.0 ADOPT** (bump, +~14 диагностик), **mcp-bsl-lsp-bridge EVAL** (Apache-2.0, но дубль bsl-semantic-search; gap=completion/hover), **sonar 1.16.1→1.18.1 DEFER** (нужен SonarQube ≥2025.4) + **fix** `config_manager.py` drift 1.0.0→1.16.1 (сделано), **claude-code-bsl-lsp SKIP** (плагин ⟂ SKIP-marketplace), **1c-mcp-metacode SKIP** (license:null + дубль GraphRAG), **1c-templates-mcp DEFER** (license:null). Adopt-исполнение (Coverage41C wiring, bsl-ls 94MB bump) — отложено до CI-runner/go-ahead.
 - **B.1 (опц.)** — гибридные обёртки `pl-*-1c` (C.3/C.5), если нужны канонические имена.
 
 ## §18 Progress log
@@ -275,6 +275,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 | 2026-06-14 | Phase 0 | Research + roadmap + ADR-019 (proposed) | этот файл, [ADR-019](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md) |
 | 2026-06-14 | Phase 0+ | Доп. анализ: 3 пути реализации + 2 слоя тестов; gaps G6–G15; Phases 0.5/7/8; кеш landscape (4-агентное исследование) | секция «Дополнительный анализ» + [кеш](../../.claude/skills/architecture-research/cache/1c-task-implementation-landscape.md) |
 | 2026-06-14 | Phase 0++ | Глубокий разбор Варианта C (D1–D5, 26 точек C1–C26, гибрид C+B, индустрия C-vs-B) + tool-census (drift T.1) + внешние кандидаты (T.2) + Phase 9; кеш ecosystem (4-агентное вн/внеш исследование) | секции «Глубокий разбор Варианта C» + «Инструменты» + [кеш ecosystem](../../.claude/skills/architecture-research/cache/1c-bsl-tooling-ecosystem-2026.md) |
+| 2026-06-14 | Phase 9 | РЕАЛИЗОВАНО: verified adopt/skip 5 кандидатов + версии (bsl-ls 0.22→0.29, sonar 1.16.1→1.18.1, Coverage41C 2.7.3 stub); fix config_manager.py drift; ADOPT-исполнение отложено до инфры | [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) + `config_manager.py` |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
