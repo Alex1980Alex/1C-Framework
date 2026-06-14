@@ -165,6 +165,7 @@ CONVERSATION__MAX_HISTORY=10
 | Hallucination false positives | Сложный контекст | Урезать `max_context_chars` (4000) |
 | Multi-agent застрял | Max iterations не задан | `_MAX_ITERATIONS = 2` |
 | Z.AI proxy 401 | Missing base_url | `base_url=settings.base_url` |
+| `run_plan_execute` падает на `result.attr` | LangGraph `ainvoke` возвращает state-**dict**, не dataclass | Читать `result["key"]` (helper `_g(key, default)`); вызов `agent.ainvoke` обёрнут в try/except → error-dict (2026-06-14) |
 
 ## Связанные скиллы
 

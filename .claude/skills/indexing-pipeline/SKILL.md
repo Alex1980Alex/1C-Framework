@@ -213,6 +213,7 @@ PDF__LOADER=hybrid               # hybrid|pymupdf4llm|docling|smart
 | Дубли при переиндексации | Dedup не сработал | Вызвать `delete_by_source()` перед `index_chunks()` |
 | BM25 schema error | Старая single-column FTS5 | `_migrate_fts_schema()` автоматически, или rebuild |
 | page_number +1 ошибка | pymupdf4llm уже 1-based | НЕ добавлять +1 к metadata["page"] |
+| Пропозиции без `original_chunk_id` | `PropositionSplitter.split_documents_async` не ставил provenance-ключ (sync — ставил) | Фикс 2026-06-14: async-путь выставляет `original_chunk_id` идентично sync (паритет metadata sync/async) |
 
 ## Связанные скиллы
 

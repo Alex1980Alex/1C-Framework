@@ -193,6 +193,8 @@ Config-driven маршрутизация промптов к скиллам че
             → skill-router._detect_skill_activations() → activate (source=prompt-detection)
 ```
 
+**Honest eval (260613).** Layer A2 — 1С-сигналы по форме текста (CamelCase-кириллица / `гкс_` / `Документ.` / `Srvr=`) + буквальное имя скилла как **целое слово** (`\b…\b`, не подстрочный `in`); веса A2 вынесены в config `a2_signals` (tunable без правки кода, дефолты == хардкод). Гейт acceptance читает **honest pooled `action_f1`** (action-only, без silence-padding) из `eval-skill-router.py` (`--split train|test|all`, `--cv K`), НЕ in-sample padded macro-F1; GT под провенанс-контрактом (`source`/`split`; лик-кандидаты `transcript-router` → `quarantine`, blocking-lint `lint_skill_router_gt.py`). Общий `shared/acceptance_watch.py` `acceptance_banner(window_days=…)` параметризован — раньше «день N/14» хардкодился и врал для 7-дневных окон (напр. tdd-guard). Полные детали + ADR-012..018 — в корневом `CLAUDE.md`.
+
 32 bundles сгруппированы по 8 доменам: framework (9), claude-code (6), langchain (2), research (3), tools (5), 1c (4), memory (2), llm (1).
 
 **Домены и bundles (v6)**:
