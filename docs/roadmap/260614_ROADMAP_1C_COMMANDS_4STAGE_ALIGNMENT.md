@@ -293,11 +293,25 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 |---|---|---|
 | **bsl-ls 0.29** | ⛔ **JDK 21**: 0.29-exec.jar (115 МБ) скачан → `UnsupportedClassVersionError` (class 65 = JDK 21; доступна 1C:EDT Axiom JDK **17** = class 61). Откат к 0.22 (verified). | Поставить JDK 21 + дать `bsl_lint.py`/CI его найти |
 | **Coverage41C** | ⛔ **EDT debug-плагины + test-run**: JDK-OK (11), dbgs:1550 **live**, но даже `--help` → `NoClassDefFoundError ...RuntimeDebugClientException` — нужны EDT-jar'ы `com._1c.g5.v8.dt.debug.*` (нет на `C:\Program Files\1C\1CE`) | `EDT_LOCATION`=plugins полного 1C:EDT IDE + live YaXUnit/VA прогон. Fix-doc: `tools/coverage41c/README.md` |
-| **mcp-bsl-lsp-bridge** | ⛔ **Docker + 8GB** (в среде нет) | Docker → пилот на копии конфигурации, сравнить vs `bsl_lint.py` |
+| **mcp-bsl-lsp-bridge** | ✅ **РАЗБЛОКИРОВАН** — Docker 29.4.0 оказался доступен → пилот проведён | EVAL DONE → **SKIP-adoption** (дубль триады, см. ниже) |
 
-Итог: 3 DEFER → 3 **точных, действенных prerequisite** (JDK 21 / EDT IDE plugins + test-run / Docker); битый 9-байт
-`coverage41c.jar` задокументирован (использовать `Coverage41C-2.7.3/bin/Coverage41C.bat`). Все точки интеграции в
-пайплайне зафиксированы — встанут при снятии блокера.
+### EVAL-пилот mcp-bsl-lsp-bridge (2026-06-15) → SKIP
+
+Docker оказался доступен → собрал образ (`mcp-lsp-bridge-bsl:latest`, 911 МБ, multi-stage Go + bundled bsl-ls
+`1.0.0-rc.1`), поднял контейнер (s6-supervised persistent bsl-ls, порт 9999) на ASCII-копии конфигурации (ro), погонял
+MCP по stdio. **Результат:** 26 LSP-инструментов, indexing `complete 4/4`; `document_diagnostics` — **полный паритет**
+с `bsl_lint.py` (те же 9 issues / 3 `InvalidCharacterInFile` 171-173); `hover` (live тип `ТабличныйДокумент`),
+`completion`, `complexity`/`module_health` подтверждены вживую. **Но** весь набор **дублирует существующую триаду**:
+diagnostics → `bsl_lint.py`+`edt-mcp`; completion/hover/definition → `edt-mcp get_content_assist/get_symbol_info/go_to_definition`
+(против РЕАЛЬНОГО 1C:EDT); call_graph/impact/rename → `bsl-semantic-search`. Единственное не-дублируемое (always-on
+per-method complexity CodeLens) маргинально (over-threshold уже ловит `bsl_lint.py`). При стоимости Docker-daemon +
+911 МБ + 2-3 ГБ RAM/проект + supply-chain → **не «заметно лучше» → SKIP**. Контейнер/образ/том/клон снесены.
+Детали: [ADR-020 «Результаты пилота EVAL»](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md).
+
+Итог: 3 DEFER/EVAL разрешены — **bsl-ls 0.29** SKIP-bump (JDK 21 не оправдан), **Coverage41C** BLOCKED (EDT IDE
+plugins + test-run; точка Этап 6 готова), **mcp-bsl-lsp-bridge** EVAL→SKIP (дубль триады). `bsl_lint.py` (ADOPT, на
+0.22) остаётся единственным проведённым инструментом Phase 9 в проде — без внешних зависимостей. Битый 9-байт
+`coverage41c.jar` задокументирован (`Coverage41C-2.7.3/bin/Coverage41C.bat`).
 
 ## §18 Progress log
 
@@ -310,6 +324,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 | 2026-06-14 | Phase 9 | Foundation «своей bsl-ls обвязки» РЕАЛИЗОВАН+verified: `scripts/bsl_lint.py` (on-demand BSL-диагностики, EDT Axiom JDK auto-discovery, json/severity/fail-on-error). Открытие: bundled JRE = LFS-указатель (не выгружен) → Java из 1C:EDT | `scripts/bsl_lint.py` + ADR-020 |
 | 2026-06-15 | Phase 9 | Интеграция в пайплайн: `bsl_lint.py` WIRED в `implement-1c-task` Этап 4 (skill v2.8, предпочтительный статанализ); таблица «tool→этап→точка интеграции» для всех Phase 9-инструментов (DEFER-инструменты получили точки интеграции) | `implement-1c-task/SKILL.md` v2.8 + секция «Интеграция Phase 9» |
 | 2026-06-15 | Phase 9 | Проверка проводки DEFER → точные блокеры: bsl-ls 0.29=JDK21 (попытка+откат к 0.22), Coverage41C=EDT-debug-плагины+test-run (JDK/dbgs OK), lsp-bridge=Docker; `tools/coverage41c/README.md` (fix-doc) | ADR-020 + roadmap «Проверка проводки» |
+| 2026-06-15 | Phase 9 | **EVAL-пилот mcp-bsl-lsp-bridge ПРОВЕДЁН → SKIP**: Docker 29.4.0 доступен → собран образ (911 МБ) + поднят контейнер на ro-копии конфигурации, 26 LSP-tools, diagnostics-паритет с `bsl_lint.py`, hover/completion/complexity verified; вердикт SKIP (дубль триады `bsl_lint.py`+`bsl-semantic-search`+`edt-mcp`); контейнер/образ/клон снесены. **Все 3 DEFER/EVAL разрешены.** | [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) «Результаты пилота» + roadmap |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
