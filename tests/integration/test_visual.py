@@ -50,6 +50,9 @@ def mock_colpali():
     )
     provider.dimensions = 128
     provider.model = MagicMock()
+    provider.model.device = "cpu"  # visual_indexer does tensor.to(model.device) — needs a real device
+    # search() sorts by late_interaction_score — return a real float (not a MagicMock)
+    provider.late_interaction_score = MagicMock(side_effect=lambda q, d: float(d.float().sum()))
 
     return provider
 
@@ -116,9 +119,6 @@ class TestVisualIndexer:
         assert page.page_number == 0
         assert page.embedding.shape[1] == 128
 
-    @pytest.mark.skip(
-        reason="visual model mock passes a MagicMock into torch .to(device) — needs mock rewrite, roadmap 260614"
-    )
     def test_search_indexed_pages(self, visual_indexer):
         """Test searching within indexed pages."""
         # Create mock indexed pages
@@ -248,7 +248,7 @@ class TestVisualSearchStrategy:
 @pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.skip(
-    reason="visual model mock passes a MagicMock into torch .to(device) — needs mock rewrite, roadmap 260614"
+    reason="needs a mock_vector_store fixture (undefined) + full index→store→search wiring — roadmap 260614"
 )
 async def test_end_to_end_visual_workflow(
     visual_indexer,

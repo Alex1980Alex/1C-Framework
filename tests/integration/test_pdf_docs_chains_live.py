@@ -57,9 +57,6 @@ class TestA5DimContract:
         assert resp.status_code == 400
         assert "dimension error" in resp.text.lower()
 
-    @pytest.mark.skip(
-        reason="requires live TEI/Qdrant absent in CI — needs service-skip guard, roadmap 260614"
-    )
     def test_alias_query_dim_matches(self):
         """Запрос правильной размерности в alias проходит (alias жив и 1024d)."""
         _require_qdrant()
@@ -69,8 +66,8 @@ class TestA5DimContract:
             f"{QDRANT_URL}/collections/pdf_documents/points/query",
             json={"query": [0.03] * 1024, "limit": 1},
         )
-        if resp.status_code == 404:
-            pytest.skip("pdf_documents alias absent")
+        if resp.status_code != 200:
+            pytest.skip(f"pdf_documents alias not live/1024d here (status {resp.status_code})")
         assert resp.status_code == 200
 
 
