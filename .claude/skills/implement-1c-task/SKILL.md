@@ -14,6 +14,7 @@ triggers:
 # Реализация задачи 1С — 8-этапный pipeline (v2.8)
 
 > **История версий:**
+> - **v2.8.1 (2026-06-15):** Этап 4 — добавлен опц. шаг 0 «автоформат» (`bsl_lint.py --format` → bsl-ls `--format` in-place, идемпотентно) ПЕРЕД диагностикой. Phase 9 (roadmap 260614). Источник: [ADR-020](../../skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md).
 > - **v2.8.0 (2026-06-15):** Этап 4 — `bsl_lint.py` (bsl-ls, 128+ диагностик) как **предпочтительный** BSL-статанализ (точнее OneScript `bsl_analyze`: нет false-positive на `#Если`/chained-call; OneScript → fallback). Интеграция Phase 9-инструмента (ADR-020) в пайплайн. Источник: [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
 > - **v2.7.0 (2026-05-11):** интеграция `1c-debug-hmr` в Этап 0 (preflight через `debug_health_check`) и Этап 5 (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки, regression diff через `debug_session_diff` против baseline `prev_session_id` из footer'а IMPLEMENTATION-PROGRESS.md). Capability matrix расширена осью `1c-debug-hmr` с новым режимом **Full (no-BP)** — pipeline работает при отсутствии debug-hmr, BP-verification SKIP. Шаблон IMPLEMENTATION-PROGRESS.md получил блок «Debug session» и footer-маркер `<!-- debug_session_id: <UUID> -->`. Этап 4 актуализирован: переход с `1c-debug` (plain) на `1c-debug-hmr` (default), plain оставлен через `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` для CI. Pre-existing rphost gap покрыт через `force_recycle_rphost=True` (Solution A) для dev и опциональный thin client `/Debug` (Solution C) для shared base. Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 (§3.1+§3.2+§3.3).
 > - **v2.6.2 (2026-05-08):** добавлено **Ограничение 3** в раздел «Известные ограничения 1c-mcp-crud» — `execute_code` запрещает `Возврат` вне процедуры/функции (фрагмент оборачивается в анонимный top-level блок, не тело функции). Workaround — переписывать ранние выходы через ветвление `Если/Иначе` с присваиванием `Результат` в каждой ветке. Источник — известное ограничение, обнаруженное в ходе e2e GKSTCPLK-2182-A 2026-05-07 ([roadmap §7](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md#7-validation-end-to-end-2026-05-07)). Никакого нового кода / decision gate / tools — только формулировка раздела ограничений.
@@ -384,6 +385,14 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 **Цель:** Проверить качество написанного BSL-кода.
 
 **Шаги:**
+
+0. **(Опционально) Автоформат изменённого модуля через bsl-ls** ПЕРЕД диагностикой — единый стиль (отступы/пробелы) по стандартам 1С:
+   ```
+   python scripts/bsl_lint.py <module.bsl> --format
+     → bsl-ls `--format` правит файл in-place; write-back ТОЛЬКО при изменении (сохраняет BOM/кодировку).
+       Идемпотентно (2-й прогон = «без изменений»). Снимает косметические замечания (MissingSpace и т.п.) до lint.
+   ```
+   После записи через EDT-MCP — перечитать модуль (`read_module_source`), т.к. файл переписан на диске.
 
 1. **Для каждого изменённого модуля — точная BSL-диагностика через bsl-language-server** (ADR-020, предпочтительно):
    ```

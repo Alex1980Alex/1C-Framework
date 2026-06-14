@@ -12,9 +12,12 @@ Java ищется в порядке: $JAVA_HOME → 1C:EDT Axiom JDK 17 → bund
 `.jar`-ы выгружены. См. ADR-020 + кеш 1c-bsl-tooling-ecosystem-2026.md.)
 
 Usage:
+  # Диагностика:
   .venv/Scripts/python.exe scripts/bsl_lint.py <файл.bsl | каталог> [--json]
         [--config <.bsl-language-server.json>] [--severity error|warning|info]
         [--fail-on-error] [--java <path>]
+  # Форматирование (правит файлы in-place через bsl-ls `--format`):
+  .venv/Scripts/python.exe scripts/bsl_lint.py <файл.bsl | каталог> --format [--config <...>]
 
 Exit: 0 (по умолчанию, advisory). С `--fail-on-error` → 1 при наличии диагностик severity=Error.
 Технические сбои (нет Java / нет jar / LS не отработал) → 2.
@@ -91,6 +94,61 @@ def run_analyze(java: str, src_dir: Path, config: Path, out_dir: Path) -> tuple[
     return proc.returncode, (proc.stderr or "") + (proc.stdout or "")
 
 
+def run_format(java: str, src_dir: Path, config: Path) -> tuple[int, str]:
+    """Запустить bsl-ls в режиме форматирования (правит .bsl/.os in-place в src_dir).
+
+    bsl-ls CLI: `format, -f, --format` (подтверждён `--help`). Принимает --srcDir и
+    --configuration. rc=0 при успехе; файлы переписываются на месте.
+    """
+    cmd = [
+        java, "-jar", str(BSL_LS_JAR),
+        "--format", "--srcDir", str(src_dir),
+        "--configuration", str(config),
+    ]
+    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=600)
+    return proc.returncode, (proc.stderr or "") + (proc.stdout or "")
+
+
+def _do_format(java: str, target: Path, config_arg: str | None) -> int:
+    """Отформатировать файл/каталог. Для одиночного файла — write-back ТОЛЬКО при
+    реальном изменении (точные байты → сохраняется BOM/кодировка 1С). Каталог — in-place.
+    Advisory: возвращает 0; при rc!=0 от bsl-ls печатает предупреждение в stderr.
+    """
+    with tempfile.TemporaryDirectory(prefix="bsl_fmt_") as td:
+        tdp = Path(td)
+        if config_arg:
+            config = Path(config_arg)
+        else:
+            config = tdp / ".bsl-language-server.json"
+            config.write_text(json.dumps({"language": "ru"}), encoding="utf-8")
+        if target.is_file():
+            src_dir = tdp / "src"
+            src_dir.mkdir()
+            tmp_file = src_dir / target.name
+            shutil.copy(target, tmp_file)
+            before = target.read_bytes()
+            rc, log = run_format(java, src_dir, config)
+            if not tmp_file.exists():  # bsl-ls не вернул файл → не трактуем как «без изменений» молча
+                print(f"[bsl_lint] предупреждение: bsl-ls не вернул файл во временный srcDir "
+                      f"(rc={rc}) — оригинал не тронут", file=sys.stderr)
+                after = before
+            else:
+                after = tmp_file.read_bytes()
+            if after != before and rc == 0:
+                target.write_bytes(after)
+                print(f"[bsl_lint] {target.name}: отформатирован ✓ (изменён)")
+            elif after != before:  # есть отличия, но rc!=0 → не доверяем выводу, оригинал НЕ перезаписан
+                print(f"[bsl_lint] {target.name}: НЕ перезаписан (bsl-ls format rc={rc}); см. stderr")
+            else:
+                print(f"[bsl_lint] {target.name}: уже отформатирован ✓ (без изменений)")
+        else:
+            rc, log = run_format(java, target, config)
+            print(f"[bsl_lint] {target}: прогон форматирования завершён (rc={rc})")
+        if rc != 0:
+            print(f"[bsl_lint] предупреждение: bsl-ls format rc={rc}\n{log[:800]}", file=sys.stderr)
+    return 0
+
+
 def parse_report(report: Path) -> list[dict]:
     """Распарсить bsl-language-server-report.json (reporter=json) в плоский список."""
     data = json.loads(report.read_text(encoding="utf-8"))
@@ -130,6 +188,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--config", default=None, help="путь к .bsl-language-server.json (по умолч. {language:ru})")
     ap.add_argument("--severity", choices=list(_SEV_MIN), default=None, help="минимальный уровень для вывода")
     ap.add_argument("--fail-on-error", action="store_true", help="exit 1 при severity=error")
+    ap.add_argument("--format", action="store_true",
+                    help="режим форматирования: переписать файл(ы) через bsl-ls (in-place), вместо диагностики")
     ap.add_argument("--java", default=None, help="явный путь к java")
     args = ap.parse_args(argv)
 
@@ -146,6 +206,9 @@ def main(argv: list[str] | None = None) -> int:
     if not target.exists():
         print(f"[bsl_lint] ОШИБКА: путь не найден: {target}", file=sys.stderr)
         return 2
+
+    if args.format:  # режим форматирования (правит файлы), не диагностика
+        return _do_format(java, target, args.config)
 
     with tempfile.TemporaryDirectory(prefix="bsl_lint_") as td:
         tdp = Path(td)

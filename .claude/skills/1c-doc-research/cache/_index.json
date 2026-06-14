@@ -861,6 +861,27 @@
         "Конфигурация: ФайловаяСистемаСлужебныйКлиент 18 примеров",
         "bsl-platform-context 8.3.27"
       ]
+    },
+    "external-bsl-ai-coding-rules-comol": {
+      "title": "Внешний набор AI-правил кодирования 1С/BSL (comol/cursor_rules_1c) — coding standards, формы, БСП, анти-паттерны, логирование",
+      "file": "external-bsl-ai-coding-rules-comol.md",
+      "created": "2026-06-15",
+      "last_verified": "2026-06-15",
+      "keywords": [
+        "стандарты кодирования BSL",
+        "правила AI 1С cursor rules",
+        "зарезервированные имена свойств формы",
+        "БСП не изобретать велосипед ssl_search",
+        "канонические области модуля 1С",
+        "анти-паттерны 1С async Ждать",
+        "ошибки ручной генерации metadata XML",
+        "стратегия логирования ЖурналРегистрации",
+        "comol ai_rules_1c"
+      ],
+      "sources": [
+        "github.com/comol/cursor_rules_1c (отображается ai_rules_1c), WebFetch 2026-06-15",
+        "лицензия: отсутствует явно (public-domain по заявлению автора)"
+      ]
     }
   }
 }

@@ -162,34 +162,41 @@ jobs:
   # Coverage41C (code coverage, after tests)
   # ═══════════════════════════════════════════════
   coverage:
-    name: Code Coverage
+    name: Code Coverage (Coverage41C)
     runs-on: [self-hosted, windows-11, 1c]
-    # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
-    # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
-    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
-    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
-    # runner'а обновить на C:\1С-Framework.)
-    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     needs: [yaxunit-tests]
-    if: always() && needs.yaxunit-tests.result == 'success'
-    continue-on-error: true  # Coverage is optional until dbgs is stable
+    # Gate (2026-06-15, ADR-020): runner online И тесты прошли. Coverage41C ТРЕБУЕТ
+    # EDT_LOCATION — plugins/ ПОЛНОГО 1C:EDT IDE (даёт com._1c.g5.v8.dt.debug.* на
+    # classpath; EDT Lite / components-only → Coverage41C.bat падает NoClassDefFoundError).
+    # Активация на self-hosted runner'е:
+    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
+    #   gh variable set EDT_LOCATION --body '<1C_EDT_IDE>\plugins'
+    #   gh variable set COVERAGE_IB_ALIAS --body '<debugger-infobase-alias>'
+    # См. tools/coverage41c/README.md. (битый 9-байт coverage41c.jar в корне НЕ использовать.)
+    # env paths выше указывают на до-миграционный D:\1C-FW — при оживлении обновить на C:\1С-Framework.
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' && needs.yaxunit-tests.result == 'success' }}
+    continue-on-error: true  # coverage опционально, пока dbgs+EDT_LOCATION не стабильны
+    env:
+      EDT_LOCATION: ${{ vars.EDT_LOCATION }}
+      IB_ALIAS: ${{ vars.COVERAGE_IB_ALIAS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check Coverage41C
+      - name: Check Coverage41C prerequisites
         id: check-coverage
         shell: pwsh
         run: |
           [Console]::OutputEncoding = [Text.Encoding]::UTF8
-          $jar = "${{ env.PROJECT_PATH }}\tools\coverage41c\coverage41c.jar"
-          if (Test-Path $jar) {
-            Write-Host "Coverage41C found: $jar"
-            echo "available=true" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Host "Coverage41C not installed, skipping"
-            echo "available=false" >> $env:GITHUB_OUTPUT
+          $bat = "${{ env.PROJECT_PATH }}\tools\coverage41c\Coverage41C-2.7.3\bin\Coverage41C.bat"
+          $ok = $true
+          if (-not (Test-Path $bat)) { Write-Host "::warning::Coverage41C.bat не найден: $bat"; $ok = $false }
+          if ([string]::IsNullOrWhiteSpace($env:EDT_LOCATION)) {
+            Write-Host "::warning::EDT_LOCATION не задан (нужен plugins/ полного 1C:EDT IDE; tools/coverage41c/README.md)"; $ok = $false
+          } elseif (-not (Test-Path $env:EDT_LOCATION)) {
+            Write-Host "::warning::EDT_LOCATION путь не существует: $env:EDT_LOCATION"; $ok = $false
           }
+          echo "available=$($ok.ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
       - name: Run Coverage
         if: steps.check-coverage.outputs.available == 'true'
@@ -199,38 +206,40 @@ jobs:
           PASS_1C: ${{ secrets.USER_1C_PASS }}
         run: |
           [Console]::OutputEncoding = [Text.Encoding]::UTF8
-          $jar = "${{ env.PROJECT_PATH }}\tools\coverage41c\coverage41c.jar"
+          $bat = "${{ env.PROJECT_PATH }}\tools\coverage41c\Coverage41C-2.7.3\bin\Coverage41C.bat"
+          $out = "${{ env.PROJECT_PATH }}\build\reports\genericCoverage.xml"
           $dbgs = "${{ env.ONEC_PATH }}\dbgs.exe"
+          New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
 
-          # Start debug server
+          # Start debug server (dbgs:1550)
           $dbgsProc = Start-Process -FilePath $dbgs -ArgumentList "--addr=localhost","--port=1550" -PassThru
           Start-Sleep -Seconds 5
+          try {
+            # Coverage41C.bat строит classpath из EDT_LOCATION (debug-плагины)
+            & "$bat" start -i "$env:IB_ALIAS" -u "http://localhost:1550" -P "${{ env.BSL_SRC }}" -o "$out"
 
-          # Start coverage
-          java -jar $jar start --debugger "localhost:1550" --output "${{ env.PROJECT_PATH }}\build\reports\coverage.xml" --format "genericCoverage" --projectDir "${{ env.BSL_SRC }}"
+            # Прогон YAxUnit между start и stop
+            & "${{ env.VRUNNER_PATH }}" `
+              run `
+              --ibconnection "${{ env.IB_CONNECTION }}" `
+              --db-user "$env:USER_1C" `
+              --db-pwd "$env:PASS_1C" `
+              --command "RunUnitTests" `
+              --execute "${{ env.PROJECT_PATH }}\tools\vanessa\YAxUnit-25.12.cfe" `
+              --settings "${{ env.PROJECT_PATH }}\tools\yaxunit.json"
 
-          # Run YAxUnit with coverage
-          & "${{ env.VRUNNER_PATH }}" `
-            run `
-            --ibconnection "${{ env.IB_CONNECTION }}" `
-            --db-user "$env:USER_1C" `
-            --db-pwd "$env:PASS_1C" `
-            --command "RunUnitTests" `
-            --execute "${{ env.PROJECT_PATH }}\tools\vanessa\YAxUnit-25.12.cfe" `
-            --settings "${{ env.PROJECT_PATH }}\tools\yaxunit.json"
-
-          # Stop coverage and generate report
-          java -jar $jar stop
-
-          # Cleanup
-          Stop-Process -Id $dbgsProc.Id -Force -ErrorAction SilentlyContinue
+            # Stop coverage → genericCoverage.xml
+            & "$bat" stop -i "$env:IB_ALIAS" -u "http://localhost:1550"
+          } finally {
+            Stop-Process -Id $dbgsProc.Id -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Upload Coverage Report
         if: always() && steps.check-coverage.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: build/reports/coverage.xml
+          path: build/reports/genericCoverage.xml
 
   # ═══════════════════════════════════════════════
   # Allure Report (aggregates all test results)
@@ -243,9 +252,9 @@ jobs:
     #   gh variable set CI_1C_RUNNER_ONLINE --body 1
     # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
     # runner'а обновить на C:\1С-Framework.)
-    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     needs: [bsl-analysis, yaxunit-tests, bdd-tests, coverage]
-    if: always()
+    # runner-gate + always() в ОДНОМ if (дубль ключа раньше затирал gate → job висел QUEUED)
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' && always() }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

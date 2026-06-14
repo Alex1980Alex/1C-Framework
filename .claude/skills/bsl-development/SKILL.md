@@ -101,6 +101,10 @@ mcp__bsl-debugger__get_variables()
 - Отступы: табуляция
 - Максимальная длина строки: 120 символов
 
+**Автоформат:** `python scripts/bsl_lint.py <module.bsl> --format` (bsl-ls `--format`, in-place, идемпотентно) — приводит отступы/пробелы к стандарту перед коммитом/диагностикой.
+
+**Расширенный свод BSL-стандартов** (канонические области модулей, зарезервированные имена свойств форм, БСП-first, анти-паттерны async/транзакций, ошибки ручного metadata-XML, стратегия логирования) — внешний community-набор `[web]`, закеширован: [`external-bsl-ai-coding-rules-comol.md`](../1c-doc-research/cache/external-bsl-ai-coding-rules-comol.md).
+
 ## Примеры использования
 
 ### Поиск процедур проведения
