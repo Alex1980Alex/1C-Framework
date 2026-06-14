@@ -311,9 +311,7 @@ class LinkRegistry:
         try:
             from ..infrastructure.trace_log import write_trace
 
-            write_trace(
-                "memory-links.log", event, disable_env="MEMORY_LINKS_LOG_DISABLE", **fields
-            )
+            write_trace("memory-links.log", event, disable_env="MEMORY_LINKS_LOG_DISABLE", **fields)
         except Exception:
             pass
 
