@@ -36,6 +36,10 @@ relabel из A**. Решение → [ADR-019](../../.claude/skills/architecture
 - Побочный bugfix (вне scope roadmap, найден при финализации): [`factory-enforcer.py`](../../.claude/hooks/factory-enforcer.py)
   ложно срабатывал на ADR-файлах (`skills/*/adr/*.md`) как на «создании нового skill» → добавлен `/adr/` в `SKIP_PATHS`
   (паритет с `/cache/`). code-verify PASS (bug-fix-validation, субагент). Это и закрыло спур-задачи factory-enforcer.
+- **Реальная проводка DEFER-инструментов (по запросу «сделай все сам»)** — все 3 разрешены исполнением, не предположением:
+  - **bsl-ls 0.29 → SKIP-bump**: 115 МБ exec-jar скачан → `UnsupportedClassVersionError` (class 65 = JDK 21; есть только EDT JDK 17) → откат к 0.22 (verified рабочий). JDK 21 ради ~14 диагностик + 190 МБ не оправдан.
+  - **Coverage41C → BLOCKED**: JDK-OK (11), dbgs:1550 live, но classpath требует EDT debug-плагинов `com._1c.g5.v8.dt.debug.*` (нет в EDT Lite) → даже `--help` падает `NoClassDefFoundError`. Fix-doc [`tools/coverage41c/README.md`](../../tools/coverage41c/README.md), точка интеграции Этап 6 готова.
+  - **mcp-bsl-lsp-bridge → EVAL DONE → SKIP**: Docker 29.4.0 доступен → собрал образ (911 МБ), поднял контейнер на ro-копии конфигурации, погонял MCP по stdio (26 LSP-tools). Diagnostics-паритет с `bsl_lint.py`; hover/completion/complexity verified. SKIP: дубль триады (`bsl_lint.py` + `bsl-semantic-search` + `edt-mcp`). Детали — [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) «Результаты пилота EVAL».
 
 ## 4. Тест (Тестирование)
 Планировочная задача (без кода) → исполняемых тестов нет. Верификация = внутренняя:
@@ -43,3 +47,5 @@ relabel из A**. Решение → [ADR-019](../../.claude/skills/architecture
 - ADR-019 в формате Context→Decision→Consequences→Alternatives, № 019 = следующий по `_index.json`;
 - roadmap по конвенции (Status/Context/Acceptance/§18 progress-log).
 Следующий шаг — ревью roadmap пользователем; реализация Phase 1 (профили `pipeline_state.py`) — отдельной задачей.
+
+**Тестирование DEFER-проводки (2026-06-15) = живое исполнение** (не статический разбор): bsl-ls 0.29 jar скачан и запущен (получен `UnsupportedClassVersionError` → доказанный JDK-блокер); Coverage41C `--help` запущен (получен `NoClassDefFoundError` → доказанный EDT-debug-блокер); mcp-bsl-lsp-bridge собран Docker'ом и **погонян вживую** (JSON-RPC `initialize`/`tools/list`/`document_diagnostics`/`quality_diagnostics`/`module_health`/`complexity`/`hover`/`completion`) → diagnostics-паритет с `bsl_lint.py` подтверждён на тех же файлах. Все артефакты пилота снесены после замеров.
