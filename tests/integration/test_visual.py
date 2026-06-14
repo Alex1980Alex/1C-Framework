@@ -50,7 +50,9 @@ def mock_colpali():
     )
     provider.dimensions = 128
     provider.model = MagicMock()
-    provider.model.device = "cpu"  # visual_indexer does tensor.to(model.device) — needs a real device
+    provider.model.device = (
+        "cpu"  # visual_indexer does tensor.to(model.device) — needs a real device
+    )
     # search() sorts by late_interaction_score — return a real float (not a MagicMock)
     provider.late_interaction_score = MagicMock(side_effect=lambda q, d: float(d.float().sum()))
 

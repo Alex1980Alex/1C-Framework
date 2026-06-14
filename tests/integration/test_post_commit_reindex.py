@@ -364,7 +364,9 @@ class TestCoreHooksPath:
         rc, value = self._run_git_config("core.hooksPath")
         fix_cmd = f'git -C "{REPO_ROOT}" config core.hooksPath {EXPECTED_HOOKS_PATH}'
         if rc != 0:
-            pytest.skip("core.hooksPath not configured here (e.g. fresh CI checkout; set by local hook install)")
+            pytest.skip(
+                "core.hooksPath not configured here (e.g. fresh CI checkout; set by local hook install)"
+            )
         assert rc == 0, f"core.hooksPath not set. Fix: {fix_cmd}"
         normalised = value.replace("\\", "/").rstrip("/")
         assert normalised.endswith(EXPECTED_HOOKS_PATH), (

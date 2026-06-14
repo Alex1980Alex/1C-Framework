@@ -286,7 +286,9 @@ Extract facts:"""
                                 else doc.get("metadata", {})
                             ),
                             "chunk_type": "proposition",
-                            "original_chunk_id": doc.id if hasattr(doc, "id") else doc.get("id", ""),
+                            "original_chunk_id": doc.id
+                            if hasattr(doc, "id")
+                            else doc.get("id", ""),
                             "proposition_index": j,
                             "total_propositions": len(propositions),
                         },
