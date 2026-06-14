@@ -130,13 +130,30 @@ async def run_plan_execute(
         max_iterations=max_iterations,
     )
 
-    result = await agent.ainvoke(initial_state)
+    try:
+        result = await agent.ainvoke(initial_state)
+    except Exception as exc:  # wrapper: surface agent failures as a result, not a raise
+        return {
+            "query": query,
+            "answer": "",
+            "steps": 0,
+            "iterations": 0,
+            "results": {},
+            "error": str(exc),
+        }
+
+    # LangGraph returns the final state as a dict (dataclass state); be robust to
+    # both a dict and an object return shape.
+    def _g(key: str, default: Any) -> Any:
+        return (
+            result.get(key, default) if isinstance(result, dict) else getattr(result, key, default)
+        )
 
     return {
         "query": query,
-        "answer": result.final_answer,
-        "steps": len(result.plan),
-        "iterations": result.iterations,
-        "results": result.results,
-        "error": result.error,
+        "answer": _g("final_answer", ""),
+        "steps": len(_g("plan", [])),
+        "iterations": _g("iterations", 0),
+        "results": _g("results", {}),
+        "error": _g("error", ""),
     }

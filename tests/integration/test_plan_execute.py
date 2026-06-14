@@ -9,10 +9,7 @@ from src.pdf_framework.agents.plan_execute.agent import (
     run_plan_execute,
 )
 from src.pdf_framework.agents.plan_execute.state import PlanExecuteState
-
-pytestmark = pytest.mark.skip(
-    reason="plan-execute mocks return MagicMocks the agent .join()s (replanner/synthesizer); test mocks drifted vs current state-flow — needs rewrite, roadmap 260614"
-)
+from src.pdf_framework.schemas.documents import DocumentChunk, SearchResponse, SearchResult
 
 
 @pytest.fixture
@@ -48,10 +45,14 @@ def mock_search_manager():
     manager = AsyncMock()
 
     async def mock_search(query, **kwargs):
-        response = MagicMock()
-        response.results = [MagicMock(content=f"Result for {query}", score=0.9)]
-        response.answer = f"Answer for {query}"
-        return response
+        # Real schema objects: the executor reads r.chunk.content / r.score and
+        # builds dict results the synthesizer .join()s — MagicMocks break that.
+        chunk = DocumentChunk(id="c1", content=f"Result for {query}", document_id="d1")
+        return SearchResponse(
+            query=query,
+            results=[SearchResult(chunk=chunk, score=0.9)],
+            total_found=1,
+        )
 
     manager.search = mock_search
     return manager
@@ -60,11 +61,12 @@ def mock_search_manager():
 @pytest.fixture
 def mock_tools(mock_search_manager):
     """Mock tools for executor."""
+    # Executor calls tool.ainvoke({...}); give each tool a real awaitable ainvoke.
     return {
-        "search": AsyncMock(return_value="search result"),
-        "graph_query": AsyncMock(return_value="graph result"),
-        "calculate": MagicMock(return_value=42),
-        "web_search": AsyncMock(return_value="web result"),
+        "search": MagicMock(ainvoke=AsyncMock(return_value="search result")),
+        "graph_query": MagicMock(ainvoke=AsyncMock(return_value="graph result")),
+        "calculate": MagicMock(ainvoke=AsyncMock(return_value=42)),
+        "web_search": MagicMock(ainvoke=AsyncMock(return_value="web result")),
     }
 
 
@@ -90,9 +92,9 @@ class TestPlanExecuteAgent:
 
         result = await plan_execute_agent.ainvoke(initial_state)
 
-        assert isinstance(result, PlanExecuteState)
-        assert len(result.plan) > 0
-        assert result.final_answer != ""
+        assert isinstance(result, dict)
+        assert len(result["plan"]) > 0
+        assert result["final_answer"] != ""
 
     @pytest.mark.asyncio
     async def test_agent_multi_step_execution(self, plan_execute_agent):
@@ -102,10 +104,10 @@ class TestPlanExecuteAgent:
         result = await plan_execute_agent.ainvoke(initial_state)
 
         # Should have executed all steps
-        assert len(result.plan) >= 2
+        assert len(result["plan"]) >= 2
         # Most steps should be completed
-        completed_count = sum(1 for s in result.plan if s.status == "completed")
-        assert completed_count >= len(result.plan) - 1
+        completed_count = sum(1 for s in result["plan"] if s.status == "completed")
+        assert completed_count >= len(result["plan"]) - 1
 
     @pytest.mark.asyncio
     async def test_agent_respects_max_iterations(self, plan_execute_agent):
@@ -118,7 +120,7 @@ class TestPlanExecuteAgent:
         result = await plan_execute_agent.ainvoke(initial_state)
 
         # Should not exceed max iterations
-        assert result.iterations <= result.max_iterations
+        assert result["iterations"] <= result["max_iterations"]
 
     @pytest.mark.asyncio
     async def test_agent_with_search_tool(self, plan_execute_agent, mock_tools):
@@ -127,9 +129,9 @@ class TestPlanExecuteAgent:
 
         result = await plan_execute_agent.ainvoke(initial_state)
 
-        # Search tool should have been called
-        assert mock_tools["search"].called
-        assert len(result.plan) > 0
+        # Search runs via search_manager (not tools["search"]) → results populated
+        assert result["results"]
+        assert len(result["plan"]) > 0
 
     @pytest.mark.asyncio
     async def test_agent_with_graph_query_tool(self, plan_execute_agent, mock_tools):
@@ -154,8 +156,8 @@ class TestPlanExecuteAgent:
 
         result = await agent.ainvoke(initial_state)
 
-        # graph_query tool should have been called
-        assert mock_tools["graph_query"].called
+        # executor calls tools["graph_query"].ainvoke(...)
+        assert mock_tools["graph_query"].ainvoke.called
 
 
 @pytest.mark.integration
@@ -247,8 +249,8 @@ async def test_end_to_end_plan_execute_workflow(mock_llm, mock_search_manager, m
     assert result["steps"] >= 2  # Should have planned at least 2 steps
     assert result["iterations"] >= 1
 
-    # Verify tools were used
-    assert mock_tools["search"].called or mock_tools["graph_query"].called
+    # Search ran via search_manager → step results collected
+    assert result["results"]
 
 
 @pytest.mark.integration
