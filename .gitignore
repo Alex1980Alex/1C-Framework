@@ -3,6 +3,10 @@
 .venv/
 venv/
 
+# MCP config — contains live API keys / passwords; keep on disk but never track.
+# (Any value already pushed must be rotated — see .mcp.json.example.)
+/.mcp.json
+
 # Local scratch / backup directory (path migration backups, ad-hoc artefacts)
 .tmp/
 
