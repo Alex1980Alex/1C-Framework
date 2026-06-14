@@ -145,7 +145,9 @@ async def run_plan_execute(
     # LangGraph returns the final state as a dict (dataclass state); be robust to
     # both a dict and an object return shape.
     def _g(key: str, default: Any) -> Any:
-        return result.get(key, default) if isinstance(result, dict) else getattr(result, key, default)
+        return (
+            result.get(key, default) if isinstance(result, dict) else getattr(result, key, default)
+        )
 
     return {
         "query": query,
