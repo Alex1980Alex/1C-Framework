@@ -14,7 +14,7 @@ import json
 import logging
 import os
 import sys
-import uuid
+import threading
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -24,6 +24,8 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from ..orchestrator.content_hash import hash_content as _hash_content
+from ..orchestrator.content_hash import point_id as _content_point_id
 from .confidence import (
     apply_to_payload,
     decay_counts,
@@ -34,6 +36,16 @@ from .confidence import (
     stability_adjusted_rate,
 )
 from .epoch import bump as _bump_epoch  # §24: surfacing-cache invalidation signal
+
+
+def _record_ingest(store: str, action: str, **fields: Any) -> None:
+    """Fail-soft §26 ingestion-metrics emit; never breaks an MCP handler."""
+    try:
+        from ..orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(store, action, **fields)
+    except Exception:
+        pass
 
 
 def _log_lifecycle(event: str, **fields: Any) -> None:
@@ -77,10 +89,31 @@ def _cascade_confidence(
 
         from .confidence import derive_confidence, seed_counts_from_legacy
 
-        # Forward-correlation links only — CONTRADICTS has inverse semantics (excluded for v1).
-        link_types = [LinkType.SUPPORTS, LinkType.EXTENDS, LinkType.BASED_ON, LinkType.DERIVES_FROM]
-        links = LinkRegistry().get_links_from(pattern_id, link_types=link_types)
+        # Forward-correlation links only — CONTRADICTS has inverse semantics
+        # (excluded for v1). BASED_ON ретирован 2026-06-12 (ADR-L1).
+        link_types = [LinkType.SUPPORTS, LinkType.EXTENDS, LinkType.DERIVES_FROM]
+        registry = LinkRegistry()
+        links = registry.get_links_from(pattern_id, link_types=link_types)
+        # Orchestrator's create_link stores unified IDs ("semantic:vector-memory:<pid>");
+        # without this second lookup such edges are invisible to the cascade
+        # (F4, roadmap 260610 B2). seen-dedup below collapses bare/unified duplicates.
+        links += registry.get_links_from(
+            f"semantic:vector-memory:{pattern_id}", link_types=link_types
+        )
         if not links:
+            # P3.2 (roadmap 260612 LinkRegistry, L5): пустой каскад больше не
+            # невидим — голодание графа видно в observability.
+            try:
+                from memory.infrastructure.trace_log import write_trace
+
+                write_trace(
+                    "memory-links.log",
+                    "cascade_empty",
+                    disable_env="MEMORY_LINKS_LOG_DISABLE",
+                    pattern_id=pattern_id,
+                )
+            except Exception:
+                pass
             return stats  # cheap no-op for an empty/unlinked graph
         stats["final_depth"] = 1
         seen: set[str] = set()
@@ -89,6 +122,12 @@ def _cascade_confidence(
                 stats["cascades_prevented"] += 1
                 continue
             nid = link.target_id
+            if nid.startswith("semantic:vector-memory:"):
+                nid = nid.rsplit(":", 1)[-1]
+            elif ":" in nid:
+                # cross-store neighbour — PropagationEngine's territory, not same-store cascade
+                stats["cascades_prevented"] += 1
+                continue
             if nid == pattern_id or nid in seen:
                 continue
             seen.add(nid)
@@ -176,6 +215,9 @@ MIN_CONFIDENCE = float(os.getenv("LEARNING_MIN_CONFIDENCE", "0.3"))
 
 # Lazy-initialized clients
 _qdrant_client: Any | None = None
+# Guards lazy init against the warmup thread racing the first tool call
+# (double client / _ensure_collection on a half-built global).
+_qdrant_init_lock = threading.Lock()
 # `_embedding_fn` is either the sentinel string "async" (use _embedding_provider)
 # or a callable producing pseudo-embeddings (offline opt-in hash fallback).
 _embedding_fn: str | Callable[[list[str]], list[list[float]]] | None = None
@@ -186,23 +228,44 @@ def _get_qdrant() -> Any:
     """Lazy-init Qdrant client. Uses shared Qdrant at localhost:6333."""
     global _qdrant_client
     if _qdrant_client is None:
-        from qdrant_client import QdrantClient
+        with _qdrant_init_lock:
+            if _qdrant_client is None:
+                from qdrant_client import QdrantClient
 
-        _qdrant_client = QdrantClient(
-            url=QDRANT_URL,
-            grpc_port=6334,
-            prefer_grpc=True,
-        )
-        _ensure_collection()
+                client = QdrantClient(
+                    url=QDRANT_URL,
+                    grpc_port=6334,
+                    prefer_grpc=True,
+                )
+                _ensure_collection(client)
+                # Publish only after ensure succeeded: a failed init leaves the
+                # global None so the next call retries the full lazy path, and
+                # fast-path readers outside the lock never see a client whose
+                # collection isn't verified yet.
+                _qdrant_client = client
     return _qdrant_client
 
 
-def _ensure_collection() -> None:
+def _warmup_qdrant() -> None:
+    """S1-warmup (260611 §18, cold-start finding): pre-pay the heavy lazy import
+    (`qdrant_client` → pydantic/grpc) + client init at server start, in a daemon
+    thread. Post-`/mcp reconnect` many MCP servers import their stacks at once;
+    under that contention the first tool call was burning its whole 60s client
+    budget on import. Fail-soft: Qdrant being down must not kill the server —
+    the next tool call retries via the same lazy path. Opt-out:
+    MEMORY_VECTOR_NO_WARMUP=1.
+    """
+    try:
+        _get_qdrant()
+        logger.info("warmup: qdrant client ready (pid %d)", os.getpid())
+    except Exception as exc:
+        logger.warning("warmup skipped: %s", exc)
+
+
+def _ensure_collection(client: Any) -> None:
     """Ensure learned_patterns collection exists with cosine 1024d vectors."""
     from qdrant_client.http import models as qmodels
 
-    client = _qdrant_client
-    assert client is not None, "_ensure_collection called before _get_qdrant init"
     collections = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME not in collections:
         client.create_collection(
@@ -359,6 +422,12 @@ def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPatt
         succ=succ,
         fail=fail,
         last_decay_at=last_decay_at,
+        # F5 (roadmap 260611 P3.1): without this mapping the model always
+        # carried expired_at=None while the get_pattern response built
+        # `archived` from the payload — archived:true with expired_at:null.
+        expired_at=datetime.fromisoformat(payload["expired_at"])
+        if payload.get("expired_at")
+        else None,
         version=payload.get("version", 1),
         tags=payload.get("tags", []),
         metadata=payload.get("metadata", {}),
@@ -373,6 +442,10 @@ def _pattern_to_payload(pattern: LearnedPattern) -> dict[str, Any]:
         "name": pattern.name,
         "description": pattern.description,
         "content": pattern.content,
+        # §26 cross-store idempotency key — lets cross_store_sync / fact-trace match
+        # this fact against the same content in other stores, and the §26 dedup path
+        # detect re-saves. Stamped on every save path (mirrors the harvester payload).
+        "content_hash": _hash_content(pattern.content),
         "confidence": pattern.confidence,
         "evidence_sources": [e.to_dict() for e in pattern.evidence_sources],
         "created_at": pattern.created_at.isoformat(),
@@ -517,8 +590,42 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     from qdrant_client.http import models as qmodels
 
     client = _get_qdrant()
-    pattern_id = str(uuid.uuid4())
     now = datetime.now()
+
+    # §26 P1.3 write-contract: deterministic content-derived id so re-saving the
+    # SAME content is an idempotent no-op (action=dup) rather than a duplicate
+    # point — and so a manually-saved pattern collides with the harvested one.
+    content_hash = _hash_content(args["content"])
+    pattern_id = _content_point_id(content_hash)
+
+    try:
+        existing = client.retrieve(collection_name=COLLECTION_NAME, ids=[pattern_id])
+    except Exception:
+        existing = []
+    if existing:
+        # Idempotent: the fact is already stored — do NOT overwrite (would reset the
+        # accrued succ/fail counts). Report it honestly as a dedup, not a fresh save.
+        _record_ingest(
+            "learned_patterns",
+            "dup",
+            content_hash=content_hash,
+            pattern_id=pattern_id,
+            harvester="save_pattern",
+        )
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "success": True,
+                        "action": "dup",
+                        "pattern_id": pattern_id,
+                        "content_hash": content_hash,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        ]
 
     evidence = []
     for e in args.get("evidence_sources", []):
@@ -554,6 +661,13 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
 
     _bump_epoch()  # §24: new/updated pattern -> invalidate surfacing cache
     _log_lifecycle("save", pattern_id=pattern_id, confidence=round(float(pattern.confidence), 4))
+    _record_ingest(
+        "learned_patterns",
+        "saved",
+        content_hash=content_hash,
+        pattern_id=pattern_id,
+        harvester="save_pattern",
+    )
     logger.info(f"Saved pattern {pattern_id}: {pattern.name} (confidence={pattern.confidence})")
     return [
         TextContent(
@@ -561,9 +675,11 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
             text=json.dumps(
                 {
                     "success": True,
+                    "action": "saved",
                     "pattern_id": pattern_id,
                     "name": pattern.name,
                     "confidence": pattern.confidence,
+                    "content_hash": content_hash,
                 },
                 ensure_ascii=False,
             ),
@@ -937,6 +1053,8 @@ async def main() -> None:
     # MCP code actually (re)loaded -- makes the "/mcp reconnect needed" caveat
     # observable instead of silent. pid distinguishes pre/post-reconnect processes.
     _log_lifecycle("server_start", pid=os.getpid(), collection=COLLECTION_NAME)
+    if os.environ.get("MEMORY_VECTOR_NO_WARMUP") != "1":
+        threading.Thread(target=_warmup_qdrant, name="qdrant-warmup", daemon=True).start()
     async with stdio_server() as (read_stream, write_stream):
         await app.run(read_stream, write_stream, app.create_initialization_options())
 

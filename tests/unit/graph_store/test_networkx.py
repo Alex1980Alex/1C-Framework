@@ -1,173 +1,202 @@
 """Unit tests for NetworkX Graph Store (F2.8).
 
 Tests:
-- F2.8.1: Test NetworkXGraphStore add/get entity
-- F2.8.3: Test JSON persistence (save/load)
+- F2.8.1: add/get entity
+- F2.8.1: add/get relation
+- F2.8.1: get neighbors depth-1 and depth-2
+- F2.8.3: JSON persistence (save/load via persist_dir)
+- F2.8.3: clear removes all entities and relations
+
+Tests are ``async def`` (project ``asyncio_mode = "auto"``); pytest-asyncio manages a
+fresh per-test event loop. (Do NOT use ``asyncio.get_event_loop().run_until_complete()``
+here — it manipulates the global loop and pollutes async tests in other files.)
 """
 
+from __future__ import annotations
+
 import pytest
+
+pytestmark = pytest.mark.unit
+
+
+# ---------------------------------------------------------------------------
+# helpers
+# ---------------------------------------------------------------------------
+
+
+async def _make_store(tmp_path):
+    """Return an initialized NetworkXGraphStore writing to tmp_path."""
+    from src.pdf_framework.config import GraphStoreSettings
+    from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+
+    settings = GraphStoreSettings(persist_dir=str(tmp_path / "graph"))
+    store = NetworkXGraphStore(settings)
+    await store.initialize()
+    return store
+
+
+def _entity(eid: str, etype: str = "CONCEPT", name: str = "", **props):
+    from src.pdf_framework.schemas.entities import Entity
+
+    return Entity(
+        id=eid,
+        name=name or eid,
+        entity_type=etype,
+        properties=props,
+    )
+
+
+def _relation(rid: str, src: str, tgt: str, rtype: str = "RELATED_TO", **kwargs):
+    from src.pdf_framework.schemas.entities import Relation
+
+    return Relation(
+        id=rid, source_entity_id=src, target_entity_id=tgt, relation_type=rtype, **kwargs
+    )
+
+
+# ---------------------------------------------------------------------------
+# tests
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.unit
 class TestNetworkXGraphStore:
     """Test NetworkX-based graph store operations."""
 
-    def test_add_entity(self):
-        """F2.8.1: Should add entity to graph."""
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+    # -- entity CRUD ---------------------------------------------------------
 
-        store = NetworkXGraphStore()
+    async def test_add_entity(self, tmp_path):
+        """F2.8.1: Should add entity to graph and retrieve it by id."""
+        store = await _make_store(tmp_path)
+        await store.add_entity(_entity("entity1", "Person", name="John Doe"))
 
-        entity = {
-            "id": "entity1",
-            "type": "Person",
-            "name": "John Doe",
-        }
-
-        store.add_entity(entity)
-
-        retrieved = store.get_entity("entity1")
+        retrieved = await store.get_entity("entity1")
         assert retrieved is not None
-        assert retrieved["id"] == "entity1"
+        assert retrieved.id == "entity1"
+        assert retrieved.name == "John Doe"
+        assert retrieved.entity_type == "Person"
 
-    def test_get_entity_not_exists(self):
-        """F2.8.1: get_entity should return None for non-existent."""
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
-
-        store = NetworkXGraphStore()
-
-        result = store.get_entity("nonexistent")
-
+    async def test_get_entity_not_exists(self, tmp_path):
+        """F2.8.1: get_entity should return None for non-existent id."""
+        store = await _make_store(tmp_path)
+        result = await store.get_entity("nonexistent")
         assert result is None
 
-    def test_add_relation(self):
-        """F2.8.1: Should add relation between entities."""
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+    # -- relation CRUD -------------------------------------------------------
 
-        store = NetworkXGraphStore()
+    async def test_add_relation(self, tmp_path):
+        """F2.8.1: Should add relation between entities and return it via get_relations."""
+        store = await _make_store(tmp_path)
+        await store.add_entity(_entity("e1"))
+        await store.add_entity(_entity("e2"))
+        await store.add_relation(_relation("r1", "e1", "e2", "KNOWS", confidence=0.8))
 
-        # Add entities first
-        store.add_entity({"id": "e1", "type": "Entity"})
-        store.add_entity({"id": "e2", "type": "Entity"})
-
-        # Add relation
-        store.add_relation("e1", "e2", "KNOWS", weight=0.8)
-
-        # Verify relation exists
-        relations = store.get_relations("e1")
+        relations = await store.get_relations("e1")
         assert len(relations) == 1
-        assert relations[0]["target"] == "e2"
-        assert relations[0]["type"] == "KNOWS"
+        assert relations[0].target_entity_id == "e2"
+        assert relations[0].relation_type == "KNOWS"
+        assert relations[0].confidence == pytest.approx(0.8)
 
-    def test_get_neighbors(self):
-        """F2.8.1: Should get neighbors of an entity."""
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+    # -- neighbor traversal --------------------------------------------------
 
-        store = NetworkXGraphStore()
+    async def test_get_neighbors_depth_1(self, tmp_path):
+        """F2.8.1: get_neighbors depth=1 should return immediate neighbors."""
+        store = await _make_store(tmp_path)
+        await store.add_entity(_entity("e1"))
+        await store.add_entity(_entity("e2"))
+        await store.add_entity(_entity("e3"))
+        await store.add_relation(_relation("r1", "e1", "e2", "CONNECTED"))
+        await store.add_relation(_relation("r2", "e1", "e3", "CONNECTED"))
 
-        store.add_entity({"id": "e1", "type": "Entity"})
-        store.add_entity({"id": "e2", "type": "Entity"})
-        store.add_entity({"id": "e3", "type": "Entity"})
-
-        store.add_relation("e1", "e2", "CONNECTED")
-        store.add_relation("e1", "e3", "CONNECTED")
-
-        neighbors = store.get_neighbors("e1", depth=1)
-
-        neighbor_ids = {n["id"] for n in neighbors}
+        subgraph = await store.get_neighbors("e1", depth=1)
+        neighbor_ids = {e.id for e in subgraph.entities}
         assert "e2" in neighbor_ids
         assert "e3" in neighbor_ids
 
-    def test_get_neighbors_depth_2(self):
-        """F2.8.1: Should get neighbors at depth 2."""
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
-
-        store = NetworkXGraphStore()
-
+    async def test_get_neighbors_depth_2(self, tmp_path):
+        """F2.8.1: get_neighbors depth=2 should include transitive neighbors."""
+        store = await _make_store(tmp_path)
         # e1 -> e2 -> e3
-        store.add_entity({"id": "e1", "type": "Entity"})
-        store.add_entity({"id": "e2", "type": "Entity"})
-        store.add_entity({"id": "e3", "type": "Entity"})
+        await store.add_entity(_entity("e1"))
+        await store.add_entity(_entity("e2"))
+        await store.add_entity(_entity("e3"))
+        await store.add_relation(_relation("r1", "e1", "e2", "CONNECTED"))
+        await store.add_relation(_relation("r2", "e2", "e3", "CONNECTED"))
 
-        store.add_relation("e1", "e2", "CONNECTED")
-        store.add_relation("e2", "e3", "CONNECTED")
-
-        neighbors = store.get_neighbors("e1", depth=2)
-
-        neighbor_ids = {n["id"] for n in neighbors}
+        subgraph = await store.get_neighbors("e1", depth=2)
+        neighbor_ids = {e.id for e in subgraph.entities}
         assert "e2" in neighbor_ids
         assert "e3" in neighbor_ids
 
-    def test_json_persistence_save_load(self, tmp_path):
-        """F2.8.3: Should save and load graph from JSON."""
+    # -- persistence ---------------------------------------------------------
+
+    async def test_json_persistence_save_load(self, tmp_path):
+        """F2.8.3: Graph persists to JSON and loads in a fresh store instance."""
+        persist_dir = tmp_path / "graph"
+        from src.pdf_framework.config import GraphStoreSettings
         from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
 
-        store = NetworkXGraphStore()
+        settings = GraphStoreSettings(persist_dir=str(persist_dir))
 
-        # Add data
-        store.add_entity({"id": "e1", "type": "Person", "name": "Alice"})
-        store.add_entity({"id": "e2", "type": "Person", "name": "Bob"})
-        store.add_relation("e1", "e2", "KNOWS")
+        # Build and populate first store
+        store1 = NetworkXGraphStore(settings)
+        await store1.initialize()
+        await store1.add_entity(_entity("e1", "Person", name="Alice"))
+        await store1.add_entity(_entity("e2", "Person", name="Bob"))
+        await store1.add_relation(_relation("r1", "e1", "e2", "KNOWS"))
 
-        # Save to file
-        file_path = tmp_path / "graph.json"
-        store.save_to_json(file_path)
+        # Verify persist file exists
+        assert (persist_dir / "graph.json").exists()
 
-        assert file_path.exists()
+        # Load into a second store from same directory
+        store2 = NetworkXGraphStore(settings)
+        await store2.initialize()
 
-        # Load into new store
-        new_store = NetworkXGraphStore()
-        new_store.load_from_json(file_path)
-
-        # Verify data
-        e1 = new_store.get_entity("e1")
+        e1 = await store2.get_entity("e1")
         assert e1 is not None
-        assert e1["name"] == "Alice"
+        assert e1.name == "Alice"
 
-        relations = new_store.get_relations("e1")
+        relations = await store2.get_relations("e1")
         assert len(relations) == 1
+        assert relations[0].target_entity_id == "e2"
 
-    def test_json_persistence_preserves_attributes(self, tmp_path):
-        """F2.8.3: JSON persistence should preserve all attributes."""
+    async def test_json_persistence_preserves_attributes(self, tmp_path):
+        """F2.8.3: JSON persistence preserves entity properties dict."""
+        persist_dir = tmp_path / "graph"
+        from src.pdf_framework.config import GraphStoreSettings
         from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
 
-        store = NetworkXGraphStore()
+        settings = GraphStoreSettings(persist_dir=str(persist_dir))
 
-        entity = {
-            "id": "e1",
-            "type": "Person",
-            "name": "Alice",
-            "age": 30,
-            "embedded": True,
-        }
+        store1 = NetworkXGraphStore(settings)
+        await store1.initialize()
+        entity = _entity("e1", "Person", name="Alice", age=30, embedded=True)
+        await store1.add_entity(entity)
 
-        store.add_entity(entity)
+        store2 = NetworkXGraphStore(settings)
+        await store2.initialize()
 
-        file_path = tmp_path / "graph.json"
-        store.save_to_json(file_path)
+        loaded = await store2.get_entity("e1")
+        assert loaded is not None
+        # Properties stored in the `properties` dict
+        assert loaded.properties.get("age") == 30
+        assert loaded.properties.get("embedded") is True
 
-        new_store = NetworkXGraphStore()
-        new_store.load_from_json(file_path)
+    # -- clear ---------------------------------------------------------------
 
-        loaded = new_store.get_entity("e1")
-
-        assert loaded["age"] == 30
-        assert loaded["embedded"] is True
-
-    def test_clear_graph(self):
+    async def test_clear_graph(self, tmp_path):
         """F2.8.3: clear() should remove all entities and relations."""
-        from src.pdf_framework.graph_store.providers.networkx_store import NetworkXGraphStore
+        store = await _make_store(tmp_path)
+        await store.add_entity(_entity("e1"))
+        await store.add_entity(_entity("e2"))
+        await store.add_relation(_relation("r1", "e1", "e2", "CONNECTED"))
 
-        store = NetworkXGraphStore()
+        stats_before = await store.get_statistics()
+        assert stats_before["node_count"] == 2
+        assert stats_before["edge_count"] == 1
 
-        store.add_entity({"id": "e1", "type": "Entity"})
-        store.add_entity({"id": "e2", "type": "Entity"})
-        store.add_relation("e1", "e2", "CONNECTED")
+        await store.clear()
 
-        assert store.count_entities() == 2
-        assert store.count_relations() == 1
-
-        store.clear()
-
-        assert store.count_entities() == 0
-        assert store.count_relations() == 0
+        stats_after = await store.get_statistics()
+        assert stats_after["node_count"] == 0
+        assert stats_after["edge_count"] == 0

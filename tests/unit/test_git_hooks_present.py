@@ -26,9 +26,11 @@ pytestmark = pytest.mark.unit
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _HOOKS_DIR = _REPO_ROOT / "scripts" / "git_hooks"
 
-# The three hooks that wire the re-index automation. Keep in sync with
-# ``core.hooksPath`` and scripts/git_post_commit_reindex.py.
-_REQUIRED_HOOKS = ["post-commit", "post-merge", "post-checkout"]
+# The three hooks that wire the re-index automation + the pre-push quality
+# gate (added 2026-06-12 — before it, pushes left the machine unchecked:
+# hooksPath shadows .git/hooks so the pre-commit framework never fired).
+# Keep in sync with ``core.hooksPath`` and scripts/git_post_commit_reindex.py.
+_REQUIRED_HOOKS = ["post-commit", "post-merge", "post-checkout", "pre-push"]
 
 
 def test_git_hooks_dir_exists() -> None:

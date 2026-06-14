@@ -76,6 +76,9 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
     ("src/pdf_framework/graph_store/", "03_ИНДЕКСАЦИЯ", "graph-operations"),
     ("src/pdf_framework/embeddings/", "02_БЫСТРЫЙ_СТАРТ", "embedding-models"),
+    # Специфичный префикс ДО общего vector_store/ (first-match-wins, break ниже):
+    # DocumentIndexer = индексация (03/34), не Hybrid Search (инцидент 2026-06-12).
+    ("src/pdf_framework/vector_store/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
     ("src/pdf_framework/vector_store/", "04_ПОИСК", "qdrant-operations"),
     ("src/pdf_framework/config/", "02_БЫСТРЫЙ_СТАРТ", "framework-config"),
     ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
@@ -86,6 +89,8 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/guardrails/", "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
     ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    # DI-контейнер Components (был UNMAPPED → блокировал Stop, 2026-06-12)
+    ("src/api/dependencies/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
     ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
@@ -154,6 +159,14 @@ SKIP_PATTERNS = [
     ".markdownlint-cli2.yaml",
     "codecov.yml",
     "data/eval/",
+    # skill-router eval ground-truth + README (versioned eval dataset, documented
+    # in data/skill-router-ground-truth.README.md + roadmap 260613; not product code).
+    "skill-router-ground-truth",
+    # ADR (Architecture Decision Records) — самодокументирующиеся decision-артефакты
+    # (Context→Decision→Consequences→Alternatives), НЕ product/infra-код; cache/ уже
+    # скипается через "/cache/" выше (260613).
+    "architecture-research/adr/",
+    "/adr/",
     # mypy ratchet baseline (auto-generated snapshot, roadmap 260514 Phase 0).
     # Re-synced opportunistically via `mypy src/ ... | python -m mypy_baseline sync`.
     # Not product code, no docs to maintain.
@@ -205,6 +218,10 @@ SKIP_PATTERNS = [
     # VA BDD test artifacts (features, run state — test infra, not product code)
     "features/",
     ".run-state.json",
+    # Generic 4-stage pipeline artifacts (ADR-017): pipeline/<task>/0N-*.md +
+    # .pipeline-state.json + CURRENT — per-task deliverables/state, not product code.
+    "pipeline/",
+    ".pipeline-state.json",
     # Obsidian vault artifacts (Hermes Phase 1 — vault config/canvases, not product code)
     ".obsidian/",
     ".canvas",
@@ -523,7 +540,7 @@ def find_stale_domains(session_files: set[str]) -> list[dict[str, Any]]:
 
 
 def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | None:
-    """Suggest a documentation chapter via wiki_pages_v1 Qdrant similarity.
+    """Suggest a documentation chapter via framework_code_v1 Qdrant similarity.
 
     Phase C2 closure (2026-05-15, roadmap 260515): additive — used ONLY for
     ad-hoc CLI lookup of unmapped files. NOT wired into the Stop critical path
@@ -579,6 +596,16 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
         from qdrant_client.models import FieldCondition, Filter, MatchText
 
         client = QdrantClient(url="http://localhost:6333", timeout=timeout_s / 2)
+        # MRL: framework_code_v1 -> *_mrl_1024 (1024d), TEI отдаёт 4096d —
+        # без truncate+renorm Qdrant отвечает 400 и suggest молча умирал
+        # (починено 2026-06-12, roadmap 260612 pdf-docs P2.B3)
+        info = client.get_collection("framework_code_v1")
+        cfg = info.config.params.vectors
+        target_dim = int(cfg.size) if cfg is not None and not isinstance(cfg, dict) else None
+        if target_dim and target_dim < len(emb):
+            arr = emb[:target_dim]
+            norm = sum(x * x for x in arr) ** 0.5
+            emb = [x / norm for x in arr] if norm > 0 else arr
         # Use framework_code_v1 with filter to scope to docs chapters only.
         # Wiki_pages_v1 indexes Cyrillic entity slugs (no chapter info in payload);
         # framework_code_v1 has `relative_path` containing

@@ -1,6 +1,6 @@
 """Unit tests for Processing pipeline (F2.6.3)."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -10,69 +10,130 @@ class TestPipeline:
     """Test ProcessingPipeline operations."""
 
     def test_pipeline_initialization(self):
-        """F2.6.3: Pipeline should initialize with correct config."""
+        """F2.6.3: Pipeline should initialize with PDFSettings config."""
+        from src.pdf_framework.config import PDFSettings
         from src.pdf_framework.processing.pipeline import ProcessingPipeline
 
-        pipeline = ProcessingPipeline(
-            chunk_size=1000,
-            overlap=100,
+        settings = PDFSettings(chunk_size=1000, chunk_overlap=100)
+        pipeline = ProcessingPipeline(settings=settings)
+
+        assert pipeline._settings.chunk_size == 1000
+        assert pipeline._settings.chunk_overlap == 100
+
+    def test_pipeline_process_document(self):
+        """F2.6.3: Should process document synchronously and return chunks."""
+        from src.pdf_framework.processing.pipeline import ProcessingPipeline
+        from src.pdf_framework.schemas.documents import (
+            DocumentChunk,
+            DocumentMetadata,
+            ProcessedDocument,
         )
 
-        assert pipeline.config.chunk_size == 1000
-        assert pipeline.config.overlap == 100
+        pipeline = ProcessingPipeline(enable_metadata_enrichment=False)
 
-    async def test_pipeline_process_document(self):
-        """F2.6.3: Should process document and return chunks."""
-        from src.pdf_framework.processing.pipeline import ProcessingPipeline
-        from src.pdf_framework.schemas.documents import ProcessedDocument
-
-        pipeline = ProcessingPipeline()
-
-        mock_loader = AsyncMock()
-        mock_loader.load.return_value = ProcessedDocument(
-            id="test",
+        doc = ProcessedDocument(
+            id="doc-1",
             source_path="/test.pdf",
-            metadata=MagicMock(page_count=1),
-            raw_text="Test content",
-            chunks=[],
+            metadata=DocumentMetadata(title="Test Doc", page_count=2),
+            raw_text="Hello world chunk one. Hello world chunk two.",
         )
-
-        result = await pipeline.process(mock_loader, "/test.pdf")
-
-        assert result.id == "test"
-
-    def test_pipeline_assign_chunk_indices(self):
-        """F2.6.3: Chunk indices should be sequential."""
-        from src.pdf_framework.processing.pipeline import ProcessingPipeline
-
-        pipeline = ProcessingPipeline()
-
-        chunks = [
-            MagicMock(chunk_index=None),
-            MagicMock(chunk_index=None),
-            MagicMock(chunk_index=None),
+        fake_chunks = [
+            DocumentChunk(
+                id="c-0",
+                content="Hello world chunk one.",
+                document_id="doc-1",
+                chunk_index=0,
+            ),
+            DocumentChunk(
+                id="c-1",
+                content="Hello world chunk two.",
+                document_id="doc-1",
+                chunk_index=1,
+            ),
         ]
 
-        result = pipeline._assign_chunk_indices(chunks)
+        with patch.object(pipeline._splitter, "split", return_value=fake_chunks):
+            result = pipeline.process(doc)
 
-        assert result[0].chunk_index == 0
-        assert result[1].chunk_index == 1
-        assert result[2].chunk_index == 2
+        assert len(result) == 2
+        assert result[0].content == "Hello world chunk one."
+        assert result[1].content == "Hello world chunk two."
+        # process() must also set document.chunks
+        assert doc.chunks == result
 
-    def test_pipeline_preserve_metadata(self):
-        """F2.6.3: Should preserve document metadata through pipeline."""
+    def test_pipeline_assign_chunk_indices(self):
+        """F2.6.3: _assign_page_numbers maps chunks to pages via page_offsets."""
         from src.pdf_framework.processing.pipeline import ProcessingPipeline
+        from src.pdf_framework.schemas.documents import (
+            DocumentChunk,
+            DocumentMetadata,
+            ProcessedDocument,
+        )
 
         pipeline = ProcessingPipeline()
 
-        metadata = {
-            "title": "Test Doc",
-            "author": "Test Author",
-            "page_count": 5,
-        }
+        raw = "Page one text here. Page two text here."
+        # page_offsets: page 1 starts at offset 0, page 2 starts at offset 20
+        doc = ProcessedDocument(
+            id="doc-pages",
+            source_path="/pages.pdf",
+            metadata=DocumentMetadata(
+                page_count=2,
+                extra={"page_offsets": [(0, 1), (20, 2)]},
+            ),
+            raw_text=raw,
+        )
 
-        result = pipeline._process_metadata(metadata)
+        chunks = [
+            DocumentChunk(
+                id="c-0",
+                content="Page one text here.",
+                document_id="doc-pages",
+            ),
+            DocumentChunk(
+                id="c-1",
+                content="Page two text here.",
+                document_id="doc-pages",
+            ),
+        ]
 
-        assert result["title"] == "Test Doc"
-        assert result["author"] == "Test Author"
-        assert result["page_count"] == 5
+        result = ProcessingPipeline._assign_page_numbers(chunks, doc)
+
+        assert result[0].page_number == 1
+        assert result[1].page_number == 2
+
+    def test_pipeline_preserve_metadata(self):
+        """F2.6.3: Document metadata fields are preserved after process()."""
+        from src.pdf_framework.processing.pipeline import ProcessingPipeline
+        from src.pdf_framework.schemas.documents import (
+            DocumentChunk,
+            DocumentMetadata,
+            ProcessedDocument,
+        )
+
+        pipeline = ProcessingPipeline(enable_metadata_enrichment=False)
+
+        doc = ProcessedDocument(
+            id="doc-meta",
+            source_path="/meta.pdf",
+            metadata=DocumentMetadata(
+                title="Test Doc",
+                author="Test Author",
+                page_count=5,
+            ),
+            raw_text="Some content.",
+        )
+
+        fake_chunk = DocumentChunk(
+            id="c-0",
+            content="Some content.",
+            document_id="doc-meta",
+        )
+
+        with patch.object(pipeline._splitter, "split", return_value=[fake_chunk]):
+            pipeline.process(doc)
+
+        # Metadata must be unchanged after pipeline processing
+        assert doc.metadata.title == "Test Doc"
+        assert doc.metadata.author == "Test Author"
+        assert doc.metadata.page_count == 5

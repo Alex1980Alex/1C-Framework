@@ -26,6 +26,7 @@ Adapted: Direct function calls instead of HTTP, 3 target servers, MCP server.
 import asyncio
 import json
 import logging
+import sqlite3
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -37,9 +38,11 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+from ..ai_memory.db import connect as _ai_db_connect
+from ..ai_memory.db import resolve_db_path as _memory_ai_db_path
 from ..ai_memory.services.audit_service import AuditAction, AuditQuery, AuditService
 from ..ai_memory.services.ttl_service import TTLPolicy, TTLService
-from ..ai_memory.services.versioning_service import VersioningService
+from ..ai_memory.services.versioning_service import ChangeType, VersioningService
 from ..infrastructure.cache import LRUCache
 from ..infrastructure.circuit_breaker import (
     CircuitBreakerRegistry,
@@ -61,7 +64,7 @@ from .memory_router import (
     RouterConfig,
     RoutingDecision,
 )
-from .propagation_engine import PropagationEngine, PropagationResult
+from .propagation_engine import PropagationConfig, PropagationEngine, PropagationResult
 from .tools.id_management import IDManagementTool
 from .tools.research import ResearchTool
 from .tools.surprise import SurpriseTool
@@ -84,6 +87,58 @@ logger = logging.getLogger("memory-orchestrator")
 
 # Project root for data paths
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+
+# route_and_save target string -> UnifiedID source (ADR-V / TTL store dispatch)
+_TARGET_TO_SOURCE = {
+    "memory-ai": SourceServer.MEMORY_AI,
+    "vector-memory": SourceServer.VECTOR_MEMORY,
+    "skill-learning": SourceServer.SKILL_LEARNING,
+    "wiki": SourceServer.OBSIDIAN_VAULT,
+}
+
+# Legacy rows / route_and_save metadata may carry importance as a str label
+# ("high") or numeric string — SQLite TEXT affinity stores it as-is, after
+# which float comparisons in the search adapter raise TypeError.
+_IMPORTANCE_LABELS = {"critical": 1.0, "high": 0.9, "medium": 0.6, "normal": 0.5, "low": 0.3}
+
+
+def _coerce_importance(value: object, default: float = 0.7) -> float:
+    """Coerce an importance value to float clamped to [0, 1]."""
+    if isinstance(value, str):
+        value = _IMPORTANCE_LABELS.get(value.strip().lower(), value)
+    try:
+        return max(0.0, min(1.0, float(value)))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+
+
+# P2.3 (roadmap 260611): лёгкая RU-нормализация для лексического поиска —
+# с 260612 P2.G2 живёт в memory.text_norm (single source, переиспользуется
+# episodic MCP-сервером); здесь — алиасы для внутренних вызовов и тестов.
+from ..text_norm import stem_token as _sl_stem  # noqa: F401  (re-export)
+from ..text_norm import tokenize as _sl_tokenize
+
+
+def _find_jsonl_hash(path: Path, content_hash: str) -> str | None:
+    """Return pattern_id of the first JSONL record matching content_hash, else None.
+
+    Lightweight line-scan (skill-learning silos are small); malformed lines skipped.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get("content_hash") == content_hash:
+                    return rec.get("pattern_id", "")
+    except OSError:
+        return None
+    return None
 
 
 # =============================================================================
@@ -141,54 +196,67 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
         return "memory-ai"
 
     async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]:
-        import sqlite3
-
-        # Tokenize query: split on whitespace, keep tokens >= 3 chars.
-        # Fallback to full query if no tokens survive filter (short/CJK queries).
-        tokens = [t.lower() for t in query.split() if len(t) >= 3]
+        # P2.G2 (roadmap 260612): casefold + RU-stem token overlap instead of the
+        # old LOWER(...) LIKE — SQLite LOWER is ASCII-only, so Cyrillic morphoforms
+        # never matched. Candidate window is importance/recency-ordered and scored
+        # Python-side.
+        tokens = _sl_tokenize(query)
         if not tokens:
-            tokens = [query.lower()]
+            return []
 
         results = []
 
         def _do_search():
-            conn = sqlite3.connect(str(self._db_path))
+            from ..ai_memory.retention import effective_importance, is_archived
+
+            conn = _ai_db_connect(self._db_path)
             try:
                 cursor = conn.cursor()
-                # OR-join LIKE for each token across content + tags (case-insensitive).
-                where_parts = ["(LOWER(content) LIKE ? OR LOWER(tags) LIKE ?)"] * len(tokens)
-                params: list = []
-                for t in tokens:
-                    params.extend([f"%{t}%", f"%{t}%"])
-                # Fetch more than limit for reranking by match ratio.
-                fetch_limit = max(limit * 3, 30)
-                params.append(fetch_limit)
+                fetch_limit = max(limit * 3, 200)
                 cursor.execute(
-                    "SELECT id, content, importance, category, tags, created_at "
+                    "SELECT id, content, importance, category, tags, created_at, metadata "
                     "FROM important_messages "
-                    f"WHERE {' OR '.join(where_parts)} "
-                    "ORDER BY importance DESC LIMIT ?",
-                    params,
+                    "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                    (fetch_limit,),
                 )
                 rows = cursor.fetchall()
             finally:
                 conn.close()
 
-            # Python-side rerank: score = 0.5 * match_ratio + 0.5 * importance.
+            # Python-side rerank: score = 0.5 * match_ratio + 0.5 * effective
+            # importance (P3.1 lazy decay — stale session_summary ranks lower).
             scored = []
             for row in rows:
-                content_lower = (row[1] or "").lower()
-                tags_lower = (row[4] or "").lower()
-                matched = sum(1 for t in tokens if t in content_lower or t in tags_lower)
-                match_ratio = matched / len(tokens) if tokens else 0.0
-                importance = min(row[2] or 0.0, 1.0)
-                combined = min(match_ratio * 0.5 + importance * 0.5, 1.0)
+                try:
+                    md = json.loads(row[6]) if row[6] else {}
+                except (json.JSONDecodeError, TypeError):
+                    md = {}
+                if is_archived(md if isinstance(md, dict) else None):
+                    continue  # P3.2: archived rows are invisible to readers
+                row_tokens = _sl_tokenize(f"{row[1] or ''} {row[4] or ''}")
+                matched = len(tokens & row_tokens)
+                if not matched:
+                    continue
+                match_ratio = matched / len(tokens)
+                importance = _coerce_importance(row[2], default=0.0)
+                eff = effective_importance(importance, row[3], row[5])
+                combined = min(match_ratio * 0.5 + eff * 0.5, 1.0)
                 scored.append((combined, match_ratio, row))
 
-            # Sort by combined score, keep only items with at least one token match.
-            scored = [s for s in scored if s[1] > 0.0]
             scored.sort(key=lambda x: x[0], reverse=True)
             for combined, _match_ratio, row in scored[:limit]:
+                # C2 (roadmap 260612): malformed tags/created_at in a single
+                # legacy row must not fail the whole memory-ai arm.
+                try:
+                    row_tags = json.loads(row[4]) if row[4] else []
+                    if not isinstance(row_tags, list):
+                        row_tags = [str(row_tags)]
+                except (json.JSONDecodeError, TypeError):
+                    row_tags = []
+                try:
+                    created = datetime.fromisoformat(row[5]) if row[5] else None
+                except ValueError:
+                    created = None
                 results.append(
                     SearchResultItem(
                         unified_id=f"episodic:memory-ai:{row[0]}",
@@ -196,8 +264,8 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
                         memory_type=MemoryType.EPISODIC,
                         content=row[1],
                         raw_score=combined,
-                        created_at=datetime.fromisoformat(row[5]) if row[5] else None,
-                        tags=json.loads(row[4]) if row[4] else [],
+                        created_at=created,
+                        tags=row_tags,
                     )
                 )
 
@@ -212,51 +280,52 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
         return "vector-memory"
 
     async def search(self, query: str, limit: int = 10, **kwargs) -> list[SearchResultItem]:
+        # roadmap 260611 P1.3 (F12): no blanket except here — adapter failures
+        # (TEI down, Qdrant down) must propagate to UnifiedSearchEngine.search,
+        # which records them in sources_failed[] instead of silently degrading
+        # this arm to an empty result. The ai-memory arm already behaves so.
         min_confidence = kwargs.get("min_confidence", 0.3)
         results = []
 
-        try:
-            from ..vector_memory.server import _get_embedding, _get_qdrant, _pattern_from_payload
+        from ..vector_memory.server import _get_embedding, _get_qdrant, _pattern_from_payload
 
-            client = await asyncio.to_thread(_get_qdrant)
-            vector = await _get_embedding(query)
+        client = await asyncio.to_thread(_get_qdrant)
+        vector = await _get_embedding(query)
 
-            from qdrant_client.http import models as qmodels
+        from qdrant_client.http import models as qmodels
 
-            conditions = [
-                qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))
-            ]
-            qresults = await asyncio.to_thread(
-                client.query_points,
-                collection_name="learned_patterns",
-                query=vector,
-                query_filter=qmodels.Filter(must=conditions),
-                limit=limit,
-                with_payload=True,
-            )
+        conditions = [
+            qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))
+        ]
+        qresults = await asyncio.to_thread(
+            client.query_points,
+            collection_name="learned_patterns",
+            query=vector,
+            query_filter=qmodels.Filter(must=conditions),
+            limit=limit,
+            with_payload=True,
+        )
 
-            for point in qresults.points:
-                payload = point.payload or {}
-                pattern = _pattern_from_payload(str(point.id), payload)
-                similarity = point.score or 0.0
-                results.append(
-                    SearchResultItem(
-                        unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
-                        source=SourceServer.VECTOR_MEMORY,
-                        memory_type=MemoryType.SEMANTIC,
-                        content=pattern.content,
-                        title=pattern.name,
-                        raw_score=similarity * pattern.confidence,
-                        created_at=pattern.created_at,
-                        tags=pattern.tags,
-                        metadata={
-                            "pattern_type": pattern.pattern_type.value,
-                            "confidence": pattern.confidence,
-                        },
-                    )
+        for point in qresults.points:
+            payload = point.payload or {}
+            pattern = _pattern_from_payload(str(point.id), payload)
+            similarity = point.score or 0.0
+            results.append(
+                SearchResultItem(
+                    unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
+                    source=SourceServer.VECTOR_MEMORY,
+                    memory_type=MemoryType.SEMANTIC,
+                    content=pattern.content,
+                    title=pattern.name,
+                    raw_score=similarity * pattern.confidence,
+                    created_at=pattern.created_at,
+                    tags=pattern.tags,
+                    metadata={
+                        "pattern_type": pattern.pattern_type.value,
+                        "confidence": pattern.confidence,
+                    },
                 )
-        except Exception as e:
-            logger.warning(f"Vector memory search failed: {e}")
+            )
 
         return results
 
@@ -275,7 +344,9 @@ class SkillLearningSearchAdapter(BaseSearchAdapter):
         if not self._patterns_file.exists():
             return []
 
-        query_lower = query.lower()
+        # P2.3 (roadmap 260611): casefold + RU-stem нормализация вместо точного
+        # word-overlap — кириллические морфоформы («паттерна»/«паттерны») матчатся.
+        query_words = _sl_tokenize(query)
         results: list[SearchResultItem] = []
 
         def _search():
@@ -292,10 +363,8 @@ class SkillLearningSearchAdapter(BaseSearchAdapter):
 
             scored = []
             for item in items:
-                text = f"{item.get('name', '')} {item.get('content', '')} {item.get('description', '')}".lower()
-                # Simple keyword overlap scoring
-                query_words = set(query_lower.split())
-                content_words = set(text.split())
+                text = f"{item.get('name', '')} {item.get('content', '')} {item.get('description', '')}"
+                content_words = _sl_tokenize(text)
                 overlap = len(query_words & content_words)
                 if overlap > 0:
                     score = overlap / max(len(query_words), 1)
@@ -370,9 +439,7 @@ class MemoryOrchestrator:
 
         # Search Engine with adapters
         self._search_engine = UnifiedSearchEngine(self._link_registry)
-        self._search_engine.register_adapter(
-            AiMemorySearchAdapter(_PROJECT_ROOT / "data" / "memory_ai.db")
-        )
+        self._search_engine.register_adapter(AiMemorySearchAdapter(_memory_ai_db_path()))
         self._search_engine.register_adapter(VectorMemorySearchAdapter())
         self._search_engine.register_adapter(
             SkillLearningSearchAdapter(_PROJECT_ROOT / "data" / "skill_learning")
@@ -542,31 +609,77 @@ class MemoryOrchestrator:
         except Exception:
             pass
 
-        # Save to each target
+        # Save to each target. A target that fails (raises or returns None) must
+        # NOT be silently swallowed into a success:true response (roadmap 260609
+        # P1.4 / §26 A6): callers cannot retry or alert on a loss they can't see.
         saved_entities = []
+        failed_targets: list[str] = []
         for target in decision.targets:
-            entity_id = await self._save_to_target(target, content, metadata)
+            try:
+                entity_id = await self._save_to_target(target, content, metadata)
+            except Exception as e:  # per-target isolation — failure recorded below
+                logger.warning(f"route_and_save: target {target} raised: {e}")
+                entity_id = None
             if entity_id:
                 saved_entities.append({"target": target, "entity_id": entity_id})
+                # ADR-V wire-minimal (roadmap 260611 P2.1, F8): every
+                # orchestrator-mediated save snapshots a CREATE version. Direct
+                # MCP-server writers (save_pattern etc.) stay outside — the
+                # JSONL version store is not concurrent-safe across processes.
+                src = _TARGET_TO_SOURCE.get(target)
+                if src is not None:
+                    try:
+                        uid = UnifiedID.from_original(src, entity_id).unified
+                    except Exception:
+                        uid = f"{target}:{entity_id}"
+                    await self._version_write(
+                        uid,
+                        {"content": content, "metadata": metadata or {}, "target": target},
+                        ChangeType.CREATE,
+                        summary="route_and_save",
+                    )
+            else:
+                failed_targets.append(target)
 
-        # Create cross-links between saved entities
+        # Create cross-links between saved entities.
+        # P1 W4-fix (roadmap 260612 LinkRegistry): концы — unified-ID, не сырые
+        # store-id (исторические raw-UUID рёбра L2 создал именно этот блок;
+        # registry теперь отклоняет не-unified вход — P0.1 валидация).
+        cross_links_created = 0
         if self.config.enable_link_creation and len(saved_entities) > 1:
-            for i in range(len(saved_entities) - 1):
+            link_ids: list[str] = []
+            for ent in saved_entities:
+                src = _TARGET_TO_SOURCE.get(ent["target"])
+                if src is None:
+                    continue
+                try:
+                    link_ids.append(UnifiedID.from_original(src, ent["entity_id"]).unified)
+                except Exception:
+                    continue
+            for i in range(len(link_ids) - 1):
                 try:
                     self._link_registry.create_link(
-                        source_id=saved_entities[i]["entity_id"],
-                        target_id=saved_entities[i + 1]["entity_id"],
+                        source_id=link_ids[i],
+                        target_id=link_ids[i + 1],
                         link_type=LinkType.SESSION_CONTEXT,
                         strength=0.7,
+                        created_by="route-and-save",
                     )
+                    cross_links_created += 1
                 except Exception as e:
                     logger.warning(f"Failed to create cross-link: {e}")
 
+        # success only when EVERY routed target persisted; saved_partial flags the
+        # mixed case (some saved, some lost) so the caller can distinguish it from a
+        # total failure (nothing saved) or a clean success.
+        all_saved = not failed_targets
         result = {
-            "success": True,
+            "success": all_saved,
+            "saved_partial": bool(saved_entities) and bool(failed_targets),
             "routing": decision.to_dict(),
             "saved_entities": saved_entities,
-            "cross_links_created": max(0, len(saved_entities) - 1),
+            "failed_targets": failed_targets,
+            "cross_links_created": cross_links_created,
         }
         await self._emit_event(
             "memory.save",
@@ -696,6 +809,116 @@ class MemoryOrchestrator:
             "related": [r.to_dict() for r in related],
         }
 
+    def _build_propagation_handlers(self) -> dict:
+        """Real update handlers wiring PropagationEngine to the backing stores
+        (roadmap 260609 P2.3). Without these the engine could only *simulate*
+        updates; with them ``propagate_update`` actually mutates:
+
+        - **vector-memory** (``semantic:vector-memory:<uuid>``): nudge the
+          pattern's Beta succ/fail counts by ``|delta|`` (sign = direction) and
+          re-derive confidence — mirrors ``vector_memory.server._cascade_confidence``
+          but for a single explicitly-propagated node. Reuses the warm Qdrant
+          client (``_get_qdrant``) pre-warmed in :meth:`start`.
+        - **memory-ai** (``episodic:memory-ai:<id>``): nudge the message's
+          importance by ``delta`` (clamped to ``[0, 1]``) in SQLite.
+
+        Each handler returns ``True`` only on a real mutation (entity found and
+        written), ``False`` otherwise — so a missing entity is *not* counted as
+        ``entities_updated``. Blocking store I/O runs in a worker thread.
+        """
+        from ..vector_memory.confidence import derive_confidence, seed_counts_from_legacy
+        from .unified_id import SourceServer, UnifiedID
+
+        # Env-override keeps tests off the production DB (P0.2 isolation spirit).
+        ai_db = str(_memory_ai_db_path())
+
+        async def _vector_memory_handler(entity_id: str, delta: float) -> bool:
+            def _apply() -> dict[str, Any] | None:
+                from ..vector_memory.epoch import bump as _bump_epoch
+                from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
+
+                try:
+                    pid = UnifiedID.parse(entity_id).identifier
+                except ValueError:
+                    return None
+                client = _get_qdrant()
+                pts = client.retrieve(collection_name=COLLECTION_NAME, ids=[pid], with_payload=True)
+                if not pts:
+                    return None  # not a learned_pattern → honest no-op
+                pay = pts[0].payload or {}
+                succ, fail = pay.get("succ"), pay.get("fail")
+                if succ is None or fail is None:
+                    succ, fail = seed_counts_from_legacy(
+                        float(pay.get("confidence", 0.70)),
+                        int(pay.get("application_count", 0) or 0),
+                    )
+                succ, fail = float(succ), float(fail)
+                if delta >= 0:
+                    succ += abs(delta)
+                else:
+                    fail += abs(delta)
+                now_iso = datetime.now().isoformat()
+                updates = {
+                    "succ": round(succ, 6),
+                    "fail": round(fail, 6),
+                    "confidence": round(derive_confidence(succ, fail), 6),
+                    "updated_at": now_iso,
+                }
+                client.set_payload(
+                    collection_name=COLLECTION_NAME,
+                    payload=updates,
+                    points=[pid],
+                )
+                # §24 invariant: every confidence writer bumps the epoch so the
+                # surfacing cache (memory-first-hook) invalidates instantly
+                # instead of serving the stale value until TTL.
+                _bump_epoch()
+                return updates
+
+            snapshot = await asyncio.to_thread(_apply)
+            if snapshot is None:
+                return False
+            # ADR-V wire-minimal (roadmap 260611 P2.1): snapshot the mutation.
+            await self._version_write(entity_id, snapshot, ChangeType.UPDATE, summary="propagation")
+            return True
+
+        async def _memory_ai_handler(entity_id: str, delta: float) -> bool:
+            def _apply() -> dict[str, Any] | None:
+                try:
+                    mid = UnifiedID.parse(entity_id).identifier
+                except ValueError:
+                    return None
+                try:
+                    conn = sqlite3.connect(ai_db, timeout=2)
+                except sqlite3.Error:
+                    return None
+                try:
+                    row = conn.execute(
+                        "SELECT importance FROM important_messages WHERE id = ?", (mid,)
+                    ).fetchone()
+                    if row is None:
+                        return None
+                    new_imp = max(0.0, min(1.0, _coerce_importance(row[0], default=0.5) + delta))
+                    conn.execute(
+                        "UPDATE important_messages SET importance = ?, updated_at = ? WHERE id = ?",
+                        (round(new_imp, 4), datetime.now().isoformat(), mid),
+                    )
+                    conn.commit()
+                    return {"importance": round(new_imp, 4)}
+                finally:
+                    conn.close()
+
+            snapshot = await asyncio.to_thread(_apply)
+            if snapshot is None:
+                return False
+            await self._version_write(entity_id, snapshot, ChangeType.UPDATE, summary="propagation")
+            return True
+
+        return {
+            SourceServer.VECTOR_MEMORY: _vector_memory_handler,
+            SourceServer.MEMORY_AI: _memory_ai_handler,
+        }
+
     async def propagate_update(
         self,
         entity_id: str,
@@ -708,14 +931,38 @@ class MemoryOrchestrator:
         if not self._link_registry:
             raise SubsystemUnavailableError("Link registry not initialized")
 
-        # Lazy-init propagation engine
+        # Lazy-init propagation engine with real store-backed update handlers
+        # (roadmap 260609 P2.3) so propagated updates actually mutate the stores
+        # instead of simulating success.
         if self._propagation_engine is None:
-            self._propagation_engine = PropagationEngine(self._link_registry)
+            self._propagation_engine = PropagationEngine(
+                self._link_registry,
+                # Synchronous request/response semantics for the MCP tool:
+                # - background queueing would return entities_updated=[] with
+                #   reason="queued_for_background_processing", hiding the very
+                #   result P2.3 made honest (depth-3 BFS over the sqlite registry
+                #   plus a few set_payload calls is sub-second, so awaiting is fine);
+                # - event dedup would silently skip a legitimate repeat
+                #   propagate_update for the same entity within process lifetime.
+                PropagationConfig(
+                    enable_background_processing=False,
+                    enable_event_deduplication=False,
+                ),
+                update_handlers=self._build_propagation_handlers(),
+                # roadmap 260611 P1.2 (F10): share the orchestrator registry so
+                # handler failures trip real named breakers
+                # ("propagation:<source>") visible via memory_circuit_status
+                # and resettable via memory_circuit_reset.
+                breaker_registry=self._circuit_registry,
+            )
             await self._propagation_engine.start()
 
+        # Sign carries the direction: the BFS uses the delta's sign (positive =
+        # boost, negative = penalty), so fold `success` into it.
+        signed_delta = abs(delta) if success else -abs(delta)
         result: PropagationResult = await self._propagation_engine.propagate(
             entity_id=entity_id,
-            base_delta=delta,
+            base_delta=signed_delta,
             success=success,
             metadata=metadata,
         )
@@ -1163,12 +1410,103 @@ class MemoryOrchestrator:
         return stats
 
     async def memory_ttl_cleanup(self) -> dict[str, Any]:
-        """Remove expired TTL entries. Returns list of removed entity IDs."""
+        """Remove expired TTL entries from the ledger AND enforce on the stores.
+
+        roadmap 260611 P2.2 (F9): the TTLService only ever touched its own
+        JSONL ledger — entities stayed readable forever. Now each removed
+        entity is dispatched by source:
+
+        - vector-memory → **archive** (``expired_at`` payload flag, consistent
+          with §22 invalidate-not-delete; archived-exclude in search does the rest);
+        - memory-ai → ``DELETE`` row;
+        - other sources → honest skip with reason.
+
+        Honest response (same pattern as P1.1 failed_entities): ledger count,
+        per-store actions and ``failed{entity: reason}`` — nothing is silently
+        swallowed.
+        """
         self._track("memory_ttl_cleanup")
         if not self._ttl_service:
             raise SubsystemUnavailableError("TTL service not initialized")
         removed = await self._ttl_service.cleanup_expired()
-        return {"success": True, "removed_count": len(removed), "removed": removed}
+
+        store_actions: dict[str, Any] = {"archived": [], "deleted": [], "skipped": {}}
+        failed: dict[str, str] = {}
+
+        for eid in removed:
+            try:
+                uid = UnifiedID.parse(eid)
+            except ValueError:
+                store_actions["skipped"][eid] = "unparseable_id"
+                continue
+            try:
+                if uid.source == SourceServer.VECTOR_MEMORY:
+
+                    def _archive(pid: str = uid.identifier) -> bool:
+                        from ..vector_memory.epoch import bump as _bump_epoch
+                        from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
+
+                        client = _get_qdrant()
+                        existing = client.retrieve(collection_name=COLLECTION_NAME, ids=[pid])
+                        if not existing:
+                            return False
+                        client.set_payload(
+                            collection_name=COLLECTION_NAME,
+                            payload={"expired_at": datetime.now().isoformat()},
+                            points=[pid],
+                        )
+                        _bump_epoch()  # §24: archive state changed → invalidate cache
+                        return True
+
+                    if await asyncio.to_thread(_archive):
+                        store_actions["archived"].append(eid)
+                    else:
+                        store_actions["skipped"][eid] = "not_found"
+
+                elif uid.source == SourceServer.MEMORY_AI:
+                    db_path = str(_memory_ai_db_path())
+
+                    def _delete(mid: str = uid.identifier, db: str = db_path) -> int:
+                        conn = _ai_db_connect(db, timeout=2)
+                        try:
+                            cur = conn.execute(
+                                "DELETE FROM important_messages WHERE id = ?", (mid,)
+                            )
+                            conn.commit()
+                            return cur.rowcount
+                        finally:
+                            conn.close()
+
+                    if await asyncio.to_thread(_delete) > 0:
+                        store_actions["deleted"].append(eid)
+                        # P2.G5 (roadmap 260612): cascade link cleanup — a deleted
+                        # episodic row must not leave dangling MIRRORS/DERIVES_FROM.
+                        try:
+                            # NB: distinct name — must NOT shadow the `removed`
+                            # ledger (list) that the return below does len() on.
+                            links_removed = self._link_registry.delete_links_for_entity(eid)
+                            if links_removed:
+                                store_actions.setdefault("links_removed", {})[eid] = links_removed
+                        except Exception as link_exc:
+                            store_actions.setdefault("link_cleanup_failed", {})[eid] = type(
+                                link_exc
+                            ).__name__
+                    else:
+                        store_actions["skipped"][eid] = "not_found"
+
+                else:
+                    store_actions["skipped"][eid] = f"unsupported_source:{uid.source.value}"
+            except Exception as e:
+                failed[eid] = type(e).__name__
+
+        return {
+            "success": not failed,
+            "removed_count": len(removed),  # back-compat
+            "removed_ledger": len(removed),
+            "removed": removed,
+            "store_actions": store_actions,
+            "failed": failed,
+        }
 
     async def memory_version_history(
         self,
@@ -1211,13 +1549,21 @@ class MemoryOrchestrator:
                 "success": False,
                 "error": f"Version {target_version} not found for entity {entity_id}",
             }
+        # roadmap 260611 P2.1 (D3): a rollback must be visible to readers —
+        # write the rolled-back snapshot's fields back to the backing store,
+        # not only into the version ledger.
+        store_writeback = await self._apply_version_to_store(entity_id, result.content)
         await self._audit(
             AuditAction.ROLLBACK,
             "memory",
             resource_id=entity_id,
             metadata={"target_version": target_version, "rollback_by": rollback_by},
         )
-        return {"success": True, "new_version": result.to_dict()}
+        return {
+            "success": True,
+            "new_version": result.to_dict(),
+            "store_writeback": store_writeback,
+        }
 
     async def memory_version_compare(
         self,
@@ -1365,22 +1711,167 @@ class MemoryOrchestrator:
 
     # ----- Private helpers -----
 
+    async def _version_write(
+        self,
+        entity_id: str,
+        content: dict[str, Any],
+        change_type: ChangeType,
+        summary: str = "",
+    ) -> None:
+        """ADR-V wire-minimal (roadmap 260611 P2.1, F8): snapshot an
+        orchestrator-mediated mutation into the versioning store.
+
+        Boundary: only orchestrator-process writers version (route_and_save,
+        propagation handlers, rollback). Direct MCP-server writers
+        (save_pattern, save_important_message, …) are out of scope — the JSONL
+        store is not concurrent-safe across processes. Fail-soft: a versioning
+        problem must never fail the primary write.
+        """
+        # getattr: tolerate partially-constructed orchestrators (tests stub the
+        # instance without running start()/__init__ side state).
+        svc = getattr(self, "_versioning_service", None)
+        if not svc:
+            return
+        try:
+            await svc.create_version(
+                entity_id=entity_id,
+                content=content,
+                change_type=change_type,
+                created_by="orchestrator",
+                change_summary=summary,
+            )
+        except Exception as e:
+            logger.warning(f"versioning skipped for {entity_id}: {e}")
+
+    async def _apply_version_to_store(
+        self, entity_id: str, content: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Write a version snapshot's known fields back to the backing store
+        (rollback writeback, roadmap 260611 P2.1 D3: «чтение видит старый контент»).
+
+        Supported: memory-ai (content/importance via SQLite UPDATE),
+        vector-memory (payload fields via set_payload — the dense vector is NOT
+        re-embedded, flagged in the response). Other sources → honest skip.
+        """
+        try:
+            uid = UnifiedID.parse(entity_id)
+        except ValueError:
+            return {"applied": False, "reason": "unparseable_entity_id"}
+
+        if uid.source == SourceServer.MEMORY_AI:
+            fields: dict[str, Any] = {}
+            if isinstance(content.get("content"), str):
+                fields["content"] = content["content"]
+            importance = content.get("importance")
+            if not isinstance(importance, int | float):
+                # F16 (roadmap 260611): CREATE-snapshots from route_and_save keep
+                # importance nested under metadata — unwrap it so a rollback to v1
+                # restores importance too, not only content.
+                meta = content.get("metadata")
+                importance = meta.get("importance") if isinstance(meta, dict) else None
+            if isinstance(importance, int | float):
+                fields["importance"] = float(importance)
+            if not fields:
+                return {"applied": False, "reason": "no_supported_fields"}
+            db_path = str(_memory_ai_db_path())
+
+            def _writeback() -> int:
+                conn = _ai_db_connect(db_path, timeout=2)
+                try:
+                    assignments = ", ".join(f"{k} = ?" for k in fields)
+                    cur = conn.execute(
+                        f"UPDATE important_messages SET {assignments}, updated_at = ? WHERE id = ?",
+                        (*fields.values(), datetime.now().isoformat(), uid.identifier),
+                    )
+                    conn.commit()
+                    return cur.rowcount
+                finally:
+                    conn.close()
+
+            rowcount = await asyncio.to_thread(_writeback)
+            if rowcount == 0:
+                return {"applied": False, "reason": "not_found"}
+            return {"applied": True, "fields": sorted(fields)}
+
+        if uid.source == SourceServer.VECTOR_MEMORY:
+            payload = {
+                k: content[k]
+                for k in ("content", "name", "description", "confidence", "succ", "fail")
+                if k in content
+            }
+            if not payload:
+                return {"applied": False, "reason": "no_supported_fields"}
+
+            def _writeback() -> bool:
+                from ..vector_memory.epoch import bump as _bump_epoch
+                from ..vector_memory.server import COLLECTION_NAME, _get_qdrant
+
+                client = _get_qdrant()
+                existing = client.retrieve(collection_name=COLLECTION_NAME, ids=[uid.identifier])
+                if not existing:
+                    return False
+                client.set_payload(
+                    collection_name=COLLECTION_NAME,
+                    payload={**payload, "updated_at": datetime.now().isoformat()},
+                    points=[uid.identifier],
+                )
+                if "confidence" in payload:
+                    _bump_epoch()  # §24: confidence writer invalidates surfacing cache
+                return True
+
+            ok = await asyncio.to_thread(_writeback)
+            if not ok:
+                return {"applied": False, "reason": "not_found"}
+            return {
+                "applied": True,
+                "fields": sorted(payload),
+                # honest limitation: payload restored, dense vector left as-is
+                "vector_reembedded": False,
+            }
+
+        return {"applied": False, "reason": f"unsupported_source:{uid.source.value}"}
+
     async def _save_to_target(
         self, target: str, content: str, metadata: dict[str, Any] | None
     ) -> str | None:
         """Save content to a specific subsystem. Returns entity ID or None."""
         entity_id = str(uuid4())
+        # §26 P1.3 write-contract: stamp the cross-store idempotency key on every
+        # path and emit an ingestion event (saved/dup/error) so these direct writes
+        # are visible to cross_store_sync / fact-trace, not just the harvesters.
+        try:
+            from .content_hash import hash_content
+
+            content_hash = hash_content(content)
+        except Exception:
+            content_hash = ""
+        # target string -> cross-store canonical store name (matches cross_store_index).
+        _store_name = {
+            "memory-ai": "memory_ai",
+            "vector-memory": "learned_patterns",
+            "skill-learning": "skill_learning",
+            "wiki": "wiki",
+        }.get(target, target)
+
+        def _ingest(action: str, **kw: Any) -> None:
+            try:
+                from .ingest_metrics import record_ingest
+
+                record_ingest(
+                    _store_name, action, content_hash=content_hash, harvester="route_and_save", **kw
+                )
+            except Exception:
+                pass
+
         try:
             if target == "memory-ai":
-                import sqlite3
-
-                db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
-                importance = (metadata or {}).get("importance", 0.7)
+                db_path = _memory_ai_db_path()
+                importance = _coerce_importance((metadata or {}).get("importance", 0.7))
                 category = (metadata or {}).get("category", "general")
                 tags = (metadata or {}).get("tags", [])
 
                 def _save():
-                    conn = sqlite3.connect(str(db_path))
+                    conn = _ai_db_connect(db_path)
                     try:
                         cursor = conn.cursor()
                         now = datetime.now().isoformat()
@@ -1396,7 +1887,7 @@ class MemoryOrchestrator:
                                 json.dumps(tags),
                                 now,
                                 now,
-                                json.dumps({}),
+                                json.dumps({"content_hash": content_hash}),
                             ),
                         )
                         conn.commit()
@@ -1404,11 +1895,30 @@ class MemoryOrchestrator:
                         conn.close()
 
                 await asyncio.to_thread(_save)
+                _ingest("saved")
 
             elif target == "vector-memory":
                 from ..vector_memory.server import _get_embedding, _get_qdrant
+                from .content_hash import point_id as _point_id
 
                 client = await asyncio.to_thread(_get_qdrant)
+
+                # Deterministic content-derived id → re-routing identical content
+                # dedups (no duplicate point) and collides with save_pattern/harvest.
+                if content_hash:
+                    entity_id = _point_id(content_hash)
+                    try:
+                        existing = await asyncio.to_thread(
+                            client.retrieve,
+                            collection_name="learned_patterns",
+                            ids=[entity_id],
+                        )
+                    except Exception:
+                        existing = []
+                    if existing:
+                        _ingest("dup", pattern_id=entity_id)
+                        return entity_id
+
                 vector = await _get_embedding(content)
 
                 from qdrant_client.http import models as qmodels
@@ -1420,6 +1930,7 @@ class MemoryOrchestrator:
                     "name": (metadata or {}).get("name", content[:50]),
                     "description": (metadata or {}).get("description", ""),
                     "content": content,
+                    "content_hash": content_hash,
                     "confidence": (metadata or {}).get("confidence", 0.7),
                     "evidence_sources": [],
                     "created_at": now.isoformat(),
@@ -1437,31 +1948,67 @@ class MemoryOrchestrator:
                     collection_name="learned_patterns",
                     points=[qmodels.PointStruct(id=entity_id, vector=vector, payload=payload)],
                 )
+                _ingest("saved", pattern_id=entity_id)
 
             elif target == "skill-learning":
                 storage_dir = _PROJECT_ROOT / "data" / "skill_learning"
                 storage_dir.mkdir(parents=True, exist_ok=True)
-                patterns_file = storage_dir / "patterns.jsonl"
+                # P0.4 (roadmap 260611): routed-контент идёт в карантин pending,
+                # а не напрямую в saved; явный auto_confirm от вызывающего —
+                # единственный способ миновать модерацию.
+                auto_confirm = bool((metadata or {}).get("auto_confirm"))
+                target_file = storage_dir / (
+                    "patterns.jsonl" if auto_confirm else "pending_patterns.jsonl"
+                )
+
+                # Dedup против всех трёх silo (pending/saved/rejected) — rejected
+                # как негативный сигнал, симметрично capture_pattern P0.2.
+                if content_hash:
+                    for silo, fname in (
+                        ("pending", "pending_patterns.jsonl"),
+                        ("saved", "patterns.jsonl"),
+                        ("rejected", "rejected_patterns.jsonl"),
+                    ):
+                        silo_path = storage_dir / fname
+                        if not silo_path.exists():
+                            continue
+                        dup_id = await asyncio.to_thread(_find_jsonl_hash, silo_path, content_hash)
+                        if dup_id is not None:
+                            _ingest(
+                                "dup",
+                                **({"reason": "rejected"} if silo == "rejected" else {}),
+                            )
+                            return dup_id or entity_id
 
                 pattern = {
                     "pattern_id": entity_id,
                     "pattern_type": (metadata or {}).get("pattern_type", "workflow-pattern"),
                     "name": (metadata or {}).get("name", content[:50]),
                     "content": content,
+                    "content_hash": content_hash,
                     "description": (metadata or {}).get("description", ""),
                     "confidence": (metadata or {}).get("confidence", 0.7),
                     "tags": (metadata or {}).get("tags", []),
+                    "evidence_sources": [],
+                    "metadata": {"routed": True},
                     "application_count": 0,
+                    "success_count": 0,
+                    "failure_count": 0,
                     "created_at": datetime.now().isoformat(),
                     "updated_at": datetime.now().isoformat(),
                     "version": 1,
+                    "archived": False,
                 }
 
                 def _append():
-                    with open(patterns_file, "a", encoding="utf-8") as f:
+                    with open(target_file, "a", encoding="utf-8") as f:
                         f.write(json.dumps(pattern, ensure_ascii=False) + "\n")
 
                 await asyncio.to_thread(_append)
+                if auto_confirm:
+                    _ingest("saved")
+                else:
+                    _ingest("skipped", reason="pending")
 
             elif target == "wiki":
                 from .memcube import ContentType as CType
@@ -1493,6 +2040,7 @@ class MemoryOrchestrator:
                     draft_path.write_text(wiki_md, encoding="utf-8")
 
                 await asyncio.to_thread(_write_draft)
+                _ingest("saved")
 
             else:
                 logger.warning(f"Unknown target: {target}")
@@ -1502,6 +2050,7 @@ class MemoryOrchestrator:
 
         except Exception as e:
             logger.error(f"Failed to save to {target}: {e}")
+            _ingest("error", reason=f"{type(e).__name__}")
             return None
 
     async def _get_entity(self, unified_id: str) -> dict[str, Any] | None:
@@ -1514,12 +2063,10 @@ class MemoryOrchestrator:
 
         try:
             if uid.source == SourceServer.MEMORY_AI:
-                import sqlite3
-
-                db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+                db_path = _memory_ai_db_path()
 
                 def _get():
-                    conn = sqlite3.connect(str(db_path))
+                    conn = _ai_db_connect(db_path)
                     try:
                         cursor = conn.cursor()
                         cursor.execute(
@@ -1585,12 +2132,10 @@ class MemoryOrchestrator:
         return None
 
     async def _get_entity_by_raw_id(self, raw_id: str) -> dict[str, Any] | None:
-        import sqlite3
-
-        db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+        db_path = _memory_ai_db_path()
         connection = None
         try:
-            connection = sqlite3.connect(str(db_path), timeout=1)
+            connection = _ai_db_connect(db_path, timeout=1)
             cursor = connection.cursor()
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at "
@@ -1617,12 +2162,10 @@ class MemoryOrchestrator:
         """Get stats from each subsystem."""
         stats: dict[str, Any] = {}
         try:
-            import sqlite3
-
-            db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+            db_path = _memory_ai_db_path()
 
             def _ai_stats():
-                conn = sqlite3.connect(str(db_path))
+                conn = _ai_db_connect(db_path)
                 try:
                     cursor = conn.cursor()
                     cursor.execute("SELECT COUNT(*) FROM important_messages")
@@ -1676,7 +2219,7 @@ class MemoryOrchestrator:
 
         if subsystems is None or "memory-ai" in subsystems:
             try:
-                db_path = _PROJECT_ROOT / "data" / "memory_ai.db"
+                db_path = _memory_ai_db_path()
                 checks["memory-ai"] = {
                     "status": "healthy" if db_path.exists() else "no_data",
                     "db_path": str(db_path),
@@ -1850,7 +2393,7 @@ async def list_tools() -> list[Tool]:
                     "link_type": {
                         "type": "string",
                         "default": "supports",
-                        "description": "based_on, supports, contradicts, extends, derives_from, session_context",
+                        "description": "supports, contradicts, extends, derives_from, session_context, promoted_to, superseded_by, mirrors",
                     },
                     "strength": {"type": "number", "default": 0.8},
                     "bidirectional": {"type": "boolean", "default": False},

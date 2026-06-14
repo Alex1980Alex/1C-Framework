@@ -109,6 +109,16 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pipeline-gate.py",
+            "timeout": 4
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pipeline-protocol.py",
+            "timeout": 3
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/userpromptsubmit-feedback-detector.py",
             "timeout": 3
           },
@@ -517,6 +527,11 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pipeline-protocol-stop.py",
+            "timeout": 8
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/code-verify-reminder.py",
             "timeout": 5
           },
@@ -533,7 +548,13 @@
           {
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/session-memory-save.py",
-            "timeout": 5,
+            "timeout": 15,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/pattern-reinforce-stop.py",
+            "timeout": 15,
             "async": true
           },
           {
@@ -560,6 +581,12 @@
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/post-merge-revert-stop.py",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/ci-catchup-on-stop.py",
+            "timeout": 5,
+            "statusMessage": "ci-catchup-stop"
           },
           {
             "type": "command",
@@ -615,9 +642,39 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-curation-candidates-on-start.py",
+            "timeout": 8,
+            "statusMessage": "curation-candidates"
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/gh-notif-intake-on-start.py",
             "timeout": 8,
             "statusMessage": "gh-notif-intake"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-learning-pending-on-start.py",
+            "timeout": 3,
+            "statusMessage": "skill-learning-pending"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-learning-acceptance-on-start.py",
+            "timeout": 5,
+            "statusMessage": "skill-learning-acceptance"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-ai-acceptance-on-start.py",
+            "timeout": 5,
+            "statusMessage": "memory-ai-acceptance"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/skill-system-acceptance-on-start.py",
+            "timeout": 10,
+            "statusMessage": "skill-system-acceptance"
           }
         ]
       }

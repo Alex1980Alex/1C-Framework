@@ -12,6 +12,15 @@ on:
       - '.github/workflows/ci-1c.yml'
   pull_request:
     branches: [master, main, develop, dev-master]
+    # Same paths filter as push (added 2026-06-12): without it EVERY PR queued
+    # 1C jobs — eternally, because no self-hosted runner is registered.
+    paths:
+      - 'configuration/**'
+      - 'src/bsl/**'
+      - 'features/**'
+      - 'tools/vanessa/**'
+      - 'tools/yaxunit.json'
+      - '.github/workflows/ci-1c.yml'
   workflow_dispatch:
 
 env:
@@ -29,6 +38,12 @@ jobs:
   bsl-analysis:
     name: BSL Static Analysis
     runs-on: [self-hosted, windows-11, 1c]
+    # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
+    # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
+    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
+    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
+    # runner'а обновить на C:\1С-Framework.)
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,6 +88,12 @@ jobs:
   yaxunit-tests:
     name: YAxUnit Tests
     runs-on: [self-hosted, windows-11, 1c]
+    # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
+    # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
+    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
+    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
+    # runner'а обновить на C:\1С-Framework.)
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     env:
       MSYS_NO_PATHCONV: '1'
     steps:
@@ -108,6 +129,12 @@ jobs:
   bdd-tests:
     name: BDD Tests
     runs-on: [self-hosted, windows-11, 1c]
+    # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
+    # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
+    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
+    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
+    # runner'а обновить на C:\1С-Framework.)
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     continue-on-error: true  # BDD tests are less stable (GUI-dependent)
     steps:
       - name: Checkout
@@ -137,6 +164,12 @@ jobs:
   coverage:
     name: Code Coverage
     runs-on: [self-hosted, windows-11, 1c]
+    # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
+    # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
+    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
+    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
+    # runner'а обновить на C:\1С-Framework.)
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     needs: [yaxunit-tests]
     if: always() && needs.yaxunit-tests.result == 'success'
     continue-on-error: true  # Coverage is optional until dbgs is stable
@@ -205,6 +238,12 @@ jobs:
   allure-report:
     name: Allure Report
     runs-on: [self-hosted, windows-11, 1c]
+    # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
+    # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
+    #   gh variable set CI_1C_RUNNER_ONLINE --body 1
+    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
+    # runner'а обновить на C:\1С-Framework.)
+    if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     needs: [bsl-analysis, yaxunit-tests, bdd-tests, coverage]
     if: always()
     steps:

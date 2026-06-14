@@ -270,3 +270,38 @@ class TestOptOut:
         result = pr.reinforce_session("any-sess", True, reinforce_fn=_fake_reinforce(calls))
         assert result["status"] == "disabled"
         assert calls == []
+
+
+# ---------------------------------------------------------------------------
+# F14 — miss != error (roadmap 260611 P3.3)
+# ---------------------------------------------------------------------------
+
+
+class TestMissClassification:
+    def test_not_found_counts_as_missing_not_error(self, monkeypatch, tmp_path):
+        """A legitimately deleted pattern (reinforce_miss reason:not_found)
+        must land in `missing`, not `errors` — no false alarm in the banner."""
+        _redirect_cache(monkeypatch, tmp_path)
+        pr.record_surfaced("sess-f14", [("p-alive", 0.9), ("p-deleted", 0.8)])
+
+        def _fn(pid: str, success: bool, **_kw: Any) -> dict[str, Any]:
+            if pid == "p-alive":
+                return {"success": True, "pattern_id": pid}
+            return {"success": False, "error": "pattern not found", "pattern_id": pid}
+
+        result = pr.reinforce_session("sess-f14", True, reinforce_fn=_fn)
+        assert result["status"] == "ok"
+        assert result["applied"] == 1
+        assert result["missing"] == 1
+        assert result["errors"] == 0
+
+    def test_real_failure_still_counts_as_error(self, monkeypatch, tmp_path):
+        _redirect_cache(monkeypatch, tmp_path)
+        pr.record_surfaced("sess-f14b", [("p-broken", 0.9)])
+
+        def _fn(pid: str, success: bool, **_kw: Any) -> dict[str, Any]:
+            return {"success": False, "error": "ConnectionError: qdrant down"}
+
+        result = pr.reinforce_session("sess-f14b", True, reinforce_fn=_fn)
+        assert result["errors"] == 1
+        assert result["missing"] == 0

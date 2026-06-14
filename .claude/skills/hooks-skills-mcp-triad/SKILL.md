@@ -47,7 +47,7 @@ description: "Используй этот скилл для понимания �
 | `code-skill-enforcer.py` | WebSearch\|WebFetch | Research cache reminder (уровень D) |
 | `code-skill-enforcer.py` | Write\|Edit | Post-verification + LEARN phase (уровни E-F) |
 | `factory-enforcer.py` | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация |
-| `docs-change-tracker.py` | Write\|Edit | Код изменился → напоминание обновить docs/ + skills/ |
+| `docs-change-tracker.py` | Write\|Edit | Код изменился → mandatory-задача обновить docs/ + skills/ (маппинг `_CODE_TO_DOCS_SKILLS`; паттерн — строка или кортеж альтернатив). Самозакрытие: правка целевого дока/скилла (`_try_complete_tasks`) или git-время целей новее `code_changed_at` (`_sync_zombie_tasks`). Memory-хуки маппятся на 27.13 Changelog + `memory-unified` (2026-06-11). ⚠ Метаданные задачи передавать через `add_task(metadata=…)`, НЕ `update_task_metadata(created_by=…)` — последняя штампует ВСЕ pending-задачи хука и затирает `code_changed_at` ранних задач → zombie (исправлено 2026-06-11) |
 | `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
 | `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
 | `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
@@ -65,6 +65,7 @@ description: "Используй этот скилл для понимания �
 | `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
 | `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `configuration/`, `ИБTransportManagementDevelop/` (EDT проект), `src/bsl/`, `openspec/`, `.pre-commit-config.yaml`, `.kblintrc.yml` (kb-lint config; living in `docs/wiki/.kblintrc.yml` per `kb_lint/config.py:60-78`), `codecov.yml`, `data/eval/`. При добавлении нового EDT-проекта в корень — добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. (Roadmap: динамическое обнаружение через `.bsl-language-server.json` маркер — см. `src/bsl/project_discovery.py`.) |
 | `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
+| `pattern-reinforce-stop.py` | §22 reinforcement-мост (roadmap 260609 P0.1): на Stop читает surfaced-паттерны сессии (`shared/pattern_reinforce.py`) и подкрепляет их в Qdrant по эвристике успеха (commit/задача). Баннер `[REINFORCE] applied/skipped/missing/errors`; `missing` = легитимно удалённые паттерны (`not_found`-miss ≠ error, roadmap 260611 F14). Advisory exit 0, cap `REINFORCE_CAP=10`, opt-out `P1_REINFORCE_DISABLE=1` |
 
 #### SessionStart (3)
 

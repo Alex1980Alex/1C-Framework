@@ -85,14 +85,15 @@ def create_plan_execute_agent(
     # Set entry point
     workflow.set_entry_point("planner")
 
-    # Add edges
-    workflow.add_edge("planner", "execute")
-    workflow.add_edge("execute", "replanner")
+    # Add edges (node is registered as "executor"; should_continue returns the
+    # label "execute"/"synthesize"/END, which map to the executor/synthesizer nodes)
+    workflow.add_edge("planner", "executor")
+    workflow.add_edge("executor", "replanner")
     workflow.add_conditional_edges(
         "replanner",
         should_continue,
         {
-            "execute": "execute",
+            "execute": "executor",
             "synthesize": "synthesizer",
             END: END,
         },

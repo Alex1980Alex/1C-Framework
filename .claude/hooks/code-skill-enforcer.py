@@ -248,6 +248,25 @@ class CodeSkillEnforcer(BaseHook):
                 break
         return normalized
 
+    def _skill_exists(self, skill) -> bool:
+        """Phantom-block guard (roadmap 260612 B2): a mapping must point to a
+        skill that actually exists in the catalog — otherwise the block message
+        demands Skill('<phantom>') which can never succeed (deadlock class,
+        documented in CLAUDE.md as 'phantom-блокировка')."""
+        if not skill:
+            return False
+        return os.path.isfile(
+            os.path.join(os.path.dirname(_HOOK_DIR), "skills", str(skill), "SKILL.md")
+        )
+
+    def _phantom_config_error(self, skill, where):
+        """Honest config error instead of an unsatisfiable block (non-blocking)."""
+        return HookOutput().system_message(
+            f"[code-skill-enforcer] CONFIG ERROR: mapping in {where} points to "
+            f"non-existent skill '{skill}' (.claude/skills/{skill}/SKILL.md missing). "
+            f"Action allowed; fix shared/code-skill-patterns.json."
+        )
+
     def _check_content_patterns(self, inp):
         """Level A: Check content against code-skill-patterns.json mappings."""
         content = self._extract_content(inp)
@@ -263,6 +282,9 @@ class CodeSkillEnforcer(BaseHook):
 
         if SessionState and SessionState.is_skill_activated(skill):
             return None
+
+        if not self._skill_exists(skill):
+            return self._phantom_config_error(skill, "patterns.mappings")
 
         return HookOutput().block(
             f"SKILL REQUIRED: '{label}' ({skill})\n"
@@ -288,6 +310,9 @@ class CodeSkillEnforcer(BaseHook):
 
                 if SessionState and SessionState.is_skill_activated(skill):
                     return None
+
+                if not self._skill_exists(skill):
+                    return self._phantom_config_error(skill, "directory_rules.mappings")
 
                 return HookOutput().block(
                     f"SKILL REQUIRED: '{label}' ({skill})\n"
@@ -320,6 +345,12 @@ class CodeSkillEnforcer(BaseHook):
 
         if not SessionState:
             return None
+
+        # 260613 F7: Level A.1 форсит Skill('learning-loop'). Тот же phantom-block
+        # guard, что и для A/B/C — если каталог learning-loop отсутствует, честная
+        # CONFIG ERROR без блока вместо неудовлетворимого требования.
+        if not self._skill_exists("learning-loop"):
+            return self._phantom_config_error("learning-loop", "research_protocol (Level A.1)")
 
         label = match.get("label", "unknown")
         domain = match.get("domain", "tech")
@@ -375,6 +406,9 @@ class CodeSkillEnforcer(BaseHook):
 
         if SessionState and SessionState.is_skill_activated(skill):
             return None
+
+        if not self._skill_exists(skill):
+            return self._phantom_config_error(skill, "bash_rules.mappings")
 
         return HookOutput().block(
             f"SKILL REQUIRED: '{label}' ({skill})\n"

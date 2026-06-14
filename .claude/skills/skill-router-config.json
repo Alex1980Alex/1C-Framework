@@ -3,6 +3,13 @@
   "cooldown_minutes": 3,
   "min_score": 2,
   "max_bundles": 2,
+  "a2_signals": {
+    "_doc": "260613 B1 — Layer A2 1C-signal weights, externalized from skill-router.py. Tunable on train-only via tune_skill_router.py (roadmap 260613 Фаза B5/C). Defaults == historical hardcoded values (behavior unchanged).",
+    "bsl_signal_weights": { "bsl-dev": 3, "research-1c": 1 },
+    "conn_str_weights": { "research-1c": 3 },
+    "literal_name_weight": 4,
+    "literal_name_min_len": 6
+  },
   "domains": {
     "1c": [
       "research-1c",
@@ -57,7 +64,8 @@
       "code-verify",
       "learning-loop",
       "task-protocol",
-      "obsidian-vault"
+      "obsidian-vault",
+      "duckdb"
     ]
   },
   "affinities": {
@@ -85,6 +93,38 @@
     ]
   },
   "bundles": {
+    "duckdb": {
+      "keywords": [
+        "duckdb",
+        "read_json_auto",
+        "union_by_name",
+        "approx_quantile",
+        "read_parquet",
+        "jsonl",
+        "in-memory sql"
+      ],
+      "weighted_keywords": {
+        "duckdb": 5,
+        "read_json_auto": 5,
+        "approx_quantile": 4,
+        "union_by_name": 4,
+        "read_parquet": 4,
+        "copy to parquet": 4,
+        "sql по jsonl": 3,
+        "аналитика по логам": 3
+      },
+      "utterances": [
+        "посчитай метрики по jsonl логу",
+        "p95 латентность из лога хуков",
+        "запрос sql по newline-delimited json",
+        "экспортируй лог в parquet",
+        "агрегация событий по дням из лога"
+      ],
+      "skills": [
+        "duckdb-analytics"
+      ],
+      "optional": []
+    },
     "research-1c": {
       "keywords": [
         "модуль объекта",
@@ -94,7 +134,8 @@
         "реквизит",
         "подсистема",
         "документ 1с",
-        "платформа 1с"
+        "платформа 1с",
+        "табличная"
       ],
       "weighted_keywords": {
         "табличная часть": 4,
@@ -115,7 +156,10 @@
         "проведения": 3,
         "проведении": 3,
         "регистра": 3,
-        "документа 1с": 3
+        "документа 1с": 3,
+        "заполн": 2,
+        "печатн": 2,
+        "журнал регистрации": 4
       },
       "utterances": [
         "помоги написать код для бухгалтерии",
@@ -200,7 +244,13 @@
         "bsl_architecture": 5,
         "bsl_document_patterns": 5,
         "bsl_subsystem_analysis": 5,
-        "архитектура модуля": 4
+        "архитектура модуля": 4,
+        "заполн": 2,
+        "форму": 2,
+        "формы": 2,
+        "печатн": 2,
+        "открытие формы": 3,
+        "в запросе": 2
       },
       "utterances": [
         "найди похожий код в базе BSL",
@@ -219,9 +269,7 @@
         "bsl-development"
       ],
       "optional": [
-        "1c-doc-research",
-        "analyze-1c-task-v2",
-        "implement-1c-task"
+        "1c-doc-research"
       ]
     },
     "research-tech": {
@@ -374,9 +422,7 @@
         "добавить обработчик": 4,
         "добавить hook": 4,
         "хук для": 3,
-        "hook for": 3,
-        "hook": 2,
-        "хук": 2
+        "hook for": 3
       },
       "utterances": [
         "need an automation that triggers on events",
@@ -471,7 +517,8 @@
         "загрузить pdf": 3,
         "reindex": 3,
         "загрузка pdf": 3,
-        "переиндексация": 3
+        "переиндексация": 3,
+        "индексаци": 2
       },
       "utterances": [
         "process and store documents for later retrieval",
@@ -550,7 +597,9 @@
       "optional": [],
       "weighted_keywords": {
         "ragas": 3,
-        "benchmark": 2
+        "benchmark": 2,
+        "качество поиска": 3,
+        "измерь": 2
       },
       "utterances": [
         "measure how good our search results are",
@@ -594,7 +643,10 @@
         "entity relation": 4,
         "связи между сущностями": 4,
         "LightRAG": 5,
-        "построй граф": 4
+        "построй граф": 4,
+        "извлеки связи": 4,
+        "связи между": 3,
+        "концепци": 2
       },
       "utterances": [
         "extract connections between concepts in documents",
@@ -681,7 +733,10 @@
       "optional": [],
       "weighted_keywords": {
         "docker compose": 3,
-        "docker": 2
+        "docker": 2,
+        "контейнер": 2,
+        "разверни": 2,
+        "продакшн": 2
       },
       "utterances": [
         "put the system into production",
@@ -1215,8 +1270,7 @@
       ],
       "optional": [
         "windows-hooks-paths",
-        "hook-enforcement-pattern",
-        "multi-level-hook-architecture"
+        "hook-enforcement-pattern"
       ],
       "weighted_keywords": {
         "хук не работает": 4,
@@ -1226,7 +1280,9 @@
         "обратные слеши": 4,
         "enforcer pattern": 4,
         "архитектура хуков": 4,
-        "hook architecture": 4
+        "hook architecture": 4,
+        "не срабатывает": 2,
+        "enforcer": 2
       },
       "utterances": [
         "my automation script is not triggering",
@@ -1301,7 +1357,9 @@
         "скрипт с claude": 3,
         "автоматизация через claude": 3,
         "json schema claude": 3,
-        "dangerously-skip-permissions": 5
+        "dangerously-skip-permissions": 5,
+        "без ui": 3,
+        "из скрипта": 2
       },
       "utterances": [
         "run the assistant from a script without UI",
@@ -1481,7 +1539,9 @@
         "конвертируй документацию": 4,
         "сделай скилл из": 4,
         "doc-to-skill": 4,
-        "скилл из документации": 4
+        "скилл из документации": 4,
+        "описаны в документации": 4,
+        "фичи": 2
       },
       "utterances": [
         "check if all features are properly documented",
@@ -1546,14 +1606,13 @@
       "optional": [],
       "weighted_keywords": {
         "retry": 2,
-        "enforcer pattern": 5,
-        "stop hook": 4,
-        "block operation": 4,
         "retry pattern": 3,
         "exponential backoff": 4,
         "fault tolerance": 3,
         "отказоустойчивость": 3,
-        "повторные попытки": 4
+        "повторные попытки": 4,
+        "повторя": 2,
+        "неудачн": 2
       },
       "utterances": [
         "automatically repeat failed API calls",
@@ -1586,8 +1645,8 @@
         "code review": 4,
         "verify": 4,
         "ревью": 4,
-        "review": 3,
-        "проверь": 3,
+        "review": 1,
+        "проверь": 1,
         "код соответствует": 5,
         "верификация": 3,
         "проверь соответствует ли реализация": 6,
@@ -1597,8 +1656,8 @@
         "review code": 4,
         "код работает": 3,
         "работает ли код": 3,
-        "проверка": 2,
-        "соответствует": 2,
+        "проверка": 1,
+        "соответствует": 1,
         "verify the code": 5,
         "проверить код": 4
       },
@@ -1638,8 +1697,7 @@
         "learning-loop"
       ],
       "optional": [
-        "doc-to-skill",
-        "triad-factory"
+        "doc-to-skill"
       ],
       "weighted_keywords": {
         "learning loop": 5,
@@ -1968,7 +2026,9 @@
         "pre-existing rphost": 4,
         "RDBG": 4,
         "отладка 1С": 4,
-        "breakpoint BSL": 4
+        "breakpoint BSL": 4,
+        "arm_next_rphost": 5,
+        "rphost": 3
       },
       "utterances": [
         "поставь breakpoint в модуле",
@@ -2089,6 +2149,27 @@
         "запустить wiki pipeline",
         "обратная синхронизация wiki в граф"
       ]
+    },
+    "langchain-mcp": {
+      "skills": [
+        "langchain-mcp-tools"
+      ],
+      "optional": [
+        "langgraph-core"
+      ],
+      "keywords": [
+        "langchain mcp",
+        "mcp langchain",
+        "MultiServerMCPClient",
+        "langchain_mcp"
+      ],
+      "weighted_keywords": {
+        "mcp сервер к langchain": 6,
+        "подключить mcp": 3,
+        "mcp сервер": 1,
+        "langchain": 1,
+        "MultiServerMCPClient": 6
+      }
     }
   },
   "min_score_gap": 2,
@@ -2104,8 +2185,8 @@
   "semantic_thresholds": {
     "enabled": true,
     "fallback_trigger": 2,
-    "strong": 0.75,
-    "moderate": 0.5,
+    "strong": 0.62,
+    "moderate": 0.55,
     "strong_bonus": 2,
     "moderate_bonus": 1,
     "timeout_ms": 500,

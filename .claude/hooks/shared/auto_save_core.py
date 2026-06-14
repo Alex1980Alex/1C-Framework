@@ -16,6 +16,7 @@ Single source of truth for the filename-list commit message format
 from __future__ import annotations
 
 import os
+import subprocess
 from collections.abc import Iterable
 
 DEFAULT_MAX_DISPLAY = 3
@@ -57,3 +58,121 @@ def format_commit_message(
     if count > max_display:
         head += f" +{count - max_display} more"
     return f"{prefix} {head}"
+
+
+def get_amendable_head(
+    project_root: str,
+    prefix: str = "chore: auto-save",
+    timeout: int = 5,
+) -> list[str] | None:
+    """Return HEAD's file list when HEAD can be absorbed via ``--amend``.
+
+    Amend-absorb (2026-06-12, план из memory feedback-auto-git-save-preempt):
+    consecutive auto-save'ы схлопываются в ОДИН коммит вместо стопки
+    ``chore: auto-save`` — следующий auto-save амендит предыдущий. Побочный
+    бонус: единственный незапушенный auto-save на вершине легко поглощается
+    осмысленным коммитом обычным ``git commit --amend -m "feat: ..."``.
+
+    Safety-гейты (любой не пройден → None → обычный новый коммит):
+      1. subject HEAD начинается с ``prefix`` (строго тот же prefix —
+         split-commit разделение auto-save/sweep-drift не смешивается);
+      2. HEAD НЕ существует ни на одном remote (``git branch -r --contains``)
+         — амендить запушенное нельзя, иначе divergence;
+      3. нет merge/rebase in progress (MERGE_HEAD / rebase-merge / rebase-apply).
+
+    Returns:
+        Список путей файлов HEAD-коммита (для объединённого сообщения)
+        или None, если амендить нельзя.
+    """
+    try:
+        subject = subprocess.run(
+            ["git", "log", "-1", "--format=%s"],
+            timeout=timeout,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=project_root,
+        )
+        if subject.returncode != 0:
+            return None
+        subj = subject.stdout.strip()
+        # Граница слова: "chore: auto-save foo.py" — да; осмысленный
+        # "chore: auto-save amend support" тоже пройдёт (message-only risk,
+        # review 2026-06-12 rec#1), но "chore: auto-saved..." — нет.
+        if subj != prefix and not subj.startswith(prefix + " "):
+            return None
+
+        git_dir_r = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            timeout=timeout,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=project_root,
+        )
+        if git_dir_r.returncode != 0:
+            return None
+        git_dir = git_dir_r.stdout.strip()
+        if not os.path.isabs(git_dir):
+            git_dir = os.path.join(project_root, git_dir)
+        for marker in (
+            "MERGE_HEAD",
+            "rebase-merge",
+            "rebase-apply",
+            "CHERRY_PICK_HEAD",
+            "REVERT_HEAD",
+        ):
+            if os.path.exists(os.path.join(git_dir, marker)):
+                return None
+
+        pushed = subprocess.run(
+            ["git", "branch", "-r", "--contains", "HEAD"],
+            timeout=timeout,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=project_root,
+        )
+        # rc!=0 (напр. пустой repo) или непустой вывод (есть на remote) → нельзя
+        if pushed.returncode != 0 or pushed.stdout.strip():
+            return None
+
+        shown = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "show",
+                "--pretty=format:",
+                "--name-only",
+                "HEAD",
+            ],
+            timeout=timeout,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=project_root,
+        )
+        if shown.returncode != 0:
+            return None
+        return [line.strip() for line in shown.stdout.splitlines() if line.strip()]
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+
+
+def merge_for_message(head_files: Iterable[str], new_files: Iterable[str]) -> list[str]:
+    """Union файлов HEAD + новых для объединённого commit message.
+
+    Дедуп по basename (head хранит relative-пути, хуки могут давать absolute —
+    один файл не должен дублироваться в сообщении; коллизия одноимённых файлов
+    из разных каталогов затрагивает только текст сообщения, не содержимое).
+    """
+    seen: set[str] = set()
+    out: list[str] = []
+    for f in list(head_files) + list(new_files):
+        key = os.path.basename(f).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(f)
+    return out

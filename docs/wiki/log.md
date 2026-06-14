@@ -368,3 +368,38 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: code-verify, task-protocol, evaluation-benchmark, learn:fastapi-framework
 - Files changed: 2
 - Summary: Session 2026-05-23. Skills: code-verify, task-protocol, evaluation-benchmark, learn:fastapi-framework. Changed 2 files in БTransportManagementDevelop/Конфигурация, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260522 PR-automation migration to dev-master discovery. Commit: docs(CLAUDE.md): document P3.2 gap-close + encoding fix + live PR #3 test
+
+## 2026-06-11 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: task-protocol, qdrant-operations
+- Files changed: 3
+- Summary: Session 2026-06-11. Skills: task-protocol, qdrant-operations. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, docs/wiki, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260610 цепочечное тестирование Unified Memory — P0-P4 прогнаны, 5 production-фиксов. Commit: chore: auto-save memory-first-hook.py. Commit: chore: auto-save export_graph_to_wiki.py
+
+
+## 2026-06-12 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-12. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(memory): 260611 skill-learning revival — pending/saved/rejected как рабочий контур (P0-P3 + тесты). Commit: chore: auto-save memory_maintenance.py, test_skill_learning_revival.py. Commit: chore: auto-save memory_orchestrator.py
+
+
+## 2026-06-13 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-13. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): 260612 Skill System P1-A3 + P4 acceptance — закрытие открытых пунктов. Commit: chore: auto-save SKILL.md, skill-router-config.json, skill_ingest_trend.py. Commit: chore: auto-commit skill-router.py, skill-router-config.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +1 more
+
+
+## 2026-06-14 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-14. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat(hooks): обязательная авто-пайплайн парадигма (ADR-018) — self-driven + hard-block. Commit: chore(pipeline): персистентная папка pipeline/ — README + .gitignore (постоянный архив задач). Commit: feat(pipeline): generic 4-stage SDLC pipeline (ADR-017) — слэш-команды + state + gate

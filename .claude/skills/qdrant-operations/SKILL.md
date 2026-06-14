@@ -24,7 +24,7 @@ description: "Qdrant Operations — управление коллекциями 
 | `graph_embeddings` | — | 4096d | **36 590** | SQ int8 only |
 | `learned_patterns` | — | 4096d | 44 | none (too small) |
 | `skill_library` | — | 4096d | 80 | Phase 9.1 memory subsystem |
-| `*_4096_backup` (×3) | — | 4096d | varies | rollback snapshots (framework/pdf/wiki) |
+| `*_4096_backup` (×3) | — | 4096d | varies | **канонический источник re-embed** (framework/pdf/wiki), см. политику ниже |
 
 **MRL aliases** (post §4.1.6/8/10): `framework_code_v1`, `pdf_documents`, `wiki_pages_v1` — **alias-only**, физический collection с suffix `_mrl_1024`. Client читает имя alias, Qdrant resolve transparently. **CAVEAT:** `delete_collection(alias)` НЕ работает в Qdrant 1.7+ — нужен `resolve_physical_collection()` helper (см. [src/framework_search/indexer.py](../../../src/framework_search/indexer.py)).
 
@@ -41,6 +41,21 @@ if target_dim and target_dim < embed_dim:  # alias resolved to 1024d collection
 
 **Не на Qwen3 (исключения):**
 - `visual_grounding` (5 pts × 768d nomic) — defer
+
+**Политика физических коллекций docs (260612 pdf-docs P0.3):**
+- `*_4096_backup` (полноразмерные Qwen3 4096d) — **канонический источник re-embed**:
+  любая смена dim/квантизации/layout (MRL, hybrid, SQ) выполняется scroll'ом из
+  backup + client-side truncate/renorm, БЕЗ повторного прогона эмбеддера по корпусу.
+  НЕ удалять и НЕ переименовывать; единственная альтернатива — повторный embed всего корпуса.
+- Physical-копии без alias и без роли (остатки бенчей) — **drop после verify**
+  (counts + выборка ids vs alias-таргет) + snapshot. Прецедент: `pdf_documents_mrl_4096`,
+  `pdf_documents_mrl_512` dropped 2026-06-12 (snapshots `pdf_documents_mrl_*-2026-06-12-*.snapshot`).
+- Новые экспериментальные копии (bench/migration) либо получают alias-роль, либо
+  удаляются в той же сессии, что их создала.
+
+**Dropped 2026-06-12** (roadmap 260612 pdf-docs P0.3 / D3): `pdf_documents_mrl_4096`,
+`pdf_documents_mrl_512` — orphan-остатки MRL-бенча §4.1.8 без alias; verify (830/830 pts,
+5/5 sample ids = alias-таргет) + snapshot перед drop.
 
 **Dropped 2026-06-03** (§26 Q1 ADR — [260603_ADR_Q1](../../../docs/roadmap/260603_ADR_Q1_EXPERIENCE_CONVERSATION_COLLECTIONS.md)): `conversation_memory`, `experience_embeddings` — 0-writer коллекции, роль покрыта episodic (`memory_ai.db`) + `learned_patterns`; популяция = cross-store дубликаты.
 

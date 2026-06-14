@@ -18,3 +18,11 @@
 	path = external/1c_mcp
 	url = https://github.com/vladimir-kharin/1c_mcp.git
 	branch = main
+[submodule "tools/bsl-ls/tree-sitter-bsl-src"]
+	path = tools/bsl-ls/tree-sitter-bsl-src
+	url = https://github.com/Alex1980Alex/tree-sitter-bsl.git
+	branch = fix/parenthesized-expression
+[submodule "tools/multilspy-fork"]
+	path = tools/multilspy-fork
+	url = https://github.com/Alex1980Alex/multilspy.git
+	branch = feat/bsl-language

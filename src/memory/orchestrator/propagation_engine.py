@@ -30,6 +30,7 @@ from ..infrastructure.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerError,
+    CircuitBreakerRegistry,
 )
 from .link_registry import LinkType
 from .unified_id import SourceServer, UnifiedID
@@ -113,6 +114,11 @@ class PropagationResult:
     cascades_prevented: int
     final_depth: int
     processing_time_ms: float
+    # roadmap 260611 P1.1 (F10): entity_id -> reason for every handler that
+    # FAILED (raised / circuit OPEN). A failed entity is distinguishable from
+    # an honest no-op skip — it never lands in entities_updated, but it is no
+    # longer silently dropped either.
+    failed_entities: dict[str, str] = field(default_factory=dict)
     reason: str = ""
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -122,6 +128,7 @@ class PropagationResult:
             "source_entity_id": self.source_entity_id,
             "entities_updated": self.entities_updated,
             "updates_applied": self.updates_applied,
+            "failed_entities": self.failed_entities,
             "cascades_prevented": self.cascades_prevented,
             "final_depth": self.final_depth,
             "processing_time_ms": round(self.processing_time_ms, 2),
@@ -132,6 +139,7 @@ class PropagationResult:
     def __str__(self) -> str:
         return (
             f"PropagationResult(updated={len(self.entities_updated)}, "
+            f"failed={len(self.failed_entities)}, "
             f"prevented={self.cascades_prevented}, depth={self.final_depth})"
         )
 
@@ -140,8 +148,8 @@ class PropagationResult:
 # Directional Propagation Rules
 # =============================================================================
 
+# BASED_ON ретирован 2026-06-12 (ADR-L1 roadmap 260612 LinkRegistry)
 FORWARD_PROPAGATION_LINKS = {
-    LinkType.BASED_ON,
     LinkType.SUPPORTS,
     LinkType.CONTRADICTS,
     LinkType.EXTENDS,
@@ -200,12 +208,22 @@ class PropagationEngine:
         link_registry: "LinkRegistry",  # type: ignore[name-defined]
         config: PropagationConfig | None = None,
         update_handlers: dict[SourceServer, Callable] | None = None,
+        breaker_registry: CircuitBreakerRegistry | None = None,
     ):
         self.link_registry = link_registry
         self.config = config or PropagationConfig()
         self.update_handlers = update_handlers or {}
+        # roadmap 260611 P1.2 (F10): named per-source breakers around handler
+        # calls. Handler exceptions are the real failure signal (Qdrant down,
+        # SQLite locked) — they trip "propagation:<source>" breakers in this
+        # registry, which the orchestrator shares with memory_circuit_status /
+        # memory_circuit_reset.
+        self.breaker_registry = breaker_registry
 
-        # Circuit breaker
+        # Engine-level breaker. NOTE: it can never auto-trip — _process_propagation
+        # catches all exceptions internally — so it acts only as a fail-fast guard
+        # when opened externally (kept for that contract; real failure tracking
+        # lives in the per-source breakers above).
         self._circuit_breaker: CircuitBreaker | None = None
         if self.config.circuit_breaker_enabled:
             self._circuit_breaker = CircuitBreaker(
@@ -228,6 +246,7 @@ class PropagationEngine:
         self._stats = {
             "events_processed": 0,
             "entities_updated": 0,
+            "entities_failed": 0,
             "cascades_prevented": 0,
             "total_processing_time_ms": 0.0,
         }
@@ -332,6 +351,7 @@ class PropagationEngine:
         # Update stats
         self._stats["events_processed"] += 1
         self._stats["entities_updated"] += len(result.entities_updated)
+        self._stats["entities_failed"] += len(result.failed_entities)
         self._stats["cascades_prevented"] += result.cascades_prevented
         self._stats["total_processing_time_ms"] += result.processing_time_ms
 
@@ -349,6 +369,7 @@ class PropagationEngine:
 
                 self._stats["events_processed"] += 1
                 self._stats["entities_updated"] += len(result.entities_updated)
+                self._stats["entities_failed"] += len(result.failed_entities)
                 self._stats["cascades_prevented"] += result.cascades_prevented
 
             except TimeoutError:
@@ -372,6 +393,7 @@ class PropagationEngine:
             # BFS traversal
             entities_updated: list[str] = []
             updates_applied: dict[str, float] = {}
+            failed_entities: dict[str, str] = {}
             cascades_prevented = 0
             max_depth_seen = 0
 
@@ -409,13 +431,21 @@ class PropagationEngine:
                         cascades_prevented += 1
                         continue
 
-                    if await self._apply_update(link.target_id, new_delta):
+                    status = await self._apply_update(link.target_id, new_delta)
+                    if status == "applied":
                         entities_updated.append(link.target_id)
                         updates_applied[link.target_id] = new_delta
 
                         if link.target_id not in visited:
                             visited.add(link.target_id)
                             queue.append((link.target_id, new_delta, depth + 1))
+                    elif status.startswith("failed:"):
+                        # F10: a handler failure (raise / circuit OPEN) is no
+                        # longer indistinguishable from an honest no-op — the
+                        # entity surfaces in failed_entities instead of silently
+                        # dropping out of entities_updated.
+                        failed_entities[link.target_id] = status[len("failed:") :]
+                    # "skipped_*" (no handler / honest no-op) stays a quiet skip.
 
             elapsed = (datetime.now() - start_time).total_seconds() * 1000
             result = PropagationResult(
@@ -423,6 +453,7 @@ class PropagationEngine:
                 source_entity_id=event.entity_id,
                 entities_updated=entities_updated,
                 updates_applied=updates_applied,
+                failed_entities=failed_entities,
                 cascades_prevented=cascades_prevented,
                 final_depth=max_depth_seen,
                 processing_time_ms=elapsed,
@@ -437,6 +468,8 @@ class PropagationEngine:
                     disable_env="MEMORY_PROPAGATION_LOG_DISABLE",
                     source=event.entity_id,
                     entities_updated=len(entities_updated),
+                    failed=len(failed_entities),
+                    failed_reasons=sorted(set(failed_entities.values())),
                     cascades_prevented=cascades_prevented,
                     final_depth=max_depth_seen,
                     latency_ms=round(elapsed, 1),
@@ -492,20 +525,64 @@ class PropagationEngine:
 
         return delta
 
-    async def _apply_update(self, entity_id: str, delta: float) -> bool:
-        """Apply update to entity via registered handler."""
+    async def _apply_update(self, entity_id: str, delta: float) -> str:
+        """Apply update to entity via registered handler.
+
+        Tri-state return (roadmap 260611 P1.1, F10):
+
+        - ``"applied"`` — handler ran and reported a real mutation;
+        - ``"skipped_no_handler"`` / ``"skipped_noop"`` — quiet skip: no handler
+          registered for the source, or the handler honestly reported no-op
+          (entity absent etc.). Not an error;
+        - ``"failed:<reason>"`` — handler raised (reason = exception type) or
+          the per-source circuit breaker is OPEN (reason = ``circuit_open``).
+
+        Honest semantics (roadmap 260609 P2.3 + 260611 P1.1): a handler
+        exception is no longer collapsed into the same ``False`` as an honest
+        no-op — callers see it in ``PropagationResult.failed_entities``.
+
+        P1.2: when the orchestrator shares its ``CircuitBreakerRegistry``, each
+        handler call goes through a named ``propagation:<source>`` breaker —
+        repeated failures (threshold from config) trip it OPEN and subsequent
+        calls fail fast with ``failed:circuit_open`` until reset/half-open.
+        """
         try:
             uid = UnifiedID.parse(entity_id)
-            handler = self.update_handlers.get(uid.source)
-            if handler:
-                await handler(entity_id, delta)
-                return True
-            # No handler — simulate success
-            logger.debug("No handler for %s, simulating update", entity_id)
-            return True
+        except ValueError:
+            return "failed:invalid_entity_id"
+
+        handler = self.update_handlers.get(uid.source)
+        if handler is None:
+            logger.debug("No update handler for %s; not counting as updated", entity_id)
+            return "skipped_no_handler"
+
+        breaker = None
+        if self.breaker_registry is not None:
+            breaker = self.breaker_registry.get_or_create(
+                f"propagation:{uid.source.value}",
+                CircuitBreakerConfig(
+                    failure_threshold=self.config.circuit_breaker_threshold,
+                    reset_timeout=self.config.circuit_breaker_timeout,
+                ),
+            )
+
+        try:
+            if breaker is not None:
+                result = await breaker.call_async(handler(entity_id, delta))
+            else:
+                result = await handler(entity_id, delta)
+        except CircuitBreakerError:
+            logger.warning(
+                "Circuit 'propagation:%s' OPEN — update rejected for %s",
+                uid.source.value,
+                entity_id,
+            )
+            return "failed:circuit_open"
         except Exception as e:
             logger.error("Error applying update to %s: %s", entity_id, e)
-            return False
+            return f"failed:{type(e).__name__}"
+
+        return "applied" if result else "skipped_noop"
 
     def _error_result(self, event: PropagationEvent, reason: str) -> PropagationResult:
         return PropagationResult(
@@ -543,6 +620,7 @@ class PropagationEngine:
         self._stats = {
             "events_processed": 0,
             "entities_updated": 0,
+            "entities_failed": 0,
             "cascades_prevented": 0,
             "total_processing_time_ms": 0.0,
         }
@@ -558,9 +636,15 @@ async def propagate_update(
     base_delta: float,
     link_registry: "LinkRegistry",
     config: PropagationConfig | None = None,
+    update_handlers: "dict[SourceServer, Callable] | None" = None,
 ) -> PropagationResult:
-    """One-shot propagation without managing engine lifecycle."""
-    engine = PropagationEngine(link_registry, config)
+    """One-shot propagation without managing engine lifecycle.
+
+    Pass ``update_handlers`` to actually mutate the backing stores; without
+    them the engine reports zero updates (honest, roadmap 260609 P2.3) rather
+    than simulating success.
+    """
+    engine = PropagationEngine(link_registry, config, update_handlers=update_handlers)
     return await engine.propagate(entity_id, base_delta)
 
 

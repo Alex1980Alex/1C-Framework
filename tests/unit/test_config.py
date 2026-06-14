@@ -28,7 +28,7 @@ from src.pdf_framework.config import (
 class TestSettingsLoading:
     """Test Settings loading from environment variables."""
 
-    def test_settings_load_default_values(self, mock_settings):
+    def test_settings_load_default_values(self):
         """Settings should load with default values."""
         settings = Settings()
 
@@ -153,7 +153,9 @@ class TestVectorStoreSettings:
         )
 
         assert settings.provider == "chroma"
-        assert "/data" in str(settings.persist_dir)
+        # Path normalises separators per-OS (WindowsPath → backslashes); compare
+        # via as_posix() so the assertion is cross-platform.
+        assert "/data" in settings.persist_dir.as_posix()
 
     def test_pgvector_settings(self):
         """PgVector settings should be properly configured."""

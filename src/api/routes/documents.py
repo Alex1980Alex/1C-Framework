@@ -1341,7 +1341,7 @@ async def index_document_async(
 
         # Initialize job status
         # redis-py async stub types hset as Awaitable[int] | int; the async client is awaitable.
-        await redis.hset(  # type: ignore[misc]
+        await redis.hset(  # type: ignore[misc, unused-ignore]
             f"job:{job_id}",
             mapping={
                 "status": "pending",

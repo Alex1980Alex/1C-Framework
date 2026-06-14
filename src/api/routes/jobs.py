@@ -3,13 +3,13 @@
 Phase 59: Async Processing Queue - job status, listing, cancellation.
 """
 
+from __future__ import annotations
+
 import logging
 from collections.abc import AsyncIterator
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from arq import ArqRedis, create_pool
-from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -20,6 +20,12 @@ from src.api.auth.dependencies import (
     get_current_tenant,
 )
 from src.pdf_framework.config import get_settings
+
+if TYPE_CHECKING:
+    # `arq` lives in the optional `queue` extra. Keep it out of module import so the
+    # API package imports cleanly without it; the runtime import is deferred to
+    # get_redis(). Annotations are lazy via `from __future__ import annotations`.
+    from arq import ArqRedis
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -66,6 +72,10 @@ class JobListResponse(BaseModel):
 
 async def get_redis() -> ArqRedis:
     """Get Redis connection pool."""
+    # Deferred import: `arq` is the optional `queue` extra (not in base/dev installs).
+    from arq import create_pool
+    from arq.connections import RedisSettings
+
     return await create_pool(RedisSettings.from_dsn(settings.queue.redis_url))
 
 
@@ -80,11 +90,11 @@ def _decode_hash(data: dict[Any, Any]) -> dict[str, str]:
 
 async def _hgetall(redis: ArqRedis, key: str) -> dict[str, str]:
     # redis-py async stub types methods as Awaitable[T] | T; the async client IS awaitable.
-    return _decode_hash(await redis.hgetall(key))  # type: ignore[misc]
+    return _decode_hash(await redis.hgetall(key))  # type: ignore[misc, unused-ignore]
 
 
 async def _hset(redis: ArqRedis, key: str, mapping: dict[str, str]) -> None:
-    await redis.hset(key, mapping=mapping)  # type: ignore[misc]
+    await redis.hset(key, mapping=mapping)  # type: ignore[misc, unused-ignore]
 
 
 async def get_job_status(job_id: str) -> JobInfo | None:

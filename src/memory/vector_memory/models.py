@@ -61,9 +61,12 @@ class EvidenceSource:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "EvidenceSource":
+        # Tolerant parse: harvester-written points may carry {"source": "..."}
+        # instead of source_type/reference — one such point must not kill a
+        # whole search_patterns response (F6, roadmap 260610).
         return cls(
-            source_type=data["source_type"],
-            reference=data["reference"],
+            source_type=data.get("source_type", "unknown"),
+            reference=data.get("reference") or data.get("source", ""),
             weight=data.get("weight", 1.0),
             timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else None,
             metadata=data.get("metadata", {}),

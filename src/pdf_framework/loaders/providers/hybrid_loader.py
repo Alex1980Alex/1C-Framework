@@ -137,7 +137,8 @@ class HybridLoader(BaseLoader):
 
         for chunk in page_chunks:
             meta: Any = chunk["metadata"]
-            page_num: int = int(meta["page"])  # already 1-based
+            # pymupdf4llm <1.0 -> "page"; >=1.0 (PyMuPDF-aligned versioning) -> "page_number"
+            page_num: int = int(meta["page"] if "page" in meta else meta["page_number"])  # 1-based
             text: str = chunk.get("text", "") or ""
             page_texts[page_num] = text
             page_list.append(text)

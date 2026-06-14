@@ -50,7 +50,8 @@ MEMORY_DIR = Path(
     )
 )
 COOLDOWN_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-cooldown.json"
-SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
+# MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
+SQLITE_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data" / "memory_ai.db")
 
 # §24 execution cache — memoize the surfacing pipeline by hash(query_tokens).
 # The hook spawns a fresh process per UserPromptSubmit, so an in-process cache is
@@ -60,9 +61,19 @@ SQLITE_DB = PROJECT_ROOT / "data" / "memory_ai.db"
 SURFACE_CACHE_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-first-surfacing-cache.json"
 SURFACE_CACHE_ENABLED = os.environ.get("MEMORY_SURFACE_CACHE_DISABLE") != "1"
 # TTL tradeoff: a pattern archived / confidence-dropped mid-TTL stays surfaced (and
-# re-reinforced) for up to this window. Bounded to 5 min; lower it or key on a
-# confidence-store epoch if staleness ever matters.
-SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "300"))  # 5 min
+# re-reinforced) for up to this window. The confidence-store epoch is folded into the
+# key (see _surface_cache_key), so any reinforce/apply/decay/archive instantly
+# invalidates — that decouples freshness from TTL, letting us raise it (roadmap 260609
+# P1.2: 300→900s) for a meaningfully higher hit-rate without staleness risk.
+SURFACE_CACHE_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_TTL", "900"))  # 15 min
+# Empty results get a SHORTER TTL: "nothing matched" is the outcome most likely to
+# flip as new patterns/lessons are harvested, so we don't want to cache a miss for the
+# full 15 min and starve a freshly-relevant pattern of its first surfacing.
+SURFACE_CACHE_EMPTY_TTL = float(os.environ.get("MEMORY_SURFACE_CACHE_EMPTY_TTL", "180"))  # 3 min
+# Cache-key relaxation (P1.2): key on the K most salient query tokens, not the full
+# token set — exact-set matching gave a ~0.4% hit-rate (real prompts rarely repeat
+# verbatim). See _surface_cache_key.
+SURFACE_CACHE_KEY_TOPK = int(os.environ.get("MEMORY_SURFACE_CACHE_KEY_TOPK", "8"))
 SURFACE_CACHE_CAP = 200  # max distinct query hashes retained (FIFO by timestamp)
 
 # §24.4 acceptance "логирование всех процессов" — structured per-invocation trace.
@@ -83,9 +94,19 @@ MIN_PROMPT_LEN = 20
 COOLDOWN_SECONDS = 30
 SCORE_THRESHOLD = 0.3
 MAX_RESULTS = 5
+# Lexical arm scroll cap (P1.1): how many learned_patterns to scan for token-overlap.
+# Lowered 100→50 — the collection is small and the full scan + payload transfer is on
+# the hot path. Reversible knob (raise if recall on the lexical arm ever regresses).
+LEXICAL_SCROLL_LIMIT = int(os.environ.get("MEMORY_SURFACE_LEXICAL_SCROLL", "50"))
 
 LAYER_WEIGHTS = {"sqlite": 0.30, "qdrant": 0.35, "md": 0.15, "wiki": 0.20}
-SOURCE_LABELS = {"sqlite": "SQLite", "qdrant": "Qdrant", "md": ".md", "wiki": "Wiki"}
+SOURCE_LABELS = {
+    "sqlite": "SQLite",
+    "qdrant": "Qdrant",
+    "md": ".md",
+    "wiki": "Wiki",
+    "skill-learning": "SkillLearning",
+}
 
 # §24 P1 ADR-D6: per-arm RRF weights for hybrid surfacing inside search_qdrant.
 # lexical > dense for BSL (CamelCase/Cyrillic dense recall-collapse, §24.2.2).
@@ -93,7 +114,15 @@ SURFACE_RRF_WEIGHTS: dict = {
     "skill": 0.5,
     "pattern_dense": 0.3,
     "pattern_lexical": 0.7,
+    "skill_learning": 0.4,
 }
+
+# P2.2 (roadmap 260611): lexical arm over skill-learning JSONL silos — confirmed
+# patterns (patterns.jsonl) + pending quarantine candidates (pending_patterns.jsonl,
+# damped + помечены status=pending) видны в surfacing ДО подтверждения (early signal).
+SKILL_LEARNING_DIR = PROJECT_ROOT / "data" / "skill_learning"
+SKILL_LEARNING_ARM_ENABLED = os.environ.get("MEMORY_SURFACE_SKILL_LEARNING_DISABLE") != "1"
+SKILL_LEARNING_PENDING_DAMP = 0.7  # pending = кандидат, ранжируется ниже confirmed
 SURFACE_RRF_K = 60  # RRF k constant for the surfacing fusion (tunable, §25 B1)
 
 # Qdrant semantic search collections (4096d Qwen3 Phase 9.1)
@@ -108,6 +137,14 @@ SEMANTIC_COLLECTIONS = [
 # §24 P0 — confidence gating thresholds
 MIN_SURFACE_CONF = 0.15  # hard noise floor: below this → never surface
 CONF_FLOOR = 0.30  # soft floor for floored-multiply score adjustment
+
+# 260612 Skill System P2.2 (S4): absolute cosine floor for the skill_library arm.
+# Without it the arm returns its top-5 for ANY prompt (generic skills like
+# task-protocol/learning-loop sit at ~0.45-0.49 cosine for unrelated prompts and
+# eat [MEMORY CONTEXT] slots from real patterns). Live calibration 2026-06-12:
+# relevant hits cluster at 0.56-0.62, irrelevant at 0.45-0.49 → 0.55 floor.
+# Rollback knob: MEMORY_SURFACE_SKILL_MIN_SCORE=0 disables the gate.
+SKILL_SURFACE_MIN_SCORE = float(os.environ.get("MEMORY_SURFACE_SKILL_MIN_SCORE", "0.55"))
 
 
 def _load_surfacing_tuning() -> None:
@@ -308,19 +345,45 @@ def update_cooldown():
 # ---------------------------------------------------------------------------
 # Layer 1 — SQLite search
 # ---------------------------------------------------------------------------
+def _retention():
+    """Fail-soft import of the shared episodic retention policy (260612 P3.1).
+
+    ``append`` (not ``insert(0)``) — see feedback-hook-src-shared-collision.
+    """
+    try:
+        src = str(PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.append(src)
+        from memory.ai_memory.retention import effective_importance, is_archived
+
+        return effective_importance, is_archived
+    except Exception:
+        return (lambda imp, _cat, _created: imp), (lambda _md: False)
+
+
 def search_sqlite(query_tokens: set, limit: int = 10) -> list:
-    """Search SQLite important_messages: top-200 by importance, rank by token overlap."""
+    """Search SQLite important_messages, rank by token overlap.
+
+    260612 P2.G6: candidate window is importance+recency ordered (was pure
+    importance — a fresh low-importance fact behind 200 older rows was
+    invisible) and raised to SQLITE_SCAN_LIMIT; stale session_summary rows are
+    demoted via lazy importance-decay (P3.1) and archived rows skipped (P3.2).
+    The hard SQLITE_TIMEOUT budget check in the loop is unchanged.
+    """
     if not query_tokens or not SQLITE_DB.exists():
         return []
     start = time.monotonic()
     results = []
+    effective_importance, is_archived = _retention()
+    scan_limit = int(os.environ.get("MEMORY_SQLITE_SCAN_LIMIT", "500"))
     try:
         conn = sqlite3.connect(str(SQLITE_DB), timeout=0.5)
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
-            "SELECT id, content, importance, category, tags "
+            "SELECT id, content, importance, category, tags, created_at, metadata "
             "FROM important_messages "
-            "ORDER BY importance DESC LIMIT 200"
+            "ORDER BY importance DESC, created_at DESC LIMIT ?",
+            (scan_limit,),
         )
         rows = cursor.fetchall()
         conn.close()
@@ -330,9 +393,15 @@ def search_sqlite(query_tokens: set, limit: int = 10) -> list:
                 break
             content = row["content"] or ""
             tags_str = (row["tags"] or "").lower()
-            importance = row["importance"] or 0.0
             category = row["category"] or "general"
             row_id = row["id"] or ""
+            try:
+                md = json.loads(row["metadata"]) if row["metadata"] else {}
+            except (json.JSONDecodeError, TypeError):
+                md = {}
+            if is_archived(md if isinstance(md, dict) else None):
+                continue
+            importance = effective_importance(row["importance"] or 0.0, category, row["created_at"])
 
             content_tokens = set(tokenize(content))
             overlap = query_tokens & content_tokens
@@ -443,7 +512,7 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
         client = QdrantClient(host="127.0.0.1", port=6333, timeout=1)
         scroll_result = client.scroll(
             collection_name="learned_patterns",
-            limit=100,
+            limit=LEXICAL_SCROLL_LIMIT,
             with_payload=True,
             with_vectors=False,
         )
@@ -483,6 +552,65 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
         return out[:limit]
 
 
+def _search_skill_learning(query_tokens: set, limit: int = 10) -> list:
+    """P2.2 (roadmap 260611): lexical arm over skill-learning JSONL silos.
+
+    Scans patterns.jsonl (confirmed) + pending_patterns.jsonl (quarantine candidates)
+    with token-overlap scoring. Pending hits are damped (×SKILL_LEARNING_PENDING_DAMP)
+    and помечены status=pending в content — кандидат виден ДО подтверждения (early
+    signal), но ранжируется ниже confirmed. Pure local file read (<50ms), no network.
+    Fail-soft → []. Opt-out: MEMORY_SURFACE_SKILL_LEARNING_DISABLE=1.
+    """
+    out: list = []
+    if not SKILL_LEARNING_ARM_ENABLED or not query_tokens:
+        return out
+    try:
+        for status, fname in (
+            ("saved", "patterns.jsonl"),
+            ("pending", "pending_patterns.jsonl"),
+        ):
+            path = SKILL_LEARNING_DIR / fname
+            if not path.exists():
+                continue
+            with open(path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        item = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    text = " ".join(
+                        str(item.get(k) or "") for k in ("name", "content", "description")
+                    )
+                    content_tokens = set(tokenize(text))
+                    overlap = query_tokens & content_tokens
+                    if not overlap:
+                        continue
+                    score = len(overlap) / max(len(query_tokens), 1)
+                    if score < SCORE_THRESHOLD:
+                        continue
+                    if status == "pending":
+                        score *= SKILL_LEARNING_PENDING_DAMP
+                    prefix = "[pending] " if status == "pending" else ""
+                    content = item.get("content") or item.get("description") or ""
+                    out.append(
+                        {
+                            "source": "skill-learning",
+                            "id": item.get("pattern_id", ""),
+                            "content": (prefix + content)[:200],
+                            "category": f"sl/{status}",
+                            "score": round(score, 4),
+                            "status": status,
+                        }
+                    )
+        out.sort(key=lambda x: -x["score"])
+        return out[:limit]
+    except Exception:
+        return out[:limit]
+
+
 def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
     """Hybrid RRF search across SEMANTIC_COLLECTIONS + always-on lexical arm (§24 P1).
 
@@ -491,6 +619,8 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
       - "pattern_dense": learned_patterns semantic hits (§24 ADR-D6 gated, _collection tagged).
       - "pattern_lexical": token-overlap on learned_patterns — ALWAYS-ON (not fallback).
         Catches CamelCase/Cyrillic/exact-term where dense underperforms (BSL recall-collapse).
+      - "skill_learning": lexical arm over skill-learning JSONL (saved + pending,
+        P2.2 roadmap 260611) — кандидаты карантина в выдаче с пометкой [pending].
 
     Weights (SURFACE_RRF_WEIGHTS): lexical 0.7 > dense 0.3 for BSL arms.
     RRF dedup by content-hash: pattern in both arms fuses → boosted rank (correct behaviour).
@@ -511,6 +641,7 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
         "skill": [],
         "pattern_dense": [],
         "pattern_lexical": [],
+        "skill_learning": [],
     }
 
     try:
@@ -550,6 +681,11 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                         }
                         arms["pattern_dense"].append(entry)
                     else:
+                        # 260612 P2.2 (S4): cut sub-floor skill hits — the arm
+                        # otherwise fills banner slots with noise for any prompt.
+                        if base_score < SKILL_SURFACE_MIN_SCORE:
+                            _trace_gate("skill_below_floor")
+                            continue
                         entry = {
                             "source": "qdrant",
                             "id": hit.get("id", ""),
@@ -563,8 +699,14 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
         _trace_set("tei", "down")
         _trace_set("tei_error", f"{type(exc).__name__}: {exc}"[:160])
 
-    # §24 P1: lexical arm — ALWAYS-ON (not fallback), catches BSL exact-term/CamelCase
-    arms["pattern_lexical"] = _search_learned_patterns(query_tokens, start, limit)
+    # §24 P1: lexical arm — ALWAYS-ON (not fallback), catches BSL exact-term/CamelCase.
+    # Own clock: sharing `start` with the dense block starved this arm to 0 hits
+    # whenever the TEI attempt ate the QDRANT_TIMEOUT budget — i.e. exactly when
+    # lexical was supposed to be the sole survivor (F11, roadmap 260610 D5).
+    arms["pattern_lexical"] = _search_learned_patterns(query_tokens, time.monotonic(), limit)
+
+    # P2.2 (roadmap 260611): skill-learning JSONL arm — local file read, no network.
+    arms["skill_learning"] = _search_skill_learning(query_tokens, limit)
 
     # Per-arm hit counts before fusion — shows which signals actually fired.
     _trace_set("arms", {k: len(v) for k, v in arms.items()})
@@ -707,9 +849,22 @@ _TRACE: dict[str, Any] = {}
 
 
 def _trace_reset() -> None:
-    """Start a fresh trace for this invocation. Seeds nested gating counters."""
+    """Start a fresh trace for this invocation. Seeds nested gating + timing maps."""
     _TRACE.clear()
     _TRACE["gate"] = {"archived": 0, "below_floor": 0, "passed": 0}
+    # P1.1: per-stage wall-clock so over-budget runs can be profiled by stage from
+    # the surfacing log (was: total duration only → no way to see WHERE time went).
+    _TRACE["timings"] = {}
+
+
+def _trace_time(stage: str, ms: float) -> None:
+    """Record a per-stage millisecond timing. Fail-soft; never raises."""
+    try:
+        t = _TRACE.get("timings")
+        if isinstance(t, dict):
+            t[stage] = round(ms, 1)
+    except Exception:
+        pass
 
 
 def _trace_set(key: str, value: Any) -> None:
@@ -812,12 +967,23 @@ def _confidence_epoch() -> float:
 
 
 def _surface_cache_key(query_tokens: set[str]) -> str:
-    """Stable hash of the retrieval input — order/case-insensitive (tokenize lowercases).
+    """Relaxed, order-insensitive hash of the retrieval input (P1.2 redesign).
 
-    Keyed on (confidence-epoch, query_tokens): a confidence mutation bumps the
-    epoch -> different key -> instant cache miss -> recompute (§24 stale-window fix).
+    Keyed on (confidence-epoch, top-K salient tokens):
+      - **Relaxation:** an exact token-set key matched verbatim repeats only — a
+        ~0.4% hit-rate in production. Instead we key on the K longest (most
+        content-bearing) stemmed tokens; in RU/BSL the long tokens are the domain
+        terms while function words are short, so two prompts about the same topic
+        with different filler collide and share a cached result. Prompts with <=K
+        tokens keep their full set (still effectively exact — low over-collision
+        risk for short queries).
+      - **Freshness:** the confidence-epoch stays folded in, so any reinforce /
+        apply / decay / archive bumps the epoch -> different key -> instant miss.
+      Over-collision is low-harm here: surfacing is advisory ("trust current code")
+      and bounded by TTL + epoch.
     """
-    payload = f"{_confidence_epoch()!r}|{' '.join(sorted(query_tokens))}"
+    salient = sorted(query_tokens, key=lambda t: (-len(t), t))[:SURFACE_CACHE_KEY_TOPK]
+    payload = f"{_confidence_epoch()!r}|{' '.join(sorted(salient))}"
     return hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()[:32]
 
 
@@ -836,7 +1002,10 @@ def _surface_cache_get(key: str) -> dict[str, Any] | None:
         entry = (data.get("entries") or {}).get(key)
         if not entry:
             return None
-        if (time.time() - float(entry.get("ts", 0))) >= SURFACE_CACHE_TTL:
+        # Empty ("no results") entries expire faster than populated ones (P1.2): a
+        # miss is the outcome most likely to flip as new patterns are harvested.
+        ttl = SURFACE_CACHE_EMPTY_TTL if entry.get("empty") else SURFACE_CACHE_TTL
+        if (time.time() - float(entry.get("ts", 0))) >= ttl:
             return None  # expired → treat as miss (lazy; overwritten on next put)
         return entry
     except Exception:
@@ -856,7 +1025,13 @@ def _surface_cache_put(key: str, results: list[Any], pids: list[Any]) -> None:
             except Exception:
                 data = {}
         entries = data.get("entries") or {}
-        entries[key] = {"ts": time.time(), "results": results, "pids": pids}
+        # `empty` drives the shorter empty-result TTL on read (P1.2).
+        entries[key] = {
+            "ts": time.time(),
+            "results": results,
+            "pids": pids,
+            "empty": not bool(results),
+        }
         # FIFO cap: drop oldest by timestamp when over capacity.
         if len(entries) > SURFACE_CACHE_CAP:
             ordered = sorted(entries, key=lambda k: entries[k].get("ts", 0))
@@ -1087,14 +1262,18 @@ class MemoryFirstHook(BaseHook):
         _trace_set("cache", "miss")
         deadline = t0 + TOTAL_BUDGET
 
+        _st = time.monotonic()
         sqlite_results = (
             search_sqlite(query_tokens, limit=10) if time.monotonic() < deadline else []
         )
+        _trace_time("sqlite", (time.monotonic() - _st) * 1000)
+        _st = time.monotonic()
         qdrant_results = (
             search_qdrant(query_tokens, limit=10, prompt=prompt)
             if time.monotonic() < deadline
             else []
         )
+        _trace_time("qdrant", (time.monotonic() - _st) * 1000)
         pids = [
             (r["id"], r["score"])
             for r in qdrant_results
@@ -1106,7 +1285,9 @@ class MemoryFirstHook(BaseHook):
             record_surfaced(inp.session_id or "", pids)
         except Exception:
             pass
+        _st = time.monotonic()
         md_results = search_md(query_tokens, limit=10) if time.monotonic() < deadline else []
+        _trace_time("md", (time.monotonic() - _st) * 1000)
         wiki_results = search_wiki(query_tokens, limit=10) if time.monotonic() < deadline else []
 
         layer_counts = {
@@ -1130,7 +1311,9 @@ class MemoryFirstHook(BaseHook):
 
         # §24 P2: optional LLM rerank of the final top-N (opt-in, skippable, bounded).
         if merged:
+            _st = time.monotonic()
             merged = _rerank_results(prompt, merged, t0)
+            _trace_time("rerank_ms", (time.monotonic() - _st) * 1000)
 
         # §24 execution cache: store fused result + surfaced pattern ids (empty cached
         # too → avoids re-running the pipeline for queries that yield nothing).

@@ -248,8 +248,15 @@ def _detect_skill_activations(prompt: str, session_id: str) -> None:
 
 
 def _load_config() -> dict | None:
-    """Load skill-router-config.json from known locations."""
-    for path in _CONFIG_LOCATIONS:
+    """Load skill-router-config.json from known locations.
+
+    260613 B5: honors the SKILL_ROUTER_CONFIG env var (absolute path) FIRST — lets
+    the offline weight-optimizer (scripts/tune_skill_router.py) inject candidate
+    `a2_signals` without touching the production config. No env → unchanged behavior.
+    """
+    override = os.environ.get("SKILL_ROUTER_CONFIG")
+    locations = [override, *_CONFIG_LOCATIONS] if override else _CONFIG_LOCATIONS
+    for path in locations:
         abs_path = os.path.abspath(path)
         if os.path.isfile(abs_path):
             try:
@@ -265,6 +272,15 @@ class SkillRouter(BaseHook):
 
     # Regex to strip file paths from prompt (prevents false matches on paths)
     _PATH_RE = re.compile(r"[a-zA-Z]:\\[^\s>]*|/[^\s>]*\.\w+")
+
+    # --- Layer A2: 1C domain signal detectors (260612 P2.1 follow-up) ---
+    # Разговорные 1С-промпты несут сигнал не в словаре, а в ФОРМЕ текста:
+    # CamelCase-кириллица (НачалоПериода), префиксы метаданных (гкс_, Документ.),
+    # строка соединения (Srvr=/Ref="). Keyword-слой это не выражает — GT-классы
+    # FN bsl-development/1c-doc-research закрываются детекторами.
+    _BSL_IDENT_RE = re.compile(r"\b[А-ЯЁ][а-яё0-9]+[А-ЯЁ][а-яёА-ЯЁ0-9]*")
+    _BSL_META_RE = re.compile(r"гкс_|\b(?:Документ|Справочник|РегистрСведений|Обработка)\.")
+    _CONN_STR_RE = re.compile(r"Srvr=|Ref=\"")
 
     # Intent classification markers
     _INFO_MARKERS = [
@@ -284,6 +300,8 @@ class SkillRouter(BaseHook):
         "зачем",
         "в чем разница",
         "what's the difference",
+        "что нового",
+        "what's new",
     ]
     _SYSTEM_PREFIXES = ("/", "!!", "git ", "cd ")
 
@@ -353,6 +371,35 @@ class SkillRouter(BaseHook):
                 if kw.lower() in prompt_lower:
                     score += weight
             scores[name] = score
+
+        # --- Layer A2: 1C domain signals + literal skill-name mention ---
+        # Детекторы работают по СЫРОМУ промпту (CamelCase требует регистра).
+        # 260613 B1: веса вынесены в config["a2_signals"] (tunable без правки кода;
+        # дефолты == исторические значения → поведение без секции не меняется).
+        a2 = config.get("a2_signals") or {}  # `or {}` — null-safe (ручная порча JSON)
+        bsl_weights = a2.get("bsl_signal_weights", {"bsl-dev": 3, "research-1c": 1})
+        conn_weights = a2.get("conn_str_weights", {"research-1c": 3})
+        lit_weight = a2.get("literal_name_weight", 4)
+        lit_min_len = a2.get("literal_name_min_len", 6)
+        if self._BSL_IDENT_RE.search(prompt) or self._BSL_META_RE.search(prompt):
+            for bname, w in bsl_weights.items():
+                if bname in bundles:
+                    scores[bname] = scores.get(bname, 0) + w
+        if self._CONN_STR_RE.search(prompt):
+            for bname, w in conn_weights.items():
+                if bname in bundles:
+                    scores[bname] = scores.get(bname, 0) + w
+        # Буквальное имя скилла в промпте — сильнейший сигнал (FN-класс
+        # «1c-debug-hmr переключись на...»: одиночный кейворд не пробивал min_score).
+        # 260613 F3: матч ТОЛЬКО как целое слово (\b...\b). Подстрочный `in` ловил
+        # однословные родовые имена (`deployment`, `autoresearch`) внутри несвязанных
+        # слов/путей ("redeployment", "deployments") и форсил бандл.
+        for name, bundle in bundles.items():
+            for skill in bundle.get("skills", []):
+                sk = skill.lower()
+                if len(sk) >= lit_min_len and re.search(rf"\b{re.escape(sk)}\b", prompt_lower):
+                    scores[name] = scores.get(name, 0) + lit_weight
+                    break
 
         # --- Layer B: Fuzzy single-word matching ---
         fuzzy = _get_fuzzy_matcher(all_keywords)
@@ -455,7 +502,7 @@ class SkillRouter(BaseHook):
         optional_skills: list[str] = []
         matched_bundle_names: list[str] = []
 
-        for name, _score in top_bundles:
+        for idx, (name, _score) in enumerate(top_bundles):
             matched_bundle_names.append(name)
             bundle = bundles[name]
 
@@ -463,9 +510,12 @@ class SkillRouter(BaseHook):
                 if skill not in required_skills:
                     required_skills.append(skill)
 
-            for skill in bundle.get("optional", []):
-                if skill not in optional_skills and skill not in required_skills:
-                    optional_skills.append(skill)
+            # Optional — только от top-1 бандла (260612 P2.1: optional всех
+            # сматченных бандлов раздувал выдачу и ронял precision).
+            if idx == 0:
+                for skill in bundle.get("optional", []) or []:
+                    if skill not in optional_skills and skill not in required_skills:
+                        optional_skills.append(skill)
 
         # Final dedup: remove from optional anything that ended up in required
         optional_skills = [s for s in optional_skills if s not in required_skills]
@@ -558,15 +608,16 @@ class SkillRouter(BaseHook):
             required_skills = []
             optional_skills = []
             matched_bundle_names = []
-            for name, _s in top_bundles:
+            for idx, (name, _s) in enumerate(top_bundles):
                 matched_bundle_names.append(name)
                 bundle = bundles[name]
                 for skill in bundle.get("skills", []):
                     if skill not in required_skills:
                         required_skills.append(skill)
-                for skill in bundle.get("optional", []):
-                    if skill not in optional_skills and skill not in required_skills:
-                        optional_skills.append(skill)
+                if idx == 0:
+                    for skill in bundle.get("optional", []) or []:
+                        if skill not in optional_skills and skill not in required_skills:
+                            optional_skills.append(skill)
 
         # --- Build stdout output (Phase 11: stdout instead of systemMessage) ---
         parts = [

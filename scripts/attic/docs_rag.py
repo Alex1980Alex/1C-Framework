@@ -1,8 +1,18 @@
-"""DocsRag Adapter — SQLite chunks + optional Qdrant embeddings for documentation search.
+"""RETIRED 2026-06-12 (roadmap 260612 pdf-docs full verification, P0.1 / D1).
 
-Provides a search adapter that queries a SQLite database of text chunks
-(split documentation) and optionally enriches results with Qdrant vector
-similarity for better ranking.
+DocsRag Adapter — SQLite chunks + optional Qdrant embeddings for documentation search.
+
+Почему ретирован, а не rewire:
+- Production-RAG для документации уже есть в `pdf_framework` (`pdf_documents` /
+  `wiki_pages_v1`, alias-дисциплина, MRL 1024d) — дублирующая SQLite-вселенная не нужна.
+- Контур был мёртв с рождения: default `chunks_db_path=""`, Qdrant-коллекция
+  `docs_chunks` никогда не существовала, эмбеддер заимствован у vector_memory
+  (Qwen3 4096d) против собственного дизайна; `_vector_search` глотал все ошибки.
+- Жил только в `tests/integration/test_memory_p3_deferred.py` (docs-часть удалена
+  той же правкой) — зелёные тесты создавали иллюзию живого контура.
+
+Relative imports ниже мертвы по построению (файл вне пакета) — НЕ запускать;
+хранится как референс дизайна FTS5+vector merge.
 
 Version: 1.0 (2026-04-04) -- P3 migration
 """

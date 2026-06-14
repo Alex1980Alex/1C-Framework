@@ -35,21 +35,17 @@ import pytest
 _STALE_FILE = Path(__file__).parent / "stale_tests.txt"
 
 # Files where EVERY collected test asserts on a removed/redesigned API.
-_FULLY_STALE_FILES = {
-    "tests/unit/loaders/test_hybrid.py",
-    "tests/unit/processing/test_splitters.py",
-    "tests/unit/agents/test_rag_nodes.py",
-    "tests/unit/vector_store/test_qdrant.py",
-    "tests/unit/graph_store/test_networkx.py",
-    "tests/unit/search/test_manager.py",
-    "tests/unit/processing/test_ids.py",
-    "tests/unit/graph_store/test_builder.py",
-    "tests/unit/agents/test_streaming.py",
-}
+# All previously-fully-stale files have been rewritten (roadmap 260608); none remain.
+_FULLY_STALE_FILES: set[str] = set()
 
 # Pass locally, fail only in the CI unit env (env-dependent). Skipped under CI only.
+# test_health.py::test_health_live was removed from this set on 2026-06-08: its CI
+# failure ("src.api has no app") was root-caused to an unconditional ``arq`` import in
+# src/api/routes/jobs.py (arq is the optional ``queue`` extra, absent in CI) and fixed
+# by deferring that import — so the test now passes in CI too. The remaining hooks
+# tests fail only on the CI runner (suspected fixture/module-load state under fresh
+# install + CI=true); their root cause needs the CI env to validate, so they stay here.
 _CI_ONLY = {
-    "tests/unit/api/test_health.py::TestHealthEndpoints::test_health_live",
     "tests/unit/hooks/test_pattern_harvest.py::test_cap_fires_above_n",
     "tests/unit/hooks/test_pattern_harvest.py::test_confirmed_drafts_and_lessons_create_cubes",
     "tests/unit/hooks/test_pattern_harvest.py::test_ingest_items_on_created_callback",

@@ -39,10 +39,29 @@ from src.memory.orchestrator.propagation_engine import (
     PropagationConfig,
     PropagationEngine,
 )
+from src.memory.orchestrator.unified_id import SourceServer
 from src.memory.skill_learning.merge_patterns import (
     ConflictStrategy,
     PatternMerger,
 )
+
+
+async def _always_apply(entity_id: str, delta: float) -> bool:
+    """Dummy update handler that reports a successful mutation.
+
+    Roadmap 260609 P2.3 made ``PropagationEngine._apply_update`` honest: with no
+    handler it returns False (no fabricated updates). Tests that exercise the
+    BFS/decay/rate-limit machinery itself supply this handler so traversal
+    proceeds and ``entities_updated`` reflects real (here, stubbed) writes.
+    """
+    return True
+
+
+# Handlers for the two receiver source types used in these tests.
+_TEST_HANDLERS = {
+    SourceServer.VECTOR_MEMORY: _always_apply,
+    SourceServer.MEMORY_AI: _always_apply,
+}
 
 # =============================================================================
 # CircuitBreaker Tests
@@ -182,13 +201,14 @@ class TestPropagationEngine:
         link_registry.create_link(
             "semantic:vector-memory:b",
             "episodic:memory-ai:c",
-            LinkType.BASED_ON,
+            LinkType.DERIVES_FROM,
             strength=0.6,
         )
 
         engine = PropagationEngine(
             link_registry,
             PropagationConfig(enable_background_processing=False, max_depth=3),
+            update_handlers=_TEST_HANDLERS,
         )
         result = await engine.propagate("semantic:vector-memory:a", 0.1)
         assert len(result.entities_updated) >= 1
@@ -214,9 +234,12 @@ class TestPropagationEngine:
                 distance_decay_per_level=1.0,  # no distance decay
                 enable_time_decay=False,
             ),
+            update_handlers=_TEST_HANDLERS,
         )
         result = await engine.propagate(ids[0], 0.1)
         assert result.final_depth <= 2
+        # With handlers wired, the chain is genuinely traversed up to the limit.
+        assert result.final_depth >= 1
 
     @pytest.mark.asyncio
     async def test_delta_threshold(self, link_registry):

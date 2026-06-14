@@ -412,15 +412,30 @@ def perform_sync_commit(
             except (subprocess.TimeoutExpired, OSError) as guard_err:
                 log.debug(f"settings guard check skipped: {guard_err}")
 
-        # Step 3: Commit
+        # Step 3: Commit (amend-absorb 2026-06-12: если HEAD — незапушенный
+        # auto-save с тем же prefix, амендим его вместо стопки новых коммитов;
+        # safety-гейты в get_amendable_head)
         count = len(modified_files)
-        from shared.auto_save_core import format_commit_message
+        from shared.auto_save_core import (
+            format_commit_message,
+            get_amendable_head,
+            merge_for_message,
+        )
 
-        commit_msg = format_commit_message(modified_files, prefix=prefix)
+        head_files = get_amendable_head(str(PROJECT_ROOT), prefix=prefix)
+        if head_files is not None:
+            commit_msg = format_commit_message(
+                merge_for_message(head_files, modified_files), prefix=prefix
+            )
+            commit_cmd = ["git", "commit", "--amend", "-m", commit_msg]
+            log.debug("step3: amend-absorb of unpushed auto-save HEAD")
+        else:
+            commit_msg = format_commit_message(modified_files, prefix=prefix)
+            commit_cmd = ["git", "commit", "-m", commit_msg]
 
         log.debug(f"step3: git commit timeout={timeout}")
         commit = subprocess.run(
-            ["git", "commit", "-m", commit_msg],
+            commit_cmd,
             timeout=timeout,
             capture_output=True,
             text=True,

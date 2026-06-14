@@ -1,0 +1,55 @@
+#!/bin/sh
+# pre-push gate (2026-06-12, pipeline-hole H1): локально push раньше не
+# проверялся ничем — core.hooksPath перекрывает .git/hooks, pre-commit
+# framework не срабатывает, а auto-save коммитит с --no-verify.
+# Этот хук — быстрый publish-гейт: ruff check + compileall ТОЛЬКО на
+# python-файлах, уходящих в push. Commit-время намеренно не гейтится
+# (auto-save должен коммитить свободно).
+#
+# Bypass: PREPUSH_SKIP=1 git push ...   или   git push --no-verify
+# Graceful: нет .venv/ruff/диапазона — пропуск (exit 0), гейт не ломает push.
+
+[ "$PREPUSH_SKIP" = "1" ] && exit 0
+
+PY=".venv/Scripts/python.exe"
+[ -x "$PY" ] || PY=".venv/bin/python"
+[ -x "$PY" ] || exit 0
+
+ZERO=0000000000000000000000000000000000000000
+files=""
+
+# stdin: <local ref> <local sha> <remote ref> <remote sha> per push'нутой ветке
+while read -r _lref lsha _rref rsha; do
+    [ "$lsha" = "$ZERO" ] && continue  # удаление ветки — нечего проверять
+    if [ "$rsha" = "$ZERO" ]; then
+        # новая ветка на remote — диффим от merge-base с origin/master
+        base=$(git merge-base "$lsha" origin/master 2>/dev/null) || continue
+    else
+        base=$rsha
+    fi
+    f=$(git diff --name-only --diff-filter=d "$base" "$lsha" -- '*.py' 2>/dev/null)
+    files="$files
+$f"
+done
+
+# только существующие файлы, уникально
+files=$(printf '%s\n' "$files" | sort -u | while read -r f; do
+    [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"
+done)
+
+[ -z "$files" ] && exit 0
+
+echo "[pre-push] gate: ruff check + compileall ($(printf '%s\n' "$files" | wc -l) py-files)"
+
+# NUL-разделитель: py-пути с пробелами не дробятся xargs'ом
+if ! printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 "$PY" -m ruff check --quiet; then
+    echo "[pre-push] BLOCKED: ruff check failed. Fix or bypass: PREPUSH_SKIP=1 git push" >&2
+    exit 1
+fi
+
+if ! printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 "$PY" -m compileall -q; then
+    echo "[pre-push] BLOCKED: compileall failed (syntax). Bypass: PREPUSH_SKIP=1 git push" >&2
+    exit 1
+fi
+
+exit 0

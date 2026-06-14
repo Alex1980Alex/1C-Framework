@@ -220,15 +220,6 @@ def reinforce_session(
         if session_id in state["sessions"]:
             return {"status": "already-processed", "session_id": session_id}
 
-        # --- Resolve reinforce_fn lazily ---
-        if reinforce_fn is None:
-            src_path = str(_PROJECT_ROOT / "src")
-            if src_path not in sys.path:
-                sys.path.insert(0, src_path)
-            from memory.vector_memory.reinforce import reinforce_pattern
-
-            reinforce_fn = reinforce_pattern
-
         # --- Filter + sort surfaced patterns ---
         surfaced = load_surfaced(session_id)
         candidates = sorted(
@@ -237,10 +228,22 @@ def reinforce_session(
             reverse=True,
         )[:cap]
 
+        # --- Resolve reinforce_fn lazily — only when there is work to do ---
+        # (roadmap 260609 P0.1: the qdrant_client import costs ~1s inside a
+        # Stop-hook budget; skip it entirely for empty-candidate sessions)
+        if reinforce_fn is None and candidates:
+            src_path = str(_PROJECT_ROOT / "src")
+            if src_path not in sys.path:
+                sys.path.insert(0, src_path)
+            from memory.vector_memory.reinforce import reinforce_pattern
+
+            reinforce_fn = reinforce_pattern
+
         # --- Per-pattern cooldown + reinforce ---
         now = datetime.now()
         applied = 0
         skipped = 0
+        missing = 0
         errors = 0
 
         for pid, _score in candidates:
@@ -259,6 +262,12 @@ def reinforce_session(
                 if result.get("success"):
                     state["patterns"][pid] = now.isoformat()
                     applied += 1
+                elif "not found" in str(result.get("error", "")).lower():
+                    # F14 (roadmap 260611 P3.3): miss ≠ error. A legitimately
+                    # deleted pattern (cleanup) surfaces as reinforce_miss
+                    # reason:not_found in the lifecycle log — counting it into
+                    # errors produced false alarms in the [REINFORCE] banner.
+                    missing += 1
                 else:
                     errors += 1
             except Exception:
@@ -302,6 +311,7 @@ def reinforce_session(
             success=success,
             applied=applied,
             skipped=skipped,
+            missing=missing,
             errors=errors,
             candidates=len(candidates),
         )
@@ -311,6 +321,7 @@ def reinforce_session(
             "success": success,
             "applied": applied,
             "skipped": skipped,
+            "missing": missing,
             "errors": errors,
         }
 

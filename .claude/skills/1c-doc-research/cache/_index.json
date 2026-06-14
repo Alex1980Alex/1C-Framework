@@ -2,6 +2,34 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "predefined-data-name-binding": {
+      "title": "Привязка предопределённых данных (ИмяПредопределённыхДанных) при DontAutoUpdate + ошибка «Предопределённый элемент отсутствует в данных»",
+      "file": "predefined-data-name-binding.md",
+      "created": "2026-06-11",
+      "last_verified": "2026-06-11",
+      "keywords": [
+        "ИмяПредопределённыхДанных",
+        "УстановитьИмяПредопределённыхДанных",
+        "Предопределённый элемент отсутствует в данных",
+        "predefinedDataUpdate",
+        "DontAutoUpdate",
+        "Не обновлять автоматически",
+        "привязка предопределённого по имени",
+        "НайтиПоКоду установить имя",
+        "обработка установки предопределённых",
+        "три пространства кодов декларация данные ТЗ",
+        "tools_ui_1c cpr1c"
+      ],
+      "sources": [
+        "its.1c.ru/db/metod8dev i8105367",
+        "infostart.ru/1c/tools/1252487",
+        "infostart.ru/1c/tools/305892",
+        "infostart.ru/1c/tools/809406",
+        "infostart.ru/1c/articles/310542",
+        "github.com/cpr1c/tools_ui_1c",
+        "live GKSTCPLK-2528 ИБTransportManagementDevelop 2026-06-11"
+      ]
+    },
     "1c-ui-automation-options": {
       "title": "Варианты UI-автоматизации 1С (нативный механизм / Vanessa / xUnit / WinAppDriver) + debug-совместимость",
       "file": "1c-ui-automation-options.md",
@@ -192,6 +220,34 @@
         "koderline.ru",
         "wonderland.v8.1c.ru",
         "bsl-platform-context"
+      ]
+    },
+    "pdf-preview-fajl-dokumenta-izmenen-bug": {
+      "title": "«Файл документа изменён» при ПолеPDFДокумента — баг платформы 8.3.27.1859…1936 (фикс 1964)",
+      "file": "pdf-preview-fajl-dokumenta-izmenen-bug.md",
+      "created": "2026-06-10",
+      "last_verified": "2026-06-10",
+      "keywords": [
+        "Файл документа изменен",
+        "ПолеPDFДокумента",
+        "ДокументPDF",
+        "предпросмотр PDF на форме",
+        "критическая ошибка Завершить работу Перезапустить",
+        "баг платформы 8.3.27.1859",
+        "исправлено 8.3.27.1964",
+        "серверный вызов в ПриОткрытии",
+        "клиент-серверный SQL",
+        "присоединённые файлы PDF",
+        "PDF.js ПолеHTMLДокумента",
+        "GKSTCPLK-2573"
+      ],
+      "sources": [
+        "forum.mista.ru/topic/901532",
+        "infostart.ru/1c/tools/2097757",
+        "infostart.ru/1c/tools/1844363",
+        "infostart.ru/1c/tools/1299501",
+        "infostart.ru/public/290899",
+        "live СистемнаяИнформация 8.3.27.1936"
       ]
     },
     "integration-1c-do": {
@@ -756,6 +812,30 @@
         "forum.infostart.ru/forum9/topic142019",
         "Документация 1С:Предприятие 8.3.27",
         "Стандарты разработки 1С 4.0"
+      ]
+    },
+    "sync-async-file-methods-server-client": {
+      "title": "Синхронные vs асинхронные файловые методы (УдалитьФайлы→НачатьУдалениеФайлов) — клиент/сервер",
+      "file": "sync-async-file-methods-server-client.md",
+      "created": "2026-06-09",
+      "last_verified": "2026-06-09",
+      "keywords": [
+        "НачатьУдалениеФайлов",
+        "УдалитьФайлы",
+        "синхронные методы на клиенте запрещены",
+        "асинхронные методы файлы",
+        "отказ от синхронных вызовов",
+        "ОписаниеОповещения callback",
+        "ФайловаяСистемаКлиент БСП",
+        "use-non-recommended-method EDT",
+        "ложноположительное замечание сервер",
+        "НачатьПолучениеИмениВременногоФайла"
+      ],
+      "sources": [
+        "master1c8.ru Руководство разработчика гл. 20.2",
+        "wonderland.v8.1c.ru унификация методов работы с файлами",
+        "Конфигурация: ФайловаяСистемаСлужебныйКлиент 18 примеров",
+        "bsl-platform-context 8.3.27"
       ]
     }
   }

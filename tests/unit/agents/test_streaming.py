@@ -1,104 +1,246 @@
-"""Unit tests for StreamingRAGRunner event types (F2.9.3)."""
+"""Unit tests for StreamingRAGRunner lifecycle behavior (F2.9.3).
+
+Focuses on runner construction, event ordering guarantees, metadata
+payloads, token-count tracking, and async-generator cancellation.
+All LLM / graph I/O is mocked — no network required.
+"""
 
 import pytest
 
+pytestmark = pytest.mark.unit
 
-@pytest.mark.unit
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_runner(graph_events, show_status=True, show_sources=True):
+    """Return a StreamingRAGRunner backed by a deterministic fake graph."""
+    from unittest.mock import MagicMock
+
+    from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+
+    graph = MagicMock()
+
+    async def fake_astream_events(state, version="v2"):
+        for ev in graph_events:
+            yield ev
+
+    graph.astream_events = fake_astream_events
+    return StreamingRAGRunner(graph=graph, show_status=show_status, show_sources=show_sources)
+
+
+def _token_event(text: str, node: str = "generate") -> dict:
+    """Build a fake on_chat_model_stream event dict."""
+    from unittest.mock import MagicMock
+
+    chunk = MagicMock()
+    chunk.content = text
+    return {
+        "event": "on_chat_model_stream",
+        "name": node,
+        "metadata": {"langgraph_node": node},
+        "data": {"chunk": chunk},
+    }
+
+
+# ---------------------------------------------------------------------------
+# TestStreamingRAGRunner
+# ---------------------------------------------------------------------------
+
+
 class TestStreamingRAGRunner:
-    """Test StreamingRAGRunner specific functionality."""
+    """Runner lifecycle, event ordering, metadata, token tracking, cancellation."""
 
-    def test_runner_initialization(self):
-        """F2.9.3: Runner should initialize with configuration."""
+    # ------------------------------------------------------------------
+    # Construction
+    # ------------------------------------------------------------------
+
+    def test_runner_stores_graph_and_flags(self):
+        """Runner exposes the injected graph and boolean flags."""
+        from unittest.mock import MagicMock
+
         from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
 
-        runner = StreamingRAGRunner(
-            chunk_size=100,
-            max_chunks=10,
+        graph = MagicMock()
+        runner = StreamingRAGRunner(graph=graph, show_status=False, show_sources=False)
+
+        assert runner._graph is graph
+        assert runner._show_status is False
+        assert runner._show_sources is False
+
+    def test_runner_defaults_show_status_and_sources_true(self):
+        """Defaults for show_status / show_sources are both True."""
+        from unittest.mock import MagicMock
+
+        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+
+        runner = StreamingRAGRunner(graph=MagicMock())
+        assert runner._show_status is True
+        assert runner._show_sources is True
+
+    # ------------------------------------------------------------------
+    # stream() yields events
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_at_least_one_event(self):
+        """stream() is an async generator that always yields at least DONE."""
+        runner = _make_runner([])
+        events = [ev async for ev in runner.stream("hello")]
+        assert len(events) >= 1
+
+    @pytest.mark.asyncio
+    async def test_stream_always_ends_with_done(self):
+        """The last event emitted is always StreamEventType.DONE."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        runner = _make_runner([_token_event("word1"), _token_event("word2")])
+        events = [ev async for ev in runner.stream("q")]
+        assert events[-1].type == StreamEventType.DONE
+
+    # ------------------------------------------------------------------
+    # Event ordering
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_status_searching_emitted_before_tokens(self):
+        """STATUS 'searching' is emitted before any TOKEN events."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        runner = _make_runner([_token_event("tok")])
+        events = [ev async for ev in runner.stream("q")]
+
+        types = [ev.type for ev in events]
+        # At least one STATUS event must precede the first TOKEN
+        first_token_idx = next((i for i, t in enumerate(types) if t == StreamEventType.TOKEN), None)
+        first_status_idx = next(
+            (i for i, t in enumerate(types) if t == StreamEventType.STATUS), None
         )
+        assert first_status_idx is not None
+        if first_token_idx is not None:
+            assert first_status_idx < first_token_idx
 
-        assert runner.chunk_size == 100
-        assert runner.max_chunks == 10
+    @pytest.mark.asyncio
+    async def test_done_emitted_after_all_tokens(self):
+        """DONE event index is always greater than every TOKEN event index."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-    async def test_stream_yields_events(self):
-        """F2.9.3: stream() should be async generator."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+        token_texts = ["A", "B", "C"]
+        runner = _make_runner([_token_event(t) for t in token_texts])
+        events = [ev async for ev in runner.stream("q")]
 
-        runner = StreamingRAGRunner()
+        types = [ev.type for ev in events]
+        done_idx = types.index(StreamEventType.DONE)
+        token_indices = [i for i, t in enumerate(types) if t == StreamEventType.TOKEN]
+        assert all(idx < done_idx for idx in token_indices)
 
-        events = []
+    # ------------------------------------------------------------------
+    # Event metadata payloads
+    # ------------------------------------------------------------------
 
-        async def collect():
-            async for event in runner.stream("test query"):
-                events.append(event)
+    @pytest.mark.asyncio
+    async def test_stream_event_has_type_data_metadata_attributes(self):
+        """Every StreamEvent exposes .type, .data, and .metadata."""
+        runner = _make_runner([])
+        events = [ev async for ev in runner.stream("q")]
+        for ev in events:
+            assert hasattr(ev, "type")
+            assert hasattr(ev, "data")
+            assert hasattr(ev, "metadata")
 
-        await collect()
+    @pytest.mark.asyncio
+    async def test_done_metadata_contains_answer_length_and_sources_count(self):
+        """DONE event metadata keys: answer_length (int >= 0), sources_count (int >= 0)."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-        assert len(events) > 0
+        runner = _make_runner([_token_event("hello "), _token_event("world")])
+        events = [ev async for ev in runner.stream("q")]
 
-    async def test_event_ordering(self):
-        """F2.9.3: Events should be ordered correctly."""
-        from src.pdf_framework.agents.rag.streaming import EventType, StreamingRAGRunner
+        done = next(ev for ev in events if ev.type == StreamEventType.DONE)
+        assert isinstance(done.metadata.get("answer_length"), int)
+        assert done.metadata["answer_length"] >= 0
+        assert isinstance(done.metadata.get("sources_count"), int)
+        assert done.metadata["sources_count"] >= 0
 
-        runner = StreamingRAGRunner()
+    @pytest.mark.asyncio
+    async def test_token_event_data_is_the_token_text(self):
+        """TOKEN event .data carries the exact token string from the LLM chunk."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-        event_order = []
+        runner = _make_runner([_token_event("exact-token")])
+        events = [ev async for ev in runner.stream("q")]
 
-        async def collect():
-            async for event in runner.stream("test"):
-                event_order.append(event.type)
+        token_events = [ev for ev in events if ev.type == StreamEventType.TOKEN]
+        assert len(token_events) == 1
+        assert token_events[0].data == "exact-token"
 
-        await collect()
+    # ------------------------------------------------------------------
+    # Token-count tracking via DONE metadata
+    # ------------------------------------------------------------------
 
-        # Query start should come before end
-        if EventType.QUERY_START in event_order and EventType.QUERY_END in event_order:
-            start_idx = event_order.index(EventType.QUERY_START)
-            end_idx = event_order.index(EventType.QUERY_END)
-            assert start_idx < end_idx
+    @pytest.mark.asyncio
+    async def test_answer_length_reflects_all_tokens(self):
+        """answer_length in DONE metadata equals the total chars of all TOKEN data."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-    async def test_stream_cancellation(self):
-        """F2.9.3: Should support stream cancellation."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
+        tokens = ["Hello", " ", "world", "!"]
+        runner = _make_runner([_token_event(t) for t in tokens])
+        events = [ev async for ev in runner.stream("q")]
 
-        runner = StreamingRAGRunner()
+        collected_tokens = [ev.data for ev in events if ev.type == StreamEventType.TOKEN]
+        done = next(ev for ev in events if ev.type == StreamEventType.DONE)
+
+        expected_len = sum(len(t) for t in collected_tokens)
+        assert done.metadata["answer_length"] == expected_len
+
+    @pytest.mark.asyncio
+    async def test_answer_length_zero_when_no_tokens(self):
+        """answer_length is 0 when the graph emits no token events."""
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
+
+        runner = _make_runner([])
+        events = [ev async for ev in runner.stream("q")]
+        done = next(ev for ev in events if ev.type == StreamEventType.DONE)
+        assert done.metadata["answer_length"] == 0
+
+    # ------------------------------------------------------------------
+    # Stream cancellation (early break)
+    # ------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_stream_supports_early_break(self):
+        """Breaking out of the async-for loop after N events does not raise."""
+        runner = _make_runner([_token_event(f"t{i}") for i in range(20)])
 
         consumed = []
+        async for ev in runner.stream("q"):
+            consumed.append(ev)
+            if len(consumed) >= 3:
+                break
 
-        async def partial_consume():
-            async for event in runner.stream("test"):
-                consumed.append(event)
-                if len(consumed) >= 2:  # Cancel early
-                    break
+        # Exactly 3 events consumed without exception
+        assert len(consumed) == 3
 
-        await partial_consume()
+    @pytest.mark.asyncio
+    async def test_stream_to_sse_produces_data_prefix_strings(self):
+        """stream_to_sse() wraps every event as 'data: {...}\\n\\n' SSE format."""
+        import json
 
-        assert len(consumed) == 2
+        from src.pdf_framework.agents.rag.streaming import StreamEventType
 
-    def test_event_metadata(self):
-        """F2.9.3: Events should contain metadata."""
-        from src.pdf_framework.agents.rag.streaming import Event
+        runner = _make_runner([_token_event("hi")])
+        lines = [line async for line in runner.stream_to_sse("q")]
 
-        event = Event(
-            type="test_event",
-            content="test content",
-            metadata={"key": "value"},
-        )
+        assert len(lines) > 0
+        for line in lines:
+            assert line.startswith("data: ")
+            assert line.endswith("\n\n")
+            payload = json.loads(line[len("data: ") :].strip())
+            assert "type" in payload
+            assert "data" in payload
 
-        assert event.metadata["key"] == "value"
-
-    async def test_token_tracking(self):
-        """F2.9.3: Should track tokens in streaming."""
-        from src.pdf_framework.agents.rag.streaming import StreamingRAGRunner
-
-        runner = StreamingRAGRunner()
-
-        token_counts = []
-
-        async def track_tokens():
-            async for event in runner.stream("test"):
-                if hasattr(event, "tokens"):
-                    token_counts.append(event.tokens)
-
-        await track_tokens()
-
-        # Should track tokens
-        assert sum(token_counts) > 0
+        # The last SSE line should be the DONE event
+        last_payload = json.loads(lines[-1][len("data: ") :].strip())
+        assert last_payload["type"] == StreamEventType.DONE.value

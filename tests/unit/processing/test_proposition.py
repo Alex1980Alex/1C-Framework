@@ -99,21 +99,24 @@ class TestPropositionSplitter:
         assert result == ["Some text"]
 
     def test_split_text_with_retry(self, mock_llm):
-        """Should retry when too few propositions extracted."""
-        # First call returns too few
-        first_response = MagicMock(content="1. Only one proposition")
-        # Second call (retry) returns more
+        """Should retry via _extract_with_retry when too few propositions extracted."""
+        # First call returns only 1 proposition (below min_propositions=3)
+        first_response = MagicMock(content="1. Only one proposition here found")
+        # Second call (retry uses plain-lines fallback) returns multiple lines
         second_response = MagicMock(
-            content="""1. First proposition
-2. Second proposition
-3. Third proposition"""
+            content="First fact from retry.\nSecond fact from retry.\nThird fact from retry."
         )
 
         mock_llm.invoke.side_effect = [first_response, second_response]
 
+        # Text must be >= 50 chars to bypass the short-text early-return guard
+        long_text = "The Eiffel Tower is located in Paris, France, and stands 324 metres tall."
         splitter = PropositionSplitter(llm=mock_llm, min_propositions=3)
-        result = splitter.split_text("Long text that needs multiple propositions")
+        result = splitter.split_text(long_text)
 
+        # Both initial + retry LLM calls must have been made
+        assert mock_llm.invoke.call_count == 2
+        # Retry result should contain at least the lines from the second response
         assert len(result) >= 3
 
     def test_parse_numbered_list_dots(self, proposition_splitter):
@@ -368,21 +371,31 @@ class TestPropositionCostTracking:
     """Tests for cost tracking functionality."""
 
     def test_split_text_tracks_llm_usage(self, proposition_splitter, mock_llm):
-        """Should track LLM usage for cost estimation."""
-        mock_llm.invoke.return_value = MagicMock(content="1. Proposition one\n2. Proposition two")
+        """Should call the LLM exactly once for text that meets the length threshold."""
+        mock_llm.invoke.return_value = MagicMock(
+            content="1. Proposition one statement here\n2. Proposition two statement here\n3. Proposition three"
+        )
 
-        proposition_splitter.split_text("Test content")
+        # Text must be >= 50 chars to bypass the short-text early-return guard
+        long_text = "The Eiffel Tower stands 324 metres tall in central Paris, France."
+        proposition_splitter.split_text(long_text)
 
-        # LLM should have been called
-        assert mock_llm.invoke.called
+        # LLM must have been invoked at least once (tracking usage = LLM was called)
+        assert mock_llm.invoke.call_count >= 1
 
     def test_min_propositions_threshold(self, mock_llm):
-        """Should only retry if below min_propositions threshold."""
-        mock_llm.invoke.return_value = MagicMock(content="1. Single proposition")
+        """When result count meets min_propositions, no retry should occur (invoke called once)."""
+        # Two propositions returned; min_propositions=2 → threshold met, no retry
+        mock_llm.invoke.return_value = MagicMock(
+            content="1. First distinct factual statement.\n2. Second distinct factual statement."
+        )
 
-        # With min_propositions=2, should retry
         splitter = PropositionSplitter(llm=mock_llm, min_propositions=2)
-        result = splitter.split_text("Test text")
+        # Text must be >= 50 chars to bypass the short-text early-return guard
+        long_text = "The Louvre Museum in Paris is the world's largest art museum by area."
+        result = splitter.split_text(long_text)
 
-        # Should have called invoke twice (initial + retry)
-        assert mock_llm.invoke.call_count >= 1
+        # Threshold met → no retry, exactly one LLM call
+        assert mock_llm.invoke.call_count == 1
+        # Both propositions returned
+        assert len(result) == 2

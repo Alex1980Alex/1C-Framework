@@ -37,13 +37,18 @@ class PatternsHarvester(BaseHook):
             return None  # fail-soft: never block stop
 
         created = stats.get("created", 0)
-        if created:
+        quarantined = stats.get("quarantined", 0)
+        if created or quarantined:
             names = ", ".join(stats.get("items", [])[:3])
-            return HookOutput().system_message(
-                f"[PATTERNS-HARVEST] +{created} pattern(s) → learned_patterns "
+            parts = [f"[PATTERNS-HARVEST] +{created} pattern(s) → learned_patterns"]
+            if quarantined:
+                # P1.2 (roadmap 260611): low-confidence auto-capture → pending quarantine
+                parts.append(f"+{quarantined} → pending (карантин)")
+            parts.append(
                 f"(dup={stats.get('skipped_dup', 0)}, cap={stats.get('skipped_cap', 0)}, "
                 f"err={stats.get('errors', 0)}): {names}"
             )
+            return HookOutput().system_message(" ".join(parts))
         return None
 
 

@@ -3,6 +3,31 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "claude-code-ecosystem-tools-2026.md",
+      "title": "Claude Code ecosystem — skills/plugins/subagents/MCP по SDLC-шагам (планирование/дизайн/кодирование/тестирование), 2026",
+      "keywords": [
+        "claude-code",
+        "plugins",
+        "skills",
+        "subagents",
+        "mcp",
+        "spec-driven-development",
+        "spec-kit",
+        "bmad",
+        "openspec",
+        "superpowers",
+        "tdd-guard",
+        "code-review",
+        "playwright",
+        "context7",
+        "architecture-planning",
+        "implementation-design",
+        "coding",
+        "testing"
+      ],
+      "last_verified": "2026-06-13"
+    },
+    {
       "file": "agent-memory-ingestion-consolidation-2026.md",
       "title": "Agent memory — ingestion, consolidation (episodic→semantic), cross-store sync",
       "keywords": [
@@ -1151,6 +1176,53 @@
       "last_verified": "2026-05-22",
       "domain": "devops-git-workflow",
       "description": "17 GitHub projects analyzed. Native auto-merge / Actions / OSS bots / SaaS comparison. 15 best practices. Mapping to PDF Framework auto-git-save + post-task-push-pr hooks."
+    },
+    {
+      "file": "curated-memory-event-store-sync-2026.md",
+      "keywords": [
+        "curated-memory",
+        "human-in-the-loop",
+        "write-gate",
+        "promotion",
+        "event-sourcing",
+        "event-store",
+        "audit",
+        "replay",
+        "CQRS",
+        "tiered-memory",
+        "github-copilot-memory"
+      ],
+      "last_verified": "2026-06-12"
+    },
+    {
+      "file": "skill-library-lifecycle-testing-2026.md",
+      "keywords": [
+        "skill-library",
+        "lifecycle",
+        "testing",
+        "evaluation",
+        "voyager",
+        "claude-code-skills",
+        "verification",
+        "provenance",
+        "superpowers"
+      ],
+      "last_verified": "2026-06-12"
+    },
+    {
+      "file": "sdlc-pipeline-orchestration-patterns.md",
+      "keywords": [
+        "pipeline",
+        "sdlc",
+        "orchestration",
+        "state-machine",
+        "artifact-handoff",
+        "slash-commands",
+        "hooks",
+        "approval-gate",
+        "openspec"
+      ],
+      "last_verified": "2026-06-13"
     }
   ]
 }

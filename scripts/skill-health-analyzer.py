@@ -137,6 +137,19 @@ def compute_skill_stats(events: list[dict]) -> tuple[dict[str, SkillStats], int]
     return dict(stats), len(prompts)
 
 
+def list_catalog_skills() -> set[str]:
+    """Skill names present in the live catalog (top-level, excl. _archived)."""
+    skills_dir = PROJECT_ROOT / ".claude" / "skills"
+    return {md.parent.name for md in skills_dir.glob("*/SKILL.md")}
+
+
+def identify_no_traffic(stats: dict[str, SkillStats], catalog: set[str]) -> list[str]:
+    """260612 P2.3 stale-criterion: catalog skills with ZERO events in the window
+    (never recommended, never activated) — dead silence is the strongest
+    review/archive signal the metrics loop can give."""
+    return sorted(catalog - set(stats))
+
+
 def identify_problems(
     stats: dict[str, SkillStats],
 ) -> tuple[list[str], list[str], list[str]]:
@@ -168,6 +181,7 @@ def generate_report(
     never_used: list[str],
     min_samples: int,
     days: int,
+    no_traffic: list[str] | None = None,
 ) -> str:
     """Generate markdown health report."""
     lines = [
@@ -223,6 +237,18 @@ def generate_report(
             lines.append(f"- **{skill}**: {s.recommended_count} recs, 0 activations")
         lines.append("")
 
+    if no_traffic:
+        lines.append(
+            f"### NO TRAFFIC in {days}d ({len(no_traffic)} skills — stale review candidates)"
+        )
+        lines.append(
+            "Не рекомендовались роутером и не активировались ни разу за окно — "
+            "кандидаты на review/архив или на доработку триггеров."
+        )
+        lines.append("")
+        lines.append(", ".join(f"`{s}`" for s in no_traffic))
+        lines.append("")
+
     if not (high_waste or router_miss or never_used):
         lines.append("No action items. All skills healthy (or insufficient data).")
         lines.append("")
@@ -236,16 +262,26 @@ def main() -> int:
     parser.add_argument("--output", type=Path, help="Output report path")
     parser.add_argument("--min-samples", type=int, default=3, help="Min recs to show")
     parser.add_argument("--no-eval", action="store_true", help="Skip F1 eval run")
+    parser.add_argument(
+        "--exit-zero",
+        action="store_true",
+        help="Always exit 0 (cadence mode: action items are the report, not a failure)",
+    )
     args = parser.parse_args()
 
     metrics_path = PROJECT_ROOT / "data" / "skill-accuracy.jsonl"
-    output_path = args.output or PROJECT_ROOT / "data" / "skill-health-report.md"
+    # 260613 F8: дефолт на канон (acceptance критерий 6 + каденс читают именно его);
+    # раньше дефолт был data/skill-health-report.md → ручной прогон клал отчёт мимо.
+    output_path = (
+        args.output or PROJECT_ROOT / "data" / "reports" / "skills" / "skill-health-report.md"
+    )
 
     events = load_accuracy_events(metrics_path, args.days)
     stats, prompt_count = compute_skill_stats(events)
     f1 = None if args.no_eval else get_f1_score()
 
     high_waste, router_miss, never_used = identify_problems(stats)
+    no_traffic = identify_no_traffic(stats, list_catalog_skills())
 
     report = generate_report(
         prompt_count,
@@ -256,6 +292,7 @@ def main() -> int:
         never_used,
         args.min_samples,
         args.days,
+        no_traffic=no_traffic,
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -263,6 +300,8 @@ def main() -> int:
     print(report)
     print(f"\nReport saved to: {output_path}")
 
+    if args.exit_zero:
+        return 0
     return 1 if (high_waste or router_miss or never_used) else 0
 
 

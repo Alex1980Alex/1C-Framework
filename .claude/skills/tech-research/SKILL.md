@@ -92,6 +92,13 @@ description: "Исследование технологий RAG/ML/Python: embed
 
 **Всегда начинай с официальных источников.**
 
+**260613 ADR-014 — сначала Context7 (live version-specific доки), потом WebSearch.**
+Для API/библиотек сперва спроси **Context7 MCP** (on-demand через `lazy-mcp`, категория
+`documentation`) — отдаёт актуальную version-specific документацию без галлюцинаций API:
+`resolve-library-id "<библиотека>"` → `get-library-docs "<id>" topic="<тема>"`. Устраняет
+stale-doc ошибки. Если Context7 не покрыл (нишевая либа / нет в индексе) → WebSearch ниже
+(fallback, не замена).
+
 ```
 WebSearch: "[библиотека] official documentation [версия]"
 WebFetch: [URL документации] — если URL известен

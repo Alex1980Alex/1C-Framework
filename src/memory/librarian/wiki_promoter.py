@@ -74,16 +74,42 @@ class WikiPromoter:
             # an apply() revives them, after which they become promotable again.
             if payload.get("expired_at"):
                 continue
+            # F13 (roadmap 260611 P3.2): idempotency pre-filter — a pattern that
+            # already carries its own promoted_to marker was promoted earlier;
+            # skip it before the (expensive) vector dedup so re-runs don't
+            # silently rewrite the draft and re-append to log.md.
+            if payload.get("promoted_to"):
+                continue
             vector = self._extract_vector(point, payload)
             existing = await self._dedup_check(vector, str(point.id))
             if existing is None:
                 slug = await self._create_draft(payload)
+                self._mark_promoted(str(point.id), slug)
                 self._create_promotion_link(str(point.id), slug)
                 await self._publish_event(
                     "wiki.draft.created", {"slug": slug, "source_id": str(point.id)}
                 )
                 created.append(slug)
         return created
+
+    def _mark_promoted(self, source_point_id: str, slug: str) -> None:
+        """Stamp promoted_to on the source point (F13: the marker finally gets
+        a writer — _dedup_check reads it on neighbours, the pre-filter reads it
+        on the candidate itself). Best-effort: never blocks the draft."""
+        try:
+            self.client.set_payload(
+                collection_name="learned_patterns",
+                payload={"promoted_to": slug},
+                points=[source_point_id],
+            )
+        except Exception as e:
+            # Marker write failed → next run will re-promote (draft rewrite);
+            # log it so the failure reaches a log, not silence.
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "wiki_promoter: failed to stamp promoted_to on %s: %s", source_point_id, e
+            )
 
     @staticmethod
     def _extract_vector(point, payload: dict) -> list[float] | None:
@@ -179,6 +205,12 @@ class WikiPromoter:
         try:
             if self.wiki_log_path.exists():
                 content = self.wiki_log_path.read_text(encoding="utf-8")
+                # F13: idempotent log — a draft already mentioned in log.md is a
+                # re-promote; don't append an identical block again. (If the old
+                # mention was trimmed past the 500-line cap, a rare duplicate is
+                # accepted as harmless.)
+                if f"docs/wiki/drafts/{slug}.md" in content:
+                    return
                 # Insert before "## Format Template" section
                 marker = "\n## Format Template"
                 if marker in content:

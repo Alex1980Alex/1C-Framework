@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -49,16 +50,55 @@ from scripts.cross_store_index import run_scan
 PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 REPORTS_DIR = PROJECT_ROOT / "data" / "reports" / "memory"
 INGEST_LOG = PROJECT_ROOT / ".claude" / "cache" / "memory-ingestion.log"
-MEMORY_AI_DB = PROJECT_ROOT / "data" / "memory_ai.db"
+# MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
+MEMORY_AI_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data" / "memory_ai.db")
 SKILL_JSONL = PROJECT_ROOT / "data" / "skill_learning" / "patterns.jsonl"
+SL_PENDING = PROJECT_ROOT / "data" / "skill_learning" / "pending_patterns.jsonl"
+SL_REJECTED = PROJECT_ROOT / "data" / "skill_learning" / "rejected_patterns.jsonl"
+# P3.1 (roadmap 260611): pending старше TTL без подтверждения → auto-reject
+PENDING_TTL_DAYS = int(os.environ.get("SKILL_PENDING_TTL_DAYS", "30"))
 WIKI_DRAFTS = PROJECT_ROOT / "docs" / "wiki" / "drafts"
 COLLECTION = "learned_patterns"
+# Docs freshness (roadmap 260612 P3.2): возраст последнего run_end per коллекция
+PROGRESS_LOG = PROJECT_ROOT / "data" / "indexing-progress.jsonl"
+DOCS_COLLECTIONS = ("pdf_documents", "wiki_pages_v1")
+DOCS_STALE_DAYS = int(os.environ.get("DOCS_STALE_DAYS", "30"))
 
 # name -> (argv after python, supports --apply, apply-only)
+# reindex_wiki (260612 P3.3): генерация wiki .md (export_graph_to_wiki в promote)
+# и индексация СВЯЗАНЫ в одном каденсе — реиндекс после promote, иначе
+# расщеплённый мозг wiki .md <-> wiki_pages_v1. pdf_documents — ручной триггер
+# (корпус статичный, см. §18 роадмапа 260612).
 SUBPROCESS_JOBS: dict[str, tuple[list[str], bool, bool]] = {
     "reflect": (["scripts/reflect_memory.py"], True, False),
     "sync": (["scripts/cross_store_sync.py", "--no-report"], True, False),
     "promote": (["-m", "scripts.export_graph_to_wiki", "promote-patterns"], False, True),
+    "reindex_wiki": (
+        ["scripts/eval_hermes_phase4.py", "index-wiki", "--prune"],
+        False,
+        True,  # apply-only: пишет в production wiki_pages_v1
+    ),
+    # 260612 Skill System A5: mirror каталога .claude/skills/ -> skill_library
+    # (upsert drift/changed, prune ghosts со снапшотом) — drift сходится к 0
+    # каждым каденсом; дешёво при отсутствии правок (content_hash skip).
+    "reindex_skill_library": (
+        ["scripts/reindex_skill_library.py"],
+        True,
+        True,  # apply-only: пишет в production skill_library
+    ),
+    # 260612 Skill System P2.3 (S6): потребитель skill-accuracy.jsonl — отчёт
+    # «review candidates» (high-waste / router-miss / never-used / no-traffic).
+    "skill_review": (
+        [
+            "scripts/skill-health-analyzer.py",
+            "--no-eval",
+            "--exit-zero",
+            "--output",
+            "data/reports/skills/skill-health-report.md",
+        ],
+        False,
+        False,  # read-only отчёт — безопасен и в dry-run каденсе
+    ),
 }
 
 
@@ -142,6 +182,154 @@ def run_forget(apply: bool, now: datetime) -> dict[str, Any]:
     return summary
 
 
+def run_review_pending(apply: bool, now: datetime) -> dict[str, Any]:
+    """P3.1 (roadmap 260611): модерация pending-карантина skill-learning.
+
+    Pending старше ``PENDING_TTL_DAYS`` без подтверждения → auto-reject
+    (``reject_reason=ttl_expired``) в rejected-silo, который блокирует повторный
+    авто-захват (P0.2 dedup). Dry-run по умолчанию (только план); ``--apply``
+    переносит записи (atomic rewrite pending: tmp + os.replace). Fail-soft.
+    """
+    try:
+        lines = SL_PENDING.read_text(encoding="utf-8").splitlines() if SL_PENDING.exists() else []
+    except OSError as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+    remaining: list[dict[str, Any]] = []
+    expired: list[dict[str, Any]] = []
+    for ln in lines:
+        ln = ln.strip()
+        if not ln:
+            continue
+        try:
+            rec = json.loads(ln)
+        except json.JSONDecodeError:
+            continue
+        age_days: float | None = None
+        try:
+            age_days = (now - datetime.fromisoformat(rec.get("created_at", ""))).days
+        except (TypeError, ValueError):  # null / malformed created_at → честный skip
+            pass
+        # Записи без валидного created_at не auto-reject'ятся (честный skip).
+        if age_days is not None and age_days > PENDING_TTL_DAYS:
+            expired.append(rec)
+        else:
+            remaining.append(rec)
+
+    summary: dict[str, Any] = {
+        "pending": len(remaining) + len(expired),
+        "expired": len(expired),
+        "ttl_days": PENDING_TTL_DAYS,
+        "applied": False,
+    }
+    if not (apply and expired):
+        return summary
+
+    try:
+        SL_REJECTED.parent.mkdir(parents=True, exist_ok=True)
+        with SL_REJECTED.open("a", encoding="utf-8") as fh:
+            for rec in expired:
+                rec["rejected_at"] = now.isoformat()
+                rec["reject_reason"] = "ttl_expired"
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        # atomic rewrite pending (P0.1 contract: tmp + os.replace, kill-safe)
+        tmp = SL_PENDING.with_name(SL_PENDING.name + ".tmp")
+        with tmp.open("w", encoding="utf-8") as fh:
+            for rec in remaining:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        os.replace(tmp, SL_PENDING)
+    except OSError as exc:
+        summary["error"] = f"{type(exc).__name__}: {exc}"
+        return summary
+
+    summary["applied"] = True
+    # observability: per-item rejected event, общий content_hash fact-key
+    try:
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        for rec in expired:
+            record_ingest(
+                "skill_learning",
+                "rejected",
+                content_hash=rec.get("content_hash", ""),
+                reason="ttl_expired",
+                harvester="review_pending",
+            )
+    except Exception:
+        pass
+    return summary
+
+
+def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
+    """P3.2 (roadmap 260612): bounded growth для эпизодики — archive-stamp.
+
+    Decay-категории (``session_summary``/``general``) старше
+    ``ARCHIVE_AFTER_DAYS`` с importance ниже порога получают
+    ``metadata.archived_at`` (invalidate-not-delete, инвариант §22 P3);
+    читатели R1/R2 фильтруют archived. Курируемые категории
+    (decision/preference/feedback/...) не архивируются по возрасту.
+
+    P3.3: job стоит ПОСЛЕ reflect в каденсе — кластеры успевают
+    консолидироваться в semantic до ухода эпизодов в архив.
+    """
+    try:
+        from memory.ai_memory.retention import is_archived, should_archive
+    except Exception as exc:
+        return {"rc": -1, "error": f"{type(exc).__name__}: {exc}"}
+
+    candidates: list[tuple[str, str, dict[str, Any]]] = []
+    try:
+        conn = sqlite3.connect(str(MEMORY_AI_DB))
+        try:
+            rows = conn.execute(
+                "SELECT id, category, created_at, importance, metadata FROM important_messages"
+            ).fetchall()
+            for rid, category, created_at, importance, raw_md in rows:
+                try:
+                    md = json.loads(raw_md) if raw_md else {}
+                except (json.JSONDecodeError, TypeError):
+                    md = {}
+                if not isinstance(md, dict) or is_archived(md):
+                    continue
+                if should_archive(category, created_at, float(importance or 0.0), now):
+                    candidates.append((rid, raw_md or "{}", md))
+            archived = 0
+            if apply and candidates:
+                for rid, _raw, md in candidates:
+                    md["archived_at"] = now.isoformat()
+                    conn.execute(
+                        "UPDATE important_messages SET metadata = ? WHERE id = ?",
+                        (json.dumps(md, ensure_ascii=False), rid),
+                    )
+                    archived += 1
+                conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:  # fail-soft: cadence survives a broken episodic DB
+        return {"rc": -1, "error": f"{type(exc).__name__}: {exc}"}
+
+    summary = {
+        "rc": 0,
+        "candidates": len(candidates),
+        "archived": archived if apply else 0,
+        "applied": bool(apply and candidates),
+    }
+    if apply and candidates:
+        try:
+            from memory.orchestrator.ingest_metrics import record_ingest
+
+            for _rid, _raw, md in candidates:
+                record_ingest(
+                    "memory_ai",
+                    "archived",
+                    content_hash=md.get("content_hash", ""),
+                    harvester="archive_episodic",
+                )
+        except Exception:
+            pass
+    return summary
+
+
 def collect_store_sizes() -> dict[str, Any]:
     """Cheap point/row/line/file counts per store (fail-soft per store)."""
     sizes: dict[str, Any] = {}
@@ -168,6 +356,13 @@ def collect_store_sizes() -> dict[str, Any]:
         sizes["wiki"] = len(list(WIKI_DRAFTS.glob("*.md"))) if WIKI_DRAFTS.exists() else 0
     except Exception:
         pass
+    # D6 (roadmap 260612 P4): docs-коллекции считаются ТОЧКАМИ в Qdrant,
+    # а не drafts на диске (раньше при 3k живых точек store_sizes видел 0)
+    for coll in DOCS_COLLECTIONS:
+        try:
+            sizes[coll] = _qdrant_client().count(collection_name=coll).count
+        except Exception:
+            pass
     # §27 P0 D0.1: persist store sizes to memory-ingestion.log for bounded-growth tracking
     try:
         from memory.orchestrator.ingest_metrics import record_store_size
@@ -178,6 +373,44 @@ def collect_store_sizes() -> dict[str, Any]:
     except Exception:
         pass
     return sizes
+
+
+def collect_docs_freshness() -> dict[str, Any]:
+    """Возраст последнего run_end per docs-коллекция (roadmap 260612 P3.2).
+
+    Скан data/indexing-progress.jsonl терпим к битым строкам; матчинг —
+    подстрока имени коллекции в run_end-строке (run_end summary index_wiki
+    несёт collection; исторический pdf — имя скрипта reindex_pdf_documents).
+    """
+    last_run_end: dict[str, str | None] = dict.fromkeys(DOCS_COLLECTIONS)
+    try:
+        with PROGRESS_LOG.open(encoding="utf-8", errors="replace") as fh:
+            for ln in fh:
+                if '"run_end"' not in ln:
+                    continue
+                for coll in DOCS_COLLECTIONS:
+                    if coll in ln:
+                        try:
+                            ts = json.loads(ln).get("ts")
+                        except json.JSONDecodeError:
+                            continue
+                        if ts:
+                            last_run_end[coll] = ts  # файл хронологический — последняя побеждает
+    except OSError:
+        pass
+
+    points: dict[str, Any] = {}
+    for coll in DOCS_COLLECTIONS:
+        try:
+            points[coll] = _qdrant_client().count(collection_name=coll).count
+        except Exception:
+            points[coll] = None
+
+    from memory.maintenance.dashboard import compute_docs_freshness
+
+    return compute_docs_freshness(
+        last_run_end, points, now=datetime.now().astimezone(), max_age_days=DOCS_STALE_DAYS
+    )
 
 
 def collect_cross_store() -> dict[str, Any]:
@@ -217,10 +450,29 @@ def collect_link_stats() -> dict[str, Any]:
         return {}
 
 
+def run_rebuild_link_stats(apply: bool) -> dict[str, Any] | str:
+    """P0.2 roadmap 260612 LinkRegistry: idempotent-пересчёт link_stats
+    из entity_links в каденсе — рассинхрон (orphan-строки после удалений
+    легаси-путями) не накапливается. Apply-only: дефолт каденса READ-ONLY."""
+    if not apply:
+        return "skipped (dry-run)"
+    try:
+        return LinkRegistry().rebuild_stats()
+    except Exception as exc:  # fail-soft: каденс не прерывается
+        return {"error": type(exc).__name__}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="memory maintenance cadence (§26 P4)")
     ap.add_argument("--apply", action="store_true", help="run jobs + archive (default: dry-run)")
-    ap.add_argument("--skip", default="", help="comma list: reflect,sync,promote,forget")
+    ap.add_argument(
+        "--skip",
+        default="",
+        help=(
+            "comma list: reflect,sync,promote,reindex_wiki,reindex_skill_library,"
+            "skill_review,forget,review_pending,archive_episodic,rebuild_link_stats"
+        ),
+    )
     ap.add_argument("--no-report", action="store_true", help="do not write dashboard file")
     ap.add_argument("--stamp", default=None, help="override timestamp (tests)")
     args = ap.parse_args()
@@ -230,11 +482,38 @@ def main() -> int:
     stamp = args.stamp or now.strftime("%Y%m%d_%H%M%S")
 
     jobs: dict[str, Any] = {}
-    for name in ("reflect", "sync", "promote"):
+    # reindex_wiki СРАЗУ после promote (260612 P3.3): export wiki .md и индексация
+    # wiki_pages_v1 — один пайплайн, иначе дрейф .md <-> Qdrant.
+    # reindex_skill_library + skill_review (260612 Skill System A5/P2.3): зеркало
+    # каталога скиллов в skill_library + отчёт review-кандидатов из метрик.
+    for name in (
+        "reflect",
+        "sync",
+        "promote",
+        "reindex_wiki",
+        "reindex_skill_library",
+        "skill_review",
+    ):
         jobs[name] = "skipped" if name in skip else _run_subprocess(name, args.apply)
     forget = {"skipped": True} if "forget" in skip else run_forget(args.apply, now)
+    # P3.1 (roadmap 260611): pending-карантин не должен гнить — TTL auto-reject
+    review_pending = (
+        {"skipped": True} if "review_pending" in skip else run_review_pending(args.apply, now)
+    )
+    jobs["review_pending"] = review_pending
+    # P3.2/P3.3 (roadmap 260612): после reflect — эпизодика консолидирована, можно в архив.
+    # Skip — строкой (конвенция reflect/sync/promote): trace-маппинг jobs→rc различает
+    # "skipped" / 0 (исполнился) / -1 (error) — acceptance-критерий archive_ran на этом стоит.
+    jobs["archive_episodic"] = (
+        "skipped" if "archive_episodic" in skip else run_archive_episodic(args.apply, now)
+    )
+    # P0.2 roadmap 260612 LinkRegistry: stats-гигиена перед сборкой дашборда
+    jobs["rebuild_link_stats"] = (
+        "skipped" if "rebuild_link_stats" in skip else run_rebuild_link_stats(args.apply)
+    )
 
     cross_store = collect_cross_store()
+    docs_freshness = collect_docs_freshness()
     dash = build_dashboard(
         store_sizes=collect_store_sizes(),
         cross_store=cross_store,
@@ -242,6 +521,7 @@ def main() -> int:
         ingest=collect_ingest(),
         forget=forget,
         jobs=jobs,
+        docs_freshness=docs_freshness,
     )
 
     if not args.no_report:
@@ -278,7 +558,10 @@ def main() -> int:
     print("# memory maintenance cadence", "(APPLY)" if args.apply else "(dry-run)")
     print(f"store_sizes={dash['store_sizes']} total_facts={dash['total_facts']}")
     print(f"forget={forget}")
+    print(f"review_pending={review_pending}")
     print(f"jobs={ {k: (v.get('rc') if isinstance(v, dict) else v) for k, v in jobs.items()} }")
+    stale = [c for c, st in docs_freshness.items() if st.get("stale")]
+    print(f"docs_freshness={docs_freshness}" + (f" ALERT stale={stale}" if stale else ""))
     if isinstance(cross_store, dict):
         print(f"cross_store_dup_rate={cross_store.get('cross_store_dup_rate')}")
     if not args.no_report:

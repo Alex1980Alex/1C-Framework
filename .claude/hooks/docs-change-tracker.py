@@ -31,7 +31,6 @@ from shared.task_master import (
     complete_task,
     get_pending_tasks,
     has_recent_completion,
-    update_task_metadata,
 )
 
 HOOK_ID = "docs-change-tracker-hook"
@@ -151,6 +150,22 @@ _CODE_TO_DOCS_SKILLS = [
         [f"{_FD}/03_ИНДЕКСАЦИЯ/03.3_Граф_знаний.md"],
         ["graph-operations"],
         "- Обнови описание entity extraction\n- Проверь LLM prompt, entity types",
+    ),
+    (
+        # ВАЖНО: специфичнее общего "src/pdf_framework/vector_store/" ниже.
+        # DocumentIndexer — оркестратор индексации, его доки = 03/34, а не
+        # Hybrid Search; matcher собирает ВСЕ совпадения, и автозакрытие
+        # (_try_complete_tasks) срабатывает по ЛЮБОМУ target-доку, поэтому
+        # без этой записи правка правильных доков не закрывала задачу
+        # (инцидент D7-сессии 2026-06-12: задача требовала только 04.2).
+        "src/pdf_framework/vector_store/indexing/",
+        [
+            f"{_FD}/03_ИНДЕКСАЦИЯ/03.1_Загрузка_PDF.md",
+            f"{_FD}/34_KNOWLEDGE_BASE/34.1_Обзор.md",
+        ],
+        ["indexing-pipeline"],
+        "- DocumentIndexer изменён: обнови шаги index_chunks (батчи, checkpoint, registry)\n"
+        "- Проверь секцию регистрации документа (D7) в 34.1",
     ),
     (
         "src/pdf_framework/indexing/delta_indexer",
@@ -339,6 +354,29 @@ _CODE_TO_DOCS_SKILLS = [
         "- Обнови описание vector store (Qdrant)\n- Проверь named vectors, sparse, collections",
     ),
     # ─── HOOKS & SKILLS (meta) ────────────────────────────────────────
+    # Memory-хуки — ДО общего ".claude/hooks/": канонические места для них —
+    # летопись 27.13 + скилл memory-unified (а не 01.2/triad), иначе правка
+    # правильных доков не матчится с целями задачи и она зависает в pending.
+    (
+        (
+            ".claude/hooks/pattern-reinforce-stop",
+            ".claude/hooks/shared/pattern_reinforce",
+            ".claude/hooks/memory-first-hook",
+            ".claude/hooks/session-memory-save",
+            ".claude/hooks/patterns-harvester",
+            ".claude/hooks/skills-harvester",
+            ".claude/hooks/shared/pattern_harvest",
+            ".claude/hooks/shared/skills_harvest",
+            ".claude/hooks/shared/reflection",
+            ".claude/hooks/memory-maintenance-cadence",
+            ".claude/hooks/memory-effectiveness-analyzer",
+            ".claude/hooks/memory-sync",
+        ),
+        [f"{_FD}/27_UNIFIED_MEMORY/27.13_Memory_Subsystem_Changelog.md"],
+        ["memory-unified"],
+        "- Memory-хук изменён: добавь запись/обнови 27.13 Changelog\n"
+        "- Обнови описание хука в скилле memory-unified (секция Hooks)",
+    ),
     (
         ".claude/hooks/",
         [f"{_FD}/01_ОБЗОР/01.2_Архитектура.md"],
@@ -421,10 +459,12 @@ class DocsChangeTracker(BaseHook):
             if skip.lower() in path_norm:
                 return None
 
-        # Find ALL matching mappings (a file may match multiple)
+        # Find ALL matching mappings (a file may match multiple).
+        # pattern is a str prefix-substring OR a tuple of alternatives.
         matches = []
         for pattern, doc_files, skill_names, hints in _CODE_TO_DOCS_SKILLS:
-            if pattern.replace("\\", "/").lower() in path_norm:
+            alternatives = pattern if isinstance(pattern, tuple) else (pattern,)
+            if any(p.replace("\\", "/").lower() in path_norm for p in alternatives):
                 matches.append((doc_files, skill_names, hints))
 
         if not matches:
@@ -619,6 +659,12 @@ class DocsChangeTracker(BaseHook):
         skills_str = "\n".join(f"  🔧 .claude/skills/{s}/SKILL.md" for s in all_skills)
         hints_str = "\n".join(all_hints)
 
+        # Structured metadata (zombie prevention + smart completion) passed
+        # directly to add_task — the old follow-up update_task_metadata(HOOK_ID,
+        # ..., merge=False) stamped ALL pending tasks of this hook, clobbering
+        # earlier tasks' source_file/code_changed_at: the ever-advancing
+        # code_changed_at made already-updated docs look stale → zombie tasks
+        # that never self-completed.
         add_task(
             title=f"Обновить доки/скиллы (изменён {basename})",
             description=(
@@ -629,18 +675,12 @@ class DocsChangeTracker(BaseHook):
             ),
             priority="normal",
             created_by=HOOK_ID,
-        )
-
-        # Store structured metadata for zombie prevention and smart completion
-        update_task_metadata(
-            HOOK_ID,
-            {
+            metadata={
                 "source_file": rel_path,
                 "target_docs": all_docs,
                 "target_skills": all_skills,
                 "code_changed_at": datetime.now().isoformat(),
             },
-            merge=False,
         )
 
         msg = (

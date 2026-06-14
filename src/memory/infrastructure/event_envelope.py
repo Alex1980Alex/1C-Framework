@@ -49,6 +49,8 @@ CACHE_LOGS: dict[str, str] = {
     "memory-circuit.log": "circuit",
     "memory-metrics.jsonl": "metrics",
     "memory-maintenance-runs.jsonl": "maintenance",
+    # P3.1 roadmap 260612 LinkRegistry: жизнь рёбер (create/delete/cascade_empty)
+    "memory-links.log": "links",
 }
 
 # Audit lives outside .claude/cache with a richer dataclass schema.
@@ -106,6 +108,10 @@ _GENERIC_PASSTHROUGH = (
     "applied",
     "outcome",
     "pattern_id",
+    "link_id",
+    "link_type",
+    "source_id",
+    "target_id",
     "old_confidence",
     "new_confidence",
     "application_count",

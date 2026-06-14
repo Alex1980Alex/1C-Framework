@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sqlite3
 import sys
@@ -44,7 +45,8 @@ from memory.orchestrator.cross_store_index import (
     summarize,
 )
 
-MEMORY_AI_DB = PROJECT_ROOT / "data" / "memory_ai.db"
+# MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
+MEMORY_AI_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data" / "memory_ai.db")
 SKILL_JSONL = PROJECT_ROOT / "data" / "skill_learning" / "patterns.jsonl"
 WIKI_DRAFTS = PROJECT_ROOT / "docs" / "wiki" / "drafts"
 REPORTS_DIR = PROJECT_ROOT / "data" / "reports" / "memory"

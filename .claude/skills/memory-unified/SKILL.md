@@ -52,24 +52,30 @@ Examples:
 - `docs:pdf-docs:a1b2c3d4e5f67890`
 - `learning:skill-learning:770g0600-g41d-63f6-c938-668877662222`
 
-### Link Types
+### Link Types (8 — ADR-L1, roadmap 260612 LinkRegistry)
 
-| Type | Description |
-|------|-------------|
-| `based_on` | Pattern based on documentation |
-| `supports` | Entity supports another |
-| `contradicts` | Entity contradicts another |
-| `extends` | Pattern extends another |
-| `derives_from` | Fact derived from another (§26 P2 reflection: semantic→episodic sources) |
-| `session_context` | Message in session context |
-| `promoted_to` | Learned pattern promoted to wiki page (§26 P3: WikiPromoter auto-creates) |
-| `mirrors` | Same fact in another store (§26 P3: cross_store_sync, mirror→canonical) |
-| `superseded_by` | Entity superseded by a newer version |
-| `graph_node` | Entity corresponds to a graph node |
+**Авто-писатели:**
+
+| Type | Писатель |
+|------|----------|
+| `mirrors` | cross_store_sync (mirror→canonical, §26 P3) |
+| `derives_from` | reflection (§26 P2: semantic→episodic sources) |
+| `session_context` | route_and_save multi-target (unified-ID концы с 2026-06-12) |
+| `promoted_to` | WikiPromoter (проведён F7; выстрелит на первом промоуте) |
+
+**Ручной словарь `create_link`:** `supports`, `contradicts`, `extends`, `superseded_by`
+(участвуют в весах propagation/каскада).
+
+**Ретированы 2026-06-12 (ADR-L1):** `based_on` (non-goal по ADR-D2/D4 pdf-docs,
+0 рёбер за историю), `graph_node` (ни писателя, ни читателя, 0 рёбер).
+`create_link` принимает ТОЛЬКО unified-ID `type:source:identifier` (P0.1 —
+сырые UUID отклоняются ValueError); CRUD эмитит `link_create`/`link_delete`
+в sink `memory-links.log` (§27, P3.1), пустой каскад виден событием
+`cascade_empty` (P3.2). Acceptance: `scripts/link_registry_acceptance.py`.
 
 **§26 P3 cross-store sync (auto-links).** [`scripts/cross_store_sync.py`](../../../scripts/cross_store_sync.py) + [`src/memory/orchestrator/cross_store_sync.py`](../../../src/memory/orchestrator/cross_store_sync.py) консолидируют дубли (из [`cross_store_index`](../../../src/memory/orchestrator/cross_store_index.py), D3.1): `ConflictResolver(SOURCE_PRIORITY)` выбирает canonical store (`wiki > learned_patterns > skill_learning > memory_ai`) и создаёт `MIRRORS`-связи (mirror→canonical) в link_registry — **idempotent, dry-run default, additive/reversible** (`--apply` для записи). [`WikiPromoter`](../../../src/memory/librarian/wiki_promoter.py) создаёт `PROMOTED_TO` при promotion learned→wiki (opt-in `link_registry`, fail-soft). `unified_search` `Deduplicator` уже коллапсит идентичный контент при запросе; `MIRRORS` добавляет персистентную провенанс-связь. См. [roadmap §26 P3](../../../docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md).
 
-**§26 P4 maintenance cadence (scheduling + ForgetGate + dashboard).** [`scripts/memory_maintenance.py`](../../../scripts/memory_maintenance.py) — оркестратор, последовательно гоняет джобы (reflect → cross_store_sync → promote → forget) и пишет дашборд в `data/reports/memory/memory_maintenance_*.md`. **READ-ONLY по умолчанию** (`--apply` для записи). **ForgetGate** [`src/memory/maintenance/forget_gate.py`](../../../src/memory/maintenance/forget_gate.py) — bounded-growth: `plan_forget` переиспользует §22 `should_archive` (archive = invalidate-not-delete `expired_at`; invariant-типы `architectural-principle`/`bsl-pattern` исключены из staleness, но fail-archived). **Dashboard** [`dashboard.py`](../../../src/memory/maintenance/dashboard.py) — store_sizes / cross_store_dup_rate / ingest+dup rates (из `memory-ingestion.log`) / forget summary / link stats. **Scheduling** — Stop-hook [`memory-maintenance-cadence.py`](../../../.claude/hooks/memory-maintenance-cadence.py) запускает оркестратор каждые N distinct sessions (sentinel-state, detached, cold-start seed). Opt-out: `MEMORY_MAINTENANCE_DISABLE=1`; cadence `MEMORY_MAINTENANCE_EVERY=N` (default 10); запись `MEMORY_MAINTENANCE_APPLY=1`. См. [roadmap §26 P4](../../../docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md). **§26 завершён (P0..P4).**
+**§26 P4 maintenance cadence (scheduling + ForgetGate + dashboard).** [`scripts/memory_maintenance.py`](../../../scripts/memory_maintenance.py) — оркестратор, последовательно гоняет джобы (reflect → cross_store_sync → promote → forget) и пишет дашборд в `data/reports/memory/memory_maintenance_*.md`. **READ-ONLY по умолчанию** (`--apply` для записи). **ForgetGate** [`src/memory/maintenance/forget_gate.py`](../../../src/memory/maintenance/forget_gate.py) — bounded-growth: `plan_forget` переиспользует §22 `should_archive` (archive = invalidate-not-delete `expired_at`; invariant-типы `architectural-principle`/`bsl-pattern` исключены из staleness, но fail-archived). **Dashboard** [`dashboard.py`](../../../src/memory/maintenance/dashboard.py) — store_sizes / cross_store_dup_rate / ingest+dup rates (из `memory-ingestion.log`) / forget summary / link stats; **+260612 pdf-docs P3.2/P4:** store_sizes считает ТОЧКИ `pdf_documents`/`wiki_pages_v1` в Qdrant (не drafts на диске); секция «Docs freshness» — `compute_docs_freshness` (pure, возраст последнего `run_end` из `data/indexing-progress.jsonl`, ⚠ STALE при > `DOCS_STALE_DAYS=30` или отсутствии run_end); job `reindex_wiki` сразу после `promote` (apply-only, wiki .md ↔ `wiki_pages_v1` одним пайплайном); acceptance `scripts/pdf_docs_acceptance.py`. **Scheduling** — Stop-hook [`memory-maintenance-cadence.py`](../../../.claude/hooks/memory-maintenance-cadence.py) запускает оркестратор каждые N distinct sessions (sentinel-state, detached, cold-start seed). Opt-out: `MEMORY_MAINTENANCE_DISABLE=1`; cadence `MEMORY_MAINTENANCE_EVERY=N` (default 10); запись `MEMORY_MAINTENANCE_APPLY=1`. См. [roadmap §26 P4](../../../docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md). **§26 завершён (P0..P4).**
 
 ### Confidence System (Vector Memory)
 
@@ -175,7 +181,49 @@ Examples:
   - Writes to `data/memory_ai.db` (category: `session_summary`)
   - Also appends brief summary to `docs/wiki/log.md` (Hermes Phase 2)
   - Dedup by session_id or date, auto-importance (0.5-0.95), auto-tags
+  - ⚠ §22 reinforce здесь БОЛЬШЕ НЕ живёт (roadmap 260609 P0.1) — см. следующий хук
+- `pattern-reinforce-stop.py` (Stop, timeout 15s async) — §22 reinforcement bridge (roadmap 260609 P0.1, 2026-06-09)
+  - Выделен из session-memory-save: там вызов стоял ПОСЛЕ early-return'ов `is_meaningful`/`already_saved` и в 5s-бюджете → **0 production-reinforce за всю историю** (все события в lifecycle-логе были pytest-фикстурами)
+  - session_id строго из Stop-payload (тот же источник, которым memory-first-hook именует `surfaced-patterns-<sid>.json`)
+  - Early-exit через `load_surfaced()` ДО импорта Qdrant; cap `REINFORCE_CAP=10`; ошибки → `session_error` в lifecycle-лог (не `except: pass`)
+  - Первый production-прогон 2026-06-09: `session=1bab9bcd applied=10 errors=0`
+  - F14 (260611): `not_found`-miss считается в `missing` (не `errors`) — паттерн легитимно удалён cleanup'ом; баннер `[REINFORCE] ... missing=N` и lifecycle-событие `session` несут отдельный счётчик
+  - Opt-out: `P1_REINFORCE_DISABLE=1`
 
+### Test isolation (roadmap 260609 P0.2)
+
+`tests/conftest.py` на import-time уводит memory-sinks в tmp: `CLAUDE_CACHE_DIR` (lifecycle/epoch/trace/ingest/surfaced) + `LINK_REGISTRY_PATH` (env-override в `LinkRegistry.__init__`). Раньше pytest писал фикстуры в production `confidence-lifecycle.log` и `data/link_registry.db`. Чистка остатков: `scripts/cleanup_memory_test_pollution.py` (dry-run default). Opt-out: `MEMORY_TEST_ISOLATION_DISABLE=1`.
+
+### Write-contract + cache redesign (roadmap 260609 P1, 2026-06-10)
+
+- **§26 write-contract в прямых писателях (P1.3):** `content_hash` + skip-on-exists dedup + `record_ingest` теперь во ВСЕХ прямых писателях, не только харвестерах — `save_pattern`, `route_and_save._save_to_target` (4 target'а), `save_important_message` (content-equality dedup), `capture_pattern` (dedup по pending+saved). Общий [`content_hash.point_id()`](../../../src/memory/orchestrator/content_hash.py) (UUID5, namespace харвестера) делает id детерминированным от контента → повторный save = `action=dup`, новой точки нет, и manual-write коллапсит в ту же точку, что harvest. Записи видны `cross_store_sync` / `fact-trace`. ⚠ MCP-side → нужен `/mcp reconnect`.
+- **Честный `route_and_save` (P1.4):** partial-fail target'ов → `success:false` + `saved_partial:true` + `failed_targets[]` (раньше — всегда `success:true`, потери молча).
+- **Surfacing cache-key редизайн (P1.2):** `_surface_cache_key` ослаблен с exact-token-set до top-K (8) salient-stem токенов (длинные = content-bearing в RU/BSL) → промпты на одну тему с разным filler'ом хитуют; epoch по-прежнему вшит (мгновенная инвалидация). TTL 300→900s; empty-результаты на коротком `SURFACE_CACHE_EMPTY_TTL` (180s). Env-knobs: `MEMORY_SURFACE_CACHE_KEY_TOPK`, `MEMORY_SURFACE_CACHE_EMPTY_TTL`, `MEMORY_SURFACE_LEXICAL_SCROLL` (100→50). Per-stage timing (`sqlite/qdrant/md/rerank`) в surfacing-log для профилирования (P1.1).
+- **Тесты:** `tests/unit/test_write_contract.py` (11), `tests/unit/test_surfacing_cache.py` (4). ⚠ Production-acceptance P1.1 (латентность) / P1.2 (hit-rate) подтвердятся накоплением surfacing-лога после reconnect.
+
+### PropagationEngine wired + стабы восстановлены (roadmap 260609 P2.2/P2.3, 2026-06-10)
+
+- **P2.3 — `propagate_update` реально мутирует:** `PropagationEngine._apply_update` честный (handler→`bool(result)`, no-handler→`False` — конец «simulate success», больше нет фантомных `entities_updated`). `MemoryOrchestrator._build_propagation_handlers()` подключает реальные handlers: **vector-memory** (нудж Beta `succ/fail` по знаку delta → `derive_confidence` → `set_payload` на тёплом `_get_qdrant`), **memory-ai** (`importance ± delta` clamp `[0,1]` в SQLite; env `MEMORY_AI_DB_PATH` для изоляции тестов). `success` сворачивается в знак delta. Сосуществует с server-side `_cascade_confidence` (синхронный каскад на горячем `apply_pattern`) — два разных входа, не конфликтуют. ⚠ MCP-side → нужен `/mcp reconnect`.
+- **P2.2 — стабы B1 восстановлены (L5-план):** `session-memory-save.py` снова пишет `docs/wiki/log.md` (`save_to_wiki_log`, UTF-8 + trim 500), делегирует промоут `export_graph_to_wiki promote-patterns` (`try_promote_patterns`, = §26 P4 cadence job, opt-out `SESSION_MEMORY_NO_PROMOTE=1`), эмитит Langfuse-span (`_emit_langfuse_span`, graceful no-op без Langfuse). Восстановлено из git `7bc57e463`.
+- **Тесты:** `tests/unit/test_propagation_honest.py` (5) + 2 BFS-теста в `test_p1_infrastructure.py` (dummy success-handler). 5 unit + 9 engine + 18 orchestrator integration PASS.
+- **Post-review remediation (2026-06-10, та же сессия):** (1) lazy-init движка в оркестраторе получил `PropagationConfig(enable_background_processing=False, enable_event_deduplication=False)` — иначе production-вызов возвращал `entities_updated=[]` / `reason="queued_for_background_processing"` (честный результат прятался за очередью), а dedup молча глотал повторный `propagate_update` по тому же entity; (2) vector-handler бампит §24 epoch после `set_payload` (инвариант: каждый писатель confidence инвалидирует surfacing-кэш); (3) `try_promote_patterns` → detached `Popen` (паттерн post-indexing-analyzer, лог `.claude/cache/session-promote.log`) — Stop-бюджет не платит за Qdrant-scroll; (4) `_emit_langfuse_span` — дешёвый pre-gate `_langfuse_configured()` (env/`.env` probe ДО импорта `src.*`; в этом окружении Langfuse реально включён — `OBSERVABILITY__LANGFUSE_ENABLED=true`, span стоит ~2.3s network-flush, emit последний в `execute()`); (5) timeout хука 5→15s в `settings.json`; (6) `ai_memory/server.py` `DB_PATH` теперь тоже уважает `MEMORY_AI_DB_PATH`. +2 теста-пина: sync+repeatable orchestrator-путь, epoch-bump handler'а.
+
+
+### Honest-failure & governance wiring (roadmap 260611, 2026-06-11)
+
+Контракт «ошибка доезжает до ответа/лога, а не глотается» — закрывает F5/F8/F9/F10/F12/F13/F14 из chain-testing 260610:
+
+- **`propagate_update` (F10):** `PropagationResult.failed_entities{entity→reason}` — handler-исключение больше не схлопывается в тихий skip; tri-state `_apply_update` (`applied` / `skipped_*` / `failed:<ExcType>`). Named breakers **`propagation:<source>`** вокруг handler-вызовов (реестр оркестратора): 5 фейлов → OPEN → `failed:circuit_open` fail-fast; `memory_circuit_status`/`memory_circuit_reset` управляют реальными breakers, transitions пишутся в `memory-circuit.log` (sink ожил, observability 10/10).
+- **`unified_search` (F12):** vector-плечо больше не глотает исключения — TEI/Qdrant-outage виден в `sources_failed[]` (как у ai-плеча); потребители читают `results`, не падая на непустом `sources_failed`.
+- **Versioning (F8, ADR-V wire-minimal):** снапшотятся только orchestrator-mediated мутации — `route_and_save` (CREATE), propagation-handlers (UPDATE), rollback (ROLLBACK + **store-writeback**: memory-ai content/importance, vector payload-поля без re-embed `vector_reembedded:false`). Прямые писатели MCP-серверов вне версионирования (JSONL не concurrent-safe между процессами).
+- **TTL (F9):** `memory_ttl_cleanup` исполняет до store'ов: vector → archive (`expired_at`, §22 invalidate-not-delete + epoch bump), memory-ai → delete; ответ `{removed_ledger, store_actions{archived/deleted/skipped}, failed}`.
+  - **Bugfix (2026-06-14, найдено в `/review #77`, коммит `943a37f0a`):** каскадная очистка ссылок `delete_links_for_entity(eid) -> int` **затеняла** `removed`-ledger (list) → финальный `return len(<int>)` падал `TypeError` ПОСЛЕ мутации store'ов на любом memory-ai-удалении. Переименовано во внутреннюю `links_removed`. Регресс `test_governance_wiring.py::test_ttl_cleanup_link_cleanup_does_not_clobber_ledger`; существующие F9-тесты маскировали баг (`_orch(with_ttl=True)` оставлял `_link_registry=None` → строка падала до присваивания). ⚠ MCP-side → `/mcp reconnect`.
+- **WikiPromoter (F13):** идемпотентен — `promoted_to` пишется на source-точку (`_mark_promoted`), pre-filter по нему до векторного dedup, `_append_log` дедупит по упоминанию `drafts/{slug}.md`.
+- **F5/F14:** `get_pattern` отдаёт согласованные `archived`/`expired_at`; reinforce-мост считает `not_found`-miss в `missing` (не `errors`) — `[REINFORCE]`-баннер не врёт.
+- **§18 live re-run follow-ups (2026-06-11, после прогона D2–D5 живыми MCP-tools):**
+  - **F16**: `_apply_version_to_store` (MEMORY_AI) разворачивает `metadata.importance` из CREATE-снапшотов `route_and_save` — rollback к v1 восстанавливает importance, не только content (top-level приоритетен, UPDATE-снапшоты propagation не задеты). Открытый N2-гэп: vector-ветка rollback-to-CREATE восстанавливает только `content` (не `metadata.confidence/name/description`) — ответ честный (`fields`), чинить при появлении live-пути.
+  - **Cold-start warmup**: `vector_memory/server.py` — daemon-поток `_warmup_qdrant` при старте сервера пре-оплачивает импорт `qdrant_client` (под contention одновременного старта MCP-серверов первый tool-вызов сгорал на 60s client-timeout); fail-soft, opt-out `MEMORY_VECTOR_NO_WARMUP=1`; `_get_qdrant` под double-checked lock, глобал публикуется только после успешного `_ensure_collection(client)` (упавший init ретраится следующим вызовом).
+- ⚠ Всё MCP-side (кроме F14-моста и F13-скрипта) → `/mcp reconnect` после правок. Тесты: `test_propagation_honest.py` (10), `test_governance_wiring.py` (9), `test_unified_search_honest.py` (2), `test_quick_fixes_260611.py` (5).
 
 ## Незадокументированные memory_subsystem
 

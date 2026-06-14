@@ -125,6 +125,27 @@ TaskUpdate(taskId, status="completed")
 После всех изменений:
 - `Skill('code-verify')` для ревью кода
 
+### 6. CAPTURE (после verify PASS — roadmap 260611 P1.1)
+
+Для **нетривиальных** задач (medium/complex) после verify PASS — зафиксировать
+переиспользуемый паттерн в карантин skill-learning:
+
+```
+mcp__skill-learning__capture_pattern(
+  pattern_type="workflow-pattern" | "bsl-pattern" | "error-fix",
+  name=..., content="проблема → решение (1-3 предложения)",
+  evidence_sources=[{"session": <sid>, "files": [...]}],
+  require_confirmation=true,
+)
+```
+
+`action=dup`/`dup_rejected` в ответе — паттерн уже известен/отклонён, не дублировать.
+
+**Негативный вход (P1.3):** если пользователь явно скорректировал ранее применённый
+тобой паттерн («не так, надо иначе») — зафиксируй анти-паттерн:
+`capture_pattern(confidence=0.3, ...)` → немедленный `reject_pattern(pattern_id)`.
+Rejected-silo блокирует повторный авто-захват этого контента (P0.2 dedup).
+
 ---
 
 ## Antipatterns

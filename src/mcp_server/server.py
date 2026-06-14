@@ -28,7 +28,8 @@ logger = logging.getLogger("pdf-vector-graph")
 
 server = Server("pdf-vector-graph")
 _components: Components | None = None
-_components_lock: asyncio.Lock | None = None
+_init_lock: asyncio.Lock | None = None
+_init_task: asyncio.Task[Components] | None = None
 
 
 def _configure_logging() -> None:
@@ -53,35 +54,64 @@ def _configure_logging() -> None:
     root.addHandler(file_handler)
 
 
+def _init_task_failed(task: asyncio.Task[Components]) -> bool:
+    """True if a finished init task ended in cancellation or error (→ restart)."""
+    if not task.done():
+        return False
+    if task.cancelled():
+        return True
+    return task.exception() is not None
+
+
+async def _do_init() -> Components:
+    """Heavy ML-stack import + ``Components.initialize()``.
+
+    Runs inside a long-lived background task (see ``_get_components``) so a
+    client tool-call timeout/cancellation cannot abort it midway. The slow part
+    is the transitive import of the ML stack (torch/transformers/LightRAG),
+    which under session-start contention can take minutes; detaching it from the
+    request lifecycle prevents the restart-from-scratch spiral.
+    """
+    global _components
+    logger.info("Lazy-init Components: starting")
+    t0 = time.monotonic()
+    from src.api.dependencies.components import Components
+
+    instance = Components()
+    await instance.initialize()
+    _components = instance
+    logger.info("Lazy-init Components: ready in %.2fs", time.monotonic() - t0)
+    return instance
+
+
 async def _get_components() -> Components:
-    global _components, _components_lock
-    if _components_lock is None:
-        _components_lock = asyncio.Lock()
-    async with _components_lock:
+    """Return the shared ``Components``, lazily initialising it exactly once.
+
+    The actual init runs in a single module-level ``asyncio.Task``; callers
+    ``await asyncio.shield(task)`` it, so a cancelled tool call detaches the
+    caller without killing the in-flight init (it keeps running and is reused by
+    the next call). A task that ends in error/cancellation is restarted on the
+    next call; a successful one caches ``_components`` for instant reuse.
+    """
+    global _components, _init_lock, _init_task
+    if _components is not None:
+        return _components
+    if _init_lock is None:
+        _init_lock = asyncio.Lock()
+    async with _init_lock:
         if _components is not None:
             return _components
-        logger.info("Lazy-init Components: starting")
-        t0 = time.monotonic()
-        from src.api.dependencies.components import Components
-
-        instance = Components()
-        try:
-            await instance.initialize()
-        except asyncio.CancelledError:
-            logger.warning(
-                "Lazy-init Components: cancelled at %.2fs, leaving _components=None for retry",
-                time.monotonic() - t0,
-            )
-            raise
-        except Exception:
-            logger.exception(
-                "Lazy-init Components: failed at %.2fs, leaving _components=None for retry",
-                time.monotonic() - t0,
-            )
-            raise
-        _components = instance
-        logger.info("Lazy-init Components: ready in %.2fs", time.monotonic() - t0)
-        return _components
+        if _init_task is None or _init_task_failed(_init_task):
+            _init_task = asyncio.create_task(_do_init())
+        task = _init_task
+    try:
+        return await asyncio.shield(task)
+    except asyncio.CancelledError:
+        logger.warning("Lazy-init Components: request cancelled; init continues in background")
+        raise
+    except Exception:
+        logger.exception("Lazy-init Components: init failed; will retry on next call")
+        raise
 
 
 @server.list_tools()
@@ -637,8 +667,29 @@ async def main():
     """Run the MCP server with stdio transport."""
     _configure_logging()
     logger.info("MCP server pdf-vector-graph: starting stdio transport")
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
+
+    # S1: warm up Components in the background at startup so the heavy ML-stack
+    # import (slow under session-start contention) overlaps with idle time and
+    # the first real tool call is not cold. Detached from any request, so a
+    # client tool-call timeout cannot abort it.
+    async def _warmup() -> None:
+        try:
+            await _get_components()
+        except Exception:
+            logger.exception("Background warmup failed; will retry on first tool call")
+
+    warmup_task = asyncio.create_task(_warmup())  # keep ref (RUF006); lives for server lifetime
+
+    try:
+        async with stdio_server() as (read_stream, write_stream):
+            await server.run(read_stream, write_stream, server.create_initialization_options())
+    finally:
+        if not warmup_task.done():
+            warmup_task.cancel()
+        # On shutdown also cancel the shielded init task — shield protects it from
+        # a cancelled *tool call*, not from server teardown (avoids orphaned task).
+        if _init_task is not None and not _init_task.done():
+            _init_task.cancel()
 
 
 if __name__ == "__main__":

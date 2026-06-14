@@ -11,6 +11,7 @@ Adapted: uses project-local data/skill_learning/ for storage.
 import asyncio
 import json
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -56,10 +57,12 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def _write_jsonl(path: Path, items: list[dict[str, Any]]):
-    """Write list of dicts to JSONL file."""
-    with open(path, "w", encoding="utf-8") as f:
+    """Atomically rewrite JSONL file: tmp + os.replace, kill-safe (P0.1, roadmap 260611)."""
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
         for item in items:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    os.replace(tmp, path)
 
 
 def _append_jsonl(path: Path, item: dict[str, Any]):
@@ -82,25 +85,84 @@ def _save_stats(stats: dict[str, Any]):
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
 
+def _derive_stats() -> dict[str, Any]:
+    """Derive stats from the saved silo (source of truth) — P0.3, roadmap 260611.
+
+    learning_stats.json остаётся write-through кэшем, не источником истины:
+    инкрементный счётчик дрейфовал от фактических строк patterns.jsonl.
+    """
+    saved = _read_jsonl(SAVED_FILE)
+    stats: dict[str, Any] = {
+        "total_patterns": len(saved),
+        "by_type": {},
+        "by_confidence": {"high": 0, "medium": 0, "low": 0},
+    }
+    for pattern in saved:
+        ptype = pattern.get("pattern_type", "unknown")
+        stats["by_type"][ptype] = stats["by_type"].get(ptype, 0) + 1
+
+        confidence = pattern.get("confidence", 0.5)
+        if confidence >= 0.7:
+            stats["by_confidence"]["high"] += 1
+        elif confidence >= 0.4:
+            stats["by_confidence"]["medium"] += 1
+        else:
+            stats["by_confidence"]["low"] += 1
+    return stats
+
+
 def _update_stats_on_save(pattern: dict[str, Any]):
-    """Update stats when a pattern is saved."""
-    stats = _load_stats()
-    stats["total_patterns"] = stats.get("total_patterns", 0) + 1
+    """Refresh the stats cache after a save (derive-on-read, cache write-through)."""
+    _save_stats(_derive_stats())
 
-    ptype = pattern.get("pattern_type", "unknown")
-    stats.setdefault("by_type", {})
-    stats["by_type"][ptype] = stats["by_type"].get(ptype, 0) + 1
 
-    confidence = pattern.get("confidence", 0.5)
-    stats.setdefault("by_confidence", {"high": 0, "medium": 0, "low": 0})
-    if confidence >= 0.7:
-        stats["by_confidence"]["high"] += 1
-    elif confidence >= 0.4:
-        stats["by_confidence"]["medium"] += 1
-    else:
-        stats["by_confidence"]["low"] += 1
+# ========== §26 P1.3 write-contract helpers (content_hash + dedup + ingest) ==========
+def _content_hash(content: str) -> str:
+    """Fail-soft canonical content_hash. Empty string on import failure."""
+    try:
+        src = str(_PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.content_hash import hash_content
 
-    _save_stats(stats)
+        return hash_content(content)
+    except Exception:
+        return ""
+
+
+def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
+    """Fail-soft §26 ingestion-metrics emit; never breaks the MCP handler."""
+    try:
+        src = str(_PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.ingest_metrics import record_ingest
+
+        record_ingest(
+            "skill_learning", action, content_hash=content_hash, harvester="capture_pattern", **kw
+        )
+    except Exception:
+        pass
+
+
+def _existing_hashes() -> dict[str, tuple[str, str]]:
+    """Map content_hash -> (pattern_id, silo) across pending/saved/rejected silos.
+
+    P0.2 (roadmap 260611): rejected участвует в dedup как негативный сигнал —
+    повторный capture отклонённого контента не создаёт pending. pending/saved
+    идут первыми, чтобы обычный dup не маскировался под dup_rejected.
+    """
+    out: dict[str, tuple[str, str]] = {}
+    for silo, path in (
+        ("pending", PENDING_FILE),
+        ("saved", SAVED_FILE),
+        ("rejected", REJECTED_FILE),
+    ):
+        for rec in _read_jsonl(path):
+            ch = rec.get("content_hash") or _content_hash(rec.get("content") or "")
+            if ch and ch not in out:
+                out[ch] = (rec.get("pattern_id", ""), silo)
+    return out
 
 
 # ========== MCP Server ==========
@@ -207,11 +269,41 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
     now = datetime.now().isoformat()
     require_confirmation = args.get("require_confirmation", True)
 
+    # §26 P1.3 write-contract: stamp content_hash + skip re-captures of content
+    # already pending/saved (anti-flood) + emit an ingestion event.
+    content_hash = _content_hash(args["content"])
+    if content_hash:
+        existing = _existing_hashes().get(content_hash)
+        if existing is not None:
+            existing_id, silo = existing
+            action = "dup_rejected" if silo == "rejected" else "dup"
+            if silo == "rejected":
+                _record_ingest("dup", content_hash, reason="rejected")
+            else:
+                _record_ingest("dup", content_hash)
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "success": True,
+                            "action": action,
+                            "pattern_id": existing_id or pattern_id,
+                            "status": action,
+                            "silo": silo,
+                            "name": args["name"],
+                        },
+                        ensure_ascii=False,
+                    ),
+                )
+            ]
+
     pattern = {
         "pattern_id": pattern_id,
         "pattern_type": args["pattern_type"],
         "name": args["name"],
         "content": args["content"],
+        "content_hash": content_hash,
         "description": args.get("description", ""),
         "confidence": args.get("confidence", 0.7),
         "tags": args.get("tags", []),
@@ -234,6 +326,7 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
         _update_stats_on_save(pattern)
         status = "saved"
 
+    _record_ingest("saved" if status == "saved" else "skipped", content_hash, reason=status)
     logger.info(f"Captured pattern {pattern_id}: {pattern['name']} (status={status})")
     return [
         TextContent(
@@ -241,6 +334,7 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
             text=json.dumps(
                 {
                     "success": True,
+                    "action": status,
                     "pattern_id": pattern_id,
                     "status": status,
                     "name": pattern["name"],
@@ -294,6 +388,54 @@ async def handle_get_pending(args: dict) -> list[TextContent]:
     ]
 
 
+def _detach_confirm_harvest(pattern: dict[str, Any]) -> None:
+    """P3.2 (roadmap 260611): confirm → немедленный harvest в learned_patterns.
+
+    Daemon-поток (TEI embed ~1s не должен держать MCP-ответ). Переиспользует
+    ``ingest_items`` из hooks-shared ``pattern_harvest`` — детерминированный
+    ``content_hash.point_id`` делает upsert идемпотентным со Stop-харвестом,
+    + epoch.bump внутри → surfacing видит паттерн сразу. Загрузка модуля через
+    importlib по file-path: ``src/shared`` (real package) затенил бы
+    ``.claude/hooks/shared`` при обычном import ([[feedback-hook-src-shared-collision]]).
+    Fail-soft: любая ошибка → лог, Stop-харвест подберёт паттерн позже.
+    """
+
+    def _run() -> None:
+        try:
+            import importlib.util
+
+            ph_path = _PROJECT_ROOT / ".claude" / "hooks" / "shared" / "pattern_harvest.py"
+            spec = importlib.util.spec_from_file_location("_sl_confirm_harvest", ph_path)
+            if spec is None or spec.loader is None:
+                return
+            ph = sys.modules.get("_sl_confirm_harvest")
+            if ph is None:
+                ph = importlib.util.module_from_spec(spec)
+                # регистрация ДО exec_module обязательна: @dataclass внутри модуля
+                # резолвит sys.modules[__module__] и падает на незарегистрированном
+                sys.modules["_sl_confirm_harvest"] = ph
+                spec.loader.exec_module(ph)
+
+            tags = pattern.get("tags") if isinstance(pattern.get("tags"), list) else []
+            item = ph.HarvestItem(
+                content=str(pattern.get("content") or ""),
+                name=str(pattern.get("name") or "")[:60],
+                description=str(pattern.get("description") or "")[:200],
+                pattern_type=str(pattern.get("pattern_type") or "workflow-pattern"),
+                source=f"skill-learning:{pattern.get('pattern_id', '')}",
+                tags=[*tags, "harvested", "skill-learning"],
+                confidence=0.85,
+            )
+            stats = ph.ingest_items([item], cap=1, harvester="confirm_pattern")
+            logger.info(f"confirm-harvest: {stats}")
+        except Exception as exc:
+            logger.warning(f"confirm-harvest failed (Stop-harvest will retry): {exc}")
+
+    import threading
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
 async def handle_confirm(args: dict) -> list[TextContent]:
     pattern_id = args["pattern_id"]
     pending = _read_jsonl(PENDING_FILE)
@@ -322,6 +464,9 @@ async def handle_confirm(args: dict) -> list[TextContent]:
     # Remove from pending
     _write_jsonl(PENDING_FILE, remaining)
 
+    # P3.2: confirm = пропуск в learned_patterns — немедленный детач-harvest
+    _detach_confirm_harvest(found)
+
     logger.info(f"Confirmed pattern {pattern_id}: {found.get('name', '')}")
     return [
         TextContent(
@@ -331,6 +476,7 @@ async def handle_confirm(args: dict) -> list[TextContent]:
                     "success": True,
                     "pattern_id": pattern_id,
                     "name": found.get("name", ""),
+                    "harvest": "detached",
                 },
                 ensure_ascii=False,
             ),
@@ -381,9 +527,13 @@ async def handle_reject(args: dict) -> list[TextContent]:
 
 
 async def handle_stats(args: dict) -> list[TextContent]:
-    stats = _load_stats()
-    pending_count = len(_read_jsonl(PENDING_FILE))
-    stats["pending_count"] = pending_count
+    stats = _derive_stats()
+    stats["pending_count"] = len(_read_jsonl(PENDING_FILE))
+    stats["rejected_count"] = len(_read_jsonl(REJECTED_FILE))
+    try:
+        _save_stats({k: stats[k] for k in ("total_patterns", "by_type", "by_confidence")})
+    except OSError:
+        pass
     return [TextContent(type="text", text=json.dumps(stats, ensure_ascii=False, indent=2))]
 
 

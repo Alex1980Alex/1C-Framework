@@ -19,7 +19,8 @@
         "MCP_OAUTH_ACCESS_TTL": "3600",
         "MCP_OAUTH_REFRESH_TTL": "86400",
         "MCP_OAUTH_CODE_TTL": "600"
-      }
+      },
+      "timeout": 600000
     },
     "auto-documenter": {
       "command": "node",

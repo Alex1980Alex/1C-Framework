@@ -9,6 +9,7 @@ Migrated from D:\\1C-Enterprise_Framework\\memory-orchestrator\\src\\link_regist
 """
 
 import json
+import os
 import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -21,9 +22,18 @@ from uuid import uuid4
 
 
 class LinkType(str, Enum):
-    """Types of relationships between entities."""
+    """Types of relationships between entities.
 
-    BASED_ON = "based_on"
+    ADR-L1 (roadmap 260612 LinkRegistry): типология = только типы с писателем
+    или ручной семантикой. Авто-писатели: MIRRORS (cross_store_sync),
+    DERIVES_FROM (reflection), SESSION_CONTEXT (route_and_save multi-target),
+    PROMOTED_TO (WikiPromoter). Ручной словарь create_link: SUPPORTS,
+    CONTRADICTS, EXTENDS, SUPERSEDED_BY. Ретированы 2026-06-12: BASED_ON
+    («pattern based on documentation» — non-goal по ADR-D2/D4 260612 pdf-docs,
+    docs-рёбра недостижимы; 0 рёбер за всю историю) и GRAPH_NODE (ни писателя,
+    ни читателя, ни семантики; 0 рёбер).
+    """
+
     SUPPORTS = "supports"
     CONTRADICTS = "contradicts"
     EXTENDS = "extends"
@@ -32,13 +42,11 @@ class LinkType(str, Enum):
     PROMOTED_TO = "promoted_to"
     SUPERSEDED_BY = "superseded_by"
     MIRRORS = "mirrors"
-    GRAPH_NODE = "graph_node"
 
     @property
     def description(self) -> str:
         """Human-readable description of the link type."""
         descriptions = {
-            LinkType.BASED_ON: "Source entity is based on or derived from target",
             LinkType.SUPPORTS: "Source entity supports or reinforces target",
             LinkType.CONTRADICTS: "Source entity contradicts or conflicts with target",
             LinkType.EXTENDS: "Source entity extends or augments target",
@@ -47,7 +55,6 @@ class LinkType(str, Enum):
             LinkType.PROMOTED_TO: "Source entity has been promoted to wiki page (target)",
             LinkType.SUPERSEDED_BY: "Source entity is superseded by a newer version (target)",
             LinkType.MIRRORS: "Source entity mirrors content from target",
-            LinkType.GRAPH_NODE: "Source entity corresponds to a graph node (target)",
         }
         return descriptions.get(self, "")
 
@@ -194,6 +201,10 @@ class LinkRegistry:
 
     def __init__(self, db_path: str | None = None):
         if db_path is None:
+            # Env override (roadmap 260609 P0.2): lets tests redirect the
+            # default registry away from the production data/link_registry.db.
+            db_path = os.environ.get("LINK_REGISTRY_PATH")
+        if db_path is None:
             data_dir = Path(__file__).parent.parent.parent.parent / "data"
             data_dir.mkdir(parents=True, exist_ok=True)
             db_path = str(data_dir / "link_registry.db")
@@ -225,10 +236,12 @@ class LinkRegistry:
                     bidirectional INTEGER DEFAULT 0,
                     expires_at TEXT,
                     CHECK (strength >= 0.0 AND strength <= 1.0),
+                    -- ADR-L1 2026-06-12: based_on/graph_node ретированы (свежие БД;
+                    -- существующие БД хранят старый CHECK — он шире, безвреден)
                     CHECK (link_type IN (
-                        'based_on', 'supports', 'contradicts',
+                        'supports', 'contradicts',
                         'extends', 'derives_from', 'session_context',
-                        'promoted_to', 'superseded_by', 'mirrors', 'graph_node'
+                        'promoted_to', 'superseded_by', 'mirrors'
                     ))
                 )
             """)
@@ -287,6 +300,37 @@ class LinkRegistry:
 
     # === CRUD ===
 
+    @staticmethod
+    def _trace(event: str, **fields: Any) -> None:
+        """P3.1 (roadmap 260612 LinkRegistry): жизнь рёбер в §27 observability.
+
+        Fail-soft + lazy import: link_registry импортируется хуками — тяжёлых
+        зависимостей на module-level быть не должно; отказ лога не ломает CRUD.
+        Opt-out: MEMORY_LINKS_LOG_DISABLE=1.
+        """
+        try:
+            from ..infrastructure.trace_log import write_trace
+
+            write_trace("memory-links.log", event, disable_env="MEMORY_LINKS_LOG_DISABLE", **fields)
+        except Exception:
+            pass
+
+    @staticmethod
+    def _validate_entity_id(entity_id: str, arg_name: str) -> None:
+        """P0.1 (roadmap 260612 LinkRegistry): рёбра только на unified-ID.
+
+        Структурная проверка `type:source:identifier` (3 непустые части) —
+        без привязки к enum'ам (будущие source'ы не ломают вход), но сырые
+        UUID и пустые строки отклоняются. Исторические 3 raw-UUID ребра
+        были слепыми для TTL-cascade/BFS — вход теперь защищён.
+        """
+        parts = entity_id.split(":", 2)
+        if len(parts) != 3 or not all(p.strip() for p in parts):
+            raise ValueError(
+                f"{arg_name} must be a unified ID 'type:source:identifier', "
+                f"got {entity_id!r} (raw UUIDs are rejected — roadmap 260612 P0.1)"
+            )
+
     def create_link(
         self,
         source_id: str,
@@ -298,6 +342,8 @@ class LinkRegistry:
         bidirectional: bool = False,
         expires_at: datetime | None = None,
     ) -> EntityLink:
+        self._validate_entity_id(source_id, "source_id")
+        self._validate_entity_id(target_id, "target_id")
         link_id = str(uuid4())
         link = EntityLink(
             link_id=link_id,
@@ -364,6 +410,14 @@ class LinkRegistry:
             self._update_stats(cursor, target_id)
             conn.commit()
 
+        self._trace(
+            "link_create",
+            link_id=link.link_id,
+            link_type=link_type.value,
+            source_id=source_id,
+            target_id=target_id,
+            created_by=created_by,
+        )
         return link
 
     def get_link(self, link_id: str) -> EntityLink | None:
@@ -616,6 +670,8 @@ class LinkRegistry:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             for source_id, target_id, link_type, strength in links:
+                self._validate_entity_id(source_id, "source_id")
+                self._validate_entity_id(target_id, "target_id")
                 try:
                     link_id = str(uuid4())
                     now = datetime.now().isoformat()
@@ -627,6 +683,18 @@ class LinkRegistry:
                     """,
                         (link_id, source_id, target_id, link_type.value, strength, now, created_by),
                     )
+                    # P0.3: batch-путь раньше не журналировал create — history
+                    # обязан быть полным независимо от входа.
+                    cursor.execute(
+                        """
+                        INSERT INTO link_history
+                        (history_id, link_id, action, new_strength, changed_at, changed_by, reason)
+                        VALUES (?, ?, 'create', ?, ?, ?, 'Link created (batch)')
+                    """,
+                        (str(uuid4()), link_id, strength, now, created_by),
+                    )
+                    self._update_stats(cursor, source_id)
+                    self._update_stats(cursor, target_id)
                     created.append(
                         EntityLink(
                             link_id=link_id,
@@ -641,17 +709,60 @@ class LinkRegistry:
                 except sqlite3.IntegrityError:
                     continue
             conn.commit()
+        if created:
+            self._trace("link_create", size=len(created), created_by=created_by, reason="batch")
         return created
 
-    def delete_links_for_entity(self, entity_id: str) -> int:
+    def delete_links_for_entity(
+        self, entity_id: str, changed_by: str = "system", reason: str = "entity removed"
+    ) -> int:
+        """Delete all edges touching entity_id.
+
+        P0.3 (roadmap 260612 LinkRegistry): удаления журналируются в
+        link_history (раньше 29 из 61 созданных рёбер исчезли бесследно) и
+        stats затронутых соседей пересчитываются (раньше link_stats копил
+        orphan-строки — 73 сущности при 32 рёбрах).
+        """
         with self._get_connection() as conn:
             cursor = conn.cursor()
+            cursor.execute(
+                "SELECT link_id, source_id, target_id, strength FROM entity_links "
+                "WHERE source_id = ? OR target_id = ?",
+                (entity_id, entity_id),
+            )
+            doomed = cursor.fetchall()
+            if not doomed:
+                return 0
+
+            now = datetime.now().isoformat()
+            endpoints: set[str] = set()
+            for row in doomed:
+                cursor.execute(
+                    """
+                    INSERT INTO link_history
+                    (history_id, link_id, action, old_strength, changed_at, changed_by, reason)
+                    VALUES (?, ?, 'delete', ?, ?, ?, ?)
+                """,
+                    (str(uuid4()), row["link_id"], row["strength"], now, changed_by, reason),
+                )
+                endpoints.add(row["source_id"])
+                endpoints.add(row["target_id"])
+
             cursor.execute(
                 "DELETE FROM entity_links WHERE source_id = ? OR target_id = ?",
                 (entity_id, entity_id),
             )
             deleted = cursor.rowcount
+            for ep in endpoints:
+                self._update_stats(cursor, ep)
             conn.commit()
+        self._trace(
+            "link_delete",
+            source_id=entity_id,
+            size=int(deleted),
+            created_by=changed_by,
+            reason=reason,
+        )
         return int(deleted)
 
     # === Stats ===
@@ -668,6 +779,42 @@ class LinkRegistry:
         """,
             (entity_id, entity_id, entity_id, entity_id, entity_id, datetime.now().isoformat()),
         )
+        # P0.2: сущность без рёбер не должна жить в stats (orphan-строки —
+        # источник рассинхрона 73-сущности-при-32-рёбрах).
+        cursor.execute(
+            "DELETE FROM link_stats WHERE entity_id = ? "
+            "AND outgoing_count = 0 AND incoming_count = 0",
+            (entity_id,),
+        )
+
+    def rebuild_stats(self) -> dict[str, int]:
+        """P0.2 (roadmap 260612 LinkRegistry): полный idempotent-пересчёт
+        link_stats из entity_links — лечит исторический рассинхрон и
+        вызывается из maintenance-каденса.
+        """
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM link_stats")
+            removed = cursor.rowcount
+            cursor.execute(
+                """
+                INSERT INTO link_stats (entity_id, outgoing_count, incoming_count, avg_strength, last_updated)
+                SELECT e.entity_id,
+                    (SELECT COUNT(*) FROM entity_links WHERE source_id = e.entity_id),
+                    (SELECT COUNT(*) FROM entity_links WHERE target_id = e.entity_id),
+                    (SELECT COALESCE(AVG(strength), 0) FROM entity_links
+                     WHERE source_id = e.entity_id OR target_id = e.entity_id),
+                    ?
+                FROM (
+                    SELECT source_id AS entity_id FROM entity_links
+                    UNION SELECT target_id FROM entity_links
+                ) e
+            """,
+                (datetime.now().isoformat(),),
+            )
+            rebuilt = cursor.rowcount
+            conn.commit()
+        return {"removed": int(removed), "rebuilt": int(rebuilt)}
 
     def get_entity_stats(self, entity_id: str) -> dict[str, Any]:
         with self._get_connection() as conn:

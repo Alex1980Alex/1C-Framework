@@ -5,6 +5,7 @@ Reads ground truth, runs each prompt through skill-router, computes precision/re
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -100,6 +101,54 @@ def compute_metrics(expected, predicted):
     return {"precision": p, "recall": r, "f1": f1, "tp": tp, "fp": fp, "fn": fn}
 
 
+def _split_of(prompt, sample):
+    """Deterministic train/test split (260613 H1). Honors an explicit per-sample
+    `split` field; else hashes the prompt (sha1 % 5 -> ~20% test). Stable across
+    runs — NOT Python's salted hash()."""
+    s = sample.get("split")
+    if s in ("train", "test"):
+        return s
+    h = int(hashlib.sha1(prompt.encode("utf-8")).hexdigest(), 16)
+    return "test" if h % 5 == 0 else "train"
+
+
+def _action_f1(rows):
+    """Macro-F1 over ACTION samples only (expected_skills != []). Excludes the
+    silence-credit padding — empty-expected samples that score f1=1.0 just for
+    staying silent (260613 F5)."""
+    vals = [r["f1"] for r in rows if r["is_action"]]
+    return round(sum(vals) / len(vals), 4) if vals else None
+
+
+def _silence_accuracy(rows):
+    """Fraction of empty-expected samples on which the router correctly stayed
+    silent. Reported SEPARATELY from action_f1 so the two don't pad each other."""
+    vals = [r for r in rows if not r["is_action"]]
+    return round(sum(1 for r in vals if r["silent_ok"]) / len(vals), 4) if vals else None
+
+
+def _cv_action_f1(rows, k):
+    """260613 B4: k-fold CV over ACTION rows. Deterministic sha1(prompt)%k partition;
+    action_f1 per non-empty fold → {k, mean, std, folds}. For a FIXED router (no
+    per-fold tuning) mean≈pooled — it surfaces variance / GT-size noise, and becomes
+    a real held-out estimate once weights are tuned per-fold (Фаза C). None if k<2 or
+    too few action rows. NB: CV folds (sha1%k) are INDEPENDENT of the train/test
+    `split` field (sha1%5) — different axes, not nested."""
+    action = [r for r in rows if r["is_action"]]
+    if k < 2 or len(action) < k:
+        return None
+    folds: list[list[float]] = [[] for _ in range(k)]
+    for r in action:
+        h = int(hashlib.sha1(r["prompt"].encode("utf-8")).hexdigest(), 16)
+        folds[h % k].append(r["f1"])
+    per_fold = [round(sum(f) / len(f), 4) for f in folds if f]
+    if not per_fold:
+        return None
+    mean = sum(per_fold) / len(per_fold)
+    var = sum((x - mean) ** 2 for x in per_fold) / len(per_fold)
+    return {"k": k, "mean": round(mean, 4), "std": round(var**0.5, 4), "folds": per_fold}
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate skill-router accuracy")
     parser.add_argument("--verbose", "-v", action="store_true")
@@ -107,6 +156,27 @@ def main():
     parser.add_argument("--ground-truth", type=str, default=str(GROUND_TRUTH))
     parser.add_argument(
         "--save-fp", action="store_true", help="Save FP/FN details to data/skill-router-fp.jsonl"
+    )
+    parser.add_argument(
+        "--save-report",
+        action="store_true",
+        help="Persist report to data/reports/skills/skill-router-eval-latest.json"
+        " (источник F1 для skill_system_acceptance, roadmap 260612 P4)",
+    )
+    parser.add_argument(
+        "--split",
+        choices=["train", "test", "all"],
+        default="all",
+        help="260613 B3: оценивать только train/test-сплит (all = весь чистый набор);"
+        " quarantine исключается всегда",
+    )
+    parser.add_argument(
+        "--cv",
+        type=int,
+        default=0,
+        metavar="K",
+        help="260613 B4: k-fold CV по action-семплам — mean±std action_f1 (стабильнее"
+        " единичного test-сплита на малом GT; для fixed-роутера mean≈pooled)",
     )
     args = parser.parse_args()
 
@@ -122,7 +192,18 @@ def main():
             if line:
                 samples.append(json.loads(line))
 
-    print(f"Loaded {len(samples)} ground truth samples", file=sys.stderr)
+    # 260613 A5: quarantine-кейсы (transcript-router, leakage-кандидаты) исключены
+    # из метрик — их метки выведены из вывода роутера (contamination). Остаются в
+    # GT-файле для авторской ре-верификации; не влияют на честное число гейта.
+    _n_all = len(samples)
+    samples = [s for s in samples if s.get("split") != "quarantine"]
+    _n_quar = _n_all - len(samples)
+    if _n_quar:
+        print(f"Excluded {_n_quar} quarantine cases (leakage-suspect)", file=sys.stderr)
+    if args.split in ("train", "test"):  # 260613 B3
+        samples = [s for s in samples if s.get("split") == args.split]
+        print(f"--split {args.split}: {len(samples)} samples", file=sys.stderr)
+    print(f"Loaded {len(samples)} scored ground truth samples", file=sys.stderr)
     print(f"Router: {ROUTER_SCRIPT}", file=sys.stderr)
     print(file=sys.stderr)
 
@@ -135,6 +216,7 @@ def main():
     skill_all, skill_req_all, bundle_all = [], [], []
     intent_results = defaultdict(lambda: {"correct": 0, "total": 0})
     fps_list, fns_list = [], []
+    per_sample = []  # 260613: split + action/silence classification per sample
 
     for i, sample in enumerate(samples):
         prompt = sample["prompt"]
@@ -155,6 +237,15 @@ def main():
         skill_all.append(sm)
         skill_req_all.append(sm_req)
         bundle_all.append(bm)
+        per_sample.append(
+            {
+                "prompt": prompt,
+                "split": _split_of(prompt, sample),
+                "is_action": bool(exp_skills),
+                "f1": sm["f1"],
+                "silent_ok": len(pred_skills) == 0,
+            }
+        )
 
         if intent in ("informational", "system"):
             ok = len(pred_skills) == 0
@@ -184,8 +275,36 @@ def main():
         v = [m[k] for m in ml]
         return sum(v) / len(v) if v else 0.0
 
+    # 260613 F1/F5 — honest metrics. `skill_metrics.f1` below is the legacy macro-F1
+    # over ALL samples (padded by empty-expected samples scoring 1.0 for silence).
+    # `action_f1` (POOLED, action samples only) strips that padding and is the number
+    # the acceptance gate reads. The train/test split is DIAGNOSTIC only: the router
+    # does NOT train on the GT at eval-time (A2 weights are hardcoded offline), so a
+    # split says nothing about generalization — it just exposes GT noise/size (tiny
+    # test folds invert vs train). A real held-out needs A2 re-derived on `train` only;
+    # until then pooled action_f1 is the honest, stable signal.
+    honest_metrics = {
+        "action_f1": _action_f1(per_sample),
+        "silence_accuracy": _silence_accuracy(per_sample),
+        "n_action": sum(1 for r in per_sample if r["is_action"]),
+        "n_silence": sum(1 for r in per_sample if not r["is_action"]),
+        "split_method": "field|sha1mod5",
+        "splits": {
+            sp: {
+                "action_f1": _action_f1([r for r in per_sample if r["split"] == sp]),
+                "silence_accuracy": _silence_accuracy([r for r in per_sample if r["split"] == sp]),
+                "n": sum(1 for r in per_sample if r["split"] == sp),
+                "n_action": sum(1 for r in per_sample if r["split"] == sp and r["is_action"]),
+            }
+            for sp in ("train", "test")
+        },
+    }
+    if args.cv:  # 260613 B4
+        honest_metrics["cv_action_f1"] = _cv_action_f1(per_sample, args.cv)
+
     report = {
         "total_samples": len(samples),
+        "honest_metrics": honest_metrics,
         "skill_metrics": {
             "precision": round(avg(skill_all, "precision"), 4),
             "recall": round(avg(skill_all, "recall"), 4),
@@ -220,6 +339,18 @@ def main():
         "top_fps": fps_list[:5],
         "top_fns": fns_list[:5],
     }
+
+    if args.save_report:
+        report_path = PROJECT_DIR / "data" / "reports" / "skills" / "skill-router-eval-latest.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(
+                {"ts": datetime.now().isoformat(), "ground_truth": str(gt_path), **report},
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
+        print(f"Saved report to {report_path}", file=sys.stderr)
 
     # Save FP/FN tracking file
     if args.save_fp and (fps_list or fns_list):
@@ -263,6 +394,28 @@ def main():
         print(f"  Recall:    {sm['recall']:.4f}")
         print(f"  F1:        {sm['f1']:.4f}")
         print(f"  TP={sm['total_tp']} FP={sm['total_fp']} FN={sm['total_fn']}")
+        hm = report["honest_metrics"]
+        ht, htr = hm["splits"]["test"], hm["splits"]["train"]
+        print("\nHonest Metrics (260613 — action-only, no silence-credit padding):")
+        print(
+            f"  action F1 (pooled): {hm['action_f1']} over {hm['n_action']} action samples"
+            "  <- GATE metric"
+        )
+        print(f"  action F1 (train):  {htr['action_f1']} (n_action={htr['n_action']})")
+        print(
+            f"  action F1 (test):   {ht['action_f1']} (n_action={ht['n_action']})"
+            "  <- diagnostic only (tiny split, noisy)"
+        )
+        print(
+            f"  silence accuracy:  {hm['silence_accuracy']} "
+            f"over {hm['n_silence']} empty-expected samples"
+        )
+        cv = hm.get("cv_action_f1")
+        if cv:
+            print(
+                f"  CV action F1 (k={cv['k']}): mean={cv['mean']} std={cv['std']} "
+                f"folds={cv['folds']}"
+            )
         print("\nBundle Metrics:")
         print(f"  Precision: {bm['precision']:.4f}")
         print(f"  Recall:    {bm['recall']:.4f}")

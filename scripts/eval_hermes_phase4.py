@@ -310,11 +310,74 @@ def cmd_baseline(args: argparse.Namespace) -> None:
     )
 
 
-def cmd_index_wiki(args: argparse.Namespace) -> None:
-    import re
+def wiki_page_point_id(name: str) -> str:
+    """Deterministic point id from page name — re-index = upsert, не дубль."""
     import uuid
 
-    from qdrant_client.models import Distance, PointStruct, VectorParams
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
+
+
+def clean_wiki_content(raw_content: str) -> str:
+    """Strip frontmatter + unwrap wikilinks (pure). Пустая страница → ''."""
+    import re
+
+    content = re.sub(r"^---\n.*?\n---\n", "", raw_content, flags=re.DOTALL)
+    content = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", content)
+    content = re.sub(r"\[\[([^\]]+)\]\]", r"\1", content)
+    return content.strip()
+
+
+def wiki_page_payload(raw_content: str, stem: str, file_path: str) -> dict[str, Any] | None:
+    """Payload-контракт wiki-точки: name / entity_type / text / file_path.
+
+    Чистая функция (без I/O) — закреплена unit-тестами
+    tests/unit/test_pdf_docs_chains.py (roadmap 260612 P1 / A2).
+    Возвращает None для пустых страниц (только frontmatter/whitespace).
+    `text` в payload обрезан до 2000 (контракт старого индексера);
+    для ЭМБЕДДИНГА используется полный clean_wiki_content (см. cmd_index_wiki).
+    """
+    content = clean_wiki_content(raw_content)
+    if not content:
+        return None
+
+    entity_type = ""
+    for line in raw_content.split("\n"):
+        if line.startswith("entity_type:"):
+            entity_type = line.split(":", 1)[1].strip().strip('"')
+            break
+
+    return {
+        "name": stem,
+        "entity_type": entity_type,
+        "text": content[:2000],
+        "file_path": file_path,
+    }
+
+
+def cmd_index_wiki(args: argparse.Namespace) -> None:
+    """Index wiki .md pages into `wiki_pages_v1` (alias-safe, TEI Qwen3 + MRL).
+
+    Переписан 2026-06-12 (roadmap 260612 pdf-docs P1/A2 + P3.1):
+    - СТАРАЯ версия эмбеддила multilingual-e5-large и делала
+      delete_collection/create_collection по ИМЕНИ ALIAS'а — после Qwen3-миграции
+      (physical `wiki_pages_v1_mrl_1024`) повторный запуск создал бы physical
+      с именем алиаса и расщепил эмбеддинг-пространство (E5 vs Qwen3 MRL).
+    - Теперь: TEI Qwen3 4096d (`FrameworkTEIEmbedder`, is_query=False) →
+      `maybe_truncate_vectors` до dim коллекции (alias-aware resolve) →
+      upsert в physical. Идемпотентно: uuid5(name) point-id.
+    - `--prune` удаляет точки страниц, исчезнувших из wiki-dir.
+    - `_progress` instrumentation: run_start/run_end в
+      data/indexing-progress.jsonl → auto-reports 28_1 покрывают wiki.
+    """
+    from qdrant_client.models import PointStruct
+
+    from scripts._progress import make_tracker
+    from src.framework_search.embedder import FrameworkTEIEmbedder
+    from src.framework_search.indexer import (
+        maybe_truncate_vectors,
+        resolve_collection_dim,
+        resolve_physical_collection,
+    )
 
     wiki_dir = Path(args.wiki_dir)
     if not wiki_dir.exists():
@@ -324,73 +387,101 @@ def cmd_index_wiki(args: argparse.Namespace) -> None:
     md_files = sorted(wiki_dir.glob("*.md"))
     print(f"[INDEX-WIKI] Found {len(md_files)} wiki pages in {wiki_dir}")
 
-    model = _get_model()
     client = QdrantClient("localhost", port=6333)
+    physical = resolve_physical_collection(client, WIKI_COLLECTION)
+    if physical not in [c.name for c in client.get_collections().collections]:
+        print(
+            f"[INDEX-WIKI] FATAL: collection '{physical}' not found. "
+            f"Создание коллекции — миграционная операция (snapshot+alias, "
+            f"см. skill qdrant-operations), не задача индексера."
+        )
+        sys.exit(1)
+    target_dim = resolve_collection_dim(client, physical)
+    print(f"[INDEX-WIKI] Target: {WIKI_COLLECTION} -> {physical} ({target_dim}d)")
 
-    existing = [c.name for c in client.get_collections().collections]
-    if WIKI_COLLECTION in existing:
-        print(f"[INDEX-WIKI] Deleting existing {WIKI_COLLECTION}...")
-        client.delete_collection(WIKI_COLLECTION)
-
-    client.create_collection(
-        WIKI_COLLECTION,
-        vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE),
+    tracker = make_tracker("index_wiki").start()
+    tracker.event(
+        "config",
+        collection=WIKI_COLLECTION,
+        physical=physical,
+        target_dim=target_dim,
+        pages=len(md_files),
+        wiki_dir=str(wiki_dir),
     )
-    print(f"[INDEX-WIKI] Created {WIKI_COLLECTION} (cosine, 1024-dim)")
 
-    batch_size = 100
+    batch_size = 32  # TEI max_client_batch_size=32
     total_indexed = 0
+    skipped_empty = 0
+    current_ids: set[str] = set()
 
-    for i in range(0, len(md_files), batch_size):
-        batch_files = md_files[i : i + batch_size]
-        texts = []
-        payloads = []
+    try:
+        with FrameworkTEIEmbedder() as embedder, tracker.stage("embed_upsert"):
+            for i in range(0, len(md_files), batch_size):
+                batch_files = md_files[i : i + batch_size]
+                texts: list[str] = []
+                payloads: list[dict[str, Any]] = []
 
-        for fp in batch_files:
-            content = fp.read_text(encoding="utf-8")
-            content = re.sub(r"^---\n.*?\n---\n", "", content, flags=re.DOTALL)
-            content = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", content)
-            content = re.sub(r"\[\[([^\]]+)\]\]", r"\1", content)
-            content = content.strip()
+                for fp in batch_files:
+                    raw = fp.read_text(encoding="utf-8")
+                    payload = wiki_page_payload(raw, fp.stem, str(fp))
+                    if payload is None:
+                        skipped_empty += 1
+                        continue
+                    # Эмбеддим ПОЛНЫЙ контент (как старый индексер), не payload-обрезок;
+                    # cap 16k chars ≈ TEI MAX_INPUT_LENGTH=4096 tokens
+                    texts.append(clean_wiki_content(raw)[:16000])
+                    payloads.append(payload)
 
-            if not content:
-                continue
+                if not texts:
+                    continue
 
-            entity_type = ""
-            for line in fp.read_text(encoding="utf-8").split("\n"):
-                if line.startswith("entity_type:"):
-                    entity_type = line.split(":", 1)[1].strip().strip('"')
-                    break
+                vectors = embedder.embed_batch(texts, is_query=False)
+                if target_dim and target_dim < len(vectors[0]):
+                    vectors = maybe_truncate_vectors(vectors, target_dim)
 
-            texts.append(content)
-            payloads.append(
-                {
-                    "name": fp.stem,
-                    "entity_type": entity_type,
-                    "text": content[:2000],
-                    "file_path": str(fp),
-                }
-            )
+                points = []
+                for vec, payload in zip(vectors, payloads):
+                    pid = wiki_page_point_id(payload["name"])
+                    current_ids.add(pid)
+                    points.append(PointStruct(id=pid, vector=vec, payload=payload))
 
-        if not texts:
-            continue
+                client.upsert(physical, points)
+                total_indexed += len(points)
+                tracker.set_state(indexed=total_indexed, of=len(md_files))
+                print(f"[INDEX-WIKI] Indexed {total_indexed}/{len(md_files)}...")
 
-        vecs = list(model.embed(texts))
-        points = []
-        for j, (vec, payload) in enumerate(zip(vecs, payloads)):
-            points.append(
-                PointStruct(
-                    id=str(uuid.uuid5(uuid.NAMESPACE_URL, payload["name"])),
-                    vector=vec.tolist(),
-                    payload=payload,
-                )
-            )
+        pruned = 0
+        if getattr(args, "prune", False) and current_ids:
+            with tracker.stage("prune"):
+                offset = None
+                stale: list[str] = []
+                while True:
+                    page, offset = client.scroll(
+                        physical, limit=1000, offset=offset, with_payload=False
+                    )
+                    stale.extend(str(p.id) for p in page if str(p.id) not in current_ids)
+                    if offset is None:
+                        break
+                if stale:
+                    client.delete(physical, points_selector=stale)
+                pruned = len(stale)
+                print(f"[INDEX-WIKI] Pruned {pruned} stale points")
+    except Exception as e:
+        tracker.event("error", error=f"{type(e).__name__}: {e}")
+        tracker.stop({"status": "failed", "indexed": total_indexed})
+        raise
 
-        client.upsert(WIKI_COLLECTION, points)
-        total_indexed += len(points)
-        print(f"[INDEX-WIKI] Indexed {total_indexed}/{len(md_files)}...")
-
-    print(f"[INDEX-WIKI] Done: {total_indexed} pages indexed into {WIKI_COLLECTION}")
+    tracker.stop(
+        {
+            "status": "ok",
+            "collection": WIKI_COLLECTION,
+            "physical": physical,
+            "indexed": total_indexed,
+            "skipped_empty": skipped_empty,
+            "pruned": pruned,
+        }
+    )
+    print(f"[INDEX-WIKI] Done: {total_indexed} pages indexed into {physical}")
 
 
 def cmd_export_wiki(args: argparse.Namespace) -> None:
@@ -547,6 +638,11 @@ def main() -> None:
 
     p_idx = sub.add_parser("index-wiki", help="Index wiki pages into Qdrant wiki_pages_v1")
     p_idx.add_argument("--wiki-dir", default="docs/wiki/entities")
+    p_idx.add_argument(
+        "--prune",
+        action="store_true",
+        help="Удалить точки страниц, исчезнувших из wiki-dir (полная синхронизация)",
+    )
 
     p_weval = sub.add_parser("wiki-eval", help="Run wiki-augmented eval via RRF fusion")
     p_weval.add_argument("--queries", required=True)
