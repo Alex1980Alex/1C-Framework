@@ -193,3 +193,5 @@ CONVERSATION__MAX_HISTORY=10
 - `hallucination_checker.py` — `HallucinationCheckSignature` (typed grounded: bool)
 
 Fallback chain: `cheap_llm_call` → `dspy.Predict/ChainOfThought` → LangChain Claude
+
+> 2026-06-14: docs verified current vs `agents/plan_execute/agent.py` (run_plan_execute dict-return noted above; no further API change).

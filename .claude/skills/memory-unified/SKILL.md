@@ -280,3 +280,5 @@ Examples:
 - `MetricsTimer` (src\memory\infrastructure\metrics.py)
 - `ManagedSubscription` (src\memory\infrastructure\subscription_manager.py)
 - `SubscriptionManager` (src\memory\infrastructure\subscription_manager.py)
+
+> 2026-06-14: docs verified current vs `orchestrator/link_registry.py` (ADR-L1 link types + TTL-cleanup bugfix noted above).

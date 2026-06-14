@@ -233,3 +233,5 @@ PDF__LOADER=hybrid               # hybrid|pymupdf4llm|docling|smart
 - Page Renderer: [page_renderer.py](src/pdf_framework/processing/page_renderer.py)
 - ID generator: [id_generator.py](src/pdf_framework/utils/id_generator.py)
 - Images: [image_extractor.py](src/pdf_framework/processing/image_extractor.py)
+
+> 2026-06-14: docs verified current vs `processing/splitters/proposition.py` (sync/async metadata parity noted above).

@@ -521,3 +521,5 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 - `todo-sync` (.claude\hooks\todo-sync.py)
 - `z-ai-delegation-enforcer` (.claude\hooks\z-ai-delegation-enforcer.py)
 - `z-ai-write-guard` (.claude\hooks\z-ai-write-guard.py)
+
+> 2026-06-14 (security pass): GitHub secret scanning + push protection ENABLED; `.mcp.json` untracked (secrets -> ${ENV}); `registry.yaml` + code env-ref'd. See root `CLAUDE.md` + commits faf8806cb / edb6a1497.
