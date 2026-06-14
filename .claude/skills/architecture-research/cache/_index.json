@@ -3,6 +3,25 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "1c-task-implementation-landscape.md",
+      "title": "Ландшафт реализации задач 1С — команды, 3 пути (direct/SDD/autonomous), 2 слоя тестов (VA BDD/YaXUnit), BSL-инструменты, 1С-хуки, drift-факты",
+      "keywords": [
+        "1c",
+        "slash-commands",
+        "sdlc",
+        "openspec",
+        "sdd",
+        "va-bdd",
+        "yaxunit",
+        "ralph",
+        "pipeline-state",
+        "bsl-tools",
+        "analyze-1c-task",
+        "implement-1c-task"
+      ],
+      "last_verified": "2026-06-14"
+    },
+    {
       "file": "claude-code-ecosystem-tools-2026.md",
       "title": "Claude Code ecosystem — skills/plugins/subagents/MCP по SDLC-шагам (планирование/дизайн/кодирование/тестирование), 2026",
       "keywords": [

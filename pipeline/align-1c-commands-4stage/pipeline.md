@@ -17,6 +17,9 @@ relabel из A**. Решение → [ADR-019](../../.claude/skills/architecture
 - Roadmap: [`docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md`](../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md)
   (контекст, текущее состояние, gap, варианты, целевой маппинг, фазы 0–6, риски, DoD, §18).
 - ADR-019 + запись в `architecture-research/adr/_index.json`.
+- Доп. анализ (по запросу «есть ли ещё команды/решения»): 4-агентное исследование всего 1С-ландшафта →
+  секция «Дополнительный анализ» в roadmap (3 пути реализации: direct/SDD/autonomous; 2 слоя тестов: VA BDD/YaXUnit;
+  gaps G6–G15; Phases 0.5/7/8) + кеш-факты `architecture-research/cache/1c-task-implementation-landscape.md`.
 - **Код фреймворка (Phase 1–6 roadmap) НЕ писался** — это отдельная будущая работа, ждёт ревью/одобрения roadmap.
 - Побочный bugfix (вне scope roadmap, найден при финализации): [`factory-enforcer.py`](../../.claude/hooks/factory-enforcer.py)
   ложно срабатывал на ADR-файлах (`skills/*/adr/*.md`) как на «создании нового skill» → добавлен `/adr/` в `SKIP_PATHS`
