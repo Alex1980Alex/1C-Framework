@@ -133,11 +133,69 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 - Скиллы/команды содержат заголовки 4 этапов + таблицу маппинга (G2/G5 закрыты).
 - `CLAUDE.md` + 17.5 описывают единый поток; ADR-019 accepted.
 
+## Дополнительный анализ (2026-06-14): полный ландшафт реализации 1С-задач
+
+> Расширение по запросу пользователя («возможно есть ещё команды и другие решения») — параллельное
+> исследование (4 субагента) всего surface'а 1С-автоматизации. Объективная инвентаризация фактов —
+> в кеше [1c-task-implementation-landscape.md](../../.claude/skills/architecture-research/cache/1c-task-implementation-landscape.md).
+> Вывод: реализация 1С-задач идёт по **трём путям** + **двум слоям тестирования**; выравнивание к 4 этапам
+> должно покрыть ВСЕ их, а не только `/analyze-1c-task`+`/implement-1c-task`.
+
+### A. Три пути реализации (а не один)
+
+| Путь | Цепочка | Когда (критерий analyze-1c-task-v2 §11) | Кто кодирует | Гейт |
+|---|---|---|---|---|
+| **1. Прямой** | analyze → implement (8 этапов) → write/run-tests | тривиальная (нет `[ADDED]` метаданных) | `implement-1c-task` (validate_query→execute_query→EDT write→get_project_errors→BP-verify) | preflight `debug_health_check` (выбор режима), НЕ межэтапный |
+| **2. SDD/OpenSpec** | analyze → opsx:propose → opsx:approve → opsx:apply → brownfield-validate → opsx:archive | средняя/сложная (`[ADDED]` объекты ИЛИ 3+ `[MODIFIED]`) | `openspec-apply-change` — **кодит напрямую**, минуя 8-этапный pipeline | `approval-gate.py` (hard: `.openspec.yaml approval=approved`) |
+| **3. Автономный** | analyze-1c-research (Executor→Reviewer→Comparator, score→85) / Ralph (`1c-analysis`, `1c-study`) | headless/итеративный анализ; код всё равно уходит в путь 1/2 | — (только анализ) | Ralph Stop-хук (маркер `RALPH_DONE`) |
+
+Тестирование — **два независимых слоя**: VA BDD (Vanessa, E2E/UI, `/write-1c-tests`+`/run-1c-tests`, `.run-state.json`) и YaXUnit (unit, `mcp-onec-test-runner` + реактивный `auto-test-after-write`). Вместе не оркестрируются.
+
+### B. Полная карта (кратко; детали — в кеше)
+- **Команды (5 профильных + 4 SDD):** `/analyze-1c-task`, `/implement-1c-task`, `/write-1c-tests`, `/run-1c-tests`, `/activate-project` (деградировал) + `/opsx:propose|approve|apply|archive` (доменно-агностичны, используются для 1С).
+- **BSL-инструменты (Кодирование):** EDT-MCP (write), 1c-mcp-crud (data), bsl-debugger (статлинт), bsl-semantic-search (refactor), 1c-debug-hmr (live BP-verify Этап 5.x) + скиллы bsl-development / bsl-refactoring-workflow / bsl-symbol-editing.
+- **1С-хуки:** bsl-tool-router, analyze/implement-preflight, implement-smoke-stop-alert, submodule-status-check, post-commit BSL-reindex (`bsl_code_v4_late`).
+
+### C. Расширенный gap-анализ (G6–G15) — сверх G1–G5
+
+| # | Разрыв | Источник | Влияние |
+|---|---|---|---|
+| G6 | `opsx:apply` (`openspec-apply-change`) кодит **напрямую**, минуя 8-этапные проверки `implement-1c-task` (validate_query/execute_query/get_project_errors/BP-verify) | `openspec-apply-change/SKILL.md` | SDD-путь теряет 1С-качество → «Кодирование» неэквивалентно между путями |
+| G7 | `approval-gate.py` блокирует `implement-1c-task` (и `opsx:apply`) при ЛЮБОМ неодобренном active change — не различает «мой change» | `approval-gate.py:_IMPLEMENTATION_SKILLS` | чужой неодобренный change зажимает даже тривиальный прямой маршрут |
+| G8 | G3 шире: `pipeline-protocol-stop` видит только `pipeline-state`, не `tasks.md`/`.openspec.yaml`/`data/analyze-1c-research/` | `pipeline-protocol-stop.py:_pipeline_used_since` | hard-block завершения при честно выполненной SDD/автономной задаче |
+| G9 | `brownfield-validate` информационный (не enforced; «зуб» — Stop-reminder с cooldown) | `brownfield-validate/SKILL.md` | «Тестирование» в SDD де-факто опционально |
+| G10 | `TEST-PLAN-DETAILED.md` — orphan: его **читает** `/write-1c-tests`, но ни одна команда не **порождает** | инвентаризация команд | разрыв Дизайн↔Тестирование |
+| G11 | VA BDD и YaXUnit не оркестрируются вместе; тест-состояние размазано (`.run-state.json` / METR / `data/analyze-1c-research/`) | агент тестирования | нет единой точки «вердикт Этапа 4» |
+| G12 | **Tooling drift:** `bsl-tool-router.py`, `bsl-development/SKILL.md`, `auto-test-after-write/SKILL.md` ссылаются на отключённые/переименованные инструменты (serena, mcp-reasoner, `mcp__metr__*`/`run_tests`, late-chunking pooling) | агент BSL-инструментов | выравнивание ляжет на сломанные ссылки → нужен prerequisite-cleanup |
+| G13 | `/activate-project` деградировал (Serena LSP мёртв на BSL, `serena-index-checker.py` удалён) | `activate-project.md` | мёртвая команда в 1С-lifecycle → вывести |
+| G14 | Path-drift после миграции на C:: `run-bdd.ps1` (glob `D:\1*-Framework`), METR-конфиг (`D:\1С-Framework`), VA-харнесс в `D:\va-test` | агент тестирования | тест-слой может не найти framework root на C: |
+| G15 | Нет файла профиля `openspec/profiles/1c-bsl.yaml` (правила 1С размазаны по `openspec-propose`) | агент SDD | дефолтный профиль `1c-bsl` без централизованных правил |
+
+### D. Пересмотр рекомендации (расширение Варианта B)
+
+База (Вариант B, мост pipeline-state) сохраняется, но расширяется на весь ландшафт:
+1. Профиль `1c` в `pipeline_state.py` покрывает **все три пути** (direct/SDD/autonomous) — каждый `done`/`approve` единый `.pipeline-state.json`.
+2. **Унифицировать гейты:** `pipeline-gate` (этап 2 approved) и `approval-gate` (openspec approved) → один stage-2-гейт (OpenSpec-approve = достаточное условие approve этапа 2); сузить `approval-gate` до «своего» change (G7).
+3. **Решить дивергенцию Кодирования (G6):** `opsx:apply` для 1С должен делегировать `implement-1c-task` (сохранить 8-этапные проверки) ЛИБО явно задокументировать осознанный trade-off.
+4. **Расширить `pipeline-protocol-stop`:** считать «pipeline used» также при обновлённом OpenSpec change / autonomous state (или обязать все пути писать `pipeline-state`) — закрывает G8.
+5. **Этап 4 (Тестирование):** свести VA + YaXUnit + brownfield под единый «вердикт Этапа 4», обязательный для закрытия (G9, G11).
+
+### E. Обновлённый план фаз (надстройка над Phase 0–6)
+
+- **Phase 0.5 (NEW, prerequisite) — Drift cleanup:** актуализировать `bsl-tool-router.py`, `bsl-development/SKILL.md`, `auto-test-after-write/SKILL.md` под реальный стек (1c-debug-hmr, mcp-onec-test-runner; без serena/reasoner); починить path-drift C:/D: (G12, G14); вывести/починить `/activate-project` (G13). Без этого выравнивание опирается на сломанные ссылки.
+- **Phase 1–6** — как раньше (профили + проводка analyze/implement + тестирование + сведение с ADR-018 + e2e).
+- **Phase 7 (NEW) — SDD-путь под 4 этапа:** проводка opsx-цепочки в `pipeline-state` (профиль `1c`); унификация гейтов (G7); решение по G6 (opsx:apply→implement); профиль `1c-bsl.yaml` (G15).
+- **Phase 8 (NEW) — Автономный путь + единый Этап 4:** интеграция analyze-1c-research/Ralph state в pipeline-state; orphan `TEST-PLAN` (G10); единый вердикт тестирования (G9, G11).
+
+> Эти фазы — расширение, не замена. ADR-019 покрывает ядро (Вариант B); дивергенция кодирования и гейтов
+> (G6/G7) при реализации Phase 7 вероятно потребует отдельного **ADR-020**.
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
 |---|---|---|---|
 | 2026-06-14 | Phase 0 | Research + roadmap + ADR-019 (proposed) | этот файл, [ADR-019](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md) |
+| 2026-06-14 | Phase 0+ | Доп. анализ: 3 пути реализации + 2 слоя тестов; gaps G6–G15; Phases 0.5/7/8; кеш landscape (4-агентное исследование) | секция «Дополнительный анализ» + [кеш](../../.claude/skills/architecture-research/cache/1c-task-implementation-landscape.md) |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
