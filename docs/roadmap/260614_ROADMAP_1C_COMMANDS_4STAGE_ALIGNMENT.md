@@ -190,12 +190,91 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 > Эти фазы — расширение, не замена. ADR-019 покрывает ядро (Вариант B); дивергенция кодирования и гейтов
 > (G6/G7) при реализации Phase 7 вероятно потребует отдельного **ADR-020**.
 
+## Глубокий разбор Варианта C (по запросу) + C-vs-B по индустрии
+
+> Максимально-глубокий ре-анализ Варианта C (полный сплит: analyze→`pl-plan-1c`/`pl-design-1c`,
+> implement→`pl-code-1c`/`pl-test-1c`). Отдельное 4-агентное исследование (внутреннее + GitHub/web).
+> Внешние факты — в кеше [1c-bsl-tooling-ecosystem-2026.md](../../.claude/skills/architecture-research/cache/1c-bsl-tooling-ecosystem-2026.md).
+
+### C.1 Спорные границы (методика не режется чисто)
+- **D1** Фаза 5 (Верификация): тест-**план** = Дизайн, тест-**прогон** = Тестирование → §7 пишется в дизайне, читается в тестировании (усугубляет G10 orphan `TEST-PLAN`).
+- **D2** Этап 0 Preflight (capability matrix) нужен И Кодированию, И Тестированию → при сплите гоняется дважды или прокидывается через state.
+- **D3** Этап 5.x BP-verify валидирует только что написанный код (`frames[0].lineNo==MODIFIED_LINE`) и блокирует Этап 6 — это «проверка кодирования», не приёмка; любое отнесение к code/test спорно + рвёт debug-session (footer `debug_session_id` пишет code-команда, читает test).
+- **D4** Этап 8 Git (3-уровневый сабмодульный коммит). **D5** Фаза 2.5 Runtime Trace дублирует debug-стек с code/test.
+- Итог: Планирование↔Дизайн и Кодирование↔Тестирование **не имеют чистого разреза** — корневая причина выбора B (макро-этап в state поверх неразрезанной методики).
+
+### C.2 Что сломается — ~26 точек (C1–C26, grep-аудит), сгруппировано
+- **Имена команд (CODE):** `analyze-1c-task-preflight`/`implement-1c-task-preflight`/`smoke-stop-alert` (привязка к `TARGET_COMMAND`), `settings.json`, фильтры по токену `slash:<name>`.
+- **Формат `ANALYSIS-REPORT` (CODE/DATA):** `score-analysis-report.py` (главный потребитель — парсит §1/§4/§6, точки, `[REQ-N]`), `eval-analysis-scorer.py`, implement Этап 1 (контракт чтения точек), Reviewer/Comparator scoring-маркеры, ~18 живых отчётов + шаблон.
+- **SDD (CODE):** `opsx:propose` populate'ит из секций ANALYSIS-REPORT → сплит ломает populate.
+- **Ralph/autoresearch (CODE):** шаблоны `1c-analysis-{executor,reviewer,comparator}` опираются на 5-фазную analyze как целое.
+- **Generic-пайплайн (CODE):** `pipeline_state.py` `_BY_COMMAND`/STAGES хардкодит `pl-*`; `pipeline-gate.py` `PIPELINE_COMMANDS`; **`pipeline-protocol-stop.py` (= G3) снимается ТОЛЬКО записью `.pipeline-state.json` — сам сплит этого НЕ даёт**.
+- **Docs/UX:** 17.5, КОМАНДЫ_CLAUDE_CODE, ~10 doc/wiki, CLAUDE.md, память; UX-путаница `pl-plan` vs `pl-plan-1c`.
+- Объём: **~20–30 файлов, сотни строк, высокий регресс-риск** (B: ~5–8 файлов, низкий, методика не тронута).
+
+### C.3 Гибрид C+B (ключевой результат)
+Тонкие команды-обёртки `pl-*-1c`, делегирующие в существующие скиллы analyze/implement/va-bdd-testing поверх B-проводки (профиль `1c`), **БЕЗ дробления `ANALYSIS-REPORT`**:
+- Устраняет главные риски C: scorer, миграция артефактов, SDD-populate, контракт implement — всё работает as-is (отчёт единый).
+- Остаётся поверх B: 4 команды + правка preflight (target/алиасы) + доки + UX-развязка имён; частично D2/D3.
+- Профит над B: ровно **канонические имена команд** (UX), функциональности не добавляет.
+
+### C.4 C vs B — вердикт индустрии (rewrite vs incremental)
+- **Strangler Fig** (Fowler/Azure/Thoughtworks): новая реализация за стабильным фасадом, переключение постепенно, лёгкий rollback [web].
+- **Branch by Abstraction** (Fowler/Confluent): внутрипроцессная миграция — абстракция → инкрементальная замена → удаление старого [web].
+- **Spolsky** «никогда не переписывай с нуля» (теряются «закодированные» edge-cases); **Brooks** second-system effect [web].
+- Наш случай: 1С-команды — **наш видимый код** с накопленными edge-cases (pre-scenario TestDB check, resume, BP-trace) → аргумент «нет видимости → rewrite» НЕ применим.
+
+### C.5 Финальный вердикт по C (усилён)
+**Чистый Вариант C — отклонён** с количественным + индустриальным обоснованием: ≈4–6× стоимости B, ~26 точек поломки, near-zero доп.функциональность; G3/G4 решаются тем же кодом, что в B; индустрия против rewrite видимой рабочей системы.
+**Рекомендация:** B как strangler-фасад (Phase 1–6) → при ценности канонических имён добавить **гибридные обёртки `pl-*-1c` опциональной фазой B.1** (Branch by Abstraction внутри; `/analyze-1c-task`/`/implement-1c-task` — алиасы для preflight/Ralph/SDD/памяти). Путь к фактическому C **без** его риска: «Strangler снаружи + Branch by Abstraction внутри».
+
+## Инструменты: используемые / неиспользуемые + внешние кандидаты
+
+### T.1 Drift: собранные, но НЕ подключённые (конкретизирует G12)
+4 готовых 1С-инструмента физически есть и **декларируются в скиллах**, но ОТСУТСТВУЮТ в активном `.mcp.json` (только в stale `D:\`-профилях + `registry.yaml`) → скиллы зовут неподключённые серверы (фантом-вызовы):
+
+| Инструмент | Статус | Фантомно зовётся в | Действие |
+|---|---|---|---|
+| `ast-grep-mcp` | собран, disabled | bsl-refactoring-workflow (fallback rename), bsl-symbol-editing, va-bdd-testing | вернуть в `.mcp.json` ИЛИ убрать из fallback |
+| `mcp-reasoner` | собран, disabled, но «ОБЯЗАТЕЛЬНЫЙ» в bsl-development | `mcp__reasoner__processThought` | вернуть ИЛИ снять «обязательность» |
+| `serena` | dead на BSL (LSP невалиден), откачен | bsl-development, auto-test-after-write | убрать фантом-вызовы |
+| `bsl-semantic-diff` | dormant | — (registry) | опц. подключить для diff-ревью |
+
+Плюс: `auto-test-after-write` зовёт `mcp__metr__*`/`run_tests`, сервер — `mcp-onec-test-runner`/`run_module_tests` (авто-тест после записи, вероятно, не срабатывает); `va-bdd-testing` allow-list зовёт `mcp__1c-mcp-server__*` вместо `mcp__1c-mcp-crud__*`; `coverage41c.jar` в CI — 9-байтовый stub `Not Found` (покрытие skip); Vanessa `.epf/.cfe` в `tools/vanessa/` — байтовые плейсхолдеры. → всё это наполняет **Phase 0.5 drift-cleanup**.
+
+### T.2 Внешние кандидаты (GitHub, чего у нас нет; ★/версии — снимок 2026-06-14, сверить)
+
+| Инструмент | Источник | Закрывает | Ценность |
+|---|---|---|---|
+| **claude-code-bsl-lsp** | `github.com/1c-syntax/claude-code-bsl-lsp` (офиц., MIT) | inline BSL LSP в Claude Code (диагностики/go-to-def/refs/format) — у нас BSL-LS только batch/CI | **High** |
+| **mcp-bsl-lsp-bridge** | `github.com/SteelMorgan/mcp-bsl-lsp-bridge` | 100+ BSL-LS проверок как MCP-tool в агентном цикле (без CI-петли) | **High** |
+| **Coverage41C** | `github.com/1c-syntax/Coverage41C` (~108★) | покрытие BSL-тестами через dbgs:1550 → genericCoverage.xml (наш SonarQube читает) | **High** |
+| **1c-templates-mcp** | `yellowmcp.com/.../1c-templates-mcp` | 2200+ BSL-шаблонов (few-shot для генерации) | **High** |
+| **1c-mcp-metacode** | `github.com/ROCTUP/1c-mcp-metacode` | Neo4j call-graph из коробки → закрывает баг `neo4j_service=None` ([[reference_bsl_search_architecture_gap]]) | **High** |
+| **comol/cursor_rules_1c** | `github.com/comol/cursor_rules_1c` | референс: 11–13 ролевых 1С-агентов (planner/architect/developer/tester) на 4 этапа + OpenSpec | **High** |
+| **vanessa-runner** | `github.com/vanessa-opensource/vanessa-runner` (~110★) | оркестратор CI 1С (init-db/load/dump/test/bdd одной командой) | Med-High |
+| **precommit1c** | `github.com/xDrivenDevelopment/precommit1c` (~187★) | .epf/.erf ↔ текст для git-diff/review (у нас .epf бинарно) | Med-High |
+| **edt-test-runner** | `github.com/bia-technologies/edt-test-runner` | YAxUnit-тесты в EDT-UI с отладкой падающего теста | Med |
+| **1c-ai-sandbox** | `github.com/SteelMorgan/1c-ai-sandbox-client-server` | изолированный 1С-sandbox → закрывает pending `sandbox-execution` | Med |
+
+Каталог MCP для 1С: `github.com/Untru/1c-mcp`. **DEPRECATED (не брать):** ring CLI (→ EDT CLI), deployka (→ vrunner), xUnitFor1C (→ YAxUnit). **Сверить версии своих:** bsl-language-server v0.29.0 (128+ диагностик), sonar-bsl-plugin v1.11.0.
+
+### T.3 SDLC-практики (подтверждают курс)
+- **OpenSpec** — официально для brownfield + approval-gate; уже в стеке (analyze-1c-task-v2 v4.0) → носитель Планирование+Дизайн, не строить параллель.
+- **GitHub Spec Kit** — `specify→plan→tasks→implement` + «constitution» (свод инвариантов на все этапы — у нас нет; для 1С = БСП-правила); перф OpenSpec 12мин/Spec Kit 90мин/BMAD 5.5ч → подтверждает «trivial→компактный pipeline.md» (ADR-018).
+- Ниша «авто-генератор YAxUnit-тестов» в индустрии пуста → наша ниша (LLM, у нас уже `autotestplan`).
+
+### T.4 Новые фазы (надстройка)
+- **Phase 9 (NEW) — Adoption candidates:** оценить/внедрить High-кандидаты (claude-code-bsl-lsp, mcp-bsl-lsp-bridge, Coverage41C, 1c-templates-mcp, 1c-mcp-metacode) через ADR-формат (как ADR-012..016 tooling-adoption); сверить версии bsl-ls/sonar.
+- **B.1 (опц.)** — гибридные обёртки `pl-*-1c` (C.3/C.5), если нужны канонические имена.
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
 |---|---|---|---|
 | 2026-06-14 | Phase 0 | Research + roadmap + ADR-019 (proposed) | этот файл, [ADR-019](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md) |
 | 2026-06-14 | Phase 0+ | Доп. анализ: 3 пути реализации + 2 слоя тестов; gaps G6–G15; Phases 0.5/7/8; кеш landscape (4-агентное исследование) | секция «Дополнительный анализ» + [кеш](../../.claude/skills/architecture-research/cache/1c-task-implementation-landscape.md) |
+| 2026-06-14 | Phase 0++ | Глубокий разбор Варианта C (D1–D5, 26 точек C1–C26, гибрид C+B, индустрия C-vs-B) + tool-census (drift T.1) + внешние кандидаты (T.2) + Phase 9; кеш ecosystem (4-агентное вн/внеш исследование) | секции «Глубокий разбор Варианта C» + «Инструменты» + [кеш ecosystem](../../.claude/skills/architecture-research/cache/1c-bsl-tooling-ecosystem-2026.md) |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
