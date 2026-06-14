@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sqlite3
 import sys
 import time
@@ -20,7 +21,7 @@ from neo4j import GraphDatabase
 
 DEFAULT_DB = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
 NEO4J_URI = "bolt://localhost:7687"
-NEO4J_AUTH = ("neo4j", "bsl-graph-2026")
+NEO4J_AUTH = (os.environ.get("NEO4J_USER", "neo4j"), os.environ.get("NEO4J_PASSWORD", ""))
 
 SCHEMA = [
     "CREATE CONSTRAINT module_id IF NOT EXISTS FOR (n:Module) REQUIRE n.id IS UNIQUE",

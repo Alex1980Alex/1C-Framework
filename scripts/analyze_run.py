@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import traceback
 from pathlib import Path
@@ -48,7 +49,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("--neo4j-uri", default="bolt://localhost:7687")
     p.add_argument("--neo4j-user", default="neo4j")
-    p.add_argument("--neo4j-password", default="bsl-graph-2026")
+    p.add_argument("--neo4j-password", default=os.environ.get("NEO4J_PASSWORD", ""))
     p.add_argument("--qdrant-collection", default="graph_embeddings")
     p.add_argument("--verbosity", default="medium", choices=["short", "medium", "full"])
     p.add_argument("--sample-size", type=int, default=200)

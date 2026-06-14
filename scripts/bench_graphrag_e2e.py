@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import statistics
 import sys
 import time
@@ -31,7 +32,7 @@ from src.bsl.semantic_search.hybrid_router import hybrid_search
 from tests.benchmarks.bsl_complex_queries import GOLDEN_QUERIES
 
 NEO4J_URI = "bolt://localhost:7687"
-NEO4J_AUTH = ("neo4j", "bsl-graph-2026")
+NEO4J_AUTH = (os.environ.get("NEO4J_USER", "neo4j"), os.environ.get("NEO4J_PASSWORD", ""))
 QDRANT_URL = "http://localhost:6333"
 COLL_BSL = "bsl_code_v4_late"
 COLL_GRAPH = "graph_embeddings"

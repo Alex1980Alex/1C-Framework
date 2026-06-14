@@ -595,7 +595,7 @@ class BSLSearchService:
 
             uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
             user = os.getenv("NEO4J_USER", "neo4j")
-            password = os.getenv("NEO4J_PASSWORD", "bsl-graph-2026")
+            password = os.getenv("NEO4J_PASSWORD", "")
             self._neo4j_driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
             await self._neo4j_driver.verify_connectivity()
             logger.info(f"[NEO4J] AsyncDriver connected: {uri} as {user}")

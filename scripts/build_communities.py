@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 import uuid
@@ -21,7 +22,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as qm
 
 NEO4J_URI = "bolt://localhost:7687"
-NEO4J_AUTH = ("neo4j", "bsl-graph-2026")
+NEO4J_AUTH = (os.environ.get("NEO4J_USER", "neo4j"), os.environ.get("NEO4J_PASSWORD", ""))
 QDRANT_URL = "http://localhost:6333"
 COLLECTION = "graph_embeddings"
 COMMUNITY_NS = uuid.UUID("d4e5f6a7-b8c9-0123-defa-2345678901bc")
