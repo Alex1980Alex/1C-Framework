@@ -1,0 +1,44 @@
+{
+  "task": "remediate-dependabot-deps",
+  "title": "Remediate 292 dependabot alerts",
+  "created_at": "2026-06-15T11:39:25",
+  "updated_at": "2026-06-15T11:39:26",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-15T11:39:25"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-15T11:39:26",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-06-15T11:39:25"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-15T11:39:26"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-15T11:39:26"
+    }
+  ]
+}
