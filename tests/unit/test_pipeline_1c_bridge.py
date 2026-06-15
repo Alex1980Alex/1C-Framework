@@ -150,3 +150,17 @@ def test_resolve_input_nonexistent_path_with_jira():
     # путь-вид, но папки нет; в строке есть JIRA → ветка jira (не folder)
     r = bridge.resolve_task_input("C:/no/such/GKSTCPLK-2201")
     assert r["kind"] == "jira" and r["slug"] == "GKSTCPLK-2201" and r["folder"] is None
+
+
+def test_resolve_input_empty_is_chat():
+    # граница (контракт явно): пусто → chat со слотом "1c-task"
+    assert bridge.resolve_task_input("")["kind"] == "chat"
+    assert bridge.resolve_task_input("")["slug"] == "1c-task"
+
+
+def test_resolve_input_folder_no_jira_ascii_slug(tmp_path):
+    # папка без JIRA в имени → kind=folder, slug = ASCII-slug имени папки (под-ветка derive_slug)
+    d = tmp_path / "unload-spec"
+    d.mkdir()
+    r = bridge.resolve_task_input(str(d))
+    assert r["kind"] == "folder" and r["slug"] == "unload-spec" and r["folder"] == str(d)
