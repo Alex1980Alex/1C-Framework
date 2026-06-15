@@ -423,3 +423,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 3
 - Summary: Session 2026-06-15. Skills: bsl-development, 1c-doc-research, memory-unified, evaluation-benchmark, code-verify, tenacity-retry, qdrant-operations, task-protocol. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, pipeline/align-1c-commands-4stage, ИБTransportManagementDevelop/Конфигурация. Commit: docs(roadmap): wire bsl_lint.py into implement-1c-task Этап 4 + Phase 9 tool→stage map. Commit: chore: auto-save implement-1c-task.md, SKILL.md, 020-phase9-1c-tooling-adoption-verified.md +1 more. Commit: chore: auto-commit 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, .pipeline-state.json, Конфигурация
 
+
+## 2026-06-16 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-16. Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify, learn:1c-metadata-objects, audit-docs, run-1c-task. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore(submodule): bump gitlink → 2f397ca6 (TOOL-USAGE-REPORT.md новый формат). Commit: feat(1c-pipeline): TOOL-USAGE-REPORT.md — группировка по категориям + саммари + обязательные петли. Commit: chore: auto-save tool_usage_report.py, test_tool_usage_report.py
+
