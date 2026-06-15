@@ -101,6 +101,22 @@ def test_relocate_on_artifact(tmp_path):
     assert d["stages"][0]["status"] == "done"
 
 
+def test_rel_to_root_relative_from_any_cwd(tmp_path, monkeypatch):
+    # БАГ co-location (пойман живым /run-1c-task): относительный --task-dir резолвился от cwd процесса,
+    # а не от корня репо → состояние попадало в .claude/hooks/configuration/... Фикс: от PROJECT_ROOT.
+    ps = _load_ps(tmp_path)
+    other = tmp_path / "elsewhere" / "deep"
+    other.mkdir(parents=True)
+    monkeypatch.chdir(other)  # cwd НЕ корень репо
+    assert ps._rel_to_root("configuration/X/docs/T") == "configuration/X/docs/T"  # от PROJECT_ROOT, не от cwd
+    # абсолютный путь под репо — без изменений
+    abs_td = ps.PROJECT_ROOT / "configuration" / "Y"
+    assert ps._rel_to_root(str(abs_td)) == "configuration/Y"
+    # абсолютный путь ВНЕ репо → абсолютный POSIX-fallback (не repo-relative)
+    outside = ps.PROJECT_ROOT.parent / "outside_repo"
+    assert Path(ps._rel_to_root(str(outside))).is_absolute()
+
+
 def test_relocate_convergence_partial_crash(tmp_path):
     # частичный крэш: register прошёл, _save в target НЕ успел → повторный relocate до-мигрирует из generic
     ps = _load_ps(tmp_path)

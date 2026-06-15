@@ -125,12 +125,18 @@ def _write_registry(reg: dict) -> None:
 
 
 def _rel_to_root(task_dir: str | Path) -> str:
-    """task_dir → POSIX-путь относительно репо (портабельно); вне репо — абсолютный."""
+    """task_dir → POSIX-путь относительно репо (портабельно); вне репо — абсолютный.
+
+    Относительный путь резолвится ОТ КОРНЯ РЕПО (PROJECT_ROOT), а не от cwd процесса: иначе
+    `--task-dir "configuration/…"` из произвольного cwd (напр. `.claude/hooks`) попадает не туда —
+    реальный баг co-location, пойманный живым прогоном /run-1c-task."""
     p = Path(task_dir)
+    if not p.is_absolute():
+        p = PROJECT_ROOT / p  # относительный — от корня репо, НЕ от cwd
     try:
-        return p.resolve().relative_to(PROJECT_ROOT).as_posix()
+        return p.resolve().relative_to(PROJECT_ROOT.resolve()).as_posix()
     except (ValueError, OSError):
-        return p.as_posix()
+        return p.resolve().as_posix()
 
 
 def register_1c(slug: str, task_dir: str | Path) -> str:
