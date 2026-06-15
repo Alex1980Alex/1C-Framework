@@ -112,3 +112,65 @@ def test_resolve_loader_failure_best_effort(monkeypatch):
     monkeypatch.setattr(mod, "_load_pipeline_state", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
     assert mod.resolve_task_dir(slug="x") is None  # сбой загрузки → None, не кидает
     assert mod.resolve_task_dir(task_dir="/explicit") == Path("/explicit")  # override до загрузчика
+
+
+# --- классификация инструментов + группированный отчёт ---
+
+
+def test_classify_tool():
+    c = mod.classify_tool
+    assert c("mcp__memory-orchestrator__unified_search") == "memory"
+    assert c("mcp__vector-memory__search_patterns") == "memory"
+    assert c("mcp__skill-learning__capture_pattern") == "memory"
+    assert c("Skill") == "skills"
+    assert c("WebSearch") == "research" and c("WebFetch") == "research"
+    assert c("mcp__1c-mcp-crud__execute_query") == "config"  # read → анализ
+    assert c("mcp__1c-mcp-crud__get_metadata_structure") == "config"
+    assert c("mcp__bsl-semantic-search__bsl_search") == "config"
+    assert c("mcp__edt-mcp__read_module_source") == "config"  # read split
+    assert c("mcp__1c-mcp-crud__execute_code") == "impl"  # write/execute → кодирование
+    assert c("mcp__edt-mcp__write_module_source") == "impl"
+    assert c("mcp__edt-mcp__update_database") == "impl"
+    assert c("mcp__mcp-onec-test-runner__run_all_tests") == "testing"
+    assert c("Edit") == "infra" and c("Bash") == "infra" and c("Agent") == "infra"
+    assert c("mcp__unknown-server__foo") == "infra"  # неизвестный сервер → infra
+
+
+def test_tool_summary():
+    assert mod.tool_summary("Edit") == "Точечная правка файла"
+    assert mod.tool_summary("mcp__edt-mcp__write_module_source")  # known → непусто
+    assert mod.tool_summary("mcp__x__some_op") == "some op"  # неизвестное MCP → суффикс
+
+
+def test_report_md_grouped():
+    by_tool = {
+        "mcp__memory-orchestrator__unified_search": {"calls": 1, "errors": 0, "ms": 20},
+        "Skill": {"calls": 5, "errors": 0, "ms": 100},
+        "mcp__1c-mcp-crud__execute_query": {"calls": 2, "errors": 0, "ms": 40},
+        "WebSearch": {"calls": 1, "errors": 0, "ms": 90},
+        "mcp__1c-mcp-crud__execute_code": {"calls": 3, "errors": 0, "ms": 60},
+        "Edit": {"calls": 10, "errors": 3, "ms": 500},
+    }
+    md = mod.report_md(by_tool, "TEST")
+    # чеклист обязательных петель — все 4 присутствуют (использованы)
+    assert "## Обязательные петли" in md
+    for m in ("✓ **Память", "✓ **Скилы", "✓ **Анализ конфигурации", "✓ **Внешний анализ"):
+        assert m in md, m
+    # секции по категориям с artifact + назначение
+    assert "## Анализ конфигурации 1С · **обязательный**" in md
+    assert "IMPLEMENTATION-PROGRESS.md" in md  # категория Кодирование (execute_code)
+    assert "| назначение |" in md
+    assert "Точечная правка файла" in md  # саммари Edit
+    assert "30.0" in md  # Edit err% = 3/10 = 30 → ✗
+
+
+def test_report_md_missing_mandatory_marks_cross(monkeypatch):
+    # нет research/анализа → ✗ в чеклисте; скилы есть → ✓
+    md = mod.report_md({"Skill": {"calls": 1, "errors": 0, "ms": 1}}, "T")
+    assert "✗ **Внешний анализ" in md and "✗ **Анализ конфигурации" in md
+    assert "✓ **Скилы" in md
+
+
+def test_report_md_empty_unchanged():
+    md = mod.report_md({}, "T")
+    assert "нет вызовов" in md

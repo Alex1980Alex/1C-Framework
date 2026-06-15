@@ -62,21 +62,143 @@ def aggregate(run_id: str | None = None, session: str | None = None, log: Path =
     return by_tool
 
 
+# Категории инструментов → artifact/этап + обязательность (петли задачи 1С).
+# (key, заголовок, artifact/этап, обязательная-петля, саммари-категории)
+_CATEGORIES = [
+    ("memory", "Память (recall/capture)", "сквозной — все этапы", True,
+     "Поиск прошлого опыта (recall) + фиксация переиспользуемых приёмов (capture)."),
+    ("skills", "Скилы (методики 1С)", "сквозной — все этапы", True,
+     "Активация профильных методик на этапах (analyze / implement / va-bdd / code-verify)."),
+    ("config", "Анализ конфигурации 1С", "ANALYSIS-REPORT.md (Планирование/Дизайн)", True,
+     "Метаданные, запросы, чтение кода, семантика, API платформы 8.3.27."),
+    ("research", "Внешний анализ (Infostart+GitHub)", "ANALYSIS-REPORT.md (Планирование/Дизайн)", True,
+     "Веб-исследование доверенных источников (8.3.27 первоисточник + Infostart + GitHub)."),
+    ("impl", "Кодирование", "IMPLEMENTATION-PROGRESS.md", False,
+     "Запись BSL/XML, исполнение/мутация, проверка ошибок, отладка."),
+    ("testing", "Тестирование", ".run-state.json", False,
+     "Прогон тестов (VA BDD / YAxUnit) + pre-check данных."),
+    ("infra", "Инфраструктура (файлы/оркестрация)", "сквозной", False,
+     "Рабочие инструменты: чтение/правка файлов, shell, поиск, субагенты."),
+]
+_CATEGORY_SUMMARY = {c[0]: c[4] for c in _CATEGORIES}
+
+# 1c-mcp-crud / edt-mcp: суффиксы READ-операций (анализ конфигурации) vs WRITE/мутация (кодирование).
+_CONFIG_READ_OPS = {
+    "execute_query", "validate_query", "get_metadata", "get_metadata_structure", "get_metadata_tree",
+    "list_metadata_objects", "search_code", "find_references_to_object", "get_object_by_link",
+    "get_link_of_object", "get_form_structure", "get_event_log", "get_access_rights", "get_bsl_syntax_help",
+    "read_module_source", "read_method_source", "list_modules", "list_projects", "get_module_structure",
+    "search_in_code", "go_to_definition", "find_references", "get_metadata_objects", "get_metadata_details",
+    "get_problem_summary", "get_project_errors", "get_symbol_info", "get_method_call_hierarchy",
+    "get_form_screenshot", "get_configuration_properties", "get_content_assist", "get_platform_documentation",
+}
+_IMPL_WRITE_OPS = {
+    "execute_code", "create_object", "update_object", "post_document", "mark_for_deletion",
+    "write_module_source", "update_database", "add_metadata_attribute", "delete_metadata_object",
+    "rename_metadata_object", "clean_project", "revalidate_objects", "debug_launch",
+}
+
+# Короткое назначение для частых инструментов (саммари-строка в таблице).
+_TOOL_SUMMARY = {
+    "Edit": "Точечная правка файла", "Write": "Создание/перезапись файла",
+    "Bash": "Shell (тесты, git, проверки)", "Skill": "Активация методики/скила",
+    "Agent": "Субагент (анализ/ревью/поиск)", "Read": "Чтение файла",
+    "Glob": "Поиск файлов по маске", "Grep": "Поиск по содержимому",
+    "WebSearch": "Веб-поиск (Infostart/GitHub/docs)", "WebFetch": "Загрузка страницы",
+    "mcp__memory-orchestrator__unified_search": "recall: федеративный поиск памяти",
+    "mcp__vector-memory__search_patterns": "recall: поиск паттернов",
+    "mcp__skill-learning__capture_pattern": "capture: фиксация приёма (карантин)",
+    "mcp__skill-learning__confirm_pattern": "capture: подтверждение паттерна",
+    "mcp__1c-mcp-crud__execute_query": "1С-запрос (ground-truth данных)",
+    "mcp__1c-mcp-crud__execute_code": "Исполнение BSL (анализ / мутация / render-verify)",
+    "mcp__1c-mcp-crud__get_metadata_structure": "Структура объекта метаданных",
+    "mcp__edt-mcp__read_module_source": "Чтение BSL-модуля",
+    "mcp__edt-mcp__write_module_source": "Запись BSL-модуля",
+    "mcp__edt-mcp__update_database": "Обновление БД конфигурации",
+    "mcp__edt-mcp__get_project_errors": "Проверка ошибок проекта",
+}
+
+
+def _suffix(tool: str) -> str:
+    return tool.rsplit("__", 1)[-1] if "__" in tool else tool
+
+
+def classify_tool(tool: str) -> str:
+    """Инструмент → категория (memory/skills/config/research/impl/testing/infra)."""
+    t = tool or ""
+    if t.startswith(("mcp__memory-orchestrator__", "mcp__vector-memory__", "mcp__skill-learning__", "mcp__memory-ai__")):
+        return "memory"
+    if t == "Skill":
+        return "skills"
+    if t in ("WebSearch", "WebFetch"):
+        return "research"
+    if t.startswith(("mcp__bsl-semantic-search__", "mcp__bsl-platform-context__", "mcp__bsl-code-search__",
+                     "mcp__framework-search__", "mcp__pdf-vector-graph__", "mcp__auto-documenter__")):
+        return "config"
+    if t.startswith(("mcp__bsl-debugger__", "mcp__1c-debug__", "mcp__1c-debug-hmr__")):
+        return "impl"
+    if t.startswith("mcp__mcp-onec-test-runner__"):
+        return "testing"
+    if t.startswith(("mcp__1c-mcp-crud__", "mcp__edt-mcp__")):
+        suf = _suffix(t)
+        return "impl" if suf in _IMPL_WRITE_OPS else "config"  # неизвестная 1С-операция → анализ
+    return "infra"  # Read/Write/Edit/Bash/Glob/Grep/Agent/Task/… + неизвестное
+
+
+def tool_summary(tool: str) -> str:
+    """Короткое назначение инструмента (саммари); неизвестное MCP → суффикс через пробелы."""
+    if tool in _TOOL_SUMMARY:
+        return _TOOL_SUMMARY[tool]
+    return _suffix(tool).replace("_", " ") if tool else ""
+
+
+def _q(errp: float) -> str:
+    return "✗" if errp >= 30 else ("⚠" if errp > 0 else "✓")
+
+
 def report_md(by_tool: dict, key: str) -> str:
-    lines = [
-        f"# TOOL-USAGE-REPORT ({key})",
-        "",
-        "| tool | calls | errors | err% | avg_ms | quality |",
-        "|---|---|---|---|---|---|",
-    ]
-    for tool, a in sorted(by_tool.items(), key=lambda x: -x[1]["calls"]):
-        errp = round(100.0 * a["errors"] / a["calls"], 1) if a["calls"] else 0.0
-        avg = round(a["ms"] / a["calls"]) if a["calls"] else 0
-        q = "✗" if errp >= 30 else ("⚠" if errp > 0 else "✓")
-        lines.append(f"| {tool} | {a['calls']} | {a['errors']} | {errp} | {avg} | {q} _заметка_ |")
+    """Группированный отчёт: обязательные петли (✓/✗) + секции по категориям (artifact + саммари + назначение)."""
+    groups: dict[str, list] = {c[0]: [] for c in _CATEGORIES}
+    for tool, a in by_tool.items():
+        groups.setdefault(classify_tool(tool), []).append((tool, a))
+
+    lines = [f"# TOOL-USAGE-REPORT ({key})", ""]
     if not by_tool:
-        lines.append("| _(нет вызовов для ключа)_ | | | | | |")
-    return "\n".join(lines) + "\n"
+        return "\n".join(lines + ["_(нет вызовов для ключа)_"]) + "\n"
+
+    # Обязательные петли — чеклист (использована ли категория)
+    lines += ["## Обязательные петли", ""]
+    for ckey, title, artifact, mand, _s in _CATEGORIES:
+        if not mand:
+            continue
+        items = groups.get(ckey, [])
+        calls = sum(a["calls"] for _, a in items)
+        lines.append(f"- {'✓' if items else '✗'} **{title}** — {artifact} ({calls} вызов(ов))")
+    lines += [""]
+
+    # Секции по категориям (только непустые)
+    for ckey, title, artifact, mand, _s in _CATEGORIES:
+        items = groups.get(ckey, [])
+        if not items:
+            continue
+        tc = sum(a["calls"] for _, a in items)
+        te = sum(a["errors"] for _, a in items)
+        terrp = round(100.0 * te / tc, 1) if tc else 0.0
+        flag = " · **обязательный**" if mand else ""
+        lines += [
+            f"## {title}{flag}",
+            f"_artifact: {artifact}. {_CATEGORY_SUMMARY[ckey]} Итого {tc} вызов(ов), {te} ошиб. ({terrp}%) {_q(terrp)}._",
+            "",
+            "| tool | назначение | calls | errors | err% | avg_ms | quality |",
+            "|---|---|---|---|---|---|---|",
+        ]
+        for tool, a in sorted(items, key=lambda x: -x[1]["calls"]):
+            errp = round(100.0 * a["errors"] / a["calls"], 1) if a["calls"] else 0.0
+            avg = round(a["ms"] / a["calls"]) if a["calls"] else 0
+            lines.append(f"| {tool} | {tool_summary(tool)} | {a['calls']} | {a['errors']} | {errp} | {avg} | {_q(errp)} |")
+        lines += [""]
+
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def append_eff(by_tool: dict, key: str, eff: Path = EFF) -> None:
