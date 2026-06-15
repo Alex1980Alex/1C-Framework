@@ -1,0 +1,44 @@
+{
+  "task": "impl-1c-bridge-f1",
+  "title": "Реализация B' F-1: автопроводка pipeline-state из 1С-preflight (ядро G3)",
+  "created_at": "2026-06-15T13:43:42",
+  "updated_at": "2026-06-15T13:47:05",
+  "current_stage": 3,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-06-15T13:47:05"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-15T13:47:05",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
