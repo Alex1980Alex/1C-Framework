@@ -7,9 +7,14 @@ Per-task: читает `data/hook-invocations.jsonl` по `correlationid==run_id
 
 Переиспользует существующий авто-лог (НЕ дублирует). stdlib-only (без duckdb-зависимости).
 
+Папка для `TOOL-USAGE-REPORT.md` (единый источник — реестр 1С-задач, как .pipeline-state.json/LOOPS.md):
+  `--slug <slug>` → `pipeline_state.state_dir(slug)` (папка задачи из реестра); `--task-dir <D>` — явный
+  override; без обоих — авто по текущему зарегистрированному 1С-пайплайну (`CURRENT`), иначе stdout.
+
 Использование:
-    python scripts/tool_usage_report.py --run-id <uuid> [--task-dir <папка задачи>]
-    python scripts/tool_usage_report.py --session <sid> [--task-dir ...]
+    python scripts/tool_usage_report.py --run-id <uuid> --slug <slug>       # в папку задачи (реестр)
+    python scripts/tool_usage_report.py --run-id <uuid> [--task-dir <D>]    # явный override
+    python scripts/tool_usage_report.py --session <sid> [--slug|--task-dir] # авто/override
     python scripts/tool_usage_report.py --rollup
 """
 
@@ -91,6 +96,41 @@ def rollup(eff: Path = EFF) -> dict:
     return agg
 
 
+def _load_pipeline_state():
+    """Загрузить pipeline_state collision-immune (spec по пути — без коллизии src/shared↔hooks/shared)."""
+    import importlib.util
+
+    ps_path = ROOT / ".claude" / "hooks" / "shared" / "pipeline_state.py"
+    spec = importlib.util.spec_from_file_location("_ps_for_tur", ps_path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def resolve_task_dir(task_dir: str | None = None, slug: str | None = None) -> Path | None:
+    """Папка для TOOL-USAGE-REPORT.md (единый источник): явный --task-dir (override) >
+    реестр state_dir(slug) > авто по CURRENT (только зарегистрированная 1С-задача). best-effort → None.
+
+    Привязка к реестру делает TOOL-USAGE-REPORT.md консистентным с .pipeline-state.json/LOOPS.md
+    (все резолвятся через pipeline_state.state_dir) — все файлы задачи в одной папке.
+    """
+    if task_dir:
+        return Path(task_dir)
+    try:
+        ps = _load_pipeline_state()
+    except Exception:
+        return None
+    if slug:
+        return ps.state_dir(slug)  # явный slug → его state_dir (папка задачи для 1С)
+    try:
+        cur = ps.resolve_current()
+        if cur and cur in ps._read_registry():  # авто: только зарегистрированная 1С-задача
+            return ps.state_dir(cur)
+    except Exception:
+        return None
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # cp1251-console safe (✓/⚠/✗ + кириллица)
@@ -100,6 +140,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run-id")
     ap.add_argument("--session")
     ap.add_argument("--task-dir")
+    ap.add_argument("--slug", help="slug 1С-задачи → папка из реестра (state_dir); единый источник")
     ap.add_argument("--rollup", action="store_true")
     args = ap.parse_args(argv)
 
@@ -111,8 +152,9 @@ def main(argv: list[str] | None = None) -> int:
     key = args.run_id or args.session
     by_tool = aggregate(run_id=args.run_id, session=args.session)
     md = report_md(by_tool, key)
-    if args.task_dir:
-        p = Path(args.task_dir) / "TOOL-USAGE-REPORT.md"
+    target = resolve_task_dir(args.task_dir, args.slug)
+    if target is not None:
+        p = target / "TOOL-USAGE-REPORT.md"
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(md, encoding="utf-8")
         print(f"написан {p}")

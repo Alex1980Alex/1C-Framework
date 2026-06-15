@@ -54,3 +54,61 @@ def test_append_eff(tmp_path):
     mod.append_eff({"edt": {"calls": 1, "errors": 0, "ms": 7}}, "R9", eff=eff)
     line = json.loads(eff.read_text(encoding="utf-8").strip())
     assert line["key"] == "R9" and line["tool"] == "edt" and line["calls"] == 1
+
+
+# --- resolve_task_dir: единый источник папки (реестр) для TOOL-USAGE-REPORT.md ---
+
+_PS = Path(__file__).resolve().parents[2] / ".claude" / "hooks" / "shared" / "pipeline_state.py"
+
+
+def _iso_ps(monkeypatch, tmp):
+    """Изолированный pipeline_state (tmp-реестр), подменённый в mod._load_pipeline_state."""
+    spec = importlib.util.spec_from_file_location("ps_for_tur_t", _PS)
+    ps = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ps)
+    tmp = Path(tmp).resolve()
+    ps.PROJECT_ROOT = tmp
+    ps.PIPELINE_DIR = tmp / "pipeline"
+    ps.CURRENT_PTR = ps.PIPELINE_DIR / "CURRENT"
+    ps.REGISTRY_PTR = ps.PIPELINE_DIR / "_1c_index.json"
+    monkeypatch.setattr(mod, "_load_pipeline_state", lambda: ps)
+    return ps
+
+
+def test_resolve_task_dir_override(monkeypatch, tmp_path):
+    _iso_ps(monkeypatch, tmp_path)
+    assert mod.resolve_task_dir(task_dir=str(tmp_path / "manual")) == Path(tmp_path / "manual")
+
+
+def test_resolve_slug_registry(monkeypatch, tmp_path):
+    ps = _iso_ps(monkeypatch, tmp_path)
+    td = Path(tmp_path).resolve() / "configuration" / "X" / "docs" / "T"
+    td.mkdir(parents=True)
+    ps.init_task("GKSTCPLK-1", title="1С-задача (run-1c-task): GKSTCPLK-1", task_dir=str(td))
+    assert mod.resolve_task_dir(slug="gkstcplk-1") == td
+
+
+def test_resolve_auto_current_1c(monkeypatch, tmp_path):
+    ps = _iso_ps(monkeypatch, tmp_path)
+    td = Path(tmp_path).resolve() / "configuration" / "Y" / "docs" / "W"
+    td.mkdir(parents=True)
+    ps.init_task("GKSTCPLK-2", title="1С-задача (run-1c-task): GKSTCPLK-2", task_dir=str(td))
+    assert mod.resolve_task_dir() == td  # CURRENT=зарегистрированная 1С → авто в папку задачи
+
+
+def test_resolve_auto_generic_none(monkeypatch, tmp_path):
+    ps = _iso_ps(monkeypatch, tmp_path)
+    ps.init_task("gen", title="Обычная задача")  # CURRENT=generic, не в реестре
+    assert mod.resolve_task_dir() is None  # авто НЕ пишет (без сюрприза) → stdout
+
+
+def test_resolve_slug_generic_honored(monkeypatch, tmp_path):
+    ps = _iso_ps(monkeypatch, tmp_path)
+    ps.init_task("gen", title="Обычная задача")
+    assert mod.resolve_task_dir(slug="gen") == ps.PIPELINE_DIR / "gen"  # явный slug уважается
+
+
+def test_resolve_loader_failure_best_effort(monkeypatch):
+    monkeypatch.setattr(mod, "_load_pipeline_state", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    assert mod.resolve_task_dir(slug="x") is None  # сбой загрузки → None, не кидает
+    assert mod.resolve_task_dir(task_dir="/explicit") == Path("/explicit")  # override до загрузчика

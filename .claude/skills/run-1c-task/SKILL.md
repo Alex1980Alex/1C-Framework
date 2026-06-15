@@ -81,8 +81,10 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
    — зафиксировать переиспользуемый приём (+ запись в `.md`-память при новом правиле/граблях заказчика).
 
 ### W — отчёт об использовании инструментов
-9. `python scripts/tool_usage_report.py --run-id <id> --task-dir <папка реализации>` →
-   `TOOL-USAGE-REPORT.md` (per-task) + `data/tool-effectiveness.jsonl` (cross-task rollup).
+9. `python scripts/tool_usage_report.py --run-id <id> --slug <slug>` →
+   `TOOL-USAGE-REPORT.md` в папке задачи (путь резолвится через реестр `pipeline_state.state_dir(slug)` —
+   единый источник, как `.pipeline-state.json`/`LOOPS.md`) + `data/tool-effectiveness.jsonl` (cross-task).
+   `--task-dir <D>` — явный override, если папка известна, но slug не зарегистрирован.
 
 ### Финал
 10. Отчёт пользователю: что сделано на каждом этапе + вердикт тестов + ссылки на артефакты.
