@@ -148,12 +148,10 @@ def _q(errp: float) -> str:
     return "✗" if errp >= 30 else ("⚠" if errp > 0 else "✓")
 
 
-def _cell(s: str) -> str:
-    return str(s).replace("|", "\\|")  # markdown-ячейка: экранируем пайп (запас прочности)
-
-
-def report_md(by_tool: dict, key: str) -> str:
-    """Группированный отчёт: обязательные петли (✓/✗) + секции по категориям (artifact + саммари + назначение)."""
+def report_md(by_tool: dict, key: str, results: dict | None = None) -> str:
+    """Группированный отчёт: обязательные петли (✓/✗) + секции по категориям, БЛОК на инструмент
+    (метрики + назначение + результат). `results` = {tool: саммари-результата} (курируется, лог не содержит)."""
+    results = results or {}
     groups: dict[str, list] = {c[0]: [] for c in _CATEGORIES}
     for tool, a in by_tool.items():
         groups.setdefault(classify_tool(tool), []).append((tool, a))
@@ -172,7 +170,7 @@ def report_md(by_tool: dict, key: str) -> str:
         lines.append(f"- {'✓' if items else '✗'} **{title}** — {artifact} ({calls} вызов(ов))")
     lines += [""]
 
-    # Секции по категориям (только непустые)
+    # Секции по категориям (только непустые) — блок на инструмент
     for ckey, title, artifact, mand, _s in _CATEGORIES:
         items = groups.get(ckey, [])
         if not items:
@@ -185,14 +183,17 @@ def report_md(by_tool: dict, key: str) -> str:
             f"## {title}{flag}",
             f"_artifact: {artifact}. {_CATEGORY_SUMMARY[ckey]} Итого {tc} вызов(ов), {te} ошиб. ({terrp}%) {_q(terrp)}._",
             "",
-            "| tool | назначение | calls | errors | err% | avg_ms | quality |",
-            "|---|---|---|---|---|---|---|",
         ]
         for tool, a in sorted(items, key=lambda x: -x[1]["calls"]):
             errp = round(100.0 * a["errors"] / a["calls"], 1) if a["calls"] else 0.0
             avg = round(a["ms"] / a["calls"]) if a["calls"] else 0
-            lines.append(f"| {_cell(tool)} | {_cell(tool_summary(tool))} | {a['calls']} | {a['errors']} | {errp} | {avg} | {_q(errp)} |")
-        lines += [""]
+            res = str(results.get(tool, "—")).strip() or "—"
+            lines += [
+                f"**`{tool}`** · {a['calls']} вызов(ов) · {a['errors']} ошиб · {avg}ms · {_q(errp)}",
+                f"· назначение: {tool_summary(tool)}",
+                f"· результат: {res}",
+                "",
+            ]
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -251,6 +252,20 @@ def resolve_task_dir(task_dir: str | None = None, slug: str | None = None) -> Pa
     return None
 
 
+def load_results(path: str | None = None, target: Path | None = None) -> dict:
+    """Курируемые саммари результата по инструменту {tool: текст}. Источник: явный --results <json>
+    ИЛИ авто `<target>/TOOL-RESULTS.json` (рядом с отчётом). Лог результатов не содержит → курируется
+    Claude по факту задачи. best-effort → {} (нет файла/битый JSON)."""
+    p = Path(path) if path else (target / "TOOL-RESULTS.json" if target else None)
+    if p is None:
+        return {}
+    try:
+        d = json.loads(Path(p).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {str(k): str(v) for k, v in d.items()} if isinstance(d, dict) else {}
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # cp1251-console safe (✓/⚠/✗ + кириллица)
@@ -261,6 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--session")
     ap.add_argument("--task-dir")
     ap.add_argument("--slug", help="slug 1С-задачи → папка из реестра (state_dir); единый источник")
+    ap.add_argument("--results", help="JSON {tool: саммари-результата}; иначе авто <папка>/TOOL-RESULTS.json")
     ap.add_argument("--rollup", action="store_true")
     args = ap.parse_args(argv)
 
@@ -271,8 +287,9 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("нужен --run-id или --session (либо --rollup)")
     key = args.run_id or args.session
     by_tool = aggregate(run_id=args.run_id, session=args.session)
-    md = report_md(by_tool, key)
     target = resolve_task_dir(args.task_dir, args.slug)
+    results = load_results(args.results, target)  # курируемые результаты (рядом с отчётом)
+    md = report_md(by_tool, key, results)
     if target is not None:
         p = target / "TOOL-USAGE-REPORT.md"
         p.parent.mkdir(parents=True, exist_ok=True)

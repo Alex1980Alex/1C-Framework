@@ -46,7 +46,7 @@ def test_rollup_and_report(tmp_path):
     agg = mod.rollup(eff=eff)
     assert agg["edt"]["calls"] == 3 and agg["edt"]["errors"] == 1
     md = mod.report_md(agg, "ROLLUP")
-    assert "edt" in md and "| tool |" in md
+    assert "`edt`" in md and "· назначение:" in md  # блочный формат
 
 
 def test_append_eff(tmp_path):
@@ -156,12 +156,30 @@ def test_report_md_grouped():
     assert "## Обязательные петли" in md
     for m in ("✓ **Память", "✓ **Скилы", "✓ **Анализ конфигурации", "✓ **Внешний анализ"):
         assert m in md, m
-    # секции по категориям с artifact + назначение
+    # блочный формат: секции по категориям + назначение + результат под каждым инструментом
     assert "## Анализ конфигурации 1С · **обязательный**" in md
     assert "IMPLEMENTATION-PROGRESS.md" in md  # категория Кодирование (execute_code)
-    assert "| назначение |" in md
+    assert "· назначение:" in md and "· результат:" in md
     assert "Точечная правка файла" in md  # саммари Edit
-    assert "30.0" in md  # Edit err% = 3/10 = 30 → ✗
+    assert "**`Edit`**" in md  # блок-заголовок инструмента
+
+
+def test_report_md_results_rendered():
+    # курируемый результат показывается под инструментом; отсутствующий → «—»
+    by_tool = {"WebSearch": {"calls": 2, "errors": 0, "ms": 90}, "Edit": {"calls": 1, "errors": 0, "ms": 5}}
+    res = {"WebSearch": "Infostart: data-driven печать = канон БСП"}
+    md = mod.report_md(by_tool, "T", results=res)
+    assert "· результат: Infostart: data-driven печать = канон БСП" in md
+    assert "· результат: —" in md  # Edit без курируемого результата
+
+
+def test_load_results(tmp_path):
+    p = tmp_path / "TOOL-RESULTS.json"
+    p.write_text('{"WebSearch": "нашёл X", "n": 5}', encoding="utf-8")
+    r = mod.load_results(str(p))
+    assert r["WebSearch"] == "нашёл X" and r["n"] == "5"  # значения приводятся к str
+    assert mod.load_results(None, None) == {}  # нет источника → пусто
+    assert mod.load_results(str(tmp_path / "nope.json")) == {}  # битый/нет файла → пусто
 
 
 def test_report_md_missing_mandatory_marks_cross(monkeypatch):
@@ -174,9 +192,3 @@ def test_report_md_missing_mandatory_marks_cross(monkeypatch):
 def test_report_md_empty_unchanged():
     md = mod.report_md({}, "T")
     assert "нет вызовов" in md
-
-
-def test_report_md_escapes_pipe():
-    # пайп в имени инструмента не должен ломать markdown-ячейку (экранируется)
-    md = mod.report_md({"weird|name": {"calls": 1, "errors": 0, "ms": 1}}, "T")
-    assert "weird\\|name" in md and "weird|name" not in md.replace("weird\\|name", "")
