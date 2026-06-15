@@ -78,3 +78,19 @@ def test_advance_best_effort(monkeypatch):
     # матч есть, но pipeline_state недоступен (пустой shared) → None, не кидает
     monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
     assert bridge.advance_for_artifact("GKSTCPLK-1-ANALYSIS-REPORT.md") is None
+
+
+# --- F-2: gate_1c_implement (collision-immune; block/allow реального пайплайна — в 04-testing DoD) ---
+
+
+def test_gate_no_pipeline_or_fail_ok():
+    # нет 1С-пайплайна для slug (ИЛИ collision→except) → ok=True (не блокируем нормальный поток)
+    res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-40404 нет такого")
+    assert res["ok"] is True and res["hard"] is False
+
+
+def test_gate_best_effort_ok(monkeypatch):
+    # сбой pipeline_state (пустой shared) → ok=True, не кидает
+    monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
+    res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-1 x")
+    assert res["ok"] is True

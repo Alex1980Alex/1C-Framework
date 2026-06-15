@@ -1,0 +1,44 @@
+{
+  "task": "impl-1c-bridge-f2",
+  "title": "B' F-2: гейт G4 — блок /implement-1c-task до approve дизайна",
+  "created_at": "2026-06-15T14:24:41",
+  "updated_at": "2026-06-15T14:29:18",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-06-15T14:26:35"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-15T14:26:35",
+      "approved": true,
+      "approved_by": "operator",
+      "approved_at": "2026-06-15T14:26:35"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-06-15T14:29:18"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-06-15T14:29:18"
+    }
+  ]
+}

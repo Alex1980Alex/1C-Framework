@@ -88,3 +88,34 @@ def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
         return tuple(done_now) or None
     except Exception:
         return None
+
+
+def gate_1c_implement(prompt: str) -> dict:
+    """G4 (ADR-019 F-2): блок /implement-1c-task если дизайн (этап 2) 1С-пайплайна НЕ approved.
+
+    Возврат {ok, hard, reason}. Нет 1С-пайплайна / не-1С / сбой → ok=True (no-op, best-effort —
+    не блокируем нормальный поток). Хард-блок ТОЛЬКО при существующем 1С-пайплайне с не-одобренным дизайном.
+    """
+    try:
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared import pipeline_state
+
+        slug = derive_slug(prompt)
+        data = pipeline_state.load(slug)
+        if not data or not str(data.get("title", "")).startswith("1С-задача"):
+            return {"ok": True, "hard": False, "reason": ""}  # нет 1С-пайплайна → no-op
+        st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
+        if st2 and st2.get("status") == "done" and st2.get("approved"):
+            return {"ok": True, "hard": False, "reason": ""}  # дизайн одобрен → allow
+        return {
+            "ok": False,
+            "hard": True,
+            "reason": (
+                f"Дизайн (ANALYSIS-REPORT, этап 2) задачи {slug} НЕ одобрен. Отревьюй ANALYSIS-REPORT "
+                f"и одобри: `.venv/Scripts/python.exe .claude/hooks/shared/pipeline_state.py approve {slug}`"
+            ),
+        }
+    except Exception:
+        return {"ok": True, "hard": False, "reason": ""}  # best-effort: не блокируем при сбое

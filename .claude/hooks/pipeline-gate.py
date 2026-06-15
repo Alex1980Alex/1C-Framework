@@ -28,6 +28,14 @@ class PipelineGate(BaseHook):
         if os.environ.get("PIPELINE_GATE_DISABLE") == "1":
             return None
         cmd = detect_slash_command(inp.prompt or "")
+        if cmd == "implement-1c-task":
+            # ADR-019 F-2 (G4): хард-гейт «Дизайн→Кодирование» для 1С-маршрута
+            from shared.pipeline_1c_bridge import gate_1c_implement
+
+            res = gate_1c_implement(inp.prompt or "")
+            if not res["ok"] and res["hard"]:
+                return HookOutput().block(f"[PIPELINE-GATE] {res['reason']}")
+            return None
         if cmd not in PIPELINE_COMMANDS:
             return None  # не наш пайплайн — пропускаем (non-breaking)
         res = gate_check(cmd)
