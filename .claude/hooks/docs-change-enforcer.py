@@ -420,6 +420,30 @@ def get_session_files(session_id: str = "") -> set[str]:
     return files
 
 
+def _claude_md_touched() -> bool:
+    """CLAUDE.md изменён в окне сессии НЕЗАВИСИМО от префикса коммита.
+
+    Фикс гэпа: get_session_files() исключает docs:/chore:/style: коммиты (--invert-grep),
+    из-за чего легитимные CLAUDE.md-правки в `docs(...)`-коммитах не попадают в session_files
+    → ложный infra-block, хотя CLAUDE.md обновлён. Проверяем напрямую: uncommitted ИЛИ
+    закоммичен в session-окне (любой subject). best-effort → False.
+    """
+    try:
+        r = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "status", "--porcelain", "--", "CLAUDE.md"],
+            cwd=str(PROJECT_ROOT), capture_output=True, text=True, encoding="utf-8", timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return True
+        r = subprocess.run(
+            ["git", "log", f"--since={SESSION_FALLBACK_WINDOW}", "--name-only", "--pretty=format:", "--", "CLAUDE.md"],
+            cwd=str(PROJECT_ROOT), capture_output=True, text=True, encoding="utf-8", timeout=5,
+        )
+        return r.returncode == 0 and "CLAUDE.md" in r.stdout
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+
+
 def find_stale_infra(session_files: set[str]) -> list[dict[str, Any]]:
     """Check if infrastructure changes (hooks/skills/settings) need CLAUDE.md update.
 
@@ -444,7 +468,7 @@ def find_stale_infra(session_files: set[str]) -> list[dict[str, Any]]:
         if _is_infra_file(fp):
             infra_changes.append(fp)
 
-    if infra_changes and not claude_md_updated:
+    if infra_changes and not claude_md_updated and not _claude_md_touched():
         return [
             {
                 "subdir": "CLAUDE.md (инфраструктура)",
