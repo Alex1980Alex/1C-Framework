@@ -90,7 +90,7 @@ _IMPL_WRITE_OPS = {
     "rename_metadata_object", "clean_project", "revalidate_objects", "debug_launch",
 }
 
-# Короткое назначение для частых инструментов (саммари-строка в таблице).
+# Короткое назначение для частых инструментов (саммари-строка блока).
 _TOOL_SUMMARY = {
     "Edit": "Точечная правка файла", "Write": "Создание/перезапись файла",
     "Bash": "Shell (тесты, git, проверки)", "Skill": "Активация методики/скила",
@@ -260,10 +260,13 @@ def load_results(path: str | None = None, target: Path | None = None) -> dict:
     if p is None:
         return {}
     try:
-        d = json.loads(Path(p).read_text(encoding="utf-8"))
+        d = json.loads(p.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    return {str(k): str(v) for k, v in d.items()} if isinstance(d, dict) else {}
+    if not isinstance(d, dict):
+        return {}
+    # значения → однострочный str (случайный \n не должен разрывать блок инструмента)
+    return {str(k): str(v).replace("\n", " ").strip() for k, v in d.items()}
 
 
 def main(argv: list[str] | None = None) -> int:
