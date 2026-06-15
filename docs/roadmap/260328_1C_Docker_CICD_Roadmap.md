@@ -76,7 +76,7 @@
 |-----------|----------|
 | Runner | `windows-1c-runner` v2.333.1, автозапуск через Task Scheduler |
 | Лейблы | `self-hosted, Windows, X64, windows-11, 1c, bsl` |
-| SonarQube | v9.9.8 LTS, BSL Plugin v1.16.1, `http://localhost:9000` |
+| SonarQube | **CB 26.6.0.123539 + BSL Plugin v1.18.1** (обновлено 2026-06-15; было v9.9.8 LTS + 1.16.1), `http://localhost:9000` |
 | Secrets | `USER_1C_LOGIN`, `USER_1C_PASS`, `SONAR_TOKEN` |
 | Variables | `SRV_1C=KOMPUTER`, `DB_NAME=testdb1c`, `ONEC_VERSION=8.3.27.1859` |
 | Junction | `D:\1C-FW` → `D:\1С-Framework` (обход кириллического пути) |
@@ -624,8 +624,9 @@ jobs:
 
 Создан файл **`docker/docker-compose.sonarqube.yml`** для изолированного запуска сервера анализа:
 
-- **Образ:** `sonarqube:lts-community`
+- **Образ:** `sonarqube:community` (Community Build 26.x; обновлено 2026-06-15 с `lts-community`/9.9 ради BSL-плагина 1.18.1, требующего ядро ≥25.4)
 - **Контейнер:** `sonarqube-1c`, порт 9000
+- **BSL-плагин:** v1.18.1, декларативный bind-mount `../tools/sonar-bsl-plugin.jar` → `extensions/plugins/` (Git LFS)
 - **Ограничения ресурсов:** Лимит памяти 4 GB (необходимо для работы Java-машины и парсинга больших проектов)
 - **Healthcheck:** Проверка состояния через `curl -f http://localhost:9000/api/system/status`
 - **Тома (Volumes):** 3 именованных тома (`data`, `extensions`, `logs`) для сохранения состояния и логов между перезапусками

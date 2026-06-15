@@ -4,7 +4,10 @@
 
 services:
   sonarqube:
-    image: sonarqube:lts-community
+    # Community Build (CB 26.x, calendar-versioned monthly) — ядро >=2025.x,
+    # требуется для sonar-bsl-plugin-community 1.18.1 (min core 25.4.0.105899).
+    # Старый sonarqube:lts-community = 9.9 LTA брал только plugin 1.16.1.
+    image: sonarqube:community
     container_name: sonarqube-1c
     ports:
       - "9000:9000"
@@ -14,6 +17,9 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
+      # BSL (1C) plugin 1.18.1 — declarative install из репо-jar (Git LFS).
+      # Путь относителен каталогу compose-файла (docker/) -> <repo>/tools/.
+      - ../tools/sonar-bsl-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-communitybsl-plugin-1.18.1.jar:ro
     mem_limit: 4g
     restart: unless-stopped
     healthcheck:

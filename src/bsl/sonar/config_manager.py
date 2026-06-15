@@ -26,7 +26,7 @@ class SonarQubeConfig(BaseModel):
     sources: str = "src"
 
     # BSL-specific settings
-    bsl_plugin_version: str = "1.16.1"  # реальная версия bundled tools/sonar-bsl-plugin.jar (ADR-020; было placeholder 1.0.0)
+    bsl_plugin_version: str = "1.18.1"  # реальная версия bundled tools/sonar-bsl-plugin.jar (установлен 2026-06-15 на SonarQube CB 26.x; было 1.16.1 под 9.9)
     quality_profile: str = "bsl-way"
 
     # Scanner path (relative to project root, Windows default)
