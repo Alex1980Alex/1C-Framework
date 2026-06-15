@@ -82,16 +82,8 @@ _CATEGORIES = [
 ]
 _CATEGORY_SUMMARY = {c[0]: c[4] for c in _CATEGORIES}
 
-# 1c-mcp-crud / edt-mcp: суффиксы READ-операций (анализ конфигурации) vs WRITE/мутация (кодирование).
-_CONFIG_READ_OPS = {
-    "execute_query", "validate_query", "get_metadata", "get_metadata_structure", "get_metadata_tree",
-    "list_metadata_objects", "search_code", "find_references_to_object", "get_object_by_link",
-    "get_link_of_object", "get_form_structure", "get_event_log", "get_access_rights", "get_bsl_syntax_help",
-    "read_module_source", "read_method_source", "list_modules", "list_projects", "get_module_structure",
-    "search_in_code", "go_to_definition", "find_references", "get_metadata_objects", "get_metadata_details",
-    "get_problem_summary", "get_project_errors", "get_symbol_info", "get_method_call_hierarchy",
-    "get_form_screenshot", "get_configuration_properties", "get_content_assist", "get_platform_documentation",
-}
+# 1c-mcp-crud / edt-mcp: суффиксы WRITE/мутация → кодирование (impl); прочие 1С-операции → анализ (config).
+# Denylist (а не allowlist read-ops): новые read-инструменты автоматически попадают в анализ без правки кода.
 _IMPL_WRITE_OPS = {
     "execute_code", "create_object", "update_object", "post_document", "mark_for_deletion",
     "write_module_source", "update_database", "add_metadata_attribute", "delete_metadata_object",
@@ -156,6 +148,10 @@ def _q(errp: float) -> str:
     return "✗" if errp >= 30 else ("⚠" if errp > 0 else "✓")
 
 
+def _cell(s: str) -> str:
+    return str(s).replace("|", "\\|")  # markdown-ячейка: экранируем пайп (запас прочности)
+
+
 def report_md(by_tool: dict, key: str) -> str:
     """Группированный отчёт: обязательные петли (✓/✗) + секции по категориям (artifact + саммари + назначение)."""
     groups: dict[str, list] = {c[0]: [] for c in _CATEGORIES}
@@ -195,7 +191,7 @@ def report_md(by_tool: dict, key: str) -> str:
         for tool, a in sorted(items, key=lambda x: -x[1]["calls"]):
             errp = round(100.0 * a["errors"] / a["calls"], 1) if a["calls"] else 0.0
             avg = round(a["ms"] / a["calls"]) if a["calls"] else 0
-            lines.append(f"| {tool} | {tool_summary(tool)} | {a['calls']} | {a['errors']} | {errp} | {avg} | {_q(errp)} |")
+            lines.append(f"| {_cell(tool)} | {_cell(tool_summary(tool))} | {a['calls']} | {a['errors']} | {errp} | {avg} | {_q(errp)} |")
         lines += [""]
 
     return "\n".join(lines).rstrip() + "\n"

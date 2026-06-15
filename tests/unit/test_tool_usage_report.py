@@ -174,3 +174,9 @@ def test_report_md_missing_mandatory_marks_cross(monkeypatch):
 def test_report_md_empty_unchanged():
     md = mod.report_md({}, "T")
     assert "нет вызовов" in md
+
+
+def test_report_md_escapes_pipe():
+    # пайп в имени инструмента не должен ломать markdown-ячейку (экранируется)
+    md = mod.report_md({"weird|name": {"calls": 1, "errors": 0, "ms": 1}}, "T")
+    assert "weird\\|name" in md and "weird|name" not in md.replace("weird\\|name", "")
