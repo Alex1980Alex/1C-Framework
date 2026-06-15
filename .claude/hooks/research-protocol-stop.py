@@ -35,7 +35,16 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 INVOCATIONS_LOG = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 PIPELINE_DIR = PROJECT_ROOT / "pipeline"
-TAIL_BYTES = 2 * 1024 * 1024
+TAIL_BYTES = 2 * 1024 * 1024  # invocation-лог: короткие CloudEvents
+TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024  # N3: транскрипт крупнее → 8 МБ, чтобы не обрезать ранний WebSearch
+
+# N4: единый предикат 1С-задачи из моста (graceful fallback — Stop-хук не должен падать на импорте)
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from shared.pipeline_1c_bridge import is_1c_task_title
+except Exception:
+    def is_1c_task_title(title) -> bool:  # type: ignore[misc]
+        return str(title or "").startswith("1С-задача (")
 
 _RESEARCH_TOOLS = {"WebSearch", "WebFetch"}
 
@@ -55,12 +64,12 @@ def _parse_dt(s: str) -> datetime | None:
     return dt.replace(tzinfo=None) if dt.tzinfo else dt
 
 
-def _read_tail(path: Path) -> list[str]:
+def _read_tail(path: Path, n: int = TAIL_BYTES) -> list[str]:
     try:
         with open(path, "rb") as f:
             f.seek(0, 2)
             size = f.tell()
-            f.seek(max(0, size - TAIL_BYTES))
+            f.seek(max(0, size - n))
             return f.read().decode("utf-8", errors="replace").splitlines()
     except OSError:
         return []
@@ -101,7 +110,7 @@ def _onec_task_this_session(start: datetime | None) -> bool:
             d = json.loads(sf.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        if not str(d.get("title", "")).startswith("1С-задача ("):
+        if not is_1c_task_title(d.get("title")):
             continue
         dt = _parse_dt(d.get("updated_at", ""))
         if dt is not None and dt >= start:
@@ -125,7 +134,7 @@ def _research_done(transcript_path: str) -> bool:
     """≥1 WebSearch/WebFetch (фактический tool_use транскрипта) = внешний анализ выполнен."""
     if not transcript_path or not Path(transcript_path).exists():
         return False
-    for line in _read_tail(Path(transcript_path)):
+    for line in _read_tail(Path(transcript_path), TRANSCRIPT_TAIL_BYTES):
         line = line.strip()
         if not line:
             continue
@@ -149,7 +158,7 @@ def main() -> None:
 
     if os.environ.get("RESEARCH_PROTOCOL_DISABLE") == "1":
         if timer:
-            timer.log(outcome="allow")
+            timer.log(outcome="allow-optout")  # N10: blanket-bypass виден в audit/tool_usage_report
         sys.exit(0)
 
     inp = _read_stdin()

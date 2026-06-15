@@ -33,6 +33,16 @@ def test_derive_slug_jira():
     assert bridge.derive_slug("/implement-1c-task GKSTCPLK-2182 доработать") == "GKSTCPLK-2182"
 
 
+def test_is_1c_task_title():
+    # N4: единый предикат 1С-пайплайна — paren-form True, lookalike/прочее False
+    assert bridge.is_1c_task_title("1С-задача (run-1c-task): GKSTCPLK-1") is True
+    assert bridge.is_1c_task_title("1С-задача (analyze-1c-task): x") is True
+    assert bridge.is_1c_task_title("1С-задача из чата: классификатор") is False  # lookalike (без скобки)
+    assert bridge.is_1c_task_title("B' доработка: docs") is False
+    assert bridge.is_1c_task_title("") is False
+    assert bridge.is_1c_task_title(None) is False
+
+
 def test_derive_slug_fallback_ascii():
     s = bridge.derive_slug("Refactor unload direction form")
     assert s and s == s.lower() and all(c.isalnum() or c == "-" for c in s)

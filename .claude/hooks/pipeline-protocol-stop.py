@@ -193,6 +193,8 @@ class PipelineProtocolStop(BaseHook):
             "  trivial → создай pipeline/<slug>/pipeline.md (4 секции: План/Дизайн/Реализация/Тест);\n"
             "  medium/complex → 01-architecture…04-testing.\n"
             "  затем: pipeline_state.py done <slug> <N> <файл>\n"
+            "Для 1С-задачи после этого Stop проверятся ТАКЖЕ: память (recall `unified_search` + "
+            "capture `capture_pattern`) и внешний анализ (`WebSearch` Infostart/GitHub) — закрой их в этом же проходе.\n"
             "Аварийный обход (если правка не была задачей): PIPELINE_PROTOCOL_DISABLE=1."
         )
 

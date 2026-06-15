@@ -26,6 +26,18 @@ import unicodedata
 _JIRA = re.compile(r"[A-Z]{2,}-\d+")
 
 
+_1C_TITLE_PREFIX = "1С-задача ("  # формат ensure_pipeline_1c / run-1c-task: f"1С-задача ({command}): {slug}"
+
+
+def is_1c_task_title(title) -> bool:
+    """Единый предикат «pipeline реальной 1С-задачи» (N4: убирает дубль/рассинхрон префикса в 6 местах).
+
+    Строго ``startswith("1С-задача (")`` (с открывающей скобкой) — исключает framework-lookalike
+    «1С-задача из чата: …». Используется в guard'ах моста И в Stop-энфорсерах (memory/research-protocol-stop).
+    """
+    return str(title or "").startswith(_1C_TITLE_PREFIX)
+
+
 def derive_slug(prompt: str) -> str:
     """JIRA-код приоритетно (стабильный ID задачи между командами); иначе ASCII-slug."""
     m = _JIRA.search(prompt or "")
@@ -97,7 +109,7 @@ def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
 
         slug = pipeline_state.resolve_current()
         data = pipeline_state.load(slug) if slug else None
-        if not data or not str(data.get("title", "")).startswith("1С-задача"):
+        if not data or not is_1c_task_title(data.get("title")):
             return None  # guard: только 1С-пайплайн (метка ensure_pipeline_1c)
         done_now = []
         for n in stages:
@@ -124,7 +136,7 @@ def gate_1c_implement(prompt: str) -> dict:
 
         slug = derive_slug(prompt)
         data = pipeline_state.load(slug)
-        if not data or not str(data.get("title", "")).startswith("1С-задача"):
+        if not data or not is_1c_task_title(data.get("title")):
             return {"ok": True, "hard": False, "reason": ""}  # нет 1С-пайплайна → no-op
         st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
         if st2 and st2.get("status") == "done" and st2.get("approved"):
@@ -162,7 +174,7 @@ def advance_test_done(file_path: str) -> tuple[int, ...] | None:
 
         slug = pipeline_state.resolve_current()
         data = pipeline_state.load(slug) if slug else None
-        if not data or not str(data.get("title", "")).startswith("1С-задача"):
+        if not data or not is_1c_task_title(data.get("title")):
             return None
         st4 = next((s for s in data.get("stages", []) if s.get("n") == 4), None)
         if st4 and st4.get("status") != "done":

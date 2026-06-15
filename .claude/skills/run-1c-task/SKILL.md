@@ -33,6 +33,9 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 
 ### Этап 1-2 — Планирование + Дизайн (методика analyze-1c-task-v2)
 1. `pipeline_state init <slug> --title "1С-задача (run-1c-task): <slug>"` (идемпотентно).
+   1.5. **ОБЯЗАТЕЛЬНО в начале** (иначе Stop-хуки `memory-protocol-stop` / `research-protocol-stop` заблокируют
+   завершение): **recall** — `mcp__memory-orchestrator__unified_search` (+ `search_patterns`) по теме задачи;
+   **внешний анализ** — `WebSearch`/`WebFetch` (Infostart + GitHub best-practices), с атрибуцией находок.
 2. **Активируй skill `analyze-1c-task-v2`** и выполни его методику (Фазы 1-5) → **ANALYSIS-REPORT.md**.
    - kind=folder → источник ТЗ = папка (spec + скриншоты); kind=jira → по коду; kind=chat → по описанию.
    - Папка реализации: `configuration/<родительская-задача>/docs/<YYMMDD_slug>/` (провизорно; см. память
@@ -40,8 +43,9 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 3. Запись `ANALYSIS-REPORT.md` авто-продвинет этапы 1→2 (хук `pipeline-1c-advance`, F-1.5).
 
 ### Этап 2.5 — АВТО-APPROVE (ключевое отличие)
-4. `pipeline_state approve <slug>` — **БЕЗ паузы на человека.** Это осознанный обход ревью
+4. `pipeline_state approve <slug> --by auto` — **БЕЗ паузы на человека.** Это осознанный обход ревью
    (пользователь выбрал `/run-1c-task`). Гейт F-2 в AUTO-потоке не участвует (skill-делегирование, не slash).
+   Метка `approved_by=auto` (а не `human`) — audit-след «дизайн НЕ ревьюился человеком» (N5).
 
 > **Хард-правило (AUTO ≠ игнор блокеров):** если анализ выявил критическую неоднозначность, противоречие в ТЗ
 > или высокий риск — **ОСТАНОВИСЬ и спроси пользователя** перед approve. Авто-режим экономит паузу на рутинном
@@ -55,6 +59,8 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 ### Этап 4 — Тестирование (методика va-bdd-testing / run-1c-tests)
 7. **Активируй skill `va-bdd-testing`** (или команду `/run-1c-tests`) → прогон BDD-сценариев до зелёных.
 8. Зелёный `.run-state.json` (все `chain[].status==passed`) авто-продвинет этап 4 (F-1.6).
+   8.5. **ОБЯЗАТЕЛЬНО после verify PASS** (иначе `memory-protocol-stop` заблокирует): `mcp__skill-learning__capture_pattern`
+   — зафиксировать переиспользуемый приём (+ запись в `.md`-память при новом правиле/граблях заказчика).
 
 ### W — отчёт об использовании инструментов
 9. `python scripts/tool_usage_report.py --run-id <id> --task-dir <папка реализации>` →

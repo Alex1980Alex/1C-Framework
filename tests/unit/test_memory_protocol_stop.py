@@ -55,13 +55,23 @@ def test_memory_signals_both_tools(tmp_path):
 
 
 def test_memory_signals_md_write_is_capture(tmp_path):
-    # запись в memory/*.md = capture; search_patterns = recall
+    # N6: запись .md в КУРИРУЕМУЮ память (`.claude/.../memory/`) = capture; search_patterns = recall
     t = tmp_path / "t.json"
     _transcript(t, [
         ("mcp__vector-memory__search_patterns", {}),
-        ("Write", {"file_path": "C:/x/memory/feedback_y.md"}),
+        ("Write", {"file_path": "C:/Users/x/.claude/projects/proj/memory/feedback_y.md"}),
     ])
     assert mod._memory_signals(str(t)) == (True, True)
+
+
+def test_memory_signals_md_outside_claude_not_capture(tmp_path):
+    # N6: .md под src/memory/ (код-доки сабсистемы) — НЕ курируемая память → НЕ capture
+    t = tmp_path / "t.json"
+    _transcript(t, [
+        ("mcp__memory-orchestrator__unified_search", {}),
+        ("Write", {"file_path": "src/memory/README.md"}),
+    ])
+    assert mod._memory_signals(str(t)) == (True, False)  # recall да, capture нет
 
 
 def test_memory_signals_route_and_save_is_capture(tmp_path):
