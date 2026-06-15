@@ -20,6 +20,7 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -38,6 +39,18 @@ BSL_INDEX_SCRIPT = PROJECT_ROOT / "scripts" / "reindex_bsl_qwen3.py"
 # BSL common modules can legitimately be 1-2 MB; use a higher cap than the
 # framework MAX_FILE_BYTES (512 KB tuned for Python/MD).
 BSL_MAX_FILE_BYTES = 4 * 1024 * 1024  # 4 MB
+
+# Call-graph (bsl_call_graph.db): unlike the per-file vector reindex above,
+# build_call_graph.py has NO --paths incremental mode — it rglob-rebuilds the
+# WHOLE project (33k symbols / 80k calls). So on .bsl diffs we spawn it THROTTLED:
+# at most once per window, gated by a spawn-sentinel to avoid thundering-herd on
+# rapid successive commits. The Qdrant graph_embeddings collection stays manual
+# (heavier embedding pass) — see chapter 43.5.
+CALL_GRAPH_SCRIPT = PROJECT_ROOT / "scripts" / "build_call_graph.py"
+CALL_GRAPH_DB = PROJECT_ROOT / "cache" / "bsl_call_graph.db"
+CALL_GRAPH_LOG_PATH = PROJECT_ROOT / "cache" / "bsl_call_graph_reindex.log"
+CALL_GRAPH_SENTINEL = PROJECT_ROOT / "cache" / "bsl_call_graph.last_spawn"
+CALL_GRAPH_MIN_INTERVAL_S = 6 * 3600  # rebuild at most once per 6h
 
 
 def _changed_files(since_ref: str) -> list[str]:
@@ -205,6 +218,51 @@ def _spawn_bsl_reindex(project: str, files: list[str]) -> None:
     _spawn_detached_cmd(cmd, BSL_LOG_PATH, header)
 
 
+def _call_graph_stale(now: float) -> bool:
+    """True if the shared call-graph DB / spawn-sentinel is missing or older than the window.
+
+    Throttle marker = newest mtime over (DB, spawn-sentinel). The sentinel is
+    touched at spawn time (before the minutes-long rebuild finishes) so rapid
+    successive commits inside the window don't each spawn a duplicate rebuild.
+    """
+    newest = 0.0
+    for p in (CALL_GRAPH_DB, CALL_GRAPH_SENTINEL):
+        try:
+            newest = max(newest, p.stat().st_mtime)
+        except OSError:
+            continue
+    if newest == 0.0:
+        return True  # nothing exists yet → build
+    return (now - newest) > CALL_GRAPH_MIN_INTERVAL_S
+
+
+def _touch_call_graph_sentinel() -> None:
+    """Mark spawn time immediately so the throttle holds before the rebuild completes."""
+    try:
+        CALL_GRAPH_SENTINEL.parent.mkdir(parents=True, exist_ok=True)
+        CALL_GRAPH_SENTINEL.write_text(str(os.getpid()), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _spawn_call_graph(project: str) -> None:
+    """Full call-graph re-parse for one 1С project into the shared bsl_call_graph.db.
+
+    No --paths incremental mode exists, so this re-parses the whole project tree.
+    add_module upserts per module; stale symbols from deleted modules are pruned by
+    a manual `--clear` pass (documented in chapter 43.5). Gated by the throttle in
+    main() so it runs at most once per window, not on every commit.
+    """
+    cmd = [
+        str(PYTHON_EXE) if PYTHON_EXE.exists() else sys.executable,
+        str(CALL_GRAPH_SCRIPT),
+        "--project",
+        project,
+    ]
+    header = f"call-graph rebuild project={Path(project).name}"
+    _spawn_detached_cmd(cmd, CALL_GRAPH_LOG_PATH, header)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Auto-reindex helper for git hooks")
     ap.add_argument(
@@ -250,6 +308,12 @@ def main() -> int:
             _spawn_framework_reindex(framework_paths)
         for group in bsl_groups:
             _spawn_bsl_reindex(group["project"], group["files"])
+        # Call-graph: full re-parse, throttled (no --paths mode). Snapshot staleness
+        # once, touch sentinel before launching so concurrent commits don't pile up.
+        if bsl_groups and _call_graph_stale(time.time()):
+            _touch_call_graph_sentinel()
+            for group in bsl_groups:
+                _spawn_call_graph(group["project"])
     except Exception:
         # Spawn failures (missing venv Python, Popen error) must not block git commits.
         pass

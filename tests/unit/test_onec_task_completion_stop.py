@@ -1,7 +1,8 @@
 """Unit-тесты onec-task-completion-stop (единый task-completion gate 1С). marker: unit.
 
-Collision-immune (importlib). Покрытие: _collect_signals (recall/capture/research/skill по фактическим
-tool_use; .md-capture только в `.claude/`; Skill 1С-методики vs прочие), _onec_task_this_session (предикат).
+Collision-immune (importlib). Покрытие: _collect_signals (recall/capture/research/skill/config_edit по
+фактическим tool_use; .md-capture только в `.claude/`; 1С-методика vs прочие методики),
+_onec_pipeline_updated (сессионный детект) + _incomplete_onec_pipeline (H5 межсессионный).
 """
 
 from __future__ import annotations
@@ -39,13 +40,13 @@ def test_collect_all_signals(tmp_path):
         ("WebSearch", {"query": "1с infostart"}),
         ("Skill", {"skill": "analyze-1c-task-v2"}),
     ])
-    assert mod._collect_signals(str(t)) == {"recall": True, "capture": True, "research": True, "skill": True}
+    assert mod._collect_signals(str(t)) == {"recall": True, "capture": True, "research": True, "skill": True, "config_edit": False}
 
 
 def test_collect_none(tmp_path):
     t = tmp_path / "t.json"
     _transcript(t, [("Read", {"file_path": "x"}), ("Bash", {"command": "echo"})])
-    assert mod._collect_signals(str(t)) == {"recall": False, "capture": False, "research": False, "skill": False}
+    assert mod._collect_signals(str(t)) == {"recall": False, "capture": False, "research": False, "skill": False, "config_edit": False}
 
 
 def test_collect_partial(tmp_path):
@@ -75,22 +76,55 @@ def test_collect_skill_non_1c_not_counted(tmp_path):
     assert mod._collect_signals(str(t))["skill"] is False
 
 
-def test_onec_task_predicate(tmp_path, monkeypatch):
+def test_collect_config_edit(tmp_path):
+    # H5: правка 1С-кода в сессии (.bsl / configuration/) → config_edit True; прочее → False
+    t = tmp_path / "t.json"
+    _transcript(t, [("Edit", {"file_path": "C:/1С-Framework/configuration/X/Module.bsl"})])
+    assert mod._collect_signals(str(t))["config_edit"] is True
+    t2 = tmp_path / "t2.json"
+    _transcript(t2, [("Edit", {"file_path": "scripts/foo.py"})])
+    assert mod._collect_signals(str(t2))["config_edit"] is False
+
+
+def test_onec_pipeline_updated_this_session(tmp_path, monkeypatch):
     monkeypatch.setattr(mod, "PIPELINE_DIR", tmp_path)
     d = tmp_path / "task1"
     d.mkdir()
     (d / ".pipeline-state.json").write_text(
         json.dumps({"title": "1С-задача (run-1c-task): zz", "updated_at": "2027-01-01T00:00:00"}), encoding="utf-8"
     )
-    assert mod._onec_task_this_session(datetime(2026, 6, 15)) is True
-    assert mod._onec_task_this_session(None) is False
+    assert mod._onec_pipeline_updated(datetime(2026, 6, 15)) == "task1"
+    assert mod._onec_pipeline_updated(None) is None
 
 
-def test_onec_task_lookalike_excluded(tmp_path, monkeypatch):
+def test_onec_pipeline_lookalike_excluded(tmp_path, monkeypatch):
     monkeypatch.setattr(mod, "PIPELINE_DIR", tmp_path)
     d = tmp_path / "task1"
     d.mkdir()
     (d / ".pipeline-state.json").write_text(
         json.dumps({"title": "1С-задача из чата: x", "updated_at": "2027-01-01T00:00:00"}), encoding="utf-8"
     )
-    assert mod._onec_task_this_session(datetime(2026, 6, 15)) is False
+    assert mod._onec_pipeline_updated(datetime(2026, 6, 15)) is None
+
+
+def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
+    # H5: межсессионная задача — этапы не все done → возвращает slug
+    inc = tmp_path / "inc"
+    monkeypatch.setattr(mod, "PIPELINE_DIR", inc)
+    d = inc / "task_h5"
+    d.mkdir(parents=True)
+    (d / ".pipeline-state.json").write_text(
+        json.dumps({"title": "1С-задача (run-1c-task): h5",
+                    "stages": [{"status": "done"}, {"status": "pending"}]}), encoding="utf-8"
+    )
+    assert mod._incomplete_onec_pipeline() == "task_h5"
+    # все этапы done → None
+    done = tmp_path / "done"
+    monkeypatch.setattr(mod, "PIPELINE_DIR", done)
+    d2 = done / "task_done"
+    d2.mkdir(parents=True)
+    (d2 / ".pipeline-state.json").write_text(
+        json.dumps({"title": "1С-задача (run-1c-task): dd",
+                    "stages": [{"status": "done"}, {"status": "done"}]}), encoding="utf-8"
+    )
+    assert mod._incomplete_onec_pipeline() is None

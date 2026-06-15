@@ -105,21 +105,37 @@ def _session_start(sid: str) -> datetime | None:
     return start
 
 
-def _onec_task_this_session(start: datetime | None) -> bool:
-    """1С-задача в сессии = pipeline с title `1С-задача (…)`, обновлён за сессию (start=None → False)."""
-    if start is None or not PIPELINE_DIR.is_dir():
-        return False
+def _iter_1c_pipelines():
+    """(slug, state_dict) всех 1С-задача-пайплайнов (по title-предикату)."""
+    if not PIPELINE_DIR.is_dir():
+        return
     for sf in PIPELINE_DIR.glob("*/.pipeline-state.json"):
         try:
             d = json.loads(sf.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        if not is_1c_task_title(d.get("title")):
-            continue
+        if is_1c_task_title(d.get("title")):
+            yield sf.parent.name, d
+
+
+def _onec_pipeline_updated(start: datetime | None) -> str | None:
+    """slug 1С-пайплайна, обновлённого ЗА сессию (start=None → None). Прямой сигнал «1С-задача в этой сессии»."""
+    if start is None:
+        return None
+    for slug, d in _iter_1c_pipelines():
         dt = _parse_dt(d.get("updated_at", ""))
         if dt is not None and dt >= start:
-            return True
-    return False
+            return slug
+    return None
+
+
+def _incomplete_onec_pipeline() -> str | None:
+    """slug 1С-пайплайна с НЕ-завершёнными этапами (H5: межсессионная задача из прошлой сессии)."""
+    for slug, d in _iter_1c_pipelines():
+        stages = d.get("stages", [])
+        if stages and not all(s.get("status") == "done" for s in stages):
+            return slug
+    return None
 
 
 def _iter_tool_uses(obj):
@@ -134,8 +150,8 @@ def _iter_tool_uses(obj):
 
 
 def _collect_signals(transcript_path: str) -> dict:
-    """Один проход по транскрипту → {recall, capture, research, skill} по фактическим tool_use."""
-    sig = {"recall": False, "capture": False, "research": False, "skill": False}
+    """Один проход по транскрипту → {recall, capture, research, skill, config_edit} по фактическим tool_use."""
+    sig = {"recall": False, "capture": False, "research": False, "skill": False, "config_edit": False}
     if not transcript_path or not Path(transcript_path).exists():
         return sig
     for line in _read_tail(Path(transcript_path), TRANSCRIPT_TAIL_BYTES):
@@ -164,7 +180,45 @@ def _collect_signals(transcript_path: str) -> dict:
                 # курируемая память (`.claude/.../memory/*.md`), не src/memory/ или docs/*/memory/
                 if "/memory/" in fp and fp.endswith(".md") and "/.claude/" in fp:
                     sig["capture"] = True
+                # H5: правка 1С-кода в этой сессии (сигнал «1С-работа была» для межсессионной задачи)
+                if "/configuration/" in fp or fp.endswith((".bsl", ".mdo", ".os")):
+                    sig["config_edit"] = True
     return sig
+
+
+def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
+    """H2: сводка обязательных петель задачи -> pipeline/<slug>/LOOPS.md (галка/крест + opt-out). best-effort."""
+    try:
+        d = PIPELINE_DIR / slug
+        if not d.is_dir():
+            return
+
+        def m(ok):
+            return "✓" if ok else "✗"
+
+        eff = PROJECT_ROOT / "data" / "tool-effectiveness.jsonl"
+        usage = d / "TOOL-USAGE-REPORT.md"
+        skill_cell = "✓" if sig.get("skill") else "⚠ info (enforced на Write)"
+        lines = [
+            f"# LOOPS — обязательные петли задачи `{slug}`",
+            "",
+            "| Петля | Статус |",
+            "|---|---|",
+            "| ПАЙПЛАЙН | ✓ (pipeline-state) |",
+            f"| RECALL (память) | {m(sig.get('recall'))} |",
+            f"| CAPTURE (память) | {m(sig.get('capture'))} |",
+            f"| RESEARCH (Infostart+GitHub) | {m(sig.get('research'))} |",
+            f"| SKILL-методика 1С | {skill_cell} |",
+            "",
+            f"- opt-out gate: {'ДА (ONEC_TASK_GATE_DISABLE)' if optout else 'нет'}",
+            f"- W per-task (`TOOL-USAGE-REPORT.md`): {'есть' if usage.exists() else 'НЕ запущен (H3)'}",
+            f"- tool-effectiveness (cross-task): {'есть' if eff.exists() else 'нет'} — `tool_usage_report.py --rollup` (H1: отчётный)",
+            "",
+            "_Авто-сводка onec-task-completion-stop на Stop (H2); фактические tool_use транскрипта._",
+        ]
+        (d / "LOOPS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except Exception:
+        pass
 
 
 def main() -> None:
@@ -188,12 +242,23 @@ def main() -> None:
 
     try:
         start = _session_start(sid)
-        if not _onec_task_this_session(start):
+        slug = _onec_pipeline_updated(start)  # прямой сигнал: 1С-пайплайн обновлён в этой сессии
+        incomplete = _incomplete_onec_pipeline() if not slug else None  # H5: незавершённый из прошлой сессии
+        if not slug and not incomplete:
             if timer:
                 timer.log(outcome="allow")
-            sys.exit(0)  # не 1С-задача за сессию → gate не применим
+            sys.exit(0)  # 1С-задачи нет вовсе → gate не применим
 
         sig = _collect_signals(transcript)
+        # H5: «незавершённая из прошлой сессии» применяется лишь при 1С-правке в ЭТОЙ сессии
+        if not slug and not sig.get("config_edit"):
+            if timer:
+                timer.log(outcome="allow")
+            sys.exit(0)
+
+        task_slug = slug or incomplete
+        _write_loops_report(task_slug, sig)  # H2: сводка петель -> pipeline/<slug>/LOOPS.md
+
         if all(sig[k] for k in ("recall", "capture", "research")):
             if timer:
                 timer.log(outcome="allow")

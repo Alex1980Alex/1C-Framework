@@ -84,10 +84,23 @@ def test_advance_non_artifact_none():
     assert bridge.advance_for_artifact("") is None
 
 
-def test_advance_best_effort(monkeypatch):
-    # матч есть, но pipeline_state недоступен (пустой shared) → None, не кидает
+def test_advance_best_effort(monkeypatch, tmp_path):
+    # матч + содержимое есть (>порог), но pipeline_state недоступен (пустой shared) → None, не кидает
+    f = tmp_path / "GKSTCPLK-1-ANALYSIS-REPORT.md"
+    f.write_text("# Анализ\n" + "Существенное содержимое отчёта. " * 20, encoding="utf-8")
     monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
-    assert bridge.advance_for_artifact("GKSTCPLK-1-ANALYSIS-REPORT.md") is None
+    assert bridge.advance_for_artifact(str(f)) is None
+
+
+def test_advance_h7_content_guard(tmp_path):
+    # H7: пустой/stub-артефакт не проходит content-guard; существенный — проходит
+    full = tmp_path / "GKSTCPLK-1-ANALYSIS-REPORT.md"
+    full.write_text("# Анализ\n" + "Существенное содержимое. " * 20, encoding="utf-8")
+    assert bridge._artifact_has_content(str(full)) is True
+    stub = tmp_path / "stub-ANALYSIS-REPORT.md"
+    stub.write_text("# TODO", encoding="utf-8")
+    assert bridge._artifact_has_content(str(stub)) is False
+    assert bridge._artifact_has_content(str(tmp_path / "nope.md")) is False
 
 
 # --- F-2: gate_1c_implement (collision-immune; block/allow реального пайплайна — в 04-testing DoD) ---

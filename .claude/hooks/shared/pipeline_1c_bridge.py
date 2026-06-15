@@ -88,6 +88,22 @@ _ARTIFACT_STAGES = [
     (re.compile(r"ANALYSIS-REPORT", re.I), (1, 2)),        # analyze → Планирование + Дизайн
     (re.compile(r"IMPLEMENTATION-PROGRESS", re.I), (3,)),  # implement → Кодирование
 ]
+_ARTIFACT_MIN_CHARS = 200  # H7: порог непробельных символов против false-advance на пустом/stub-артефакте
+
+
+def _artifact_has_content(file_path: str, min_chars: int = _ARTIFACT_MIN_CHARS) -> bool:
+    """H7: артефакт несёт реальное содержимое (не пустой/stub) — иначе этапы не продвигаем.
+
+    Настоящий ANALYSIS-REPORT / IMPLEMENTATION-PROGRESS (методики analyze/implement) — это >1KB
+    структурированного текста; порог 200 непробельных символов отсекает заглушку, не задевая
+    реальный отчёт. Инкрементальная запись: пустой header не продвинет, заполняющий Edit — продвинет.
+    """
+    try:
+        with open(file_path, encoding="utf-8", errors="replace") as f:
+            body = f.read()
+    except OSError:
+        return False
+    return len("".join(body.split())) >= min_chars
 
 
 def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
@@ -102,6 +118,8 @@ def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
         stages = next((st for rx, st in _ARTIFACT_STAGES if rx.search(name)), None)
         if not stages:
             return None
+        if not _artifact_has_content(file_path):
+            return None  # H7: пустой/stub-артефакт не продвигает этапы (false-advance guard)
         hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if hooks not in sys.path:
             sys.path.insert(0, hooks)
