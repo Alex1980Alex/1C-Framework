@@ -5,10 +5,10 @@
 
 | Этап | Инструменты | Назначение | Quality (по факту) |
 |---|---|---|---|
-| **Планирование** | architecture-research (skill), Read/Grep (pipeline_state.py, preflight-хуки), ADR-019 | подтвердить B′-подход, точки интеграции | _заполнить_ |
-| **Дизайн** | architecture-research, Read (base/HookInput, slash_detect) | контракт helper + правки preflight + тесты | _заполнить_ |
-| **Кодирование** | implementer (skill), Write/Edit, ruff/`py_compile` | helper `pipeline_1c_bridge.py` + 2 правки preflight + unit-тест | _заполнить_ |
-| **Тестирование** | code-verify (skill), `pytest -m unit`, синтетический preflight, `pipeline-protocol-stop` синтетика | DoD 1–4: тест зелёный, G3 закрыт, без регрессий | _заполнить_ |
+| **Планирование** | architecture-research (skill), Read/Grep (pipeline_state.py, preflight-хуки), ADR-019 | подтвердить B′-подход, точки интеграции | **✓ хорошо** — точки интеграции (idempotent init_task, preflight) найдены сразу |
+| **Дизайн** | architecture-research, Read (implement-preflight execute) | контракт helper + правки preflight + тесты | **✓ хорошо** — дизайн концентричный, approve без правок |
+| **Кодирование** | create-hook (skill), Write/Edit, ruff/`py_compile` | helper `pipeline_1c_bridge.py` + 2 правки preflight + unit-тест | **✓ хорошо** — helper+правки чисто (ruff/compile green с 1й) |
+| **Тестирование** | evaluation-benchmark (skill, gated), `pytest -m unit`, синтетический preflight, ruff | DoD 1–4: тест зелёный, G3 закрыт, без регрессий | **⚠ частично** — тесты упали 2/5 в full-suite (src/shared collision), нашёл+переписал collision-immune (+1 итерация); skill-gate enforcer потребовал доп. Skill() |
 
 **Не используются (для F-1):** EDT-MCP / 1c-mcp-crud / 1c-debug-hmr / sonar / bsl_lint (это framework-Python-срез, НЕ BSL-задача).
 

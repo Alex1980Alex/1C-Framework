@@ -60,6 +60,11 @@ class ImplementOneCTaskPreflight(BaseHook):
         if detect_slash_command(inp.prompt or "") != TARGET_COMMAND:
             return None
 
+        # ADR-019 F-1 (G3): автозавод pipeline-state для 1С-задачи (best-effort, не блокирует)
+        from shared.pipeline_1c_bridge import ensure_pipeline_1c
+
+        ensure_pipeline_1c(inp.prompt or "", TARGET_COMMAND)
+
         if not SMOKE_TEST_SCRIPT.exists():
             self._log_preflight(inp, exit_code=-1, mode="missing-script")
             return HookOutput().system_message(
