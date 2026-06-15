@@ -56,3 +56,25 @@ def test_best_effort_never_raises(monkeypatch):
     # ensure_pipeline_1c обязан вернуть None, НЕ кинуть (инвариант «не ломать preflight»)
     monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
     assert bridge.ensure_pipeline_1c("/analyze-1c-task GKSTCPLK-1 x", "analyze-1c-task") is None
+
+
+# --- F-1.5: advance_for_artifact (collision-immune; live-движение этапов — в 04-testing DoD) ---
+
+
+def test_advance_regex_mapping():
+    # артефакт→этапы (чистый regex, без pipeline_state)
+    a = next(st for rx, st in bridge._ARTIFACT_STAGES if rx.search("GKSTCPLK-1-ANALYSIS-REPORT.md"))
+    i = next(st for rx, st in bridge._ARTIFACT_STAGES if rx.search("IMPLEMENTATION-PROGRESS.md"))
+    assert a == (1, 2) and i == (3,)
+
+
+def test_advance_non_artifact_none():
+    # путь без 1С-артефакта → None (ранний выход, pipeline_state не трогается)
+    assert bridge.advance_for_artifact("/x/some_random.py") is None
+    assert bridge.advance_for_artifact("") is None
+
+
+def test_advance_best_effort(monkeypatch):
+    # матч есть, но pipeline_state недоступен (пустой shared) → None, не кидает
+    monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
+    assert bridge.advance_for_artifact("GKSTCPLK-1-ANALYSIS-REPORT.md") is None

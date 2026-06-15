@@ -49,3 +49,42 @@ def ensure_pipeline_1c(prompt: str, command: str) -> str | None:
         return slug
     except Exception:
         return None  # никогда не ломаем preflight
+
+
+# ADR-019 F-1.5: запись 1С-артефакта → продвижение этапов CURRENT 1С-пайплайна.
+_ARTIFACT_STAGES = [
+    (re.compile(r"ANALYSIS-REPORT", re.I), (1, 2)),        # analyze → Планирование + Дизайн
+    (re.compile(r"IMPLEMENTATION-PROGRESS", re.I), (3,)),  # implement → Кодирование
+]
+
+
+def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
+    """Продвинуть этапы CURRENT 1С-пайплайна по записи 1С-артефакта (F-1.5). best-effort → None.
+
+    ANALYSIS-REPORT → этапы 1,2 (Планирование+Дизайн); IMPLEMENTATION-PROGRESS → этап 3 (Кодирование).
+    Guard: трогаем ТОЛЬКО пайплайн с меткой F-1 (title «1С-задача…») — не двигаем framework-dev пайплайны.
+    Идемпотентно: mark_done только для ещё-не-done этапов. Возврат — кортеж реально продвинутых этапов | None.
+    """
+    try:
+        name = (file_path or "").replace("\\", "/").rsplit("/", 1)[-1]
+        stages = next((st for rx, st in _ARTIFACT_STAGES if rx.search(name)), None)
+        if not stages:
+            return None
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared import pipeline_state
+
+        slug = pipeline_state.resolve_current()
+        data = pipeline_state.load(slug) if slug else None
+        if not data or not str(data.get("title", "")).startswith("1С-задача"):
+            return None  # guard: только 1С-пайплайн (метка ensure_pipeline_1c)
+        done_now = []
+        for n in stages:
+            st = next((s for s in data.get("stages", []) if s.get("n") == n), None)
+            if st and st.get("status") != "done":
+                pipeline_state.mark_done(slug, n)
+                done_now.append(n)
+        return tuple(done_now) or None
+    except Exception:
+        return None
