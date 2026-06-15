@@ -205,3 +205,115 @@ def classify_1c_task(prompt: str) -> dict:
         }
     except Exception:
         return {"is_1c": False, "jira": None, "ttype": None, "ask": False}
+
+
+# --- Классификатор сложности (оценка трудозатрат) + маршрутизация потока (2026-06-15) ---
+# Решение пользователя: 1С-задача из чата → простая→AUTO /run-1c-task, средняя→спросить,
+# сложная→гейтованный /analyze+/implement; не-1С/сомнение-в-1С → спросить, сомнение-в-потоке → спросить.
+
+# Сильный 1С-маркер (уверенность что это 1С): гкс_-префикс / объект.точка / CamelCase-кириллица.
+_1C_STRONG = re.compile(
+    r"гкс_"
+    r"|(?:Документ|Справочник|Регистр\w*|Обработк\w|Отч[её]т|Перечислени\w|ПланВидов\w*|Константа)\."
+    r"|[а-яё][А-ЯЁ][а-яё]",  # CamelCase-кириллица: ПриЗаписи, ТабличныйДокумент, гкс_НастройкиНазначения
+    re.U,
+)
+
+# Эвристика трудозатрат. Веса/пороги — тюнятся без правки кода (паттерн a2_signals из skill-router).
+_EFFORT_CFG = {
+    "base": 1,  # любая 1С-задача нетривиальна
+    "bands": {"simple_max": 2, "medium_max": 5},  # ≤2 simple; 3..5 medium; ≥6 complex
+    "weights": {
+        "light": -2, "modify": 2, "heavy_obj": 5, "cross": 3, "multi": 2,
+        "folder": 2, "ttype_T1": 1, "ttype_T3": 1,
+    },
+    "signals": {
+        "light": ["опечатк", "текст сообщен", "наименован", "переименов", "комментар",
+                  "подсказк", "заголовок", "формулировк", "очепятк"],
+        "modify": ["доработать", "доработ", "добавить реквизит", "добавить колонк",
+                   "добавить поле", "добавить форм", "новый реквизит", "новую процедур",
+                   "изменить алгоритм", "изменить запрос"],
+        "heavy_obj": ["новый документ", "новый справочник", "новый регистр", "новый отчёт",
+                      "новый отчет", "новую обработк", "создать документ", "создать справочник",
+                      "создать регистр", "создать отчёт", "создать отчет", "создать обработк",
+                      "план обмена", "план видов", "бизнес-процесс", "регистр накоплен",
+                      "регистр сведен", "регистр бухгалтер"],
+        "cross": ["обмен данны", "интеграц", "rls", "права доступ", "ограничени доступа",
+                  "новую роль", "новая роль", "подсистем", "конвертац", "миграц", "рефакторинг"],
+        "multi": ["несколько", "массов", "по всем", "пакетн", "все документ"],
+    },
+}
+
+
+def estimate_effort(prompt: str, ttype: str = "", is_folder: bool = False, cfg: dict | None = None) -> dict:
+    """Эвристическая оценка трудозатрат 1С-задачи → {complexity, points, signals}.
+
+    Баллы по группам сигналов текста (light/modify/heavy_obj/cross/multi) + тип задачи (T1/T3) + наличие
+    ТЗ-папки → band (simple ≤2 / medium 3–5 / complex ≥6). ЭВРИСТИКА (грубый оценщик, НЕ замена ревью);
+    веса/пороги — в cfg (тюнятся без правки кода). База = 1.
+    """
+    c = cfg or _EFFORT_CFG
+    w = c["weights"]
+    p = (prompt or "").lower()
+    base = c.get("base", 1)
+    hit = []
+    # позитивные сигналы реальной работы (modify/heavy_obj/cross/multi) + папка + тип задачи
+    pos = 0
+    for group in ("modify", "heavy_obj", "cross", "multi"):
+        if any(k in p for k in c["signals"].get(group, [])):
+            pos += w.get(group, 0)
+            hit.append(group)
+    if is_folder:
+        pos += w.get("folder", 0)
+        hit.append("folder")
+    if ttype == "T1":
+        pos += w.get("ttype_T1", 0)
+    elif ttype == "T3":
+        pos += w.get("ttype_T3", 0)
+    # light (косметика) — ТОЛЬКО downgrade чисто-косметической задачи (нет сигналов работы),
+    # НЕ counterweight: иначе имя-атрибута («Комментарий»/«Заголовок») в medium-задаче ложно тянет в simple.
+    if pos == 0 and any(k in p for k in c["signals"].get("light", [])):
+        points = base + w.get("light", 0)
+        hit.append("light")
+    else:
+        points = base + pos
+    points = max(0, points)
+    b = c["bands"]
+    if points <= b["simple_max"]:
+        complexity = "simple"
+    elif points <= b["medium_max"]:
+        complexity = "medium"
+    else:
+        complexity = "complex"
+    return {"complexity": complexity, "points": points, "signals": hit}
+
+
+def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None) -> dict:
+    """Маршрутизация 1С-задачи из чата → какой поток запускать.
+
+    Объединяет classify_1c_task (детект 1С + тип) + estimate_effort (сложность). Решение пользователя
+    (2026-06-15): простая→AUTO /run-1c-task, средняя→спросить, сложная→гейтованный /analyze+/implement;
+    не-1С/сомнение-в-1С → спросить, сомнение-в-потоке → спросить.
+
+    flow ∈ {none, ask_1c, auto, ask_flow, gated}. Возврат = classify ∪ estimate ∪ {flow, reason, confident_1c}.
+    """
+    cl = classify_1c_task(prompt)
+    if not cl.get("is_1c"):
+        return {**cl, "complexity": None, "points": 0, "signals": [], "confident_1c": False,
+                "flow": "none", "reason": "не 1С-задача"}
+    eff = estimate_effort(prompt, ttype=cl.get("ttype", ""), is_folder=is_folder, cfg=cfg)
+    out = {**cl, **eff}
+    confident = bool(cl.get("jira")) or bool(_1C_STRONG.search(prompt or ""))
+    out["confident_1c"] = confident
+    if not confident:
+        out["flow"] = "ask_1c"
+        out["reason"] = "1С-сигнал слабый/без JIRA — подтвердить (1С ли) + тип/папка (V.6)"
+        return out
+    comp = eff["complexity"]
+    if comp == "simple":
+        out["flow"], out["reason"] = "auto", "простая → /run-1c-task (AUTO, без паузы)"
+    elif comp == "complex":
+        out["flow"], out["reason"] = "gated", "сложная → гейтованный /analyze-1c-task + /implement-1c-task (ревью анализа)"
+    else:
+        out["flow"], out["reason"] = "ask_flow", "средняя → спросить: /run-1c-task (AUTO) или гейтованный поток"
+    return out

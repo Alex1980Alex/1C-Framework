@@ -164,3 +164,56 @@ def test_resolve_input_folder_no_jira_ascii_slug(tmp_path):
     d.mkdir()
     r = bridge.resolve_task_input(str(d))
     assert r["kind"] == "folder" and r["slug"] == "unload-spec" and r["folder"] == str(d)
+
+
+# --- классификатор сложности (estimate_effort) + маршрутизация (route_1c_task) ---
+
+
+def test_estimate_effort_bands():
+    # light → simple; modify → medium; heavy_obj → complex
+    assert bridge.estimate_effort("исправить опечатку в наименовании справочника")["complexity"] == "simple"
+    assert bridge.estimate_effort("доработать форму, добавить колонку")["complexity"] == "medium"
+    assert bridge.estimate_effort("создать новый документ с регистром накопления")["complexity"] == "complex"
+
+
+def test_estimate_effort_folder_bump():
+    # ТЗ-папка (+2) поднимает баллы: cross(+3)=medium → +folder=complex
+    base = bridge.estimate_effort("настроить обмен данными")
+    folder = bridge.estimate_effort("настроить обмен данными", is_folder=True)
+    assert base["complexity"] == "medium" and folder["points"] > base["points"]
+
+
+def test_route_non_1c_none():
+    r = bridge.route_1c_task("как работает RAG embeddings")
+    assert r["flow"] == "none" and r["is_1c"] is False
+
+
+def test_route_simple_auto():
+    # уверенный 1С (JIRA), light → simple → auto
+    r = bridge.route_1c_task("GKSTCPLK-1 исправить опечатку в наименовании гкс_Справочник")
+    assert r["confident_1c"] is True and r["complexity"] == "simple" and r["flow"] == "auto"
+
+
+def test_route_complex_gated():
+    # уверенный 1С (JIRA), heavy_obj → complex → gated
+    r = bridge.route_1c_task("GKSTCPLK-2 создать новый документ Перемещение с регистром накопления")
+    assert r["complexity"] == "complex" and r["flow"] == "gated"
+
+
+def test_route_medium_ask_flow():
+    # уверенный 1С (гкс_/CamelCase), modify → medium → ask_flow
+    r = bridge.route_1c_task("доработать обработку гкс_ЗагрузкаДанных, добавить колонку")
+    assert r["confident_1c"] is True and r["complexity"] == "medium" and r["flow"] == "ask_flow"
+
+
+def test_route_weak_1c_ask():
+    # 1С-сигнал есть (проведени+исправ), но НЕТ JIRA/strong-маркера → ask_1c (сомнение → спросить)
+    r = bridge.route_1c_task("исправить ошибку при проведении")
+    assert r["is_1c"] is True and r["confident_1c"] is False and r["flow"] == "ask_1c"
+
+
+def test_route_attribute_name_not_light_downgrade():
+    # регресс (live-smoke 2026-06-15): имя реквизита «Комментарий»/«Заголовок» НЕ должно
+    # косметически (light) занижать medium-задачу до simple — light только для чистой косметики
+    r = bridge.route_1c_task("доработать обработку гкс_ЗагрузкаДанных добавить колонку Комментарий")
+    assert r["complexity"] == "medium" and r["flow"] == "ask_flow"

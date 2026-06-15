@@ -207,21 +207,26 @@ class CodeSkillEnforcer(BaseHook):
             ):
                 return None
 
+        # tests/ exempt от content-based уровней (A/A.1): тест-фикстуры легитимно несут
+        # доменные токены (имена объектов конфигурации, веб-библиотеки) — precision-работа,
+        # не делегируемая генерация (тот же exempt, что у z-ai-write-guard).
+        is_test = self._is_test_file(file_path)
+
         # Level B: Directory rules (checked FIRST — most specific)
         result = self._check_directory_rules(inp)
         if result:
             return result
 
-        # Level A: Content patterns (topics WITH dedicated skills)
-        result = self._check_content_patterns(inp)
-        if result:
-            return result
+        if not is_test:
+            # Level A: Content patterns (topics WITH dedicated skills)
+            result = self._check_content_patterns(inp)
+            if result:
+                return result
 
-        # Level A.1: Research protocol (topics WITHOUT dedicated skills)
-        # BLOCKS and instructs Skill('learning-loop')
-        result = self._check_research_protocol(inp)
-        if result:
-            return result
+            # Level A.1: Research protocol (topics WITHOUT dedicated skills)
+            result = self._check_research_protocol(inp)
+            if result:
+                return result
 
         # Level C: Bash commands
         result = self._check_bash_commands(inp)
@@ -229,6 +234,19 @@ class CodeSkillEnforcer(BaseHook):
             return result
 
         return None
+
+    @staticmethod
+    def _is_test_file(file_path):
+        """Тест-файл (tests/ или test_*.py / *_test.py) — exempt от content-based уровней.
+
+        Фикстуры легитимно несут доменные токены (имена объектов конфигурации, веб-библиотеки),
+        которые в продукт-коде форсили бы домен-скилл или обучающий цикл. Тест-код — precision-работа.
+        """
+        if not file_path:
+            return False
+        fp = file_path.replace("\\", "/").lower()
+        base = fp.rsplit("/", 1)[-1]
+        return "/tests/" in fp or fp.startswith("tests/") or base.startswith("test_") or base.endswith("_test.py")
 
     def _extract_content(self, inp):
         """Extract content from Write or Edit tool input."""
