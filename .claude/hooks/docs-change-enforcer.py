@@ -179,6 +179,8 @@ SKIP_PATTERNS = [
     "infra/",
     "external/",
     "pyproject.toml",
+    # SonarQube config — root infra (ADR-021); документирован в ADR/roadmap, не product-doc
+    "sonar-project.properties",
     # OpenSpec SDD artifacts (specs/proposals/designs/tasks — self-documenting via openspec-* skills)
     "openspec/",
     ".env.example",
