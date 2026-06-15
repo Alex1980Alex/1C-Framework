@@ -551,12 +551,7 @@
           },
           {
             "type": "command",
-            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-protocol-stop.py",
-            "timeout": 8
-          },
-          {
-            "type": "command",
-            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/research-protocol-stop.py",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/onec-task-completion-stop.py",
             "timeout": 8
           },
           {
