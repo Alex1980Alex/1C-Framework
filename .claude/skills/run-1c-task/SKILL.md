@@ -40,11 +40,18 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
    1.5. **ОБЯЗАТЕЛЬНО в начале** (иначе единый Stop-gate `onec-task-completion-stop` заблокирует
    завершение): **recall** — `mcp__memory-orchestrator__unified_search` (+ `search_patterns`) по теме задачи;
    **внешний анализ** — `WebSearch`/`WebFetch` (Infostart + GitHub best-practices), с атрибуцией находок.
-2. **Активируй skill `analyze-1c-task-v2`** и выполни его методику (Фазы 1-5) → **ANALYSIS-REPORT.md**.
+2. **Активируй skill `analyze-1c-task-v2`** и выполни его методику (Фазы 1-5) **ЦЕЛИКОМ** → **ANALYSIS-REPORT.md**.
    - kind=folder → источник ТЗ = папка (spec + скриншоты); kind=jira → по коду; kind=chat → по описанию.
    - Папка реализации: `configuration/<родительская-задача>/docs/<YYMMDD_slug>/` (провизорно; см. память
      `project-1c-task-input-taxonomy`).
-3. Запись `ANALYSIS-REPORT.md` авто-продвинет этапы 1→2 (хук `pipeline-1c-advance`, F-1.5).
+   - ⚠ **НЕ конспектируй методику.** ANALYSIS-REPORT обязан соответствовать шаблону analyze-1c-task-v2
+     (§1-§11) с КОНТЕНТ-секциями (не просто номерами): **§1 Требования `[REQ-N]` · §2 объекты с
+     `[MODIFIED]`/`[ADDED]` · §3 анализ+паттерны · §4 пронумерованные точки модификации (файл/строка/было→стало/
+     образец) · §6 Риски/открытые вопросы · §7 Тест-план · §9 Резюме · §11 Сложность+Маршрут · МЕТАДАННЫЕ JIRA**.
+     Это конвенция остальных задач (см. соседние `*/ANALYSIS-REPORT.md`); тонкий конспект — пробел.
+3. Запись `ANALYSIS-REPORT.md` авто-продвинет этапы 1→2 (хук `pipeline-1c-advance`, F-1.5). Тот же хук запускает
+   **advisory-валидатор** `lint_1c_artifacts.py` — при нехватке core-секций выдаёт нудж (не блок). Само-проверка:
+   `python scripts/lint_1c_artifacts.py "<папка>/ANALYSIS-REPORT.md"` → score должен быть ✓ (≥70).
 
 ### Этап 2.4 — Preflight полноты ТЗ (H6: AUTO-approve идёт без человека)
 
@@ -70,9 +77,14 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 > ревью, но не отменяет здравый смысл.
 
 ### Этап 3 — Кодирование (методика implement-1c-task)
-5. **Активируй skill `implement-1c-task`** и выполни его методику (Этап 0 Preflight → Этапы 1-8) по
+5. **Активируй skill `implement-1c-task`** и выполни его методику (Этап 0 Preflight → Этапы 1-8) **ЦЕЛИКОМ** по
    готовому ANALYSIS-REPORT.md → BSL/XML через EDT-MCP, BP-verification, `get_project_errors=0`.
-6. Запись `IMPLEMENTATION-PROGRESS.md` авто-продвинет этап 3 (F-1.5).
+   - ⚠ **НЕ конспектируй.** IMPLEMENTATION-PROGRESS обязан нести: **Статус · Pipeline mode · Выполненные точки
+     (с `EDT errors: 0` + образец) · `## Отклонения от ANALYSIS-REPORT` (даже «нет») · Результаты тестирования
+     (render-verify/BP) · корпоративное `## Сообщение коммита` (Как было/Как стало/Изменённые объекты) +
+     `МЕТАДАННЫЕ: <JIRA>`**. Это конвенция соседних задач.
+6. Запись `IMPLEMENTATION-PROGRESS.md` авто-продвинет этап 3 (F-1.5). Тот же хук запускает advisory-валидатор;
+   само-проверка: `python scripts/lint_1c_artifacts.py "<папка>/IMPLEMENTATION-PROGRESS.md"` → score ✓ (≥70).
 
 ### Этап 4 — Тестирование (методика va-bdd-testing / run-1c-tests)
 7. **Активируй skill `va-bdd-testing`** (или команду `/run-1c-tests`) → прогон BDD-сценариев до зелёных.
