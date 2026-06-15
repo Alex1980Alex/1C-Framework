@@ -75,8 +75,9 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
   pl-test-1c). Максимально «канонично», но ломает существующий UX, формат ANALYSIS-REPORT, `.run-state.json`,
   SDD-маршрут и доку 17.5. Высокий риск, низкая доп.ценность над B. → отклонён как основной.
 
-**Рекомендация: B (мост pipeline-state) + переименовательная часть A**, переиспользуя `approval-gate.py`
-как гейт «Дизайн→Кодирование». Обоснование и последствия — [ADR-019](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md).
+**Рекомендация → ФИНАЛ (2026-06-15): Вариант B′ «мост через хуки»** (уточнённый B) + переименовательная часть A,
+переиспользуя `pipeline-gate.py`/`approval-gate.py` как гейт «Дизайн→Кодирование». [ADR-019 **accepted**](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md).
+Полное обоснование выбора — раздел [«Финальное решение (2026-06-15)»](#финальное-решение-2026-06-15--b-мост-через-хуки) ниже.
 
 ## Целевой маппинг (4 этапа ↔ 1С)
 
@@ -460,6 +461,47 @@ T3 — ключевой случай из запроса («доработка �
   (единый вердикт Этапа 4 = pass ИЛИ порождение T3-дельты).
 - ADR при реализации — расширение **ADR-019** (профиль `1c` несёт input-taxonomy в Этапе 1) либо отдельный срез в Phase 2 DoD.
 
+## Финальное решение (2026-06-15): B′ — мост через хуки
+
+> Доп-анализ перед реализацией (запрос «финализируем выбор… прими окончательное решение, возможно новый подход»).
+> Вывод: базовый выбор **B верен, но уточнён до B′** — тоньше и детерминированнее. Зафиксировано в
+> [ADR-019 **accepted**](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md).
+
+### F.1 Повторная проверка B — два over-engineering-момента
+1. **Профили избыточны.** Generic-этапы `pipeline_state.py` уже домен-агностичны (ADR-017): 4 этапа + hard-gate на
+   этапе 2 — profile-НЕзависимы. 1С-маппинг (analyze Фазы 1–3→этап 1, 4–5→этап 2; implement 0–3→этап 3, 4–6→этап 4)
+   кладётся на ТЕ ЖЕ этапы; различие (делегат-скилл, имя артефакта) — параметр вызова, НЕ параллельная `STAGES_1C`. [own]
+2. **Правка команд/скиллов хрупка.** B-как-написан вшивал `pipeline_state init/done` в analyze/implement — но скилл =
+   markdown-гайд (soft, модель может пропустить). **Хук = детерминированно (hard).** [own]
+
+### F.2 B′ — проводка через СУЩЕСТВУЮЩИЕ хуки, методика 1С не трогается
+| Что | Чем (уже существует) | Закрывает |
+|---|---|---|
+| `init` при старте | [`analyze-1c-task-preflight.py`](../../.claude/hooks/analyze-1c-task-preflight.py) (UPS на /analyze-1c-task, `detect_slash_command`) → `pipeline_state init` | G3 (старт) |
+| `done` этапов | новый PostToolUse:Write на `*ANALYSIS-REPORT*`(→этап 1–2)/`*IMPLEMENTATION-PROGRESS*`(→этап 3) | G3 |
+| гейт «Дизайн→Код» | [`pipeline-gate.py`](../../.claude/hooks/pipeline-gate.py) расширить на /implement-1c-task (та же `gate_check` что pl-code) | G4 |
+| approve | человек `pipeline_state approve <slug>` после ревью ANALYSIS-REPORT (OpenSpec-approve = эквивалент на SDD) | G4 |
+| relabel | заголовки 4 этапов в analyze/implement SKILL.md (часть A) | G5/G2 |
+
+### F.3 Почему B′, а не альтернативы (финал)
+- **A один** — не закрывает G3/G4 (главную боль). Поглощён как relabel-часть B′.
+- **C / гибрид `pl-*-1c`** — ~20–30 файлов, ломает ANALYSIS-REPORT/scorer/SDD-populate/`.run-state`, near-zero доп.ценность над B (см. «Глубокий разбор C»). Отклонён.
+- **B-как-написан** (профили + правка методики) — B′ строго ⊂ него по риску: профили убраны (этапы уже агностичны), методика **0 правок логики**, детерминированнее.
+- **Exempt 1С из `pipeline-protocol-stop`** (do-nothing антипод) — закрыл бы G3 без моста, но это ОТКАЗ от цели «1С КАК выражение 4 этапов». Отклонён.
+
+### F.4 Граница ценности (честно)
+ADR-018 (`pipeline-protocol-stop`) уже заставляет **ad-hoc** 1С-задачи (вне слэш-команд, как в этой сессии) иметь
+pipeline → там G3 де-факто закрыт ручным артефактом. **B′ ценен именно для слэш-маршрута**
+`/analyze-1c-task`→`/implement-1c-task` (авто-`init` + гейт дизайна, чтобы не упираться в Stop-блок и получить
+чекпоинт одобрения). Если слэш-маршрут не используется — ценность ниже (практику покрывают mandatory-hook + дисциплина входа, раздел «Вход в пайплайн»).
+
+### F.5 Порядок реализации (когда «реализуй») — foundation-first, обратимыми срезами
+1. **F-1 (ядро G3):** `analyze-preflight` `init` + PostToolUse done-детектор → 1С-слэш-задача обновляет `.pipeline-state.json`; Stop-хук доволен без ручного пайплайна. DoD: прогон /analyze→/implement оставляет `pipeline/<jira>/` со стадиями.
+2. **F-2 (G4):** `pipeline-gate.py` += /implement-1c-task (гейт «дизайн approved»).
+3. **F-3 (G5):** relabel заголовки 4 этапов в 2 SKILL.md + таблица маппинга.
+4. **F-4 (опц.):** display-label `profile:"1c"` в `render_status`; input-ingestion (G20–G23) — отдельный срез поверх F-1.
+Каждый срез: behavior-preserving для не-1С пайплайна + регресс-тест; единый rollback = снять хук-проводку.
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
@@ -477,6 +519,8 @@ T3 — ключевой случай из запроса («доработка �
 | 2026-06-15 | Phase 9 | **G16–G19 проведены в CI ([ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md) accepted) + verified e2e:** G17 self-hosted+локальный sonar (НЕ SonarCloud — проприетарный конфиг); robust sonar-шаг `ci-1c.yml` (reachability-gate + scanner-cli вместо битого bundled-JRE + server-JRE-provisioning JDK21 + пути D:→C: + `submodules: recursive`). G18 gate «1C BSL Way» (Clean-as-You-Code, new-code only, legacy grandfathered) — воспроизводимый `sonar_setup_quality_gate.py`. G19 источники **динамические** (`sonar_sources.py` — растущие `configuration/<JIRA>` авто-подхватываются) + drop внешнего bsl-report. **E2e:** полный конфиг 7215 файлов → ANALYSIS SUCCESSFUL, QG **OK** (baseline). G6/G7 → будущий ADR-022. | [ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md) + `scripts/sonar_setup_quality_gate.py` + `scripts/sonar_sources.py` + `ci-1c.yml` + `sonar-project.properties` + `scripts/run-sonar-analysis.ps1` |
 
 | 2026-06-15 | Phase 0+ | **Анализ входа в пайплайн (раздел «Вход… таксономия ТЗ»):** вход разнороден по 2 осям — ИСТОЧНИК (A1 папка ТЗ `configuration/<JIRA>/docs/` со spec+скриншоты+чат-диалог+история / A2 чат) × ТИП (T1 новое / T2 bugfix / T3 «не учтено»/found-in-testing = дельта на прежнюю задачу). Текущий `/analyze-1c-task` = «один spec-файл» → узко. Новые гэпы **G20–G23** (мультимодальный вход, классификация типа, T3↔parent-link + prior-PR-состояние, версия конфига≠ветка). Этап 1 получает под-шаг input-ingestion (6 шагов); state несёт `input_source`/`task_type`/`parent_task`/`target_config_version`; петля «Тест прежней→T3» закрывает часть G11. Grounded на реальной `260304/docs`; edge-cases Z.AI-ревью [delegated]. | раздел «Вход в пайплайн» + надстройка Phase 2 (расширяет ADR-019) |
+
+| 2026-06-15 | Decision | **ФИНАЛ выбора варианта (перед реализацией): B′ «мост через хуки», ADR-019 proposed→accepted.** Доп-анализ вскрыл 2 over-engineering в B-как-написан: профили избыточны (этапы уже домен-агностичны, ADR-017) + правка команд/скиллов хрупка (soft) → проводка через СУЩЕСТВУЮЩИЕ хуки (`analyze-1c-task-preflight` init + PostToolUse done-детектор + `pipeline-gate` на /implement-1c-task), методика 1С 0-правок (детерминированнее). Отклонены: A-один (не G3/G4), C/гибрид (~20-30 файлов), B-как-написан (B′⊂него по риску), exempt (отказ от цели). Граница: ad-hoc уже покрыт ADR-018 → B′ для слэш-маршрута. Порядок F-1..F-4 foundation-first. | [ADR-019 accepted](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md) + раздел «Финальное решение» |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.

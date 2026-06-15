@@ -1,7 +1,7 @@
 # ADR-019: Приведение 1С-команд (/analyze-1c-task, /implement-1c-task) к generic 4-этапному пайплайну
 
 **Дата:** 2026-06-14
-**Статус:** proposed (план в roadmap, код не писался)
+**Статус:** accepted (финализировано 2026-06-15 — уточнено до **B′ «мост через хуки»**, см. Решение; код ещё не писался)
 **Исследование:** ../cache/sdlc-pipeline-orchestration-patterns.md
 **Расширяет/корректирует:** [ADR-017](017-generic-4stage-pipeline-slash-state.md) (которое объявляло 1С-цепочку «не трогаем»), [ADR-018](018-mandatory-auto-pipeline-protocol.md) (обязательная парадигма)
 **Roadmap:** ../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md
@@ -19,10 +19,19 @@ state `features/<task>/.run-state.json`). ADR-017 явно вынес 1С-цеп
 (G1–G5) и маппинг — в roadmap. [own]
 
 ## Решение
-**Вариант B — мост через pipeline-state + переименовательная часть варианта A.** [own]
-- В [`pipeline_state.py`](../../../../.claude/hooks/shared/pipeline_state.py) ввести **профили**:
-  `default` (текущие STAGES) и `1c` (4 канонических этапа с 1С-делегатами и 1С-артефактами). `init --profile 1c`
-  пишет профиль в state; gate/status/delegates его читают. Default-профиль — без изменений (дефолты == хардкод). [own]
+**Вариант B′ — «мост через хуки» (уточнённый B) + переименовательная часть A.** Финал 2026-06-15 после доп-анализа
+([запрос «прими окончательное решение»]): исходный B предлагал ПРОФИЛИ в `pipeline_state.py` + проводку правкой
+самих команд/скиллов; уточнено до более тонкого и **детерминированного** варианта. [own]
+- **БЕЗ профилей.** Generic-этапы [`pipeline_state.py`](../../../../.claude/hooks/shared/pipeline_state.py) уже
+  домен-агностичны (ADR-017: Планирование→Дизайн→Кодирование→Тестирование, gate на этапе 2 — profile-независимы).
+  1С переиспользует ИХ ЖЕ; различие per-домен (делегат-скилл, имена артефактов) — параметры вызова, опц. лёгкий
+  `profile:"1c"` СТРОКОЙ только для display. Отдельная `STAGES_1C`/PROFILES-машина **не нужна** (была over-engineering). [own]
+- **Проводку state делают ХУКИ, НЕ правка методики** (1С-команды/скиллы — 0 правок логики). Точки уже существуют:
+  [`analyze-1c-task-preflight.py`](../../../../.claude/hooks/analyze-1c-task-preflight.py) (UPS на `/analyze-1c-task`,
+  `detect_slash_command`) → `pipeline_state init <slug>`; новый PostToolUse:Write на `*ANALYSIS-REPORT*.md`/
+  `*IMPLEMENTATION-PROGRESS*.md` → `done` соответствующих этапов; [`pipeline-gate.py`](../../../../.claude/hooks/pipeline-gate.py)
+  расширяется на `/implement-1c-task` (G4-гейт «дизайн approved», та же `gate_check` что у `pl-code`). Детерминированнее,
+  чем soft skill-инструкция «вызови pipeline_state» (которую модель может пропустить). [own]
 - 1С-команды становятся первоклассным экземпляром 4-этапного пайплайна, **проводя** тот же
   `.pipeline-state.json`, НЕ переписывая богатую методику:
   - Этап 1 Планирование ← analyze Фазы 1–3; Этап 2 Дизайн ← analyze Фазы 4–5 (+опц. OpenSpec);
@@ -38,18 +47,25 @@ state `features/<task>/.run-state.json`). ADR-017 явно вынес 1С-цеп
 единый словарь и audit-trail для 1С и не-1С задач; тривиальный 1С-маршрут получает чекпоинт одобрения дизайна
 (G4); методика 1С не переписывается → низкий риск; обратимо.
 **Отрицательные:** два state-файла на 1С-задачу (`.pipeline-state.json` + `.run-state.json`) — требует чёткой
-доки границ ответственности; небольшой overhead проводки в 2 командах; нужно держать профиль `1c` в синхроне
-с реальными фазами скиллов при их эволюции.
+доки границ ответственности; проводка живёт в хуках (чуть менее «на виду», чем в самой команде) — компенсируется
+детерминизмом. **B′ устраняет два прежних минуса B:** профилей нет (нечего синхронить с фазами скиллов) и методика
+1С не редактируется (0 правок команд/скиллов → нет риска регрессии богатой методики).
 
 ## Альтернативы
 - **A — только документация/relabel:** дёшево, но не снимает G3/G4 (главную боль) → недостаточно, поглощено как часть B.
 - **C — полный сплит команд** (analyze→2, implement→2 команды как pl-*): максимально канонично, но ломает UX,
   формат ANALYSIS-REPORT, `.run-state.json`, SDD-маршрут, доку 17.5 — высокий риск, низкая доп.ценность над B → отклонён.
 - **Оставить как есть** (ADR-017 «не трогаем»): отклонён прямым запросом пользователя.
+- **B-как-написан** (профили `STAGES_1C` + проводка правкой команд/скиллов): уточнён до **B′** — профили избыточны
+  (этапы уже домен-агностичны), а проводка в хуках детерминированнее и не трогает методику. B′ строго ⊂ B по риску.
+- **Exempt 1С из `pipeline-protocol-stop`** (антипод): закрыл бы G3 без моста, но противоречит цели (1С КАК выражение
+  4 этапов) → отклонён. NB: ad-hoc 1С-задачи (вне слэш-команд) ADR-018 и так заставляет иметь pipeline — B′ ценен
+  именно для слэш-маршрута `/analyze-1c-task`→`/implement-1c-task`.
 
-## Связанные файлы
-`.claude/hooks/shared/pipeline_state.py` (профили), `.claude/commands/analyze-1c-task.md`,
-`.claude/commands/implement-1c-task.md`, `.claude/skills/analyze-1c-task-v2/SKILL.md`,
-`.claude/skills/implement-1c-task/SKILL.md`, `.claude/hooks/pipeline-protocol-stop.py` (ADR-018),
-`.claude/hooks/approval-gate.py`, `docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md`,
-`CLAUDE.md` (1С Pipeline), `docs/framework documentation/17_ТЕСТИРОВАНИЕ_1С/17.5_КОМАНДЫ_ПАЙПЛАЙНА.md`.
+## Связанные файлы (B′ — проводка в хуках, методика 1С не редактируется)
+**Проводка/гейт (хуки):** `.claude/hooks/analyze-1c-task-preflight.py` (init), новый PostToolUse:Write done-детектор
+(`*ANALYSIS-REPORT*`/`*IMPLEMENTATION-PROGRESS*`), `.claude/hooks/pipeline-gate.py` (G4 на `/implement-1c-task`),
+`.claude/hooks/shared/pipeline_state.py` (опц. display-label, БЕЗ `STAGES_1C`), `.claude/hooks/pipeline-protocol-stop.py`
+(ADR-018), `.claude/hooks/approval-gate.py` (SDD-маршрут). **Только A-relabel (G5, заголовки 4 этапов, без правки логики):**
+`analyze-1c-task-v2/SKILL.md`, `implement-1c-task/SKILL.md`. **Доки:** roadmap 260614, `CLAUDE.md` (1С Pipeline),
+`17.5_КОМАНДЫ_ПАЙПЛАЙНА.md`.
