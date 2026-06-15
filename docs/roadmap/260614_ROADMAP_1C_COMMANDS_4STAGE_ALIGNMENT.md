@@ -279,7 +279,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 | **bsl-ls 0.29 bump** | (база `bsl_lint.py`) | `tools/bsl-ls/bsl-language-server.jar` — апгрейд под `bsl_lint.py` | DEFER (94 МБ) |
 | **mcp-bsl-lsp-bridge** | Кодирование (live completion/hover) | при EVAL→ADOPT: `implement-1c-task` Этап 3/4 (live LSP-навигация/диагностика) | EVAL |
 | **Coverage41C** | Тестирование | [`run-1c-tests`](../../.claude/commands/run-1c-tests.md) / `implement-1c-task` **Этап 6** — coverage после YAxUnit/VA → `genericCoverage.xml` → SonarQube | DEFER (fix stub-jar + CI-runner + dbgs) |
-| **sonar-bsl-plugin 1.18.1** | Тестирование/QA | CI `ci-1c.yml` (после SonarQube ≥2025.4) + `config_manager.py` (drift fixed ✅) | DEFER |
+| **sonar-bsl-plugin 1.18.1** | Тестирование/QA | CI `ci-1c.yml` job `bsl-analysis` + on-demand scanner; QG = кандидат «вердикт Этапа 4» (детали — раздел «Глубокий анализ S.1–S.6») | ✅ **DONE (сервер live)** — CB 26.6 + 1.18.1, 180 правил, live-скан 428 BSL verified 2026-06-15 |
 | **claude-code-bsl-lsp / 1c-mcp-metacode / 1c-templates-mcp** | — | НЕ интегрируются | SKIP/DEFER (плагин-конфликт / no-license / дубль) |
 
 Каждый DEFER-инструмент имеет **заданную точку интеграции** — встанет в пайплайн при снятии блокера (инфра/лицензия/версия сервера). Ближайшие срезы: Coverage41C → Этап 6 (после fix stub + появления CI-runner); EVAL lsp-bridge → Этап 3/4.
@@ -313,6 +313,82 @@ plugins + test-run; точка Этап 6 готова), **mcp-bsl-lsp-bridge** 
 0.22) остаётся единственным проведённым инструментом Phase 9 в проде — без внешних зависимостей. Битый 9-байт
 `coverage41c.jar` задокументирован (`Coverage41C-2.7.3/bin/Coverage41C.bat`).
 
+## Глубокий анализ (2026-06-15): SonarQube РАЗБЛОКИРОВАН — QA-слой 1С-пайплайна live
+
+> Доп-анализ по запросу («глубокий анализ + новые инструменты + sonar»). Последний из трёх
+> DEFER/EVAL-инструментов Phase 9, остававшийся отложенным по **серверу**, — снят. Всё ниже —
+> **verified исполнением** (live-скан реального BSL), не предположение. Снимает stale-DEFER
+> в таблицах «Интеграция Phase 9» и §18. Решение установки — [ADR-020 RESOLVED](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md).
+
+### S.1 DEFER → DONE: что фактически изменилось
+`sonar-bsl-plugin 1.18.1` был **DEFER** («нужен SonarQube ≥2025.4, наш `lts-community`/9.9, контейнер down»).
+Снято 2026-06-15: поднят **SonarQube Community Build 26.6.0.123539** (`docker/docker-compose.sonarqube.yml`:
+образ `lts-community`→`community`; плагин — декларативный bind-mount LFS-jar в `extensions/plugins/`), live/healthy
+на `localhost:9000`; **180 BSL-правил** активны; `config_manager.py` 1.16.1→1.18.1. Это **первый Phase 9-DEFER,
+ставший DONE** (остальные: bsl-ls 0.29 SKIP-bump=JDK21, Coverage41C BLOCKED=EDT-плагины, lsp-bridge SKIP=дубль).
+
+### S.2 Живая верификация всего QA-цикла (не теория)
+Прогон: bundled `sonar-scanner-cli` → **server JRE-provisioning (JDK 21)** → `Sensor BSL Core Sensor [communitybsl]`
+→ **428 BSL-модулей** (`src/bsl/CommonModules`, **279 251 NCLOC**) → `ANALYSIS SUCCESSFUL` (34s сенсор).
+Результаты с сервера (`/api/measures`, `/api/issues`, `/api/qualitygates`):
+
+| Метрика | Значение |
+|---|---|
+| issues (всего) | **29 697** (CRITICAL 2421 / MAJOR 6119 / MINOR 12169 / INFO 8988 / BLOCKER 0) |
+| по типам | code_smells 29 270 · **bugs 302** · **vulnerabilities 125** |
+| security_hotspots | 766 |
+| cognitive_complexity | 74 073 · sqale_index (tech-debt) 150 380 мин (~313 дней) · дубли 3.7% |
+| Quality Gate | **OK** (дефолтный «Sonar way», условия на new-code; baseline пуст → проходит) |
+
+Dashboard: `http://localhost:9000/dashboard?id=bsl-smoke` (smoke-проект оставлен как живое доказательство).
+
+**Технический нюанс проводки (verified, важен для CI):** scanner-side BSL-сенсор плагина 1.18.1 скомпилирован под
+**Java 21 (class 65)** → `UnsupportedClassVersionError` на EDT Axiom JDK **17** (class 61) — **тот же JDK-21 блокер,
+что у bsl-ls 0.29** (ADR-020). Обойдён штатно: scanner 6.2 **сам провиженит JDK 21 с сервера** (`/api/v2/analysis/jres`,
+нужен токен). Bundled scanner-JRE — **LFS-указатель (130 байт, не выгружен)** → CLI-bootstrap гоняем EDT-java 17,
+движок+сенсор — provisioned 21. То есть локальный скан **зависит от живого сервера** (provisioning) ЛИБО от установки JDK 21.
+
+### S.3 Место SonarQube в 4-этапной модели (deep) — НЕ дубль `bsl_lint.py`
+SonarQube — **QA/quality-gate слой** Этапа 4 (Тестирование), комплементарный, а не конкурентный `bsl_lint.py`:
+
+| Аспект | `bsl_lint.py` (bsl-ls 0.22, LSP) | SonarQube + communitybsl 1.18.1 |
+|---|---|---|
+| Этап | **Кодирование** (inner-loop, per-file) | **Тестирование/QA** (outer-loop, project-wide) |
+| Точка | implement Этап 4 шаг 0 формат + статанализ | CI `bsl-analysis` / on-demand scanner / pre-merge |
+| Скорость | быстрый, on-demand, локальный | тяжёлый (34s/428 файлов), CI/periodic |
+| Охват | диагностики bsl-ls по файлу | 180 правил + **bugs/vulns/security-hotspots/code-smells** + cognitive complexity + дубли + tech-debt |
+| История/гейт | нет | **quality gate (new-code), тренды, PR decoration, sqale-долг** |
+| JDK | 17 (EDT) | **21** (provisioned с сервера) |
+
+Разделение труда: `bsl_lint.py` = быстрый inner-loop в Кодировании; SonarQube = outer-loop вердикт качества в
+Тестировании/QA. Оба используют bsl-language-server движок, но на разных горизонтах (файл vs проект+история).
+
+### S.4 Каскад разблокировки в пайплайне
+1. **CI-job `bsl-analysis` (`ci-1c.yml`)** — степ «Run Sonar Scanner» (bundled scanner, `SONAR_TOKEN`, `localhost:9000`)
+   **уже проложен**, ждал только сервер. Теперь путь рабочий (предпосылки — S.6).
+2. **Coverage41C → `genericCoverage.xml` → SonarQube** — **половина** разблокирована: sonar-сторона готова
+   (`sonar.coverageReportPaths` в `sonar-project.properties`, закомментирован), Coverage41C-сторона всё ещё BLOCKED
+   (EDT debug-плагины, см. выше). При снятии её блокера покрытие вливается в тот же sonar-проект → единый QA-вид.
+3. **Quality Gate как «единый вердикт Этапа 4» (закрывает часть G9/G11)** — sonar QG = конкретный кандидат на единую
+   точку «вердикт Тестирования» (сейчас VA BDD / YaXUnit / brownfield не оркестрированы). QG агрегирует static+coverage
+   в один pass/fail на проект/PR — то, чего не хватало Этапу 4.
+
+### S.5 Новые гэпы (sonar-specific) — G16–G19 (сверх G1–G15)
+| # | Разрыв | Влияние |
+|---|---|---|
+| G16 | bsl-сенсор требует **JDK 21** локально; EDT даёт 17 → локальный скан завязан на server-JRE-provisioning (живой сервер+токен) ИЛИ установку JDK 21 | CI-runner без доступа к серверу/JDK21 не запустит сенсор |
+| G17 | `ci-1c.yml` шлёт на `localhost:9000` → подразумевает **self-hosted runner с локальным SonarQube** (тем, что поднят). Для GitHub-hosted runner нужен внешний сервер (SonarCloud/публичный) + `SONAR_TOKEN` secret | хостинг sonar для CI не решён |
+| G18 | Quality Gate дефолтный («Sonar way», new-code) → на CommonModules **29k issues** baseline; без кастомного BSL-гейта + baseline-даты гейт либо шумит, либо всегда «OK» (как в smoke) | вердикт Этапа 4 нерепрезентативен без настройки |
+| G19 | `sonar.sources=configuration` (сабмодуль, в dev-checkout ~пуст: 1 .bsl) → реальный таргет — `src/bsl` (2185) / `ИБTransport` (2103) ИЛИ материализация сабмодуля; `reportPath=build/bsl-report/bsl-json.json` ждёт `run-sonar-analysis.ps1` | конфиг скана не нацелен на реальный BSL |
+
+### S.6 Рекомендация (надстройка над Этапом 4)
+SonarQube встаёт в **Этап 4 (Тестирование/QA)** как outer-loop quality gate, комплементарно `bsl_lint.py`
+(inner-loop Кодирования). Ближайшие срезы (приоритет): (1) **G17** — решить хостинг sonar для CI (self-hosted+local
+сервер vs внешний) + `SONAR_TOKEN`; (2) **G18** — кастомный BSL quality gate + baseline (иначе 29k issues = шум);
+(3) **G19** — нацелить `sonar.sources` на реальный BSL; (4) при разблокировке **Coverage41C** — влить
+`genericCoverage.xml` в sonar (закрывает coverage-половину «вердикта Этапа 4»). ADR при реализации проводки в Этап 4 —
+вероятно **ADR-022** (sonar-QA-gate; ADR-021 зарезервирован под G6/G7 дивергенцию кодирования).
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
@@ -326,6 +402,7 @@ plugins + test-run; точка Этап 6 готова), **mcp-bsl-lsp-bridge** 
 | 2026-06-15 | Phase 9 | Проверка проводки DEFER → точные блокеры: bsl-ls 0.29=JDK21 (попытка+откат к 0.22), Coverage41C=EDT-debug-плагины+test-run (JDK/dbgs OK), lsp-bridge=Docker; `tools/coverage41c/README.md` (fix-doc) | ADR-020 + roadmap «Проверка проводки» |
 | 2026-06-15 | Phase 9 | **EVAL-пилот mcp-bsl-lsp-bridge ПРОВЕДЁН → SKIP**: Docker 29.4.0 доступен → собран образ (911 МБ) + поднят контейнер на ro-копии конфигурации, 26 LSP-tools, diagnostics-паритет с `bsl_lint.py`, hover/completion/complexity verified; вердикт SKIP (дубль триады `bsl_lint.py`+`bsl-semantic-search`+`edt-mcp`); контейнер/образ/клон снесены. **Все 3 DEFER/EVAL разрешены.** | [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) «Результаты пилота» + roadmap |
 | 2026-06-15 | Phase 9 | **3 новых инструмента (без внешних зависимостей):** (1) BSL-форматер `bsl_lint.py --format` (bsl-ls `--format`, write-back при rc==0+изменении, idempotent, unit-тест 4/4, wired Этап 4 шаг 0 v2.8.1); (2) Coverage41C CI-проводка — `ci-1c.yml` job `coverage` переписан на `Coverage41C.bat`+`EDT_LOCATION`-gate (+ fix дубля `if:` в coverage/allure-report, YAML-валидирован); (3) comol BSL coding-rules → кеш `1c-doc-research` + указатель `bsl-development`. sonar 1.18.1 DEFER подтверждён (SonarQube lts-community/9.9, контейнер down → апгрейд сервера). | `scripts/bsl_lint.py` + `tests/unit/test_bsl_lint_format.py` + `ci-1c.yml` + `implement-1c-task` v2.8.1 + cache + ADR-020 |
+| 2026-06-15 | Phase 9 | **sonar 1.18.1 DEFER → RESOLVED + live-verified QA-цикл:** поднят SonarQube CB 26.6.0.123539 (`sonarqube:community`, было `lts-community`/9.9) + плагин 1.18.1 (180 правил); прогон scanner→server-JRE(JDK21)→BSL-сенсор на 428 BSL (279k NCLOC) = **29697 issues** (302 bugs/125 vulns/766 hotspots), QG OK. Глубокий анализ S.1–S.6: место sonar в Этапе 4 (QA-gate, комплементарно `bsl_lint.py`), каскад разблокировки (CI `bsl-analysis` / Coverage41C-половина / вердикт Этапа 4), новые гэпы **G16–G19** (JDK21-сенсор / хостинг CI / QG-baseline / sources). Нюанс: bsl-сенсор=class65/JDK21 (тот же блокер, что bsl-ls 0.29) → обход server-JRE-provisioning. | `docker-compose.sonarqube.yml` + `config_manager.py` + [ADR-020 RESOLVED](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) + раздел «Глубокий анализ (2026-06-15)» |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
