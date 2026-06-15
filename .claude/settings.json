@@ -556,6 +556,11 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/research-protocol-stop.py",
+            "timeout": 8
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/code-verify-reminder.py",
             "timeout": 5
           },
