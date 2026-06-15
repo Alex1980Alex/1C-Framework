@@ -188,7 +188,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
 - **Phase 8 (NEW) — Автономный путь + единый Этап 4:** интеграция analyze-1c-research/Ralph state в pipeline-state; orphan `TEST-PLAN` (G10); единый вердикт тестирования (G9, G11).
 
 > Эти фазы — расширение, не замена. ADR-019 покрывает ядро (Вариант B); дивергенция кодирования и гейтов
-> (G6/G7) при реализации Phase 7 вероятно потребует отдельного **ADR-021** (ADR-020 занят Phase 9 tooling-adoption).
+> (G6/G7) при реализации Phase 7 вероятно потребует отдельного **ADR-022** (ADR-020=Phase 9 tooling, ADR-021=sonar QA-gate).
 
 ## Глубокий разбор Варианта C (по запросу) + C-vs-B по индустрии
 
@@ -386,8 +386,16 @@ SonarQube встаёт в **Этап 4 (Тестирование/QA)** как ou
 (inner-loop Кодирования). Ближайшие срезы (приоритет): (1) **G17** — решить хостинг sonar для CI (self-hosted+local
 сервер vs внешний) + `SONAR_TOKEN`; (2) **G18** — кастомный BSL quality gate + baseline (иначе 29k issues = шум);
 (3) **G19** — нацелить `sonar.sources` на реальный BSL; (4) при разблокировке **Coverage41C** — влить
-`genericCoverage.xml` в sonar (закрывает coverage-половину «вердикта Этапа 4»). ADR при реализации проводки в Этап 4 —
-вероятно **ADR-022** (sonar-QA-gate; ADR-021 зарезервирован под G6/G7 дивергенцию кодирования).
+`genericCoverage.xml` в sonar (закрывает coverage-половину «вердикта Этапа 4»).
+
+> **РЕАЛИЗОВАНО 2026-06-15 ([ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md), accepted):** G17/G18/G19 проведены в CI + verified e2e.
+> **G17** — self-hosted+локальный SonarQube (не SonarCloud: проприетарный конфиг); sonar-шаг `ci-1c.yml` robust
+> (reachability-gate + scanner-cli вместо битого bundled-JRE + server-JRE-provisioning JDK21 + пути D:→C:).
+> **G18** — gate «1C BSL Way» (Clean-as-You-Code, new-code only; legacy 29k grandfathered) через воспроизводимый
+> [`scripts/sonar_setup_quality_gate.py`](../../scripts/sonar_setup_quality_gate.py); coverage-условие deferred до Coverage41C.
+> **G19** — источники **динамические** ([`scripts/sonar_sources.py`](../../scripts/sonar_sources.py): растущие `configuration/<JIRA>`
+> авто-подхватываются) + drop избыточного внешнего bsl-report (плагин встроенный). E2e: полный конфиг 7215 файлов →
+> `ANALYSIS SUCCESSFUL`, QG **OK** (baseline). G6/G7-дивергенция кодирования → будущий **ADR-022**.
 
 ## §18 Progress log
 
@@ -403,6 +411,7 @@ SonarQube встаёт в **Этап 4 (Тестирование/QA)** как ou
 | 2026-06-15 | Phase 9 | **EVAL-пилот mcp-bsl-lsp-bridge ПРОВЕДЁН → SKIP**: Docker 29.4.0 доступен → собран образ (911 МБ) + поднят контейнер на ro-копии конфигурации, 26 LSP-tools, diagnostics-паритет с `bsl_lint.py`, hover/completion/complexity verified; вердикт SKIP (дубль триады `bsl_lint.py`+`bsl-semantic-search`+`edt-mcp`); контейнер/образ/клон снесены. **Все 3 DEFER/EVAL разрешены.** | [ADR-020](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) «Результаты пилота» + roadmap |
 | 2026-06-15 | Phase 9 | **3 новых инструмента (без внешних зависимостей):** (1) BSL-форматер `bsl_lint.py --format` (bsl-ls `--format`, write-back при rc==0+изменении, idempotent, unit-тест 4/4, wired Этап 4 шаг 0 v2.8.1); (2) Coverage41C CI-проводка — `ci-1c.yml` job `coverage` переписан на `Coverage41C.bat`+`EDT_LOCATION`-gate (+ fix дубля `if:` в coverage/allure-report, YAML-валидирован); (3) comol BSL coding-rules → кеш `1c-doc-research` + указатель `bsl-development`. sonar 1.18.1 DEFER подтверждён (SonarQube lts-community/9.9, контейнер down → апгрейд сервера). | `scripts/bsl_lint.py` + `tests/unit/test_bsl_lint_format.py` + `ci-1c.yml` + `implement-1c-task` v2.8.1 + cache + ADR-020 |
 | 2026-06-15 | Phase 9 | **sonar 1.18.1 DEFER → RESOLVED + live-verified QA-цикл:** поднят SonarQube CB 26.6.0.123539 (`sonarqube:community`, было `lts-community`/9.9) + плагин 1.18.1 (180 правил); прогон scanner→server-JRE(JDK21)→BSL-сенсор на 428 BSL (279k NCLOC) = **29697 issues** (302 bugs/125 vulns/766 hotspots), QG OK. Глубокий анализ S.1–S.6: место sonar в Этапе 4 (QA-gate, комплементарно `bsl_lint.py`), каскад разблокировки (CI `bsl-analysis` / Coverage41C-половина / вердикт Этапа 4), новые гэпы **G16–G19** (JDK21-сенсор / хостинг CI / QG-baseline / sources). Нюанс: bsl-сенсор=class65/JDK21 (тот же блокер, что bsl-ls 0.29) → обход server-JRE-provisioning. | `docker-compose.sonarqube.yml` + `config_manager.py` + [ADR-020 RESOLVED](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) + раздел «Глубокий анализ (2026-06-15)» |
+| 2026-06-15 | Phase 9 | **G16–G19 проведены в CI ([ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md) accepted) + verified e2e:** G17 self-hosted+локальный sonar (НЕ SonarCloud — проприетарный конфиг); robust sonar-шаг `ci-1c.yml` (reachability-gate + scanner-cli вместо битого bundled-JRE + server-JRE-provisioning JDK21 + пути D:→C: + `submodules: recursive`). G18 gate «1C BSL Way» (Clean-as-You-Code, new-code only, legacy grandfathered) — воспроизводимый `sonar_setup_quality_gate.py`. G19 источники **динамические** (`sonar_sources.py` — растущие `configuration/<JIRA>` авто-подхватываются) + drop внешнего bsl-report. **E2e:** полный конфиг 7215 файлов → ANALYSIS SUCCESSFUL, QG **OK** (baseline). G6/G7 → будущий ADR-022. | [ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md) + `scripts/sonar_setup_quality_gate.py` + `scripts/sonar_sources.py` + `ci-1c.yml` + `sonar-project.properties` + `scripts/run-sonar-analysis.ps1` |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.

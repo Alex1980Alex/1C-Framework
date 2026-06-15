@@ -27,8 +27,11 @@ env:
   ONEC_PATH: 'C:\Program Files\1cv8\8.3.27.1859\bin'
   OSCRIPT_PATH: 'C:\Tools\OneScript\bin\oscript.exe'
   VRUNNER_PATH: 'C:\Tools\OneScript\bin\vrunner.bat'
-  PROJECT_PATH: 'D:\1C-FW'
-  BSL_SRC: 'D:\1C-FW\src\projects\configuration\260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС\src'
+  # ADR-021 G17: пути обновлены с до-миграционного D:\1C-FW на C:. Если на runner'е
+  # кириллица в путях ломает тулчейн — создать ASCII-junction C:\1C-FW → C:\1С-Framework
+  # (как было на D:-эре) и подставить его. sonar/java юникод-пути держат (verified 2026-06-15).
+  PROJECT_PATH: 'C:\1С-Framework'
+  BSL_SRC: 'C:\1С-Framework\ИБTransportManagementDevelop\Конфигурация'
   IB_CONNECTION: '/SKOMPUTER\testdb1c'
 
 jobs:
@@ -41,12 +44,15 @@ jobs:
     # Runner-gate (2026-06-12): репо имеет 0 self-hosted runner'ов → без гейта
     # джобы висят QUEUED вечно на каждом PR. Когда runner зарегистрирован:
     #   gh variable set CI_1C_RUNNER_ONLINE --body 1
-    # (env paths выше указывают на до-миграционный D:\1C-FW — при оживлении
-    # runner'а обновить на C:\1С-Framework.)
+    # env paths обновлены на C:\1С-Framework (ADR-021 G17, 2026-06-15). Требования для
+    # sonar-шага: локальный SonarQube CB 26.6 (docker-compose.sonarqube.yml) на :9000 +
+    # secret SONAR_TOKEN. Шаг reachability-gated → без сервера/токена корректно skip'ается.
     if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive   # ADR-021 G19: BSL-источники = сабмодули (главный конфиг + configuration/<JIRA>)
 
       - name: Run BSL Language Server
         shell: pwsh
@@ -65,15 +71,24 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           [Console]::OutputEncoding = [Text.Encoding]::UTF8
-          $scannerBin = "${{ env.PROJECT_PATH }}\tools\sonar-scanner-6.2.1.4610-windows-x64\bin\sonar-scanner.bat"
-          if (Test-Path $scannerBin) {
-            & $scannerBin `
-              "-Dsonar.host.url=http://localhost:9000" `
-              "-Dsonar.token=$env:SONAR_TOKEN" `
-              "-Dsonar.projectBaseDir=${{ env.PROJECT_PATH }}"
-          } else {
-            Write-Host "sonar-scanner not found, skipping SonarQube upload" -ForegroundColor Yellow
-          }
+          # ADR-021 G17: reachability-gate — нет сервера → чистый skip (не падаем)
+          try { $st = (Invoke-RestMethod -Uri "http://localhost:9000/api/system/status" -TimeoutSec 5).status } catch { $st = "DOWN" }
+          if ($st -ne "UP") { Write-Host "SonarQube недоступен ($st) — skip sonar" -ForegroundColor Yellow; exit 0 }
+          # G18: применить quality gate «1C BSL Way» (идемпотентно)
+          python "${{ env.PROJECT_PATH }}\scripts\sonar_setup_quality_gate.py"
+          # G19: динамический список источников (растущие configuration/<JIRA> авто-подхватываются)
+          $sources = & python "${{ env.PROJECT_PATH }}\scripts\sonar_sources.py"
+          # G17: bundled scanner-JRE = LFS-указатель (битый) → scanner-cli jar + java;
+          # сенсор bsl = JDK 21 (class 65) тянется server-JRE-provisioning (НЕ skip provisioning).
+          $cli = "${{ env.PROJECT_PATH }}\tools\sonar-scanner-6.2.1.4610-windows-x64\lib\sonar-scanner-cli-6.2.1.4610.jar"
+          if (-not (Test-Path $cli)) { Write-Host "scanner-cli not found — skip" -ForegroundColor Yellow; exit 0 }
+          $java = (Get-ChildItem "C:\Program Files\1C\1CE\components\axiom-jdk-full-17*\bin\java.exe" -EA SilentlyContinue | Select-Object -First 1).FullName
+          if (-not $java) { $java = "java" }   # fallback: system java для CLI-bootstrap
+          & $java -jar $cli `
+            "-Dsonar.host.url=http://localhost:9000" `
+            "-Dsonar.token=$env:SONAR_TOKEN" `
+            "-Dsonar.projectBaseDir=${{ env.PROJECT_PATH }}" `
+            "-Dsonar.sources=$sources"
 
       - name: Upload BSL Report
         if: always()

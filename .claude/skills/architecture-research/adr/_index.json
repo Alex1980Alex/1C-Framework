@@ -335,6 +335,25 @@
         "phase-9",
         "verified"
       ]
+    },
+    {
+      "id": "ADR-021",
+      "file": "021-sonar-qa-gate-ci-production-wiring.md",
+      "title": "SonarQube QA-gate — продакшен-проводка в CI (G17 хостинг / G18 1C BSL Way gate / G19 динамические источники)",
+      "status": "accepted",
+      "date": "2026-06-15",
+      "research": "../cache/1c-bsl-tooling-ecosystem-2026.md",
+      "tags": [
+        "tooling-adoption",
+        "1c",
+        "bsl",
+        "sonarqube",
+        "quality-gate",
+        "ci",
+        "clean-as-you-code",
+        "extends-adr-020",
+        "verified"
+      ]
     }
   ]
 }
