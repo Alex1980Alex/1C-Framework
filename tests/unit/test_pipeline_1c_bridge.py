@@ -94,3 +94,31 @@ def test_gate_best_effort_ok(monkeypatch):
     monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
     res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-1 x")
     assert res["ok"] is True
+
+
+# --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
+
+
+def test_advance_test_done_non_runstate():
+    assert bridge.advance_test_done("/x/features/foo/other.json") is None
+    assert bridge.advance_test_done("") is None
+
+
+def test_advance_test_done_best_effort():
+    # .run-state.json, но файла нет → except → None (best-effort)
+    assert bridge.advance_test_done("/no/such/.run-state.json") is None
+
+
+# --- input-ingestion: classify_1c_task (чистая функция → fully collision-immune) ---
+
+
+def test_classify_t1_t2_t3():
+    assert bridge.classify_1c_task("Доработать создание Направление GKSTCPLK-2182")["ttype"] == "T1"
+    assert bridge.classify_1c_task("Исправить ошибку формирования пробы GKSTCPLK-2177")["ttype"] == "T2"
+    assert bridge.classify_1c_task("Исправить ошибки тестирование нового функционала GKSTCPLK-2236")["ttype"] == "T3"
+
+
+def test_classify_non_1c_and_ask():
+    assert bridge.classify_1c_task("как работает RAG embeddings")["is_1c"] is False
+    c = bridge.classify_1c_task("исправь ошибку в гкс_ЛабораторныйАнализ при проведении")
+    assert c["is_1c"] is True and c["ask"] is True  # 1С-сигнал+глагол, нет JIRA → ask

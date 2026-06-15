@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -119,3 +120,69 @@ def gate_1c_implement(prompt: str) -> dict:
         }
     except Exception:
         return {"ok": True, "hard": False, "reason": ""}  # best-effort: не блокируем при сбое
+
+
+def advance_test_done(file_path: str) -> tuple[int, ...] | None:
+    """F-1.6: запись `features/<task>/.run-state.json` со ВСЕМИ секциями passed → этап 4 (Тестирование) done.
+
+    best-effort → None. Guard: только 1С-пайплайн (title-метка F-1). Идемпотентно (не done → done).
+    """
+    try:
+        name = (file_path or "").replace("\\", "/").rsplit("/", 1)[-1]
+        if name != ".run-state.json":
+            return None
+        with open(file_path, encoding="utf-8") as f:
+            rs = json.load(f)
+        chain = rs.get("chain") or []
+        if not chain or not all(s.get("status") == "passed" for s in chain):
+            return None  # ещё не все секции passed → этап 4 не закрываем
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared import pipeline_state
+
+        slug = pipeline_state.resolve_current()
+        data = pipeline_state.load(slug) if slug else None
+        if not data or not str(data.get("title", "")).startswith("1С-задача"):
+            return None
+        st4 = next((s for s in data.get("stages", []) if s.get("n") == 4), None)
+        if st4 and st4.get("status") != "done":
+            pipeline_state.mark_done(slug, 4)
+            return (4,)
+        return None
+    except Exception:
+        return None
+
+
+# input-ingestion (V.6/G20–G23): классификация 1С-задачи из чата.
+_TASK_VERB = re.compile(r"доработ|исправ|добав|создать|реализ|провед|настро", re.I)
+_1C_SIGNAL = re.compile(r"гкс_|Документ\.|Справочник\.|РегистрСведений|реквизит|ПриЗаписи|проведени", re.I)
+
+
+def classify_1c_task(prompt: str) -> dict:
+    """V.6: тип входящей 1С-задачи. {is_1c, jira, ttype(T1/T2/T3), ask}. best-effort → is_1c False.
+
+    is_1c = JIRA-код ИЛИ (1С-сигнал + таск-глагол). T2=bugfix, T3=«не учтено»/found-in-testing, T1=новое.
+    ask=True если 1С-задача из чата без JIRA (уточнить новая/доработка + создать ТЗ-папку, V.6).
+    """
+    try:
+        p = prompt or ""
+        jira = _JIRA.search(p)
+        is_1c = bool(jira) or bool(_1C_SIGNAL.search(p) and _TASK_VERB.search(p))
+        if not is_1c:
+            return {"is_1c": False, "jira": None, "ttype": None, "ask": False}
+        low = p.lower()
+        if "не учт" in low or ("тестирован" in low and "функционал" in low):
+            ttype = "T3"
+        elif "исправ" in low and "ошибк" in low:
+            ttype = "T2"
+        else:
+            ttype = "T1"
+        return {
+            "is_1c": True,
+            "jira": jira.group(0) if jira else None,
+            "ttype": ttype,
+            "ask": jira is None,  # чат без JIRA → уточнить новая/доработка (V.6)
+        }
+    except Exception:
+        return {"is_1c": False, "jira": None, "ttype": None, "ask": False}

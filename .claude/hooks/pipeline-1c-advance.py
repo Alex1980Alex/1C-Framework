@@ -29,12 +29,12 @@ class Pipeline1CAdvance(BaseHook):
         if not path:
             return None
 
-        from shared.pipeline_1c_bridge import advance_for_artifact
+        from shared.pipeline_1c_bridge import advance_for_artifact, advance_test_done
 
-        adv = advance_for_artifact(path)
+        adv = advance_for_artifact(path) or advance_test_done(path)  # F-1.5 + F-1.6 (этап 4 по .run-state)
         if adv:
             return HookOutput().system_message(
-                f"[pipeline-1c-advance] этап(ы) {adv} → done (1С-пайплайн, ADR-019 F-1.5)"
+                f"[pipeline-1c-advance] этап(ы) {adv} → done (1С-пайплайн, ADR-019 F-1.5/F-1.6)"
             )
         return None
 
