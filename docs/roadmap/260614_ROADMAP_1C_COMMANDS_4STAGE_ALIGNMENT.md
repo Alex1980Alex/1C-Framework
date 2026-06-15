@@ -397,6 +397,69 @@ SonarQube встаёт в **Этап 4 (Тестирование/QA)** как ou
 > авто-подхватываются) + drop избыточного внешнего bsl-report (плагин встроенный). E2e: полный конфиг 7215 файлов →
 > `ANALYSIS SUCCESSFUL`, QG **OK** (baseline). G6/G7-дивергенция кодирования → будущий **ADR-022**.
 
+## Вход в пайплайн: таксономия ТЗ и интеграция в Этап 1 (2026-06-15)
+
+> Доп-анализ по запросу пользователя: вход в 4-этапную парадигму **разнороден** — это может быть папка с ТЗ
+> (напр. `configuration/<JIRA>/docs/<подзадача>/`) ИЛИ сообщение в чате; причём по сути — новое ТЗ, **исправление
+> ошибки** прежнего ТЗ, или **доработка не учтённого ранее** при выполнении прежнего ТЗ. Это нужно учесть при
+> приведении к 4 этапам. Текущая модель входа узкая → новые гэпы **G20–G23**. (Edge-cases частично делегированы
+> Z.AI-ревью [delegated], синтез [own].)
+
+### V.1 Что есть сейчас (факты)
+- `/analyze-1c-task` ([command](../../.claude/commands/analyze-1c-task.md)) берёт из `$ARGUMENTS` **один** «Путь к ТЗ —
+  файл (обычно `*ТЗ*.md` … в папке задачи)» + путь к src + `--trace`. → вход моделируется как **один spec-файл**.
+- Реальная папка ТЗ (grounded — `configuration/260304_GKSTCPLK-2182…/docs/`) на деле **богаче** одного файла: под-папка
+  на каждый тикет содержит спеку (`<title>.md`), **скриншоты** (`Скриншот-*.jpg` = визуальный ТЗ), иногда **чат-диалог**
+  (`GKSTCPLK-2177/Диалог по з-че.md` = чат как источник ТЗ), произведённый `<JIRA>-ANALYSIS-REPORT.md`, варианты
+  (`-VARIANT-B/PARAM-ANALYSIS.md`), цепочки тестов (`-TESTING-CHAINS.md`).
+
+### V.2 Таксономия входа — 2 оси
+
+**Ось A — ИСТОЧНИК:**
+- **A1 Папка ТЗ** `configuration/<JIRA>/docs/<подзадача>/` — структурированный набор (spec + скриншоты + опц. чат-диалог + история прежних отчётов).
+- **A2 Сообщение в чате** — free-form `$ARGUMENTS` (часто = текст ТЗ напрямую, иногда со ссылкой на папку/скриншот).
+
+**Ось B — ТИП** (меняет глубину этапов + нужен ли prior-контекст):
+| Тип | Признак (видно в именах папок) | Глубина 4 этапов | Prior-контекст |
+|---|---|---|---|
+| **T1 Новое/доработка** | «Доработать создание/форму/проведение…» (2182, 2178, 2181) | полный 4-этап | нет |
+| **T2 Bugfix** | «Исправить ошибку…» (2176, 2177) | Планирование сжато (root-cause + точка фикса), Дизайн лёгкий, **Тестирование критично** (регресс) | иногда (объект прежней задачи) |
+| **T3 Не учтено / found-in-testing** | «Исправить ошибки **тестирование нового функционала**…» (2236) | **ДЕЛЬТА** на прежнюю задачу | **ОБЯЗАТЕЛЕН** (prior ANALYSIS-REPORT + реализация) |
+
+T3 — ключевой случай из запроса («доработка что было не учтено раньше при выполнении какого-то ТЗ»). Часто **рождается
+в Этапе 4 (Тестирование)** прежней задачи (пример: GKSTCPLK-2236 = T3 к 2182, обнаружено при тестировании нового
+функционала по заблокированным ТС). Это greenfield-АНТИпаттерн: переанализировать с нуля → дубль-работа + риск повторить ту же ошибку.
+
+### V.3 Как ложится в 4-этапную парадигму
+**Этап 1 (Планирование) получает явный под-шаг «Приём входа» (input ingestion):**
+1. **detect источник** (папка A1 / чат A2);
+2. **собрать ВСЕ артефакты** входа (spec + скриншоты [мультимодальный Read изображений] + чат-диалог), не только один `*ТЗ*.md`;
+3. **классифицировать тип** (T1/T2/T3) — по форме текста/имени папки;
+4. для **T3** (и часто T2) — резолвить `parent_task` + **загрузить prior** ANALYSIS-REPORT + `pipeline/<prior-slug>`;
+   **проверить состояние prior-реализации** [delegated]: если prior ещё в **открытом PR** (не замёржен) — дельта
+   создаётся на **ту же ветку**, не на `master` (`gh pr list --base master` по JIRA/commit prior'а);
+5. **дедуп по spec-hash** [delegated]: A1 повторно с неизменённой spec.md → переиспользовать prior отчёт из истории папки (rescan только при изменении хэша);
+6. **multi-ТЗ split** [delegated]: несколько spec в одной A1-папке → отдельные `pipeline/<slug>` на каждый, не слить в один анализ.
+
+`pipeline_state` (профиль `1c`, ADR-019) фиксирует на старте: `input_source` (path|chat), `task_type` (T1/T2/T3),
+`parent_task` (ссылка на прежний slug/JIRA для T3), `target_config_version` — связывает дельту с родителем и питает Этап 4.
+
+### V.4 Новые гэпы (G20–G23, сверх G1–G19)
+| # | Разрыв | Влияние |
+|---|---|---|
+| G20 | Вход = один `*ТЗ*.md`; **игнорируются скриншоты** (визуальный ТЗ + сверка UI-меток код↔mockup [delegated]), **чат-диалог**, история (prior отчёты в той же папке) | потеря требований/контекста на старте |
+| G21 | Нет **классификации типа** (T1/T2/T3) → одинаковая глубина для тривиального bugfix и крупной доработки (⟂ ADR-018 «trivial→компактно») | over/under-process |
+| G22 | **T3 не связывается с прежней задачей**: нет `parent_task`/проверки prior-PR-состояния, Этап 1 не грузит prior-артефакты | дубль-анализ + повтор ошибки; петля «Тест→T3» неявна (усиливает G11) |
+| G23 | **Версия конфига ≠ ветка** [delegated]: ТЗ под версию 1.1.5, а HEAD 1.2.0 → требования vs состояние repo расходятся, нигде не логируется | план строится на устаревшем состоянии |
+
+### V.5 Влияние на план (надстройка над Phase 2)
+- **Phase 2** (проводка `/analyze-1c-task`) расширяется input-ingestion под-шагом (V.3 1–6): detect → собрать мультимодальные
+  артефакты → классифицировать T1/T2/T3 → резолв parent + prior-PR-состояние → дедуп/split → запись
+  `input_source`/`task_type`/`parent_task`/`target_config_version` в state. Фаза 1 (Требования) перестаёт быть «один spec-файл».
+- **Связка с Этапом 4:** провал теста прежней задачи = триггер новой **T3** с авто-`parent_task` → закрывает часть G11
+  (единый вердикт Этапа 4 = pass ИЛИ порождение T3-дельты).
+- ADR при реализации — расширение **ADR-019** (профиль `1c` несёт input-taxonomy в Этапе 1) либо отдельный срез в Phase 2 DoD.
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
@@ -412,6 +475,8 @@ SonarQube встаёт в **Этап 4 (Тестирование/QA)** как ou
 | 2026-06-15 | Phase 9 | **3 новых инструмента (без внешних зависимостей):** (1) BSL-форматер `bsl_lint.py --format` (bsl-ls `--format`, write-back при rc==0+изменении, idempotent, unit-тест 4/4, wired Этап 4 шаг 0 v2.8.1); (2) Coverage41C CI-проводка — `ci-1c.yml` job `coverage` переписан на `Coverage41C.bat`+`EDT_LOCATION`-gate (+ fix дубля `if:` в coverage/allure-report, YAML-валидирован); (3) comol BSL coding-rules → кеш `1c-doc-research` + указатель `bsl-development`. sonar 1.18.1 DEFER подтверждён (SonarQube lts-community/9.9, контейнер down → апгрейд сервера). | `scripts/bsl_lint.py` + `tests/unit/test_bsl_lint_format.py` + `ci-1c.yml` + `implement-1c-task` v2.8.1 + cache + ADR-020 |
 | 2026-06-15 | Phase 9 | **sonar 1.18.1 DEFER → RESOLVED + live-verified QA-цикл:** поднят SonarQube CB 26.6.0.123539 (`sonarqube:community`, было `lts-community`/9.9) + плагин 1.18.1 (180 правил); прогон scanner→server-JRE(JDK21)→BSL-сенсор на 428 BSL (279k NCLOC) = **29697 issues** (302 bugs/125 vulns/766 hotspots), QG OK. Глубокий анализ S.1–S.6: место sonar в Этапе 4 (QA-gate, комплементарно `bsl_lint.py`), каскад разблокировки (CI `bsl-analysis` / Coverage41C-половина / вердикт Этапа 4), новые гэпы **G16–G19** (JDK21-сенсор / хостинг CI / QG-baseline / sources). Нюанс: bsl-сенсор=class65/JDK21 (тот же блокер, что bsl-ls 0.29) → обход server-JRE-provisioning. | `docker-compose.sonarqube.yml` + `config_manager.py` + [ADR-020 RESOLVED](../../.claude/skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md) + раздел «Глубокий анализ (2026-06-15)» |
 | 2026-06-15 | Phase 9 | **G16–G19 проведены в CI ([ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md) accepted) + verified e2e:** G17 self-hosted+локальный sonar (НЕ SonarCloud — проприетарный конфиг); robust sonar-шаг `ci-1c.yml` (reachability-gate + scanner-cli вместо битого bundled-JRE + server-JRE-provisioning JDK21 + пути D:→C: + `submodules: recursive`). G18 gate «1C BSL Way» (Clean-as-You-Code, new-code only, legacy grandfathered) — воспроизводимый `sonar_setup_quality_gate.py`. G19 источники **динамические** (`sonar_sources.py` — растущие `configuration/<JIRA>` авто-подхватываются) + drop внешнего bsl-report. **E2e:** полный конфиг 7215 файлов → ANALYSIS SUCCESSFUL, QG **OK** (baseline). G6/G7 → будущий ADR-022. | [ADR-021](../../.claude/skills/architecture-research/adr/021-sonar-qa-gate-ci-production-wiring.md) + `scripts/sonar_setup_quality_gate.py` + `scripts/sonar_sources.py` + `ci-1c.yml` + `sonar-project.properties` + `scripts/run-sonar-analysis.ps1` |
+
+| 2026-06-15 | Phase 0+ | **Анализ входа в пайплайн (раздел «Вход… таксономия ТЗ»):** вход разнороден по 2 осям — ИСТОЧНИК (A1 папка ТЗ `configuration/<JIRA>/docs/` со spec+скриншоты+чат-диалог+история / A2 чат) × ТИП (T1 новое / T2 bugfix / T3 «не учтено»/found-in-testing = дельта на прежнюю задачу). Текущий `/analyze-1c-task` = «один spec-файл» → узко. Новые гэпы **G20–G23** (мультимодальный вход, классификация типа, T3↔parent-link + prior-PR-состояние, версия конфига≠ветка). Этап 1 получает под-шаг input-ingestion (6 шагов); state несёт `input_source`/`task_type`/`parent_task`/`target_config_version`; петля «Тест прежней→T3» закрывает часть G11. Grounded на реальной `260304/docs`; edge-cases Z.AI-ревью [delegated]. | раздел «Вход в пайплайн» + надстройка Phase 2 (расширяет ADR-019) |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
