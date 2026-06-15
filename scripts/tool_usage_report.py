@@ -113,6 +113,8 @@ def resolve_task_dir(task_dir: str | None = None, slug: str | None = None) -> Pa
 
     Привязка к реестру делает TOOL-USAGE-REPORT.md консистентным с .pipeline-state.json/LOOPS.md
     (все резолвятся через pipeline_state.state_dir) — все файлы задачи в одной папке.
+    Примечание: явный --slug для НЕзарегистрированного slug уходит в generic pipeline/<slug>/
+    (для такого случая ожидается --task-dir); авто-ветка для generic CURRENT даёт None (stdout).
     """
     if task_dir:
         return Path(task_dir)
@@ -124,7 +126,7 @@ def resolve_task_dir(task_dir: str | None = None, slug: str | None = None) -> Pa
         return ps.state_dir(slug)  # явный slug → его state_dir (папка задачи для 1С)
     try:
         cur = ps.resolve_current()
-        if cur and cur in ps._read_registry():  # авто: только зарегистрированная 1С-задача
+        if cur and ps.is_registered(cur):  # авто: только зарегистрированная 1С-задача (публичный предикат)
             return ps.state_dir(cur)
     except Exception:
         return None

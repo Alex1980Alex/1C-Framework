@@ -153,6 +153,12 @@ def state_dir(slug: str) -> Path:
     return PIPELINE_DIR / _slugify(slug)
 
 
+def is_registered(slug: str) -> bool:
+    """slug — зарегистрированная 1С-задача (состояние в папке задачи)? Публичный предикат для внешних
+    потребителей (напр. tool_usage_report) — без опоры на приватный _read_registry."""
+    return _slugify(slug) in _read_registry()
+
+
 def relocate_1c(slug: str, task_dir: str | Path) -> bool:
     """Перенести состояние 1С-задачи в папку задачи (relocate-on-artifact). Идемпотентно. True если перенёс.
 
