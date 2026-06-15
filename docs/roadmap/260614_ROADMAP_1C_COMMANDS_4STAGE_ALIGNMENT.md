@@ -515,6 +515,48 @@ pipeline → там G3 де-факто закрыт ручным артефак�
 4. **F-4 (опц.):** display-label `profile:"1c"` в `render_status`; input-ingestion (G20–G23) — отдельный срез поверх F-1.
 Каждый срез: behavior-preserving для не-1С пайплайна + регресс-тест; единый rollback = снять хук-проводку.
 
+## Инструментирование инструментов per-task + оценка эффективности (2026-06-15)
+
+> Требование пользователя: в папке реализации — артефакт с (1) **планом** инструментов на каждый этап,
+> (2) **логом** использования (ошибки/качество), (3) **оценкой эффективности** на основе лога. Решения (2 развилки):
+> **гибрид** (авто-лог + ручная оценка) + **per-task отчёт + глобальная агрегация** (cross-task). Новый гэп **G24**.
+
+### W.1 Что УЖЕ есть (переиспользуем, НЕ дублируем) [own]
+- `hook-invocations.jsonl` (`invocation_logger.py`): per-вызов **tool / outcome** (allow/block/message/**error**) /
+  error-msg / **latency** / **run_id** (один прогон слэш-команды) + CloudEvents + `causationid`. MCP-вызовы логируются (`mcp-invocation-logger`).
+- `audit_query.py` (DuckDB): **error-rate, latency-p95, top-tools, causation-chain по run_id**.
+→ «лог использования + ошибки + латентность» по задаче (`run_id`) уже ведётся **автоматически**.
+
+### W.2 Чего нет (новый слой = G24)
+(а) **план** инструментов по этапам; (б) **качество** (субъективная польза, не только success/error); (в) **per-task
+отчёт эффективности** в папке задачи; (г) **глобальная агрегация** cross-task.
+
+### W.3 Артефакты в папке задачи (`configuration/<…>/docs/<slug>/`)
+| Артефакт | Когда | Содержание | Источник |
+|---|---|---|---|
+| **`TOOL-PLAN.md`** | Этап 1–2 (Планирование/Дизайн) | таблица «этап → инструменты → назначение» | ADR-020 tool→stage + sonar/`bsl_lint`/Coverage41C |
+| **лог** (НЕ файл в папке) | Кодирование/Тестирование (авто) | tool/outcome/error/latency по `run_id` | `hook-invocations.jsonl` (**reuse**) |
+| **`TOOL-USAGE-REPORT.md`** | конец (Этап 4/Stop) | per-tool: usage/error-rate/latency (из audit по run_id) + **quality** (✓/⚠/✗ + заметка) → вердикт | `audit_query --view causation-chain --correlation-id <run_id>` + ручная quality |
+
+### W.4 Quality-шкала (ручная — то, чего авто-лог не различает) [own]
+- **✓ хорошо** — нужный результат с 1–2 попытки. **⚠ частично** — помог, но с трением (обходные пути, N попыток — заметка).
+- **✗ плохо** — ошибка/не помог/заблокировал (error из лога + причина). Каждая отметка — с короткой заметкой (что за ошибка/трение).
+
+### W.5 Глобальная агрегация (cross-task) [own]
+per-task `TOOL-USAGE-REPORT` → накопление в `data/tool-effectiveness.jsonl` (tool × этап × {usage, error-rate, avg-quality}).
+Rollup → cross-task профиль → (а) **корректирует `TOOL-PLAN`** (Этап 1 предлагает инструменты с лучшей историей на этапе),
+(б) кормит **skill-learning/confidence (§22–27)** — проблемные инструменты ↓, надёжные ↑. Замыкает петлю «использовал → оценил → выбор улучшился».
+
+### W.6 Как ложится в 4-этапную парадигму (B′)
+`TOOL-PLAN` — продукт Этапа 1–2 (рядом с ANALYSIS-REPORT); лог — авто (run_id уже ставят preflight-хуки analyze/implement);
+`TOOL-USAGE-REPORT`+quality+глоб-агрегация — Этап 4/Stop (новый Stop-шаг ИЛИ часть implement Этапа 7 «Документация»). G24 — в общий список гэпов.
+
+### W.7 Реализация (когда «реализуй») — поверх B′ F-1..F-4
+- `scripts/tool_usage_report.py --run-id <id> --task-dir <path>` — обёртка над `audit_query` по run_id → `TOOL-USAGE-REPORT.md` (raw) + слот quality.
+- `TOOL-PLAN.md` шаблон + заполнение в analyze/implement (часть A-relabel).
+- `data/tool-effectiveness.jsonl` + rollup-скрипт → корректировка плана + хук в skill-learning.
+**Применяю частично СРАЗУ:** `TOOL-PLAN` (по этапам) + quality-заметки веду вручную уже сейчас; авто-агрегация/отчёт-скрипт — срез реализации.
+
 ## §18 Progress log
 
 | Дата | Phase | Событие | Артефакт/PR |
@@ -536,6 +578,8 @@ pipeline → там G3 де-факто закрыт ручным артефак�
 | 2026-06-15 | Decision | **ФИНАЛ выбора варианта (перед реализацией): B′ «мост через хуки», ADR-019 proposed→accepted.** Доп-анализ вскрыл 2 over-engineering в B-как-написан: профили избыточны (этапы уже домен-агностичны, ADR-017) + правка команд/скиллов хрупка (soft) → проводка через СУЩЕСТВУЮЩИЕ хуки (`analyze-1c-task-preflight` init + PostToolUse done-детектор + `pipeline-gate` на /implement-1c-task), методика 1С 0-правок (детерминированнее). Отклонены: A-один (не G3/G4), C/гибрид (~20-30 файлов), B-как-написан (B′⊂него по риску), exempt (отказ от цели). Граница: ad-hoc уже покрыт ADR-018 → B′ для слэш-маршрута. Порядок F-1..F-4 foundation-first. | [ADR-019 accepted](../../.claude/skills/architecture-research/adr/019-1c-commands-4stage-pipeline-alignment.md) + раздел «Финальное решение» |
 
 | 2026-06-15 | Phase 0+ | **V.6 Дизамбигуация чат-входа (правило пользователя, применять СРАЗУ):** чат-задача без явного типа → авто-детект родителя → если не нашёл/не сказано «доработка» → **ОБЯЗАТЕЛЬНО спросить** new-vs-доработка (не guess). Standalone → новая ТЗ-папка `configuration/260304_GKSTCPLK-2182…/docs/<YYMMDD_slug>/` (⚠ provisional, «возможно перенесём»), авто-slug `YYMMDD_<имя>`, полная папка для ЛЮБОЙ задачи вкл. trivial; доработка/T2/T3 → подпапка к родителю + prior-контекст. Уточняет G21/G22. Зеркалировано в память `project-1c-task-input-taxonomy`. | раздел «Вход» V.6 + память |
+
+| 2026-06-15 | Phase 0+ | **Раздел W — инструментирование инструментов per-task + оценка эффективности (требование пользователя):** артефакты в папке задачи — `TOOL-PLAN.md` (инструменты по этапам) + `TOOL-USAGE-REPORT.md` (per-tool usage/error/latency из audit по run_id + ручное quality ✓/⚠/✗ → вердикт). Лог **переиспользует** `hook-invocations.jsonl` (уже пишет, run_id-коррелирован) — НЕ дублируем (развилка: гибрид). Эффективность: per-task + **глобальная агрегация** `data/tool-effectiveness.jsonl` → корректирует план + skill-learning/confidence (развилка: cross-task). Новый гэп **G24**. TOOL-PLAN+quality веду вручную сразу; отчёт-скрипт/агрегация — срез реализации. | раздел W (W.1-W.7) |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): PR merge, завершение фазы, ADR,
 > снятый блокер. После каждого — обновить таблицу + коммит `docs(roadmap):`.
