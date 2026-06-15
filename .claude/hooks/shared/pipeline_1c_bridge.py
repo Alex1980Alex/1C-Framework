@@ -37,6 +37,25 @@ def derive_slug(prompt: str) -> str:
     return slug or "1c-task"
 
 
+def resolve_task_input(arg: str) -> dict:
+    """Вход ``/run-1c-task``: путь к ТЗ-папке / JIRA-код / описание из чата.
+
+    Возврат ``{kind: 'folder'|'jira'|'chat', slug, folder}``. Чистая функция (os.path + derive_slug,
+    без pipeline_state) → collision-immune тест. ``folder=None`` если вход — не существующая папка.
+
+    Приоритет: существующая папка (slug из её имени) > JIRA-код > описание (ASCII-slug).
+    Несуществующий путь с JIRA-кодом в имени → ветка jira (код задачи как slug).
+    """
+    a = (arg or "").strip().strip('"').strip("'")
+    if a and (os.sep in a or "/" in a) and os.path.isdir(a):
+        slug = derive_slug(os.path.basename(os.path.normpath(a)))
+        return {"kind": "folder", "slug": slug, "folder": a}
+    m = _JIRA.search(a)
+    if m:
+        return {"kind": "jira", "slug": m.group(0), "folder": None}
+    return {"kind": "chat", "slug": derive_slug(a), "folder": None}
+
+
 def ensure_pipeline_1c(prompt: str, command: str) -> str | None:
     """Идемпотентно завести pipeline для 1С-задачи. Возврат slug | None (best-effort)."""
     try:

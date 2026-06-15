@@ -122,3 +122,31 @@ def test_classify_non_1c_and_ask():
     assert bridge.classify_1c_task("как работает RAG embeddings")["is_1c"] is False
     c = bridge.classify_1c_task("исправь ошибку в гкс_ЛабораторныйАнализ при проведении")
     assert c["is_1c"] is True and c["ask"] is True  # 1С-сигнал+глагол, нет JIRA → ask
+
+
+# --- run-1c-task: resolve_task_input (чистая функция: os.path + derive_slug → collision-immune) ---
+
+
+def test_resolve_input_jira():
+    r = bridge.resolve_task_input("GKSTCPLK-2182 доработать форму")
+    assert r["kind"] == "jira" and r["slug"] == "GKSTCPLK-2182" and r["folder"] is None
+
+
+def test_resolve_input_chat():
+    # описание из чата (нет пути, нет JIRA) → chat; кириллица → общий slug
+    r = bridge.resolve_task_input("исправить ошибку проведения накладной")
+    assert r["kind"] == "chat" and r["folder"] is None and r["slug"]
+
+
+def test_resolve_input_folder(tmp_path):
+    # существующая папка ТЗ с JIRA в имени → kind=folder, slug из имени папки
+    d = tmp_path / "260615_GKSTCPLK-2200"
+    d.mkdir()
+    r = bridge.resolve_task_input(str(d))
+    assert r["kind"] == "folder" and r["slug"] == "GKSTCPLK-2200" and r["folder"] == str(d)
+
+
+def test_resolve_input_nonexistent_path_with_jira():
+    # путь-вид, но папки нет; в строке есть JIRA → ветка jira (не folder)
+    r = bridge.resolve_task_input("C:/no/such/GKSTCPLK-2201")
+    assert r["kind"] == "jira" and r["slug"] == "GKSTCPLK-2201" and r["folder"] is None
