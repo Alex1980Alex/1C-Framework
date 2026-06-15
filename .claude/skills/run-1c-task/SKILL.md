@@ -33,6 +33,10 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 
 ### Этап 1-2 — Планирование + Дизайн (методика analyze-1c-task-v2)
 1. `pipeline_state init <slug> --title "1С-задача (run-1c-task): <slug>"` (идемпотентно).
+   **kind=folder** → добавь `--task-dir "<folder>"`: состояние (`.pipeline-state.json`), `LOOPS.md` и
+   имена этапов (ANALYSIS-REPORT.md / IMPLEMENTATION-PROGRESS.md / .run-state.json) рождаются СРАЗУ в папке
+   задачи рядом с её артефактами. Для kind=chat/jira папка узнаётся при записи ANALYSIS-REPORT.md →
+   состояние авто-переезжает туда (relocate-on-artifact, хук `pipeline-1c-advance`).
    1.5. **ОБЯЗАТЕЛЬНО в начале** (иначе единый Stop-gate `onec-task-completion-stop` заблокирует
    завершение): **recall** — `mcp__memory-orchestrator__unified_search` (+ `search_patterns`) по теме задачи;
    **внешний анализ** — `WebSearch`/`WebFetch` (Infostart + GitHub best-practices), с атрибуцией находок.

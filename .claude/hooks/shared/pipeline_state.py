@@ -36,6 +36,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PIPELINE_DIR = PROJECT_ROOT / "pipeline"
 CURRENT_PTR = PIPELINE_DIR / "CURRENT"
 STATE_NAME = ".pipeline-state.json"
+# Реестр 1С-задач: {slug: task_dir(rel-to-root POSIX)} — состояние 1С-пайплайна живёт В ПАПКЕ ЗАДАЧИ
+# (configuration/<parent>/docs/<task>/), а не в generic pipeline/<slug>/. Generic-поток реестр не трогает.
+REGISTRY_PTR = PIPELINE_DIR / "_1c_index.json"
+_1C_TITLE_PREFIX = "1С-задача ("  # совпадает с pipeline_1c_bridge.is_1c_task_title (N4)
 
 # Этапы — единый источник истины (команда ↔ этап ↔ артефакт).
 STAGES = [
@@ -76,6 +80,24 @@ _BY_COMMAND = {s["command"]: s for s in STAGES}
 PIPELINE_COMMANDS = tuple(s["command"] for s in STAGES)
 APPROVAL_STAGE = 2  # дизайн человек одобряет перед кодированием (единственный hard-гейт)
 
+# 1С-профиль этапов: имена артефактов = реальные файлы методики 1С (в папке задачи), а не generic 0N-*.md.
+# Выбирается по title-маркеру `1С-задача (`. Этап 4 = `.run-state.json` (решение пользователя — в папке задачи).
+STAGES_1C = [
+    {"n": 1, "name": "planning", "command": "pl-plan", "artifact": "ANALYSIS-REPORT.md",
+     "title": "Планирование архитектуры", "delegates": "analyze-1c-task-v2"},
+    {"n": 2, "name": "design", "command": "pl-design", "artifact": "ANALYSIS-REPORT.md",
+     "title": "Дизайн реализации", "delegates": "analyze-1c-task-v2"},
+    {"n": 3, "name": "implementation", "command": "pl-code", "artifact": "IMPLEMENTATION-PROGRESS.md",
+     "title": "Кодирование", "delegates": "implement-1c-task"},
+    {"n": 4, "name": "testing", "command": "pl-test", "artifact": ".run-state.json",
+     "title": "Тестирование", "delegates": "va-bdd-testing"},
+]
+
+
+def is_1c(title: str | None) -> bool:
+    """1С-задача по title-маркеру (локальный prefix-чек — ядро не зависит от bridge)."""
+    return str(title or "").startswith(_1C_TITLE_PREFIX)
+
 
 def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
@@ -88,8 +110,114 @@ def _slugify(s: str) -> str:
     return out.strip("-") or "task"
 
 
+def _read_registry() -> dict:
+    try:
+        return json.loads(REGISTRY_PTR.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_registry(reg: dict) -> None:
+    REGISTRY_PTR.parent.mkdir(parents=True, exist_ok=True)
+    tmp = REGISTRY_PTR.with_suffix(".tmp")
+    tmp.write_text(json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(REGISTRY_PTR)  # атомарно
+
+
+def _rel_to_root(task_dir: str | Path) -> str:
+    """task_dir → POSIX-путь относительно репо (портабельно); вне репо — абсолютный."""
+    p = Path(task_dir)
+    try:
+        return p.resolve().relative_to(PROJECT_ROOT).as_posix()
+    except (ValueError, OSError):
+        return p.as_posix()
+
+
+def register_1c(slug: str, task_dir: str | Path) -> str:
+    """Зарегистрировать 1С-задачу: состояние живёт в task_dir. Идемпотентно. Возврат — сохранённый rel-путь."""
+    slug = _slugify(slug)  # симметрия с init_task — ключ реестра всегда нормализован
+    rel = _rel_to_root(task_dir)
+    reg = _read_registry()
+    if reg.get(slug) != rel:
+        reg[slug] = rel
+        _write_registry(reg)
+    return rel
+
+
+def state_dir(slug: str) -> Path:
+    """Каталог состояния slug: папка задачи (реестр 1С) либо generic pipeline/<slug>/."""
+    td = _read_registry().get(_slugify(slug))
+    if td:
+        p = Path(td)
+        return p if p.is_absolute() else (PROJECT_ROOT / p)
+    return PIPELINE_DIR / _slugify(slug)
+
+
+def relocate_1c(slug: str, task_dir: str | Path) -> bool:
+    """Перенести состояние 1С-задачи в папку задачи (relocate-on-artifact). Идемпотентно. True если перенёс.
+
+    Порядок (каждый шаг атомарен через _save/_write_registry tmp+replace): прочитать состояние (из текущего
+    расположения ИЛИ generic) → register (резолв переключается на task_dir) → _save в папку задачи → удалить
+    старый generic-файл/папку. Сходимость при частичном крэше: если register прошёл, но _save не успел, generic
+    ещё держит состояние → повторный relocate подхватит его из generic и до-мигрирует.
+    """
+    slug = _slugify(slug)
+    new_rel = _rel_to_root(task_dir)
+    if _read_registry().get(slug) == new_rel and (state_dir(slug) / STATE_NAME).exists():
+        return False  # уже в папке задачи — no-op
+    generic = PIPELINE_DIR / slug
+    data = None
+    for sp in (state_dir(slug) / STATE_NAME, generic / STATE_NAME):  # текущее, затем generic (crash-retry)
+        try:
+            data = json.loads(sp.read_text(encoding="utf-8"))
+            break
+        except (OSError, ValueError):
+            continue
+    register_1c(slug, task_dir)  # после этого state_dir(slug) == task_dir
+    if data is not None:
+        _save(slug, data)  # пишет в папку задачи
+    try:
+        gs = generic / STATE_NAME
+        if generic != state_dir(slug) and gs.exists():  # generic ≠ цель → удалить осиротевший generic
+            gs.unlink()
+            if not any(generic.iterdir()):  # подчистить пустую pipeline/<slug>/ (не папку задачи)
+                generic.rmdir()
+    except OSError:
+        pass
+    return True
+
+
 def _state_path(slug: str) -> Path:
-    return PIPELINE_DIR / slug / STATE_NAME
+    return state_dir(slug) / STATE_NAME
+
+
+def iter_states():
+    """Все пайплайны (slug, data): 1С из реестра (папки задач) + generic из pipeline/*/. Dedup по slug.
+
+    Единый источник для прямых читателей (pipeline-protocol-stop, onec-task-completion-stop) — после
+    переезда 1С-состояния в папку задачи generic-glob его уже не найдёт, поэтому энумерируем оба места.
+    """
+    seen = set()
+    for slug, td in _read_registry().items():  # 1С: авторитетное расположение — папка задачи
+        p = Path(td)
+        sp = (p if p.is_absolute() else PROJECT_ROOT / p) / STATE_NAME
+        try:
+            data = json.loads(sp.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        seen.add(slug)
+        yield slug, data
+    if PIPELINE_DIR.is_dir():
+        for sf in PIPELINE_DIR.glob("*/.pipeline-state.json"):
+            slug = sf.parent.name
+            if slug in seen:
+                continue
+            try:
+                data = json.loads(sf.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            seen.add(slug)
+            yield slug, data
 
 
 def resolve_current() -> str | None:
@@ -129,15 +257,18 @@ def _set_current(slug: str) -> None:
     CURRENT_PTR.write_text(slug, encoding="utf-8")
 
 
-def init_task(slug: str, title: str = "") -> dict:
+def init_task(slug: str, title: str = "", task_dir: str | None = None) -> dict:
     slug = _slugify(slug)
+    if task_dir and is_1c(title):
+        register_1c(slug, task_dir)  # состояние сразу в папке задачи (kind=folder)
     existing = load(slug)
     if existing:  # идемпотентно — повторный init не затирает прогресс
         _set_current(slug)
         return existing
     now = _now()
+    template = STAGES_1C if is_1c(title) else STAGES  # 1С-профиль: артефакты = реальные файлы методики
     stages = []
-    for s in STAGES:
+    for s in template:
         st = {
             "n": s["n"],
             "name": s["name"],
@@ -256,7 +387,7 @@ def artifact_path(command: str, slug: str | None = None) -> Path | None:
     data = load(slug)
     if not stage or not data:
         return None
-    return PIPELINE_DIR / data["task"] / stage["artifact"]
+    return state_dir(data["task"]) / stage["artifact"]
 
 
 def render_status(slug: str | None = None) -> str:
@@ -272,7 +403,7 @@ def render_status(slug: str | None = None) -> str:
         extra = ""
         if st["n"] == APPROVAL_STAGE:
             extra = " (одобрен)" if st.get("approved") else " (НЕ одобрен)"
-        art = PIPELINE_DIR / data["task"] / st["artifact"]
+        art = state_dir(data["task"]) / st["artifact"]
         missing = "" if art.exists() else " — файла нет"
         lines.append(f"  {mark} {st['n']}. {st['command']:8s} -> {st['artifact']}{extra}{missing}")
     return "\n".join(lines)
@@ -301,6 +432,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("init", help="создать пайплайн для задачи")
     p.add_argument("slug")
     p.add_argument("--title", default="")
+    p.add_argument("--task-dir", default=None, help="папка 1С-задачи (состояние ляжет туда, а не в pipeline/)")
 
     p = sub.add_parser("done", help="отметить этап завершённым")
     p.add_argument("slug", help="slug или '-' (текущий)")
@@ -321,8 +453,8 @@ def main(argv: list[str] | None = None) -> int:
 
     args = ap.parse_args(argv)
     if args.cmd == "init":
-        d = init_task(args.slug, args.title)
-        _emit(f"init {d['task']} -> {PIPELINE_DIR / d['task']}/ (CURRENT)")
+        d = init_task(args.slug, args.title, task_dir=args.task_dir)
+        _emit(f"init {d['task']} -> {state_dir(d['task'])}/ (CURRENT)")
         _emit(render_status(d["task"]))
     elif args.cmd == "done":
         d = mark_done(args.slug, args.stage, args.artifact)

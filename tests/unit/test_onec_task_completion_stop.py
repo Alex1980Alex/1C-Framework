@@ -86,8 +86,26 @@ def test_collect_config_edit(tmp_path):
     assert mod._collect_signals(str(t2))["config_edit"] is False
 
 
+def _isolate_pipeline(monkeypatch, pdir):
+    """Изолировать энумерацию пайплайнов на тестовую папку pdir (пустой реестр).
+
+    Патчим mod.PIPELINE_DIR (graceful-fallback хука) ВСЕГДА; и shared.pipeline_state.* — best-effort
+    (при коллизии src/shared↔hooks/shared в полном прогоне `from shared import pipeline_state` падает
+    и в хуке, и тут — хук уходит в fallback glob(mod.PIPELINE_DIR), которого достаточно). См. памятку
+    feedback-hook-src-shared-collision."""
+    monkeypatch.setattr(mod, "PIPELINE_DIR", pdir)
+    try:
+        from shared import pipeline_state as _ps
+
+        if hasattr(_ps, "iter_states"):
+            monkeypatch.setattr(_ps, "PIPELINE_DIR", pdir)
+            monkeypatch.setattr(_ps, "REGISTRY_PTR", pdir / "_no_registry.json")
+    except Exception:
+        pass  # коллизия src/shared → хук использует fallback glob(mod.PIPELINE_DIR)
+
+
 def test_onec_pipeline_updated_this_session(tmp_path, monkeypatch):
-    monkeypatch.setattr(mod, "PIPELINE_DIR", tmp_path)
+    _isolate_pipeline(monkeypatch, tmp_path)
     d = tmp_path / "task1"
     d.mkdir()
     (d / ".pipeline-state.json").write_text(
@@ -98,7 +116,7 @@ def test_onec_pipeline_updated_this_session(tmp_path, monkeypatch):
 
 
 def test_onec_pipeline_lookalike_excluded(tmp_path, monkeypatch):
-    monkeypatch.setattr(mod, "PIPELINE_DIR", tmp_path)
+    _isolate_pipeline(monkeypatch, tmp_path)
     d = tmp_path / "task1"
     d.mkdir()
     (d / ".pipeline-state.json").write_text(
@@ -110,7 +128,8 @@ def test_onec_pipeline_lookalike_excluded(tmp_path, monkeypatch):
 def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
     # H5: межсессионная задача — этапы не все done → возвращает slug
     inc = tmp_path / "inc"
-    monkeypatch.setattr(mod, "PIPELINE_DIR", inc)
+    inc.mkdir()
+    _isolate_pipeline(monkeypatch, inc)
     d = inc / "task_h5"
     d.mkdir(parents=True)
     (d / ".pipeline-state.json").write_text(
@@ -120,7 +139,8 @@ def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
     assert mod._incomplete_onec_pipeline() == "task_h5"
     # все этапы done → None
     done = tmp_path / "done"
-    monkeypatch.setattr(mod, "PIPELINE_DIR", done)
+    done.mkdir()
+    _isolate_pipeline(monkeypatch, done)
     d2 = done / "task_done"
     d2.mkdir(parents=True)
     (d2 / ".pipeline-state.json").write_text(

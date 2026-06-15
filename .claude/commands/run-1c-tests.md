@@ -28,8 +28,12 @@ Stage 4 (post-verification), диагностика ошибок, откалиб
 3. Код задачи (`<TASK-ID>`) — извлекается из пути, slug `project1234`
 
 **Алгоритм резолва путей:**
-- Папка задачи → `features/<task-slug>/` (список секций)
-- State file → `features/<task-slug>/.run-state.json` (цепочка)
+- Папка `.feature`-секций → `features/<task-slug>/` (определения тестов — не меняется)
+- State file (`.run-state.json`):
+  - **1С-задача** (есть pipeline-state, `pipeline_state.state_dir(<slug>)` ≠ generic `pipeline/`) →
+    `<task_dir>/.run-state.json` — В ПАПКЕ ЗАДАЧИ рядом с ANALYSIS-REPORT.md/IMPLEMENTATION-PROGRESS.md
+    (этап 4 пайплайна; передавать `run-bdd.ps1 -OutputJson "<task_dir>/.run-state.json"`).
+  - иначе (legacy/не-1С) → `features/<task-slug>/.run-state.json`.
 - Reports → `build/reports/<task-slug>/` (JUnit XML)
 
 ---
@@ -87,7 +91,8 @@ mcp__1c-mcp-crud__execute_query(
 
 ## State file: `.run-state.json`
 
-Местоположение: `features/<task-slug>/.run-state.json`
+Местоположение: **1С-задача** → `<task_dir>/.run-state.json` (папка задачи, этап 4 пайплайна);
+legacy/не-1С → `features/<task-slug>/.run-state.json` (см. «Алгоритм резолва путей» выше).
 
 Формат:
 ```json

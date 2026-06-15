@@ -106,8 +106,20 @@ def _session_start(sid: str) -> datetime | None:
 
 
 def _iter_1c_pipelines():
-    """(slug, state_dict) всех 1С-задача-пайплайнов (по title-предикату)."""
-    if not PIPELINE_DIR.is_dir():
+    """(slug, state_dict) всех 1С-задача-пайплайнов (по title-предикату).
+
+    Через pipeline_state.iter_states() — 1С-состояние живёт в папке задачи (реестр), generic-glob его
+    не найдёт. Graceful fallback на старый glob по pipeline/*/ (если ядро недоступно)."""
+    try:
+        from shared import pipeline_state
+
+        for slug, d in pipeline_state.iter_states():
+            if is_1c_task_title(d.get("title")):
+                yield slug, d
+        return
+    except Exception:
+        pass
+    if not PIPELINE_DIR.is_dir():  # fallback: только generic
         return
     for sf in PIPELINE_DIR.glob("*/.pipeline-state.json"):
         try:
@@ -187,9 +199,14 @@ def _collect_signals(transcript_path: str) -> dict:
 
 
 def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
-    """H2: сводка обязательных петель задачи -> pipeline/<slug>/LOOPS.md (галка/крест + opt-out). best-effort."""
+    """H2: сводка обязательных петель -> <state_dir>/LOOPS.md (для 1С = папка задачи). best-effort."""
     try:
-        d = PIPELINE_DIR / slug
+        try:
+            from shared import pipeline_state
+
+            d = pipeline_state.state_dir(slug)  # 1С: папка задачи; generic: pipeline/<slug>/
+        except Exception:
+            d = PIPELINE_DIR / slug
         if not d.is_dir():
             return
 

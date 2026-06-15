@@ -68,8 +68,12 @@ def resolve_task_input(arg: str) -> dict:
     return {"kind": "chat", "slug": derive_slug(a), "folder": None}
 
 
-def ensure_pipeline_1c(prompt: str, command: str) -> str | None:
-    """Идемпотентно завести pipeline для 1С-задачи. Возврат slug | None (best-effort)."""
+def ensure_pipeline_1c(prompt: str, command: str, task_dir: str | None = None) -> str | None:
+    """Идемпотентно завести pipeline для 1С-задачи. Возврат slug | None (best-effort).
+
+    task_dir (если известна папка ТЗ, напр. kind=folder) → состояние рождается сразу в ней; иначе
+    в generic pipeline/<slug>/ до первого артефакта (relocate-on-artifact перенесёт в папку задачи).
+    """
     try:
         hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if hooks not in sys.path:
@@ -77,7 +81,7 @@ def ensure_pipeline_1c(prompt: str, command: str) -> str | None:
         from shared import pipeline_state
 
         slug = derive_slug(prompt)
-        pipeline_state.init_task(slug, title=f"1С-задача ({command}): {slug}")  # идемпотентно
+        pipeline_state.init_task(slug, title=f"1С-задача ({command}): {slug}", task_dir=task_dir)  # идемпотентно
         return slug
     except Exception:
         return None  # никогда не ломаем preflight
@@ -129,6 +133,15 @@ def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
         data = pipeline_state.load(slug) if slug else None
         if not data or not is_1c_task_title(data.get("title")):
             return None  # guard: только 1С-пайплайн (метка ensure_pipeline_1c)
+        # relocate-on-artifact: состояние 1С-задачи живёт В ПАПКЕ ЗАДАЧИ рядом с артефактом.
+        # task_dir = каталог только что записанного ANALYSIS-REPORT/IMPLEMENTATION-PROGRESS.
+        try:
+            task_dir = os.path.dirname(os.path.abspath(file_path))
+            if task_dir and hasattr(pipeline_state, "relocate_1c"):
+                pipeline_state.relocate_1c(slug, task_dir)
+                data = pipeline_state.load(slug) or data  # перечитать из нового расположения
+        except Exception:
+            pass  # best-effort: перенос не должен ломать продвижение этапов
         done_now = []
         for n in stages:
             st = next((s for s in data.get("stages", []) if s.get("n") == n), None)

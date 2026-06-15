@@ -154,15 +154,30 @@ def _git_session_edit(start: datetime | None) -> bool:
     return False
 
 
+def _iter_all_states():
+    """(slug, data) всех пайплайнов: generic pipeline/*/ + 1С из реестра (папки задач).
+
+    Через pipeline_state.iter_states() — после переезда 1С-состояния в папку задачи свой generic-glob
+    его не нашёл бы → ложный «пайплайн не использован» → ложный блок. Graceful fallback на старый glob.
+    """
+    try:
+        from shared import pipeline_state
+
+        yield from pipeline_state.iter_states()
+        return
+    except Exception:
+        pass
+    if PIPELINE_DIR.is_dir():  # fallback: только generic
+        for sf in PIPELINE_DIR.glob("*/.pipeline-state.json"):
+            try:
+                yield sf.parent.name, json.loads(sf.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+
+
 def _pipeline_used_since(start: datetime | None) -> bool:
-    """Был ли хоть один pipeline/<slug>/.pipeline-state.json обновлён за сессию."""
-    if not PIPELINE_DIR.is_dir():
-        return False
-    for sf in PIPELINE_DIR.glob("*/.pipeline-state.json"):
-        try:
-            d = json.loads(sf.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
+    """Был ли хоть один пайплайн (generic ИЛИ 1С в папке задачи) обновлён за сессию."""
+    for _slug, d in _iter_all_states():
         dt = _parse_dt(d.get("updated_at", ""))
         if dt is None:
             continue
