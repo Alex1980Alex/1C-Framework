@@ -11,6 +11,12 @@ triggers:
   - реализация по ANALYSIS-REPORT
 ---
 
+> **4-этапная парадигма (ADR-019 B′, G5/G2):** этот skill реализует **Этап 3 «Кодирование»** (Этапы 0–3:
+> preflight→подготовка→валидация→BSL-write) и **Этап 4 «Тестирование»** (Этапы 4–6 + `/write-1c-tests`/`/run-1c-tests`).
+> Артефакт — `IMPLEMENTATION-PROGRESS.md`. `pipeline/<slug>/.pipeline-state.json` ведётся **автоматически** (preflight-мост
+> F-1, advance F-1.5). **Гейт (F-2):** запуск БЛОКИРУЕТСЯ, пока дизайн (этап 2, ANALYSIS-REPORT) не одобрен —
+> `pipeline_state.py approve <slug>`. См. [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
+
 # Реализация задачи 1С — 8-этапный pipeline (v2.8)
 
 > **История версий:**
