@@ -217,3 +217,49 @@ def test_route_attribute_name_not_light_downgrade():
     # косметически (light) занижать medium-задачу до simple — light только для чистой косметики
     r = bridge.route_1c_task("доработать обработку гкс_ЗагрузкаДанных добавить колонку Комментарий")
     assert r["complexity"] == "medium" and r["flow"] == "ask_flow"
+
+
+# --- recall-расширение детектора (заземлено на configuration/.../docs реальные задачи) ---
+
+
+def test_recall_oblique_form_now_detected():
+    # miss-кейс ревьюера: косвенный падеж, без точки/JIRA/гкс_ → теперь is_1c, но weak → ask_1c
+    r = bridge.route_1c_task("доработать форму документа Расход")
+    assert r["is_1c"] is True and r["confident_1c"] is False and r["flow"] == "ask_1c"
+
+
+def test_recall_real_titles():
+    # реальные заголовки configuration/260304…/docs (без JIRA) — детектятся через term+verb
+    for t in [
+        "Создать новую печатную форму Акт забраковки товара",
+        "Настроить обмен с базой УТ Инфида",
+        "Дополнить АРМ детали блок лаб анализ",
+        "Восстановить предопределенные элементы справочников",
+        "Скорректировать профили доступа в 1С Управление транспортом",
+    ]:
+        assert bridge.classify_1c_task(t)["is_1c"] is True, t
+
+
+def test_recall_definitive_marker_without_verb():
+    # гкс_ / configuration-path → 1С даже БЕЗ таск-глагола (definitive)
+    assert bridge.classify_1c_task("посмотри гкс_НастройкиНазначенияРазгрузки")["is_1c"] is True
+    assert bridge.classify_1c_task("открой configuration/260304_X/docs описание")["is_1c"] is True
+
+
+def test_recall_camelcase_object_with_verb():
+    # CamelCase-объект без доменного-термина-подстроки + глагол → is_1c (арбитрарные имена объектов)
+    r = bridge.route_1c_task("доработать НаправлениеНаРазгрузку")
+    assert r["is_1c"] is True and r["confident_1c"] is True
+
+
+def test_recall_t3_passive_uchteno():
+    # T3-формулировка «не учтено» (учт-глагол) + 1С-сигнал → is_1c + ttype T3 (рек. ревьюера)
+    c = bridge.classify_1c_task("при тестировании не учтено формирование движений в регистре")
+    assert c["is_1c"] is True and c["ttype"] == "T3"
+
+
+def test_recall_non_1c_still_none():
+    # расширение НЕ ловит не-1С: вопрос/код без таск-глагола ИЛИ без 1С-сигнала
+    assert bridge.classify_1c_task("как работает RAG embeddings")["is_1c"] is False
+    assert bridge.classify_1c_task("что такое ТабличныйДокумент")["is_1c"] is False  # CamelCase, но нет глагола
+    assert bridge.classify_1c_task("напиши скрипт на python для парсинга")["is_1c"] is False
