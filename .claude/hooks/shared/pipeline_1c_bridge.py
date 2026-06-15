@@ -33,7 +33,7 @@ def is_1c_task_title(title) -> bool:
     """Единый предикат «pipeline реальной 1С-задачи» (N4: убирает дубль/рассинхрон префикса в 6 местах).
 
     Строго ``startswith("1С-задача (")`` (с открывающей скобкой) — исключает framework-lookalike
-    «1С-задача из чата: …». Используется в guard'ах моста И в Stop-энфорсерах (memory/research-protocol-stop).
+    «1С-задача из чата: …». Используется в guard'ах моста И в Stop-gate (onec-task-completion-stop).
     """
     return str(title or "").startswith(_1C_TITLE_PREFIX)
 

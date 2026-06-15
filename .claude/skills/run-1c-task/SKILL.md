@@ -33,7 +33,7 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 
 ### Этап 1-2 — Планирование + Дизайн (методика analyze-1c-task-v2)
 1. `pipeline_state init <slug> --title "1С-задача (run-1c-task): <slug>"` (идемпотентно).
-   1.5. **ОБЯЗАТЕЛЬНО в начале** (иначе Stop-хуки `memory-protocol-stop` / `research-protocol-stop` заблокируют
+   1.5. **ОБЯЗАТЕЛЬНО в начале** (иначе единый Stop-gate `onec-task-completion-stop` заблокирует
    завершение): **recall** — `mcp__memory-orchestrator__unified_search` (+ `search_patterns`) по теме задачи;
    **внешний анализ** — `WebSearch`/`WebFetch` (Infostart + GitHub best-practices), с атрибуцией находок.
 2. **Активируй skill `analyze-1c-task-v2`** и выполни его методику (Фазы 1-5) → **ANALYSIS-REPORT.md**.
@@ -59,7 +59,7 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 ### Этап 4 — Тестирование (методика va-bdd-testing / run-1c-tests)
 7. **Активируй skill `va-bdd-testing`** (или команду `/run-1c-tests`) → прогон BDD-сценариев до зелёных.
 8. Зелёный `.run-state.json` (все `chain[].status==passed`) авто-продвинет этап 4 (F-1.6).
-   8.5. **ОБЯЗАТЕЛЬНО после verify PASS** (иначе `memory-protocol-stop` заблокирует): `mcp__skill-learning__capture_pattern`
+   8.5. **ОБЯЗАТЕЛЬНО после verify PASS** (иначе `onec-task-completion-stop` заблокирует): `mcp__skill-learning__capture_pattern`
    — зафиксировать переиспользуемый приём (+ запись в `.md`-память при новом правиле/граблях заказчика).
 
 ### W — отчёт об использовании инструментов
