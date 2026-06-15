@@ -93,6 +93,52 @@
     ]
   },
   "bundles": {
+    "edt-mcp": {
+      "keywords": [
+        "edt-mcp",
+        "EDT MCP",
+        "write_module_source",
+        "create_metadata",
+        "modify_metadata",
+        "adopt_metadata_object",
+        "rename_metadata_object",
+        "get_project_errors",
+        "revalidate_objects",
+        "run_yaxunit_tests",
+        "create_project",
+        "create_infobase",
+        "enable_toolset",
+        "get_tool_guide",
+        "инструменты EDT"
+      ],
+      "weighted_keywords": {
+        "edt-mcp": 5,
+        "write_module_source": 5,
+        "adopt_metadata_object": 5,
+        "create_metadata": 4,
+        "modify_metadata": 4,
+        "rename_metadata_object": 4,
+        "run_yaxunit_tests": 4,
+        "enable_toolset": 4,
+        "get_project_errors": 3,
+        "revalidate_objects": 3,
+        "create_project": 3,
+        "create_infobase": 3,
+        "инструменты edt": 3
+      },
+      "utterances": [
+        "какие инструменты есть в edt",
+        "создать реквизит через edt",
+        "адоптировать объект в расширение",
+        "перехватить событие формы в расширении",
+        "запустить yaxunit тесты через edt",
+        "обновить базу данных через edt"
+      ],
+      "skills": [
+        "edt-mcp"
+      ],
+      "optional": []
+    },
     "duckdb": {
       "keywords": [
         "duckdb",
