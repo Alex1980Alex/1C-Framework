@@ -192,3 +192,80 @@ def test_report_md_missing_mandatory_marks_cross(monkeypatch):
 def test_report_md_empty_unchanged():
     md = mod.report_md({}, "T")
     assert "нет вызовов" in md
+
+
+# --- ADR-022 P0.2: реальная латентность MCP через Pre/Post-пару ---
+
+
+def test_aggregate_mcp_pre_post_real_latency(tmp_path):
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__edt-mcp__update_database",
+         "ts": "2026-06-17T10:00:00", "tool_call_id": "c1", "correlationid": "R1"},
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__edt-mcp__update_database",
+         "ts": "2026-06-17T10:00:03", "tool_call_id": "c1", "outcome": "allow", "correlationid": "R1"},
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__edt-mcp__update_database"]
+    assert a["calls"] == 1                  # Pre+Post одного вызова не двоятся
+    assert a["latency_real"] is True and a["paired"] == 1
+    assert a["ms"] == 3000                  # реальные 3с (ts(post)−ts(pre)), не overhead хука
+    assert a["errors"] == 0
+
+
+def test_aggregate_mcp_pre_only_no_latency(tmp_path):
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__x__op",
+         "ts": "2026-06-17T10:00:00", "correlationid": "R1"},
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
+    assert a["calls"] == 1 and a["paired"] == 0 and a["latency_real"] is False and a["ms"] == 0
+
+
+def test_aggregate_mcp_error_from_post(tmp_path):
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__x__op",
+         "ts": "2026-06-17T10:00:00", "correlationid": "R1"},
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op",
+         "ts": "2026-06-17T10:00:01", "outcome": "error", "error": "boom", "correlationid": "R1"},
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
+    assert a["errors"] == 1 and a["paired"] == 1 and a["ms"] == 1000
+
+
+def test_aggregate_mcp_no_double_count_with_hook_row(tmp_path):
+    # MCP-тул с mcp_call-парой + stray hook-auto-log строкой → hook не двоит calls/ms
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__llm-rotation__llm_complete",
+         "ts": "2026-06-17T10:00:00", "correlationid": "R1"},
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__llm-rotation__llm_complete",
+         "ts": "2026-06-17T10:00:02", "outcome": "allow", "correlationid": "R1"},
+        {"category": "hook", "tool": "mcp__llm-rotation__llm_complete", "elapsed_ms": 20,
+         "outcome": "allow", "correlationid": "R1"},  # наблюдатель-хук — игнор
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__llm-rotation__llm_complete"]
+    assert a["calls"] == 1 and a["ms"] == 2000 and a["latency_real"] is True
+
+
+def test_aggregate_non_mcp_overhead_unchanged(tmp_path):
+    # нативный тул (нет category) — старое поведение: счёт строк + Σelapsed_ms, latency_real=False
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"tool": "Edit", "outcome": "allow", "elapsed_ms": 10, "correlationid": "R1"},
+        {"tool": "Edit", "outcome": "allow", "elapsed_ms": 20, "correlationid": "R1"},
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["Edit"]
+    assert a["calls"] == 2 and a["ms"] == 30 and a["latency_real"] is False
+
+
+def test_report_md_latency_real_vs_overhead():
+    by_tool = {
+        "mcp__edt-mcp__update_database": {"calls": 1, "errors": 0, "ms": 3000, "paired": 1, "latency_real": True},
+        "Edit": {"calls": 4, "errors": 0, "ms": 80, "latency_real": False},
+    }
+    md = mod.report_md(by_tool, "T")
+    assert "3000ms" in md and "3000ms~" not in md   # реальная латентность MCP — без тильды
+    assert "20ms~" in md                            # overhead хука — с тильдой
+    assert "overhead хука" in md                    # footnote

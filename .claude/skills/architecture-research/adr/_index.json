@@ -354,6 +354,28 @@
         "extends-adr-020",
         "verified"
       ]
+    },
+    {
+      "id": "ADR-022",
+      "file": "022-tool-call-observability-effectiveness.md",
+      "title": "Достоверная observability и оценка эффективности tool-call'ов — P0 lightweight (MCP Post matcher, real Pre/Post latency, category-aware audit, OTel-поля) + P1 deterministic + P2 opt-in OTel",
+      "status": "accepted",
+      "date": "2026-06-17",
+      "research": "../cache/tool-call-observability-effectiveness-2026.md",
+      "tags": [
+        "observability",
+        "tool-effectiveness",
+        "otel-genai",
+        "claude-code-otel",
+        "mcp-logging",
+        "latency",
+        "pre-post-pairing",
+        "tool_call_id",
+        "tool_usage_report",
+        "audit_query",
+        "langfuse",
+        "extends-section-15"
+      ]
     }
   ]
 }

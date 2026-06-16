@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,17 +45,96 @@ def _iter_events(log: Path = LOG):
                 continue
 
 
+def _ms_between(a_ts: str | None, b_ts: str | None) -> int | None:
+    """Длительность в мс между двумя ISO-таймстампами (b − a). None при непарсибельности."""
+    if not a_ts or not b_ts:
+        return None
+    try:
+        return int((datetime.fromisoformat(b_ts) - datetime.fromisoformat(a_ts)).total_seconds() * 1000)
+    except (ValueError, TypeError):
+        return None
+
+
+def _pair_durations(pres: list[dict], posts: list[dict]) -> tuple[int, int]:
+    """Сумма реальных длительностей Pre→Post + число пар (ADR-022 P0.2 — латентность тула, не overhead хука).
+    Join по `tool_call_id` если есть, иначе FIFO: ранний неиспользованный Pre не позже Post."""
+    if not posts:
+        return 0, 0
+    pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
+    posts_sorted = sorted(posts, key=lambda e: e.get("ts", ""))
+    pre_by_id: dict[str, dict] = {}
+    for p in pres_sorted:
+        cid = p.get("tool_call_id")
+        if cid:
+            pre_by_id.setdefault(cid, p)
+    used: set[int] = set()
+    total = 0
+    n = 0
+    for post in posts_sorted:
+        pre = None
+        cid = post.get("tool_call_id")
+        if cid and cid in pre_by_id and id(pre_by_id[cid]) not in used:
+            pre = pre_by_id[cid]
+        else:
+            for p in pres_sorted:
+                if id(p) in used:
+                    continue
+                if p.get("ts", "") <= post.get("ts", ""):
+                    pre = p
+                    break
+        if pre is None:
+            continue
+        d = _ms_between(pre.get("ts"), post.get("ts"))
+        if d is not None and d >= 0:
+            used.add(id(pre))  # R2: помечаем Pre использованным ТОЛЬКО при валидной паре
+            total += d
+            n += 1
+    return total, n
+
+
+def _aggregate_mcp(rows: list[dict]) -> dict:
+    """MCP-вызовы из Pre/Post-строк: реальная латентность + дедуп calls (Pre+Post одного вызова = 1)."""
+    from collections import defaultdict
+
+    pre: dict[str, list] = defaultdict(list)
+    post: dict[str, list] = defaultdict(list)
+    for e in rows:
+        (post if e.get("event") == "PostToolUse" else pre)[e["tool"]].append(e)
+    out: dict[str, dict] = {}
+    for tool in set(pre) | set(post):
+        pres, posts = pre[tool], post[tool]
+        calls = max(len(pres), len(posts))  # Pre и Post одного вызова не двоятся
+        errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
+        ms, paired = _pair_durations(pres, posts)
+        out[tool] = {"calls": calls, "errors": errors, "ms": ms,
+                     "paired": paired, "latency_real": paired > 0}
+    return out
+
+
 def aggregate(run_id: str | None = None, session: str | None = None, log: Path = LOG) -> dict:
-    by_tool: dict[str, dict] = {}
+    """Агрегат по инструменту. MCP (`category=mcp_call`) — реальная латентность через Pre/Post-пару
+    (ADR-022 P0.2); остальное (нативные/хуки) — счёт строк + `elapsed_ms` как overhead (`latency_real=False`)."""
+    matched: list[dict] = []
     for e in _iter_events(log):
         if run_id and e.get("correlationid") != run_id:
             continue
         if session and e.get("session") != session:
             continue
-        tool = e.get("tool")
-        if not tool:
+        if not e.get("tool"):
             continue
-        a = by_tool.setdefault(tool, {"calls": 0, "errors": 0, "ms": 0})
+        matched.append(e)
+
+    mcp_rows = [e for e in matched if e.get("category") == "mcp_call"]
+    by_tool: dict[str, dict] = dict(_aggregate_mcp(mcp_rows))
+    mcp_tools = set(by_tool)  # истина MCP-тулов — только из mcp_call-строк
+
+    for e in matched:
+        if e.get("category") == "mcp_call":
+            continue
+        tool = e["tool"]
+        if tool in mcp_tools:  # stray hook-строки MCP-тула не двоим
+            continue
+        a = by_tool.setdefault(tool, {"calls": 0, "errors": 0, "ms": 0, "latency_real": False})
         a["calls"] += 1
         if e.get("outcome") == "error" or e.get("error"):
             a["errors"] += 1
@@ -186,15 +266,25 @@ def report_md(by_tool: dict, key: str, results: dict | None = None) -> str:
         ]
         for tool, a in sorted(items, key=lambda x: -x[1]["calls"]):
             errp = round(100.0 * a["errors"] / a["calls"], 1) if a["calls"] else 0.0
-            avg = round(a["ms"] / a["calls"]) if a["calls"] else 0
             res = str(results.get(tool, "—")).strip() or "—"
+            if a.get("latency_real") and a.get("paired"):
+                lat = f"{round(a['ms'] / a['paired'])}ms"      # реальная (Pre/Post-пара MCP)
+            elif a.get("ms"):
+                lat = f"{round(a['ms'] / a['calls'])}ms~"      # overhead хука, НЕ время инструмента
+            else:
+                lat = "n/a"
             lines += [
-                f"**`{tool}`** · {a['calls']} вызов(ов) · {a['errors']} ошиб · {avg}ms · {_q(errp)}",
+                f"**`{tool}`** · {a['calls']} вызов(ов) · {a['errors']} ошиб · {lat} · {_q(errp)}",
                 f"· назначение: {tool_summary(tool)}",
                 f"· результат: {res}",
                 "",
             ]
 
+    lines += [
+        "",
+        "> Латентность: `Nms` = реальная (Pre/Post-пара MCP, ADR-022); `Nms~` = overhead хука "
+        "(НЕ время инструмента); `n/a` = пары нет.",
+    ]
     return "\n".join(lines).rstrip() + "\n"
 
 

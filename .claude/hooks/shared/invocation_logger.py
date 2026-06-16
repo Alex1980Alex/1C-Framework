@@ -112,6 +112,8 @@ def log_invocation(
     category: str = "hook",  # Phase 8: Multi-source log unification
     run_id: str = "",  # Phase 8: Cross-hook correlation (slash-command run)
     causation_id: str = "",  # Phase 9 (§15 P0): parent event id (DAG causality)
+    tool_call_id: str = "",  # ADR-022 P0.4: tool_use_id — join-ключ Pre/Post (= gen_ai.tool.call.id)
+    error_type: str = "",  # ADR-022 P0.4: низкокардинальная категория ошибки (= OTel error.type)
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -175,6 +177,10 @@ def log_invocation(
             "agent_id": agent_id,  # Phase 7
             "category": category,  # Phase 8
             "run_id": run_id,  # Phase 8
+            # --- ADR-022 P0.4: OTel-совместимые поля tool-call (gen_ai.tool.call.id / success / error.type) ---
+            "tool_call_id": tool_call_id,
+            "success": (outcome != "error" and not error),
+            "error_type": error_type or ("unknown" if outcome == "error" else ""),
             # --- CloudEvents v1.0 envelope (§15 P0) ---
             "specversion": "1.0",
             "id": event_id,

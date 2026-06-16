@@ -59,6 +59,9 @@ class McpInvocationLogger(BaseHook):
         )
 
         outcome, error = self._classify_outcome(inp, event)
+        # ADR-022 P0.4: tool_use_id — стабильный join-ключ Pre/Post (если платформа его шлёт;
+        # иначе tool_usage_report падает на FIFO по (session, tool, correlationid)).
+        tool_call_id = inp.raw.get("tool_use_id") or inp.raw.get("toolUseID") or ""
 
         try:
             from shared.invocation_logger import log_invocation
@@ -74,6 +77,8 @@ class McpInvocationLogger(BaseHook):
                 error=error,
                 category="mcp_call",
                 run_id=get_run_id(inp.session_id),
+                tool_call_id=tool_call_id,
+                error_type=("mcp_tool_error" if outcome == "error" else ""),
             )
         except Exception:
             pass  # Logging must never block

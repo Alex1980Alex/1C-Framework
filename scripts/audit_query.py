@@ -88,6 +88,9 @@ VIEWS: dict[str, str] = {
         ORDER BY events DESC
         LIMIT 20
     """,
+    # ВНИМАНИЕ (ADR-022): elapsed_ms здесь = время ХУКА-наблюдателя, НЕ время инструмента.
+    # slash_run исключён (его elapsed_ms = бизнес-длительность слэш-рана, искажает p95 хуков).
+    # Реальная латентность MCP-инструментов — во view `mcp-latency` (Pre/Post-пара).
     "latency-p95": """
         SELECT hook,
                COUNT(*) AS calls,
@@ -96,8 +99,33 @@ VIEWS: dict[str, str] = {
                approx_quantile(elapsed_ms, 0.95) AS p95_ms,
                approx_quantile(elapsed_ms, 0.99) AS p99_ms
         FROM logs
-        WHERE elapsed_ms > 0
+        WHERE elapsed_ms > 0 AND category != 'slash_run'
         GROUP BY hook
+        ORDER BY p95_ms DESC
+        LIMIT 30
+    """,
+    # ADR-022 P0.3 — РЕАЛЬНАЯ латентность MCP-тулов: пара Pre→Post в одном
+    # (session, tool, correlationid), длительность = ts(post) − ts(pre) (LAG-pairing).
+    "mcp-latency": """
+        WITH mcp AS (
+            SELECT ts, tool, session, correlationid, event,
+                   epoch_ms(CAST(ts AS TIMESTAMP)) AS t_ms
+            FROM logs
+            WHERE category = 'mcp_call' AND tool IS NOT NULL
+        ),
+        seq AS (
+            SELECT tool, event, t_ms,
+                   LAG(t_ms) OVER (PARTITION BY session, tool, correlationid ORDER BY ts) AS prev_ms,
+                   LAG(event) OVER (PARTITION BY session, tool, correlationid ORDER BY ts) AS prev_event
+            FROM mcp
+        )
+        SELECT tool,
+               COUNT(*) AS calls,
+               ROUND(AVG(t_ms - prev_ms), 1) AS avg_ms,
+               approx_quantile(t_ms - prev_ms, 0.95) AS p95_ms
+        FROM seq
+        WHERE event = 'PostToolUse' AND prev_event = 'PreToolUse' AND (t_ms - prev_ms) >= 0
+        GROUP BY tool
         ORDER BY p95_ms DESC
         LIMIT 30
     """,
