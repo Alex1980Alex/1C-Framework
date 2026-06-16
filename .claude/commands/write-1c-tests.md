@@ -283,8 +283,6 @@ mcp__1c-mcp-crud__list_metadata_objects    # список всех объект�
 - `mcp__1c-mcp-crud__validate_query` — синтаксическая проверка запроса ДО исполнения
 - `mcp__1c-mcp-crud__find_references_to_object` — найти ссылки на объект в базе
 - `mcp__bsl-debugger__bsl_execute` — прогнать чистую логику на OneScript без подключения к БД
-- `mcp-reasoner` со стратегиями `bsl_document_patterns` (10 уровней для документов),
-  `bsl_subsystem_analysis` (12 уровней для подсистем), `bsl_architecture` (8 уровней)
 
 **Что именно выяснить:**
 - [ ] **Цепочка состояний** — какие значения перечислений возможны, через что переходят
