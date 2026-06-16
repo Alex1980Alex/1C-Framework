@@ -993,7 +993,7 @@ mcp__1c-mcp-crud__execute_query(
 
 ```python
 # After test run, verify documents were created:
-mcp__1c-mcp-server__execute_query(
+mcp__1c-mcp-crud__execute_query(
     query="""ВЫБРАТЬ
         Рег.Ссылка,
         Рег.Номер,
@@ -1011,7 +1011,7 @@ mcp__1c-mcp-server__execute_query(
 
 ```python
 # Verify state transitions in СостоянияРегистрации:
-mcp__1c-mcp-server__execute_query(
+mcp__1c-mcp-crud__execute_query(
     query="""ВЫБРАТЬ
         С.ДокументРегистрации,
         С.Состояние,
@@ -1027,7 +1027,7 @@ mcp__1c-mcp-server__execute_query(
 
 ```python
 # Verify scoreboard content:
-mcp__1c-mcp-server__execute_query(
+mcp__1c-mcp-crud__execute_query(
     query="""ВЫБРАТЬ
         Т.ВидТабло,
         Т.ТранспортноеСредство,
@@ -1477,7 +1477,7 @@ Maintain a calibration log in feature file comments:
 - [1c-development](../1c-development/SKILL.md) — General 1C development
 - [analyze-1c-task-v2](../analyze-1c-task-v2/SKILL.md) — Task analysis (precedes test writing)
 - [1c-registers](../1c-registers/SKILL.md) — Register reference (for verification queries)
-- [1c-mcp-server](../1c-mcp-server/SKILL.md) — Live database tools (for Stage 4 verification)
+- [1c-mcp-crud](../1c-mcp-crud/SKILL.md) — Live database tools (for Stage 4 verification)
 
 ## Supporting Resources
 

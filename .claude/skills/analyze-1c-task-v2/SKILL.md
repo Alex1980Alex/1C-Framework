@@ -18,7 +18,7 @@ commands:
 > **автоматически** (preflight-мост F-1) и двигается по записи отчёта (F-1.5). **Гейт (F-2):** дизайн (этап 2) одобряется
 > человеком (`pipeline_state.py approve <slug>`) перед `/implement-1c-task`. См. [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
 
-# Анализ задачи 1С — 5-фазная методология (v4.2)
+# Анализ задачи 1С — 5-фазная методология (v4.3)
 
 ## Overview
 
