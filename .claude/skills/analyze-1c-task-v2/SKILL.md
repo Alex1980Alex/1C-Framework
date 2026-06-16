@@ -109,6 +109,29 @@ Skill для комплексного анализа задачи по конф�
 - Зависимости между точками модификации
 - Порядок выполнения
 
+## EDT-MCP в анализе — опционально (НЕ в `allowed-tools`)
+
+> Основной путь чтения кода/метаданных в анализе — `bsl-semantic-search` + `1c-mcp-crud` + `pdf-vector-graph`
+> (Вариант C, read-only). EDT-MCP в `allowed-tools` команды `/analyze-1c-task` **отсутствует** — это
+> **опциональный альтернативный ридер** (чтение через живую модель EDT: точные ссылки/AST в любом ru/en
+> написании). Чтобы реально применять — добавить read-тулы EDT-MCP в `allowed-tools` команды (расширение
+> scope); иначе вести анализ через primary-инструменты.
+
+Раскладка EDT-MCP read/nav/forms по фазам (если включён как альтернатива):
+
+| Фаза | EDT-MCP (опционально) | Primary (по умолчанию) |
+|---|---|---|
+| Preflight | `list_projects` · `get_edt_version` · `get_server_status` | — |
+| Ф1 Требования | — | чтение ТЗ (`Read`) |
+| Ф2 Объекты | `get_metadata_objects` · `get_metadata_details` · `get_configuration_properties` · `list_subsystems` · `get_subsystem_content` | `get_metadata` (1c-mcp-crud) |
+| Ф3 Алгоритм | `read_module_source` · `read_method_source` · `get_module_structure` · `find_references` · `go_to_definition` · `get_method_call_hierarchy` · `get_symbol_info` · `search_in_code` · `get_platform_documentation` | `bsl_search`/`bsl_hybrid_search`/`bsl_object_info`/`bsl_call_graph` + docs RAG (pdf-vector-graph) |
+| Ф4 План | `validate_query` | `validate_query`/`get_metadata` (1c-mcp-crud), `bsl-platform-context` |
+| Ф5 Верификация | `get_project_errors` · `get_problem_summary` · `get_markers` | — |
+| Формы (анализ) | `get_form_screenshot` · `get_form_layout_snapshot` ⚠ JVM-флаг | `get_form_structure` (1c-mcp-crud) |
+
+Отладочный EDT-MCP-тулсет в Фазе 2.5 (Runtime Trace) — **альтернатива `1c-debug-hmr`** (основной путь).
+Полный справочник 70 тулов — skill [`edt-mcp`](../edt-mcp/SKILL.md).
+
 ## 5 фаз анализа
 
 ### Фаза 1: Требования

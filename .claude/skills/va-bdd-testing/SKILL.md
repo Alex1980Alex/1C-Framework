@@ -64,6 +64,17 @@ pre-test analysis that discovers correct element names.
 - Reviewing `.feature` files for correctness before execution
 - Translating manual test plans into automated VA BDD scenarios
 
+## Роль EDT-MCP в этом скилле (узкая — анализ форм)
+
+VA BDD — это **UI-тесты Vanessa**; исполнение идёт через `1c-mcp-crud` + `run-bdd.ps1`. Из EDT-MCP здесь
+нужен только **анализ форм** (Stage 1): `get_form_screenshot` · `get_form_layout_snapshot` (⚠ требуют
+JVM-флаг `nativeFormBufferedLayoutRender`) · `read_module_source` (Form.Module — имена элементов/обработчики).
+
+⚠ **YAXUnit ≠ VA.** Тестовые EDT-MCP-тулы `run_yaxunit_tests` (+ профилирование `start_profiling` /
+`stop_profiling` / `get_profiling_results`) — **отдельный трек юнит-тестов** (см. `mcp-onec-test-runner`
++ Этап 6 `implement-1c-task`), к этому скиллу **не относятся**. Полный справочник 70 тулов — skill
+[`edt-mcp`](../edt-mcp/SKILL.md).
+
 ## Mandatory 4-Stage Workflow
 
 **NEVER write test steps without completing stages 1 and 2 first.**
