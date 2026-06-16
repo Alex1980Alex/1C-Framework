@@ -1,0 +1,18 @@
+# ADR-022 P2 — лёгкий OTLP-приёмник (otel-collector) для нативного OTel Claude Code.
+# Запуск:   docker compose -f docker/docker-compose.otel-collector.yml up -d
+# Логи:     docker logs -f claude-otel-collector
+# Стоп:     docker compose -f docker/docker-compose.otel-collector.yml down
+# Затем:    .venv/Scripts/python.exe scripts/otel/enable_claude_otel.py --otlp http://localhost:4318
+#           → перезапустить claude → спаны claude_code.tool.execution польются в логи коллектора.
+# Дашборды (Langfuse/SigNoz) — заменить endpoint в enable_claude_otel.py --otlp (см. how-to 42.8).
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest  # для prod — пинить версию
+    container_name: claude-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP (endpoint для enable_claude_otel.py --otlp)
+    restart: unless-stopped

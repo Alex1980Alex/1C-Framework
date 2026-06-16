@@ -1,0 +1,34 @@
+# ADR-022 P2 — лёгкий OTLP-приёмник для нативной телеметрии Claude Code.
+# Принимает OTLP (grpc :4317 / http :4318) и ЛОГИРУЕТ спаны/метрики/логи (debug-exporter) —
+# верифицируемый sink: после `enable_claude_otel.py --otlp http://localhost:4318` + рестарта claude
+# спаны claude_code.tool.execution видны в `docker logs claude-otel-collector`.
+# Дашборды/LLM-judge — апгрейд на Langfuse (официальный compose, см. 42.8).
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
