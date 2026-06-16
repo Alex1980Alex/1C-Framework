@@ -111,6 +111,36 @@ def _aggregate_mcp(rows: list[dict]) -> dict:
     return out
 
 
+def _effectiveness(events: list[dict]) -> dict:
+    """Детерминированная эффективность (ADR-022 P1) по MCP-вызовам (Post = завершённый вызов с outcome/args_hash):
+    `repeats` — повтор идентичного вызова (тот же `args_hash` у тула в одном run = retry); `abandonment` —
+    последняя попытка тула завершилась ошибкой (не восстановились). Только MCP: у нативных тулов outcome =
+    исход хука-наблюдателя, не инструмента. Логику подтвердил Z.AI-ревью (claude-haiku, PASS)."""
+    from collections import defaultdict
+
+    calls = sorted(
+        (e for e in events if e.get("category") == "mcp_call" and e.get("event") == "PostToolUse"),
+        key=lambda e: e.get("ts", ""),
+    )
+    out: dict[str, dict] = defaultdict(lambda: {"repeats": 0, "abandonment": 0})
+    seen: dict[str, set] = defaultdict(set)
+    per_tool: dict[str, list] = defaultdict(list)
+    for e in calls:
+        tool = e.get("tool")
+        if not tool:
+            continue
+        per_tool[tool].append(e)
+        ah = e.get("args_hash")
+        if ah:
+            if ah in seen[tool]:
+                out[tool]["repeats"] += 1
+            seen[tool].add(ah)
+    for tool, evs in per_tool.items():
+        if evs and (evs[-1].get("outcome") == "error" or evs[-1].get("error")):
+            out[tool]["abandonment"] = 1
+    return dict(out)
+
+
 def aggregate(run_id: str | None = None, session: str | None = None, log: Path = LOG) -> dict:
     """Агрегат по инструменту. MCP (`category=mcp_call`) — реальная латентность через Pre/Post-пару
     (ADR-022 P0.2); остальное (нативные/хуки) — счёт строк + `elapsed_ms` как overhead (`latency_real=False`)."""

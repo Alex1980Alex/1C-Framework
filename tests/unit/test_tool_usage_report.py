@@ -269,3 +269,63 @@ def test_report_md_latency_real_vs_overhead():
     assert "3000ms" in md and "3000ms~" not in md   # реальная латентность MCP — без тильды
     assert "20ms~" in md                            # overhead хука — с тильдой
     assert "overhead хука" in md                    # footnote
+
+
+# --- ADR-022 P1: retry/abandonment + success-rate ---
+
+
+def test_effectiveness_retry(tmp_path):
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:01",
+         "args_hash": "AAA", "outcome": "allow", "correlationid": "R1"},
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:05",
+         "args_hash": "AAA", "outcome": "allow", "correlationid": "R1"},  # тот же args → retry
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:09",
+         "args_hash": "BBB", "outcome": "allow", "correlationid": "R1"},  # другой args → не retry
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
+    assert a["repeats"] == 1 and a["abandonment"] == 0
+
+
+def test_effectiveness_abandonment(tmp_path):
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:01",
+         "outcome": "allow", "correlationid": "R1"},
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:05",
+         "outcome": "error", "error": "boom", "correlationid": "R1"},  # последняя — ошибка → abandonment
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
+    assert a["abandonment"] == 1
+
+
+def test_effectiveness_recovered_not_abandoned(tmp_path):
+    # ошибка, затем успешный ретрай → НЕ abandonment (последняя попытка ок)
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:01",
+         "outcome": "error", "error": "boom", "correlationid": "R1"},
+        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:05",
+         "outcome": "allow", "correlationid": "R1"},
+    ])
+    a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
+    assert a["abandonment"] == 0
+
+
+def test_effectiveness_keys_present_native(tmp_path):
+    # нативный тул получает дефолтные repeats/abandonment=0 (нет MCP-сигнала)
+    log = tmp_path / "log.jsonl"
+    _write(log, [{"tool": "Edit", "outcome": "allow", "elapsed_ms": 10, "correlationid": "R1"}])
+    a = mod.aggregate(run_id="R1", log=log)["Edit"]
+    assert a["repeats"] == 0 and a["abandonment"] == 0
+
+
+def test_report_md_success_rate_and_markers():
+    by_tool = {
+        "mcp__x__op": {"calls": 4, "errors": 1, "ms": 0, "latency_real": False, "repeats": 2, "abandonment": 1},
+    }
+    md = mod.report_md(by_tool, "T")
+    assert "75% success" in md          # (4-1)/4
+    assert "⟳2 повтор" in md
+    assert "не восстановлено" in md
