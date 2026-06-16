@@ -30,6 +30,8 @@ Pre/Post pairing:
 Timeout: 3s
 """
 
+import hashlib
+import json
 import os
 import sys
 
@@ -37,6 +39,16 @@ _HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
+
+
+def _args_fingerprint(tool_input: object) -> str:
+    """ADR-022 P1: стабильный хеш аргументов вызова для детекта retry (повтор идентичного вызова).
+    Хешируем, НЕ логируем сырьё (PII/секреты остаются вне лога)."""
+    try:
+        blob = json.dumps(tool_input, sort_keys=True, ensure_ascii=False, default=str)
+        return hashlib.sha1(blob.encode("utf-8")).hexdigest()[:12]
+    except Exception:
+        return ""
 
 
 class McpInvocationLogger(BaseHook):
@@ -62,6 +74,7 @@ class McpInvocationLogger(BaseHook):
         # ADR-022 P0.4: tool_use_id — стабильный join-ключ Pre/Post (если платформа его шлёт;
         # иначе tool_usage_report падает на FIFO по (session, tool, correlationid)).
         tool_call_id = inp.raw.get("tool_use_id") or inp.raw.get("toolUseID") or ""
+        args_hash = _args_fingerprint(inp.tool_input)
 
         try:
             from shared.invocation_logger import log_invocation
@@ -79,6 +92,7 @@ class McpInvocationLogger(BaseHook):
                 run_id=get_run_id(inp.session_id),
                 tool_call_id=tool_call_id,
                 error_type=("mcp_tool_error" if outcome == "error" else ""),
+                args_hash=args_hash,
             )
         except Exception:
             pass  # Logging must never block

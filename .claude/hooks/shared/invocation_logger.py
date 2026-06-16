@@ -114,6 +114,7 @@ def log_invocation(
     causation_id: str = "",  # Phase 9 (§15 P0): parent event id (DAG causality)
     tool_call_id: str = "",  # ADR-022 P0.4: tool_use_id — join-ключ Pre/Post (= gen_ai.tool.call.id)
     error_type: str = "",  # ADR-022 P0.4: низкокардинальная категория ошибки (= OTel error.type)
+    args_hash: str = "",  # ADR-022 P1: хеш аргументов вызова → детект retry (повтор идентичного)
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -181,6 +182,7 @@ def log_invocation(
             "tool_call_id": tool_call_id,
             "success": (outcome != "error" and not error),
             "error_type": error_type or ("unknown" if outcome == "error" else ""),
+            "args_hash": args_hash,  # ADR-022 P1: фингерпринт аргументов (детект retry)
             # --- CloudEvents v1.0 envelope (§15 P0) ---
             "specversion": "1.0",
             "id": event_id,

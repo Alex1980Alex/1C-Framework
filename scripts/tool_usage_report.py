@@ -139,6 +139,13 @@ def aggregate(run_id: str | None = None, session: str | None = None, log: Path =
         if e.get("outcome") == "error" or e.get("error"):
             a["errors"] += 1
         a["ms"] += int(e.get("elapsed_ms") or 0)
+
+    for tool, eff in _effectiveness(matched).items():  # ADR-022 P1: retry/abandonment
+        if tool in by_tool:
+            by_tool[tool].update(eff)
+    for a in by_tool.values():
+        a.setdefault("repeats", 0)
+        a.setdefault("abandonment", 0)
     return by_tool
 
 
@@ -273,8 +280,14 @@ def report_md(by_tool: dict, key: str, results: dict | None = None) -> str:
                 lat = f"{round(a['ms'] / a['calls'])}ms~"      # overhead хука, НЕ время инструмента
             else:
                 lat = "n/a"
+            sr = round(100.0 * (a["calls"] - a["errors"]) / a["calls"]) if a["calls"] else 0
+            extra = ""
+            if a.get("repeats"):
+                extra += f" · ⟳{a['repeats']} повтор"
+            if a.get("abandonment"):
+                extra += " · ⚠ не восстановлено"
             lines += [
-                f"**`{tool}`** · {a['calls']} вызов(ов) · {a['errors']} ошиб · {lat} · {_q(errp)}",
+                f"**`{tool}`** · {a['calls']} вызов(ов) · {a['errors']} ошиб ({sr}% success) · {lat} · {_q(errp)}{extra}",
                 f"· назначение: {tool_summary(tool)}",
                 f"· результат: {res}",
                 "",
@@ -283,7 +296,8 @@ def report_md(by_tool: dict, key: str, results: dict | None = None) -> str:
     lines += [
         "",
         "> Латентность: `Nms` = реальная (Pre/Post-пара MCP, ADR-022); `Nms~` = overhead хука "
-        "(НЕ время инструмента); `n/a` = пары нет.",
+        "(НЕ время инструмента); `n/a` = пары нет. Эффективность (P1): `(N% success)` = доля без ошибок; "
+        "`⟳N повтор` = идентичный вызов (retry); `⚠ не восстановлено` = последняя попытка тула — ошибка.",
     ]
     return "\n".join(lines).rstrip() + "\n"
 
