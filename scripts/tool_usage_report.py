@@ -340,12 +340,21 @@ def append_eff(by_tool: dict, key: str, eff: Path = EFF) -> None:
 
 
 def rollup(eff: Path = EFF) -> dict:
+    """Cross-task агрегат. РЕАЛЬНАЯ латентность (ADR-022 P2-followup): `ms`/`paired` копятся ТОЛЬКО из
+    строк с `paired>0` (реальная Pre/Post-пара MCP); overhead-строки (нативные / без пары) в латентность
+    НЕ идут → отчёт не выдаёт overhead за время инструмента. repeats/abandonment (P1) тоже агрегируются."""
     agg: dict[str, dict] = {}
     for r in _iter_events(eff):
-        t = agg.setdefault(r.get("tool"), {"calls": 0, "errors": 0, "ms": 0})
+        t = agg.setdefault(r.get("tool"), {"calls": 0, "errors": 0, "ms": 0, "paired": 0,
+                                           "repeats": 0, "abandonment": 0, "latency_real": False})
         t["calls"] += r.get("calls", 0)
         t["errors"] += r.get("errors", 0)
-        t["ms"] += r.get("ms", 0)
+        t["repeats"] += int(r.get("repeats") or 0)
+        t["abandonment"] += int(r.get("abandonment") or 0)
+        if int(r.get("paired") or 0) > 0:  # только реальная Pre/Post-латентность
+            t["ms"] += int(r.get("ms") or 0)
+            t["paired"] += int(r.get("paired") or 0)
+            t["latency_real"] = True
     return agg
 
 

@@ -329,3 +329,20 @@ def test_report_md_success_rate_and_markers():
     assert "75% success" in md          # (4-1)/4
     assert "⟳2 повтор" in md
     assert "не восстановлено" in md
+
+
+def test_rollup_real_latency_from_paired(tmp_path):
+    # ADR-022 P2-followup #1: rollup копит реальную латентность ТОЛЬКО из paired-строк; overhead не идёт
+    eff = tmp_path / "eff.jsonl"
+    _write(eff, [
+        {"key": "R1", "tool": "mcp__x__op", "calls": 1, "errors": 0, "ms": 3000, "paired": 1, "latency_real": True},
+        {"key": "R2", "tool": "mcp__x__op", "calls": 1, "errors": 0, "ms": 1000, "paired": 1, "latency_real": True},
+        {"key": "R3", "tool": "Edit", "calls": 5, "errors": 0, "ms": 100},  # overhead-строка, без paired
+    ])
+    agg = mod.rollup(eff=eff)
+    op = agg["mcp__x__op"]
+    assert op["paired"] == 2 and op["ms"] == 4000 and op["latency_real"] is True
+    ed = agg["Edit"]
+    assert ed["paired"] == 0 and ed["ms"] == 0 and ed["latency_real"] is False  # overhead НЕ в латентность
+    md = mod.report_md(agg, "ROLLUP")
+    assert "2000ms" in md and "2000ms~" not in md  # 4000/2 = реальная средняя, без тильды
