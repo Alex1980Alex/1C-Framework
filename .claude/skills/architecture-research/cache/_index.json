@@ -1264,6 +1264,47 @@
         "openspec"
       ],
       "last_verified": "2026-06-13"
+    },
+    {
+      "file": "tool-call-observability-effectiveness-2026.md",
+      "title": "Observability и оценка эффективности tool-call'ов в LLM-агентах — OTel GenAI execute_tool, Claude Code native OTel, LangSmith/Langfuse, MCP logging, effectiveness-метрики (2026)",
+      "keywords": [
+        "tool-observability",
+        "tool-effectiveness",
+        "otel-genai",
+        "execute_tool-span",
+        "gen_ai.tool.name",
+        "gen_ai.tool.call.id",
+        "claude-code-otel",
+        "claude_code.tool.execution",
+        "tool_result-event",
+        "duration_ms",
+        "cost.usage",
+        "mcp_tool.name",
+        "langsmith",
+        "langfuse",
+        "otlp",
+        "scores",
+        "llm-as-judge",
+        "mcp-logging-notifications",
+        "tool-success-rate",
+        "tool-correctness",
+        "argument-correctness",
+        "task-completion",
+        "retry-abandonment",
+        "trajectory-eval",
+        "deepeval",
+        "mcp-bench",
+        "span-duration",
+        "error-type",
+        "hook-invocations-jsonl",
+        "tool_usage_report",
+        "audit_query"
+      ],
+      "created": "2026-06-17",
+      "last_verified": "2026-06-17",
+      "sources_count": 12,
+      "github_repos_count": 5
     }
   ]
 }
