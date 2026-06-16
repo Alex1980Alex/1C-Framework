@@ -1,6 +1,10 @@
 ---
 name: run-1c-task
 description: AUTO-оркестратор 1С-задачи — прогон analyze→implement→test БЕЗ паузы на ревью первого этапа. ИСПОЛЬЗУЙ для /run-1c-task. Вход — JIRA-код / описание из чата / путь к папке ТЗ. Делегирует методикам analyze-1c-task-v2 + implement-1c-task + va-bdd-testing/run-1c-tests, сам их НЕ дублирует. Гейтованный режим (с паузой на ревью ANALYSIS-REPORT) — отдельные /analyze-1c-task + /implement-1c-task.
+version: 1.0.0
+updated: 2026-06-15
+commands:
+  - /run-1c-task
 ---
 
 # /run-1c-task — AUTO-прогон 1С-задачи (4 этапа без паузы)

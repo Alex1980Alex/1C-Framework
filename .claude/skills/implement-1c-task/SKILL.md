@@ -1,14 +1,16 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.8.0
-updated: 2026-05-11
+version: 2.8.1
+updated: 2026-06-15
 tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-crud, bsl-debugger, 1c-debug-hmr]
 triggers:
   - реализовать задачу 1С
   - implement 1c task
   - внести изменения по анализу
   - реализация по ANALYSIS-REPORT
+commands:
+  - /implement-1c-task
 ---
 
 > **4-этапная парадигма (ADR-019 B′, G5/G2):** этот skill реализует **Этап 3 «Кодирование»** (Этапы 0–3:

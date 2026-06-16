@@ -50,7 +50,7 @@ $ARGUMENTS
 
 Skill определяет:
 - 5 последовательных фаз (Требования → Объекты → Алгоритм → План → Верификация)
-- Допущенные MCP-инструменты (Serena, ast-grep, bsl-platform-context, bsl-semantic-search, pdf-vector-graph)
+- Допущенные MCP-инструменты (bsl-semantic-search, bsl-platform-context, 1c-mcp-crud, pdf-vector-graph, 1c-debug-hmr)
 - Формат отчёта
 - Best practices и common pitfalls
 
@@ -75,8 +75,8 @@ Skill определяет:
 ---
 
 ## ВАЖНО:
-- Для BSL используй  (не Serena для парсинга BSL!)
-- Используй  для проверки API платформы
-- Используй  для поиска похожего кода
-- Используй  для поиска в документации 1С
-- Сохрани результат анализа в файл, а также в память через
+- Для разбора BSL используй `bsl-semantic-search` / `bsl-code-search` (НЕ Serena для парсинга BSL!)
+- Используй `bsl-platform-context` для проверки API платформы 8.3.27
+- Используй `bsl-semantic-search` (`bsl_similar` / `bsl_hybrid_search`) для поиска похожего кода
+- Используй `pdf-vector-graph` для поиска в документации 1С 8.3.27
+- Сохрани результат анализа в файл, а также в память через `memory-orchestrator__route_and_save`
