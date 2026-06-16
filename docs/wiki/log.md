@@ -432,3 +432,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 2
 - Summary: Session 2026-06-16. Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify, learn:1c-metadata-objects, audit-docs, run-1c-task. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore(submodule): bump gitlink → 2f397ca6 (TOOL-USAGE-REPORT.md новый формат). Commit: feat(1c-pipeline): TOOL-USAGE-REPORT.md — группировка по категориям + саммари + обязательные петли. Commit: chore: auto-save tool_usage_report.py, test_tool_usage_report.py
 
+
+## 2026-06-17 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify
+- Files changed: 2
+- Summary: Session 2026-06-17. Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify, learn:1c-metadata-objects, audit-docs, run-1c-task. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(skills): раскладка 70 EDT-MCP-инструментов по фазам пайплайна 1С. Commit: chore: auto-save SKILL.md. Commit: docs(43): сжать «Оценка покрытия и пробелы» в 43.5; фикс-лог N1–N12/H1–H7 → roadmap §18
+
