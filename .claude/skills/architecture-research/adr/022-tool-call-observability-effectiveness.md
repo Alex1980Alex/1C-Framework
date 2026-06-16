@@ -31,6 +31,14 @@
 
 **P2 (opt-in, heavy):** включить встроенный OTel Claude Code (`CLAUDE_CODE_ENABLE_TELEMETRY=1`) → локальный Langfuse self-host (MIT, OTLP) / SigNoz: точные спаны, cost-per-tool, цепочки субагентов, online LLM-judge на сэмпле. JSONL остаётся лёгким hot-path'ом. Подключить лежащий без дела `otel_exporter.py` как мост (или полагаться на нативную эмиссию).
 
+> **Реализовано (scaffold, 2026-06-17, opt-in default OFF):** тоггл `scripts/otel/enable_claude_otel.py`
+> (`--console` zero-infra / `--otlp <endpoint>` +Langfuse Basic-auth / `--disable` / `--status`) пишет
+> OTel-env в gitignored `settings.local.json` — team `settings.json` не трогается. How-to —
+> `docs/framework documentation/42_MONITOR_CI/42.8_Claude_Code_OTel_Tool_Telemetry.md`. Бэкенд
+> (Langfuse/SigNoz) НЕ вендорится в репо (тяжёлый, версионируется) — поднимается официально по how-to.
+> Тоггл верифицирован (console/otlp/disable + сохранность чужого env, cp1251-safe вывод); сквозная
+> эмиссия OTel — за пользователем при opt-in (из скрипта/хука не проверяема).
+
 ## Последствия
 
 **Положительные:** ошибки и латентность MCP становятся достоверными за P0 (часы); метрики перестают вводить в заблуждение; поля готовы к OTel-миграции; P2 даёт точную телеметрию без потолка хук-логгера.
