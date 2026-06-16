@@ -85,7 +85,6 @@ $ARGUMENTS
 | `mcp__bsl-debugger__bsl_execute` | Чистая логика BSL на OneScript без подключения к БД — для верификации алгоритмов |
 | `mcp__ast-grep-mcp__ast_grep` | Точечный AST-поиск по паттернам BSL (когда нужен структурный матчинг) |
 | `Grep` по `Form.xml` | Поиск `<Button name=`, `(InputField|LabelField|…)`, `<Table name=`, `AutoCommandBar` в исходниках формы |
-| `mcp-reasoner` (стратегии `bsl_document_patterns`, `bsl_subsystem_analysis`, `bsl_architecture`) | Многоуровневый анализ сложной бизнес-логики (10-12 уровней reasoning) |
 
 ### Обязательные проверки на реальной базе (сводная таблица)
 

@@ -30,11 +30,11 @@ commands:
 > - **v2.6.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2182-A (АРМ «Композитные пробы»). Две правки. **Этап 1 — path-fallback:** ANALYSIS-REPORT'ы пишут Designer-style пути (`Documents/<Имя>/Ext/ManagerModule.bsl`, `DataProcessors/<Имя>/Forms/<Форма>/Ext/Form/Module.bsl`); EDT в проекте flatten'ит их до своих абсолютных путей (напр. `DataProcessors/гкс_АРМКомпозитныеПробы/Forms/Форма/Module.bsl`). При этом `read_method_source(project, <designer_path>, ...)` падает с `File not found`. Добавлен явный шаг-fallback: при File-not-found → `list_modules(project, objectName=<ИмяОбъектаКонфигурации>)` → перебрать возвращённые `module_path`, выбрать совпадающий по типу модуля (Manager / Object / Form), повторить `read_method_source` с EDT-путём. Зафиксировать соответствие Designer→EDT в IMPLEMENTATION-PROGRESS.md (для будущих правок этой же задачи). **Этап 8 — layout:** диаграмма «трёх уровней вложенности» в v2.5.0 описывала `ИБTransportManagementDevelop/` как отдельный standalone-репо (НЕ submodule main). E2e-валидация 2026-05-07 (4 коммита в 3 репозиториях: `d3db501` BSL → `71a9ba481` main gitlink Конфигурация → `c6616817` docs submodule PROGRESS → `907b89ce1` main gitlink configuration) показала: фактически main repo tracks **два submodule напрямую** — `configuration/<TaskFolder>` (документация) и `ИБTransportManagementDevelop/Конфигурация` (BSL-исходники). Папка `ИБTransportManagementDevelop/` сама — обычная подпапка main repo, не отдельный git-репозиторий. Промежуточного «middle repo» с собственным `.git` нет; шаг 2 v2.5.0 (commit gitlink в `ИБTransportManagementDevelop`) удалён. Diagnostic-блок переписан под new-layout (`git ls-files --stage ИБTransportManagementDevelop/Конфигурация` ожидает entry с mode 160000).
 > - **v2.5.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2335. **Этап 4** — явный graceful-skip для `bsl_analyze` на production BSL: OneScript-парсер падает на директивах препроцессора `#Если ... Тогда` и chained-вызовах вида `Запрос.Выполнить().Пустой()` (стандартные 1С-конструкции). Если EDT `get_project_errors` = 0, ошибки `bsl_analyze` на этих паттернах фиксируем как tool-limitation и идём дальше. **Этап 6** — добавлен ОБЯЗАТЕЛЬНЫЙ шаг 0 «Обновление БД» через `mcp__edt-mcp__update_database` (или ручной EDT → Update Database) ПЕРЕД любым `execute_code`-вызовом изменённой функции; без этого live-инфобаза работает на старой скомпилированной конфигурации и `execute_code` возвращает старое поведение. **Этап 8** — переписан раздел git: 3-уровневая структура repo (main / submodule / nested standalone), запрет `git add <submodule-dir>` (подцепляет untracked), pattern `git -c user.name=... -c user.email=...` для submodule без локальной identity (CLAUDE.md запрещает `git config`). Добавлен раздел [Известные ограничения 1c-mcp-crud](#известные-ограничения-1c-mcp-crud) с workaround'ами для сериализации ссылок (`ПРЕДСТАВЛЕНИЕ()`) и пустого `attributes:[]` для регистров.
 > - **v2.4.0 (2026-05-07):** в Preflight добавлен **TCP-probe** портов `:8765` (edt-mcp) и `:1550` (1С debug agent) — отдельный сигнал от наличия MCP-tool в сессии. Добавлен **fallback для Этапа 5** (`find_references` через `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph`; `get_project_errors` через `bsl-debugger:bsl_analyze` per-file). Кросс-ссылки на новый раздел [16.6 EDT-MCP setup](../../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) и smoke-test `scripts/smoke_test_implement_1c_task.py`. Триггер изменений — выполнение Phase 4 + 5 [roadmap'а 260505](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md).
-> - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
+> - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debugger` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
 > - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
 > - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
 > - **v2.1.0 (2026-04-14):** добавлен Этап 0 (откачен).
-> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-crud + bsl-debug-server.
+> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-crud + bsl-debugger.
 
 ## Overview
 
@@ -45,7 +45,7 @@ Skill для реализации задачи по конфигурации 1С
 **Отличия v2 от v1:**
 - EDT-MCP: чтение/запись BSL-модулей прямо в проект EDT, валидация запросов, проверка ошибок
 - 1c-mcp-crud: верификация SQL на живых данных ДО записи, подготовка тестовых данных, проверка результатов ПОСЛЕ
-- bsl-debug-server: статический анализ BSL-кода, отладка чистой логики в OneScript
+- bsl-debugger: статический анализ BSL-кода, отладка чистой логики в OneScript
 
 ## Входные данные
 
@@ -86,7 +86,7 @@ Skill для реализации задачи по конфигурации 1С
 | `get_object_by_link` | Этап 6: посмотреть конкретный объект по ссылке |
 | `find_references_to_object` | Этап 5: найти ссылки на объект в базе данных |
 
-### bsl-debug-server — статический анализ и отладка
+### bsl-debugger — статический анализ и отладка
 
 | Инструмент | Когда использовать |
 |---|---|
@@ -95,7 +95,7 @@ Skill для реализации задачи по конфигурации 1С
 | `bsl_debug_start` | Этап 4: пошаговая отладка алгоритма (breakpoints, step) |
 | `bsl_debug_variables` | Этап 4: проверить значения переменных в точке останова |
 
-**Ограничение bsl-debug-server:** Работает через OneScript, НЕ через 1С:Предприятие.
+**Ограничение bsl-debugger:** Работает через OneScript, НЕ через 1С:Предприятие.
 Нет доступа к объектам 1С (Документы, Регистры, Справочники). Подходит ТОЛЬКО для:
 - Проверки чистой логики (условия, циклы, формирование массивов)
 - Статического анализа (bsl_analyze) — но **с известными false-positive'ами на стандартных 1С-конструкциях** (директивы препроцессора `#Если ... Тогда`, chained `Запрос.Выполнить().Пустой()`). См. Этап 4 → graceful skip.
@@ -150,7 +150,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
    |---|---|---|
    | `edt-mcp` | `mcp__edt-mcp__list_projects` (или `ToolSearch query: "edt"`) | в результатах есть `mcp__edt-mcp__*` |
    | `1c-mcp-crud` | `mcp__1c-mcp-crud__get_metadata` (или `ToolSearch query: "+1c crud"`) | в результатах есть `mcp__1c-mcp-crud__*` |
-   | `bsl-debug-server` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
+   | `bsl-debugger` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
 
 2. **TCP-probe ключевых портов** — отдельный сигнал от наличия MCP-tool в сессии (tool может быть зарегистрирован, но HTTP-bridge упасть):
 
@@ -174,7 +174,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 4. Сопоставить результат с матрицей капабилити:
 
-   | edt-mcp | 1c-mcp-crud | bsl-debug-server | 1c-debug-hmr | Режим pipeline |
+   | edt-mcp | 1c-mcp-crud | bsl-debugger | 1c-debug-hmr | Режим pipeline |
    |---|---|---|---|---|
    | ✓ | ✓ | ✓ | ✓ | **Full** — все 8 этапов работают как описано, Этап 5 включает BP-verification |
    | ✓ | ✓ | ✓ | ✗ | **Full (no-BP)** — все этапы работают, Этап 5 BP-verification SKIP (заметка в IMPLEMENTATION-PROGRESS) |
@@ -412,7 +412,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
    **Fallback** (Java/bsl-ls недоступны — bundled JRE = невыгруженный LFS-указатель / EDT не запущен):
    ```
-   bsl-debug-server: bsl_analyze(file=<absolute_path>)
+   bsl-debugger: bsl_analyze(file=<absolute_path>)
      → OneScript-линтер (известные false-positive'ы — см. ниже)
    ```
 
@@ -420,17 +420,17 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 3. Для новых процедур с чистой логикой (без обращений к базе):
    ```
-   bsl-debug-server: bsl_execute(code_fragment)
+   bsl-debugger: bsl_execute(code_fragment)
      → проверить что логика работает (условия, циклы, массивы)
    ```
 
 4. При сложной логике (вложенные циклы, условия) — пошаговая отладка:
    ```
-   bsl-debug-server: bsl_debug_start(file, breakpoints)
-   bsl-debug-server: bsl_debug_step(session, "stepInto")
-   bsl-debug-server: bsl_debug_variables(session)
+   bsl-debugger: bsl_debug_start(file, breakpoints)
+   bsl-debugger: bsl_debug_step(session, "stepInto")
+   bsl-debugger: bsl_debug_variables(session)
      → проверить значения на каждом шаге
-   bsl-debug-server: bsl_debug_stop(session)
+   bsl-debugger: bsl_debug_stop(session)
    ```
 
 5. **Live runtime debug в Этапе 4 — экспериментальный шаг, НЕ путать с обязательной BP-verification Этапа 5.x.**
@@ -997,7 +997,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 3. Если данных действительно нет — это НЕ ошибка для превентивных проверок
 4. Зафиксировать в IMPLEMENTATION-PROGRESS.md
 
-### bsl-debug-server: bsl_analyze вернул предупреждения
+### bsl-debugger: bsl_analyze вернул предупреждения
 
 1. Критичные (Error) — исправить обязательно
 2. Warning — оценить, исправить если разумно

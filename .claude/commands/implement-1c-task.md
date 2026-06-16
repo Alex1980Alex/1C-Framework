@@ -1,5 +1,5 @@
 ---
-description: Реализация задачи 1С по готовому ANALYSIS-REPORT.md через 8-этапный pipeline (EDT-MCP + 1c-mcp-crud + bsl-debug-server + 1c-debug-hmr). Запускать ПОСЛЕ /analyze-1c-task. Вариант W (write-heavy bounded scope).
+description: Реализация задачи 1С по готовому ANALYSIS-REPORT.md через 8-этапный pipeline (EDT-MCP + 1c-mcp-crud + bsl-debugger + 1c-debug-hmr). Запускать ПОСЛЕ /analyze-1c-task. Вариант W (write-heavy bounded scope).
 allowed-tools:
   - Read
   - Write
@@ -57,6 +57,19 @@ allowed-tools:
   - mcp__1c-debug-hmr__debug_step
   - mcp__1c-debug-hmr__debug_session_summary
   - mcp__1c-debug-hmr__debug_session_diff
+  - mcp__1c-debug__debug_health_check
+  - mcp__1c-debug__debug_connect
+  - mcp__1c-debug__debug_disconnect
+  - mcp__1c-debug__debug_set_breakpoint
+  - mcp__1c-debug__debug_get_breakpoints
+  - mcp__1c-debug__debug_break_on_next
+  - mcp__1c-debug__debug_ping
+  - mcp__1c-debug__debug_stack_trace
+  - mcp__1c-debug__debug_variables
+  - mcp__1c-debug__debug_evaluate
+  - mcp__1c-debug__debug_step
+  - mcp__1c-debug__debug_session_summary
+  - mcp__1c-debug__debug_session_diff
 ---
 
 # Реализация задачи 1С
@@ -73,9 +86,9 @@ $ARGUMENTS
 **Используй skill implement-1c-task** — единый источник методологии реализации.
 
 Skill определяет:
-- **Этап 0 Preflight (ОБЯЗАТЕЛЬНО)** — `debug_health_check(mode="probe")` через `1c-debug-hmr` + handshakes `edt-mcp` / `1c-mcp-crud` / `bsl-debug-server` → выбор режима pipeline (**Full** / **Full (no-BP)** / Code-only / Read-only verify / Read-only research). Без этого skill уходит в этапы где нужные tool-вызовы не существуют.
+- **Этап 0 Preflight (ОБЯЗАТЕЛЬНО)** — `debug_health_check(mode="probe")` через `1c-debug-hmr` + handshakes `edt-mcp` / `1c-mcp-crud` / `bsl-debugger` → выбор режима pipeline (**Full** / **Full (no-BP)** / Code-only / Read-only verify / Read-only research). Без этого skill уходит в этапы где нужные tool-вызовы не существуют.
 - 8 последовательных этапов (Подготовка → Валидация запросов → BSL → Статанализ → Верификация (вкл. Live BP-verification 5.x) → Тестирование → Документация → Git)
-- 4 основных MCP-сервера: **EDT-MCP**, **1c-mcp-crud**, **bsl-debug-server**, **1c-debug-hmr** (последний опциональный, нужен для BP-verification Этапа 5.x)
+- 4 основных MCP-сервера: **EDT-MCP**, **1c-mcp-crud**, **bsl-debugger**, **1c-debug-hmr** (последний опциональный, нужен для BP-verification Этапа 5.x)
 - Вспомогательные: bsl-semantic-search (+ fallback для Этапа 1), bsl-code-search, bsl-platform-context
 - Обязательные циклы проверки и правила
 
@@ -96,7 +109,7 @@ Skill определяет:
 - `execute_query` → прогнать SQL на живой базе (ДО и ПОСЛЕ)
 - `execute_code` → подготовить/очистить тестовые данные
 
-#### bsl-debug-server — анализ и отладка
+#### bsl-debugger — анализ и отладка
 - `bsl_analyze` → статический анализ BSL-кода (линтер)
 - `bsl_execute` → проверить чистую логику (без базы, только OneScript)
 
