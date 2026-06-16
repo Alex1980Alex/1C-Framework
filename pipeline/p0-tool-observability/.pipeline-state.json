@@ -1,0 +1,44 @@
+{
+  "task": "p0-tool-observability",
+  "title": "ADR-022 + P0: достоверные метрики tool-call (MCP Post matcher, real latency Pre/Post join, category-aware audit, OTel-поля)",
+  "created_at": "2026-06-17T00:14:46",
+  "updated_at": "2026-06-17T00:28:08",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-06-17T00:28:08"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-17T00:28:08",
+      "approved": true,
+      "approved_by": "claude",
+      "approved_at": "2026-06-17T00:28:08"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-06-17T00:28:08"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-06-17T00:28:08"
+    }
+  ]
+}

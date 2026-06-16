@@ -106,6 +106,9 @@ VIEWS: dict[str, str] = {
     """,
     # ADR-022 P0.3 — РЕАЛЬНАЯ латентность MCP-тулов: пара Pre→Post в одном
     # (session, tool, correlationid), длительность = ts(post) − ts(pre) (LAG-pairing).
+    # R3: парность по соседству LAG (НЕ по tool_call_id) — при параллельных вызовах одного
+    # тула в одном partition возможен недосчёт пар (не ложные значения); источник истины при
+    # интерливинге — tool_usage_report.py (там join по tool_call_id).
     "mcp-latency": """
         WITH mcp AS (
             SELECT ts, tool, session, correlationid, event,
