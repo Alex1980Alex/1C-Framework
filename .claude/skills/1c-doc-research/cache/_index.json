@@ -904,6 +904,30 @@
         "github.com/comol/cursor_rules_1c (отображается ai_rules_1c), WebFetch 2026-06-15",
         "лицензия: отсутствует явно (public-domain по заявлению автора)"
       ]
+    },
+    "bsl-extract-complex-condition-readability": {
+      "title": "Вынесение громоздкого условия в именованную функцию-предикат (читаемость BSL)",
+      "file": "bsl-extract-complex-condition-readability.md",
+      "created": "2026-06-16",
+      "last_verified": "2026-06-16",
+      "keywords": [
+        "читаемость условий BSL",
+        "вынесение сложного логического выражения в функцию",
+        "функция-предикат 1С",
+        "extract method булево условие",
+        "ТипЗнч Тип Структура Свойство ЗначениеЗаполнено",
+        "громоздкое Если рефакторинг",
+        "BSLLS диагностики стандарты",
+        "стандартные области модуля",
+        "ленивость И ИЛИ short-circuit 1С"
+      ],
+      "sources": [
+        "v8std.ru/diagnostics/bslls/",
+        "docs.checkbsl.org/checks/overall/StandardRegion/",
+        "helpme1s.ru урок 6 сложные логические выражения",
+        "Стандарты разработки 1С / Документация 8.3.27",
+        "live GKSTCPLK-2566 гкс_ПечатьАктРасхожденияВеса 2026-06-16"
+      ]
     }
   }
 }
