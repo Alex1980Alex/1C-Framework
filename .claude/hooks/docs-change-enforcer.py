@@ -162,6 +162,9 @@ SKIP_PATTERNS = [
     # skill-router eval ground-truth + README (versioned eval dataset, documented
     # in data/skill-router-ground-truth.README.md + roadmap 260613; not product code).
     "skill-router-ground-truth",
+    # 1С-детектор eval ground-truth (versioned eval dataset для scripts/eval_1c_detector.py;
+    # документирован в 43.5 §«Инструментарий качества» + architecture-research cache; не product-код).
+    "1c-detector-ground-truth",
     # ADR (Architecture Decision Records) — самодокументирующиеся decision-артефакты
     # (Context→Decision→Consequences→Alternatives), НЕ product/infra-код; cache/ уже
     # скипается через "/cache/" выше (260613).
