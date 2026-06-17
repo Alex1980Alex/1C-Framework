@@ -20,8 +20,10 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import sys
+import urllib.request
 from collections import Counter
 from pathlib import Path
 
@@ -127,6 +129,87 @@ def semantic_sim(text: str, index: dict | None = None) -> float:
         return 0.0
 
 
+# ── #3 stage-2b: TEI-эскалация — ОЦЕНЕНО, НЕ ПРИНЯТО в route (ADR-023) ───────────────────
+# Гипотеза: эмбеддинги Qwen3 различат near-domain по СМЫСЛУ («обмен 1С» vs «обмен kafka»),
+# чего bag-of-words TF-IDF не может. РЕЗУЛЬТАТ ЗАМЕРА (golden-set): эмбеддинги анизотропны на
+# коротком РУ 1С-тексте — негативы (qdrant / «лабораторный анализ») дают cosine 0.85–0.90 наравне
+# с позитивами; centering (вычитание mean) overlap не убирает (один явный FN даже упал до 0.45).
+# Согласуется с [[feedback-bsl-embedding-collapse]]. Вывод: TF-IDF stage-2a разделяет лучше —
+# оставлен финальным семантическим слоем. Функции ниже доступны через CLI (build-emb/emb) для
+# будущего пересмотра (reranker), но В route НЕ ВКЛЮЧЕНЫ. graceful: TEI down → 0.0.
+_TEI_URL = os.environ.get("ONEC_TEI_URL", "http://localhost:8080/embed")
+_EMB_DIM = 1024  # MRL truncate 4096→1024 + renorm (как framework_code_v1 / prework-similar-code)
+EMB_INDEX = PROJECT_ROOT / "data" / "1c-utterance-embeddings.json"
+_emb_cache: dict | None = None
+
+
+def _tei_embed(texts: list[str], timeout: float = 2.0) -> list | None:
+    """Эмбеддинги через TEI (urllib, stdlib — без httpx в hook). list[vec] | None (сбой)."""
+    try:
+        req = urllib.request.Request(
+            _TEI_URL,
+            data=json.dumps({"inputs": texts}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
+def _mrl(vec: list[float], dim: int = _EMB_DIM) -> list[float]:
+    """Matryoshka: первые dim + L2-renorm (cosine = dot после нормировки)."""
+    v = vec[:dim]
+    n = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / n for x in v]
+
+
+def build_embeddings(path: Path = EMB_INDEX, timeout: float = 60.0, batch: int = 32) -> int:
+    """Оффлайн: utterances → TEI → MRL-1024 → JSON. N | -1 (TEI down). Чанки ≤32 —
+    TEI max_client_batch_size=32, batch>32 = HTTP 413 (memory feedback_tei_batch_size_limit)."""
+    utt = _load_utterances()
+    vecs: list = []
+    for i in range(0, len(utt), batch):
+        raw = _tei_embed(utt[i : i + batch], timeout=timeout)
+        if not raw:
+            return -1
+        vecs.extend(_mrl(v) for v in raw)
+    path.write_text(json.dumps({"dim": _EMB_DIM, "vecs": vecs}), encoding="utf-8")
+    return len(utt)
+
+
+def _get_embeddings() -> dict | None:
+    global _emb_cache
+    if _emb_cache is not None:
+        return _emb_cache or None
+    try:
+        _emb_cache = json.loads(EMB_INDEX.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        _emb_cache = {}
+    return _emb_cache or None
+
+
+def embed_sim(text: str, timeout: float = 1.5) -> float:
+    """Max cosine TEI-эмбеддинга текста к utterance-эмбеддингам ∈ [0,1]. best-effort → 0.0
+    (TEI down / нет индекса → 0.0; вызыватель деградирует на TF-IDF-вердикт)."""
+    try:
+        idx = _get_embeddings()
+        if not idx or not idx.get("vecs"):
+            return 0.0
+        raw = _tei_embed([text], timeout=timeout)
+        if not raw:
+            return 0.0
+        q = _mrl(raw[0], idx.get("dim", _EMB_DIM))
+        best = 0.0
+        for v in idx["vecs"]:
+            dot = sum(a * b for a, b in zip(q, v))  # обе L2-норм → dot = cosine
+            if dot > best:
+                best = dot
+        return round(best, 4)
+    except Exception:
+        return 0.0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = argv if argv is not None else sys.argv[1:]
     try:
@@ -137,10 +220,21 @@ def main(argv: list[str] | None = None) -> int:
         k = save_index()
         print(f"built index from {k} utterances -> {INDEX}")
         return 0
+    if args and args[0] == "build-emb":
+        k = build_embeddings()
+        print(
+            f"built embeddings from {k} utterances -> {EMB_INDEX}"
+            if k >= 0
+            else "TEI down — embeddings NOT built"
+        )
+        return 0 if k >= 0 else 1
     if len(args) >= 2 and args[0] == "sim":
         print(semantic_sim(args[1]))
         return 0
-    print("usage: onec_semantic_fallback.py build | sim <text>")
+    if len(args) >= 2 and args[0] == "emb":
+        print(embed_sim(args[1]))
+        return 0
+    print("usage: onec_semantic_fallback.py build | build-emb | sim <text> | emb <text>")
     return 1
 
 

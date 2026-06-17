@@ -376,6 +376,25 @@
         "langfuse",
         "extends-section-15"
       ]
+    },
+    {
+      "id": "ADR-023",
+      "file": "023-1c-detector-tei-stage2b-rejected-anisotropy.md",
+      "title": "TEI-эскалация (stage-2b) детектора 1С-задач — ОТКЛОНЕНО (анизотропия Qwen3-эмбеддингов на коротком РУ 1С-тексте; TF-IDF stage-2a разделяет лучше)",
+      "status": "rejected",
+      "date": "2026-06-17",
+      "research": "../cache/intent-detection-routing-best-practices.md",
+      "tags": [
+        "1c-detector",
+        "intent-detection",
+        "tei",
+        "embeddings",
+        "anisotropy",
+        "embedding-collapse",
+        "tf-idf",
+        "semantic-fallback",
+        "rejected"
+      ]
     }
   ]
 }
