@@ -65,8 +65,16 @@ def prf(tp: int, fp: int, fn: int) -> dict:
             "tp": tp, "fp": fp, "fn": fn}
 
 
-def evaluate(rows: list[dict]) -> dict:
+def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
     bridge = load_bridge()
+    classify = None
+    if llm_tail:  # #3 stage-3: на mid-band TF-IDF зовём LLM-классификатор (замер потолка)
+        spec = importlib.util.spec_from_file_location(
+            "onec_llm_tail_eval", BRIDGE.parent / "onec_llm_tail.py"
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        classify = mod.llm_classify
     tp = fp = fn = tn = 0
     cls_tot = {c: 0 for c in _CLASSES}
     cls_ok = {c: 0 for c in _CLASSES}
@@ -81,6 +89,13 @@ def evaluate(rows: list[dict]) -> dict:
         pred_1c = bool(r.get("is_1c"))
         pred_cls = route_class_of(r.get("flow", "none"))
         conf = r.get("confidence")
+        # #3 stage-3: mid-band TF-IDF (не confident, 0.40≤sem<0.85) → LLM решает по смыслу
+        sem = r.get("semantic_sim", 0.0) or 0.0
+        if classify and not r.get("confident_1c") and 0.40 <= sem < 0.85:
+            v = classify(text)
+            if v is not None:
+                pred_1c = v
+                pred_cls = "ask" if v else "none"
         if exp_1c and pred_1c:
             tp += 1
         elif exp_1c and not pred_1c:
@@ -124,6 +139,8 @@ def main(argv=None):
     ap.add_argument("--split", choices=["train", "test", "all"], default="all")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--verbose", "-v", action="store_true")
+    ap.add_argument("--llm-tail", action="store_true",
+                    help="#3 stage-3: на mid-band TF-IDF звать LLM-классификатор (замер потолка; медленно)")
     args = ap.parse_args(argv)
 
     sys.stdout.reconfigure(encoding="utf-8")
@@ -138,7 +155,7 @@ def main(argv=None):
     if args.split in ("train", "test"):
         rows = [s for s in rows if split_of(s["text"], s) == args.split]
 
-    rep = evaluate(rows)
+    rep = evaluate(rows, llm_tail=args.llm_tail)
     rep["split"] = args.split
 
     if args.json:

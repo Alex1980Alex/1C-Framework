@@ -395,6 +395,23 @@
         "semantic-fallback",
         "rejected"
       ]
+    },
+    {
+      "id": "ADR-024",
+      "file": "024-1c-detector-llm-tail-wired-blocked-no-model.md",
+      "title": "LLM-on-tail (stage-3) детектора 1С — реализовано+подключено, заблокировано (нет instruct-модели: qwen2.5-coder always-false, claude-cli спавнит in-repo агента, paid API запрещён)",
+      "status": "blocked",
+      "date": "2026-06-18",
+      "research": "../cache/intent-detection-routing-best-practices.md",
+      "tags": [
+        "1c-detector",
+        "intent-detection",
+        "llm-tail",
+        "llm-rotation",
+        "ollama",
+        "infra-blocked",
+        "cascade-stage3"
+      ]
     }
   ]
 }
