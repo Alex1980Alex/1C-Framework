@@ -1,0 +1,44 @@
+{
+  "task": "1c-detector-expand",
+  "title": "1C detector: code-presence path + expand domain/verb dicts (grounded in real TZ)",
+  "created_at": "2026-06-17T21:35:48",
+  "updated_at": "2026-06-17T22:04:09",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-17T22:04:09"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-17T22:04:09",
+      "approved": true,
+      "approved_by": "claude-review",
+      "approved_at": "2026-06-17T22:04:09"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline_1c_bridge.py",
+      "status": "done",
+      "completed_at": "2026-06-17T22:04:09"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "test_pipeline_1c_bridge.py",
+      "status": "done",
+      "completed_at": "2026-06-17T22:04:09"
+    }
+  ]
+}
