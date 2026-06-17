@@ -1,0 +1,44 @@
+{
+  "task": "1c-detector-semantic-fallback",
+  "title": "1C detector #3 cascade (TF-IDF + TEI semantic fallback) + #4 lemmatization",
+  "created_at": "2026-06-17T23:01:39",
+  "updated_at": "2026-06-17T23:15:52",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-17T23:15:52"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-17T23:15:52",
+      "approved": true,
+      "approved_by": "claude-review",
+      "approved_at": "2026-06-17T23:15:52"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "onec_semantic_fallback.py",
+      "status": "done",
+      "completed_at": "2026-06-17T23:15:52"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "test_pipeline_1c_bridge.py",
+      "status": "done",
+      "completed_at": "2026-06-17T23:15:52"
+    }
+  ]
+}
