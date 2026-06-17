@@ -165,6 +165,9 @@ SKIP_PATTERNS = [
     # 1С-детектор eval ground-truth (versioned eval dataset для scripts/eval_1c_detector.py;
     # документирован в 43.5 §«Инструментарий качества» + architecture-research cache; не product-код).
     "1c-detector-ground-truth",
+    # 1С-детектор route-utterances (курируемые фразы для TF-IDF semantic fallback #3 stage-2a;
+    # data, не product-код — параллельно ground-truth; документирован в ADR-023/024 + 43.5).
+    "1c-utterances",
     # ADR (Architecture Decision Records) — самодокументирующиеся decision-артефакты
     # (Context→Decision→Consequences→Alternatives), НЕ product/infra-код; cache/ уже
     # скипается через "/cache/" выше (260613).
