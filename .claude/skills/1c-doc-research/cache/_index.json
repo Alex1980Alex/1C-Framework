@@ -2,6 +2,32 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "documentpdf-prochitat-ingress": {
+      "title": "ДокументPDF.Прочитать — ingress только из файла; Показать() требует temp-файл (бинарь/поток не работают)",
+      "file": "documentpdf-prochitat-ingress.md",
+      "created": "2026-06-17",
+      "last_verified": "2026-06-17",
+      "keywords": [
+        "ДокументPDF Прочитать",
+        "Прочитать из потока ДокументPDF",
+        "ОткрытьПотокДляЧтения Прочитать",
+        "Неправильный заголовок PDF файла",
+        "Прочитать ДвоичныеДанные PDF",
+        "ДокументPDF Показать временный файл",
+        "ДокументPDF лочит файл занят другим процессом",
+        "просмотр PDF без temp-файла",
+        "ДокументPDF.Показать редактирование окно",
+        "краш rphost Прочитать Поток",
+        "GKSTCPLK-2573 PDF просмотр"
+      ],
+      "sources": [
+        "bsl-platform-context 8.3.27",
+        "live execute_code 8.3.27.1936 GKSTCPLK-2573 2026-06-17",
+        "infostart.ru/1c/articles/2400974",
+        "infostart.ru/1c/tools/1844363",
+        "infostart.ru/journal/news/mir-1s 8-3-22 pdf"
+      ]
+    },
     "bsp-postavlyaemye-profili-roli": {
       "title": "БСП: поставляемые профили групп доступа — добавление роли в коде (ПриЗаполненииПоставляемыхПрофилейГруппДоступа) + наполнение профилей при обновлении ИБ",
       "file": "bsp-postavlyaemye-profili-roli.md",
