@@ -82,6 +82,28 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 ---
 
+## 2026-06-18 — Auto-promoted: GKSTCPLK-2567 (ИБTransportManagementDevelop): анал
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `GKSTCPLK-2567 (ИБTransportManagementDevelop): анал` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/gkstcplk-2567-transportmanagementdevelop-.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-18 — Auto-promoted: unnamed-pattern
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `unnamed-pattern` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/unnamed-pattern.md`
+
+**Status:** Pending review
+
+---
+
 ## Format Template
 
 ```
@@ -440,4 +462,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify
 - Files changed: 2
 - Summary: Session 2026-06-17. Skills: architecture-research, create-hook, evaluation-benchmark, hook-enforcement-pattern, code-verify, learn:1c-metadata-objects, audit-docs, run-1c-task. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(skills): раскладка 70 EDT-MCP-инструментов по фазам пайплайна 1С. Commit: chore: auto-save SKILL.md. Commit: docs(43): сжать «Оценка покрытия и пробелы» в 43.5; фикс-лог N1–N12/H1–H7 → roadmap §18
+
+
+## 2026-06-18 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: architecture-research, create-hook, evaluation-benchmark, deployment, claude-code-admin
+- Files changed: 2
+- Summary: Session 2026-06-18. Skills: architecture-research, create-hook, evaluation-benchmark, deployment, claude-code-admin, 1c-doc-research, bsl-development, audit-docs. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-commit eval_1c_detector.py, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация. Commit: chore: auto-save onec_llm_tail.py, eval_1c_detector.py. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация
 
