@@ -17,6 +17,7 @@ JSON-выход + температура 0 (детерминизм).
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 
 _SYS = "Ты строгий классификатор задач. Отвечай ТОЛЬКО JSON, без пояснений."
@@ -29,6 +30,10 @@ _TMPL = (
     "микросервисы, RAG/ML), общие вопросы, не-задачи.\n"
     'Ответь строго JSON: {{"is_1c": true|false}}'
 )
+
+# Instruct-модель ollama (НЕ coder — qwen2.5-coder:7b отдаёт false на всё, ADR-024).
+# qwen2.5:7b уже в allow-list провайдера ollama-local (service.py:185); env-override на будущее.
+_MODEL = os.environ.get("ONEC_TAIL_MODEL", "qwen2.5:7b")
 
 
 def _parse(text: str) -> bool | None:
@@ -48,19 +53,22 @@ def _parse(text: str) -> bool | None:
 
 
 async def _aclassify(prompt: str, timeout: float) -> bool | None:
-    from src.shared.llm_rotation.adapter import cheap_llm_call
+    # service.complete напрямую (НЕ cheap_llm_call): нужно нацелить на instruct-модель _MODEL
+    # + форсировать ollama-local (claude-cli спавнит in-repo агента → мусор, ADR-024).
+    from src.shared.llm_rotation.service import get_service
 
-    text = await asyncio.wait_for(
-        cheap_llm_call(
-            _TMPL.format(p=prompt[:300]),
+    result = await asyncio.wait_for(
+        get_service().complete(
+            prompt=_TMPL.format(p=prompt[:300]),
             system_prompt=_SYS,
-            component="onec-tail-classify",
-            max_tokens=24,
+            model=_MODEL,
+            preferred_provider="ollama-local",
             temperature=0.0,
+            max_tokens=24,
         ),
         timeout=timeout,
     )
-    return _parse(text)
+    return _parse(result.get("text", "") if isinstance(result, dict) else "")
 
 
 _loop = None
