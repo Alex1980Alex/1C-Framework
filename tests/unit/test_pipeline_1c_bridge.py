@@ -411,3 +411,33 @@ def test_confidence_threshold_preserves_confident_1c():
         assert r["confident_1c"] is exp, text
         if r["is_1c"]:
             assert (r["confidence"] >= 0.7) is r["confident_1c"], text
+
+
+# --- #3: TF-IDF semantic fallback (recall-boost на неуверенных входах) ---
+
+
+def test_semantic_sim_module():
+    spec = importlib.util.spec_from_file_location("onec_sf_t", _HOOKS / "shared" / "onec_semantic_fallback.py")
+    sf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sf)
+    hi = sf.semantic_sim("не отрабатывает кнопка печати на форме акта приёмки")  # парафраз ТЗ
+    lo = sf.semantic_sim("how does RAG embeddings work")  # английский, не 1С
+    assert hi >= 0.55 and lo < 0.55 and hi > lo
+
+
+def test_route_semantic_promotes_fn():
+    # regex упускает (нет таск-глагола), semantic ловит парафраз ТЗ → is_1c=True, flow=ask_1c (мягко)
+    r = bridge.route_1c_task("не отрабатывает кнопка печати на форме акта приёмки")
+    assert r["is_1c"] is True and r["flow"] == "ask_1c" and r["confident_1c"] is False
+    assert r["semantic_sim"] >= 0.55
+
+
+def test_route_semantic_negative_stays_none():
+    r = bridge.route_1c_task("как работает RAG embeddings")
+    assert r["is_1c"] is False and r["flow"] == "none" and r["semantic_sim"] < 0.55
+
+
+def test_route_confident_skips_semantic():
+    # на confident-входе semantic НЕ вызывается (sem=0.0) — экономия + уверенный путь не тронут
+    r = bridge.route_1c_task("GKSTCPLK-1 доработать форму")
+    assert r["confident_1c"] is True and r["semantic_sim"] == 0.0

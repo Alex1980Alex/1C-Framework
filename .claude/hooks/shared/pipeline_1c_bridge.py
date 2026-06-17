@@ -414,6 +414,28 @@ def estimate_effort(prompt: str, ttype: str = "", is_folder: bool = False, cfg: 
     return {"complexity": complexity, "points": points, "signals": hit}
 
 
+# #3 stage-2a: порог TF-IDF semantic fallback (env-tunable ONEC_SEM_THRESHOLD). Замер golden-set:
+# FN-парафразы (no-verb 1С-задачи) sim 0.87–0.92; near-domain РУ-негативы БЕЗ глагола (regex→none)
+# 0.58–0.63; разговорный FN «лабанализ» 0.475. 0.70 разделяет: промоут явных FN, режет near-domain
+# semantic-sole FP. Потолок precision TF-IDF (bag-of-words не различает «обмен данными 1С» vs
+# «обмен микросервисами kafka» по СМЫСЛУ) — снимается TEI-эскалацией stage-2b. Промоут всегда →
+# ask_1c (вопрос, не прогон) — blast-radius безопасен.
+_SEM_THRESHOLD = float(os.environ.get("ONEC_SEM_THRESHOLD", "0.70"))
+
+
+def _semantic_sim_safe(prompt: str) -> float:
+    """Max cosine к курируемым 1С-фразам (#3). best-effort → 0.0 (нет индекса/сбой → не мешаем regex)."""
+    try:
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared.onec_semantic_fallback import semantic_sim
+
+        return float(semantic_sim(prompt))
+    except Exception:
+        return 0.0
+
+
 def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None) -> dict:
     """Маршрутизация 1С-задачи из чата → какой поток запускать.
 
@@ -424,19 +446,29 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     flow ∈ {none, ask_1c, auto, ask_flow, gated}. Возврат = classify ∪ estimate ∪ {flow, reason, confident_1c}.
     """
     cl = classify_1c_task(prompt)
-    if not cl.get("is_1c"):
-        return {**cl, "complexity": None, "points": 0, "signals": [], "confident_1c": False,
-                "flow": "none", "reason": "не 1С-задача"}
-    eff = estimate_effort(prompt, ttype=cl.get("ttype", ""), is_folder=is_folder, cfg=cfg)
-    out = {**cl, **eff}
-    # confident: калиброванный скор (#2, из classify) ≥ 0.7 — эквивалент прежнему
-    # `jira ∨ strong ∨ code`, но с градацией для будущего fall-through (mid-band 0.5 →
-    # semantic-check #3). `confidence` уже в out (через **cl).
+    # confident: калиброванный скор (#2) ≥ 0.7 — эквивалент прежнему `jira ∨ strong ∨ code`.
     confident = cl.get("confidence", 0.0) >= 0.7
+    # #3 stage-2a TF-IDF semantic fallback: ТОЛЬКО на неуверенных входах (regex дал none/weak).
+    # Семантика = МЯГКИЙ сигнал — поднимает recall (промоут is_1c из none на парафразах, что
+    # стем-словарь упустил), но НЕ делает confident (остаётся ask_1c). Инвариант безопасности цел.
+    sem = _semantic_sim_safe(prompt or "") if not confident else 0.0
+    semantic_hit = sem >= _SEM_THRESHOLD
+    is_1c = bool(cl.get("is_1c")) or semantic_hit
+    if not is_1c:
+        return {**cl, "complexity": None, "points": 0, "signals": [], "confident_1c": False,
+                "flow": "none", "reason": "не 1С-задача", "semantic_sim": sem}
+    eff = estimate_effort(prompt, ttype=cl.get("ttype") or "", is_folder=is_folder, cfg=cfg)
+    out = {**cl, **eff}
+    out["is_1c"] = True  # мог быть промоут семантикой (#3)
+    out["semantic_sim"] = sem
     out["confident_1c"] = confident
     if not confident:
         out["flow"] = "ask_1c"
-        out["reason"] = "1С-сигнал слабый/без JIRA — подтвердить (1С ли) + тип/папка (V.6)"
+        if semantic_hit and not cl.get("is_1c"):
+            out["ask"] = True  # семантика-промоут (нет JIRA/маркера) → подтвердить
+            out["reason"] = f"семантическое сходство с 1С-фразами (sim={sem}) — подтвердить, 1С ли это"
+        else:
+            out["reason"] = "1С-сигнал слабый/без JIRA — подтвердить (1С ли) + тип/папка (V.6)"
         return out
     comp = eff["complexity"]
     if comp == "simple":

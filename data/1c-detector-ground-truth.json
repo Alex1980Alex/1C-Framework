@@ -62,5 +62,9 @@
   {"text": "почему не печатается ярлык пробы при отборе образцов", "is_1c": true, "route_class": "ask", "source": "hard_fn_noverb", "split": "train"},
   {"text": "после приёмки транспортное средство осталось заблокированным", "is_1c": true, "route_class": "ask", "source": "hard_descriptive", "split": "train"},
   {"text": "движения по регистру задвоились при перепроведении документа", "is_1c": true, "route_class": "ask", "source": "hard_fn_morphology", "split": "test"},
-  {"text": "в реестре накладных не отображается часть строк", "is_1c": true, "route_class": "ask", "source": "hard_caught", "split": "train"}
+  {"text": "в реестре накладных не отображается часть строк", "is_1c": true, "route_class": "ask", "source": "hard_caught", "split": "train"},
+  {"text": "обмен данными между микросервисами по rest api", "is_1c": false, "route_class": "none", "source": "near_domain_ru", "split": "test"},
+  {"text": "транспортное средство застряло в пробке на трассе", "is_1c": false, "route_class": "none", "source": "near_domain_ru", "split": "train"},
+  {"text": "форма обратной связи на сайте компании", "is_1c": false, "route_class": "none", "source": "near_domain_ru", "split": "train"},
+  {"text": "загрузка данных из файла в облачное хранилище", "is_1c": false, "route_class": "none", "source": "near_domain_ru", "split": "test"}
 ]
