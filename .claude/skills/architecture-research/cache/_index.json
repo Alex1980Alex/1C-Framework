@@ -21,6 +21,26 @@
       "last_verified": "2026-06-17"
     },
     {
+      "file": "orchestration-best-practices.md",
+      "title": "Оркестрация LLM-агентов и stateful-workflow — фреймворки (LangGraph/CrewAI/Temporal/...), паттерны (saga/HITL/evaluator-optimizer/magentic), прод-практики (durable-execution/circuit-breaker/OTel-GenAI/event-sourcing)",
+      "keywords": [
+        "orchestration",
+        "agent-workflow",
+        "langgraph",
+        "durable-execution",
+        "saga-compensation",
+        "human-in-the-loop",
+        "circuit-breaker",
+        "otel-genai",
+        "event-sourcing",
+        "state-machine",
+        "evaluator-optimizer",
+        "magentic",
+        "multi-agent"
+      ],
+      "last_verified": "2026-06-18"
+    },
+    {
       "file": "1c-bsl-tooling-ecosystem-2026.md",
       "title": "Экосистема инструментов 1С/BSL (dev/test/CI/AI-MCP) + spec-driven/strangler-fig миграция — внешние факты GitHub 2026",
       "keywords": [
