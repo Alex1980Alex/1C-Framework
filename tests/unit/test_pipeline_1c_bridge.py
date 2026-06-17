@@ -286,3 +286,86 @@ def test_recall_non_1c_still_none():
     assert bridge.classify_1c_task("как работает RAG embeddings")["is_1c"] is False
     assert bridge.classify_1c_task("что такое ТабличныйДокумент")["is_1c"] is False  # CamelCase, но нет глагола
     assert bridge.classify_1c_task("напиши скрипт на python для парсинга")["is_1c"] is False
+
+
+# --- code-presence path: наличие 1С-кода = ключевой признак (БЕЗ таск-глагола) ---
+
+
+def test_code_path_manager_call_no_verb():
+    # вызов менеджера (мн.число) + СрезПоследних — код без глагола → is_1c + confident
+    r = bridge.route_1c_task("РегистрыСведений.гкс_СостоянияРегистрации.СрезПоследних(&Дата)")
+    assert r["is_1c"] is True and r["code"] is True and r["confident_1c"] is True
+
+
+def test_code_path_event_handler_no_verb():
+    c = bridge.classify_1c_task("ПередЗаписью(Отказ, Замещение)")
+    assert c["is_1c"] is True and c["code"] is True
+
+
+def test_code_path_bsl_closer_no_verb():
+    # закрывающее ключевое слово BSL — однозначный код
+    assert bridge.classify_1c_task("вставь сюда КонецПроцедуры")["is_1c"] is True
+
+
+def test_code_path_query_token_no_verb():
+    c = bridge.classify_1c_task("ВЫРАЗИТЬ(Ссылка КАК Документ.Расход) ЕСТЬNULL(Сумма, 0)")
+    assert c["code"] is True and c["is_1c"] is True
+
+
+def test_code_path_bsp_call_confident_route():
+    # БСП-вызов → код → confident → маршрут по сложности (НЕ ask_1c)
+    r = bridge.route_1c_task("замени на ОбщегоНазначения.ЗначениеРеквизитаОбъекта")
+    assert r["is_1c"] is True and r["confident_1c"] is True and r["flow"] != "ask_1c"
+
+
+def test_code_path_pasted_bsl_block_no_dict_verb():
+    # вставленный BSL без таск-глагола из словаря (Если/Тогда/Возврат — не _TASK_VERB)
+    src = "Если ОбменДанными.Загрузка Тогда Возврат; КонецЕсли;"
+    c = bridge.classify_1c_task(src)
+    assert c["is_1c"] is True and c["code"] is True
+
+
+# --- расширение доменной лексики (чат-транскрипты: домен-слово + глагол) ---
+
+
+def test_domain_expansion_with_verb():
+    for t in [
+        "перепровести направление на разгрузку",
+        "заблокировать приёмку по усиленному контролю",
+        "доработать формирование номера пробы из АРМ композита",
+        "зарегистрировать отгрузку к обмену",
+        "выгрузить лабораторный анализ в отчёт",
+    ]:
+        assert bridge.classify_1c_task(t)["is_1c"] is True, t
+
+
+def test_domain_abbreviations_with_verb():
+    # узкие аббревиатуры предметной области + глагол
+    assert bridge.classify_1c_task("дополнить проведение по ФНП")["is_1c"] is True
+    assert bridge.classify_1c_task("исправить запись на ПЛК")["is_1c"] is True
+
+
+# --- регрессия: расширение НЕ ломает негативы и инвариант «слабый сигнал → ask_1c» ---
+
+
+def test_code_path_preserves_camelcase_negative():
+    # CamelCase-идентификатор без кода-конструкции и без глагола → НЕ 1С (вопрос)
+    c = bridge.classify_1c_task("что такое ТабличныйДокумент")
+    assert c["is_1c"] is False and c["code"] is False
+
+
+def test_code_path_no_prose_false_positive():
+    # prose: заглавное слово + точка + ПРОБЕЛ — НЕ код (member-guard .(Заглавная|гкс_))
+    assert bridge.classify_1c_task("Это важный Документ. Прочитай его внимательно")["code"] is False
+
+
+def test_domain_term_alone_not_1c():
+    # доменное слово БЕЗ глагола и БЕЗ кода → сигнала мало (нужна пара термин+глагол)
+    assert bridge.classify_1c_task("лабораторный анализ")["is_1c"] is False
+
+
+def test_code_path_no_module_suffix_or_bsl_false_positive():
+    # ревью-фикс: англ. слова ООП и хвост `.bsl` НЕ должны давать code (иначе FP → auto-прогон).
+    assert bridge.classify_1c_task("the ObjectModule pattern in OOP design")["code"] is False
+    assert bridge.classify_1c_task("see utils.bsl in the repo for details")["code"] is False
+    assert bridge.classify_1c_task("our FormModule handles the UI layer")["is_1c"] is False
