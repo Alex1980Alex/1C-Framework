@@ -1,0 +1,44 @@
+{
+  "task": "docs-43-5-e2e-map",
+  "title": "Docs: 43.5 сквозная карта — вход чат->детект->маршрут->завершение",
+  "created_at": "2026-06-17T20:07:41",
+  "updated_at": "2026-06-17T20:13:27",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "docs/framework documentation/43_ПАЙПЛАЙН_1С/43.5_СКВОЗНАЯ_КАРТА.md",
+      "status": "done",
+      "completed_at": "2026-06-17T20:13:27"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "docs/framework documentation/43_ПАЙПЛАЙН_1С/43.5_СКВОЗНАЯ_КАРТА.md",
+      "status": "done",
+      "completed_at": "2026-06-17T20:13:27",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-06-17T20:13:27"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "docs/framework documentation/43_ПАЙПЛАЙН_1С/43.5_СКВОЗНАЯ_КАРТА.md",
+      "status": "done",
+      "completed_at": "2026-06-17T20:13:27"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "docs/framework documentation/43_ПАЙПЛАЙН_1С/43.5_СКВОЗНАЯ_КАРТА.md",
+      "status": "done",
+      "completed_at": "2026-06-17T20:13:27"
+    }
+  ]
+}
