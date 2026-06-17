@@ -4,7 +4,7 @@
 Зачем: эмбеддинги Qwen3 на коротком РУ 1С-тексте коллапсируют (ADR-023) — frozen-эмбеддинги
 (cosine ИЛИ обученный probe, 5-fold F1≤0.76) проигрывают rule+TF-IDF (F1 0.976). LLM
 классифицирует по СМЫСЛУ — закрывает near-domain хвост («обмен 1С» vs «обмен kafka»),
-который лексика не различает. Через cheap_llm_call (llm-rotation: claude-cli-haiku / ollama).
+который лексика не различает. Через service.complete (llm-rotation, ollama-local instruct-модель).
 
 Контракт (framework design): НЕ в синхронном hook-пути — хуки лёгкие (5с, regex), LLM-работа
 у Claude/агента. Зовётся:
