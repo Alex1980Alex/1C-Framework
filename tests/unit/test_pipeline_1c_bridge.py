@@ -369,3 +369,45 @@ def test_code_path_no_module_suffix_or_bsl_false_positive():
     assert bridge.classify_1c_task("the ObjectModule pattern in OOP design")["code"] is False
     assert bridge.classify_1c_task("see utils.bsl in the repo for details")["code"] is False
     assert bridge.classify_1c_task("our FormModule handles the UI layer")["is_1c"] is False
+
+
+# --- #2: калиброванная уверенность (confidence ∈ {0.0, 0.5, 0.7, 0.9, 1.0}) ---
+
+
+def test_confidence_jira_max():
+    assert bridge.classify_1c_task("GKSTCPLK-2182 доработать форму")["confidence"] == 1.0
+
+
+def test_confidence_code_or_definitive_high():
+    assert bridge.classify_1c_task("Документы.гкс_Основание.Записать()")["confidence"] == 0.9
+    assert bridge.classify_1c_task("посмотри гкс_НастройкиРазгрузки")["confidence"] == 0.9
+    assert bridge.classify_1c_task("вставь сюда КонецПроцедуры")["confidence"] == 0.9
+
+
+def test_confidence_strong_camelcase_mid():
+    # CamelCase-объект без гкс_/jira/code + глагол → strong → 0.7
+    assert bridge.classify_1c_task("доработать НаправлениеНаРазгрузку")["confidence"] == 0.7
+
+
+def test_confidence_weak_signal_verb_low():
+    # доменный термин + глагол, без strong/code/jira → 0.5
+    assert bridge.classify_1c_task("исправить ошибку при проведении")["confidence"] == 0.5
+
+
+def test_confidence_non_1c_zero():
+    assert bridge.classify_1c_task("как работает RAG embeddings")["confidence"] == 0.0
+
+
+def test_confidence_threshold_preserves_confident_1c():
+    # инвариант #2: confident_1c == (confidence >= 0.7), поведение прежнее
+    cases = [
+        ("GKSTCPLK-1 доработать", True),               # jira → 1.0
+        ("доработать НаправлениеНаРазгрузку", True),   # strong → 0.7
+        ("исправить ошибку при проведении", False),   # weak → 0.5 → ask_1c
+        ("как работает RAG", False),                  # none → 0.0
+    ]
+    for text, exp in cases:
+        r = bridge.route_1c_task(text)
+        assert r["confident_1c"] is exp, text
+        if r["is_1c"]:
+            assert (r["confidence"] >= 0.7) is r["confident_1c"], text

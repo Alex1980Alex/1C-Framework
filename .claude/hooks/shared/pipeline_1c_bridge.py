@@ -243,7 +243,7 @@ _1C_SIGNAL = re.compile(
 
 
 def classify_1c_task(prompt: str) -> dict:
-    """V.6: тип входящей 1С-задачи. {is_1c, jira, ttype(T1/T2/T3), ask, code}. best-effort → is_1c False.
+    """V.6: тип входящей 1С-задачи. {is_1c, jira, ttype(T1/T2/T3), ask, code, confidence}. best-effort → is_1c False.
 
     is_1c = JIRA ∨ definitive (гкс_/configuration) ∨ литеральный 1С-код ∨ (1С-сигнал + таск-глагол).
     code=True — в тексте распознан 1С/BSL-синтаксис (ключевой признак, БЕЗ глагола; используется для
@@ -264,7 +264,21 @@ def classify_1c_task(prompt: str) -> dict:
             or ((bool(_1C_SIGNAL.search(p)) or bool(_1C_STRONG.search(p))) and has_verb)
         )
         if not is_1c:
-            return {"is_1c": False, "jira": None, "ttype": None, "ask": False, "code": False}
+            return {"is_1c": False, "jira": None, "ttype": None, "ask": False, "code": False,
+                    "confidence": 0.0}
+        # Калиброванная уверенность (#2): скор 0..1 = max по силе сигнала. Инвариант:
+        # confident_1c в route = (confidence >= 0.7) ТОЧНО воспроизводит прежнее
+        # `jira ∨ _1C_STRONG ∨ code` — эквивалентность под guard'ом is_1c (вне него confidence=0.0,
+        # а прежнее выражение в route недостижимо после early-return). jira1.0 / code·definitive0.9 /
+        # strong0.7 ≥0.7 → confident; signal+verb0.5 → ask_1c. Mid-band 0.5 — для fall-through (#3 semantic).
+        if jira:
+            confidence = 1.0
+        elif code or _1C_DEFINITIVE.search(p):
+            confidence = 0.9
+        elif _1C_STRONG.search(p):
+            confidence = 0.7
+        else:
+            confidence = 0.5  # is_1c только через доменный термин (_1C_SIGNAL) + таск-глагол
         low = p.lower()
         if "не учт" in low or ("тестирован" in low and "функционал" in low):
             ttype = "T3"
@@ -278,9 +292,11 @@ def classify_1c_task(prompt: str) -> dict:
             "ttype": ttype,
             "ask": jira is None,  # чат без JIRA → уточнить новая/доработка (V.6)
             "code": code,  # был ли распознан литеральный 1С-код (поднимает confident_1c в route)
+            "confidence": confidence,  # калиброванный скор силы 1С-сигнала (0..1)
         }
     except Exception:
-        return {"is_1c": False, "jira": None, "ttype": None, "ask": False, "code": False}
+        return {"is_1c": False, "jira": None, "ttype": None, "ask": False, "code": False,
+                "confidence": 0.0}
 
 
 # --- Классификатор сложности (оценка трудозатрат) + маршрутизация потока (2026-06-15) ---
@@ -413,9 +429,10 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
                 "flow": "none", "reason": "не 1С-задача"}
     eff = estimate_effort(prompt, ttype=cl.get("ttype", ""), is_folder=is_folder, cfg=cfg)
     out = {**cl, **eff}
-    # confident: JIRA ∨ сильный маркер (гкс_/объект.точка/CamelCase) ∨ литеральный 1С-код.
-    # Наличие кода — ключевой признак ⇒ маршрут по сложности (auto/ask_flow/gated), не вопрос.
-    confident = bool(cl.get("jira")) or bool(_1C_STRONG.search(prompt or "")) or bool(cl.get("code"))
+    # confident: калиброванный скор (#2, из classify) ≥ 0.7 — эквивалент прежнему
+    # `jira ∨ strong ∨ code`, но с градацией для будущего fall-through (mid-band 0.5 →
+    # semantic-check #3). `confidence` уже в out (через **cl).
+    confident = cl.get("confidence", 0.0) >= 0.7
     out["confident_1c"] = confident
     if not confident:
         out["flow"] = "ask_1c"

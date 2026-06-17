@@ -3,6 +3,24 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "intent-detection-routing-best-practices.md",
+      "title": "Детекция интента/домена + роутинг свободного текста — best practices (semantic-router, hybrid cascade, confidence-threshold, stemming vs lemmatization)",
+      "keywords": [
+        "intent-classification",
+        "semantic-router",
+        "routing",
+        "cascade",
+        "text-classification",
+        "confidence-threshold",
+        "lemmatization",
+        "pymorphy3",
+        "setfit",
+        "tf-idf",
+        "abstention"
+      ],
+      "last_verified": "2026-06-17"
+    },
+    {
       "file": "1c-bsl-tooling-ecosystem-2026.md",
       "title": "Экосистема инструментов 1С/BSL (dev/test/CI/AI-MCP) + spec-driven/strangler-fig миграция — внешние факты GitHub 2026",
       "keywords": [
