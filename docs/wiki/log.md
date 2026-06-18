@@ -472,3 +472,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 2
 - Summary: Session 2026-06-18. Skills: architecture-research, create-hook, evaluation-benchmark, deployment, claude-code-admin, 1c-doc-research, bsl-development, audit-docs. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-commit eval_1c_detector.py, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация. Commit: chore: auto-save onec_llm_tail.py, eval_1c_detector.py. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация
 
+
+## 2026-06-19 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud
+- Files changed: 5
+- Summary: Session 2026-06-19. Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud. Changed 5 files in .gitignore, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, gitignore, pipeline/fix-1c-mcp-crud, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save pipeline.md. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация. Commit: fix(1c-detector): гейт actionless (verb-less/zero-signal) auto→ask_flow + _TASK_VERB (Находка 3)
+

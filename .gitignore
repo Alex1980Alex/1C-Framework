@@ -151,3 +151,6 @@ tmp_gen*.py
 
 # Trained 1С-detector gate (ADR-025) — regenerable via scripts/train_onec_setfit.py, not committed (120MB)
 models/onec-setfit/
+
+# diagnostic scratch
+.tmp_onec/
