@@ -124,19 +124,18 @@ def test_status_keys(monkeypatch):
 # --- data-shaping тренировочного скрипта (без ML-стека) ---
 
 
-def test_to_examples_labels_and_e5_prefix():
+def test_to_texts_e5_prefix():
     rows = [{"text": "доработать форму", "is_1c": True}, {"text": "как работает RAG", "is_1c": False}]
-    texts, labels = train.to_examples(rows, model_name="cointegrated/rubert-tiny2")
-    assert labels == [1, 0] and texts[0] == "доработать форму"  # tiny2 — без префикса
-    e5_texts, _ = train.to_examples(rows, model_name="intfloat/multilingual-e5-small")
-    assert e5_texts[0].startswith("query: ")  # e5 — префикс по model card
+    assert train.to_texts(rows, "cointegrated/rubert-tiny2") == ["доработать форму", "как работает RAG"]
+    e5 = train.to_texts(rows, "intfloat/multilingual-e5-small")
+    assert e5[0].startswith("query: ") and e5[0].endswith("доработать форму")  # e5 — префикс (model card)
 
 
-def test_partition_explicit_split():
-    rows = [{"text": "a", "is_1c": True, "split": "train"},
-            {"text": "b", "is_1c": False, "split": "test"}]
-    tr, te = train.partition(rows)
-    assert [r["text"] for r in tr] == ["a"] and [r["text"] for r in te] == ["b"]
+def test_split_of_explicit_and_deterministic():
+    assert train.split_of("a", {"split": "train"}) == "train"
+    assert train.split_of("b", {"split": "test"}) == "test"
+    assert train.split_of("x", {}) in ("train", "test")  # нет поля → sha1%5
+    assert train.split_of("x", {}) == train.split_of("x", {})  # детерминирован
 
 
 def test_summarize_and_dry_run_counts(capsys):
