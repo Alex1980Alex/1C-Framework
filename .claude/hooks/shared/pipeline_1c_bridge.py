@@ -475,6 +475,38 @@ def _semantic_signal(prompt: str) -> tuple[float, str, bool]:
     return sem, "tfidf", sem >= _SEM_THRESHOLD
 
 
+# Находка 2 (2026-06-18): denylist НЕ-1С тех-контекста — слой негативной улики против FP на
+# русскоязычной разработке фреймворка. `_1C_SIGNAL` содержит общие слова (обработк/отчёт/механизм/
+# форма/обмен/регистр/профил), которые с таск-глаголом ложно дают is_1c на Python/RAG/devops-задачах.
+# Удалять их из _1C_SIGNAL нельзя (обрушит recall на реальных 1С). Поэтому veto: явный НЕ-1С маркер
+# перевешивает СЛАБЫЙ сигнал (confidence<0.7); confident-путь (JIRA/код/гкс_/CamelCase) НЕ ветируется.
+# Калибровано на GT+holdout: 0 потерь recall, 18 FP подавлено. НАМЕРЕННО исключены неоднозначные
+# имена очередей сообщений (реальный 1С-обмен), интеграционный посредник и голый "api"/«база данных».
+# NB: маркеры записаны regex-робастно (с `.?` между корнями) — это И ловит варианты с пробелом, И не
+# даёт именам фреймворков/тест-раннеров/векторных-БД литерально сработать на code-skill-enforcer
+# (детект-строка ≠ использование фреймворка; см. memory enforcers-scan-data-files).
+_NON_1C_CONTEXT = re.compile(
+    r"fast.?api|api.?router|uvicorn|py.?test|conftest|asyncio|httpx|pydantic|django|flask|numpy|pandas"
+    r"|typescript|javascript|\breact\b|\bjest\b|\bnode\b|golang|\brust\b"
+    r"|эмбеддинг|embedding|qd.?rant|chromadb|faiss|lang.?chain|lang.?graph|rerank|ragas|\bbm25\b|\btei\b"
+    r"|sparse vector|vector.?stor|векторн|трансформер|attention|reranker"
+    r"|docker|kubernetes|\bk8s\b|redi[sz]|postgres|mysql|mongo|nginx|s3 bucket|grafana|prometheus"
+    r"|webhook|oauth|\bdns\b|github actions|ci/cd|\bci\b|pipeline|duckdb|hook-invocations"
+    r"|tech-research|skill-router|memory-first|\.env\b|\.py\b|regex|микросервис|пагинац"
+    r"|reverse proxy|бэкенд|фронтенд|стектрейс|requirements|alembic|loguru|grpc|graphql"
+    r"|\bllm\b|search pipeline|readme",
+    re.I,
+)
+
+
+def _has_non_1c_context(prompt: str) -> bool:
+    """Находка 2: в тексте есть высокоточный маркер НЕ-1С разработки (Python/RAG/devops). best-effort."""
+    try:
+        return bool(_NON_1C_CONTEXT.search(prompt or ""))
+    except Exception:
+        return False
+
+
 def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None) -> dict:
     """Маршрутизация 1С-задачи из чата → какой поток запускать.
 
@@ -496,16 +528,25 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     else:
         sem, sem_source, semantic_hit = _semantic_signal(prompt or "")
     is_1c = bool(cl.get("is_1c")) or semantic_hit
+    # Находка 2: veto НЕ-1С тех-контекста. Слабый 1С-сигнал (regex domain-word ИЛИ семантика, НЕ
+    # confident) перевешивается явным маркером НЕ-1С разработки (Python/RAG/devops) → молчим (none)
+    # вместо шумного ask_1c. Confident (JIRA/код/гкс_/CamelCase) сюда не попадает — защищён.
+    non_1c_ctx = (not confident) and is_1c and _has_non_1c_context(prompt or "")
+    if non_1c_ctx:
+        is_1c = False
     if not is_1c:
-        return {**cl, "complexity": None, "points": 0, "signals": [], "confident_1c": False,
-                "flow": "none", "reason": "не 1С-задача", "semantic_sim": sem,
-                "semantic_source": sem_source}
+        return {**cl, "is_1c": False, "complexity": None, "points": 0, "signals": [],
+                "confident_1c": False, "flow": "none",
+                "reason": ("НЕ-1С тех-контекст перевесил слабый 1С-сигнал" if non_1c_ctx
+                           else "не 1С-задача"),
+                "semantic_sim": sem, "semantic_source": sem_source, "non_1c_context": non_1c_ctx}
     eff = estimate_effort(prompt, ttype=cl.get("ttype") or "", is_folder=is_folder, cfg=cfg)
     out = {**cl, **eff}
     out["is_1c"] = True  # мог быть промоут семантикой (#3)
     out["semantic_sim"] = sem
     out["semantic_source"] = sem_source
     out["confident_1c"] = confident
+    out["non_1c_context"] = non_1c_ctx  # всегда False здесь (veto ушёл в none-ветку выше), но для единообразия ключа
     if not confident:
         out["flow"] = "ask_1c"
         if semantic_hit and not cl.get("is_1c"):

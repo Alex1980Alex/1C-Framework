@@ -19,6 +19,17 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
+
+@pytest.fixture(autouse=True)
+def _setfit_gate_off(monkeypatch):
+    """Детерминизм независимо от dev-окружения: тесты этого модуля проверяют route/classify +
+    TF-IDF откат (поведение при ВЫКЛ SetFit-гейте = CI-дефолт). Локально gate может быть ВКЛ
+    (ONEC_SETFIT_ENABLE=1 в settings.local.json) → semantic_source/semantic_sim расходятся и
+    semantic-assert-тесты флейкуют. Снимаем флаг на каждый тест. SetFit gate-on покрыт отдельно
+    (test_onec_setfit_gate.py). См. memory feedback-deterministic-test-robustness."""
+    monkeypatch.delenv("ONEC_SETFIT_ENABLE", raising=False)
+
+
 _HOOKS = Path(__file__).resolve().parents[2] / ".claude" / "hooks"
 
 _spec = importlib.util.spec_from_file_location(
@@ -308,6 +319,57 @@ def test_route_truly_cosmetic_still_auto():
     # инвариант: truly-cosmetic правка (нет develop/modify/heavy сигналов) остаётся simple→auto
     r = bridge.route_1c_task("GKSTCPLK-1 исправить опечатку в наименовании гкс_Справочник")
     assert r["complexity"] == "simple" and r["flow"] == "auto"
+
+
+# --- Находка 2 (2026-06-18): veto НЕ-1С тех-контекста (precision на русскоязычной разработке) ---
+
+
+def test_has_non_1c_context_helper():
+    # высокоточные маркеры НЕ-1С разработки ловятся (regex-робастные формы + пробельные варианты)
+    for t in ["обработка в FastAPI", "fast api роутер", "поиск в Qdrant", "тест на pytest",
+              "агент на langchain", "rerank в search pipeline", "образ docker", "очистка redis"]:
+        assert bridge._has_non_1c_context(t) is True, t
+    # чистая 1С-задача — НЕ тех-контекст
+    for t in ["доработать проведение документа Реализация", "добавить реквизит в справочник",
+              "разработать печатную форму Акт"]:
+        assert bridge._has_non_1c_context(t) is False, t
+
+
+def test_route_veto_framework_dev_to_none():
+    # РЕГРЕСС Находки 2: слабый 1С-сигнал (обработк/механизм/отчёт + глагол) + явный НЕ-1С маркер
+    # → veto → flow=none (молчим), а не ask_1c (шум). Детерминично (is_1c через regex, не семантику).
+    for t in [
+        "Доработать обработку ошибок в API роутере FastAPI",
+        "Создать обработку входящих webhook от GitHub",
+        "Реализовать механизм rerank в search pipeline",
+        "Сформировать отчёт по латентности через DuckDB",
+        "Доработать механизм синхронизации векторов между Qdrant коллекциями",
+    ]:
+        r = bridge.route_1c_task(t)
+        assert r["is_1c"] is False and r["flow"] == "none", (t, r["flow"])
+        assert r["non_1c_context"] is True, t
+
+
+def test_route_veto_respects_confident_1c():
+    # ИНВАРИАНТ безопасности: confident-вход (гкс_/JIRA/код/CamelCase) с тех-словом НЕ ветируется —
+    # реальная 1С-задача, упомянувшая инструмент, защищена.
+    r = bridge.route_1c_task("доработать обработку гкс_ЛабораторныйАнализ с выгрузкой в postgres")
+    assert r["confident_1c"] is True and r["is_1c"] is True and r["flow"] != "none"
+    assert r["non_1c_context"] is False
+    r2 = bridge.route_1c_task("GKSTCPLK-1 доработать выгрузку регистра для duckdb-отчёта")
+    assert r2["is_1c"] is True and r2["flow"] != "none"
+
+
+def test_route_veto_preserves_weak_real_1c():
+    # 1С-задача со слабым сигналом, но БЕЗ тех-маркера → veto НЕ срабатывает → остаётся ask_1c
+    r = bridge.route_1c_task("доработать обработку проведения накладной")
+    assert r["is_1c"] is True and r["flow"] == "ask_1c" and r["non_1c_context"] is False
+
+
+def test_route_non_1c_carries_non_1c_context_key():
+    # ключ non_1c_context присутствует во всех возвратах (наблюдаемость)
+    assert "non_1c_context" in bridge.route_1c_task("как работает RAG embeddings")
+    assert "non_1c_context" in bridge.route_1c_task("GKSTCPLK-1 доработать форму")
 
 
 # --- recall-расширение детектора (заземлено на configuration/.../docs реальные задачи) ---
