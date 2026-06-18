@@ -32,6 +32,7 @@ GROUND_TRUTH = PROJECT_DIR / "data" / "1c-detector-ground-truth.json"
 BRIDGE = PROJECT_DIR / ".claude" / "hooks" / "shared" / "pipeline_1c_bridge.py"
 
 _CLASSES = ("none", "ask", "confident")
+_BANDS = ("simple", "medium", "complex")
 
 
 def load_bridge():
@@ -82,6 +83,14 @@ def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
     confusion = {c: {d: 0 for d in _CLASSES} for c in _CLASSES}
     conf_by_class: dict[str, list[float]] = {c: [] for c in _CLASSES}
     misses = []
+    # complexity-band (Находка 3, 2026-06-18): валидация simple/medium/complex + детект auto-мисроутов.
+    # Полоса достижима ТОЛЬКО на confident-входе (route_1c_task: non-confident → ask_1c минуя complexity),
+    # поэтому считаем лишь по строкам, где GT задал `complexity` И предикт confident. auto_misroute =
+    # GT-сложность medium/complex, а flow=auto (substantial-задача авто-прогоняется мимо гейта ревью).
+    band_tot = {b: 0 for b in _BANDS}
+    band_ok = {b: 0 for b in _BANDS}
+    band_confusion = {b: {d: 0 for d in _BANDS} for b in _BANDS}
+    auto_misroutes = []
     for s in rows:
         text = s["text"]
         exp_1c = bool(s["is_1c"])
@@ -90,6 +99,16 @@ def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
         pred_1c = bool(r.get("is_1c"))
         pred_cls = route_class_of(r.get("flow", "none"))
         conf = r.get("confidence")
+        exp_band = s.get("complexity")
+        if exp_band in _BANDS and pred_cls == "confident":
+            pred_band = r.get("complexity")
+            band_tot[exp_band] += 1
+            if pred_band in _BANDS:
+                band_confusion[exp_band][pred_band] += 1
+            if pred_band == exp_band:
+                band_ok[exp_band] += 1
+            if exp_band in ("medium", "complex") and r.get("flow") == "auto":
+                auto_misroutes.append({"text": text[:70], "exp": exp_band, "got_flow": "auto"})
         # #3 stage-3: mid-band TF-IDF (не confident, 0.40≤sem<0.85) → LLM решает по смыслу
         sem = r.get("semantic_sim", 0.0) or 0.0
         if classify and not r.get("confident_1c") and 0.40 <= sem < 0.85:
@@ -130,6 +149,15 @@ def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
         },
         "confusion": confusion,
         "confidence_mean_by_class": {c: mean(conf_by_class[c]) for c in _CLASSES},
+        "complexity_band": {
+            "n": sum(band_tot.values()),
+            "accuracy": round(sum(band_ok.values()) / sum(band_tot.values()), 4)
+            if sum(band_tot.values()) else None,
+            "per_band": {b: {"acc": round(band_ok[b] / band_tot[b], 4) if band_tot[b] else None,
+                             "n": band_tot[b]} for b in _BANDS},
+            "confusion": band_confusion,
+            "auto_misroutes": auto_misroutes,
+        },
         "misses": misses,
     }
 
@@ -181,6 +209,17 @@ def main(argv=None):
     print("confusion (exp -> pred):")
     for c in _CLASSES:
         print(f"   {c:9s} -> {rep['confusion'][c]}")
+    cb = rep["complexity_band"]
+    print(f"\ncomplexity-band (n={cb['n']}, на confident-строках с GT-меткой): acc={cb['accuracy']}")
+    for b in _BANDS:
+        pb = cb["per_band"][b]
+        print(f"   {b:9s} acc={pb['acc']} (n={pb['n']})")
+    if cb["auto_misroutes"]:
+        print(f"   ⚠ AUTO-мисроутов (medium/complex → flow=auto): {len(cb['auto_misroutes'])}")
+        for mr in cb["auto_misroutes"]:
+            print(f"      exp={mr['exp']:8s} | {mr['text']}")
+    else:
+        print("   ✓ AUTO-мисроутов нет (ни одна medium/complex задача не уходит в auto)")
     if rep["misses"] and args.verbose:
         print(f"\nMisses ({len(rep['misses'])}):")
         for mm in rep["misses"]:

@@ -272,6 +272,44 @@ def test_route_attribute_name_not_light_downgrade():
     assert r["complexity"] == "medium" and r["flow"] == "ask_flow"
 
 
+# --- Находка 1 (2026-06-18): группа develop — substantial-задачи НЕ должны уходить в simple→auto ---
+
+
+def test_estimate_effort_develop_group():
+    # «разработать/реализовать + печатная форма/механизм/функционал» → develop (+2) → medium, не simple
+    for txt in ["разработать печатную форму", "реализовать функционал по внесению данных",
+                "разработать механизм приёмки авто", "создать новую печатную форму"]:
+        e = bridge.estimate_effort(txt, ttype="T1")
+        assert e["complexity"] == "medium" and "develop" in e["signals"], (txt, e)
+
+
+def test_route_develop_printform_not_auto():
+    # РЕГРЕСС Находки 1: реальные печатные формы / «разработать механизм» с JIRA (confident)
+    # больше НЕ авто-прогоняются мимо гейта ревью (раньше: simple→auto).
+    for t in [
+        "GKSTCPLK-2377 Создать новую печатную форму Акт забраковки товара",
+        "GKSTCPLK-2400 Разработать печатную форму Ярлык пробы",
+        "GKSTCPLK-2414 Разработать механизм приемки авто с другим порядком операции",
+        "GKSTCPLK-2483 Реализовать функционал по внесению данных в документ Регистрация на ПЛК",
+    ]:
+        r = bridge.route_1c_task(t)
+        assert r["confident_1c"] is True, t
+        assert r["complexity"] in ("medium", "complex"), (t, r["complexity"])
+        assert r["flow"] != "auto", (t, r["flow"])
+
+
+def test_route_exchange_setup_not_auto():
+    # «настроить обмен с базой УТ» → cross (расширенный) → medium → не auto (была simple/auto)
+    r = bridge.route_1c_task("GMFM-5826 Настроить обмен с базой УТ Инфида и МФМ")
+    assert r["complexity"] in ("medium", "complex") and r["flow"] != "auto"
+
+
+def test_route_truly_cosmetic_still_auto():
+    # инвариант: truly-cosmetic правка (нет develop/modify/heavy сигналов) остаётся simple→auto
+    r = bridge.route_1c_task("GKSTCPLK-1 исправить опечатку в наименовании гкс_Справочник")
+    assert r["complexity"] == "simple" and r["flow"] == "auto"
+
+
 # --- recall-расширение детектора (заземлено на configuration/.../docs реальные задачи) ---
 
 
