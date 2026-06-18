@@ -412,6 +412,28 @@
         "infra-blocked",
         "cascade-stage3"
       ]
+    },
+    {
+      "id": "ADR-025",
+      "file": "025-1c-detector-setfit-stage2a-scaffold.md",
+      "title": "SetFit-гейт детектора 1С (stage-2a′) — обучаемая замена TF-IDF (opt-in каркас; старт rubert-tiny2, апгрейд multilingual-e5-small; активация ⟸ разметка ~150–300)",
+      "status": "accepted",
+      "date": "2026-06-18",
+      "research": "../cache/intent-detection-routing-best-practices.md",
+      "tags": [
+        "1c-detector",
+        "intent-detection",
+        "setfit",
+        "few-shot-classification",
+        "sentence-transformers",
+        "rubert-tiny2",
+        "multilingual-e5-small",
+        "tf-idf",
+        "semantic-fallback",
+        "opt-in",
+        "cascade-stage2a",
+        "scaffold"
+      ]
     }
   ]
 }

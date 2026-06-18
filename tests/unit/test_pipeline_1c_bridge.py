@@ -441,3 +441,31 @@ def test_route_confident_skips_semantic():
     # на confident-входе semantic НЕ вызывается (sem=0.0) — экономия + уверенный путь не тронут
     r = bridge.route_1c_task("GKSTCPLK-1 доработать форму")
     assert r["confident_1c"] is True and r["semantic_sim"] == 0.0
+
+
+# --- ADR-025: SetFit-гейт opt-in — поведение route при выключенном гейте (behavior-preserving) ---
+
+
+def test_route_semantic_source_tfidf_when_gate_off():
+    # гейт по умолчанию ВЫКЛЮЧЕН → семантический слой = TF-IDF (откат), новый ключ проставлен
+    r = bridge.route_1c_task("не отрабатывает кнопка печати на форме акта приёмки")
+    assert r["is_1c"] is True and r["flow"] == "ask_1c"
+    assert r["semantic_source"] == "tfidf"
+
+
+def test_route_semantic_source_skipped_on_confident():
+    # confident-вход → семантику не зовём → source=skipped (и sim=0.0, как прежде)
+    r = bridge.route_1c_task("GKSTCPLK-1 доработать форму")
+    assert r["semantic_sim"] == 0.0 and r["semantic_source"] == "skipped"
+
+
+def test_route_non_1c_carries_source():
+    # негатив тоже несёт semantic_source (ранний return дополнен ключом)
+    r = bridge.route_1c_task("как работает RAG embeddings")
+    assert r["flow"] == "none" and r["semantic_source"] == "tfidf"
+
+
+def test_semantic_signal_falls_back_to_tfidf():
+    # _semantic_signal: гейт спит (setfit_prob→None) → источник tfidf, скор = semantic_sim
+    score, source, hit = bridge._semantic_signal("не отрабатывает кнопка печати на форме акта приёмки")
+    assert source == "tfidf" and isinstance(hit, bool) and score > 0.0

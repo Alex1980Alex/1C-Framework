@@ -436,6 +436,37 @@ def _semantic_sim_safe(prompt: str) -> float:
         return 0.0
 
 
+# ADR-025 stage-2a′: SetFit-гейт — обучаемый слой ② поверх/вместо TF-IDF (opt-in, по умолчанию спит).
+_SETFIT_THRESHOLD = float(os.environ.get("ONEC_SETFIT_THRESHOLD", "0.5"))
+
+
+def _setfit_prob_safe(prompt: str) -> float | None:
+    """Вероятность 1С от SetFit-гейта (ADR-025). None → гейт спит/сбой → caller падает на TF-IDF. best-effort."""
+    try:
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared.onec_setfit_gate import setfit_prob
+
+        return setfit_prob(prompt)
+    except Exception:
+        return None
+
+
+def _semantic_signal(prompt: str) -> tuple[float, str, bool]:
+    """Семантический слой ② каскада → (score, source, hit).
+
+    SetFit-гейт (ADR-025, opt-in) с приоритетом; при None (выключен/нет модели/сбой) — откат на TF-IDF
+    (stage-2a, onec_semantic_fallback). Оба — МЯГКИЙ сигнал: hit промоутит вход лишь в ask_1c (инвариант
+    безопасности), порог свой на источник (SetFit-вероятность и TF-IDF-косинус — разные шкалы).
+    """
+    prob = _setfit_prob_safe(prompt)
+    if prob is not None:
+        return prob, "setfit", prob >= _SETFIT_THRESHOLD
+    sem = _semantic_sim_safe(prompt)
+    return sem, "tfidf", sem >= _SEM_THRESHOLD
+
+
 def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None) -> dict:
     """Маршрутизация 1С-задачи из чата → какой поток запускать.
 
@@ -448,19 +479,24 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     cl = classify_1c_task(prompt)
     # confident: калиброванный скор (#2) ≥ 0.7 — эквивалент прежнему `jira ∨ strong ∨ code`.
     confident = cl.get("confidence", 0.0) >= 0.7
-    # #3 stage-2a TF-IDF semantic fallback: ТОЛЬКО на неуверенных входах (regex дал none/weak).
-    # Семантика = МЯГКИЙ сигнал — поднимает recall (промоут is_1c из none на парафразах, что
-    # стем-словарь упустил), но НЕ делает confident (остаётся ask_1c). Инвариант безопасности цел.
-    sem = _semantic_sim_safe(prompt or "") if not confident else 0.0
-    semantic_hit = sem >= _SEM_THRESHOLD
+    # Семантический слой ② (ADR-025): SetFit-гейт (opt-in) с откатом на TF-IDF (stage-2a). ТОЛЬКО на
+    # неуверенных входах (regex дал none/weak). Семантика = МЯГКИЙ сигнал — поднимает recall (промоут
+    # is_1c из none на парафразах, что стем-словарь упустил), но НЕ делает confident (остаётся ask_1c).
+    # Инвариант безопасности цел. semantic_source ∈ {setfit, tfidf, skipped} — для наблюдаемости.
+    if confident:
+        sem, sem_source, semantic_hit = 0.0, "skipped", False
+    else:
+        sem, sem_source, semantic_hit = _semantic_signal(prompt or "")
     is_1c = bool(cl.get("is_1c")) or semantic_hit
     if not is_1c:
         return {**cl, "complexity": None, "points": 0, "signals": [], "confident_1c": False,
-                "flow": "none", "reason": "не 1С-задача", "semantic_sim": sem}
+                "flow": "none", "reason": "не 1С-задача", "semantic_sim": sem,
+                "semantic_source": sem_source}
     eff = estimate_effort(prompt, ttype=cl.get("ttype") or "", is_folder=is_folder, cfg=cfg)
     out = {**cl, **eff}
     out["is_1c"] = True  # мог быть промоут семантикой (#3)
     out["semantic_sim"] = sem
+    out["semantic_source"] = sem_source
     out["confident_1c"] = confident
     if not confident:
         out["flow"] = "ask_1c"

@@ -23,6 +23,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -141,7 +142,11 @@ def main(argv=None):
     ap.add_argument("--verbose", "-v", action="store_true")
     ap.add_argument("--llm-tail", action="store_true",
                     help="#3 stage-3: на mid-band TF-IDF звать LLM-классификатор (замер потолка; медленно)")
+    ap.add_argument("--setfit", action="store_true",
+                    help="ADR-025: семантический слой ② через SetFit-гейт (нужна обученная модель; иначе graceful → TF-IDF)")
     args = ap.parse_args(argv)
+    if args.setfit:  # включить SetFit-гейт для этого прогона (route_1c_task подхватит env)
+        os.environ["ONEC_SETFIT_ENABLE"] = "1"
 
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
