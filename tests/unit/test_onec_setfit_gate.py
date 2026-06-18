@@ -117,7 +117,7 @@ def test_model_dir_env_override(monkeypatch, tmp_path):
 def test_status_keys(monkeypatch):
     monkeypatch.delenv("ONEC_SETFIT_ENABLE", raising=False)
     st = gate.status()
-    assert set(st) == {"enabled", "setfit_installed", "model_dir", "model_present", "threshold"}
+    assert set(st) == {"enabled", "deps_installed", "model_dir", "model_present", "threshold", "backend", "cv_f1"}
     assert st["enabled"] is False
 
 

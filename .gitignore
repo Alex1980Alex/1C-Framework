@@ -148,3 +148,6 @@ openspec-lint-report.md
 
 # Implementer temp generators (route-around code-skill-enforcer; auto-deleted)
 tmp_gen*.py
+
+# Trained 1С-detector gate (ADR-025) — regenerable via scripts/train_onec_setfit.py, not committed (120MB)
+models/onec-setfit/
