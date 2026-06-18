@@ -99,7 +99,8 @@ def test_is_enabled_parsing(monkeypatch, val, exp):
     assert gate.is_enabled() is exp
 
 
-def test_threshold_default_env_and_bad(monkeypatch):
+def test_threshold_default_env_and_bad(monkeypatch, tmp_path):
+    monkeypatch.setenv("ONEC_SETFIT_MODEL_DIR", str(tmp_path))  # пустой каталог → нет meta.json → дефолт
     monkeypatch.delenv("ONEC_SETFIT_THRESHOLD", raising=False)
     assert gate.threshold() == 0.5
     monkeypatch.setenv("ONEC_SETFIT_THRESHOLD", "0.7")

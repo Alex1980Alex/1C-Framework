@@ -59,38 +59,75 @@ def threshold() -> float:
     Откалиброванный порог — отдельный от TF-IDF-порога (0.70): шкала вероятностей SetFit
     не совпадает со шкалой косинуса bag-of-words. Подбирается `eval_1c_detector.py --setfit`.
     """
+    env = os.environ.get("ONEC_SETFIT_THRESHOLD")
+    if env:
+        try:
+            return float(env)
+        except (TypeError, ValueError):
+            pass
+    t = _meta().get("threshold")  # калиброванный порог из обучения
+    return float(t) if isinstance(t, (int, float)) else 0.5
+
+
+def _meta() -> dict:
+    """meta.json обученной модели (backend/model/threshold/метрики). {} если нет."""
     try:
-        return float(os.environ.get("ONEC_SETFIT_THRESHOLD", "0.5"))
-    except (TypeError, ValueError):
-        return 0.5
+        import json
+
+        return json.loads((model_dir() / "meta.json").read_text(encoding="utf-8"))
+    except Exception:
+        return {}
 
 
-def _have_setfit() -> bool:
-    """Установлен ли пакет setfit? (без фактической загрузки тяжёлого стека)."""
+def _have_deps() -> bool:
+    """Установлен ли инференс-стек (sentence-transformers + sklearn + joblib)? (без загрузки тяжёлого)."""
     import importlib.util
 
-    return importlib.util.find_spec("setfit") is not None
+    return all(importlib.util.find_spec(p) for p in ("sentence_transformers", "sklearn", "joblib"))
+
+
+def _model_present() -> bool:
+    """Обученная модель на диске: каталог ST-энкодера + сериализованная LR-голова."""
+    d = model_dir()
+    return (d / "st").exists() and (d / "head.pkl").exists()
+
+
+class _STHead:
+    """ST-энкодер + LR-голова с интерфейсом ``.predict_proba(texts)`` (как sklearn/SetFit) —
+    чтобы setfit_prob/_positive_prob и тесты (FakeModel) работали без изменений."""
+
+    def __init__(self, st, lr):
+        self._st = st
+        self._lr = lr
+
+    def predict_proba(self, texts):
+        emb = self._st.encode(list(texts), normalize_embeddings=True, show_progress_bar=False)
+        return self._lr.predict_proba(emb)
 
 
 def _load_model():
-    """Лениво загрузить SetFitModel из model_dir(); кэш на процесс. None при отсутствии deps/модели.
+    """Лениво загрузить ST-энкодер + LR-голову из model_dir(); кэш на процесс. None при отсутствии
+    deps/модели. setfit-пакет НЕ используется (несовместим с transformers 5.x в этом окружении:
+    default_logdir removed + config_setfit.json 404) — голова обучается напрямую на рабочем стеке
+    фреймворка (sentence-transformers + sklearn). См. ADR-025.
 
-    Кэшируется ДАЖЕ отрицательный результат (None) — повторная загрузка в рамках процесса не
-    предпринимается (хук всё равно живёт один вызов). Тесты обходят кэш, передавая model= напрямую.
+    Кэшируется ДАЖЕ отрицательный результат (None). Тесты обходят кэш, передавая model= напрямую.
     """
     global _model_cache
     if _model_cache is not _UNSET:
         return _model_cache
     _model_cache = None  # пессимистичный дефолт: считаем «нет», пока не загрузим успешно
-    d = model_dir()
-    if not d.exists():
+    if not _model_present():
         return None
     try:
-        from setfit import SetFitModel
+        import joblib
+        from sentence_transformers import SentenceTransformer
     except Exception:
-        return None  # setfit/torch не установлены — спим, caller падает на TF-IDF
+        return None  # ST/sklearn нет — спим, caller падает на TF-IDF
     try:
-        _model_cache = SetFitModel.from_pretrained(str(d))
+        st = SentenceTransformer(str(model_dir() / "st"))
+        lr = joblib.load(model_dir() / "head.pkl")
+        _model_cache = _STHead(st, lr)
     except Exception:
         _model_cache = None
     return _model_cache
@@ -134,13 +171,15 @@ def setfit_prob(text: str, model=None) -> float | None:
 
 def status() -> dict:
     """Снимок состояния гейта (для CLI info / диагностики)."""
-    d = model_dir()
+    m = _meta()
     return {
         "enabled": is_enabled(),
-        "setfit_installed": _have_setfit(),
-        "model_dir": str(d),
-        "model_present": d.exists(),
+        "deps_installed": _have_deps(),
+        "model_dir": str(model_dir()),
+        "model_present": _model_present(),
         "threshold": threshold(),
+        "backend": m.get("backend", "sentence-transformers+lr"),
+        "cv_f1": m.get("cv_f1"),
     }
 
 
@@ -160,8 +199,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{k}: {v}")
         if not st["enabled"]:
             print("→ гейт ВЫКЛЮЧЕН (ONEC_SETFIT_ENABLE не задан) — route падает на TF-IDF")
-        elif not st["setfit_installed"]:
-            print("→ setfit НЕ установлен: pip install setfit")
+        elif not st["deps_installed"]:
+            print("→ нет инференс-стека: pip install sentence-transformers scikit-learn joblib")
         elif not st["model_present"]:
             print("→ модели нет: обучите scripts/train_onec_setfit.py")
         return 0
