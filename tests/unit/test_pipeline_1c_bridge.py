@@ -28,6 +28,19 @@ bridge = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(bridge)
 
 
+def _force_shared_import_failure(monkeypatch):
+    """Гарантированно уронить `from shared import pipeline_state` внутри bridge-функций.
+
+    Замены sys.modules['shared'] пустым модулем НЕДОСТАТОЧНО: если sys.modules['shared.pipeline_state']
+    закэширован прошлым тестом/хуком (полный прогон), Python резолвит submodule ИЗ КЭША → import
+    проходит, ensure_pipeline_1c/gate_1c_implement/advance_for_artifact уходят в РЕАЛЬНЫЙ pipeline_state
+    и пишут CURRENT/реестр в репозиторий (root-cause order-dependent флейка + полютер pipeline/_1c_index.json).
+    Удаляем и подмодуль — тогда import гарантированно падает (ImportError) → best-effort путь (None/ok=True).
+    """
+    monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
+    monkeypatch.delitem(sys.modules, "shared.pipeline_state", raising=False)
+
+
 def test_derive_slug_jira():
     # JIRA-код = стабильный ID задачи
     assert bridge.derive_slug("/implement-1c-task GKSTCPLK-2182 доработать") == "GKSTCPLK-2182"
@@ -64,7 +77,7 @@ def test_same_jira_one_slug():
 def test_best_effort_never_raises(monkeypatch):
     # форсируем сбой импорта pipeline_state (пустой `shared` без сабмодуля) →
     # ensure_pipeline_1c обязан вернуть None, НЕ кинуть (инвариант «не ломать preflight»)
-    monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
+    _force_shared_import_failure(monkeypatch)
     assert bridge.ensure_pipeline_1c("/analyze-1c-task GKSTCPLK-1 x", "analyze-1c-task") is None
 
 
@@ -88,7 +101,7 @@ def test_advance_best_effort(monkeypatch, tmp_path):
     # матч + содержимое есть (>порог), но pipeline_state недоступен (пустой shared) → None, не кидает
     f = tmp_path / "GKSTCPLK-1-ANALYSIS-REPORT.md"
     f.write_text("# Анализ\n" + "Существенное содержимое отчёта. " * 20, encoding="utf-8")
-    monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
+    _force_shared_import_failure(monkeypatch)
     assert bridge.advance_for_artifact(str(f)) is None
 
 
@@ -114,7 +127,7 @@ def test_gate_no_pipeline_or_fail_ok():
 
 def test_gate_best_effort_ok(monkeypatch):
     # сбой pipeline_state (пустой shared) → ok=True, не кидает
-    monkeypatch.setitem(sys.modules, "shared", types.ModuleType("shared"))
+    _force_shared_import_failure(monkeypatch)
     res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-1 x")
     assert res["ok"] is True
 

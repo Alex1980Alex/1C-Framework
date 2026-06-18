@@ -699,6 +699,8 @@ def harvest(
     drafts_dir: Path = DRAFTS_DIR,
     lifecycle_dir: Path = LIFECYCLE_DIR,
     skill_learning_file: Path = SKILL_LEARNING_FILE,
+    pending_file: Path = SL_PENDING_FILE,
+    rejected_file: Path = SL_REJECTED_FILE,
     cap: int | None = None,
     dry_run: bool = False,
     sources: tuple[str, ...] = ("drafts", "lessons", "skill_learning"),
@@ -712,6 +714,10 @@ def harvest(
     QUARANTINE_THRESHOLD идут в pending-карантин skill-learning (``quarantine_items``),
     остальные — прямым маршрутом в learned_patterns (``ingest_items``, как раньше).
     Opt-out карантина: PATTERNS_QUARANTINE_DISABLE=1. Pure fail-soft.
+
+    Силосы карантина (``pending_file``/``rejected_file``, + ``skill_learning_file`` как saved-силос)
+    инъектируемы — дефолты = реальные data/skill_learning/* (прод), тесты подменяют на tmp
+    (иначе quarantine-ветка пишет в реальный pending-store → недетерминизм + полютер).
     """
     now = now or datetime.now()
     candidates: list[HarvestItem] = []
@@ -738,7 +744,16 @@ def harvest(
         harvester="patterns",
     )
     if low:
-        qstats = quarantine_items(low, cap=cap, dry_run=dry_run, client=client, now=now)
+        qstats = quarantine_items(
+            low,
+            cap=cap,
+            dry_run=dry_run,
+            client=client,
+            now=now,
+            pending_file=pending_file,
+            saved_file=skill_learning_file,
+            rejected_file=rejected_file,
+        )
         stats["quarantined"] = qstats["quarantined"]
         stats["quarantine"] = qstats
     return stats

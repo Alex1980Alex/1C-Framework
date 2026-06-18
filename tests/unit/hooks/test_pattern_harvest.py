@@ -100,7 +100,10 @@ def dirs(tmp_path: Path) -> tuple[Path, Path]:
 # --------------------------------------------------------------------------- #
 # Tests
 # --------------------------------------------------------------------------- #
-def test_confirmed_drafts_and_lessons_create_cubes(dirs: tuple[Path, Path]) -> None:
+def test_confirmed_drafts_and_lessons_create_cubes(dirs: tuple[Path, Path], tmp_path: Path) -> None:
+    # P1.2 карантин (roadmap 260611): confirmed draft (conf 0.85) → cube в learned_patterns;
+    # session-lesson (auto-извлечён, conf 0.70 < QUARANTINE_THRESHOLD 0.8) → pending-карантин, не cube.
+    # Силосы карантина изолированы в tmp (иначе harvest пишет в реальный data/skill_learning/pending).
     drafts, life = dirs
     _write_draft(
         drafts, "a", "confirmed", "Читать реквизит через ОбщегоНазначения, не Ссылка.Реквизит"
@@ -121,10 +124,15 @@ def test_confirmed_drafts_and_lessons_create_cubes(dirs: tuple[Path, Path]) -> N
         embed=_fake_embed,
         sources=("drafts", "lessons"),
         lesson_max_age_hours=0,
+        pending_file=tmp_path / "pending.jsonl",
+        rejected_file=tmp_path / "rejected.jsonl",
+        skill_learning_file=tmp_path / "saved.jsonl",
     )
-    assert stats["created"] == 2  # 1 draft + 1 real lesson (noise filtered)
+    assert stats["created"] == 1  # confirmed draft → learned_patterns cube
+    assert stats["quarantined"] == 1  # lesson (conf 0.70) → pending-карантин (P1.2)
     assert stats["errors"] == 0
-    assert len(client.store) == 2
+    assert len(client.store) == 1  # только draft в Qdrant; урок ушёл в pending-файл
+    assert (tmp_path / "pending.jsonl").exists()  # урок не потерян — в карантине
 
 
 def test_pending_and_placeholder_drafts_skipped(dirs: tuple[Path, Path]) -> None:
