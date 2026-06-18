@@ -59,6 +59,11 @@ class OnecTaskInput(BaseHook):
             parts.append(
                 "• МАРШРУТ: простая → запусти **`/run-1c-task`** (AUTO: analyze→approve→implement→test, без паузы на ревью)."
             )
+        elif flow == "ask_flow" and r.get("actionless"):
+            parts.append(
+                "• МАРШРУТ: 1С-контекст распознан, но ДЕЙСТВИЕ не названо (нет таск-глагола/scope) — "
+                "НЕ запускай **`/run-1c-task`**; СПРОСИ у пользователя, что именно сделать."
+            )
         elif flow == "ask_flow":
             parts.append(
                 "• МАРШРУТ: средней сложности → СПРОСИ пользователя: **`/run-1c-task`** (AUTO) ИЛИ "

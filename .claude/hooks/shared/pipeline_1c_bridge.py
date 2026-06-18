@@ -223,7 +223,10 @@ _TASK_VERB = re.compile(
     r"убра|устран|дополн|сформир|отобра|вернут|удал|оптимизир|перенес|внедр|учт|учес|учл|"
     # расширение (grounded на реальных ТЗ): глаголы засчитываются лишь в паре с 1С-сигналом → low-FP
     r"перепровест|перезаполн|зарегистрир|синхронизир|заблокир|разблокир|принят|провер|"
-    r"рассчита|вывест|вывод|выгруз|загруз|активир|внес|отмен|\bформирован",
+    r"рассчита|вывест|вывод|выгруз|загруз|активир|внес|отмен|\bформирован|"
+    # частые глаголы (Находка 3, 2026-06-18): start-`\b` против substring-FP — основы цепляют
+    # инфлексии (замени/заменить/замена), но НЕ похожие не-глаголы (взамен/переписка/переделка).
+    r"\bзамен|\bпомен|\bпереписа|\bперепиш|\bпередела|\bобнов|\bпереимен|\bпоправ",
     re.I,
 )
 # Определяющие маркеры: 1С даже БЕЗ таск-глагола (гкс_-префикс / путь к 1С-задаче).
@@ -536,7 +539,7 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
         is_1c = False
     if not is_1c:
         return {**cl, "is_1c": False, "complexity": None, "points": 0, "signals": [],
-                "confident_1c": False, "flow": "none",
+                "confident_1c": False, "flow": "none", "actionless": False,
                 "reason": ("НЕ-1С тех-контекст перевесил слабый 1С-сигнал" if non_1c_ctx
                            else "не 1С-задача"),
                 "semantic_sim": sem, "semantic_source": sem_source, "non_1c_context": non_1c_ctx}
@@ -549,6 +552,7 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     out["non_1c_context"] = non_1c_ctx  # всегда False здесь (veto ушёл в none-ветку выше), но для единообразия ключа
     if not confident:
         out["flow"] = "ask_1c"
+        out["actionless"] = False  # actionless-гейт живёт только в confident+simple ветке (ниже)
         if semantic_hit and not cl.get("is_1c"):
             out["ask"] = True  # семантика-промоут (нет JIRA/маркера) → подтвердить
             out["reason"] = f"семантическое сходство с 1С-фразами (sim={sem}) — подтвердить, 1С ли это"
@@ -556,7 +560,24 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
             out["reason"] = "1С-сигнал слабый/без JIRA — подтвердить (1С ли) + тип/папка (V.6)"
         return out
     comp = eff["complexity"]
-    if comp == "simple":
+    # Гейт «действие не названо» (Находка 3, 2026-06-18): confident-1С, но НЕТ ни таск-глагола, ни
+    # work-сигналов (signals==[]) → вход = 1С-контекст/вопрос без actionable scope (напр. вставленный
+    # код + «это 1С?»). НЕ запускаем AUTO в пустоту — спрашиваем «что сделать?» (инвариант пользователя
+    # «сомнение → спросить»). Срабатывает ТОЛЬКО в simple-полосе: verb-less ∧ zero-signal даёт
+    # points ≤ 2 ⇒ всегда simple, поэтому medium/complex (gated/ask_flow) по построению не затронуты.
+    actionless = (
+        comp == "simple"
+        and not bool(_TASK_VERB.search(prompt or ""))
+        and not eff.get("signals")
+    )
+    out["actionless"] = actionless
+    if actionless:
+        out["flow"] = "ask_flow"
+        out["reason"] = (
+            "1С-контекст без названного действия (нет таск-глагола/scope) — "
+            "спроси, что именно сделать (не запускай AUTO)"
+        )
+    elif comp == "simple":
         out["flow"], out["reason"] = "auto", "простая → /run-1c-task (AUTO, без паузы)"
     elif comp == "complex":
         out["flow"], out["reason"] = "gated", "сложная → гейтованный /analyze-1c-task + /implement-1c-task (ревью анализа)"

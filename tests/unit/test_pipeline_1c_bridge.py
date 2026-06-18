@@ -599,3 +599,77 @@ def test_semantic_signal_falls_back_to_tfidf():
     # _semantic_signal: гейт спит (setfit_prob→None) → источник tfidf, скор = semantic_sim
     score, source, hit = bridge._semantic_signal("не отрабатывает кнопка печати на форме акта приёмки")
     assert source == "tfidf" and isinstance(hit, bool) and score > 0.0
+
+
+# --- Находка 3 (2026-06-18): гейт «действие не названо» (actionless) auto → ask_flow ---
+
+# Точный вход живого прогона: путь к ManagerModule + BSL + предупреждение анализатора + вопрос.
+# Детект «1С» уверен (гкс_ + код), но действия НЕ названо (нет таск-глагола, нет work-сигнала).
+_ACTIONLESS_PROMPT = (
+    "Project/TransportManagement/src/DataProcessors/"
+    "гкс_ПечатьАктВозврата_Беларусь/ManagerModule.bsl "
+    "Шаблоны = Новый Структура(); "
+    "Предыдущее значение переменной не используется "
+    "Это 1С задача?"
+)
+
+
+def test_route_actionless_headline_user_example():
+    # ГВОЗДЬ: ровно вход пользователя → 1С уверенно, но verb-less ∧ zero-signal → НЕ auto, а ask_flow.
+    r = bridge.route_1c_task(_ACTIONLESS_PROMPT)
+    assert r["is_1c"] is True
+    assert r["confident_1c"] is True          # гкс_/код → confident сохранён
+    assert r["complexity"] == "simple"        # ноль work-сигналов
+    assert r["actionless"] is True
+    assert r["flow"] == "ask_flow"            # НЕ "auto" — корень бага закрыт
+    assert r["flow"] != "auto"
+
+
+def test_route_actionless_code_dump_no_verb():
+    # вставленный вызов менеджера БЕЗ таск-глагола → confident по коду, но действие не названо → ask_flow
+    r = bridge.route_1c_task("РегистрыСведений.гкс_СостоянияРегистрации.СрезПоследних(&Дата)")
+    assert r["confident_1c"] is True and r["actionless"] is True and r["flow"] == "ask_flow"
+
+
+def test_route_actionless_false_when_verb_present():
+    # ИНВАРИАНТ: confident+simple С глаголом («исправить») → actionless=False, остаётся auto.
+    r = bridge.route_1c_task("GKSTCPLK-1 исправить опечатку в наименовании гкс_Справочник")
+    assert r["actionless"] is False and r["flow"] == "auto"
+
+
+def test_route_actionless_false_when_work_signal_present():
+    # work-сигнал (modify) даёт points>2 → не simple → гейт не достижим → actionless=False.
+    r = bridge.route_1c_task("доработать обработку гкс_ЗагрузкаДанных, добавить колонку")
+    assert r["actionless"] is False and r["flow"] == "ask_flow"  # medium ask_flow, НЕ actionless
+
+
+def test_route_actionless_key_present_all_returns():
+    # наблюдаемость: ключ actionless во ВСЕХ ветках возврата (none / ask_1c / confident).
+    assert "actionless" in bridge.route_1c_task("как работает RAG embeddings")          # none
+    assert "actionless" in bridge.route_1c_task("исправить ошибку при проведении")       # ask_1c (weak)
+    assert "actionless" in bridge.route_1c_task("GKSTCPLK-1 доработать форму, добавить колонку")  # confident
+    # в none/ask_1c ветках гейт неактуален → False
+    assert bridge.route_1c_task("как работает RAG embeddings")["actionless"] is False
+    assert bridge.route_1c_task("исправить ошибку при проведении")["actionless"] is False
+
+
+# --- расширение _TASK_VERB частыми глаголами (start-`\b` против substring-FP) ---
+
+
+def test_task_verb_extension_common_verbs():
+    # частые глаголы, ранее отсутствовавшие в словаре → теперь распознаются
+    for t in ["замени макет печати", "поменяй реквизит", "перепиши запрос", "переписать модуль",
+              "переделай форму", "обнови справочник", "переименуй документ", "поправь печать"]:
+        assert bridge._TASK_VERB.search(t), t
+
+
+def test_task_verb_extension_no_substring_fp():
+    # start-`\b`: добавленные основы НЕ цепляют похожие НЕ-глаголы (и старые основы тоже их не ловят)
+    for t in ["взамен старого порядка", "деловая переписка по почте", "переделка тут не нужна"]:
+        assert bridge._TASK_VERB.search(t) is None, t
+
+
+def test_task_verb_extension_route_replace_is_action():
+    # эффект на гейт: «замени X на Y» теперь = названное действие (не actionless) → маршрут по сложности
+    r = bridge.route_1c_task("замени на ОбщегоНазначения.ЗначениеРеквизитаОбъекта")
+    assert r["confident_1c"] is True and r["actionless"] is False and r["flow"] != "ask_1c"
