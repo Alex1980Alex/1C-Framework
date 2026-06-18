@@ -9,18 +9,20 @@ description: "1c-mcp-crud — MCP доступ к данным и метадан
 
 ## Обзор
 
-MCP-сервер для работы с базой 1С:Предприятие через AI-агентов. Расширенный набор инструментов (17 tools) поверх HTTP-сервиса 1С:
+MCP-сервер для работы с базой 1С:Предприятие через AI-агентов. **19 инструментов** поверх HTTP-сервиса 1С (эталон — live `tools/list`, проверено 2026-06-19 на базе `transport`):
 
-| Возможность | Tools |
-|---|---|
-| Запросы и BSL-код | `execute_query`, `validate_query`, `execute_code`, `get_bsl_syntax_help` |
-| Чтение метаданных | `get_metadata`, `get_metadata_structure`, `get_metadata_tree`, `list_metadata_objects` |
-| Чтение форм | `get_form_structure` |
-| Поиск по коду конфигурации | `search_code` |
-| CRUD объектов | `create_object`, `update_object`, `post_document`, `mark_for_deletion` |
-| Навигационные ссылки | `get_link_of_object`, `get_object_by_link` |
-| Анализ зависимостей | `find_references_to_object` |
-| Безопасность и аудит | `get_access_rights`, `get_event_log`, `submit_for_deanonymization` |
+| Возможность | Tools | Кол-во |
+|---|---|---|
+| Запросы и BSL-код | `execute_query`, `validate_query`, `execute_code`, `get_bsl_syntax_help` | 4 |
+| Чтение метаданных | `get_metadata`, `get_metadata_structure`, `get_metadata_tree`, `list_metadata_objects` | 4 |
+| Чтение форм | `get_form_structure` | 1 |
+| Поиск по коду конфигурации | `search_code` | 1 |
+| CRUD объектов | `create_object`, `update_object`, `post_document`, `mark_for_deletion` | 4 |
+| Навигационные ссылки | `get_link_of_object`, `get_object_by_link` | 2 |
+| Анализ зависимостей | `find_references_to_object` | 1 |
+| Безопасность и аудит | `get_access_rights`, `get_event_log` | 2 |
+
+> **Состав = 19** (live tools/list). `submit_for_deanonymization` фигурирует в некоторых сборках расширения, но в **текущей боевой сборке (`transport`) его НЕТ** — не закладываться на него. Полная боевая `.cfe` весит ~70 KB; копия `external/1c_mcp/build/MCP_Сервер.cfe` (~41 KB) **устарела** и отдаёт лишь 2 инструмента — для восстановления её НЕ использовать (см. Диагностику).
 
 ## Триггеры
 
@@ -38,9 +40,11 @@ MCP-сервер для работы с базой 1С:Предприятие ч
 ## Архитектура
 
 ```
-Claude Code ──MCP stdio──► Python entrypoint ──HTTP Basic──► IIS /hs/mcp/rpc ──► База 1С (TestDB)
-                           mcp_entrypoint.py                  расширение MCP_Сервер
+Claude Code ──MCP stdio──► Python launcher ──HTTP Basic──► веб-сервер (Apache/IIS) /<база>/hs/mcp/rpc ──► База 1С
+                           mcp_1c_stdio_launcher.py          расширение MCP_Сервер
 ```
+
+> Боевой инстанс смотрит на публикацию `transport` через **Apache** (`C:\Apache24`, см. `httpd.conf` → `Alias "/transport"` + `default.vrd`). Health-эндпоинт: `GET http://localhost/transport/hs/mcp/health` → `{"status":"ok"}`.
 
 - Python-процесс стартует Claude Code как stdio MCP-server
 - Каждый tool-call оборачивается в HTTP-запрос к публикации 1С (`MCP_ONEC_URL`)
@@ -56,19 +60,24 @@ Claude Code ──MCP stdio──► Python entrypoint ──HTTP Basic──►
 
 ```json
 "1c-mcp-crud": {
-  "command": "D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\venv\\Scripts\\python.exe",
-  "args": ["D:\\1C-Enterprise_Framework\\src\\external\\1c_mcp\\mcp_entrypoint.py"],
+  "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+  "args": ["C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"],
+  "cwd": "C:\\1С-Framework\\external\\1c_mcp",
   "env": {
+    "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
     "PYTHONIOENCODING": "utf-8",
-    "MCP_ONEC_URL": "http://localhost/TestDB",
-    "MCP_ONEC_USERNAME": "<user>",
+    "MCP_ONEC_URL": "http://localhost/transport",
+    "MCP_ONEC_SERVICE_ROOT": "mcp",
+    "MCP_ONEC_USERNAME": "<user>@sodru.com",
     "MCP_ONEC_PASSWORD": "<password>"
   },
   "timeout": 60000
 }
 ```
 
-В проекте дополнительно настроены экземпляры под другие базы: `1c-mcp-crud-infeeda`, `1c-mcp-crud-dev39144`, `1c-mcp-crud-daily` — отличаются `MCP_ONEC_URL`.
+- Entrypoint — **`scripts/mcp_1c_stdio_launcher.py`** (шим: parent-repo `src/` коллидирует с `external/1c_mcp/src/`; launcher делает `chdir` + `sys.path.insert` к сабмодулю). НЕ `mcp_entrypoint.py`.
+- Домен логина — **`@sodru.com`** (НЕ `@sodrugestvo.ru`/`@sodrugestvo.by`; у разных пользователей базы домены различаются — см. [[feedback-1c-mcp-crud-login-domain]]).
+- Прямой вызов сервиса в обход незарегистрированного MCP — его же клиентом `external/1c_mcp/src/py_server/onec_client.py` (`OneCClient` → Basic-auth → JSON-RPC `tools/call`/`tools/list`/`GET /health`).
 
 ## Точные параметры API (общие c унаследованным toolkit)
 
@@ -142,15 +151,15 @@ Claude Code ──MCP stdio──► Python entrypoint ──HTTP Basic──►
 {"metadata_object": "Справочник.гкс_ГруппыТС"}
 ```
 
-Возвращает список ролей и их прав на объект — Чтение/Изменение/Просмотр и т.д.
+Возвращает права по ролям на объект — Чтение/Добавление/Изменение/Удаление/Просмотр и т.д. С параметром `user_name` — эффективные права конкретного пользователя (а не список ролей): `{"metadata_object": "Справочник.Пользователи", "user_name": "o.karankevich@sodru.com"}`.
 
 ### `get_event_log`
 
 ```json
-{"count": 20}
+{"limit": 50, "levels": "Error,Warning"}
 ```
 
-Дополнительные параметры: `start_date`, `end_date`, `level` (Information/Error/Warning).
+Параметры (live-схема): `limit` (default 50), `levels` (CSV: `Information,Warning,Error,Note`), `start_date`/`end_date` (ISO 8601, по умолчанию — последний час), `events` (CSV имён событий), `user` (CSV), `metadata_type` (FQN-фильтр). **NB:** параметр называется `limit`/`levels` (НЕ `count`/`level`).
 
 ## Типичные цепочки вызовов
 
@@ -199,7 +208,8 @@ Claude Code ──MCP stdio──► Python entrypoint ──HTTP Basic──►
 |----------|---------|---------|
 | MCP-сервер не стартует | Питон-venv в `MCP_ONEC_*` нет / битый путь | Проверить `command`/`args` в `.mcp.json` |
 | 401/403 от IIS | Неверный `MCP_ONEC_USERNAME` / `MCP_ONEC_PASSWORD` | Обновить env в `.mcp.json` |
-| 404 на `/hs/mcp/rpc` | Не опубликована конфигурация на IIS, либо нет расширения `MCP_Сервер` | Опубликовать через `webinst.exe`, проверить расширение |
+| 404 на `/hs/mcp/rpc` | Не опубликована конфигурация на веб-сервере, либо нет расширения `MCP_Сервер` | Опубликовать через `webinst.exe`/`vrd`, проверить расширение |
+| **`500` на ВСЕХ эндпоинтах (вкл. `/health`)**, тело пустое, в Apache `error.log` ничего | Расширение `MCP_Сервер` есть в базе, но его конфигурация **не применена к БД** (правки в Конфигураторе без «Обновить конфигурацию БД»). Сервер `1c-mcp-crud` из-за этого = `failed`. **NB:** `401`=логин/пароль, `500`=сам сервис | `1cv8 DESIGNER /S "<srv>\<ib>" /N <admin> /P <pwd> /LoadCfg "<MCP_Сервер.cfe>" -Extension "MCP_Сервер"` → `/UpdateDBCfg -Extension "MCP_Сервер"` → `/mcp reconnect`. Полную 19-tool `.cfe` брать из `DumpCfg -Extension` самой базы (build-копия устарела). Нужна учётка с правами конфигурирования (ПолныеПрава). Детали — память [[reference-1c-mcp-crud-extension-restore]] |
 | Таймаут `execute_query` | Тяжёлый запрос | `ПЕРВЫЕ N`, оптимизация запроса, рост `timeout` в `.mcp.json` |
 | Кракозябры в ответах | cp1251 stdout на Windows | `PYTHONIOENCODING=utf-8` в `env` (включено по умолчанию) |
 | `object_description must contain '_objectRef'` | Неправильный формат для `get_link_of_object` / `find_references_to_object` | Обернуть в `{_objectRef: true, УникальныйИдентификатор: "uuid", ТипОбъекта: "..."}` |
