@@ -29,6 +29,64 @@ if os.environ.get("MEMORY_TEST_ISOLATION_DISABLE") != "1":
     os.environ["CLAUDE_CACHE_DIR"] = str(_mem_iso_cache)
     os.environ["LINK_REGISTRY_PATH"] = str(_mem_iso_root / "link_registry.db")
 
+
+# =============================================================================
+# Pipeline-state pollution guard (order-flake defense, 2026-06-18)
+# =============================================================================
+# pipeline_state пишет 1С-реестр / CURRENT / generic-состояния под РЕАЛЬНЫЙ
+# репозиторный `pipeline/` через module-level path-константы (НЕ env-настраиваемые,
+# в отличие от memory-синков выше). Тест, дотянувшийся до реального init_task/
+# register_1c (напр. неполный sys.modules-мок, при котором `from shared import
+# pipeline_state` резолвится из кэша — order-флейк, починенный в
+# test_pipeline_1c_bridge), молча портит `pipeline/_1c_index.json` / `CURRENT`,
+# а падает потом СОСЕДНИЙ тест — флейково и с неверной атрибуцией.
+#
+# Этот autouse-гард снимает снимок указанных файлов до теста и РОНЯЕТ сам
+# тест-полютер, если они изменились — детерминированно, в ЛЮБОМ порядке, с
+# кэшером или без. Детекция (а не tmp-изоляция) выбрана намеренно: пишущий в
+# репо тест должен всплыть как падение и быть починен, а не «пройти», записав в
+# tmp. Снимок восстанавливается, чтобы утечка не каскадила и не пачкала дерево.
+# Opt-out: PIPELINE_POLLUTION_GUARD_DISABLE=1.
+_PIPELINE_DIR = Path(__file__).resolve().parents[1] / "pipeline"
+_PIPELINE_GUARD_TARGETS = (_PIPELINE_DIR / "_1c_index.json", _PIPELINE_DIR / "CURRENT")
+
+
+@pytest.fixture(autouse=True)
+def _pipeline_state_pollution_guard():
+    if os.environ.get("PIPELINE_POLLUTION_GUARD_DISABLE") == "1":
+        yield
+        return
+
+    def _snap() -> dict:
+        out: dict = {}
+        for t in _PIPELINE_GUARD_TARGETS:
+            try:
+                out[t] = t.read_bytes() if t.exists() else None
+            except OSError:
+                out[t] = None
+        return out
+
+    before = _snap()
+    yield
+    after = _snap()
+    polluted = [t.name for t in _PIPELINE_GUARD_TARGETS if before.get(t) != after.get(t)]
+    # best-effort restore — утечка не должна каскадить в следующий тест / рабочее дерево
+    for t in _PIPELINE_GUARD_TARGETS:
+        if before.get(t) != after.get(t):
+            try:
+                if before.get(t) is None:
+                    t.unlink(missing_ok=True)
+                else:
+                    t.write_bytes(before[t])
+            except OSError:
+                pass
+    assert not polluted, (
+        f"Тест записал в РЕАЛЬНЫЙ pipeline/ ({', '.join(polluted)}) — нужна изоляция "
+        "(tmp PIPELINE_DIR/REGISTRY_PTR/CURRENT либо force-fail импорта shared.pipeline_state). "
+        "Снимок восстановлен."
+    )
+
+
 # =============================================================================
 # Basic Fixtures
 # =============================================================================

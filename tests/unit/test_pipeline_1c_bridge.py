@@ -81,6 +81,23 @@ def test_best_effort_never_raises(monkeypatch):
     assert bridge.ensure_pipeline_1c("/analyze-1c-task GKSTCPLK-1 x", "analyze-1c-task") is None
 
 
+def test_force_shared_failure_evicts_cached_submodule(monkeypatch):
+    """Регресс-гард на изоляцию `_force_shared_import_failure` (root-cause order-флейка).
+
+    Воспроизводим «кэшер» ПРЯМО в тесте: кладём `shared.pipeline_state` в sys.modules ДО мока
+    (как сделал бы сосед/хук через `from shared import pipeline_state`). Инвариант фикса — helper
+    ОБЯЗАН выселить подмодуль, иначе `from shared import pipeline_state` резолвится ИЗ КЭША и
+    best-effort функции уходят в РЕАЛЬНЫЙ pipeline_state (полютер CURRENT/реестра). Тест экспонирует
+    worst-case КАЖДЫЙ прогон — без зависимости от порядка тестов и наличия естественного кэшера
+    («а если кешера не будет»). Откатят `delitem` — этот тест красный ВСЕГДА, а не флейково.
+    """
+    monkeypatch.setitem(sys.modules, "shared.pipeline_state", types.ModuleType("shared.pipeline_state"))
+    _force_shared_import_failure(monkeypatch)
+    assert "shared.pipeline_state" not in sys.modules  # выселен → import не резолвится из кэша
+    # сквозной best-effort контракт держится даже при предзаполненном кэше:
+    assert bridge.ensure_pipeline_1c("/analyze-1c-task GKSTCPLK-1 x", "analyze-1c-task") is None
+
+
 # --- F-1.5: advance_for_artifact (collision-immune; live-движение этапов — в 04-testing DoD) ---
 
 
