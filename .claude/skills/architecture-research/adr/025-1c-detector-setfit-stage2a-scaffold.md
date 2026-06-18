@@ -26,6 +26,14 @@ CV + калибровка порога → `models/onec-setfit/{st,head.pkl,meta
 Контрастный fine-tune тела (полный SetFit) + `multilingual-e5-small` апгрейд — опциональные следующие
 шаги. Активация: `ONEC_SETFIT_ENABLE=1` (по умолчанию OFF; порог из `meta.json`).
 
+**Warm-serve (deployment, 2026-06-18):** in-process загрузка модели в UPS-хуке = **~6с/промпт** (свежий
+процесс на каждый промпт; > 5с-таймаут хука → совет теряется → in-process нежизнеспособен в проде).
+Решение: [`scripts/onec_setfit_serve.py`](../../../../scripts/onec_setfit_serve.py) — **CPU-сервис** (stdlib
+`http.server`, **0 VRAM**, модель в памяти одного долгоживущего процесса, **idle-shutdown** 30мин → 0
+ресурсов в простое); гейт (`_serve_prob`) зовёт его по HTTP с **авто-стартом detached** (cooldown-lock).
+Замер: **6040мс → ~25мс** (240×), в рамках таймаута хука. `model=`-инъекция (тесты) остаётся in-process.
+Включение «по-настоящему» = `ONEC_SETFIT_ENABLE=1` + warm-serve (авто-стартуется). [exp]
+
 ## Контекст
 Семантический слой ② детектора 1С (`route_1c_task`, неуверенные входы confidence<0.7) сейчас — TF-IDF
 (`onec_semantic_fallback.semantic_sim`, ПРИНЯТ #3 stage-2a). Его потолок: bag-of-words не различает

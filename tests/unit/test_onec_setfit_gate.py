@@ -10,11 +10,14 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
+os.environ.setdefault("ONEC_SETFIT_NO_AUTOSTART", "1")  # тесты не спавнят warm-serve-процесс
 
 _ROOT = Path(__file__).resolve().parents[2]
 _GATE = _ROOT / ".claude" / "hooks" / "shared" / "onec_setfit_gate.py"
@@ -73,6 +76,22 @@ def test_enabled_model_raises_is_graceful(monkeypatch):
     # модель кидает → best-effort None, не исключение
     monkeypatch.setenv("ONEC_SETFIT_ENABLE", "1")
     assert gate.setfit_prob("любой текст", model=_BoomModel()) is None
+
+
+def test_serve_prob_no_model_none(monkeypatch, tmp_path):
+    # warm-serve путь (model=None): модели на диске нет → None без HTTP/спавна
+    monkeypatch.setenv("ONEC_SETFIT_ENABLE", "1")
+    monkeypatch.setenv("ONEC_SETFIT_MODEL_DIR", str(tmp_path / "none"))
+    assert gate.setfit_prob("доработать проведение") is None
+
+
+def test_serve_prob_service_down_graceful(monkeypatch):
+    # модель «есть», но warm-serve не поднят (порт-заглушка) → ConnectionRefused → None (graceful, не кидает)
+    monkeypatch.setenv("ONEC_SETFIT_ENABLE", "1")
+    monkeypatch.setenv("ONEC_SETFIT_NO_AUTOSTART", "1")
+    monkeypatch.setenv("ONEC_SETFIT_PORT", "1")  # заведомо недоступный порт
+    monkeypatch.setattr(gate, "_model_present", lambda: True)
+    assert gate.setfit_prob("доработать проведение") is None
 
 
 # --- извлечение вероятности позитивного класса ---

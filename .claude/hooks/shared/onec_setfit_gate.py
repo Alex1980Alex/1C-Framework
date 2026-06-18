@@ -152,19 +152,78 @@ def _positive_prob(proba) -> float | None:
     return vals[-1]  # метки [0,1] → последний столбец = P(is_1c)
 
 
-def setfit_prob(text: str, model=None) -> float | None:
-    """Вероятность того, что text — 1С-задача, по SetFit-гейту. None = гейт спит/ошибка (→ TF-IDF).
+_HTTP_TIMEOUT = float(os.environ.get("ONEC_SETFIT_HTTP_TIMEOUT", "2.0"))
 
-    best-effort: НИКОГДА не кидает. `model` (опц.) — внедрить модель в обход кэша/файла (для тестов).
+
+def _port() -> int:
+    try:
+        return int(os.environ.get("ONEC_SETFIT_PORT", "8077"))
+    except (TypeError, ValueError):
+        return 8077
+
+
+def _serve_prob(text: str) -> float | None:
+    """Вероятность через warm-serve (HTTP). None при нет-модели / сервис недоступен → caller на TF-IDF.
+
+    Сервис не поднят (ConnectionRefused) → авто-старт detached (прогрев ~6с) + None этот раз; следующие
+    промпты идут в прогретый сервис (~6мс). См. scripts/onec_setfit_serve.py.
+    """
+    if not _model_present():
+        return None
+    import json as _json
+    import urllib.request
+
+    try:
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{_port()}/predict",
+            data=_json.dumps({"text": text or ""}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as r:
+            return float(_json.loads(r.read().decode("utf-8"))["prob"])
+    except Exception:
+        _maybe_autostart()
+        return None
+
+
+def _maybe_autostart() -> None:
+    """Поднять warm-serve detached (best-effort). Cooldown-lock против спам-спавна на прогреве."""
+    if os.environ.get("ONEC_SETFIT_NO_AUTOSTART") == "1":
+        return
+    try:
+        import subprocess
+        import time
+
+        lock = model_dir() / ".serve-spawn.lock"
+        now = time.time()
+        if lock.exists() and (now - lock.stat().st_mtime) < 60:
+            return  # недавно стартовали — ждём прогрев, не плодим процессы
+        lock.write_text(str(now), encoding="utf-8")
+        serve = PROJECT_ROOT / "scripts" / "onec_setfit_serve.py"
+        flags = 0
+        if sys.platform == "win32":
+            flags = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        subprocess.Popen(
+            [sys.executable, str(serve)],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=flags, close_fds=True,
+        )
+    except Exception:
+        pass
+
+
+def setfit_prob(text: str, model=None) -> float | None:
+    """Вероятность того, что text — 1С-задача. None = гейт спит/нет модели/ошибка (→ TF-IDF).
+
+    best-effort, НИКОГДА не кидает. `model` (опц.) — прямая инъекция (тесты) → in-process predict.
+    Иначе — warm-serve по HTTP (модель в долгоживущем процессе, ~6мс; в отличие от ~6с in-process
+    в свежем процессе хука). Сервис не поднят → авто-старт + None этот раз (TF-IDF).
     """
     if not is_enabled():
         return None
     try:
-        m = model if model is not None else _load_model()
-        if m is None:
-            return None
-        proba = m.predict_proba([text or ""])
-        return _positive_prob(proba)
+        if model is not None:  # инъекция (тесты) — in-process predict
+            return _positive_prob(model.predict_proba([text or ""]))
+        return _serve_prob(text)
     except Exception:
         return None
 
