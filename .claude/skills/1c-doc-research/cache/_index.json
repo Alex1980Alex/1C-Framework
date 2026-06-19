@@ -2,6 +2,27 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "1c-config-source-export-for-study": {
+      "title": "Изучение исходного кода конфигураций 1С (УТ/ERP/типовые) — выгрузка в файлы: DumpConfigToFiles / ibcmd / EDT / gitsync; формат Конфигуратор vs EDT; схема для Claude (EDT-MCP для рабочей + дамп-в-файлы + bsl-semantic-search для референса)",
+      "file": "1c-config-source-export-for-study.md",
+      "created": "2026-06-19",
+      "last_verified": "2026-06-19",
+      "keywords": [
+        "DumpConfigToFiles",
+        "выгрузка конфигурации в файлы",
+        "ibcmd",
+        "EDT экспорт",
+        "ring",
+        "gitsync",
+        "GitConverter",
+        "1CFilesConverter",
+        "исходники модулей",
+        "ObjectModule.bsl",
+        "изучение типовой конфигурации",
+        "чтение кода УТ",
+        "референс конфигурация"
+      ]
+    },
     "vygruzit-zhurnal-registracii-limit": {
       "title": "ВыгрузитьЖурналРегистрации: у ТЗ-перегрузки НЕТ параметра-лимита (3-й параметр = КолонкиВыборки); лимит только обрезкой BSL-цикла; колонка уровня = Уровень",
       "file": "vygruzit-zhurnal-registracii-limit.md",
