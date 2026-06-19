@@ -270,5 +270,7 @@ def format_staged_python(
             capture_output=True,
             cwd=project_root,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except (subprocess.TimeoutExpired, OSError, ValueError):
+        # Never block the auto-commit on a formatting hiccup (ruff missing,
+        # timeout, bad args). CI's pre-commit job remains the backstop.
         pass
