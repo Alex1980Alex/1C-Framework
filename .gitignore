@@ -154,3 +154,6 @@ models/onec-setfit/
 
 # diagnostic scratch
 .tmp_onec/
+
+# 1C reference configs (UT/ERP DumpConfigToFiles for read-only study; bodies not tracked)
+external/1c-reference-src/
