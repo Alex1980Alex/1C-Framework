@@ -166,6 +166,12 @@ def _auto_commit(files: list[str]) -> dict:
         if staged == 0:
             return {"success": False, "error": "git add failed"}
 
+        # ruff-format staged .py so auto-commits stay CI-clean (this path
+        # bypasses pre-commit). Best-effort, never blocks.
+        from shared.auto_save_core import format_staged_python
+
+        format_staged_python(str(PROJECT_ROOT), staged_files)
+
         # Commit (amend-absorb 2026-06-12: незапушенный auto-commit HEAD
         # того же prefix поглощается --amend; гейты в auto_save_core)
         from shared.auto_save_core import (

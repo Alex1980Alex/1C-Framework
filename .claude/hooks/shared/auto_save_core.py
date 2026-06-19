@@ -17,9 +17,24 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from collections.abc import Iterable
 
 DEFAULT_MAX_DISPLAY = 3
+
+# Mirror of .pre-commit-config.yaml top-level `exclude:` for the .py-relevant
+# trees — ruff-format must leave vendored / generated code alone (those carry
+# their own lint configs).
+_RUFF_SKIP_PREFIXES = (
+    "tools/",
+    "infra/",
+    "external/",
+    "cache/",
+    "src/bsl/",
+    "jre/",
+    ".serena/",
+    ".vscode-extensions/",
+)
 
 
 def format_commit_message(
@@ -176,3 +191,84 @@ def merge_for_message(head_files: Iterable[str], new_files: Iterable[str]) -> li
         seen.add(key)
         out.append(f)
     return out
+
+
+def _python_exe(project_root: str) -> str:
+    """Return the project's .venv python (where ruff lives), or fall back to
+    the interpreter running the hook."""
+    for rel in (
+        os.path.join(".venv", "Scripts", "python.exe"),
+        os.path.join(".venv", "bin", "python"),
+    ):
+        cand = os.path.join(project_root, rel)
+        if os.path.isfile(cand):
+            return cand
+    return sys.executable
+
+
+def _ruff_line_length(project_root: str, default: int = 100) -> int:
+    """Read ``[tool.ruff] line-length`` from pyproject.toml (default 100).
+
+    Passed to ruff explicitly: a bare ``ruff format <file>`` does not reliably
+    pick up the formatter line-length here, while ``--line-length N`` is
+    verified-equivalent to the pre-commit ruff-format hook that CI runs.
+    """
+    try:
+        import tomllib
+
+        with open(os.path.join(project_root, "pyproject.toml"), "rb") as fh:
+            data = tomllib.load(fh)
+        value = data.get("tool", {}).get("ruff", {}).get("line-length")
+        return int(value) if value else default
+    except (OSError, ValueError, TypeError, KeyError, ImportError):
+        return default
+
+
+def format_staged_python(
+    project_root: str,
+    files: Iterable[str],
+    timeout: int = 20,
+) -> None:
+    """Ruff-format the .py files about to be auto-committed, then re-stage them.
+
+    Auto-commit bypasses pre-commit (``--no-verify`` / custom core.hooksPath),
+    so unformatted .py would otherwise land in the repo and turn CI's pre-commit
+    job red (memory ``project-ci-precommit-red-autocommit-noverify``). Running
+    ruff-format here with the repo line-length keeps every auto-commit CI-clean.
+
+    Best-effort: any failure (ruff missing, timeout) is swallowed — never raises
+    and never blocks the commit. Vendored / generated trees are skipped to mirror
+    the pre-commit top-level exclude.
+    """
+    root_norm = project_root.replace("\\", "/").rstrip("/")
+    py: list[str] = []
+    for f in files:
+        norm = f.replace("\\", "/")
+        if not norm.lower().endswith(".py"):
+            continue
+        rel = norm[len(root_norm) + 1 :] if norm.startswith(root_norm + "/") else norm
+        if any(rel.startswith(p) for p in _RUFF_SKIP_PREFIXES):
+            continue
+        py.append(f)
+    if not py:
+        return
+    cmd = [
+        _python_exe(project_root),
+        "-m",
+        "ruff",
+        "format",
+        "--line-length",
+        str(_ruff_line_length(project_root)),
+        "--",
+        *py,
+    ]
+    try:
+        subprocess.run(cmd, timeout=timeout, capture_output=True, cwd=project_root)
+        subprocess.run(
+            ["git", "add", "--", *py],
+            timeout=10,
+            capture_output=True,
+            cwd=project_root,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        pass

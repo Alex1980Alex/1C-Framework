@@ -127,6 +127,21 @@ auto-save коммит **того же prefix'а**, новый auto-save вып�
 (legacy/смешанные prefix'ы): `git reset --soft <последний-запушенный>` → один
 осмысленный коммит. Регресс: [tests/unit/test_auto_save_amend.py](../../../tests/unit/test_auto_save_amend.py) (7 тестов, throwaway-репо).
 
+### 1.6 Ruff-format перед коммитом (2026-06-19)
+
+Все три коммит-пути перед коммитом вызывают `auto_save_core.format_staged_python(project_root, files)`:
+ruff-format'ит **staged .py** под `[tool.ruff] line-length` из pyproject (затем `git add` заново).
+Зачем: auto-commit идёт `--no-verify` (или через кастомный `core.hooksPath`), в обход pre-commit,
+поэтому неотформатированный .py раньше попадал в `master` и красил CI-джоб **Pre-commit Hooks**
+(см. [[project-ci-precommit-red-autocommit-noverify]]). Теперь auto-commit'ы CI-clean.
+
+- **Эквивалентность CI:** `ruff format --line-length N` проверенно совпадает с pre-commit ruff-format
+  (голый `ruff format <file>` line-length не подхватывает — поэтому `--line-length` передаётся явно;
+  значение читается из pyproject, fallback 100). Python берётся из `.venv` (`_python_exe`).
+- **Best-effort:** любой сбой (нет ruff, timeout) проглатывается — коммит НЕ блокируется.
+- **Exclude:** vendored/generated деревья (`tools/`, `external/`, `infra/`, `src/bsl/` …) пропускаются —
+  зеркало top-level `exclude:` в `.pre-commit-config.yaml`.
+
 ### 2. Zombie Task Prevention
 
 `sync_pending_tasks_with_git()` вызывается на **каждый** PostToolUse. Проверяет:

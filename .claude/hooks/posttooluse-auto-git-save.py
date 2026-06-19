@@ -114,6 +114,11 @@ def _git_commit(files: list[str]) -> bool:
                 timeout=10,
                 cwd=project_dir,
             )
+        # Keep auto-commits CI-clean: ruff-format staged .py before committing
+        # (this path uses --no-verify, bypassing pre-commit). Best-effort.
+        from shared.auto_save_core import format_staged_python
+
+        format_staged_python(project_dir, files)
         # Count staged changes
         result = subprocess.run(
             ["git", "diff", "--cached", "--stat"],

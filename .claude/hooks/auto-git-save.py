@@ -365,6 +365,12 @@ def perform_sync_commit(
             log.warning("step2: TIMEOUT git add batch")
             return {"success": False, "error": "git add timeout"}
 
+        # Step 2.4: ruff-format staged .py so threshold auto-commits stay
+        # CI-clean (this path bypasses pre-commit). Best-effort, never blocks.
+        from shared.auto_save_core import format_staged_python
+
+        format_staged_python(str(PROJECT_ROOT), modified_files)
+
         # Step 2.5: GUARD — block auto-commit when .claude/settings.json shrinks
         # substantially. Prevents regressions like commit 910a3a1f (2026-03-20)
         # where auto-save silently dropped 127 lines from PostToolUse section.
