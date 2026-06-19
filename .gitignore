@@ -157,3 +157,6 @@ models/onec-setfit/
 
 # 1C reference configs (UT/ERP DumpConfigToFiles for read-only study; bodies not tracked)
 external/1c-reference-src/
+
+# stray subagent/format-probe scratch
+_tmp_fmt_check/
