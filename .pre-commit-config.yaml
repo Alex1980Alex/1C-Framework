@@ -55,12 +55,31 @@ repos:
     hooks:
       - id: trailing-whitespace
         name: Trim Trailing Whitespace
-        # settings.json is rewritten by the auto-save hook (no trailing newline)
-        # → would re-break every CI run; gitleaks still scans it (global).
-        exclude: ^\.claude/settings(\.local)?\.json$
+        # Machine-generated / auto-rewritten files lack a trailing newline and are
+        # re-written without one on every auto-commit → perpetual CI churn. Exclude
+        # from whitespace/eof hooks only; gitleaks + check-json still scan them.
+        # - .claude/settings*.json   rewritten by auto-save hook
+        # - pipeline/                pipeline_state.py state JSON + scratch artifacts
+        # - docs/wiki/log.md, drafts auto-appended by wiki hooks
+        # - .mcp.json.example        generated mirror of .mcp.json
+        exclude: |
+          (?x)^(
+            \.claude/settings(\.local)?\.json|
+            pipeline/.*|
+            docs/wiki/log\.md|
+            docs/wiki/drafts/.*|
+            \.mcp\.json\.example
+          )$
       - id: end-of-file-fixer
         name: Fix End of Files
-        exclude: ^\.claude/settings(\.local)?\.json$
+        exclude: |
+          (?x)^(
+            \.claude/settings(\.local)?\.json|
+            pipeline/.*|
+            docs/wiki/log\.md|
+            docs/wiki/drafts/.*|
+            \.mcp\.json\.example
+          )$
       - id: check-yaml
         name: Check YAML
         args: ['--unsafe']
