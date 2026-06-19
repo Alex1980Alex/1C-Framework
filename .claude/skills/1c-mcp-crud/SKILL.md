@@ -161,6 +161,8 @@ Claude Code ──MCP stdio──► Python launcher ──HTTP Basic──► �
 
 Параметры (live-схема): `limit` (default 50), `levels` (CSV: `Information,Warning,Error,Note`), `start_date`/`end_date` (ISO 8601, по умолчанию — последний час), `events` (CSV имён событий), `user` (CSV), `metadata_type` (FQN-фильтр). **NB:** параметр называется `limit`/`levels` (НЕ `count`/`level`).
 
+> **Семантика лимитирования (важно при правке обработчика расширения).** В обработчике `ПолучитьЖурналРегистрации` журнал выгружается в `ТаблицаЗначений`, а у этой перегрузки `ВыгрузитьЖурналРегистрации(ТЗ, Отбор, КолонкиВыборки)` **параметра-количества НЕТ** (3-й позиционный = «КолонкиВыборки»; число молча игнорируется, строка → «Неправильное имя колонки»). Поэтому `limit` каплится **обрезкой BSL-цикла** (`Если Записи.Количество() >= Лимит Тогда Прервать`) + сортировкой `ТаблицаЖурнала.Сортировать("Дата Убыв")` (самые свежие N). Колонка уровня — `Уровень` (НЕ `УровеньЖурналаРегистрации`). Раньше инструмент был сломан (всегда `count:0` — отсутствовал `Записи.Добавить`; `limit` не работал) — **исправлено и развёрнуто 2026-06-19** (`MCP_Сервер_FIXED2.cfe`). Полный разбор + рецепт правки `.cfe` — cache [`vygruzit-zhurnal-registracii-limit`](../1c-doc-research/cache/vygruzit-zhurnal-registracii-limit.md).
+
 ## Типичные цепочки вызовов
 
 ### Получить данные объекта по коду
@@ -218,7 +220,8 @@ Claude Code ──MCP stdio──► Python launcher ──HTTP Basic──► �
 
 ## Ссылки
 
-- Регистрация в `.mcp.json` — [строки 1c-mcp-crud / 1c-mcp-crud-infeeda / 1c-mcp-crud-dev39144 / 1c-mcp-crud-daily](../../../.mcp.json)
+- Регистрация в `.mcp.json` — [строки 1c-mcp-crud / **1c-mcp-crud-erp** / 1c-mcp-crud-infeeda / 1c-mcp-crud-dev39144 / 1c-mcp-crud-daily](../../../.mcp.json)
+  - **Профиль `1c-mcp-crud-erp`** — те же 19 инструментов, но другая база: `MCP_ONEC_URL=http://localhost/erp` → **серверная** база `Srvr=DESKTOP-TNU600C;Ref=Enterprise20_2_5_27_52` (УправлениеПредприятием 2.5.27.52), публикация через **Apache** (`C:\Apache24\htdocs\erp\default.vrd`), tool-prefix `mcp__1c-mcp-crud-erp__*`. Методика API идентична. Деплой/правка расширения этой базы — память [[project-1c-mcp-erp-extension]]
 - Подсистема памяти и токен-экономии — `mcp__memory-orchestrator__*`
 - Тестирование через VA BDD — skill `va-bdd-testing`, использует `1c-mcp-crud` как источник проверок (Stage 4a)
 - Анализ задачи — skill `analyze-1c-task-v2` (использует `1c-mcp-crud` для проверки реквизитов и валидации запросов)
