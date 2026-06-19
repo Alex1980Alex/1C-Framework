@@ -50,7 +50,9 @@ def _ms_between(a_ts: str | None, b_ts: str | None) -> int | None:
     if not a_ts or not b_ts:
         return None
     try:
-        return int((datetime.fromisoformat(b_ts) - datetime.fromisoformat(a_ts)).total_seconds() * 1000)
+        return int(
+            (datetime.fromisoformat(b_ts) - datetime.fromisoformat(a_ts)).total_seconds() * 1000
+        )
     except (ValueError, TypeError):
         return None
 
@@ -106,8 +108,13 @@ def _aggregate_mcp(rows: list[dict]) -> dict:
         calls = max(len(pres), len(posts))  # Pre и Post одного вызова не двоятся
         errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
         ms, paired = _pair_durations(pres, posts)
-        out[tool] = {"calls": calls, "errors": errors, "ms": ms,
-                     "paired": paired, "latency_real": paired > 0}
+        out[tool] = {
+            "calls": calls,
+            "errors": errors,
+            "ms": ms,
+            "paired": paired,
+            "latency_real": paired > 0,
+        }
     return out
 
 
@@ -182,38 +189,88 @@ def aggregate(run_id: str | None = None, session: str | None = None, log: Path =
 # Категории инструментов → artifact/этап + обязательность (петли задачи 1С).
 # (key, заголовок, artifact/этап, обязательная-петля, саммари-категории)
 _CATEGORIES = [
-    ("memory", "Память (recall/capture)", "сквозной — все этапы", True,
-     "Поиск прошлого опыта (recall) + фиксация переиспользуемых приёмов (capture)."),
-    ("skills", "Скилы (методики 1С)", "сквозной — все этапы", True,
-     "Активация профильных методик на этапах (analyze / implement / va-bdd / code-verify)."),
-    ("config", "Анализ конфигурации 1С", "ANALYSIS-REPORT.md (Планирование/Дизайн)", True,
-     "Метаданные, запросы, чтение кода, семантика, API платформы 8.3.27."),
-    ("research", "Внешний анализ (Infostart+GitHub)", "ANALYSIS-REPORT.md (Планирование/Дизайн)", True,
-     "Веб-исследование доверенных источников (8.3.27 первоисточник + Infostart + GitHub)."),
-    ("impl", "Кодирование", "IMPLEMENTATION-PROGRESS.md", False,
-     "Запись BSL/XML, исполнение/мутация, проверка ошибок, отладка."),
-    ("testing", "Тестирование", ".run-state.json", False,
-     "Прогон тестов (VA BDD / YAxUnit) + pre-check данных."),
-    ("infra", "Инфраструктура (файлы/оркестрация)", "сквозной", False,
-     "Рабочие инструменты: чтение/правка файлов, shell, поиск, субагенты."),
+    (
+        "memory",
+        "Память (recall/capture)",
+        "сквозной — все этапы",
+        True,
+        "Поиск прошлого опыта (recall) + фиксация переиспользуемых приёмов (capture).",
+    ),
+    (
+        "skills",
+        "Скилы (методики 1С)",
+        "сквозной — все этапы",
+        True,
+        "Активация профильных методик на этапах (analyze / implement / va-bdd / code-verify).",
+    ),
+    (
+        "config",
+        "Анализ конфигурации 1С",
+        "ANALYSIS-REPORT.md (Планирование/Дизайн)",
+        True,
+        "Метаданные, запросы, чтение кода, семантика, API платформы 8.3.27.",
+    ),
+    (
+        "research",
+        "Внешний анализ (Infostart+GitHub)",
+        "ANALYSIS-REPORT.md (Планирование/Дизайн)",
+        True,
+        "Веб-исследование доверенных источников (8.3.27 первоисточник + Infostart + GitHub).",
+    ),
+    (
+        "impl",
+        "Кодирование",
+        "IMPLEMENTATION-PROGRESS.md",
+        False,
+        "Запись BSL/XML, исполнение/мутация, проверка ошибок, отладка.",
+    ),
+    (
+        "testing",
+        "Тестирование",
+        ".run-state.json",
+        False,
+        "Прогон тестов (VA BDD / YAxUnit) + pre-check данных.",
+    ),
+    (
+        "infra",
+        "Инфраструктура (файлы/оркестрация)",
+        "сквозной",
+        False,
+        "Рабочие инструменты: чтение/правка файлов, shell, поиск, субагенты.",
+    ),
 ]
 _CATEGORY_SUMMARY = {c[0]: c[4] for c in _CATEGORIES}
 
 # 1c-mcp-crud / edt-mcp: суффиксы WRITE/мутация → кодирование (impl); прочие 1С-операции → анализ (config).
 # Denylist (а не allowlist read-ops): новые read-инструменты автоматически попадают в анализ без правки кода.
 _IMPL_WRITE_OPS = {
-    "execute_code", "create_object", "update_object", "post_document", "mark_for_deletion",
-    "write_module_source", "update_database", "add_metadata_attribute", "delete_metadata_object",
-    "rename_metadata_object", "clean_project", "revalidate_objects", "debug_launch",
+    "execute_code",
+    "create_object",
+    "update_object",
+    "post_document",
+    "mark_for_deletion",
+    "write_module_source",
+    "update_database",
+    "add_metadata_attribute",
+    "delete_metadata_object",
+    "rename_metadata_object",
+    "clean_project",
+    "revalidate_objects",
+    "debug_launch",
 }
 
 # Короткое назначение для частых инструментов (саммари-строка блока).
 _TOOL_SUMMARY = {
-    "Edit": "Точечная правка файла", "Write": "Создание/перезапись файла",
-    "Bash": "Shell (тесты, git, проверки)", "Skill": "Активация методики/скила",
-    "Agent": "Субагент (анализ/ревью/поиск)", "Read": "Чтение файла",
-    "Glob": "Поиск файлов по маске", "Grep": "Поиск по содержимому",
-    "WebSearch": "Веб-поиск (Infostart/GitHub/docs)", "WebFetch": "Загрузка страницы",
+    "Edit": "Точечная правка файла",
+    "Write": "Создание/перезапись файла",
+    "Bash": "Shell (тесты, git, проверки)",
+    "Skill": "Активация методики/скила",
+    "Agent": "Субагент (анализ/ревью/поиск)",
+    "Read": "Чтение файла",
+    "Glob": "Поиск файлов по маске",
+    "Grep": "Поиск по содержимому",
+    "WebSearch": "Веб-поиск (Infostart/GitHub/docs)",
+    "WebFetch": "Загрузка страницы",
     "mcp__memory-orchestrator__unified_search": "recall: федеративный поиск памяти",
     "mcp__vector-memory__search_patterns": "recall: поиск паттернов",
     "mcp__skill-learning__capture_pattern": "capture: фиксация приёма (карантин)",
@@ -235,14 +292,29 @@ def _suffix(tool: str) -> str:
 def classify_tool(tool: str) -> str:
     """Инструмент → категория (memory/skills/config/research/impl/testing/infra)."""
     t = tool or ""
-    if t.startswith(("mcp__memory-orchestrator__", "mcp__vector-memory__", "mcp__skill-learning__", "mcp__memory-ai__")):
+    if t.startswith(
+        (
+            "mcp__memory-orchestrator__",
+            "mcp__vector-memory__",
+            "mcp__skill-learning__",
+            "mcp__memory-ai__",
+        )
+    ):
         return "memory"
     if t == "Skill":
         return "skills"
     if t in ("WebSearch", "WebFetch"):
         return "research"
-    if t.startswith(("mcp__bsl-semantic-search__", "mcp__bsl-platform-context__", "mcp__bsl-code-search__",
-                     "mcp__framework-search__", "mcp__pdf-vector-graph__", "mcp__auto-documenter__")):
+    if t.startswith(
+        (
+            "mcp__bsl-semantic-search__",
+            "mcp__bsl-platform-context__",
+            "mcp__bsl-code-search__",
+            "mcp__framework-search__",
+            "mcp__pdf-vector-graph__",
+            "mcp__auto-documenter__",
+        )
+    ):
         return "config"
     if t.startswith(("mcp__bsl-debugger__", "mcp__1c-debug__", "mcp__1c-debug-hmr__")):
         return "impl"
@@ -305,9 +377,9 @@ def report_md(by_tool: dict, key: str, results: dict | None = None) -> str:
             errp = round(100.0 * a["errors"] / a["calls"], 1) if a["calls"] else 0.0
             res = str(results.get(tool, "—")).strip() or "—"
             if a.get("latency_real") and a.get("paired"):
-                lat = f"{round(a['ms'] / a['paired'])}ms"      # реальная (Pre/Post-пара MCP)
+                lat = f"{round(a['ms'] / a['paired'])}ms"  # реальная (Pre/Post-пара MCP)
             elif a.get("ms"):
-                lat = f"{round(a['ms'] / a['calls'])}ms~"      # overhead хука, НЕ время инструмента
+                lat = f"{round(a['ms'] / a['calls'])}ms~"  # overhead хука, НЕ время инструмента
             else:
                 lat = "n/a"
             sr = round(100.0 * (a["calls"] - a["errors"]) / a["calls"]) if a["calls"] else 0
@@ -345,8 +417,18 @@ def rollup(eff: Path = EFF) -> dict:
     НЕ идут → отчёт не выдаёт overhead за время инструмента. repeats/abandonment (P1) тоже агрегируются."""
     agg: dict[str, dict] = {}
     for r in _iter_events(eff):
-        t = agg.setdefault(r.get("tool"), {"calls": 0, "errors": 0, "ms": 0, "paired": 0,
-                                           "repeats": 0, "abandonment": 0, "latency_real": False})
+        t = agg.setdefault(
+            r.get("tool"),
+            {
+                "calls": 0,
+                "errors": 0,
+                "ms": 0,
+                "paired": 0,
+                "repeats": 0,
+                "abandonment": 0,
+                "latency_real": False,
+            },
+        )
         t["calls"] += r.get("calls", 0)
         t["errors"] += r.get("errors", 0)
         t["repeats"] += int(r.get("repeats") or 0)
@@ -388,7 +470,9 @@ def resolve_task_dir(task_dir: str | None = None, slug: str | None = None) -> Pa
         return ps.state_dir(slug)  # явный slug → его state_dir (папка задачи для 1С)
     try:
         cur = ps.resolve_current()
-        if cur and ps.is_registered(cur):  # авто: только зарегистрированная 1С-задача (публичный предикат)
+        if cur and ps.is_registered(
+            cur
+        ):  # авто: только зарегистрированная 1С-задача (публичный предикат)
             return ps.state_dir(cur)
     except Exception:
         return None
@@ -422,7 +506,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--session")
     ap.add_argument("--task-dir")
     ap.add_argument("--slug", help="slug 1С-задачи → папка из реестра (state_dir); единый источник")
-    ap.add_argument("--results", help="JSON {tool: саммари-результата}; иначе авто <папка>/TOOL-RESULTS.json")
+    ap.add_argument(
+        "--results", help="JSON {tool: саммари-результата}; иначе авто <папка>/TOOL-RESULTS.json"
+    )
     ap.add_argument("--rollup", action="store_true")
     args = ap.parse_args(argv)
 

@@ -32,11 +32,11 @@ GATE_NAME = "1C BSL Way"
 # Clean-as-You-Code: метрика, оператор, error-порог. Всё — new_* (только новый код).
 # rating 1=A,2=B,3=C,4=D,5=E; op GT error=1 → «хуже A проваливает».
 CONDITIONS = [
-    ("new_reliability_rating", "GT", "1"),       # нет новых bugs (рейтинг надёжности = A)
-    ("new_security_rating", "GT", "1"),          # нет новых vulnerabilities (рейтинг безопасности = A)
+    ("new_reliability_rating", "GT", "1"),  # нет новых bugs (рейтинг надёжности = A)
+    ("new_security_rating", "GT", "1"),  # нет новых vulnerabilities (рейтинг безопасности = A)
     ("new_security_hotspots_reviewed", "LT", "100"),  # 100% новых hotspots отревьюено
-    ("new_maintainability_rating", "GT", "1"),   # нет новых code-smell-долгов выше A
-    ("new_duplicated_lines_density", "GT", "3"), # дубли в новом коде ≤ 3%
+    ("new_maintainability_rating", "GT", "1"),  # нет новых code-smell-долгов выше A
+    ("new_duplicated_lines_density", "GT", "3"),  # дубли в новом коде ≤ 3%
     # ОТЛОЖЕНО до Coverage41C (ADR-020 BLOCKED): ("new_coverage", "LT", "60"),
 ]
 
@@ -111,10 +111,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  [skip] условие {metric} уже есть")
             continue
         st, r = _call(
-            args.host, "/api/qualitygates/create_condition", auth,
+            args.host,
+            "/api/qualitygates/create_condition",
+            auth,
             {"gateName": GATE_NAME, "metric": metric, "op": op, "error": err},
         )
-        print(f"  [{'ok' if st in (200, 201) else 'WARN'}] +условие {metric} {op} {err} (status={st})")
+        print(
+            f"  [{'ok' if st in (200, 201) else 'WARN'}] +условие {metric} {op} {err} (status={st})"
+        )
 
     # 2b. убрать deferred-условия (CB CAYC-шаблон сам добавляет new_coverage и т.п.)
     st, show = _call(args.host, "/api/qualitygates/show", auth, {"name": GATE_NAME}, method="GET")
@@ -122,26 +126,41 @@ def main(argv: list[str] | None = None) -> int:
         if c.get("metric") in DEFERRED_METRICS:
             cid = c.get("id")
             dst, _ = _call(args.host, "/api/qualitygates/delete_condition", auth, {"id": cid})
-            print(f"  [{'ok' if dst in (200, 204) else 'WARN'}] -условие {c['metric']} (deferred, status={dst})")
+            print(
+                f"  [{'ok' if dst in (200, 204) else 'WARN'}] -условие {c['metric']} (deferred, status={dst})"
+            )
 
     # 3. проект (создать при отсутствии) + назначить gate
-    _call(args.host, "/api/projects/create", auth,
-          {"project": args.project, "name": args.project})  # best-effort (уже есть → 400)
-    st, _ = _call(args.host, "/api/qualitygates/select", auth,
-                  {"gateName": GATE_NAME, "projectKey": args.project})
+    _call(
+        args.host, "/api/projects/create", auth, {"project": args.project, "name": args.project}
+    )  # best-effort (уже есть → 400)
+    st, _ = _call(
+        args.host,
+        "/api/qualitygates/select",
+        auth,
+        {"gateName": GATE_NAME, "projectKey": args.project},
+    )
     print(f"[{'ok' if st in (200, 204) else 'WARN'}] gate -> проект {args.project} (status={st})")
 
     # 4. new-code = previous_version (Clean-as-You-Code baseline)
-    st, _ = _call(args.host, "/api/new_code_periods/set", auth,
-                  {"type": "previous_version", "project": args.project})
-    print(f"[{'ok' if st in (200, 204) else 'WARN'}] new-code period = previous_version (status={st})")
+    st, _ = _call(
+        args.host,
+        "/api/new_code_periods/set",
+        auth,
+        {"type": "previous_version", "project": args.project},
+    )
+    print(
+        f"[{'ok' if st in (200, 204) else 'WARN'}] new-code period = previous_version (status={st})"
+    )
 
     # 5. опц. default
     if args.set_default:
         st, _ = _call(args.host, "/api/qualitygates/set_as_default", auth, {"name": GATE_NAME})
         print(f"[{'ok' if st in (200, 204) else 'WARN'}] set_as_default (status={st})")
 
-    print(f"\n[DONE] «{GATE_NAME}» применён к {args.project}. Dashboard: {args.host}/dashboard?id={args.project}")
+    print(
+        f"\n[DONE] «{GATE_NAME}» применён к {args.project}. Dashboard: {args.host}/dashboard?id={args.project}"
+    )
     return 0
 
 

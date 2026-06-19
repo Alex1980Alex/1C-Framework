@@ -26,12 +26,20 @@ def _write(p: Path, rows: list[dict]) -> None:
 
 def test_aggregate_by_run_id(tmp_path):
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"tool": "edt", "outcome": "allow", "elapsed_ms": 10, "correlationid": "R1"},
-        {"tool": "edt", "outcome": "allow", "elapsed_ms": 20, "correlationid": "R1"},
-        {"tool": "crud", "outcome": "error", "elapsed_ms": 100, "correlationid": "R1"},
-        {"tool": "edt", "outcome": "allow", "elapsed_ms": 5, "correlationid": "R2"},  # другой run
-    ])
+    _write(
+        log,
+        [
+            {"tool": "edt", "outcome": "allow", "elapsed_ms": 10, "correlationid": "R1"},
+            {"tool": "edt", "outcome": "allow", "elapsed_ms": 20, "correlationid": "R1"},
+            {"tool": "crud", "outcome": "error", "elapsed_ms": 100, "correlationid": "R1"},
+            {
+                "tool": "edt",
+                "outcome": "allow",
+                "elapsed_ms": 5,
+                "correlationid": "R2",
+            },  # другой run
+        ],
+    )
     agg = mod.aggregate(run_id="R1", log=log)
     assert agg["edt"]["calls"] == 2 and agg["edt"]["errors"] == 0 and agg["edt"]["ms"] == 30
     assert agg["crud"]["calls"] == 1 and agg["crud"]["errors"] == 1
@@ -39,10 +47,13 @@ def test_aggregate_by_run_id(tmp_path):
 
 def test_rollup_and_report(tmp_path):
     eff = tmp_path / "eff.jsonl"
-    _write(eff, [
-        {"key": "R1", "tool": "edt", "calls": 2, "errors": 0, "ms": 30},
-        {"key": "R2", "tool": "edt", "calls": 1, "errors": 1, "ms": 5},
-    ])
+    _write(
+        eff,
+        [
+            {"key": "R1", "tool": "edt", "calls": 2, "errors": 0, "ms": 30},
+            {"key": "R2", "tool": "edt", "calls": 1, "errors": 1, "ms": 5},
+        ],
+    )
     agg = mod.rollup(eff=eff)
     assert agg["edt"]["calls"] == 3 and agg["edt"]["errors"] == 1
     md = mod.report_md(agg, "ROLLUP")
@@ -109,7 +120,9 @@ def test_resolve_slug_generic_honored(monkeypatch, tmp_path):
 
 
 def test_resolve_loader_failure_best_effort(monkeypatch):
-    monkeypatch.setattr(mod, "_load_pipeline_state", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        mod, "_load_pipeline_state", lambda: (_ for _ in ()).throw(RuntimeError("boom"))
+    )
     assert mod.resolve_task_dir(slug="x") is None  # сбой загрузки → None, не кидает
     assert mod.resolve_task_dir(task_dir="/explicit") == Path("/explicit")  # override до загрузчика
 
@@ -166,7 +179,10 @@ def test_report_md_grouped():
 
 def test_report_md_results_rendered():
     # курируемый результат показывается под инструментом; отсутствующий → «—»
-    by_tool = {"WebSearch": {"calls": 2, "errors": 0, "ms": 90}, "Edit": {"calls": 1, "errors": 0, "ms": 5}}
+    by_tool = {
+        "WebSearch": {"calls": 2, "errors": 0, "ms": 90},
+        "Edit": {"calls": 1, "errors": 0, "ms": 5},
+    }
     res = {"WebSearch": "Infostart: data-driven печать = канон БСП"}
     md = mod.report_md(by_tool, "T", results=res)
     assert "· результат: Infostart: data-driven печать = канон БСП" in md
@@ -199,37 +215,76 @@ def test_report_md_empty_unchanged():
 
 def test_aggregate_mcp_pre_post_real_latency(tmp_path):
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__edt-mcp__update_database",
-         "ts": "2026-06-17T10:00:00", "tool_call_id": "c1", "correlationid": "R1"},
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__edt-mcp__update_database",
-         "ts": "2026-06-17T10:00:03", "tool_call_id": "c1", "outcome": "allow", "correlationid": "R1"},
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PreToolUse",
+                "tool": "mcp__edt-mcp__update_database",
+                "ts": "2026-06-17T10:00:00",
+                "tool_call_id": "c1",
+                "correlationid": "R1",
+            },
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__edt-mcp__update_database",
+                "ts": "2026-06-17T10:00:03",
+                "tool_call_id": "c1",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__edt-mcp__update_database"]
-    assert a["calls"] == 1                  # Pre+Post одного вызова не двоятся
+    assert a["calls"] == 1  # Pre+Post одного вызова не двоятся
     assert a["latency_real"] is True and a["paired"] == 1
-    assert a["ms"] == 3000                  # реальные 3с (ts(post)−ts(pre)), не overhead хука
+    assert a["ms"] == 3000  # реальные 3с (ts(post)−ts(pre)), не overhead хука
     assert a["errors"] == 0
 
 
 def test_aggregate_mcp_pre_only_no_latency(tmp_path):
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__x__op",
-         "ts": "2026-06-17T10:00:00", "correlationid": "R1"},
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PreToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:00",
+                "correlationid": "R1",
+            },
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
     assert a["calls"] == 1 and a["paired"] == 0 and a["latency_real"] is False and a["ms"] == 0
 
 
 def test_aggregate_mcp_error_from_post(tmp_path):
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__x__op",
-         "ts": "2026-06-17T10:00:00", "correlationid": "R1"},
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op",
-         "ts": "2026-06-17T10:00:01", "outcome": "error", "error": "boom", "correlationid": "R1"},
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PreToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:00",
+                "correlationid": "R1",
+            },
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:01",
+                "outcome": "error",
+                "error": "boom",
+                "correlationid": "R1",
+            },
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
     assert a["errors"] == 1 and a["paired"] == 1 and a["ms"] == 1000
 
@@ -237,14 +292,33 @@ def test_aggregate_mcp_error_from_post(tmp_path):
 def test_aggregate_mcp_no_double_count_with_hook_row(tmp_path):
     # MCP-тул с mcp_call-парой + stray hook-auto-log строкой → hook не двоит calls/ms
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PreToolUse", "tool": "mcp__llm-rotation__llm_complete",
-         "ts": "2026-06-17T10:00:00", "correlationid": "R1"},
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__llm-rotation__llm_complete",
-         "ts": "2026-06-17T10:00:02", "outcome": "allow", "correlationid": "R1"},
-        {"category": "hook", "tool": "mcp__llm-rotation__llm_complete", "elapsed_ms": 20,
-         "outcome": "allow", "correlationid": "R1"},  # наблюдатель-хук — игнор
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PreToolUse",
+                "tool": "mcp__llm-rotation__llm_complete",
+                "ts": "2026-06-17T10:00:00",
+                "correlationid": "R1",
+            },
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__llm-rotation__llm_complete",
+                "ts": "2026-06-17T10:00:02",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },
+            {
+                "category": "hook",
+                "tool": "mcp__llm-rotation__llm_complete",
+                "elapsed_ms": 20,
+                "outcome": "allow",
+                "correlationid": "R1",
+            },  # наблюдатель-хук — игнор
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__llm-rotation__llm_complete"]
     assert a["calls"] == 1 and a["ms"] == 2000 and a["latency_real"] is True
 
@@ -252,23 +326,32 @@ def test_aggregate_mcp_no_double_count_with_hook_row(tmp_path):
 def test_aggregate_non_mcp_overhead_unchanged(tmp_path):
     # нативный тул (нет category) — старое поведение: счёт строк + Σelapsed_ms, latency_real=False
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"tool": "Edit", "outcome": "allow", "elapsed_ms": 10, "correlationid": "R1"},
-        {"tool": "Edit", "outcome": "allow", "elapsed_ms": 20, "correlationid": "R1"},
-    ])
+    _write(
+        log,
+        [
+            {"tool": "Edit", "outcome": "allow", "elapsed_ms": 10, "correlationid": "R1"},
+            {"tool": "Edit", "outcome": "allow", "elapsed_ms": 20, "correlationid": "R1"},
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["Edit"]
     assert a["calls"] == 2 and a["ms"] == 30 and a["latency_real"] is False
 
 
 def test_report_md_latency_real_vs_overhead():
     by_tool = {
-        "mcp__edt-mcp__update_database": {"calls": 1, "errors": 0, "ms": 3000, "paired": 1, "latency_real": True},
+        "mcp__edt-mcp__update_database": {
+            "calls": 1,
+            "errors": 0,
+            "ms": 3000,
+            "paired": 1,
+            "latency_real": True,
+        },
         "Edit": {"calls": 4, "errors": 0, "ms": 80, "latency_real": False},
     }
     md = mod.report_md(by_tool, "T")
-    assert "3000ms" in md and "3000ms~" not in md   # реальная латентность MCP — без тильды
-    assert "20ms~" in md                            # overhead хука — с тильдой
-    assert "overhead хука" in md                    # footnote
+    assert "3000ms" in md and "3000ms~" not in md  # реальная латентность MCP — без тильды
+    assert "20ms~" in md  # overhead хука — с тильдой
+    assert "overhead хука" in md  # footnote
 
 
 # --- ADR-022 P1: retry/abandonment + success-rate ---
@@ -276,26 +359,66 @@ def test_report_md_latency_real_vs_overhead():
 
 def test_effectiveness_retry(tmp_path):
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:01",
-         "args_hash": "AAA", "outcome": "allow", "correlationid": "R1"},
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:05",
-         "args_hash": "AAA", "outcome": "allow", "correlationid": "R1"},  # тот же args → retry
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:09",
-         "args_hash": "BBB", "outcome": "allow", "correlationid": "R1"},  # другой args → не retry
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:01",
+                "args_hash": "AAA",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:05",
+                "args_hash": "AAA",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },  # тот же args → retry
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:09",
+                "args_hash": "BBB",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },  # другой args → не retry
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
     assert a["repeats"] == 1 and a["abandonment"] == 0
 
 
 def test_effectiveness_abandonment(tmp_path):
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:01",
-         "outcome": "allow", "correlationid": "R1"},
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:05",
-         "outcome": "error", "error": "boom", "correlationid": "R1"},  # последняя — ошибка → abandonment
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:01",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:05",
+                "outcome": "error",
+                "error": "boom",
+                "correlationid": "R1",
+            },  # последняя — ошибка → abandonment
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
     assert a["abandonment"] == 1
 
@@ -303,12 +426,28 @@ def test_effectiveness_abandonment(tmp_path):
 def test_effectiveness_recovered_not_abandoned(tmp_path):
     # ошибка, затем успешный ретрай → НЕ abandonment (последняя попытка ок)
     log = tmp_path / "log.jsonl"
-    _write(log, [
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:01",
-         "outcome": "error", "error": "boom", "correlationid": "R1"},
-        {"category": "mcp_call", "event": "PostToolUse", "tool": "mcp__x__op", "ts": "2026-06-17T10:00:05",
-         "outcome": "allow", "correlationid": "R1"},
-    ])
+    _write(
+        log,
+        [
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:01",
+                "outcome": "error",
+                "error": "boom",
+                "correlationid": "R1",
+            },
+            {
+                "category": "mcp_call",
+                "event": "PostToolUse",
+                "tool": "mcp__x__op",
+                "ts": "2026-06-17T10:00:05",
+                "outcome": "allow",
+                "correlationid": "R1",
+            },
+        ],
+    )
     a = mod.aggregate(run_id="R1", log=log)["mcp__x__op"]
     assert a["abandonment"] == 0
 
@@ -323,10 +462,17 @@ def test_effectiveness_keys_present_native(tmp_path):
 
 def test_report_md_success_rate_and_markers():
     by_tool = {
-        "mcp__x__op": {"calls": 4, "errors": 1, "ms": 0, "latency_real": False, "repeats": 2, "abandonment": 1},
+        "mcp__x__op": {
+            "calls": 4,
+            "errors": 1,
+            "ms": 0,
+            "latency_real": False,
+            "repeats": 2,
+            "abandonment": 1,
+        },
     }
     md = mod.report_md(by_tool, "T")
-    assert "75% success" in md          # (4-1)/4
+    assert "75% success" in md  # (4-1)/4
     assert "⟳2 повтор" in md
     assert "не восстановлено" in md
 
@@ -334,15 +480,42 @@ def test_report_md_success_rate_and_markers():
 def test_rollup_real_latency_from_paired(tmp_path):
     # ADR-022 P2-followup #1: rollup копит реальную латентность ТОЛЬКО из paired-строк; overhead не идёт
     eff = tmp_path / "eff.jsonl"
-    _write(eff, [
-        {"key": "R1", "tool": "mcp__x__op", "calls": 1, "errors": 0, "ms": 3000, "paired": 1, "latency_real": True},
-        {"key": "R2", "tool": "mcp__x__op", "calls": 1, "errors": 0, "ms": 1000, "paired": 1, "latency_real": True},
-        {"key": "R3", "tool": "Edit", "calls": 5, "errors": 0, "ms": 100},  # overhead-строка, без paired
-    ])
+    _write(
+        eff,
+        [
+            {
+                "key": "R1",
+                "tool": "mcp__x__op",
+                "calls": 1,
+                "errors": 0,
+                "ms": 3000,
+                "paired": 1,
+                "latency_real": True,
+            },
+            {
+                "key": "R2",
+                "tool": "mcp__x__op",
+                "calls": 1,
+                "errors": 0,
+                "ms": 1000,
+                "paired": 1,
+                "latency_real": True,
+            },
+            {
+                "key": "R3",
+                "tool": "Edit",
+                "calls": 5,
+                "errors": 0,
+                "ms": 100,
+            },  # overhead-строка, без paired
+        ],
+    )
     agg = mod.rollup(eff=eff)
     op = agg["mcp__x__op"]
     assert op["paired"] == 2 and op["ms"] == 4000 and op["latency_real"] is True
     ed = agg["Edit"]
-    assert ed["paired"] == 0 and ed["ms"] == 0 and ed["latency_real"] is False  # overhead НЕ в латентность
+    assert (
+        ed["paired"] == 0 and ed["ms"] == 0 and ed["latency_real"] is False
+    )  # overhead НЕ в латентность
     md = mod.report_md(agg, "ROLLUP")
     assert "2000ms" in md and "2000ms~" not in md  # 4000/2 = реальная средняя, без тильды

@@ -246,7 +246,12 @@ class CodeSkillEnforcer(BaseHook):
             return False
         fp = file_path.replace("\\", "/").lower()
         base = fp.rsplit("/", 1)[-1]
-        return "/tests/" in fp or fp.startswith("tests/") or base.startswith("test_") or base.endswith("_test.py")
+        return (
+            "/tests/" in fp
+            or fp.startswith("tests/")
+            or base.startswith("test_")
+            or base.endswith("_test.py")
+        )
 
     def _extract_content(self, inp):
         """Extract content from Write or Edit tool input."""

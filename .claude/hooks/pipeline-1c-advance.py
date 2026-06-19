@@ -64,10 +64,16 @@ class Pipeline1CAdvance(BaseHook):
 
         from shared.pipeline_1c_bridge import advance_for_artifact, advance_test_done
 
-        adv = advance_for_artifact(path) or advance_test_done(path)  # F-1.5 + F-1.6 (этап 4 по .run-state)
+        adv = advance_for_artifact(path) or advance_test_done(
+            path
+        )  # F-1.5 + F-1.6 (этап 4 по .run-state)
         note = _completeness_note(path)  # D: advisory-валидатор секций (не блок)
         if adv or note:
-            msg = f"[pipeline-1c-advance] этап(ы) {adv} → done (1С-пайплайн, ADR-019 F-1.5/F-1.6)" if adv else ""
+            msg = (
+                f"[pipeline-1c-advance] этап(ы) {adv} → done (1С-пайплайн, ADR-019 F-1.5/F-1.6)"
+                if adv
+                else ""
+            )
             return HookOutput().system_message((msg + note).strip())
         return None
 

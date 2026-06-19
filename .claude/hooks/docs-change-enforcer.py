@@ -437,13 +437,29 @@ def _claude_md_touched() -> bool:
     try:
         r = subprocess.run(
             ["git", "-c", "core.quotepath=false", "status", "--porcelain", "--", "CLAUDE.md"],
-            cwd=str(PROJECT_ROOT), capture_output=True, text=True, encoding="utf-8", timeout=5,
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
         )
         if r.returncode == 0 and r.stdout.strip():
             return True
         r = subprocess.run(
-            ["git", "log", f"--since={SESSION_FALLBACK_WINDOW}", "--name-only", "--pretty=format:", "--", "CLAUDE.md"],
-            cwd=str(PROJECT_ROOT), capture_output=True, text=True, encoding="utf-8", timeout=5,
+            [
+                "git",
+                "log",
+                f"--since={SESSION_FALLBACK_WINDOW}",
+                "--name-only",
+                "--pretty=format:",
+                "--",
+                "CLAUDE.md",
+            ],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=5,
         )
         return r.returncode == 0 and "CLAUDE.md" in r.stdout
     except (OSError, ValueError, subprocess.SubprocessError):

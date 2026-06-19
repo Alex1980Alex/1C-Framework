@@ -58,9 +58,14 @@ def summarize(rows: list[dict]) -> dict:
     train = [r for r in rows if split_of(r["text"], r) == "train"]
     test = [r for r in rows if split_of(r["text"], r) == "test"]
     pos = sum(1 for r in rows if r.get("is_1c"))
-    return {"n": len(rows), "pos": pos, "neg": len(rows) - pos,
-            "train": len(train), "test": len(test),
-            "train_pos": sum(1 for r in train if r.get("is_1c"))}
+    return {
+        "n": len(rows),
+        "pos": pos,
+        "neg": len(rows) - pos,
+        "train": len(train),
+        "test": len(test),
+        "train_pos": sum(1 for r in train if r.get("is_1c")),
+    }
 
 
 def dry_run(rows: list[dict]) -> dict:
@@ -75,7 +80,9 @@ def dry_run(rows: list[dict]) -> dict:
     if bad:
         print(f"проблемные строки (пустой text / нет is_1c): {bad[:10]}")
     if s["n"] < MIN_RECOMMENDED:
-        print(f"данных мало ({s['n']} < {MIN_RECOMMENDED}) — голова шумит; см. scripts/bootstrap_1c_gt.py")
+        print(
+            f"данных мало ({s['n']} < {MIN_RECOMMENDED}) — голова шумит; см. scripts/bootstrap_1c_gt.py"
+        )
     if s["train_pos"] in (0, s["train"]):
         print("train содержит только один класс — обучение бессмысленно")
     print("OK: датасет читается, форма корректна" if not bad else "ИТОГ: есть проблемные строки")
@@ -89,8 +96,14 @@ def _prf(y_true, y_pred) -> dict:
     pr = tp / (tp + fp) if (tp + fp) else 0.0
     rc = tp / (tp + fn) if (tp + fn) else 0.0
     f1 = 2 * pr * rc / (pr + rc) if (pr + rc) else 0.0
-    return {"precision": round(pr, 4), "recall": round(rc, 4), "f1": round(f1, 4),
-            "tp": tp, "fp": fp, "fn": fn}
+    return {
+        "precision": round(pr, 4),
+        "recall": round(rc, 4),
+        "f1": round(f1, 4),
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+    }
 
 
 def train(rows: list[dict], model_name: str, out_dir: Path) -> int:
@@ -113,16 +126,19 @@ def train(rows: list[dict], model_name: str, out_dir: Path) -> int:
         print(f"данных мало ({len(rows)} < {MIN_RECOMMENDED}) — голова шумит, качество ограничено.")
 
     st = SentenceTransformer(model_name)
-    X = np.asarray(st.encode(to_texts(rows, model_name), normalize_embeddings=True,
-                             show_progress_bar=False))
+    X = np.asarray(
+        st.encode(to_texts(rows, model_name), normalize_embeddings=True, show_progress_bar=False)
+    )
     y = np.array([int(bool(r["is_1c"])) for r in rows])
     trm = np.array([split_of(r["text"], r) == "train" for r in rows])
 
     def _fit(xt, yt):
         return LogisticRegression(max_iter=2000, class_weight="balanced").fit(xt, yt)
 
-    f1s = [_prf(y[te], _fit(X[tr], y[tr]).predict(X[te]))["f1"]
-           for tr, te in StratifiedKFold(5, shuffle=True, random_state=0).split(X, y)]
+    f1s = [
+        _prf(y[te], _fit(X[tr], y[tr]).predict(X[te]))["f1"]
+        for tr, te in StratifiedKFold(5, shuffle=True, random_state=0).split(X, y)
+    ]
     cv_f1 = round(float(np.mean(f1s)), 4)
     print(f"5-fold CV F1 (vse {len(rows)}): {cv_f1} +- {np.std(f1s):.3f}")
 
@@ -140,20 +156,36 @@ def train(rows: list[dict], model_name: str, out_dir: Path) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     st.save(str(out_dir / "st"))
     joblib.dump(final, out_dir / "head.pkl")
-    (out_dir / "meta.json").write_text(json.dumps(
-        {"backend": "sentence-transformers+lr", "model": model_name, "threshold": best_thr,
-         "cv_f1": cv_f1, "test_f1": m["f1"], "n_train": int(trm.sum())},
-        ensure_ascii=False, indent=2), encoding="utf-8")
+    (out_dir / "meta.json").write_text(
+        json.dumps(
+            {
+                "backend": "sentence-transformers+lr",
+                "model": model_name,
+                "threshold": best_thr,
+                "cv_f1": cv_f1,
+                "test_f1": m["f1"],
+                "n_train": int(trm.sum()),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     print(f"sohraneno -> {out_dir}/ (st/ + head.pkl + meta.json, threshold={best_thr})")
-    print("Aktivaciya: ONEC_SETFIT_ENABLE=1 (porog iz meta.json; eval -- scripts/eval_1c_detector.py --setfit)")
+    print(
+        "Aktivaciya: ONEC_SETFIT_ENABLE=1 (porog iz meta.json; eval -- scripts/eval_1c_detector.py --setfit)"
+    )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Train 1C-detector gate head (ST+LR, ADR-025 Stage 3)")
     ap.add_argument("--ground-truth", default=str(GROUND_TRUTH))
-    ap.add_argument("--model", default=DEFAULT_MODEL,
-                    help="sentence-transformer (default rubert-tiny2; upgrade multilingual-e5-small)")
+    ap.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help="sentence-transformer (default rubert-tiny2; upgrade multilingual-e5-small)",
+    )
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     ap.add_argument("--dry-run", action="store_true", help="validaciya dataseta bez ML-steka")
     args = ap.parse_args(argv)

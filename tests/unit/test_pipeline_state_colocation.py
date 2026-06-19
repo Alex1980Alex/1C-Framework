@@ -43,7 +43,10 @@ def test_generic_unchanged(tmp_path):
     ps = _load_ps(tmp_path)
     d = ps.init_task("gen-task", title="Обычная задача")
     assert [s["artifact"] for s in d["stages"]] == [
-        "01-architecture.md", "02-design.md", "03-implementation.md", "04-testing.md"
+        "01-architecture.md",
+        "02-design.md",
+        "03-implementation.md",
+        "04-testing.md",
     ]
     assert ps.state_dir("gen-task") == ps.PIPELINE_DIR / "gen-task"
     assert (ps.PIPELINE_DIR / "gen-task" / ps.STATE_NAME).exists()
@@ -56,7 +59,10 @@ def test_1c_profile_with_task_dir(tmp_path):
     td.mkdir(parents=True)
     d = ps.init_task("GKSTCPLK-1", title="1С-задача (run-1c-task): GKSTCPLK-1", task_dir=str(td))
     assert [s["artifact"] for s in d["stages"]] == [
-        "ANALYSIS-REPORT.md", "ANALYSIS-REPORT.md", "IMPLEMENTATION-PROGRESS.md", ".run-state.json"
+        "ANALYSIS-REPORT.md",
+        "ANALYSIS-REPORT.md",
+        "IMPLEMENTATION-PROGRESS.md",
+        ".run-state.json",
     ]
     assert (td / ps.STATE_NAME).exists()
     assert ps.state_dir("gkstcplk-1") == td
@@ -108,7 +114,9 @@ def test_rel_to_root_relative_from_any_cwd(tmp_path, monkeypatch):
     other = tmp_path / "elsewhere" / "deep"
     other.mkdir(parents=True)
     monkeypatch.chdir(other)  # cwd НЕ корень репо
-    assert ps._rel_to_root("configuration/X/docs/T") == "configuration/X/docs/T"  # от PROJECT_ROOT, не от cwd
+    assert (
+        ps._rel_to_root("configuration/X/docs/T") == "configuration/X/docs/T"
+    )  # от PROJECT_ROOT, не от cwd
     # абсолютный путь под репо — без изменений
     abs_td = ps.PROJECT_ROOT / "configuration" / "Y"
     assert ps._rel_to_root(str(abs_td)) == "configuration/Y"
@@ -139,7 +147,9 @@ def test_iter_states_generic_and_1c(tmp_path):
     ps.init_task("gen", title="Обычная")  # generic
     td = tmp_path / "configuration" / "Z" / "docs" / "W"
     td.mkdir(parents=True)
-    ps.init_task("GKSTCPLK-5", title="1С-задача (run-1c-task): GKSTCPLK-5", task_dir=str(td))  # 1С в папке
+    ps.init_task(
+        "GKSTCPLK-5", title="1С-задача (run-1c-task): GKSTCPLK-5", task_dir=str(td)
+    )  # 1С в папке
     slugs = sorted(slug for slug, _ in ps.iter_states())
     assert slugs == ["gen", "gkstcplk-5"]  # энумератор видит оба расположения
 

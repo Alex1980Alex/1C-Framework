@@ -63,8 +63,14 @@ def prf(tp: int, fp: int, fn: int) -> dict:
     p = tp / (tp + fp) if (tp + fp) else (1.0 if fn == 0 else 0.0)
     r = tp / (tp + fn) if (tp + fn) else 1.0
     f1 = 2 * p * r / (p + r) if (p + r) else 0.0
-    return {"precision": round(p, 4), "recall": round(r, 4), "f1": round(f1, 4),
-            "tp": tp, "fp": fp, "fn": fn}
+    return {
+        "precision": round(p, 4),
+        "recall": round(r, 4),
+        "f1": round(f1, 4),
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+    }
 
 
 def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
@@ -129,8 +135,9 @@ def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
         if pred_cls == exp_cls:
             cls_ok[exp_cls] += 1
         else:
-            misses.append({"text": text[:60], "exp": exp_cls, "got": pred_cls,
-                           "conf": conf, "is_1c": pred_1c})
+            misses.append(
+                {"text": text[:60], "exp": exp_cls, "got": pred_cls, "conf": conf, "is_1c": pred_1c}
+            )
         if isinstance(conf, (int, float)):
             conf_by_class[exp_cls].append(float(conf))
 
@@ -140,11 +147,9 @@ def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
     return {
         "n": len(rows),
         "is_1c": prf(tp, fp, fn) | {"tn": tn},
-        "route_class_accuracy": round(
-            sum(cls_ok.values()) / len(rows), 4) if rows else None,
+        "route_class_accuracy": round(sum(cls_ok.values()) / len(rows), 4) if rows else None,
         "per_class": {
-            c: {"acc": round(cls_ok[c] / cls_tot[c], 4) if cls_tot[c] else None,
-                "n": cls_tot[c]}
+            c: {"acc": round(cls_ok[c] / cls_tot[c], 4) if cls_tot[c] else None, "n": cls_tot[c]}
             for c in _CLASSES
         },
         "confusion": confusion,
@@ -152,9 +157,15 @@ def evaluate(rows: list[dict], llm_tail: bool = False) -> dict:
         "complexity_band": {
             "n": sum(band_tot.values()),
             "accuracy": round(sum(band_ok.values()) / sum(band_tot.values()), 4)
-            if sum(band_tot.values()) else None,
-            "per_band": {b: {"acc": round(band_ok[b] / band_tot[b], 4) if band_tot[b] else None,
-                             "n": band_tot[b]} for b in _BANDS},
+            if sum(band_tot.values())
+            else None,
+            "per_band": {
+                b: {
+                    "acc": round(band_ok[b] / band_tot[b], 4) if band_tot[b] else None,
+                    "n": band_tot[b],
+                }
+                for b in _BANDS
+            },
             "confusion": band_confusion,
             "auto_misroutes": auto_misroutes,
         },
@@ -168,10 +179,16 @@ def main(argv=None):
     ap.add_argument("--split", choices=["train", "test", "all"], default="all")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--verbose", "-v", action="store_true")
-    ap.add_argument("--llm-tail", action="store_true",
-                    help="#3 stage-3: на mid-band TF-IDF звать LLM-классификатор (замер потолка; медленно)")
-    ap.add_argument("--setfit", action="store_true",
-                    help="ADR-025: семантический слой ② через SetFit-гейт (нужна обученная модель; иначе graceful → TF-IDF)")
+    ap.add_argument(
+        "--llm-tail",
+        action="store_true",
+        help="#3 stage-3: на mid-band TF-IDF звать LLM-классификатор (замер потолка; медленно)",
+    )
+    ap.add_argument(
+        "--setfit",
+        action="store_true",
+        help="ADR-025: семантический слой ② через SetFit-гейт (нужна обученная модель; иначе graceful → TF-IDF)",
+    )
     args = ap.parse_args(argv)
     if args.setfit:  # включить SetFit-гейт для этого прогона (route_1c_task подхватит env)
         os.environ["ONEC_SETFIT_ENABLE"] = "1"
@@ -199,8 +216,10 @@ def main(argv=None):
     print("=" * 60)
     print(f"1С-ДЕТЕКТОР — EVAL ({args.split}, n={rep['n']})")
     print("=" * 60)
-    print(f"is_1c   P={m['precision']:.3f}  R={m['recall']:.3f}  F1={m['f1']:.3f}"
-          f"   (tp={m['tp']} fp={m['fp']} fn={m['fn']} tn={m['tn']})")
+    print(
+        f"is_1c   P={m['precision']:.3f}  R={m['recall']:.3f}  F1={m['f1']:.3f}"
+        f"   (tp={m['tp']} fp={m['fp']} fn={m['fn']} tn={m['tn']})"
+    )
     print(f"route_class accuracy: {rep['route_class_accuracy']:.3f}")
     for c in _CLASSES:
         pc = rep["per_class"][c]
@@ -210,7 +229,9 @@ def main(argv=None):
     for c in _CLASSES:
         print(f"   {c:9s} -> {rep['confusion'][c]}")
     cb = rep["complexity_band"]
-    print(f"\ncomplexity-band (n={cb['n']}, на confident-строках с GT-меткой): acc={cb['accuracy']}")
+    print(
+        f"\ncomplexity-band (n={cb['n']}, на confident-строках с GT-меткой): acc={cb['accuracy']}"
+    )
     for b in _BANDS:
         pb = cb["per_band"][b]
         print(f"   {b:9s} acc={pb['acc']} (n={pb['n']})")

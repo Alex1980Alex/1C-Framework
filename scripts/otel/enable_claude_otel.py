@@ -98,13 +98,17 @@ def _enabled_env(args) -> dict[str, str]:
 
 def main(argv: list[str] | None = None) -> int:
     try:
-        sys.stdout.reconfigure(encoding="utf-8")  # Windows cp1251: безопасный вывод кириллицы/символов
+        sys.stdout.reconfigure(
+            encoding="utf-8"
+        )  # Windows cp1251: безопасный вывод кириллицы/символов
     except Exception:
         pass
     p = argparse.ArgumentParser(description="ADR-022 P2: opt-in OTel Claude Code")
     mode = p.add_mutually_exclusive_group(required=True)
     mode.add_argument("--console", action="store_true", help="экспорт в console (zero-infra)")
-    mode.add_argument("--otlp", metavar="ENDPOINT", help="OTLP-эндпоинт (Langfuse/SigNoz/collector)")
+    mode.add_argument(
+        "--otlp", metavar="ENDPOINT", help="OTLP-эндпоинт (Langfuse/SigNoz/collector)"
+    )
     mode.add_argument("--disable", action="store_true", help="убрать OTel-env (opt-out)")
     mode.add_argument("--status", action="store_true", help="показать текущее состояние")
     p.add_argument("--public-key")
@@ -122,7 +126,9 @@ def main(argv: list[str] | None = None) -> int:
         cur = {k: env[k] for k in _MANAGED if k in env}
         out = sys.stdout.buffer
         out.write((json.dumps(cur, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
-        out.write(f"OTel: {'ВКЛ' if env.get('CLAUDE_CODE_ENABLE_TELEMETRY') == '1' else 'выкл'} ({path})\n".encode())
+        out.write(
+            f"OTel: {'ВКЛ' if env.get('CLAUDE_CODE_ENABLE_TELEMETRY') == '1' else 'выкл'} ({path})\n".encode()
+        )
         return 0
 
     if args.disable:
@@ -130,7 +136,9 @@ def main(argv: list[str] | None = None) -> int:
             env.pop(k, None)
         data["env"] = env
         _save(path, data)
-        print(f"OTel выключен (убрано {len(_MANAGED)} ключей при наличии) -> {path}. Перезапусти claude.")
+        print(
+            f"OTel выключен (убрано {len(_MANAGED)} ключей при наличии) -> {path}. Перезапусти claude."
+        )
         return 0
 
     # console / otlp
@@ -138,8 +146,10 @@ def main(argv: list[str] | None = None) -> int:
     data["env"] = env
     _save(path, data)
     where = "console" if args.console else f"otlp -> {args.otlp}"
-    print(f"OTel включён ({where}) -> {path}. Перезапусти claude. Контент: "
-          f"{'ON' if args.content else 'OFF (без PII)'}.")
+    print(
+        f"OTel включён ({where}) -> {path}. Перезапусти claude. Контент: "
+        f"{'ON' if args.content else 'OFF (без PII)'}."
+    )
     return 0
 
 

@@ -27,7 +27,9 @@ import urllib.request
 _OLLAMA_URL = os.environ.get("ONEC_OLLAMA_URL", "http://localhost:11434/api/chat")
 _MODEL = os.environ.get("ONEC_TAIL_MODEL", "qwen2.5:7b")
 
-_SYS = 'Ты классификатор задач. Возвращаешь ТОЛЬКО JSON-объект {"is_1c": true|false}, без пояснений.'
+_SYS = (
+    'Ты классификатор задач. Возвращаешь ТОЛЬКО JSON-объект {"is_1c": true|false}, без пояснений.'
+)
 _TMPL = (
     'Текст: "{p}".\n'
     "Это ЗАДАЧА на разработку или доработку в системе 1С:Предприятие "

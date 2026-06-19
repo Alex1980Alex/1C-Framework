@@ -83,14 +83,38 @@ APPROVAL_STAGE = 2  # дизайн человек одобряет перед к
 # 1С-профиль этапов: имена артефактов = реальные файлы методики 1С (в папке задачи), а не generic 0N-*.md.
 # Выбирается по title-маркеру `1С-задача (`. Этап 4 = `.run-state.json` (решение пользователя — в папке задачи).
 STAGES_1C = [
-    {"n": 1, "name": "planning", "command": "pl-plan", "artifact": "ANALYSIS-REPORT.md",
-     "title": "Планирование архитектуры", "delegates": "analyze-1c-task-v2"},
-    {"n": 2, "name": "design", "command": "pl-design", "artifact": "ANALYSIS-REPORT.md",
-     "title": "Дизайн реализации", "delegates": "analyze-1c-task-v2"},
-    {"n": 3, "name": "implementation", "command": "pl-code", "artifact": "IMPLEMENTATION-PROGRESS.md",
-     "title": "Кодирование", "delegates": "implement-1c-task"},
-    {"n": 4, "name": "testing", "command": "pl-test", "artifact": ".run-state.json",
-     "title": "Тестирование", "delegates": "va-bdd-testing"},
+    {
+        "n": 1,
+        "name": "planning",
+        "command": "pl-plan",
+        "artifact": "ANALYSIS-REPORT.md",
+        "title": "Планирование архитектуры",
+        "delegates": "analyze-1c-task-v2",
+    },
+    {
+        "n": 2,
+        "name": "design",
+        "command": "pl-design",
+        "artifact": "ANALYSIS-REPORT.md",
+        "title": "Дизайн реализации",
+        "delegates": "analyze-1c-task-v2",
+    },
+    {
+        "n": 3,
+        "name": "implementation",
+        "command": "pl-code",
+        "artifact": "IMPLEMENTATION-PROGRESS.md",
+        "title": "Кодирование",
+        "delegates": "implement-1c-task",
+    },
+    {
+        "n": 4,
+        "name": "testing",
+        "command": "pl-test",
+        "artifact": ".run-state.json",
+        "title": "Тестирование",
+        "delegates": "va-bdd-testing",
+    },
 ]
 
 
@@ -179,7 +203,10 @@ def relocate_1c(slug: str, task_dir: str | Path) -> bool:
         return False  # уже в папке задачи — no-op
     generic = PIPELINE_DIR / slug
     data = None
-    for sp in (state_dir(slug) / STATE_NAME, generic / STATE_NAME):  # текущее, затем generic (crash-retry)
+    for sp in (
+        state_dir(slug) / STATE_NAME,
+        generic / STATE_NAME,
+    ):  # текущее, затем generic (crash-retry)
         try:
             data = json.loads(sp.read_text(encoding="utf-8"))
             break
@@ -190,7 +217,9 @@ def relocate_1c(slug: str, task_dir: str | Path) -> bool:
         _save(slug, data)  # пишет в папку задачи
     try:
         gs = generic / STATE_NAME
-        if generic != state_dir(slug) and gs.exists():  # generic ≠ цель → удалить осиротевший generic
+        if (
+            generic != state_dir(slug) and gs.exists()
+        ):  # generic ≠ цель → удалить осиротевший generic
             gs.unlink()
             if not any(generic.iterdir()):  # подчистить пустую pipeline/<slug>/ (не папку задачи)
                 generic.rmdir()
@@ -278,7 +307,9 @@ def init_task(slug: str, title: str = "", task_dir: str | None = None) -> dict:
         _set_current(slug)
         return existing
     now = _now()
-    template = STAGES_1C if is_1c(title) else STAGES  # 1С-профиль: артефакты = реальные файлы методики
+    template = (
+        STAGES_1C if is_1c(title) else STAGES
+    )  # 1С-профиль: артефакты = реальные файлы методики
     stages = []
     for s in template:
         st = {
@@ -444,7 +475,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("init", help="создать пайплайн для задачи")
     p.add_argument("slug")
     p.add_argument("--title", default="")
-    p.add_argument("--task-dir", default=None, help="папка 1С-задачи (состояние ляжет туда, а не в pipeline/)")
+    p.add_argument(
+        "--task-dir", default=None, help="папка 1С-задачи (состояние ляжет туда, а не в pipeline/)"
+    )
 
     p = sub.add_parser("done", help="отметить этап завершённым")
     p.add_argument("slug", help="slug или '-' (текущий)")

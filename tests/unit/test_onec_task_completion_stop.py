@@ -25,7 +25,14 @@ _spec.loader.exec_module(mod)
 def _transcript(p: Path, tool_uses: list[tuple[str, dict]]) -> None:
     p.write_text(
         "\n".join(
-            json.dumps({"message": {"role": "assistant", "content": [{"type": "tool_use", "name": n, "input": i}]}})
+            json.dumps(
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": [{"type": "tool_use", "name": n, "input": i}],
+                    }
+                }
+            )
             for n, i in tool_uses
         ),
         encoding="utf-8",
@@ -34,28 +41,46 @@ def _transcript(p: Path, tool_uses: list[tuple[str, dict]]) -> None:
 
 def test_collect_all_signals(tmp_path):
     t = tmp_path / "t.json"
-    _transcript(t, [
-        ("mcp__memory-orchestrator__unified_search", {}),
-        ("mcp__skill-learning__capture_pattern", {}),
-        ("WebSearch", {"query": "1с infostart"}),
-        ("Skill", {"skill": "analyze-1c-task-v2"}),
-    ])
-    assert mod._collect_signals(str(t)) == {"recall": True, "capture": True, "research": True, "skill": True, "config_edit": False}
+    _transcript(
+        t,
+        [
+            ("mcp__memory-orchestrator__unified_search", {}),
+            ("mcp__skill-learning__capture_pattern", {}),
+            ("WebSearch", {"query": "1с infostart"}),
+            ("Skill", {"skill": "analyze-1c-task-v2"}),
+        ],
+    )
+    assert mod._collect_signals(str(t)) == {
+        "recall": True,
+        "capture": True,
+        "research": True,
+        "skill": True,
+        "config_edit": False,
+    }
 
 
 def test_collect_none(tmp_path):
     t = tmp_path / "t.json"
     _transcript(t, [("Read", {"file_path": "x"}), ("Bash", {"command": "echo"})])
-    assert mod._collect_signals(str(t)) == {"recall": False, "capture": False, "research": False, "skill": False, "config_edit": False}
+    assert mod._collect_signals(str(t)) == {
+        "recall": False,
+        "capture": False,
+        "research": False,
+        "skill": False,
+        "config_edit": False,
+    }
 
 
 def test_collect_partial(tmp_path):
     # recall + research есть, capture + skill нет
     t = tmp_path / "t.json"
-    _transcript(t, [
-        ("mcp__vector-memory__search_patterns", {}),
-        ("WebFetch", {"url": "https://github.com/x"}),
-    ])
+    _transcript(
+        t,
+        [
+            ("mcp__vector-memory__search_patterns", {}),
+            ("WebFetch", {"url": "https://github.com/x"}),
+        ],
+    )
     sig = mod._collect_signals(str(t))
     assert sig["recall"] and sig["research"] and not sig["capture"] and not sig["skill"]
 
@@ -109,7 +134,8 @@ def test_onec_pipeline_updated_this_session(tmp_path, monkeypatch):
     d = tmp_path / "task1"
     d.mkdir()
     (d / ".pipeline-state.json").write_text(
-        json.dumps({"title": "1С-задача (run-1c-task): zz", "updated_at": "2027-01-01T00:00:00"}), encoding="utf-8"
+        json.dumps({"title": "1С-задача (run-1c-task): zz", "updated_at": "2027-01-01T00:00:00"}),
+        encoding="utf-8",
     )
     assert mod._onec_pipeline_updated(datetime(2026, 6, 15)) == "task1"
     assert mod._onec_pipeline_updated(None) is None
@@ -120,7 +146,8 @@ def test_onec_pipeline_lookalike_excluded(tmp_path, monkeypatch):
     d = tmp_path / "task1"
     d.mkdir()
     (d / ".pipeline-state.json").write_text(
-        json.dumps({"title": "1С-задача из чата: x", "updated_at": "2027-01-01T00:00:00"}), encoding="utf-8"
+        json.dumps({"title": "1С-задача из чата: x", "updated_at": "2027-01-01T00:00:00"}),
+        encoding="utf-8",
     )
     assert mod._onec_pipeline_updated(datetime(2026, 6, 15)) is None
 
@@ -133,8 +160,13 @@ def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
     d = inc / "task_h5"
     d.mkdir(parents=True)
     (d / ".pipeline-state.json").write_text(
-        json.dumps({"title": "1С-задача (run-1c-task): h5",
-                    "stages": [{"status": "done"}, {"status": "pending"}]}), encoding="utf-8"
+        json.dumps(
+            {
+                "title": "1С-задача (run-1c-task): h5",
+                "stages": [{"status": "done"}, {"status": "pending"}],
+            }
+        ),
+        encoding="utf-8",
     )
     assert mod._incomplete_onec_pipeline() == "task_h5"
     # все этапы done → None
@@ -144,7 +176,12 @@ def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
     d2 = done / "task_done"
     d2.mkdir(parents=True)
     (d2 / ".pipeline-state.json").write_text(
-        json.dumps({"title": "1С-задача (run-1c-task): dd",
-                    "stages": [{"status": "done"}, {"status": "done"}]}), encoding="utf-8"
+        json.dumps(
+            {
+                "title": "1С-задача (run-1c-task): dd",
+                "stages": [{"status": "done"}, {"status": "done"}],
+            }
+        ),
+        encoding="utf-8",
     )
     assert mod._incomplete_onec_pipeline() is None

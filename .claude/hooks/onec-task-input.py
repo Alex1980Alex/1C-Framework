@@ -80,7 +80,9 @@ class OnecTaskInput(BaseHook):
                 f"• JIRA {r.get('jira')} — собери ВСЕ артефакты папки (spec + скриншоты + чат-диалог + история), не один *ТЗ*.md"
             )
         if ttype == "T2":
-            parts.append("• T2: Планирование сжато (root-cause + точка фикса), Тестирование критично (регресс)")
+            parts.append(
+                "• T2: Планирование сжато (root-cause + точка фикса), Тестирование критично (регресс)"
+            )
         if ttype == "T3":
             parts.append(
                 "• T3: загрузи prior ANALYSIS-REPORT + реализацию родителя как контекст (дельта, НЕ greenfield); "

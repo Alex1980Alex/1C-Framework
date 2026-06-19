@@ -69,7 +69,9 @@ def test_enabled_no_model_none(monkeypatch, tmp_path):
 
 def test_enabled_fake_model_returns_pos_prob(monkeypatch):
     monkeypatch.setenv("ONEC_SETFIT_ENABLE", "1")
-    assert gate.setfit_prob("исправить ошибку проведения", model=_FakeModel(0.83)) == pytest.approx(0.83)
+    assert gate.setfit_prob("исправить ошибку проведения", model=_FakeModel(0.83)) == pytest.approx(
+        0.83
+    )
 
 
 def test_enabled_model_raises_is_graceful(monkeypatch):
@@ -111,15 +113,27 @@ def test_positive_prob_single_and_bad():
 # --- парсинг env ---
 
 
-@pytest.mark.parametrize("val,exp", [("1", True), ("true", True), ("YES", True), ("on", True),
-                                     ("0", False), ("", False), ("off", False)])
+@pytest.mark.parametrize(
+    "val,exp",
+    [
+        ("1", True),
+        ("true", True),
+        ("YES", True),
+        ("on", True),
+        ("0", False),
+        ("", False),
+        ("off", False),
+    ],
+)
 def test_is_enabled_parsing(monkeypatch, val, exp):
     monkeypatch.setenv("ONEC_SETFIT_ENABLE", val)
     assert gate.is_enabled() is exp
 
 
 def test_threshold_default_env_and_bad(monkeypatch, tmp_path):
-    monkeypatch.setenv("ONEC_SETFIT_MODEL_DIR", str(tmp_path))  # пустой каталог → нет meta.json → дефолт
+    monkeypatch.setenv(
+        "ONEC_SETFIT_MODEL_DIR", str(tmp_path)
+    )  # пустой каталог → нет meta.json → дефолт
     monkeypatch.delenv("ONEC_SETFIT_THRESHOLD", raising=False)
     assert gate.threshold() == 0.5
     monkeypatch.setenv("ONEC_SETFIT_THRESHOLD", "0.7")
@@ -136,7 +150,15 @@ def test_model_dir_env_override(monkeypatch, tmp_path):
 def test_status_keys(monkeypatch):
     monkeypatch.delenv("ONEC_SETFIT_ENABLE", raising=False)
     st = gate.status()
-    assert set(st) == {"enabled", "deps_installed", "model_dir", "model_present", "threshold", "backend", "cv_f1"}
+    assert set(st) == {
+        "enabled",
+        "deps_installed",
+        "model_dir",
+        "model_present",
+        "threshold",
+        "backend",
+        "cv_f1",
+    }
     assert st["enabled"] is False
 
 
@@ -144,10 +166,18 @@ def test_status_keys(monkeypatch):
 
 
 def test_to_texts_e5_prefix():
-    rows = [{"text": "доработать форму", "is_1c": True}, {"text": "как работает RAG", "is_1c": False}]
-    assert train.to_texts(rows, "cointegrated/rubert-tiny2") == ["доработать форму", "как работает RAG"]
+    rows = [
+        {"text": "доработать форму", "is_1c": True},
+        {"text": "как работает RAG", "is_1c": False},
+    ]
+    assert train.to_texts(rows, "cointegrated/rubert-tiny2") == [
+        "доработать форму",
+        "как работает RAG",
+    ]
     e5 = train.to_texts(rows, "intfloat/multilingual-e5-small")
-    assert e5[0].startswith("query: ") and e5[0].endswith("доработать форму")  # e5 — префикс (model card)
+    assert e5[0].startswith("query: ") and e5[0].endswith(
+        "доработать форму"
+    )  # e5 — префикс (model card)
 
 
 def test_split_of_explicit_and_deterministic():
@@ -158,9 +188,11 @@ def test_split_of_explicit_and_deterministic():
 
 
 def test_summarize_and_dry_run_counts(capsys):
-    rows = [{"text": "доработать", "is_1c": True, "split": "train"},
-            {"text": "создать", "is_1c": False, "split": "train"},
-            {"text": "обмен", "is_1c": True, "split": "test"}]
+    rows = [
+        {"text": "доработать", "is_1c": True, "split": "train"},
+        {"text": "создать", "is_1c": False, "split": "train"},
+        {"text": "обмен", "is_1c": True, "split": "test"},
+    ]
     s = train.summarize(rows)
     assert s["n"] == 3 and s["pos"] == 2 and s["neg"] == 1 and s["train"] == 2 and s["test"] == 1
     out = train.dry_run(rows)  # печатает + возвращает сводку
@@ -170,9 +202,15 @@ def test_summarize_and_dry_run_counts(capsys):
 
 def test_load_rows_drops_quarantine(tmp_path):
     p = tmp_path / "gt.json"
-    p.write_text(json.dumps([
-        {"text": "доработать", "is_1c": True},
-        {"text": "leak", "is_1c": True, "split": "quarantine"},
-    ], ensure_ascii=False), encoding="utf-8")
+    p.write_text(
+        json.dumps(
+            [
+                {"text": "доработать", "is_1c": True},
+                {"text": "leak", "is_1c": True, "split": "quarantine"},
+            ],
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
     rows = train.load_rows(p)
     assert len(rows) == 1 and rows[0]["text"] == "доработать"

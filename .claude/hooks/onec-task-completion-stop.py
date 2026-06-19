@@ -43,8 +43,10 @@ try:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from shared.pipeline_1c_bridge import is_1c_task_title
 except Exception:
+
     def is_1c_task_title(title) -> bool:  # type: ignore[misc]
         return str(title or "").startswith("1С-задача (")
+
 
 _RECALL_TOOLS = {
     "mcp__memory-orchestrator__unified_search",
@@ -57,7 +59,13 @@ _CAPTURE_TOOLS = {
     "mcp__memory-orchestrator__route_and_save",
 }
 _RESEARCH_TOOLS = {"WebSearch", "WebFetch"}
-_1C_SKILLS = ("analyze-1c-task-v2", "implement-1c-task", "va-bdd-testing", "run-1c-task", "code-verify")
+_1C_SKILLS = (
+    "analyze-1c-task-v2",
+    "implement-1c-task",
+    "va-bdd-testing",
+    "run-1c-task",
+    "code-verify",
+)
 
 
 def _read_stdin() -> dict:
@@ -163,7 +171,13 @@ def _iter_tool_uses(obj):
 
 def _collect_signals(transcript_path: str) -> dict:
     """Один проход по транскрипту → {recall, capture, research, skill, config_edit} по фактическим tool_use."""
-    sig = {"recall": False, "capture": False, "research": False, "skill": False, "config_edit": False}
+    sig = {
+        "recall": False,
+        "capture": False,
+        "research": False,
+        "skill": False,
+        "config_edit": False,
+    }
     if not transcript_path or not Path(transcript_path).exists():
         return sig
     for line in _read_tail(Path(transcript_path), TRANSCRIPT_TAIL_BYTES):
@@ -260,7 +274,9 @@ def main() -> None:
     try:
         start = _session_start(sid)
         slug = _onec_pipeline_updated(start)  # прямой сигнал: 1С-пайплайн обновлён в этой сессии
-        incomplete = _incomplete_onec_pipeline() if not slug else None  # H5: незавершённый из прошлой сессии
+        incomplete = (
+            _incomplete_onec_pipeline() if not slug else None
+        )  # H5: незавершённый из прошлой сессии
         if not slug and not incomplete:
             if timer:
                 timer.log(outcome="allow")
@@ -294,7 +310,10 @@ def main() -> None:
             f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n\n"
             "Закрой пункты с ✗ и заверши снова. Опт-аут (trivial-правка / реально не нужно): ONEC_TASK_GATE_DISABLE=1."
         )
-        sys.stdout.buffer.write(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False).encode("utf-8") + b"\n")
+        sys.stdout.buffer.write(
+            json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False).encode("utf-8")
+            + b"\n"
+        )
         sys.stdout.buffer.flush()
         if timer:
             timer.log(outcome="block")

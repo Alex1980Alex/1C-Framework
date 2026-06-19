@@ -85,10 +85,18 @@ def _code_str(code) -> str:
 
 def run_analyze(java: str, src_dir: Path, config: Path, out_dir: Path) -> tuple[int, str]:
     cmd = [
-        java, "-jar", str(BSL_LS_JAR),
-        "--analyze", "--srcDir", str(src_dir),
-        "--reporter", "json", "--outputDir", str(out_dir),
-        "--configuration", str(config),
+        java,
+        "-jar",
+        str(BSL_LS_JAR),
+        "--analyze",
+        "--srcDir",
+        str(src_dir),
+        "--reporter",
+        "json",
+        "--outputDir",
+        str(out_dir),
+        "--configuration",
+        str(config),
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=600)
     return proc.returncode, (proc.stderr or "") + (proc.stdout or "")
@@ -101,9 +109,14 @@ def run_format(java: str, src_dir: Path, config: Path) -> tuple[int, str]:
     --configuration. rc=0 при успехе; файлы переписываются на месте.
     """
     cmd = [
-        java, "-jar", str(BSL_LS_JAR),
-        "--format", "--srcDir", str(src_dir),
-        "--configuration", str(config),
+        java,
+        "-jar",
+        str(BSL_LS_JAR),
+        "--format",
+        "--srcDir",
+        str(src_dir),
+        "--configuration",
+        str(config),
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=600)
     return proc.returncode, (proc.stderr or "") + (proc.stdout or "")
@@ -128,17 +141,26 @@ def _do_format(java: str, target: Path, config_arg: str | None) -> int:
             shutil.copy(target, tmp_file)
             before = target.read_bytes()
             rc, log = run_format(java, src_dir, config)
-            if not tmp_file.exists():  # bsl-ls не вернул файл → не трактуем как «без изменений» молча
-                print(f"[bsl_lint] предупреждение: bsl-ls не вернул файл во временный srcDir "
-                      f"(rc={rc}) — оригинал не тронут", file=sys.stderr)
+            if (
+                not tmp_file.exists()
+            ):  # bsl-ls не вернул файл → не трактуем как «без изменений» молча
+                print(
+                    f"[bsl_lint] предупреждение: bsl-ls не вернул файл во временный srcDir "
+                    f"(rc={rc}) — оригинал не тронут",
+                    file=sys.stderr,
+                )
                 after = before
             else:
                 after = tmp_file.read_bytes()
             if after != before and rc == 0:
                 target.write_bytes(after)
                 print(f"[bsl_lint] {target.name}: отформатирован ✓ (изменён)")
-            elif after != before:  # есть отличия, но rc!=0 → не доверяем выводу, оригинал НЕ перезаписан
-                print(f"[bsl_lint] {target.name}: НЕ перезаписан (bsl-ls format rc={rc}); см. stderr")
+            elif (
+                after != before
+            ):  # есть отличия, но rc!=0 → не доверяем выводу, оригинал НЕ перезаписан
+                print(
+                    f"[bsl_lint] {target.name}: НЕ перезаписан (bsl-ls format rc={rc}); см. stderr"
+                )
             else:
                 print(f"[bsl_lint] {target.name}: уже отформатирован ✓ (без изменений)")
         else:
@@ -165,14 +187,20 @@ def parse_report(report: Path) -> list[dict]:
             else:
                 _s = str(sev or "").strip().lower()
                 sev_name = {"information": "info", "informational": "info"}.get(_s, _s)
-            out.append({
-                "file": path,
-                "line": (start.get("line", -1) + 1) if isinstance(start.get("line"), int) else None,
-                "column": (start.get("character", -1) + 1) if isinstance(start.get("character"), int) else None,
-                "severity": sev_name,
-                "code": _code_str(d.get("code")),
-                "message": d.get("message", ""),
-            })
+            out.append(
+                {
+                    "file": path,
+                    "line": (start.get("line", -1) + 1)
+                    if isinstance(start.get("line"), int)
+                    else None,
+                    "column": (start.get("character", -1) + 1)
+                    if isinstance(start.get("character"), int)
+                    else None,
+                    "severity": sev_name,
+                    "code": _code_str(d.get("code")),
+                    "message": d.get("message", ""),
+                }
+            )
     return out
 
 
@@ -182,24 +210,39 @@ def main(argv: list[str] | None = None) -> int:
             _stream.reconfigure(encoding="utf-8")
         except Exception:
             pass
-    ap = argparse.ArgumentParser(prog="bsl_lint", description="BSL diagnostics via bundled bsl-language-server")
+    ap = argparse.ArgumentParser(
+        prog="bsl_lint", description="BSL diagnostics via bundled bsl-language-server"
+    )
     ap.add_argument("path", help="файл .bsl/.os или каталог")
     ap.add_argument("--json", action="store_true", help="вывод JSON-списком")
-    ap.add_argument("--config", default=None, help="путь к .bsl-language-server.json (по умолч. {language:ru})")
-    ap.add_argument("--severity", choices=list(_SEV_MIN), default=None, help="минимальный уровень для вывода")
+    ap.add_argument(
+        "--config", default=None, help="путь к .bsl-language-server.json (по умолч. {language:ru})"
+    )
+    ap.add_argument(
+        "--severity", choices=list(_SEV_MIN), default=None, help="минимальный уровень для вывода"
+    )
     ap.add_argument("--fail-on-error", action="store_true", help="exit 1 при severity=error")
-    ap.add_argument("--format", action="store_true",
-                    help="режим форматирования: переписать файл(ы) через bsl-ls (in-place), вместо диагностики")
+    ap.add_argument(
+        "--format",
+        action="store_true",
+        help="режим форматирования: переписать файл(ы) через bsl-ls (in-place), вместо диагностики",
+    )
     ap.add_argument("--java", default=None, help="явный путь к java")
     args = ap.parse_args(argv)
 
     java = find_java(args.java)
     if not java:
-        print("[bsl_lint] ОШИБКА: не найден запускаемый java (JAVA_HOME / 1C:EDT Axiom JDK / bundled JRE / PATH). "
-              "Bundled JRE — Git-LFS exe, возможно не выгружен (`git lfs pull`).", file=sys.stderr)
+        print(
+            "[bsl_lint] ОШИБКА: не найден запускаемый java (JAVA_HOME / 1C:EDT Axiom JDK / bundled JRE / PATH). "
+            "Bundled JRE — Git-LFS exe, возможно не выгружен (`git lfs pull`).",
+            file=sys.stderr,
+        )
         return 2
     if not _runnable(BSL_LS_JAR):
-        print(f"[bsl_lint] ОШИБКА: нет {BSL_LS_JAR} (или это LFS-указатель). `git lfs pull`.", file=sys.stderr)
+        print(
+            f"[bsl_lint] ОШИБКА: нет {BSL_LS_JAR} (или это LFS-указатель). `git lfs pull`.",
+            file=sys.stderr,
+        )
         return 2
 
     target = Path(args.path)
@@ -234,7 +277,10 @@ def main(argv: list[str] | None = None) -> int:
             reports[0] if reports else None,
         )
         if report is None:
-            print(f"[bsl_lint] ОШИБКА: bsl-ls не создал отчёт (rc={rc}).\n{log[:2000]}", file=sys.stderr)
+            print(
+                f"[bsl_lint] ОШИБКА: bsl-ls не создал отчёт (rc={rc}).\n{log[:2000]}",
+                file=sys.stderr,
+            )
             return 2
         diags = parse_report(report)
         if target.is_file():  # вернуть исходный путь вместо temp-копии

@@ -8,6 +8,7 @@
 
 `run_format` (вызов java/bsl-ls) замокан — тесты не требуют Java/jar (marker `unit`, в CI-гейте).
 """
+
 from __future__ import annotations
 
 import sys
@@ -23,6 +24,7 @@ pytestmark = pytest.mark.unit
 
 def _mock_run_format(new_bytes: bytes | None, rc: int = 0, delete: bool = False):
     """Сымитировать bsl-ls `--format`: пишет new_bytes в копию внутри srcDir (или удаляет её)."""
+
     def _fake(java: str, src_dir: Path, config: Path):
         f = next(Path(src_dir).glob("*"))  # единственная копия
         if delete:
@@ -30,6 +32,7 @@ def _mock_run_format(new_bytes: bytes | None, rc: int = 0, delete: bool = False)
         elif new_bytes is not None:
             f.write_bytes(new_bytes)
         return rc, ""
+
     return _fake
 
 

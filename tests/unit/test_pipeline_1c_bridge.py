@@ -61,7 +61,9 @@ def test_is_1c_task_title():
     # N4: единый предикат 1С-пайплайна — paren-form True, lookalike/прочее False
     assert bridge.is_1c_task_title("1С-задача (run-1c-task): GKSTCPLK-1") is True
     assert bridge.is_1c_task_title("1С-задача (analyze-1c-task): x") is True
-    assert bridge.is_1c_task_title("1С-задача из чата: классификатор") is False  # lookalike (без скобки)
+    assert (
+        bridge.is_1c_task_title("1С-задача из чата: классификатор") is False
+    )  # lookalike (без скобки)
     assert bridge.is_1c_task_title("B' доработка: docs") is False
     assert bridge.is_1c_task_title("") is False
     assert bridge.is_1c_task_title(None) is False
@@ -102,7 +104,9 @@ def test_force_shared_failure_evicts_cached_submodule(monkeypatch):
     worst-case КАЖДЫЙ прогон — без зависимости от порядка тестов и наличия естественного кэшера
     («а если кешера не будет»). Откатят `delitem` — этот тест красный ВСЕГДА, а не флейково.
     """
-    monkeypatch.setitem(sys.modules, "shared.pipeline_state", types.ModuleType("shared.pipeline_state"))
+    monkeypatch.setitem(
+        sys.modules, "shared.pipeline_state", types.ModuleType("shared.pipeline_state")
+    )
     _force_shared_import_failure(monkeypatch)
     assert "shared.pipeline_state" not in sys.modules  # выселен → import не резолвится из кэша
     # сквозной best-effort контракт держится даже при предзаполненном кэше:
@@ -178,8 +182,16 @@ def test_advance_test_done_best_effort():
 
 def test_classify_t1_t2_t3():
     assert bridge.classify_1c_task("Доработать создание Направление GKSTCPLK-2182")["ttype"] == "T1"
-    assert bridge.classify_1c_task("Исправить ошибку формирования пробы GKSTCPLK-2177")["ttype"] == "T2"
-    assert bridge.classify_1c_task("Исправить ошибки тестирование нового функционала GKSTCPLK-2236")["ttype"] == "T3"
+    assert (
+        bridge.classify_1c_task("Исправить ошибку формирования пробы GKSTCPLK-2177")["ttype"]
+        == "T2"
+    )
+    assert (
+        bridge.classify_1c_task("Исправить ошибки тестирование нового функционала GKSTCPLK-2236")[
+            "ttype"
+        ]
+        == "T3"
+    )
 
 
 def test_classify_non_1c_and_ask():
@@ -235,9 +247,15 @@ def test_resolve_input_folder_no_jira_ascii_slug(tmp_path):
 
 def test_estimate_effort_bands():
     # light → simple; modify → medium; heavy_obj → complex
-    assert bridge.estimate_effort("исправить опечатку в наименовании справочника")["complexity"] == "simple"
+    assert (
+        bridge.estimate_effort("исправить опечатку в наименовании справочника")["complexity"]
+        == "simple"
+    )
     assert bridge.estimate_effort("доработать форму, добавить колонку")["complexity"] == "medium"
-    assert bridge.estimate_effort("создать новый документ с регистром накопления")["complexity"] == "complex"
+    assert (
+        bridge.estimate_effort("создать новый документ с регистром накопления")["complexity"]
+        == "complex"
+    )
 
 
 def test_estimate_effort_folder_bump():
@@ -288,8 +306,12 @@ def test_route_attribute_name_not_light_downgrade():
 
 def test_estimate_effort_develop_group():
     # «разработать/реализовать + печатная форма/механизм/функционал» → develop (+2) → medium, не simple
-    for txt in ["разработать печатную форму", "реализовать функционал по внесению данных",
-                "разработать механизм приёмки авто", "создать новую печатную форму"]:
+    for txt in [
+        "разработать печатную форму",
+        "реализовать функционал по внесению данных",
+        "разработать механизм приёмки авто",
+        "создать новую печатную форму",
+    ]:
         e = bridge.estimate_effort(txt, ttype="T1")
         assert e["complexity"] == "medium" and "develop" in e["signals"], (txt, e)
 
@@ -326,12 +348,23 @@ def test_route_truly_cosmetic_still_auto():
 
 def test_has_non_1c_context_helper():
     # высокоточные маркеры НЕ-1С разработки ловятся (regex-робастные формы + пробельные варианты)
-    for t in ["обработка в FastAPI", "fast api роутер", "поиск в Qdrant", "тест на pytest",
-              "агент на langchain", "rerank в search pipeline", "образ docker", "очистка redis"]:
+    for t in [
+        "обработка в FastAPI",
+        "fast api роутер",
+        "поиск в Qdrant",
+        "тест на pytest",
+        "агент на langchain",
+        "rerank в search pipeline",
+        "образ docker",
+        "очистка redis",
+    ]:
         assert bridge._has_non_1c_context(t) is True, t
     # чистая 1С-задача — НЕ тех-контекст
-    for t in ["доработать проведение документа Реализация", "добавить реквизит в справочник",
-              "разработать печатную форму Акт"]:
+    for t in [
+        "доработать проведение документа Реализация",
+        "добавить реквизит в справочник",
+        "разработать печатную форму Акт",
+    ]:
         assert bridge._has_non_1c_context(t) is False, t
 
 
@@ -414,7 +447,9 @@ def test_recall_t3_passive_uchteno():
 def test_recall_non_1c_still_none():
     # расширение НЕ ловит не-1С: вопрос/код без таск-глагола ИЛИ без 1С-сигнала
     assert bridge.classify_1c_task("как работает RAG embeddings")["is_1c"] is False
-    assert bridge.classify_1c_task("что такое ТабличныйДокумент")["is_1c"] is False  # CamelCase, но нет глагола
+    assert (
+        bridge.classify_1c_task("что такое ТабличныйДокумент")["is_1c"] is False
+    )  # CamelCase, но нет глагола
     assert bridge.classify_1c_task("напиши скрипт на python для парсинга")["is_1c"] is False
 
 
@@ -531,10 +566,10 @@ def test_confidence_non_1c_zero():
 def test_confidence_threshold_preserves_confident_1c():
     # инвариант #2: confident_1c == (confidence >= 0.7), поведение прежнее
     cases = [
-        ("GKSTCPLK-1 доработать", True),               # jira → 1.0
-        ("доработать НаправлениеНаРазгрузку", True),   # strong → 0.7
-        ("исправить ошибку при проведении", False),   # weak → 0.5 → ask_1c
-        ("как работает RAG", False),                  # none → 0.0
+        ("GKSTCPLK-1 доработать", True),  # jira → 1.0
+        ("доработать НаправлениеНаРазгрузку", True),  # strong → 0.7
+        ("исправить ошибку при проведении", False),  # weak → 0.5 → ask_1c
+        ("как работает RAG", False),  # none → 0.0
     ]
     for text, exp in cases:
         r = bridge.route_1c_task(text)
@@ -547,7 +582,9 @@ def test_confidence_threshold_preserves_confident_1c():
 
 
 def test_semantic_sim_module():
-    spec = importlib.util.spec_from_file_location("onec_sf_t", _HOOKS / "shared" / "onec_semantic_fallback.py")
+    spec = importlib.util.spec_from_file_location(
+        "onec_sf_t", _HOOKS / "shared" / "onec_semantic_fallback.py"
+    )
     sf = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sf)
     hi = sf.semantic_sim("не отрабатывает кнопка печати на форме акта приёмки")  # парафраз ТЗ
@@ -597,7 +634,9 @@ def test_route_non_1c_carries_source():
 
 def test_semantic_signal_falls_back_to_tfidf():
     # _semantic_signal: гейт спит (setfit_prob→None) → источник tfidf, скор = semantic_sim
-    score, source, hit = bridge._semantic_signal("не отрабатывает кнопка печати на форме акта приёмки")
+    score, source, hit = bridge._semantic_signal(
+        "не отрабатывает кнопка печати на форме акта приёмки"
+    )
     assert source == "tfidf" and isinstance(hit, bool) and score > 0.0
 
 
@@ -618,10 +657,10 @@ def test_route_actionless_headline_user_example():
     # ГВОЗДЬ: ровно вход пользователя → 1С уверенно, но verb-less ∧ zero-signal → НЕ auto, а ask_flow.
     r = bridge.route_1c_task(_ACTIONLESS_PROMPT)
     assert r["is_1c"] is True
-    assert r["confident_1c"] is True          # гкс_/код → confident сохранён
-    assert r["complexity"] == "simple"        # ноль work-сигналов
+    assert r["confident_1c"] is True  # гкс_/код → confident сохранён
+    assert r["complexity"] == "simple"  # ноль work-сигналов
     assert r["actionless"] is True
-    assert r["flow"] == "ask_flow"            # НЕ "auto" — корень бага закрыт
+    assert r["flow"] == "ask_flow"  # НЕ "auto" — корень бага закрыт
     assert r["flow"] != "auto"
 
 
@@ -645,9 +684,11 @@ def test_route_actionless_false_when_work_signal_present():
 
 def test_route_actionless_key_present_all_returns():
     # наблюдаемость: ключ actionless во ВСЕХ ветках возврата (none / ask_1c / confident).
-    assert "actionless" in bridge.route_1c_task("как работает RAG embeddings")          # none
-    assert "actionless" in bridge.route_1c_task("исправить ошибку при проведении")       # ask_1c (weak)
-    assert "actionless" in bridge.route_1c_task("GKSTCPLK-1 доработать форму, добавить колонку")  # confident
+    assert "actionless" in bridge.route_1c_task("как работает RAG embeddings")  # none
+    assert "actionless" in bridge.route_1c_task("исправить ошибку при проведении")  # ask_1c (weak)
+    assert "actionless" in bridge.route_1c_task(
+        "GKSTCPLK-1 доработать форму, добавить колонку"
+    )  # confident
     # в none/ask_1c ветках гейт неактуален → False
     assert bridge.route_1c_task("как работает RAG embeddings")["actionless"] is False
     assert bridge.route_1c_task("исправить ошибку при проведении")["actionless"] is False
@@ -658,8 +699,16 @@ def test_route_actionless_key_present_all_returns():
 
 def test_task_verb_extension_common_verbs():
     # частые глаголы, ранее отсутствовавшие в словаре → теперь распознаются
-    for t in ["замени макет печати", "поменяй реквизит", "перепиши запрос", "переписать модуль",
-              "переделай форму", "обнови справочник", "переименуй документ", "поправь печать"]:
+    for t in [
+        "замени макет печати",
+        "поменяй реквизит",
+        "перепиши запрос",
+        "переписать модуль",
+        "переделай форму",
+        "обнови справочник",
+        "переименуй документ",
+        "поправь печать",
+    ]:
         assert bridge._TASK_VERB.search(t), t
 
 

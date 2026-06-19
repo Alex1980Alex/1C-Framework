@@ -41,7 +41,9 @@ _state = {"model": None, "last": time.monotonic(), "gate": None}
 
 def _load():
     """Загрузить ST+LR один раз (через гейт — единый источник загрузки/контракта)."""
-    os.environ.setdefault("ONEC_SETFIT_ENABLE", "1")  # _load_model не зависит от флага, но для ясности
+    os.environ.setdefault(
+        "ONEC_SETFIT_ENABLE", "1"
+    )  # _load_model не зависит от флага, но для ясности
     from shared import onec_setfit_gate as gate
 
     _state["gate"] = gate
@@ -103,7 +105,10 @@ def main(argv=None) -> int:
     except Exception:
         pass
     if _load() is None:
-        print("модель не найдена (models/onec-setfit) — обучите scripts/train_onec_setfit.py", file=sys.stderr)
+        print(
+            "модель не найдена (models/onec-setfit) — обучите scripts/train_onec_setfit.py",
+            file=sys.stderr,
+        )
         return 2
     srv = ThreadingHTTPServer(("127.0.0.1", args.port), _Handler)
     threading.Thread(target=_idle_watch, args=(srv,), daemon=True).start()

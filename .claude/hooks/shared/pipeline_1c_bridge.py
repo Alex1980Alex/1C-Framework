@@ -26,7 +26,9 @@ import unicodedata
 _JIRA = re.compile(r"[A-Z]{2,}-\d+")
 
 
-_1C_TITLE_PREFIX = "1С-задача ("  # формат ensure_pipeline_1c / run-1c-task: f"1С-задача ({command}): {slug}"
+_1C_TITLE_PREFIX = (
+    "1С-задача ("  # формат ensure_pipeline_1c / run-1c-task: f"1С-задача ({command}): {slug}"
+)
 
 
 def is_1c_task_title(title) -> bool:
@@ -81,7 +83,9 @@ def ensure_pipeline_1c(prompt: str, command: str, task_dir: str | None = None) -
         from shared import pipeline_state
 
         slug = derive_slug(prompt)
-        pipeline_state.init_task(slug, title=f"1С-задача ({command}): {slug}", task_dir=task_dir)  # идемпотентно
+        pipeline_state.init_task(
+            slug, title=f"1С-задача ({command}): {slug}", task_dir=task_dir
+        )  # идемпотентно
         return slug
     except Exception:
         return None  # никогда не ломаем preflight
@@ -89,10 +93,12 @@ def ensure_pipeline_1c(prompt: str, command: str, task_dir: str | None = None) -
 
 # ADR-019 F-1.5: запись 1С-артефакта → продвижение этапов CURRENT 1С-пайплайна.
 _ARTIFACT_STAGES = [
-    (re.compile(r"ANALYSIS-REPORT", re.I), (1, 2)),        # analyze → Планирование + Дизайн
+    (re.compile(r"ANALYSIS-REPORT", re.I), (1, 2)),  # analyze → Планирование + Дизайн
     (re.compile(r"IMPLEMENTATION-PROGRESS", re.I), (3,)),  # implement → Кодирование
 ]
-_ARTIFACT_MIN_CHARS = 200  # H7: порог непробельных символов против false-advance на пустом/stub-артефакте
+_ARTIFACT_MIN_CHARS = (
+    200  # H7: порог непробельных символов против false-advance на пустом/stub-артефакте
+)
 
 
 def _artifact_has_content(file_path: str, min_chars: int = _ARTIFACT_MIN_CHARS) -> bool:
@@ -257,7 +263,9 @@ def classify_1c_task(prompt: str) -> dict:
         p = prompt or ""
         jira = _JIRA.search(p)
         has_verb = bool(_TASK_VERB.search(p))
-        code = bool(_1C_CODE.search(p))  # литеральный 1С/BSL-синтаксис — сам по себе сигнал (без глагола)
+        code = bool(
+            _1C_CODE.search(p)
+        )  # литеральный 1С/BSL-синтаксис — сам по себе сигнал (без глагола)
         # уровни: (1) JIRA; (2) definitive (гкс_/configuration); (3) КОД (наличие 1С-синтаксиса —
         # ключевой признак); (4) доменный термин ИЛИ сильный маркер (CamelCase/объект.точка) + глагол.
         is_1c = (
@@ -267,8 +275,14 @@ def classify_1c_task(prompt: str) -> dict:
             or ((bool(_1C_SIGNAL.search(p)) or bool(_1C_STRONG.search(p))) and has_verb)
         )
         if not is_1c:
-            return {"is_1c": False, "jira": None, "ttype": None, "ask": False, "code": False,
-                    "confidence": 0.0}
+            return {
+                "is_1c": False,
+                "jira": None,
+                "ttype": None,
+                "ask": False,
+                "code": False,
+                "confidence": 0.0,
+            }
         # Калиброванная уверенность (#2): скор 0..1 = max по силе сигнала. Инвариант:
         # confident_1c в route = (confidence >= 0.7) ТОЧНО воспроизводит прежнее
         # `jira ∨ _1C_STRONG ∨ code` — эквивалентность под guard'ом is_1c (вне него confidence=0.0,
@@ -298,8 +312,14 @@ def classify_1c_task(prompt: str) -> dict:
             "confidence": confidence,  # калиброванный скор силы 1С-сигнала (0..1)
         }
     except Exception:
-        return {"is_1c": False, "jira": None, "ttype": None, "ask": False, "code": False,
-                "confidence": 0.0}
+        return {
+            "is_1c": False,
+            "jira": None,
+            "ttype": None,
+            "ask": False,
+            "code": False,
+            "confidence": 0.0,
+        }
 
 
 # --- Классификатор сложности (оценка трудозатрат) + маршрутизация потока (2026-06-15) ---
@@ -353,36 +373,98 @@ _EFFORT_CFG = {
     "base": 1,  # любая 1С-задача нетривиальна
     "bands": {"simple_max": 2, "medium_max": 5},  # ≤2 simple; 3..5 medium; ≥6 complex
     "weights": {
-        "light": -2, "modify": 2, "develop": 2, "heavy_obj": 5, "cross": 3, "multi": 2,
-        "folder": 2, "ttype_T1": 1, "ttype_T3": 1,
+        "light": -2,
+        "modify": 2,
+        "develop": 2,
+        "heavy_obj": 5,
+        "cross": 3,
+        "multi": 2,
+        "folder": 2,
+        "ttype_T1": 1,
+        "ttype_T3": 1,
     },
     "signals": {
-        "light": ["опечатк", "текст сообщен", "наименован", "переименов", "комментар",
-                  "подсказк", "заголовок", "формулировк", "очепятк"],
-        "modify": ["доработать", "доработ", "добавить реквизит", "добавить колонк",
-                   "добавить поле", "добавить форм", "новый реквизит", "новую процедур",
-                   "изменить алгоритм", "изменить запрос"],
+        "light": [
+            "опечатк",
+            "текст сообщен",
+            "наименован",
+            "переименов",
+            "комментар",
+            "подсказк",
+            "заголовок",
+            "формулировк",
+            "очепятк",
+        ],
+        "modify": [
+            "доработать",
+            "доработ",
+            "добавить реквизит",
+            "добавить колонк",
+            "добавить поле",
+            "добавить форм",
+            "новый реквизит",
+            "новую процедур",
+            "изменить алгоритм",
+            "изменить запрос",
+        ],
         # develop (Находка 1, 2026-06-18): substantial-создание/реализация, фразировки которых НЕ
         # покрывали modify/heavy_obj → задачи ложно падали в simple→auto (печатные формы, «разработать
         # механизм», «реализовать функционал»). Вес +2 (medium-уровень, single-count) — безопасный пол:
         # такая задача больше НЕ авто-прогоняется мимо гейта ревью. Отдельная группа (не modify) —
         # чтобы не сломать «2 modify-хита = medium» (test_route_medium_ask_flow).
-        "develop": ["разработать", "реализовать", "печатн", "механизм", "функционал",
-                    "новую форм", "новая форм"],
-        "heavy_obj": ["новый документ", "новый справочник", "новый регистр", "новый отчёт",
-                      "новый отчет", "новую обработк", "создать документ", "создать справочник",
-                      "создать регистр", "создать отчёт", "создать отчет", "создать обработк",
-                      "план обмена", "план видов", "бизнес-процесс", "регистр накоплен",
-                      "регистр сведен", "регистр бухгалтер"],
-        "cross": ["обмен данны", "настроить обмен", "обмен с баз", "обмен между", "интеграц",
-                  "rls", "права доступ", "ограничени доступа", "новую роль", "новая роль",
-                  "подсистем", "конвертац", "миграц", "рефакторинг"],
+        "develop": [
+            "разработать",
+            "реализовать",
+            "печатн",
+            "механизм",
+            "функционал",
+            "новую форм",
+            "новая форм",
+        ],
+        "heavy_obj": [
+            "новый документ",
+            "новый справочник",
+            "новый регистр",
+            "новый отчёт",
+            "новый отчет",
+            "новую обработк",
+            "создать документ",
+            "создать справочник",
+            "создать регистр",
+            "создать отчёт",
+            "создать отчет",
+            "создать обработк",
+            "план обмена",
+            "план видов",
+            "бизнес-процесс",
+            "регистр накоплен",
+            "регистр сведен",
+            "регистр бухгалтер",
+        ],
+        "cross": [
+            "обмен данны",
+            "настроить обмен",
+            "обмен с баз",
+            "обмен между",
+            "интеграц",
+            "rls",
+            "права доступ",
+            "ограничени доступа",
+            "новую роль",
+            "новая роль",
+            "подсистем",
+            "конвертац",
+            "миграц",
+            "рефакторинг",
+        ],
         "multi": ["несколько", "массов", "по всем", "пакетн", "все документ"],
     },
 }
 
 
-def estimate_effort(prompt: str, ttype: str = "", is_folder: bool = False, cfg: dict | None = None) -> dict:
+def estimate_effort(
+    prompt: str, ttype: str = "", is_folder: bool = False, cfg: dict | None = None
+) -> dict:
     """Эвристическая оценка трудозатрат 1С-задачи → {complexity, points, signals}.
 
     Баллы по группам сигналов текста (light/modify/heavy_obj/cross/multi) + тип задачи (T1/T3) + наличие
@@ -538,24 +620,39 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     if non_1c_ctx:
         is_1c = False
     if not is_1c:
-        return {**cl, "is_1c": False, "complexity": None, "points": 0, "signals": [],
-                "confident_1c": False, "flow": "none", "actionless": False,
-                "reason": ("НЕ-1С тех-контекст перевесил слабый 1С-сигнал" if non_1c_ctx
-                           else "не 1С-задача"),
-                "semantic_sim": sem, "semantic_source": sem_source, "non_1c_context": non_1c_ctx}
+        return {
+            **cl,
+            "is_1c": False,
+            "complexity": None,
+            "points": 0,
+            "signals": [],
+            "confident_1c": False,
+            "flow": "none",
+            "actionless": False,
+            "reason": (
+                "НЕ-1С тех-контекст перевесил слабый 1С-сигнал" if non_1c_ctx else "не 1С-задача"
+            ),
+            "semantic_sim": sem,
+            "semantic_source": sem_source,
+            "non_1c_context": non_1c_ctx,
+        }
     eff = estimate_effort(prompt, ttype=cl.get("ttype") or "", is_folder=is_folder, cfg=cfg)
     out = {**cl, **eff}
     out["is_1c"] = True  # мог быть промоут семантикой (#3)
     out["semantic_sim"] = sem
     out["semantic_source"] = sem_source
     out["confident_1c"] = confident
-    out["non_1c_context"] = non_1c_ctx  # всегда False здесь (veto ушёл в none-ветку выше), но для единообразия ключа
+    out["non_1c_context"] = (
+        non_1c_ctx  # всегда False здесь (veto ушёл в none-ветку выше), но для единообразия ключа
+    )
     if not confident:
         out["flow"] = "ask_1c"
         out["actionless"] = False  # actionless-гейт живёт только в confident+simple ветке (ниже)
         if semantic_hit and not cl.get("is_1c"):
             out["ask"] = True  # семантика-промоут (нет JIRA/маркера) → подтвердить
-            out["reason"] = f"семантическое сходство с 1С-фразами (sim={sem}) — подтвердить, 1С ли это"
+            out["reason"] = (
+                f"семантическое сходство с 1С-фразами (sim={sem}) — подтвердить, 1С ли это"
+            )
         else:
             out["reason"] = "1С-сигнал слабый/без JIRA — подтвердить (1С ли) + тип/папка (V.6)"
         return out
@@ -566,9 +663,7 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     # «сомнение → спросить»). Срабатывает ТОЛЬКО в simple-полосе: verb-less ∧ zero-signal даёт
     # points ≤ 2 ⇒ всегда simple, поэтому medium/complex (gated/ask_flow) по построению не затронуты.
     actionless = (
-        comp == "simple"
-        and not bool(_TASK_VERB.search(prompt or ""))
-        and not eff.get("signals")
+        comp == "simple" and not bool(_TASK_VERB.search(prompt or "")) and not eff.get("signals")
     )
     out["actionless"] = actionless
     if actionless:
@@ -580,7 +675,13 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     elif comp == "simple":
         out["flow"], out["reason"] = "auto", "простая → /run-1c-task (AUTO, без паузы)"
     elif comp == "complex":
-        out["flow"], out["reason"] = "gated", "сложная → гейтованный /analyze-1c-task + /implement-1c-task (ревью анализа)"
+        out["flow"], out["reason"] = (
+            "gated",
+            "сложная → гейтованный /analyze-1c-task + /implement-1c-task (ревью анализа)",
+        )
     else:
-        out["flow"], out["reason"] = "ask_flow", "средняя → спросить: /run-1c-task (AUTO) или гейтованный поток"
+        out["flow"], out["reason"] = (
+            "ask_flow",
+            "средняя → спросить: /run-1c-task (AUTO) или гейтованный поток",
+        )
     return out
