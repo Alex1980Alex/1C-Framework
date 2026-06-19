@@ -84,6 +84,8 @@ Remove-Item .claude/cache/auto-git-save.paused
 
 До commit `96b8f3a24` второй хук игнорировал sentinel и мог авто-коммитить 200+ файлов с шумным сообщением даже при `forever` паузе (инцидент `93fee7b53` 2026-05-13). Теперь оба гейтятся одинаково — пользователь переключает обе линии одним sentinel-файлом.
 
+> **Регрессия + guard (2026-06-19):** вызов `_is_paused()` в `posttooluse-auto-git-save.py:execute()` был потерян при рефакторинге (функция осталась определена, но не вызывалась) → debounce-хук снова коммитил сквозь `forever` паузу, подхватывая чужие staged-файлы. Вызов восстановлен; защищён регресс-тестом [tests/unit/test_auto_save_pause.py](../../../tests/unit/test_auto_save_pause.py) (paused → `_git_commit` не зовётся; not-paused → зовётся, защита от over-gating). Третий хук `auto-git-save-prompt.py` гейтит через `_is_paused()` (стр. 266), `auto-git-save.py` — через `get_pause_status()` (стр. 678) — все три проверены.
+
 ---
 
 ## Механизмы

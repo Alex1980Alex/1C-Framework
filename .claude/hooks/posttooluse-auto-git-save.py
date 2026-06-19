@@ -173,6 +173,15 @@ class PostToolUseAutoGitSave(BaseHook):
         if not file_path or not _should_track(file_path):
             return None
 
+        # Honor the shared pause sentinel (same file as auto-git-save.py +
+        # auto-git-save-prompt.py). Without this the debounce path committed
+        # straight through a `forever` pause — `_is_paused()` stayed defined but
+        # its call site was lost in a refactor (regression). auto-git-save.py
+        # still tracks the file on its own PostToolUse, so nothing is dropped;
+        # the commit just waits for resume. Guard: tests/unit/test_auto_save_pause.py.
+        if _is_paused():
+            return None
+
         # Load debounce state
         pending = _load_pending()
         now = time.time()
