@@ -615,10 +615,14 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     else:
         sem, sem_source, semantic_hit = _semantic_signal(prompt or "")
     is_1c = bool(cl.get("is_1c")) or semantic_hit
-    # Находка 2: veto НЕ-1С тех-контекста. Слабый 1С-сигнал (regex domain-word ИЛИ семантика, НЕ
-    # confident) перевешивается явным маркером НЕ-1С разработки (Python/RAG/devops) → молчим (none)
-    # вместо шумного ask_1c. Confident (JIRA/код/гкс_/CamelCase) сюда не попадает — защищён.
-    non_1c_ctx = (not confident) and is_1c and _has_non_1c_context(prompt or "")
+    # Находка 2 + C4: veto НЕ-1С тех-контекста. Veto-иммунны ТОЛЬКО строго-уверенные входы
+    # (confidence ≥ 0.9 = JIRA / литеральный код / гкс_·configuration — это точно 1С, даже если
+    # упомянут инструмент). CamelCase-кириллица (0.7) — слабейший, FP-склонный confident-сигнал —
+    # ВЕТИРУЕТСЯ (C4): любой кириллический CamelCase-«горб» даёт 0.7, поэтому «функция ПолучитьЭмбеддинг
+    # в langchain» раньше ошибочно шла confident→auto/ask_flow; теперь denylist перевешивает → none.
+    # Слабый regex domain-word / семантика (<0.7) — тоже ветируется (как и раньше).
+    veto_immune = cl.get("confidence", 0.0) >= 0.9
+    non_1c_ctx = (not veto_immune) and is_1c and _has_non_1c_context(prompt or "")
     if non_1c_ctx:
         is_1c = False
     if not is_1c:

@@ -405,6 +405,21 @@ def test_route_non_1c_carries_non_1c_context_key():
     assert "non_1c_context" in bridge.route_1c_task("GKSTCPLK-1 доработать форму")
 
 
+def test_route_camelcase_confident_is_veto_able_c4():
+    # C4: CamelCase-кириллица (confidence 0.7) — слабейший confident-сигнал — ВЕТИРУЕТСЯ НЕ-1С
+    # тех-маркером → none (раньше confident обходил veto → ошибочный auto/ask_flow).
+    r = bridge.route_1c_task("добавить функцию ПолучитьЭмбеддинг в langchain пайплайн")
+    assert r["confidence"] == 0.7  # только CamelCase-strong, без jira/code/definitive
+    assert r["is_1c"] is False and r["flow"] == "none" and r["non_1c_context"] is True
+
+
+def test_route_strong_confident_stays_veto_immune_c4():
+    # ИНВАРИАНТ C4: строго-уверенный (≥0.9 — гкс_/код/JIRA) с тем же тех-словом НЕ ветируется.
+    r = bridge.route_1c_task("доработать гкс_ЗагрузкаДанных с выгрузкой в langchain")
+    assert r["confidence"] == 0.9 and r["is_1c"] is True
+    assert r["flow"] != "none" and r["non_1c_context"] is False
+
+
 # --- recall-расширение детектора (заземлено на configuration/.../docs реальные задачи) ---
 
 
