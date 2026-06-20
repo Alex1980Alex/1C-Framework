@@ -27,6 +27,11 @@ while read -r _lref lsha _rref rsha; do
     else
         base=$rsha
     fi
+    # ADR-027: submodule push-ordering guard — блок, если родитель двигает gitlink
+    # сабмодуля на коммит, не запушенный в его remote (класс dangling gitlink, PR #77).
+    if ! "$PY" scripts/check_submodule_push_order.py "$base" "$lsha"; then
+        exit 1
+    fi
     f=$(git diff --name-only --diff-filter=d "$base" "$lsha" -- '*.py' 2>/dev/null)
     files="$files
 $f"
