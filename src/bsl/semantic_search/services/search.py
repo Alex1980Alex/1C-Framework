@@ -440,13 +440,17 @@ class BSLSearchService:
         """Vector search via Qdrant.
 
         Auto-detects collection layout on first call:
-          * `hybrid` (named dense + sparse BM25) -> **pure BM25 sparse**
-            (`using="bm25"`). Realistic eval on 50 labeled BSL queries
-            (`data/bsl_golden_set.json`, 2026-05-22) showed pure BM25 strictly
-            dominates Prefetch+RRF: dMRR +7.3pp, dRecall@10 +6.0pp, dNDCG@10
-            +7.0pp. Dense Qwen3 contributes nothing useful on BSL content —
-            adding it via RRF degrades top-K ordering. Plus: skipping the TEI
-            dense embed cuts query latency.
+          * `hybrid` (named dense + sparse BM25) -> **hybrid RRF** (Prefetch
+            dense + BM25 sparse -> FusionQuery RRF). 2026-06-20 re-verified
+            realistic eval (lexical `data/bsl_golden_set.json` + vocab-mismatch
+            `data/eval/bsl/bsl_semantic_golden.json`): hybrid beats BM25-first on
+            BOTH splits — lexical recall@10 0.78 vs 0.68 (+10pp), semantic 0.34
+            vs 0.16 (+18pp). The prior "pure BM25 dominates / dense ~18%" verdict
+            (2026-05-22) did NOT reproduce: dense is healthy (0.72 lexical / 0.42
+            semantic) — the 18% was a harness artifact. Fallbacks: TEI down ->
+            BM25-only; BM25/FastEmbed down -> dense-only. (query-adaptive fusion,
+            dense-heavy for NL queries, is the next step — semantic dense-only
+            0.42 still > hybrid 0.34.) See memory feedback-bsl-sparse-bm25-dominance.
           * `dense_only` (single-vector OR named without sparse) -> plain
             dense `query_points`. Backwards-compat for non-migrated collections.
         """
@@ -466,49 +470,81 @@ class BSLSearchService:
             layout = self._detect_collection_layout(collection_name)
 
             if layout == "hybrid":
-                bm25 = self._get_bm25_sparse()
-                if bm25 is not None:
-                    from qdrant_client import models as qm
+                # 2026-06-20 (Phase 0 verified): hybrid RRF default — dense + BM25
+                # sparse fusion. Supersedes pure-BM25 default; hybrid beats BM25-first
+                # on lexical (+10pp) AND vocab-mismatch (+18pp) recall@10. Graceful
+                # degradation keeps the old BM25-only path when TEI is down.
+                from qdrant_client import models as qm
 
+                bm25 = self._get_bm25_sparse()
+                # --- dense arm (TEI Qwen3; is_query=True applies the query instruct prefix) ---
+                if self._embedding_service is None:
+                    import atexit
+
+                    from src.framework_search.embedder import FrameworkTEIEmbedder
+
+                    self._embedding_service = FrameworkTEIEmbedder()
+                    atexit.register(self._embedding_service.close)
+                try:
+                    query_embedding = (
+                        await asyncio.to_thread(
+                            self._embedding_service.embed_batch, [query], is_query=True
+                        )
+                    )[0] or None
+                except Exception as exc:
+                    logger.error(f"TEI embedding failed (hybrid dense arm): {exc}")
+                    query_embedding = None
+                # --- BM25 sparse arm (FastEmbed Qdrant/bm25 over CamelCase-normalized query) ---
+                sparse_vec = None
+                if bm25 is not None:
                     norm_query = self._normalize_camelcase_for_bm25(query)
                     sparse_emb = await asyncio.to_thread(
                         lambda: next(iter(bm25.embed([norm_query])))
                     )
+                    sparse_vec = qm.SparseVector(
+                        indices=sparse_emb.indices.tolist(),
+                        values=sparse_emb.values.tolist(),
+                    )
+
+                prefetch_limit = max(limit, 50)
+                if query_embedding and sparse_vec is not None:
+                    # both arms healthy -> RRF fusion (the verified default)
                     search_results = (
                         await asyncio.to_thread(
                             self._qdrant_client.query_points,
                             collection_name=collection_name,
-                            query=qm.SparseVector(
-                                indices=sparse_emb.indices.tolist(),
-                                values=sparse_emb.values.tolist(),
-                            ),
+                            prefetch=[
+                                qm.Prefetch(
+                                    query=query_embedding,
+                                    using="dense",
+                                    limit=prefetch_limit,
+                                    filter=filters,
+                                ),
+                                qm.Prefetch(
+                                    query=sparse_vec,
+                                    using="bm25",
+                                    limit=prefetch_limit,
+                                    filter=filters,
+                                ),
+                            ],
+                            query=qm.FusionQuery(fusion=qm.Fusion.RRF),
+                            limit=limit,
+                        )
+                    ).points
+                elif sparse_vec is not None:
+                    # TEI down -> BM25-only fallback (prev default)
+                    search_results = (
+                        await asyncio.to_thread(
+                            self._qdrant_client.query_points,
+                            collection_name=collection_name,
+                            query=sparse_vec,
                             using="bm25",
                             limit=limit,
                             query_filter=filters,
                         )
                     ).points
-                else:
-                    # FastEmbed missing — fall back to dense via named vector.
-                    # This is worse than BM25 (golden eval: dense ~18% recall@10
-                    # vs bm25 ~76%) but better than nothing.
-                    if self._embedding_service is None:
-                        import atexit
-
-                        from src.framework_search.embedder import FrameworkTEIEmbedder
-
-                        self._embedding_service = FrameworkTEIEmbedder()
-                        atexit.register(self._embedding_service.close)
-                    try:
-                        query_embedding = (
-                            await asyncio.to_thread(
-                                self._embedding_service.embed_batch,
-                                [query],
-                                is_query=True,
-                            )
-                        )[0]
-                    except Exception as exc:
-                        logger.error(f"TEI embedding failed: {exc}", exc_info=True)
-                        return []
+                elif query_embedding:
+                    # BM25/FastEmbed down -> dense-only fallback
                     search_results = (
                         await asyncio.to_thread(
                             self._qdrant_client.query_points,
@@ -519,6 +555,9 @@ class BSLSearchService:
                             query_filter=filters,
                         )
                     ).points
+                else:
+                    logger.error("hybrid search: both arms unavailable (TEI + BM25 down)")
+                    return []
             else:
                 # Legacy single-vector path (Phase 8.12 BSL collections, others).
                 # Requires TEI dense embedding.
