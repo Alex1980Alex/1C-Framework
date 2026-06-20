@@ -3,6 +3,25 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "bsl-embedding-collapse-remediation-2026.md",
+      "title": "BSL/code embedding collapse — remediation (anisotropy/whitening, code+Cyrillic модели, чанкинг/идентификаторы, contrastive fine-tune) — факты web 2023-2026",
+      "keywords": [
+        "embedding-collapse",
+        "anisotropy",
+        "whitening",
+        "soft-zca",
+        "code-retrieval",
+        "cyrillic-embedding",
+        "qwen3-embedding",
+        "chunking",
+        "identifier-splitting",
+        "contrastive-finetune",
+        "bm25-hybrid",
+        "bsl"
+      ],
+      "last_verified": "2026-06-20"
+    },
+    {
       "file": "agentic-pipeline-workflow-enforcement-2026.md",
       "title": "Agentic pipeline/workflow enforcement — best practices (GitHub 2025-2026: Spec Kit 80k / BMAD 48k / OpenSpec / Kiro SDD · LangGraph / Burr state-machine · semantic-router · agentic-guardrails · task-master)",
       "keywords": [
