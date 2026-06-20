@@ -660,14 +660,14 @@ def test_route_actionless_headline_user_example():
     assert r["confident_1c"] is True  # гкс_/код → confident сохранён
     assert r["complexity"] == "simple"  # ноль work-сигналов
     assert r["actionless"] is True
-    assert r["flow"] == "ask_flow"  # НЕ "auto" — корень бага закрыт
+    assert r["flow"] == "ask_action"  # C1: actionless ≠ medium — отдельное значение flow
     assert r["flow"] != "auto"
 
 
 def test_route_actionless_code_dump_no_verb():
     # вставленный вызов менеджера БЕЗ таск-глагола → confident по коду, но действие не названо → ask_flow
     r = bridge.route_1c_task("РегистрыСведений.гкс_СостоянияРегистрации.СрезПоследних(&Дата)")
-    assert r["confident_1c"] is True and r["actionless"] is True and r["flow"] == "ask_flow"
+    assert r["confident_1c"] is True and r["actionless"] is True and r["flow"] == "ask_action"
 
 
 def test_route_actionless_false_when_verb_present():

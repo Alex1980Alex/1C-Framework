@@ -599,7 +599,9 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     (2026-06-15): простая→AUTO /run-1c-task, средняя→спросить, сложная→гейтованный /analyze+/implement;
     не-1С/сомнение-в-1С → спросить, сомнение-в-потоке → спросить.
 
-    flow ∈ {none, ask_1c, auto, ask_flow, gated}. Возврат = classify ∪ estimate ∪ {flow, reason, confident_1c}.
+    flow ∈ {none, ask_1c, auto, ask_flow, ask_action, gated}. Возврат = classify ∪ estimate ∪
+    {flow, reason, confident_1c}. ask_flow = средняя сложность («AUTO или гейт?»); ask_action =
+    actionless («что сделать?») — РАЗНЫЕ значения (C1: enum самодостаточен, не нужен доп-ключ actionless).
     """
     cl = classify_1c_task(prompt)
     # confident: калиброванный скор (#2) ≥ 0.7 — эквивалент прежнему `jira ∨ strong ∨ code`.
@@ -667,7 +669,9 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     )
     out["actionless"] = actionless
     if actionless:
-        out["flow"] = "ask_flow"
+        # C1: отдельное значение flow (не перегружаем ask_flow) — потребителю не нужно
+        # доп-проверять ключ actionless. (Ключ actionless сохранён для наблюдаемости/совместимости.)
+        out["flow"] = "ask_action"
         out["reason"] = (
             "1С-контекст без названного действия (нет таск-глагола/scope) — "
             "спроси, что именно сделать (не запускай AUTO)"
