@@ -9,6 +9,22 @@
   ],
   "records": [
     {
+      "id": "ADR-027",
+      "file": "027-prepush-submodule-ordering-guard.md",
+      "title": "pre-push submodule-ordering guard (защита от dangling gitlink, класс PR #77)",
+      "status": "accepted",
+      "date": "2026-06-20",
+      "research": "../cache/orchestration-best-practices.md",
+      "tags": [
+        "git",
+        "submodule",
+        "pre-push",
+        "guardrails",
+        "saga-prevention",
+        "dangling-gitlink"
+      ]
+    },
+    {
       "id": "ADR-026",
       "file": "026-state-first-1c-pipeline-enforcement.md",
       "title": "State-first enforcement пайплайна 1С (вход через машинерию + PreToolUse onec-state-first-guard)",
