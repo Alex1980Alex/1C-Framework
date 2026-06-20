@@ -3,6 +3,26 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "agentic-pipeline-workflow-enforcement-2026.md",
+      "title": "Agentic pipeline/workflow enforcement — best practices (GitHub 2025-2026: Spec Kit 80k / BMAD 48k / OpenSpec / Kiro SDD · LangGraph / Burr state-machine · semantic-router · agentic-guardrails · task-master)",
+      "keywords": [
+        "spec-driven-development",
+        "spec-kit",
+        "bmad",
+        "openspec",
+        "kiro",
+        "agent-workflow",
+        "state-machine",
+        "pipeline-enforcement",
+        "HITL-approval",
+        "guardrails",
+        "task-state",
+        "langgraph",
+        "burr"
+      ],
+      "last_verified": "2026-06-20"
+    },
+    {
       "file": "intent-detection-routing-best-practices.md",
       "title": "Детекция интента/домена + роутинг свободного текста — best practices (semantic-router, hybrid cascade, confidence-threshold, stemming vs lemmatization)",
       "keywords": [

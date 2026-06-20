@@ -9,6 +9,21 @@
   ],
   "records": [
     {
+      "id": "ADR-026",
+      "file": "026-state-first-1c-pipeline-enforcement.md",
+      "title": "State-first enforcement пайплайна 1С (вход через машинерию + PreToolUse onec-state-first-guard)",
+      "status": "accepted",
+      "date": "2026-06-20",
+      "research": "../cache/agentic-pipeline-workflow-enforcement-2026.md",
+      "tags": [
+        "1c-pipeline",
+        "state-first",
+        "hook-enforcement",
+        "spec-driven",
+        "guardrails"
+      ]
+    },
+    {
       "id": "ADR-001",
       "file": "001-langchain-over-haystack.md",
       "title": "LangChain + LangGraph вместо Haystack",
