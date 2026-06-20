@@ -34,6 +34,9 @@ DBSF **строго доминирует RRF** (L равно 0.80, S +4pp) бе�
 - **weighted-RRF dense-heavy (70/30)** — S 0.40 (ещё +2pp), но L −2pp (0.78). Отклонён в пользу no-regression DBSF.
 - **query-form classifier (NL→dense / id→bm25)** — оба golden = NL, классификатор по форме их не разделяет; на L dense-heavy регрессит. Отклонён.
 
+## Phase 3 addendum (2026-06-20) — confidence-gated fusion измерено и ОТКЛОНЕНО
+Остаток на S (DBSF 0.38 → dense-only ceiling 0.42) пытались закрыть **bm25-confidence-gating** (`bm25_top1 < θ → dense-only, иначе DBSF`); построен **identifier-golden** (I, query=имя символа) для контроля регресса. Измерение ([`scripts/bsl_phase3_adaptive_eval.py`](../../../../scripts/bsl_phase3_adaptive_eval.py), L/S/I, θ-свип): bm25_top1 L median 53.5 > S 30.6 (разделимы), **но I перекрывает S** (редкие low-IDF имена символов). В no-regression точке (θ≈26): S +2pp = шум (1 запрос из 50); значимый S-прирост (θ≈46 → S 0.46) **регрессит identifier** (I 0.96→0.90 — gating мис-роутит точные имена в dense-only). θ настроен на тех же 50 запросах → overfit-риск на проде. **Вердикт: не внедрять — DBSF остаётся финальным дефолтом**; deferred-пункт query-adaptive закрыт измерением (не гипотезой). Артефакты: `data/eval/bsl/bsl_identifier_golden.json`, `data/reports/bsl_phase3_adaptive_eval.json`.
+
 ## Связанные файлы
 - [src/bsl/semantic_search/services/search.py](../../../../src/bsl/semantic_search/services/search.py) `_call_qdrant_search`
 - [scripts/bsl_phase2_fusion_eval.py](../../../../scripts/bsl_phase2_fusion_eval.py) · data/eval/bsl/bsl_semantic_golden.json
