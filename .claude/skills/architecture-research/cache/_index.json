@@ -3,6 +3,26 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "1c-form-skd-spreadsheet-tooling-2026.md",
+      "title": "Анализ/правка форм (.form), табличных документов (.mxlx) и СКД в 1С — 3 слоя (EDT-модель/XML/runtime-BSL) + MCP-карта (live GitHub-свип pending)",
+      "keywords": [
+        "1c",
+        "edt-mcp",
+        "1c-mcp-crud",
+        "managed-forms",
+        "form-form",
+        "spreadsheet-document",
+        "mxlx",
+        "skd",
+        "data-composition-schema",
+        "print-form",
+        "render-verify",
+        "mcp",
+        "tooling"
+      ],
+      "last_verified": "2026-06-20"
+    },
+    {
       "file": "bsl-embedding-collapse-remediation-2026.md",
       "title": "BSL/code embedding collapse — remediation (anisotropy/whitening, code+Cyrillic модели, чанкинг/идентификаторы, contrastive fine-tune) — факты web 2023-2026",
       "keywords": [
