@@ -481,3 +481,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Files changed: 5
 - Summary: Session 2026-06-19. Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud. Changed 5 files in .gitignore, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, gitignore, pipeline/fix-1c-mcp-crud, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save pipeline.md. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация. Commit: fix(1c-detector): гейт actionless (verb-less/zero-signal) auto→ask_flow + _TASK_VERB (Находка 3)
 
+
+## 2026-06-20 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud
+- Files changed: 1
+- Summary: Session 2026-06-20. Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud, 1c-doc-research, edt-mcp, multi-level-hook-architecture. Changed 1 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: fix(auto-git-save): debounce hook ignored the pause sentinel. Commit: chore: remove stray _tmp_fmt_check artifact, gitignore it. Commit: chore: auto-save auto_save_core.py, CLAUDE.md, sample.py +1 more
+
