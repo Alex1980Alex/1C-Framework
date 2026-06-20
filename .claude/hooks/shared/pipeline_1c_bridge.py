@@ -70,6 +70,30 @@ def resolve_task_input(arg: str) -> dict:
     return {"kind": "chat", "slug": derive_slug(a), "folder": None}
 
 
+def resolve_active_1c_slug(prompt: str) -> str | None:
+    """Slug активного 1С-пайплайна — единая идентификация для gate/ensure-implement (C2/C3).
+
+    JIRA в промпте → его код (стабильный ID задачи; gate сам проверит существование/approve, как раньше).
+    Иначе → CURRENT-указатель, ЕСЛИ это 1С-пайплайн (метка is_1c_task_title) — так /implement
+    прицепляется к пайплайну /analyze для НЕ-JIRA задач (у которых derive_slug(analyze)≠derive_slug(implement)).
+    best-effort → None (нет JIRA и нет активного 1С-пайплайна / сбой импорта).
+    """
+    try:
+        m = _JIRA.search(prompt or "")
+        if m:
+            return m.group(0)
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared import pipeline_state
+
+        cur = pipeline_state.resolve_current()
+        data = pipeline_state.load(cur) if cur else None
+        return cur if (data and is_1c_task_title(data.get("title"))) else None
+    except Exception:
+        return None
+
+
 def ensure_pipeline_1c(prompt: str, command: str, task_dir: str | None = None) -> str | None:
     """Идемпотентно завести pipeline для 1С-задачи. Возврат slug | None (best-effort).
 
@@ -82,7 +106,11 @@ def ensure_pipeline_1c(prompt: str, command: str, task_dir: str | None = None) -
             sys.path.insert(0, hooks)
         from shared import pipeline_state
 
-        slug = derive_slug(prompt)
+        # C2/C3: /implement прицепляется к активному 1С-пайплайну (не-JIRA: пайплайн /analyze через
+        # CURRENT) вместо нового slug из своего prompt; analyze / нет активного → свежий derive_slug.
+        slug = (
+            resolve_active_1c_slug(prompt) if command == "implement-1c-task" else None
+        ) or derive_slug(prompt)
         pipeline_state.init_task(
             slug, title=f"1С-задача ({command}): {slug}", task_dir=task_dir
         )  # идемпотентно
@@ -171,10 +199,13 @@ def gate_1c_implement(prompt: str) -> dict:
             sys.path.insert(0, hooks)
         from shared import pipeline_state
 
-        slug = derive_slug(prompt)
-        data = pipeline_state.load(slug)
+        # C2/C3: единая идентификация (как ensure-implement) — JIRA-slug, иначе активный CURRENT-1С.
+        # Для не-JIRA это находит пайплайн /analyze (раньше derive_slug(implement_prompt) ≠ analyze-slug
+        # → G4 молча no-op либо ложно блокировал свежий implement-пайплайн).
+        slug = resolve_active_1c_slug(prompt)
+        data = pipeline_state.load(slug) if slug else None
         if not data or not is_1c_task_title(data.get("title")):
-            return {"ok": True, "hard": False, "reason": ""}  # нет 1С-пайплайна → no-op
+            return {"ok": True, "hard": False, "reason": ""}  # нет активного 1С-пайплайна → no-op
         st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
         if st2 and st2.get("status") == "done" and st2.get("approved"):
             return {"ok": True, "hard": False, "reason": ""}  # дизайн одобрен → allow

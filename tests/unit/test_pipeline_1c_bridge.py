@@ -164,6 +164,67 @@ def test_gate_best_effort_ok(monkeypatch):
     assert res["ok"] is True
 
 
+# --- C2/C3: единая идентификация активного 1С-пайплайна (resolve_active_1c_slug) ---
+
+
+def _inject_fake_pipeline_state(monkeypatch, current=None, pipelines=None):
+    """Фейковый shared.pipeline_state (паттерн _force_shared_import_failure, но с функциями)."""
+    pipelines = pipelines or {}
+    fake = types.ModuleType("shared.pipeline_state")
+    fake.resolve_current = lambda: current
+    fake.load = lambda s=None: pipelines.get(s if s else current)
+    shared = types.ModuleType("shared")
+    shared.pipeline_state = fake
+    monkeypatch.setitem(sys.modules, "shared", shared)
+    monkeypatch.setitem(sys.modules, "shared.pipeline_state", fake)
+
+
+def test_resolve_active_jira_returns_own_slug(monkeypatch):
+    # JIRA в промпте → его код (стабильный ID); CURRENT не используется (даже если иной)
+    _inject_fake_pipeline_state(monkeypatch, current="other")
+    assert bridge.resolve_active_1c_slug("/implement-1c-task GKSTCPLK-9 реализация") == "GKSTCPLK-9"
+
+
+def test_resolve_active_non_jira_uses_current_if_1c(monkeypatch):
+    # не-JIRA → CURRENT, если это 1С-пайплайн (метка title)
+    _inject_fake_pipeline_state(
+        monkeypatch,
+        current="slug-A",
+        pipelines={"slug-A": {"title": "1С-задача (analyze-1c-task): slug-A"}},
+    )
+    assert bridge.resolve_active_1c_slug("реализовать доработку формы") == "slug-A"
+
+
+def test_resolve_active_non_jira_non_1c_current_is_none(monkeypatch):
+    # не-JIRA, CURRENT — НЕ 1С-пайплайн (framework-dev) → None (не зацепим чужой пайплайн)
+    _inject_fake_pipeline_state(
+        monkeypatch, current="fw", pipelines={"fw": {"title": "framework work (C1-C4)"}}
+    )
+    assert bridge.resolve_active_1c_slug("реализовать доработку формы") is None
+
+
+def test_gate_non_jira_converges_on_analyze_pipeline(monkeypatch):
+    # C2/C3 ГВОЗДЬ: не-JIRA /implement находит пайплайн /analyze через CURRENT → дизайн approved → allow
+    approved = {
+        "title": "1С-задача (analyze-1c-task): slug-A",
+        "stages": [{"n": 2, "status": "done", "approved": True}],
+    }
+    _inject_fake_pipeline_state(monkeypatch, current="slug-A", pipelines={"slug-A": approved})
+    res = bridge.gate_1c_implement("реализовать доработку формы")  # не-JIRA prompt
+    assert res["ok"] is True and res["hard"] is False
+
+
+def test_gate_non_jira_blocks_when_design_not_approved(monkeypatch):
+    # G4 теперь РАБОТАЕТ для не-JIRA: дизайн НЕ approved в активном пайплайне → hard-блок
+    not_approved = {
+        "title": "1С-задача (analyze-1c-task): slug-A",
+        "stages": [{"n": 2, "status": "done", "approved": False}],
+    }
+    _inject_fake_pipeline_state(monkeypatch, current="slug-A", pipelines={"slug-A": not_approved})
+    res = bridge.gate_1c_implement("реализовать доработку формы")  # не-JIRA prompt
+    assert res["ok"] is False and res["hard"] is True
+
+
 # --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
 
 
