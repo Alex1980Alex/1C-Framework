@@ -2,6 +2,26 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "registr-svedeniy-podchinennyy-periodichnost-klyuch": {
+      "title": "Периодический регистр сведений, подчинённый регистратору — ключ записи (Период+Измерения при календарной, Регистратор+НомерСтроки при RecorderPosition) и коллизия «Запись с такими ключевыми полями существует»; обходы: RecorderPosition / Second / guard СуществуетПлан (эталон УстановкаКвотАссортимента)",
+      "file": "registr-svedeniy-podchinennyy-periodichnost-klyuch.md",
+      "created": "2026-06-20",
+      "last_verified": "2026-06-20",
+      "keywords": [
+        "регистр сведений подчинение регистратору",
+        "периодичность регистра сведений",
+        "ключ записи регистра сведений",
+        "запись с такими ключевыми полями существует",
+        "по позиции регистратора",
+        "в пределах секунды",
+        "СуществуетПлан guard",
+        "залоговые цены протокол"
+      ],
+      "sources": [
+        "https://v8.1c.ru/platforma/registr-svedeniy/",
+        "https://infostart.ru/1c/articles/1749405/"
+      ]
+    },
     "1c-config-source-export-for-study": {
       "title": "Изучение исходного кода конфигураций 1С (УТ/ERP/типовые) — выгрузка в файлы: DumpConfigToFiles / ibcmd / EDT / gitsync; формат Конфигуратор vs EDT; схема для Claude (EDT-MCP для рабочей + дамп-в-файлы + bsl-semantic-search для референса)",
       "file": "1c-config-source-export-for-study.md",
