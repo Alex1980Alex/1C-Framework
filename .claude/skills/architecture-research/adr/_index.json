@@ -9,6 +9,23 @@
   ],
   "records": [
     {
+      "id": "ADR-029",
+      "file": "029-1c-formsserver-skip-watch.md",
+      "title": "1c-formsserver (form MCP) — SKIP/watch: незрелый (7★/0 releases) + не in-place editor (не решает horizontalStretch-триггер)",
+      "status": "accepted",
+      "date": "2026-06-20",
+      "research": "../cache/1c-form-skd-spreadsheet-tooling-2026.md",
+      "tags": [
+        "1c",
+        "forms",
+        "mcp",
+        "adopt-eval",
+        "edt-mcp",
+        "tooling",
+        "skip-watch"
+      ]
+    },
+    {
       "id": "ADR-028",
       "file": "028-bsl-fusion-dbsf-default.md",
       "title": "BSL retrieval fusion — DBSF default (supersedes BM25-first; Phase 0 disproved dense-broken, Phase 2 DBSF>RRF)",
