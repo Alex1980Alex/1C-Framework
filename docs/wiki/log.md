@@ -28,7 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-- F3 skill `sandbox-execution` + log entry (this one)
 - DryRun zero-dep fallback retained as CI/no-key default
 - 38 unit tests (13 DryRun + 13 LangSmith + 12 E2B), `select_backend()` env-driven helper
 
@@ -99,6 +98,17 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - Pattern: `unnamed-pattern` (confidence: 0.81)
 - Draft: `docs/wiki/drafts/unnamed-pattern.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-21 — Auto-promoted: SDD Approval Gate (Phase 3)
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `SDD Approval Gate (Phase 3)` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/sdd-approval-gate-phase-3.md`
 
 **Status:** Pending review
 
@@ -488,5 +498,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 - Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud
 - Files changed: 1
-- Summary: Session 2026-06-20. Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud, 1c-doc-research, edt-mcp, multi-level-hook-architecture. Changed 1 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: fix(auto-git-save): debounce hook ignored the pause sentinel. Commit: chore: remove stray _tmp_fmt_check artifact, gitignore it. Commit: chore: auto-save auto_save_core.py, CLAUDE.md, sample.py +1 more
-
