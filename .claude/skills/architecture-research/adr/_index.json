@@ -9,6 +9,24 @@
   ],
   "records": [
     {
+      "id": "ADR-028",
+      "file": "028-bsl-fusion-dbsf-default.md",
+      "title": "BSL retrieval fusion — DBSF default (supersedes BM25-first; Phase 0 disproved dense-broken, Phase 2 DBSF>RRF)",
+      "status": "accepted",
+      "date": "2026-06-20",
+      "research": "../cache/bsl-embedding-collapse-remediation-2026.md",
+      "tags": [
+        "bsl",
+        "retrieval",
+        "fusion",
+        "dbsf",
+        "rrf",
+        "hybrid-search",
+        "qdrant",
+        "embedding-collapse"
+      ]
+    },
+    {
       "id": "ADR-027",
       "file": "027-prepush-submodule-ordering-guard.md",
       "title": "pre-push submodule-ordering guard (защита от dangling gitlink, класс PR #77)",

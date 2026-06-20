@@ -440,17 +440,19 @@ class BSLSearchService:
         """Vector search via Qdrant.
 
         Auto-detects collection layout on first call:
-          * `hybrid` (named dense + sparse BM25) -> **hybrid RRF** (Prefetch
-            dense + BM25 sparse -> FusionQuery RRF). 2026-06-20 re-verified
-            realistic eval (lexical `data/bsl_golden_set.json` + vocab-mismatch
-            `data/eval/bsl/bsl_semantic_golden.json`): hybrid beats BM25-first on
-            BOTH splits — lexical recall@10 0.78 vs 0.68 (+10pp), semantic 0.34
-            vs 0.16 (+18pp). The prior "pure BM25 dominates / dense ~18%" verdict
-            (2026-05-22) did NOT reproduce: dense is healthy (0.72 lexical / 0.42
-            semantic) — the 18% was a harness artifact. Fallbacks: TEI down ->
-            BM25-only; BM25/FastEmbed down -> dense-only. (query-adaptive fusion,
-            dense-heavy for NL queries, is the next step — semantic dense-only
-            0.42 still > hybrid 0.34.) See memory feedback-bsl-sparse-bm25-dominance.
+          * `hybrid` (named dense + sparse BM25) -> **hybrid DBSF** (Prefetch
+            dense + BM25 sparse -> FusionQuery DBSF, RRF fallback). 2026-06-20
+            re-verified realistic eval (lexical `data/bsl_golden_set.json` +
+            vocab-mismatch `data/eval/bsl/bsl_semantic_golden.json`): hybrid beats
+            BM25-first on BOTH splits — lexical recall@10 0.80 vs 0.68, semantic
+            0.38 vs 0.16. Phase 2 measured DBSF strictly dominates RRF (lexical
+            0.80 = RRF, no regression; semantic 0.38 vs RRF 0.34) — score-distribution
+            fusion z-normalizes each arm, auto-down-weighting the failing BM25 arm on
+            vocab-mismatch queries (no query classifier needed). The prior "pure BM25
+            dominates / dense ~18%" verdict (2026-05-22) did NOT reproduce: dense is
+            healthy (0.72 lexical / 0.42 semantic) — the 18% was a harness artifact.
+            Fallbacks: TEI down -> BM25-only; BM25/FastEmbed down -> dense-only.
+            See memory feedback-bsl-sparse-bm25-dominance.
           * `dense_only` (single-vector OR named without sparse) -> plain
             dense `query_points`. Backwards-compat for non-migrated collections.
         """
@@ -508,29 +510,50 @@ class BSLSearchService:
 
                 prefetch_limit = max(limit, 50)
                 if query_embedding and sparse_vec is not None:
-                    # both arms healthy -> RRF fusion (the verified default)
-                    search_results = (
-                        await asyncio.to_thread(
-                            self._qdrant_client.query_points,
-                            collection_name=collection_name,
-                            prefetch=[
-                                qm.Prefetch(
-                                    query=query_embedding,
-                                    using="dense",
-                                    limit=prefetch_limit,
-                                    filter=filters,
-                                ),
-                                qm.Prefetch(
-                                    query=sparse_vec,
-                                    using="bm25",
-                                    limit=prefetch_limit,
-                                    filter=filters,
-                                ),
-                            ],
-                            query=qm.FusionQuery(fusion=qm.Fusion.RRF),
-                            limit=limit,
+                    # both arms healthy -> DBSF fusion. Phase 2 measured (L+S golden):
+                    # DBSF strictly dominates RRF — lexical recall@10 0.80 (=RRF, no
+                    # regression), semantic 0.38 vs RRF 0.34 (+4pp). DBSF z-normalizes
+                    # each arm's score distribution, so the failing BM25 arm on
+                    # vocab-mismatch queries (flat/low scores) auto-contributes less —
+                    # score-adaptive WITHOUT a query classifier. Fallback: RRF if the
+                    # Qdrant build lacks DBSF (requires Qdrant >= 1.10).
+                    prefetch = [
+                        qm.Prefetch(
+                            query=query_embedding,
+                            using="dense",
+                            limit=prefetch_limit,
+                            filter=filters,
+                        ),
+                        qm.Prefetch(
+                            query=sparse_vec,
+                            using="bm25",
+                            limit=prefetch_limit,
+                            filter=filters,
+                        ),
+                    ]
+                    try:
+                        search_results = (
+                            await asyncio.to_thread(
+                                self._qdrant_client.query_points,
+                                collection_name=collection_name,
+                                prefetch=prefetch,
+                                query=qm.FusionQuery(fusion=qm.Fusion.DBSF),
+                                limit=limit,
+                            )
+                        ).points
+                    except Exception as exc:
+                        logger.warning(
+                            f"DBSF fusion unavailable, falling back to RRF: {exc}"
                         )
-                    ).points
+                        search_results = (
+                            await asyncio.to_thread(
+                                self._qdrant_client.query_points,
+                                collection_name=collection_name,
+                                prefetch=prefetch,
+                                query=qm.FusionQuery(fusion=qm.Fusion.RRF),
+                                limit=limit,
+                            )
+                        ).points
                 elif sparse_vec is not None:
                     # TEI down -> BM25-only fallback (prev default)
                     search_results = (
