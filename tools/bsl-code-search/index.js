@@ -19,7 +19,7 @@ function extractSymbols(content, filePath) {
   const lines = content.split('\n');
 
   lines.forEach((line, idx) => {
-    const m = line.match(/^\s*(Процедура|Функция|Procedure|Function)\s+(\w+)\s*\(([^)]*)\)/i);
+    const m = line.match(/^\s*(Процедура|Функция|Procedure|Function)\s+([\wА-Яа-яЁё]+)\s*\(([^)]*)\)/i);
     if (!m) return;
 
     const [, typeStr, name, paramsStr] = m;
@@ -40,7 +40,7 @@ function extractSymbols(content, filePath) {
 }
 
 function buildCallGraph(filePath, content, symbols) {
-  const callPattern = /(\w+)\s*\(/g;
+  const callPattern = /([\wА-Яа-яЁё]+)\s*\(/g;
   let match;
 
   while ((match = callPattern.exec(content)) !== null) {
