@@ -9,6 +9,24 @@
   ],
   "records": [
     {
+      "id": "ADR-031",
+      "file": "031-cc-1c-skills-adopt-offline-mxl-dcs-editor.md",
+      "title": "Adopt cc-1c-skills как offline-редактор .mxl/.mxlx и .dcs (round-trip DSL, live-verified на боевых файлах); амендит ADR-030 (Табличный LOW→MEDIUM)",
+      "status": "accepted",
+      "date": "2026-06-21",
+      "research": "../cache/1c-form-skd-spreadsheet-tooling-2026.md",
+      "tags": [
+        "1c",
+        "spreadsheet",
+        "mxlx",
+        "skd",
+        "data-composition",
+        "cc-1c-skills",
+        "tooling",
+        "adopt"
+      ]
+    },
+    {
       "id": "ADR-030",
       "file": "030-1c-ui-report-artifact-editing-strategy.md",
       "title": "Стратегия AI-правки UI/report-артефактов 1С — слой-под-артефакт (СКД: XDTO+runtime / Формы: EDT-модель+XML для stretch, bounds-verify / Табличный: runtime-BSL+GUI); новых MCP не вводим",
