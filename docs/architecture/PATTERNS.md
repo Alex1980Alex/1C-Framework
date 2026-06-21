@@ -51,7 +51,7 @@ related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks
 | 2.13 | 3-Tier Pipeline | [[three-tier-pipeline]] |
 | 2.14 | **Findings-to-Pipeline Remediation** (findings любого сканера → обязательный пайплайн, не ad-hoc; реализация: [[fix-sonar-task]], контракт SARIF) | ADR-033/034 |
 
-> **Глоссарий «pipeline» (T5, ADR-034):** в проекте 4 разных «pipeline» — **1.10 Pipeline** (arch-паттерн стадий обработки) · **2.13 3-Tier Pipeline** (3 уровня хуков) · **generic 4-stage** (ADR-017: Планирование→Дизайн→Кодирование→Тестирование) · **1С-пайплайн** (гл. 43, специализация generic-4stage). Паттерн 2.14 «Findings-to-Pipeline» кормит последний.
+> **Глоссарий «pipeline» (T5, ADR-034):** в проекте 4 разных «pipeline» — **1.10 Pipeline** (arch-паттерн стадий обработки) · **2.13 3-Tier Pipeline** (3 уровня хуков) · **generic 4-stage** (ADR-017: Планирование→Дизайн→Кодирование→Тестирование) · **1С-пайплайн** (гл. 43, специализация generic-4stage). Паттерн 2.14 «Findings-to-Pipeline» кормит последний. Как этот каталог соотносится с пайплайном и оркестраторами (слоистость каталог→пайплайн→оркестратор + резолв T1-T5) — [гл. 43.8](../framework%20documentation/43_ПАЙПЛАЙН_1С/43.8_СЛОИСТОСТЬ_ПАТТЕРНЫ_ПАЙПЛАЙН_ОРКЕСТРАТОРЫ.md).
 
 ---
 
