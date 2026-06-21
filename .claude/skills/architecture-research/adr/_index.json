@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-032",
+      "file": "032-1c-ui-report-tooling-selection.md",
+      "title": "Выбор инструментария AI-правки 1C UI/report — cc-1c-skills (offline, осн.) + codepilot1c-edt (EDT-write) + EDT-MCP (baseline/deploy); матрица способность→инструмент",
+      "status": "accepted",
+      "date": "2026-06-21",
+      "research": "../cache/1c-form-skd-spreadsheet-tooling-2026.md",
+      "tags": [
+        "1c",
+        "forms",
+        "spreadsheet",
+        "skd",
+        "data-composition",
+        "cc-1c-skills",
+        "codepilot1c-edt",
+        "edt-mcp",
+        "tooling-selection"
+      ]
+    },
+    {
       "id": "ADR-031",
       "file": "031-cc-1c-skills-adopt-offline-mxl-dcs-editor.md",
       "title": "Adopt cc-1c-skills как offline-редактор .mxl/.mxlx и .dcs (round-trip DSL, live-verified на боевых файлах); амендит ADR-030 (Табличный LOW→MEDIUM)",
