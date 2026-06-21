@@ -49,6 +49,7 @@ related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks
 | 2.11 | Task Master | [[task-master]] |
 | 2.12 | Invocation Logger | [[invocation-logger]] |
 | 2.13 | 3-Tier Pipeline | [[three-tier-pipeline]] |
+| 2.14 | Lint-to-Pipeline Remediation (статанализ → обязательный пайплайн, не ad-hoc) | [[fix-sonar-task]] · ADR-033 |
 
 ---
 

@@ -41,7 +41,7 @@ SonarQube подключён как **отчёт + quality gate** (CI `ci-1c.yml
 - **Тащить issues в отдельную БД/борд** — избыточно; worklist в `data/reports/sonar/` + JSON достаточно. [own]
 
 ## Связанные файлы
-- Создан: `scripts/sonar_issues_pull.py`
+- Создан: `scripts/sonar_issues_pull.py`, `scripts/sonar_setup_quality_profile.py` (профиль «1C BSL Way» 180/180), `.claude/commands/fix-sonar-task.md` + `.claude/skills/fix-sonar-task/SKILL.md` (обязательный паттерн-оркестратор)
 - Существующие: `scripts/run-sonar-analysis.ps1`, `scripts/sonar_setup_quality_gate.py`, `scripts/sonar_sources.py`, `.github/workflows/ci-1c.yml`
 - Док: `docs/framework documentation/43_ПАЙПЛАЙН_1С/43.7_АНАЛИЗ_ВСЕЙ_КОНФИГУРАЦИИ.md` (раздел «Этап исправления»)
 - Отложено: жёсткий QG-блокер CI (option «в») — отдельным ADR после baseline
