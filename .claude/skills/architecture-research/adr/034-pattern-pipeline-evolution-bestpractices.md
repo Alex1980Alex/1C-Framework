@@ -1,6 +1,6 @@
 # ADR-034: Эволюция слоистости pattern↔pipeline по best-practices 2026 (резолв T1-T5)
 
-**Дата:** 2026-06-21 · **Статус:** proposed (роадмап) · **Исследование:** [../cache/pattern-pipeline-orchestration-2026.md](../cache/pattern-pipeline-orchestration-2026.md)
+**Дата:** 2026-06-21 · **Статус:** accepted (R1-R8 реализованы; R3 — основа, миграция инкрементальна) · **Исследование:** [../cache/pattern-pipeline-orchestration-2026.md](../cache/pattern-pipeline-orchestration-2026.md)
 **Связь:** уточняет ADR-017/018 (generic + mandatory pipeline), ADR-033 (Sonar remediation), PATTERN 2.14.
 
 ## Контекст
@@ -18,7 +18,7 @@
 
 **Очередность внедрения:** дёшево сначала — **R4 + R5 + R6 + R8** (SARIF-контракт, split детерминизма, CaYC-гейт, таксономия), затем **R1** (child-state), затем **R3** (policy-слой) + **R2/R7**.
 
-**Реализовано 2026-06-21:** ✅ **R4** (`sonar_issues_pull.py --format sarif`, SARIF 2.1.0, live-verified) · ✅ **R5** (`remediation_class` deterministic/judgment в pull + триаже `/fix-sonar-task`) · ✅ **R8** (PATTERN 2.14 → «Findings-to-Pipeline Remediation» + глоссарий «pipeline» в PATTERNS.md) · ✅ **R6** (`scripts/sonar_quality_gate_check.py` — Clean-as-You-Code hard-gate на новый код; вписан в `run-sonar-analysis.ps1` + `ci-1c.yml`; **opt-in** `SONAR_QG_HARD=1`, по умолчанию soft; live: hard→exit 1, soft→exit 0). Осталось: R1 (child-workflow), R2/R7, R3 (policy-слой).
+**Реализовано 2026-06-21:** ✅ **R4** (`sonar_issues_pull.py --format sarif`, SARIF 2.1.0, live-verified) · ✅ **R5** (`remediation_class` deterministic/judgment в pull + триаже `/fix-sonar-task`) · ✅ **R8** (PATTERN 2.14 → «Findings-to-Pipeline Remediation» + глоссарий «pipeline» в PATTERNS.md) · ✅ **R6** (`scripts/sonar_quality_gate_check.py` — Clean-as-You-Code hard-gate на новый код; вписан в `run-sonar-analysis.ps1` + `ci-1c.yml`; **opt-in** `SONAR_QG_HARD=1`, по умолчанию soft; live: hard→exit 1, soft→exit 0) · ✅ **R1+R2** (child-workflow в `fix-sonar-task` SKILL Шаг 3: кластеры строго последовательно, свой pipeline-state на кластер, «один CURRENT за раз», per-cluster completion+идемпотентность) · ✅ **R7** (evaluator-optimizer в Шаг 4: re-scan дельта + адверсариальный `code-verify` + критерий BLOCKER=0 ∧ нет new_violations, не сошлось → назад к implement) · ✅ **R3 (foundation)** (`.claude/hooks/shared/gate_policy.py` — composable fail-closed `evaluate_gates` + `log_decision` decision-log/аудит; 4 unit-теста PASS; **additive** — существующие Stop-хуки НЕ тронуты, миграция на policy-слой инкрементальна). **Все R1-R8 заземлены** (R3 — основа; полная миграция хуков — отдельным заходом).
 
 ## Последствия
 ### Положительные

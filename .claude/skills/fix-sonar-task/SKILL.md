@@ -38,21 +38,30 @@ Sonar даёт десятки тысяч issues; среди BLOCKER/CRITICAL е�
 ### Шаг 2 — Кластеризация
 Сгруппировать **real**-баги в задачи-кластеры (по модулю/механизму). Один кластер = одна pipeline-задача.
 
-### Шаг 3 — Per-cluster pipeline (ОБЯЗАТЕЛЬНО)
-Для каждого кластера:
-1. **`/analyze-1c-task`** (методика `analyze-1c-task-v2`) → **ANALYSIS-REPORT.md**: корень (рефакторинг/мёртвый/extension/FP), точки модификации, **доменный вопрос** (какой метод/метаданное целевое).
-2. **approve** дизайна (реальность бага + intended behavior подтверждены; FP отсекается здесь).
-3. **`/implement-1c-task`** → правка BSL/XML через EDT-MCP + `get_project_errors` verify (BSL пишет Opus).
-4. **`/run-1c-tests`** (если есть BDD) + live BP-trace (1c-debug-hmr) по ветке бага.
+### Шаг 3 — Per-cluster pipeline (ОБЯЗАТЕЛЬНО, child-workflow R1 ADR-034)
+**Кластеры — СТРОГО ПОСЛЕДОВАТЕЛЬНО: один кластер = один полный пайплайн-цикл (child) со СВОИМ состоянием; «один CURRENT за раз».** Не запускать следующий, пока текущий не закрыт+проверен — иначе указатель `CURRENT` перетрётся, а сессионный `onec-task-completion-stop` пропустит кластер без своего capture (натяжения T1/T2).
 
-### Шаг 4 — Re-scan + verify (этап Тестирование)
-`scripts/run-sonar-analysis.ps1` (под профилем «1C BSL Way» 180/180) → `sonar_issues_pull.py` по затронутым файлам → **BLOCKER/CRITICAL по ним = 0**. Зафиксировать дельту.
+Для КАЖДОГО кластера (по очереди):
+1. **init child-pipeline:** `pipeline_state.py init sonar-<rule>-<file> --title "Sonar: <кластер>"` — свой slug + состояние (переезжает в папку задачи); НЕ переиспользовать чужой `CURRENT`.
+2. **`/analyze-1c-task`** (`analyze-1c-task-v2`) → **ANALYSIS-REPORT.md**: корень (рефакторинг/мёртвый/extension/FP), точки, **доменный вопрос** (какой метод/метаданное целевое).
+3. **approve** дизайна (реальность бага + intended behavior; FP отсекается здесь).
+4. **`/implement-1c-task`** → правка BSL/XML через EDT-MCP + `get_project_errors` verify (BSL пишет Opus).
+5. **`/run-1c-tests`** (если есть BDD) + live BP-trace (1c-debug-hmr).
+6. **per-cluster completion (R2):** recall+capture+research **для ЭТОГО кластера** (не полагаться на сессионный gate) → `pipeline_state.py done <slug> 4`. Кластер **идемпотентен** (повторный прогон безопасен — повторная правка того же бага не создаёт дубль).
+7. → только теперь следующий кластер.
+
+### Шаг 4 — Re-scan + verify (этап Тестирование, evaluator-optimizer R7 ADR-034)
+После фикса — **петля evaluator-optimizer**:
+1. `scripts/run-sonar-analysis.ps1` (профиль «1C BSL Way» 180/180) → `sonar_issues_pull.py` по затронутым файлам → дельта.
+2. **Адверсариальный `code-verify`**: фикс не внёс новых issues и не сломал смежное.
+3. **Критерий приёмки:** BLOCKER/CRITICAL по затронутым файлам = 0 **И** нет новых `new_violations` (`sonar_quality_gate_check.py`).
+4. **Не сошлось → вернуться к Шагу 3.4 (implement)** для кластера (итеративное уточнение фикса), затем повторить оценку. Зафиксировать дельту.
 
 ## Хард-правила
 - **НИКОГДА** не фиксить Sonar-issue ad-hoc вне пайплайна (это и есть паттерн).
 - Каждый **real**-баг = pipeline-задача с ANALYSIS-REPORT (доменное решение зафиксировано).
 - **FP / extension / placeholder / БСП / cosmetic** → НЕ код-правка: документировать, при необходимости — исключить из скана (`sonar_sources.py`) или добавить расширение в скоуп.
-- Жёсткий QG-блокер CI — отложен (ADR-033): сперва baseline кастома, потом fail на `new_violations`.
+- Жёсткий QG-блокер (R6, ADR-034) реализован: `sonar_quality_gate_check.py` (Clean-as-You-Code, только новый код), **opt-in** `SONAR_QG_HARD=1` (по умолчанию soft/warn).
 
 ## Связанные
 - Скрипты: `scripts/sonar_issues_pull.py`, `scripts/run-sonar-analysis.ps1`, `scripts/sonar_setup_quality_profile.py` (профиль 180/180).

@@ -12,9 +12,10 @@
       "id": "ADR-034",
       "file": "034-pattern-pipeline-evolution-bestpractices.md",
       "title": "Эволюция слоистости pattern↔pipeline по best-practices 2026 — резолв T1-T5 (child-workflow R1, SARIF R4, split детерминизма R5, Clean-as-You-Code R6, policy-gate R3, таксономия R8)",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-06-21",
       "research": "../cache/pattern-pipeline-orchestration-2026.md",
+      "status_note": "accepted 2026-06-21 — R1-R8 реализованы (R3 foundation)",
       "tags": [
         "architecture",
         "orchestration",
