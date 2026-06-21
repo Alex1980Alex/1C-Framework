@@ -23,3 +23,14 @@ MCP-сервер `codepilot1c` не переподключался (`/mcp` → `
   - старый `cpedt-local-8766-tkn` → **401 Unauthorized** (подтверждает корень). ✅
 - `.mcp.json` валиден (`ConvertFrom-Json` OK). ✅
 - Остаётся пользователю: `/mcp reconnect` (Claude Code перечитает конфиг). Caveat: ротация токена в EDT / закрытие EDT → повторный `-32000`.
+
+## Доп-итерация: токен верный, а reconnect всё равно -32000
+Корень №3 — **mcp-remote игнорирует статичный Bearer и принудительно идёт в OAuth**: сервер анонсирует OAuth-discovery (`.well-known/oauth-protected-resource` + `oauth-authorization-server` → 200), mcp-remote делает dynamic client registration + token-flow (пишет `~/.mcp-auth/mcp-remote-0.1.37/<hash>_{client_info,code_verifier,tokens}.json`), который headless'но не доводится → `-32000`. Чистка кэша не помогает — mcp-remote пересоздаёт его при каждом старте (метки времени подтвердили).
+
+**Финальное решение:** убрать mcp-remote из цепочки — перевести `codepilot1c` на нативный HTTP-транспорт Claude Code с Bearer-заголовком:
+```json
+"codepilot1c": { "type": "http", "url": "http://127.0.0.1:8766/mcp", "headers": { "Authorization": "Bearer <token>" } }
+```
+Нативный клиент шлёт заголовок напрямую; OAuth-дискавери mcp-remote не запускается. `~/.mcp-auth`-кэш вычищен (не используется).
+
+**Fallback** (если нативный HTTP-клиент тоже уйдёт в OAuth): сменить в EDT *1C Copilot → MCP Хост → Режим авторизации* на **«Только Bearer»** (сервер перестанет анонсировать OAuth) — server-side, надёжнее всего.
