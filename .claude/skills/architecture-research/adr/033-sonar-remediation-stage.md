@@ -13,7 +13,7 @@ SonarQube подключён как **отчёт + quality gate** (CI `ci-1c.yml
 
 ## Решение
 
-Ввести **триггерный (не на каждую задачу) remediation-этап** поверх существующего Sonar-слоя — 4 шага. [own]
+Ввести remediation как **ОБЯЗАТЕЛЬНЫЙ паттерн через 1С-пайплайн** — команда/скилл [`/fix-sonar-task`](../../fix-sonar-task/SKILL.md): Sonar-issue **никогда не фиксится ad-hoc**, каждый реальный баг проходит analyze→implement→test→re-scan (обновление 2026-06-21 по требованию: «обработку багов настроить в обязательном порядке через пайплайн — это паттерн»). 4 шага. [own]
 
 1. **Pull + приоритизация:** [`scripts/sonar_issues_pull.py`](../../../scripts/sonar_issues_pull.py) (создан, zero-dep urllib) — `/api/issues/search` → группировка по severity/правилу/файлу → worklist (severity → файл → строка) в `data/reports/sonar/`. Фокус: `--severities`, `--types BUG,VULNERABILITY`, `--path-contains` (кастом). Проверено live: 4454/4454 BLOCKER+CRITICAL.
 2. **Scope-гейт (ОБЯЗАТЕЛЬНО):** править **только кастомный код** (`гкс_*`, `configuration/<JIRA>`) + **реальные дефекты** (BUG / VULNERABILITY / `CreateQueryInCycle` / `ExecuteExternalCode`). **НЕ трогать вендорную БСП** — она даёт ~90% issues, но это чужой код: правки сорвут обновление типовой и не стоят усилий. [exp]
