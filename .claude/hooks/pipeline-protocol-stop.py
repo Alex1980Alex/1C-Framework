@@ -33,6 +33,19 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput
 
+# R3 (ADR-034): унифицированный decision-log гейтов (best-effort, не ронять Stop-хук)
+try:
+    from shared.gate_policy import decision as _gp_decision
+    from shared.gate_policy import log_decision as _gp_log
+except Exception:
+
+    def _gp_decision(*a, **k):
+        return {}
+
+    def _gp_log(*a, **k):
+        return None
+
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 INVOCATIONS = PROJECT_ROOT / "data" / "hook-invocations.jsonl"
 PIPELINE_DIR = PROJECT_ROOT / "pipeline"
@@ -200,7 +213,9 @@ class PipelineProtocolStop(BaseHook):
         if not had_write:
             return None  # нет правок за сессию → не задача → exempt
         if _pipeline_used_since(start):
+            _gp_log(_gp_decision("pipeline-protocol", True, "pipeline used"))
             return None  # пайплайн использован → ok
+        _gp_log(_gp_decision("pipeline-protocol", False, "edits without pipeline"))
         return HookOutput().block(
             "[PIPELINE-PROTOCOL] В этой сессии были правки кода без пайплайна (ADR-018, "
             "обязательная парадигма). Оформи задачу через пайплайн перед завершением:\n"

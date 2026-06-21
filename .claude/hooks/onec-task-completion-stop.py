@@ -48,6 +48,18 @@ except Exception:
         return str(title or "").startswith("1С-задача (")
 
 
+# R3 (ADR-034): унифицированный decision-log гейтов (best-effort, не ронять Stop-хук)
+try:
+    from shared.gate_policy import decision as _gp_decision, log_decision as _gp_log
+except Exception:
+
+    def _gp_decision(*a, **k):
+        return {}
+
+    def _gp_log(*a, **k):
+        return None
+
+
 _RECALL_TOOLS = {
     "mcp__memory-orchestrator__unified_search",
     "mcp__vector-memory__search_patterns",
@@ -309,6 +321,17 @@ def main() -> None:
             f"  {'✓' if sig['skill'] else '⚠'} SKILL [1С-методика] — "
             f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n\n"
             "Закрой пункты с ✗ и заверши снова. Опт-аут (trivial-правка / реально не нужно): ONEC_TASK_GATE_DISABLE=1."
+        )
+        _gp_log(
+            _gp_decision(
+                "onec-task-completion",
+                False,
+                "1С-задача: незакрыты обязательные петли",
+                recall=sig.get("recall"),
+                capture=sig.get("capture"),
+                research=sig.get("research"),
+                skill=sig.get("skill"),
+            )
         )
         sys.stdout.buffer.write(
             json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False).encode("utf-8")
