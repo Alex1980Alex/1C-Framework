@@ -203,6 +203,8 @@ class PipelineProtocolStop(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         if os.environ.get("PIPELINE_PROTOCOL_DISABLE") == "1":
             return None
+        if os.environ.get("GATE_ORCHESTRATOR_ENABLE") == "1":
+            return None  # R3: уступаем gate-orchestrator-stop (composition)
         sid = inp.session_id or ""
         if not sid:
             return None  # не можем привязать к сессии → allow (без deadlock)

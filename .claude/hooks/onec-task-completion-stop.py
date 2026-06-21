@@ -278,6 +278,11 @@ def main() -> None:
             timer.log(outcome="allow-optout")
         sys.exit(0)
 
+    if os.environ.get("GATE_ORCHESTRATOR_ENABLE") == "1":
+        if timer:
+            timer.log(outcome="allow-yield-orchestrator")  # R3: уступаем gate-orchestrator-stop
+        sys.exit(0)
+
     inp = _read_stdin()
     sid = inp.get("session_id", "")
     transcript = inp.get("transcript_path", inp.get("transcript", ""))
