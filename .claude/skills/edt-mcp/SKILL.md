@@ -190,7 +190,8 @@ import_configuration_from_xml(importPath="C:\\dump", projectName="<НОВЫЙ>")
 | `write_module_source` отказ «oldSource matched 0/multiple» | Фрагмент неуникален/устарел | Перечитай `read_module_source`, возьми больший уникальный `oldSource` |
 | Запись отклонена по `expectedHash` | Файл изменился после чтения (lost-update) | Перечитай → возьми свежий `contentHash` → повтори |
 | `search_in_code` не находит русский/англ. идентификатор | Текстовый поиск НЕ ru/en-aware | Используй `find_references`/`go_to_definition`/`get_method_call_hierarchy` |
-| Скрин/раскладка формы пустые | Нет JVM-флага `nativeFormBufferedLayoutRender` | Добавь в `1cedt.ini -vmargs`, перезапусти; проверь `get_server_status.formRenderFlags` |
+| Скриншот формы пустой | Нет `-DnativeFormBufferedLayoutRender=true` | Добавь в `1cedt.ini -vmargs`, рестарт EDT + `/mcp reconnect` |
+| `elementsWithBounds: 0` при непустой форме | `nativeFormLayoutRender=true` (native C++-режим, дефолт) — НЕ баг | Флипни в `=false` (Java-режим) в `1cedt.ini -vmargs`, рестарт + `/mcp reconnect`; verify `get_server_status.formRenderFlags` + `boundsSource: layoutProjection` |
 | «BSL model is not available» / «still building» | Проект ещё индексируется | Дождись `state=ready` (`list_projects`) или `clean_project` |
 | `update_database` `stateAfter≠UPDATED` | Реструктуризацию БД нельзя авто-подтвердить | Подтверди диалог в EDT UI или `fullUpdate=true` |
 | `persisted=false` в ответе create/modify | Экспорт в `.mdo` не подтверждён | Перепроверь объект перед опорой на диск; при рассинхроне — `resync_to_disk` |
