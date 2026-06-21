@@ -28,14 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-- DryRun zero-dep fallback retained as CI/no-key default
-- 38 unit tests (13 DryRun + 13 LangSmith + 12 E2B), `select_backend()` env-driven helper
-
-### Ф6 (OAuth) — Sprint 1 + 2
-
-- F4 audit doc [`docs/wiki/auth/oauth2-service.md`](auth/oauth2-service.md)
-- F5.1 BSL wrapper `src/bsl/mcp_server/auth/oauth2.py` 214→78 LoC thin async adapter
-- F5.2 reusable FastAPI router `src/shared/mcp_oauth/fastapi/` (build_oauth_router + require_oauth)
 - F5.3 regression 47/47 OAuth-domain tests pass, zero new fails
 - F5.4 audit logging `AuditedOAuth2Service` + `OAuthAuditEvent` (5 event types)
 - F5.5 `.mcp.json` env vars + [`oauth-setup.md`](auth/oauth-setup.md) (PKCE flow + httpx client + troubleshooting)
@@ -109,6 +101,28 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - Pattern: `SDD Approval Gate (Phase 3)` (confidence: 0.80)
 - Draft: `docs/wiki/drafts/sdd-approval-gate-phase-3.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-22 — Auto-promoted: [1c-analysis] GKSTCPLK-2521(?) «Отображение УК на 
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `[1c-analysis] GKSTCPLK-2521(?) «Отображение УК на ` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/1c-analysis-gkstcplk-2521----.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-22 — Auto-promoted: [ANALYSIS GKSTCPLK-2565] Доработать печатную форму
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `[ANALYSIS GKSTCPLK-2565] Доработать печатную форму` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/analysis-gkstcplk-2565---.md`
 
 **Status:** Pending review
 
@@ -484,17 +498,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 
 ## 2026-06-19 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud
-- Files changed: 5
-- Summary: Session 2026-06-19. Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud. Changed 5 files in .gitignore, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, gitignore, pipeline/fix-1c-mcp-crud, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save pipeline.md. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация. Commit: fix(1c-detector): гейт actionless (verb-less/zero-signal) auto→ask_flow + _TASK_VERB (Находка 3)
-
-
-## 2026-06-20 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: evaluation-benchmark, architecture-research, update-config, code-verify, 1c-mcp-crud
-- Files changed: 1
