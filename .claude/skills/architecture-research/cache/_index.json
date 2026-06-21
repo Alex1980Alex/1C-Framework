@@ -3,6 +3,16 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "pattern-pipeline-orchestration-2026.md",
+      "title": "Оркестрация пайплайнов + findings→remediation + gate-композиция — best practices 2026 (Temporal/LangGraph/Dagster, Pixee/Copilot-Autofix/OpenRewrite, OPA, SARIF, Anthropic agent-patterns)",
+      "keywords": [
+        "orchestration", "durable-execution", "langgraph", "temporal", "dagster",
+        "findings-remediation", "pixee", "copilot-autofix", "openrewrite", "sarif",
+        "opa", "policy-as-code", "pipeline", "agent-patterns", "orchestrator-workers"
+      ],
+      "last_verified": "2026-06-21"
+    },
+    {
       "file": "1c-form-skd-spreadsheet-tooling-2026.md",
       "title": "Анализ/правка форм (.form), табличных документов (.mxlx) и СКД в 1С — 3 слоя (EDT-модель/XML/runtime-BSL) + MCP-карта (live GitHub-свип pending)",
       "keywords": [
