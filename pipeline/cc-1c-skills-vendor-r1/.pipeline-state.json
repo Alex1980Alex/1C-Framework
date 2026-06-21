@@ -1,0 +1,44 @@
+{
+  "task": "cc-1c-skills-vendor-r1",
+  "title": "Вендоринг cc-1c-skills + закрытие R-1 (full cycle mxlx)",
+  "created_at": "2026-06-21T16:43:19",
+  "updated_at": "2026-06-21T16:43:19",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline/cc-1c-skills-vendor-r1/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:43:19"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline/cc-1c-skills-vendor-r1/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:43:19",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline/cc-1c-skills-vendor-r1/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:43:19"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline/cc-1c-skills-vendor-r1/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:43:19"
+    }
+  ]
+}
