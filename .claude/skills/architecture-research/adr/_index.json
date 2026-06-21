@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-030",
+      "file": "030-1c-ui-report-artifact-editing-strategy.md",
+      "title": "Стратегия AI-правки UI/report-артефактов 1С — слой-под-артефакт (СКД: XDTO+runtime / Формы: EDT-модель+XML для stretch, bounds-verify / Табличный: runtime-BSL+GUI); новых MCP не вводим",
+      "status": "accepted",
+      "date": "2026-06-21",
+      "research": "../cache/1c-form-skd-spreadsheet-tooling-2026.md",
+      "tags": [
+        "1c",
+        "forms",
+        "spreadsheet",
+        "mxlx",
+        "skd",
+        "data-composition",
+        "edt-mcp",
+        "tooling",
+        "editing-strategy"
+      ]
+    },
+    {
       "id": "ADR-029",
       "file": "029-1c-formsserver-skip-watch.md",
       "title": "1c-formsserver (form MCP) — SKIP/watch: незрелый (7★/0 releases) + не in-place editor (не решает horizontalStretch-триггер)",

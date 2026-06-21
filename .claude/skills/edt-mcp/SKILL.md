@@ -167,7 +167,10 @@ debug_launch(...) → start_profiling(applicationId) → <прогон> → stop
 get_form_screenshot(projectName, formPath="Catalog.X.Forms.ItemForm")   # PNG
 get_form_layout_snapshot(projectName, formPath, mode="compact")         # YAML-раскладка
 ```
-⚠ Требуют запуск EDT с `-DnativeFormBufferedLayoutRender=true`. В текущем `1cedt.ini` флага НЕТ → результат будет пустым. Добавь флаг в секцию `-vmargs` и перезапусти EDT.
+⚠ **Два ортогональных JVM-флага в `1cedt.ini -vmargs`** (см. cache `1c-doc-research/edt-mcp-form-render-flags`):
+- `-DnativeFormBufferedLayoutRender=true` — нужен для **скриншота** (`get_form_screenshot`), иначе PNG пустой.
+- `-DnativeFormLayoutRender=false` — нужен для **per-element bounds** в `get_form_layout_snapshot`. Дефолт EDT `=true` (native C++) → `elementsWithBounds: 0` **by design** (НЕ баг). Bounds считаются только в Java-режиме (`boundsSource: layoutProjection`).
+После правки — рестарт EDT (JVM-arg только при старте) + `/mcp reconnect`; проверь `get_server_status.formRenderFlags`. Java-режим раскладки тяжелее для IDE — включать под задачи с bounds, иначе вернуть `true`.
 
 ### J. XML-экспорт/импорт
 ```

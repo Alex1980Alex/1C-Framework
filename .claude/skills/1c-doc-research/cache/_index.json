@@ -693,6 +693,29 @@
         ".mcp.json"
       ]
     },
+    "edt-mcp-form-render-flags": {
+      "title": "EDT-MCP рендер форм — два JVM-флага (bounds vs скриншот): nativeFormLayoutRender=false → per-element bounds (boundsSource layoutProjection), nativeFormBufferedLayoutRender=true → скриншот; флаги ортогональны, native=дефолт зануляет bounds by design",
+      "file": "edt-mcp-form-render-flags.md",
+      "created": "2026-06-21",
+      "last_verified": "2026-06-21",
+      "keywords": [
+        "get_form_layout_snapshot elementsWithBounds 0",
+        "nativeFormLayoutRender",
+        "nativeFormBufferedLayoutRender",
+        "формат bounds формы EDT пустой",
+        "layoutProjection viewProjection",
+        "isNativeRender FormLayoutSnapshotService",
+        "1cedt.ini vmargs форма рендер",
+        "EDT скриншот формы пустой",
+        "get_server_status formRenderFlags",
+        "Java режим раскладки vs native C++"
+      ],
+      "sources": [
+        "github.com/DitriXNew/EDT-MCP",
+        ".claude/skills/edt-mcp-testing/references/forms/get_form_layout_snapshot.md",
+        "live 2026-06-21 EDT 2025.2.6.4 плагин 2.3.1 гкс_НаправлениеНаРазгрузку ФормаДокумента 50/50"
+      ]
+    },
     "dbgs-rdbg-debug-server": {
       "title": "Сервер отладки 1С (dbgs.exe / RDBG / Debug UI) — протокол, команды, ограничения, post-attach + post-BP-fire handshake, pre-existing rphost gap (setBreakOnNextStatement FAILED 2026-05-10 — нужен force-recycle rphost), UI+ initSettings fix, P1 thin-client validation passed",
       "file": "dbgs-rdbg-debug-server.md",
