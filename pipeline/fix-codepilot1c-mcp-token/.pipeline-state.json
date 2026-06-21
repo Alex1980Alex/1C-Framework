@@ -1,0 +1,44 @@
+{
+  "task": "fix-codepilot1c-mcp-token",
+  "title": "Fix codepilot1c MCP -32000: enable EDT host + sync Bearer token in .mcp.json",
+  "created_at": "2026-06-21T07:33:46",
+  "updated_at": "2026-06-21T07:34:16",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T07:34:16"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T07:34:16",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T07:34:16"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T07:34:16"
+    }
+  ]
+}
