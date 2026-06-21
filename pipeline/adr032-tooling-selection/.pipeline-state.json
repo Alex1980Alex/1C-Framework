@@ -1,0 +1,44 @@
+{
+  "task": "adr032-tooling-selection",
+  "title": "ADR-032 выбор инструментария 1C UI/report",
+  "created_at": "2026-06-21T16:58:15",
+  "updated_at": "2026-06-21T16:58:16",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline/adr032-tooling-selection/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:58:15"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline/adr032-tooling-selection/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:58:15",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline/adr032-tooling-selection/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:58:16"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline/adr032-tooling-selection/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T16:58:16"
+    }
+  ]
+}
