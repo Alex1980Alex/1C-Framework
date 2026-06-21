@@ -1,0 +1,52 @@
+# Реальные выгрузки обработок (примеры, не для версионирования)
+upload/
+
+# Результаты сборки
+build/
+base/
+*.epf
+*.log
+
+# Временные файлы тестов
+test-tmp/
+
+# Локальные настройки Claude Code
+.claude/settings.local.json
+
+# Инструменты (portable Apache и т.д.)
+tools/
+
+# Отладка навыков (eval, trigger-test, run_loop результаты)
+debug/
+
+# Кэш тестов навыков
+tests/skills/.cache/
+
+# Python кэш
+__pycache__/
+
+# Локальный реестр баз данных 1С
+.v8-project.json
+
+# web-test: Node.js зависимости и runtime-артефакты
+.claude/skills/web-test/scripts/node_modules/
+.claude/skills/web-test/.browser-session.json
+
+# Скриншоты и видео (артефакты тестирования web-test)
+*.png
+*.mp4
+
+# Навыки, скопированные для других AI-платформ (генерируются scripts/switch.py)
+.agents/skills/
+.augment/
+.cline/
+.codex/
+.cursor/
+.gemini/
+.github/skills/
+.kilocode/
+.kiro/
+.opencode/
+.roo/
+.windsurf/
+debug-templates.txt

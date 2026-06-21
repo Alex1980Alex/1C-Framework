@@ -1,0 +1,32 @@
+{
+  "name": "cc-1c-skills",
+  "interface": {
+    "displayName": "1C Skills"
+  },
+  "plugins": [
+    {
+      "name": "1c-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Nikolay-Shirokov/cc-1c-skills.git",
+        "ref": "port-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Development"
+    },
+    {
+      "name": "1c-skills-py",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Nikolay-Shirokov/cc-1c-skills.git",
+        "ref": "port-codex-py"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Development"
+    }
+  ]
+}
