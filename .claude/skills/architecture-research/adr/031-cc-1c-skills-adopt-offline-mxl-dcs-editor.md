@@ -38,7 +38,7 @@ ADR-030 (2026-06-21) зафиксировал градиент tractability AI-�
 
 ### Отрицательные / риски
 - Внешняя зависимость (single-author, хоть и активная 1198 commits). Митигировать: вендорить зафиксированную версию в `external/cc-1c-skills`. [own]
-- `mxl-compile` нормализует XML (меньше элементов) — нужно проверять рендером (`execute_code` → PDF), что 1С принимает recompiled `.mxlx`; контент сохраняется, но платформенная загрузка recompiled-макета не верифицирована end-to-end (риск R-1). [own]
+- `mxl-compile` нормализует XML (1238→858 элементов, меньше) — контент сохраняется. ~~риск R-1~~ **R-1 ЗАКРЫТ (live 2026-06-21):** деплой recompiled `.mxlx` с маркером в `ПФ_MXL_АктРасхожденияВеса_by` → EDT авто-подхватил дисковую правку (`INCREMENTAL_UPDATE_REQUIRED`) → `update_database` (EDT 2025.2 + edt-mcp 2.3.1) → ИБ: `marker=YES`, `pdfBytes=41553` (рендер OK, H/W целы) → откат из backup → `update_database` → `marker=NO`, git CLEAN. Полный цикл «правка→платформа принимает→рендер» доказан; **уточняет** [[feedback-edt-mcp-mxlx-not-compiled]] (в этой связке подхват сработал через workspace auto-refresh). [own]
 - Скилл-набор скриптов, не MCP-сервер → вызывается через Bash/subprocess, не через MCP-протокол (не интегрируется в tool-роутинг автоматически). [own]
 - `.mxlx` после правки в EDT-проекте: EDT может не рекомпилировать внешние правки (см. [[feedback-edt-mcp-mxlx-not-compiled]]) → грузить через `update_database`, не `clean_project`. [exp]
 
