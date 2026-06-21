@@ -89,6 +89,10 @@ jobs:
             "-Dsonar.token=$env:SONAR_TOKEN" `
             "-Dsonar.projectBaseDir=${{ env.PROJECT_PATH }}" `
             "-Dsonar.sources=$sources"
+          # R6 (ADR-034): Quality Gate gate (Clean-as-You-Code, new-code). Hard под SONAR_QG_HARD=1, иначе soft.
+          $qgArgs = if ($env:SONAR_QG_HARD -eq "1") { @() } else { @("--soft") }
+          python "${{ env.PROJECT_PATH }}\scripts\sonar_quality_gate_check.py" @qgArgs
+          if ($LASTEXITCODE -ne 0) { Write-Host "Quality Gate FAILED (new-code)"; exit $LASTEXITCODE }
 
       - name: Upload BSL Report
         if: always()

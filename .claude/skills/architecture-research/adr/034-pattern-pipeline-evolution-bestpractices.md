@@ -18,6 +18,8 @@
 
 **Очередность внедрения:** дёшево сначала — **R4 + R5 + R6 + R8** (SARIF-контракт, split детерминизма, CaYC-гейт, таксономия), затем **R1** (child-state), затем **R3** (policy-слой) + **R2/R7**.
 
+**Реализовано 2026-06-21:** ✅ **R4** (`sonar_issues_pull.py --format sarif`, SARIF 2.1.0, live-verified) · ✅ **R5** (`remediation_class` deterministic/judgment в pull + триаже `/fix-sonar-task`) · ✅ **R8** (PATTERN 2.14 → «Findings-to-Pipeline Remediation» + глоссарий «pipeline» в PATTERNS.md) · ✅ **R6** (`scripts/sonar_quality_gate_check.py` — Clean-as-You-Code hard-gate на новый код; вписан в `run-sonar-analysis.ps1` + `ci-1c.yml`; **opt-in** `SONAR_QG_HARD=1`, по умолчанию soft; live: hard→exit 1, soft→exit 0). Осталось: R1 (child-workflow), R2/R7, R3 (policy-слой).
+
 ## Последствия
 ### Положительные
 - T1-T5 закрыты проверенными отраслевыми паттернами; пайплайн масштабируется на батч без протечки слоёв; findings-слой обобщается на любой сканер (SARIF); снят блокер жёсткого QG (CaYC).

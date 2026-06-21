@@ -27,12 +27,12 @@ Sonar даёт десятки тысяч issues; среди BLOCKER/CRITICAL е�
 ## Оркестрация
 
 ### Шаг 1 — Pull + триаж (этап Планирование)
-1. `scripts/sonar_issues_pull.py <фильтр> --max 5000` → worklist (MD+JSON) в `data/reports/sonar/`.
+1. `scripts/sonar_issues_pull.py <фильтр> --max 5000` → worklist (MD+JSON+**SARIF 2.1.0**, R4) в `data/reports/sonar/`. Каждый issue несёт **`remediation_class`** (R5): `deterministic` (механический фикс) / `judgment` (домен).
 2. **Scope-гейт (ADR-033):** оставить **кастом** (`/гкс_`, `configuration/`); **БСП не трогаем** (~90% issues — чужой код, правки сорвут обновление типовой).
 3. **Триаж чтением кода** (НЕ авто-фикс): по каждому правиле/файлу определить:
    - **real** — битый вызов/запрос (метод/метаданное реально отсутствует) → в пайплайн;
    - **FP** — динамический модуль (`ОбщегоНазначения.ОбщийМодуль(строка)`), объект из расширения (чужой префикс), плейсхолдер шаблона (`ИмяПланаОбмена`) → пометить, НЕ фиксить (при необходимости исключить из скана / добавить расширение в скоуп);
-   - **cosmetic** — стиль/конвенция (LineLength/MissingSpace/ServerSideExportFormMethod) → отдельный batch (опц., низкий приоритет), НЕ через тяжёлый анализ.
+   - **deterministic** (R5-класс: LineLength/MissingSpace/формат) → **детерминированный трансформер** (cc-1c-skills batch / ruff-подобный), НЕ тяжёлый анализ-пайплайн (split детерминизм/judgment, ADR-034 R5).
    Инструменты триажа: `scan_metadata_index` (объект существует?), `bsl_list_methods` (метод существует?), Read кода. После `/mcp reconnect` — `bsl-code-search`/`bsl_impact_analysis`/`edt_find_references`.
 
 ### Шаг 2 — Кластеризация

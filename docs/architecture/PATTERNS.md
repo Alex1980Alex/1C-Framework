@@ -49,7 +49,9 @@ related: ["[[overview]]", "[[triad-architecture]]", "[[ralph-wiggum]]", "[[hooks
 | 2.11 | Task Master | [[task-master]] |
 | 2.12 | Invocation Logger | [[invocation-logger]] |
 | 2.13 | 3-Tier Pipeline | [[three-tier-pipeline]] |
-| 2.14 | Lint-to-Pipeline Remediation (статанализ → обязательный пайплайн, не ad-hoc) | [[fix-sonar-task]] · ADR-033 |
+| 2.14 | **Findings-to-Pipeline Remediation** (findings любого сканера → обязательный пайплайн, не ad-hoc; реализация: [[fix-sonar-task]], контракт SARIF) | ADR-033/034 |
+
+> **Глоссарий «pipeline» (T5, ADR-034):** в проекте 4 разных «pipeline» — **1.10 Pipeline** (arch-паттерн стадий обработки) · **2.13 3-Tier Pipeline** (3 уровня хуков) · **generic 4-stage** (ADR-017: Планирование→Дизайн→Кодирование→Тестирование) · **1С-пайплайн** (гл. 43, специализация generic-4stage). Паттерн 2.14 «Findings-to-Pipeline» кормит последний.
 
 ---
 
