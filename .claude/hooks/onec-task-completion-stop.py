@@ -50,7 +50,8 @@ except Exception:
 
 # R3 (ADR-034): унифицированный decision-log гейтов (best-effort, не ронять Stop-хук)
 try:
-    from shared.gate_policy import decision as _gp_decision, log_decision as _gp_log
+    from shared.gate_policy import decision as _gp_decision
+    from shared.gate_policy import log_decision as _gp_log
 except Exception:
 
     def _gp_decision(*a, **k):
