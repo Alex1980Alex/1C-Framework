@@ -1,0 +1,44 @@
+{
+  "task": "fix-reindex-segfault",
+  "title": "Фикс segfault reindex_bsl_qwen3.py (гонка тредов трекера × import ST на torch2.10)",
+  "created_at": "2026-06-22T02:06:12",
+  "updated_at": "2026-06-22T02:06:49",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-22T02:06:48"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-22T02:06:48",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-22T02:06:49"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-22T02:06:49"
+    }
+  ]
+}
