@@ -18,9 +18,10 @@
         "print-form",
         "render-verify",
         "mcp",
-        "tooling"
+        "tooling",
+        "codepilot1c-edt"
       ],
-      "last_verified": "2026-06-20"
+      "last_verified": "2026-06-21"
     },
     {
       "file": "bsl-embedding-collapse-remediation-2026.md",
