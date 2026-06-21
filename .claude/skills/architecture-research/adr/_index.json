@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-034",
+      "file": "034-pattern-pipeline-evolution-bestpractices.md",
+      "title": "Эволюция слоистости pattern↔pipeline по best-practices 2026 — резолв T1-T5 (child-workflow R1, SARIF R4, split детерминизма R5, Clean-as-You-Code R6, policy-gate R3, таксономия R8)",
+      "status": "proposed",
+      "date": "2026-06-21",
+      "research": "../cache/pattern-pipeline-orchestration-2026.md",
+      "tags": [
+        "architecture",
+        "orchestration",
+        "pipeline",
+        "pattern",
+        "durable-execution",
+        "sarif",
+        "policy-as-code",
+        "remediation",
+        "roadmap"
+      ]
+    },
+    {
       "id": "ADR-033",
       "file": "033-sonar-remediation-stage.md",
       "title": "Remediation-этап по итогам SonarQube — sonar_issues_pull.py + scope на кастомный код + re-scan (БСП не трогаем; жёсткий QG-блокер отложен)",
