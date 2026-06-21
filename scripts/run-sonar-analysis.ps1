@@ -43,4 +43,10 @@ if (-not $java) { $java = "java" }   # fallback: system java для CLI-bootstra
     "-Dsonar.sources=$sources"
 if ($LASTEXITCODE -ne 0) { Write-Host "Sonar Scanner failed!" -ForegroundColor Red; exit 1 }
 
+# R6 (ADR-034): Quality Gate gate — Clean-as-You-Code (условия new-code; легаси не блокирует).
+# Hard под $env:SONAR_QG_HARD=1 (валит билд на QG=ERROR), иначе soft (только warn).
+$qgArgs = if ($env:SONAR_QG_HARD -eq "1") { @() } else { @("--soft") }
+& "$ProjectRoot\.venv\Scripts\python.exe" "$ProjectRoot\scripts\sonar_quality_gate_check.py" --host $Host_ @qgArgs
+if ($LASTEXITCODE -ne 0) { Write-Host "Quality Gate FAILED (hard, new-code)" -ForegroundColor Red; exit $LASTEXITCODE }
+
 Write-Host "`nDone! Dashboard: $Host_/dashboard?id=upravlenie-transportom-plk" -ForegroundColor Green
