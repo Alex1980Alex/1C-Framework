@@ -24,6 +24,7 @@ Usage:
 import argparse
 import logging
 import os
+import subprocess
 import sys
 import time
 import uuid
@@ -981,6 +982,37 @@ class Qwen3TEIEmbedder:
             self._client = None  # type: ignore[assignment]
 
 
+def _fa2_preflight_ok() -> bool:
+    """Probe — in an ISOLATED subprocess — whether FlashAttention-2 actually
+    runs on the installed torch/CUDA build instead of segfaulting.
+
+    `import flash_attn` succeeding is NOT sufficient: its compiled CUDA kernels
+    load lazily on first call and can crash the whole process (ABI drift — e.g.
+    flash-attn 2.8.3 against torch 2.10.0+cu128 segfaults at model construction,
+    exit 139). A native crash can't be caught in-process, so we exercise a tiny
+    `flash_attn_func` call in a child process: clean exit 0 => FA2 is safe to
+    enable; any crash / non-zero exit => fall back to standard attention.
+
+    Override: BSL_FORCE_FA2=1 skips this probe (checked by the caller).
+    """
+    probe = (
+        "import torch\n"
+        "from flash_attn import flash_attn_func\n"
+        "q = torch.randn(1, 16, 8, 128, device='cuda', dtype=torch.bfloat16)\n"
+        "flash_attn_func(q, q, q)\n"
+        "torch.cuda.synchronize()\n"
+    )
+    try:
+        r = subprocess.run(
+            [sys.executable, "-c", probe],
+            capture_output=True,
+            timeout=180,
+        )
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+    return r.returncode == 0
+
+
 def make_embedder(
     name: str,
     batch_size: int = 32,
@@ -1528,6 +1560,23 @@ def main() -> None:
         print("       (Phase 8.8 uses single-vector 4096d for bsl_code_v4)")
         sys.exit(1)
 
+    # Pre-import the heavy native ML stack BEFORE the progress tracker starts
+    # its daemon threads (below). On the transformers5.x / sentence-transformers5.4 /
+    # torch2.10 stack, those threads — the telemetry thread spawns an `nvidia-smi`
+    # subprocess every interval — racing with the native DLL loading done by
+    # `from sentence_transformers import ...` segfaults the process on Windows
+    # (loader-lock + CreateProcess during DLL init -> exit 139 at model_load).
+    # Importing here, while no tracker thread exists yet, loads those DLLs
+    # safely; the embedder's later import is then a cached no-op. Only in-process
+    # embedders need it — qwen3 (Ollama) / qwen3-tei (httpx) never load torch
+    # locally, so skip the multi-second import cost for them.
+    if args.embedder in ("e5", "qwen3-st"):
+        # Imported for side effect only: load the native DLLs while no tracker
+        # thread is running yet. sentence_transformers pulls torch transitively;
+        # torch is kept explicit to mirror the validated import sequence.
+        import sentence_transformers
+        import torch
+
     t0 = time.time()
     # roadmap 260518 follow-up — initialize module-level tracker so embedder
     # methods (_embed_chunks_late, _embed_late_chunked_sliding, flush_batch)
@@ -1557,6 +1606,20 @@ def main() -> None:
             f"For qwen3-tei, FlashAttention 2 is built into the TEI runtime."
         )
         sys.exit(1)
+    if args.enable_fa2 and not os.environ.get("BSL_FORCE_FA2") and not _fa2_preflight_ok():
+        # `import flash_attn` succeeding is not proof FA2 runs: its CUDA kernels
+        # load lazily and can segfault the process (flash-attn vs torch ABI
+        # drift — e.g. 2.8.3 vs torch 2.10.0+cu128 -> exit 139 at model build).
+        # The isolated subprocess probe just crashed, so drop to standard
+        # attention instead of killing this (potentially multi-hour) run.
+        print(
+            "WARNING: --enable-fa2 requested but a FlashAttention-2 preflight probe "
+            "crashed (flash-attn/torch ABI mismatch). Falling back to standard "
+            "attention. Reinstall flash-attn for this torch build to restore FA2, "
+            "or set BSL_FORCE_FA2=1 to bypass this probe."
+        )
+        _evt("fa2_preflight_failed", action="disabled_fallback_standard")
+        args.enable_fa2 = False
     if args.pooling_mode == "late-chunking" and args.embedder != "qwen3-st":
         # TEI returns pooled vectors only — no token-level hidden states.
         # The hook lives on Qwen3STEmbedder.embed_late_chunked.
