@@ -1,0 +1,44 @@
+{
+  "task": "docs-43-7-tools-inventory",
+  "title": "43.7 полный инвентарь инструментов + реальные прогоны",
+  "created_at": "2026-06-21T17:47:04",
+  "updated_at": "2026-06-21T17:47:04",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline/docs-43-7-tools-inventory/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T17:47:04"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline/docs-43-7-tools-inventory/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T17:47:04",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline/docs-43-7-tools-inventory/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T17:47:04"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline/docs-43-7-tools-inventory/pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-21T17:47:04"
+    }
+  ]
+}
