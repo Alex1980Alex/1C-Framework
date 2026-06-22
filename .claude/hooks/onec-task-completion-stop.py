@@ -106,6 +106,7 @@ _DEBUG_TRACE_MARKERS = (
     "wait_for_target",
 )
 ADVISORY_EVENTS_LOG = PROJECT_ROOT / ".claude" / "cache" / "onec-toolgate-events.jsonl"
+ADVISORY_LOG_CAP = 5000  # FIFO-ротация лога advisory-событий (рост не безграничен)
 
 
 def _read_stdin() -> dict:
@@ -333,6 +334,12 @@ def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
         }
         with open(ADVISORY_EVENTS_LOG, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        # FIFO-ротация: лог не растёт безгранично (1С-задачи редки → файл мал, чтение дёшево)
+        lines = ADVISORY_EVENTS_LOG.read_text(encoding="utf-8", errors="replace").splitlines()
+        if len(lines) > ADVISORY_LOG_CAP:
+            ADVISORY_EVENTS_LOG.write_text(
+                "\n".join(lines[-ADVISORY_LOG_CAP:]) + "\n", encoding="utf-8"
+            )
     except Exception:
         pass
 
