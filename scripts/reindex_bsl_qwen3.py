@@ -330,9 +330,15 @@ class Qwen3STEmbedder:
 
     Phase 1 of roadmap 260518 (BSL Late Chunking improvements):
         - `max_seq_length` default bumped 4096 → 8192 to cut single-pass fallback%.
-        - VRAM math on RTX 3090 24GB: model 16 GB FP16 + 8192-token activations
-          ~1.5 GB (no FA2) → ~17.5 GB peak, 6.5 GB headroom. Safe by ~2 GB margin
-          required in §3.4 success criteria.
+        - VRAM math on RTX 3090 24GB: model 16 GB FP16 + 8192-token activations.
+          The original ~1.5 GB activation estimate (no FA2) ignored the O(n^2)
+          attention score matrix [batch, heads, seq, seq]: at the XXL_8K bucket
+          (batch=2, seq=8192) those scores alone are multiple GB per layer, and
+          a single god-object chunk OOMs the card mid-run (observed on the ERP
+          reference reindex, gpu_vram ~24.2/24.5 GB). FA2 makes attention memory
+          linear (no materialized n×n scores) and is now auto-enabled for
+          qwen3-st whenever the preflight probe passes — see the FA2 gate in
+          `main()`. Without FA2 the 8192 default is only safe for short chunks.
     """
 
     MODEL_ID = "Qwen/Qwen3-Embedding-8B"
@@ -1669,6 +1675,40 @@ def main() -> None:
         )
         _evt("fa2_preflight_failed", action="disabled_fallback_standard")
         args.enable_fa2 = False
+    # Auto-enable FA2 for qwen3-st when the operator did not ask for it but the
+    # machine supports it. roadmap 260518 P1 bumped max_seq_length to 8192; a
+    # single god-object chunk at 8192 tokens materializes the O(n^2) attention
+    # score matrix and OOMs an 8B model on a 24GB card mid-run under "standard"
+    # pooling (the ERP reference reindex died exactly this way at gpu_vram
+    # ~24.2/24.5 GB — the late-chunking FA2 guard below never fires for standard
+    # pooling). FA2 makes attention memory linear with NO quality change (exact
+    # reformulation via tiling + online softmax, not an approximation), so it is
+    # free correctness insurance. The same isolated subprocess probe gates it,
+    # so an ABI-broken flash-attn still falls back safely instead of segfaulting.
+    # Escape hatches: explicit --enable-fa2 keeps its path above; BSL_NO_AUTO_FA2=1
+    # forces the legacy no-FA2 path (e.g. to benchmark it).
+    if (
+        args.embedder == "qwen3-st"
+        and not args.enable_fa2
+        and not os.environ.get("BSL_NO_AUTO_FA2")
+    ):
+        if os.environ.get("BSL_FORCE_FA2") or _fa2_preflight_ok():
+            args.enable_fa2 = True
+            print(
+                "INFO: auto-enabling FlashAttention-2 for qwen3-st (preflight OK). "
+                "Keeps attention memory linear so god-object chunks at "
+                "max_seq_length=8192 fit on a 24GB card without OOM; FA2 is exact "
+                "so embeddings are unchanged. Set BSL_NO_AUTO_FA2=1 to opt out."
+            )
+            _evt("fa2_auto_enabled", reason="qwen3_st_oom_guard")
+        else:
+            print(
+                "WARNING: qwen3-st runs at max_seq_length=8192 but FA2 could not be "
+                "auto-enabled (preflight probe crashed). A single god-object chunk "
+                "may OOM an 8B model on a 24GB card. Reinstall flash-attn matching "
+                "this torch build to restore linear-memory attention."
+            )
+            _evt("fa2_auto_enable_failed", action="continue_no_fa2")
     if args.pooling_mode == "late-chunking" and args.embedder != "qwen3-st":
         # TEI returns pooled vectors only — no token-level hidden states.
         # The hook lives on Qwen3STEmbedder.embed_late_chunked.
