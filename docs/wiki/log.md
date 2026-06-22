@@ -28,14 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-- F5.3 regression 47/47 OAuth-domain tests pass, zero new fails
-- F5.4 audit logging `AuditedOAuth2Service` + `OAuthAuditEvent` (5 event types)
-- F5.5 `.mcp.json` env vars + [`oauth-setup.md`](auth/oauth-setup.md) (PKCE flow + httpx client + troubleshooting)
-
-**Status:** Hermes-llm-wiki Phase 5 + Phase 6 ready for `/opsx:archive hermes-llm-wiki`.
-
-**Architecture finding:** pdf-vector-graph MCP — stdio-only, OAuth not applicable to local transport. F5.2 retargeted as reusable FastAPI router in `src.shared.mcp_oauth.fastapi` for any future HTTP MCP server (one-line `app.include_router()` to enable).
-
 ---
 
 ## 2026-04-20 — Initial Bootstrap
@@ -498,3 +490,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 
 ## 2026-06-19 — Session Summary
+## 2026-06-23 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: create-hook, evaluation-benchmark, code-verify, architecture-research, indexing-pipeline
+- Files changed: 3
+- Summary: Session 2026-06-23. Skills: create-hook, evaluation-benchmark, code-verify, architecture-research, indexing-pipeline, qdrant-operations, analyze-1c-task, analyze-1c-task-v2. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, pipeline/_1c_index.json, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save ManagerModule.bsl, ANALYSIS-REPORT-T3-Валюта-вида-в-примечании-ТТН.md, spravochnik-valyuty-simvolnyy-tsifrovoy-kod.md +1 more. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-save 01-architecture.md, 02-design.md, 03-implementation.md +1 more
+
