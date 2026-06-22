@@ -12,10 +12,10 @@
       "id": "ADR-035",
       "file": "035-mandatory-high-leverage-1c-tools.md",
       "title": "Обязательное использование высоко-эффективных инструментов 1С-пайплайна — многоуровневый условный мандат (T1 impact_analysis+1c-debug-hmr по типу задачи / T2 reference-search at-stage / T3 conditional / T4 recommended); контекст задачи определяющий; advisory→hard лестница",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-06-22",
       "research": "../../../docs/framework documentation/43_ПАЙПЛАЙН_1С/43.7_АНАЛИЗ_ВСЕЙ_КОНФИГУРАЦИИ.md",
-      "status_note": "proposed 2026-06-22 — на ревью; enforcement (Фаза 1 advisory в onec-task-completion-stop) не вшит до acceptance",
+      "status_note": "accepted 2026-06-22 — Фаза 1 (advisory T1-T2 + event-log в onec-task-completion-stop, code-verify PASS) реализована; Фаза 2 (hard-промоут + контекст-классификация типа задачи) отложена до замера follow_rate/FP",
       "tags": [
         "1c",
         "pipeline",

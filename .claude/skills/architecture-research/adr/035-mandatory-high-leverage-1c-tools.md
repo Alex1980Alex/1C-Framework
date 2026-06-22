@@ -1,7 +1,7 @@
 # ADR-035: Обязательное использование высоко-эффективных инструментов 1С-пайплайна — многоуровневый условный мандат
 
 **Дата:** 2026-06-22
-**Статус:** proposed
+**Статус:** accepted (Фаза 1 — advisory — реализована 2026-06-22; Фаза 2 hard-промоут отложена до замера follow_rate/FP)
 **Исследование:** контекст — [гл. 43.7 §«Необязательные инструменты с высоким выигрышем эффективности»](../../../docs/framework%20documentation/43_ПАЙПЛАЙН_1С/43.7_АНАЛИЗ_ВСЕЙ_КОНФИГУРАЦИИ.md) (без отдельного cache-профиля; основание — реальные прогоны 2026-06-21 + опыт)
 **Связь:** расширяет обязательный минимум [43.4](../../../docs/framework%20documentation/43_ПАЙПЛАЙН_1С/43.4_СПРАВОЧНИК_ИНСТРУМЕНТОВ.md); enforcement-цель — [`onec-task-completion-stop.py`](../../../.claude/hooks/onec-task-completion-stop.py) (единый 1С task-completion gate); зеркалит лестницу advisory→hard из [ADR-018](018-mandatory-auto-pipeline-protocol.md) и tdd-guard ([ADR-015](015-testing-adopt-tddguard-optin-eval-playwright.md))
 
@@ -59,6 +59,6 @@
 
 ## Связанные файлы
 - Док: `docs/framework documentation/43_ПАЙПЛАЙН_1С/43.7_…md` (§«Необязательные инструменты…» — добавить ссылку на этот ADR), `43.4_…md` (обязательный минимум)
-- Enforcement-цель (Фаза 1-2): `.claude/hooks/onec-task-completion-stop.py` (+ `shared/pipeline_1c_bridge.py` для классификации типа задачи)
+- Enforcement: **Фаза 1 РЕАЛИЗОВАНА (2026-06-22)** в [`onec-task-completion-stop.py`](../../../.claude/hooks/onec-task-completion-stop.py) — T1 (`bsl_impact_analysis` + `1c-debug-hmr`/`1c-debug` BP-trace) и T2 (`bsl_search`/`bsl_hybrid_search`/`bsl_similar`) детектятся как **advisory** (info-строки в block-чеклисте маркером `•` + LOOPS.md; **блок-решение НЕ изменено** — строго recall/capture/research) + event-log [`.claude/cache/onec-toolgate-events.jsonl`](../../../.claude/cache/) (follow_rate/FP, пишется на КАЖДОЙ 1С-задаче). `debug_trace` сужен до содержательных trace-tool'ов (set_breakpoint/stack_trace/variables/evaluate/step/logpoint), не connection-проверок (ping/health/targets). code-verify PASS (инвариант «advisory не блокирует» подтверждён). Фаза 2-цель: `shared/pipeline_1c_bridge.py` для классификации типа задачи + промоут в hard
 - Память: `feedback_live_bp_trace_mandatory.md`, `project_1c_tool_usage_instrumentation.md` (W-цикл/`tool_usage_report.py`)
 - Отложено (Фаза 2): hard-промоут + условная детекция типа задачи — отдельной правкой после advisory-валидации

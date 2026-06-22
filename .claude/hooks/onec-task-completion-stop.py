@@ -80,6 +80,33 @@ _1C_SKILLS = (
     "code-verify",
 )
 
+# ADR-035 Фаза 1 — high-leverage инструменты как ADVISORY (info, НИКОГДА не блок;
+# блок-решение остаётся строго по recall/capture/research). Сбор follow_rate/FP за окно
+# → ADVISORY_EVENTS_LOG. Surfacing условный (текст подсказки сам поясняет «когда»).
+#   T1 — impact-анализ перед правкой экспортного метода + live BP-trace для runtime-логики;
+#   T2 — поиск эталона (reference) на Планировании.
+_IMPACT_TOOLS = {"mcp__bsl-semantic-search__bsl_impact_analysis"}
+_REFSEARCH_TOOLS = {
+    "mcp__bsl-semantic-search__bsl_search",
+    "mcp__bsl-semantic-search__bsl_hybrid_search",
+    "mcp__bsl-semantic-search__bsl_similar",
+}
+# Префиксы серверов 1c-debug/1c-debug-hmr + маркеры СОДЕРЖАТЕЛЬНОГО BP-trace: метрика follow_rate
+# должна отражать реальную трассировку (set_breakpoint/stack_trace/variables/evaluate/step/logpoint),
+# а НЕ connection-проверки (ping/health_check/connect/targets) — иначе «использование» завышается.
+_DEBUG_TOOL_PREFIXES = ("mcp__1c-debug-hmr__", "mcp__1c-debug__")
+_DEBUG_TRACE_MARKERS = (
+    "set_breakpoint",
+    "stack_trace",
+    "variables",
+    "evaluate",
+    "set_logpoint",
+    "break_on_next",
+    "_step",
+    "wait_for_target",
+)
+ADVISORY_EVENTS_LOG = PROJECT_ROOT / ".claude" / "cache" / "onec-toolgate-events.jsonl"
+
 
 def _read_stdin() -> dict:
     try:
@@ -190,6 +217,10 @@ def _collect_signals(transcript_path: str) -> dict:
         "research": False,
         "skill": False,
         "config_edit": False,
+        # ADR-035 Фаза 1 — advisory (не влияют на блок)
+        "impact": False,
+        "debug_trace": False,
+        "ref_search": False,
     }
     if not transcript_path or not Path(transcript_path).exists():
         return sig
@@ -210,6 +241,14 @@ def _collect_signals(transcript_path: str) -> dict:
                 sig["capture"] = True
             elif name in _RESEARCH_TOOLS:
                 sig["research"] = True
+            elif name in _IMPACT_TOOLS:  # ADR-035 T1 (advisory)
+                sig["impact"] = True
+            elif name in _REFSEARCH_TOOLS:  # ADR-035 T2 (advisory)
+                sig["ref_search"] = True
+            elif name.startswith(_DEBUG_TOOL_PREFIXES) and any(  # ADR-035 T1 (advisory)
+                mk in name for mk in _DEBUG_TRACE_MARKERS
+            ):
+                sig["debug_trace"] = True
             elif name == "Skill":
                 s = str(inp.get("skill") or inp.get("command") or "")
                 if any(k in s for k in _1C_SKILLS):
@@ -240,6 +279,9 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
         def m(ok):
             return "✓" if ok else "✗"
 
+        def adv(ok):  # ADR-035 Фаза 1 — advisory-маркер (не блок)
+            return "✓" if ok else "⚠ advisory"
+
         eff = PROJECT_ROOT / "data" / "tool-effectiveness.jsonl"
         usage = d / "TOOL-USAGE-REPORT.md"
         skill_cell = "✓" if sig.get("skill") else "⚠ info (enforced на Write)"
@@ -253,6 +295,11 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
             f"| CAPTURE (память) | {m(sig.get('capture'))} |",
             f"| RESEARCH (Infostart+GitHub) | {m(sig.get('research'))} |",
             f"| SKILL-методика 1С | {skill_cell} |",
+            f"| T1 impact-анализ перед правкой (advisory) | {adv(sig.get('impact'))} |",
+            f"| T1 live BP-trace runtime-логики (advisory) | {adv(sig.get('debug_trace'))} |",
+            f"| T2 поиск эталона на Планировании (advisory) | {adv(sig.get('ref_search'))} |",
+            "",
+            "_T1-T2 (ADR-035 Фаза 1) — рекомендательно, НЕ влияют на блок (блок только по RECALL/CAPTURE/RESEARCH)._",
             "",
             f"- opt-out gate: {'ДА (ONEC_TASK_GATE_DISABLE)' if optout else 'нет'}",
             f"- W per-task (`TOOL-USAGE-REPORT.md`): {'есть' if usage.exists() else 'НЕ запущен (H3)'}",
@@ -261,6 +308,31 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
             "_Авто-сводка onec-task-completion-stop на Stop (H2); фактические tool_use транскрипта._",
         ]
         (d / "LOOPS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except Exception:
+        pass
+
+
+def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
+    """ADR-035 Фаза 1 — лог advisory-состояния T1-T2 на КАЖДОЙ 1С-задаче (allow и block).
+
+    Данные для замера follow_rate / FP перед промоутом T1-T2 в hard (Фаза 2): какой % 1С-задач
+    уже использует impact/BP-trace/reference-search. Модель — tdd-guard events.jsonl (ADR-015).
+    best-effort: ошибка лога никогда не влияет на gate. JSONL в `.claude/cache/` (gitignored runtime).
+    """
+    try:
+        ADVISORY_EVENTS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        rec = {
+            "ts": datetime.now().isoformat(),
+            "adr": "ADR-035-phase1",
+            "slug": slug,
+            "impact": bool(sig.get("impact")),
+            "debug_trace": bool(sig.get("debug_trace")),
+            "ref_search": bool(sig.get("ref_search")),
+            "config_edit": bool(sig.get("config_edit")),
+            "hard_blocked": bool(hard_blocked),
+        }
+        with open(ADVISORY_EVENTS_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     except Exception:
         pass
 
@@ -310,7 +382,13 @@ def main() -> None:
         task_slug = slug or incomplete
         _write_loops_report(task_slug, sig)  # H2: сводка петель -> pipeline/<slug>/LOOPS.md
 
-        if all(sig[k] for k in ("recall", "capture", "research")):
+        # Блок-решение — СТРОГО по hard-петлям (recall/capture/research). T1-T2 (ADR-035) advisory,
+        # в это условие НЕ входят.
+        hard_ok = all(sig[k] for k in ("recall", "capture", "research"))
+        # ADR-035 Фаза 1 — лог advisory T1-T2 на КАЖДОЙ 1С-задаче (allow и block) для follow_rate/FP
+        _log_advisory_event(task_slug, sig, hard_blocked=not hard_ok)
+
+        if hard_ok:
             if timer:
                 timer.log(outcome="allow")
             sys.exit(0)
@@ -325,7 +403,12 @@ def main() -> None:
             f"  {mark(sig['capture'])} CAPTURE — `mcp__skill-learning__capture_pattern` после verify PASS (или `route_and_save` / `.md`-память)\n"
             f"  {mark(sig['research'])} RESEARCH — `WebSearch`/`WebFetch` (внешний анализ: Infostart + GitHub best-practices)\n"
             f"  {'✓' if sig['skill'] else '⚠'} SKILL [1С-методика] — "
-            f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n\n"
+            f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n"
+            "  — — — рекомендательно (ADR-035 Фаза 1, • = подсказка, НЕ блок) — — —\n"
+            f"  {'✓' if sig['impact'] else '•'} T1 impact-анализ — `bsl_impact_analysis` перед правкой существующего экспортного метода (карта «кто сломается»)\n"
+            f"  {'✓' if sig['debug_trace'] else '•'} T1 live BP-trace — `1c-debug-hmr` для алгоритмов с ≥3 ветвлений / bugfix-verify\n"
+            f"  {'✓' if sig['ref_search'] else '•'} T2 поиск эталона — `bsl_search`/`bsl_similar` на Планировании\n\n"
+            "Блок — ТОЛЬКО по ✗ (RECALL/CAPTURE/RESEARCH); T1-T2 (•) не блокируют (advisory).\n"
             "Закрой пункты с ✗ и заверши снова. Опт-аут (trivial-правка / реально не нужно): ONEC_TASK_GATE_DISABLE=1."
         )
         _gp_log(
@@ -337,6 +420,9 @@ def main() -> None:
                 capture=sig.get("capture"),
                 research=sig.get("research"),
                 skill=sig.get("skill"),
+                impact=sig.get("impact"),  # ADR-035 advisory
+                debug_trace=sig.get("debug_trace"),
+                ref_search=sig.get("ref_search"),
             )
         )
         sys.stdout.buffer.write(
