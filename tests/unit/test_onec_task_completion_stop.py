@@ -56,6 +56,10 @@ def test_collect_all_signals(tmp_path):
         "research": True,
         "skill": True,
         "config_edit": False,
+        # ADR-035 Фаза 1 — advisory T1-T2 (в этом транскрипте отсутствуют)
+        "impact": False,
+        "debug_trace": False,
+        "ref_search": False,
     }
 
 
@@ -68,6 +72,9 @@ def test_collect_none(tmp_path):
         "research": False,
         "skill": False,
         "config_edit": False,
+        "impact": False,
+        "debug_trace": False,
+        "ref_search": False,
     }
 
 
@@ -185,3 +192,69 @@ def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     assert mod._incomplete_onec_pipeline() is None
+
+
+# ─── ADR-035 Фаза 1 — advisory T1-T2 ────────────────────────────────────────
+
+
+def test_collect_advisory_t1_t2(tmp_path):
+    # T1 impact + T1 BP-trace (содержательный) + T2 reference-search детектятся
+    t = tmp_path / "t.json"
+    _transcript(
+        t,
+        [
+            ("mcp__bsl-semantic-search__bsl_impact_analysis", {}),
+            ("mcp__1c-debug-hmr__debug_stack_trace", {}),
+            ("mcp__bsl-semantic-search__bsl_search", {}),
+        ],
+    )
+    sig = mod._collect_signals(str(t))
+    assert sig["impact"] and sig["debug_trace"] and sig["ref_search"]
+    # advisory не подменяют hard-сигналы
+    assert not sig["recall"] and not sig["capture"] and not sig["research"]
+
+
+def test_debug_trace_narrowed_to_substantive(tmp_path):
+    # connection-проверки (ping/health/targets) НЕ считаются BP-trace; реальная трассировка — да
+    for tool, expected in [
+        ("mcp__1c-debug-hmr__debug_ping", False),
+        ("mcp__1c-debug-hmr__debug_health_check", False),
+        ("mcp__1c-debug-hmr__debug_targets", False),
+        ("mcp__1c-debug-hmr__debug_stack_trace", True),
+        ("mcp__1c-debug__debug_set_breakpoint", True),
+        ("mcp__1c-debug-hmr__debug_variables", True),
+    ]:
+        t = tmp_path / "dt.json"
+        _transcript(t, [(tool, {})])
+        assert mod._collect_signals(str(t))["debug_trace"] is expected, tool
+
+
+def test_advisory_absent_does_not_block(tmp_path):
+    # ИНВАРИАНТ ADR-035: hard-петли есть, T1-T2 отсутствуют → блок-условие
+    # all(recall,capture,research) остаётся True (advisory НЕ влияет на блок).
+    t = tmp_path / "t.json"
+    _transcript(
+        t,
+        [
+            ("mcp__memory-orchestrator__unified_search", {}),
+            ("mcp__skill-learning__capture_pattern", {}),
+            ("WebSearch", {"query": "x"}),
+        ],
+    )
+    sig = mod._collect_signals(str(t))
+    assert not (sig["impact"] or sig["debug_trace"] or sig["ref_search"])
+    assert all(sig[k] for k in ("recall", "capture", "research")) is True
+
+
+def test_log_advisory_event_rotation(tmp_path, monkeypatch):
+    # FIFO-ротация: лог обрезается до ADVISORY_LOG_CAP последних записей, последняя — present
+    log = tmp_path / "events.jsonl"
+    monkeypatch.setattr(mod, "ADVISORY_EVENTS_LOG", log)
+    monkeypatch.setattr(mod, "ADVISORY_LOG_CAP", 3)
+    sig = {"impact": False, "debug_trace": False, "ref_search": False, "config_edit": True}
+    for i in range(6):
+        mod._log_advisory_event(f"slug-{i}", sig, hard_blocked=False)
+    lines = log.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3  # обрезано до cap
+    assert json.loads(lines[-1])["slug"] == "slug-5"  # последняя запись сохранена
+    assert json.loads(lines[0])["slug"] == "slug-3"  # старые вытеснены (FIFO)
