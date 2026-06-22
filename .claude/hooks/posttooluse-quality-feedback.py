@@ -52,6 +52,34 @@ def _run_ruff(file_path: str) -> list[dict] | None:
         return None
 
 
+def _spawn_bsl_format(file_path: str) -> bool:
+    """ADR-036: авто-форматирование BSL — bsl_lint.py --format (in-place, идемпотентно).
+
+    Запускается ДЕТАЧЕНО (Popen без wait): bsl-ls = JVM, cold-start легко >5s timeout хука,
+    поэтому форматируем в фоне — хук возвращается мгновенно, формат завершается сам. Best-effort:
+    нет venv/скрипта/ошибка spawn → False, никогда не роняет хук. Делает bsl_lint «обязательным
+    по построению» (auto), без блокировки (вариант A промоута high-leverage инструментов)."""
+    project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+    venv_python = os.path.join(project_dir, ".venv", "Scripts", "python.exe")
+    script = os.path.join(project_dir, "scripts", "bsl_lint.py")
+    if not (os.path.isfile(venv_python) and os.path.isfile(script)):
+        return False
+    try:
+        kwargs = {
+            "cwd": project_dir,
+            "stdout": subprocess.DEVNULL,
+            "stderr": subprocess.DEVNULL,
+            "stdin": subprocess.DEVNULL,
+        }
+        if os.name == "nt":
+            # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP — переживает возврат хука
+            kwargs["creationflags"] = 0x00000008 | subprocess.CREATE_NEW_PROCESS_GROUP
+        subprocess.Popen([venv_python, script, file_path, "--format"], **kwargs)
+        return True
+    except OSError:
+        return False
+
+
 class PostToolUseQualityFeedback(BaseHook):
     """PostToolUse hook for Write|Edit: run ruff on *.py files."""
 
@@ -70,12 +98,27 @@ class PostToolUseQualityFeedback(BaseHook):
         if not file_path:
             return None
 
+        normalized = file_path.replace("\\", "/")
+
+        # ADR-036: BSL-файлы → авто-формат (bsl_lint --format, детачено). Вендорные деревья
+        # (reference-конфиги ERP/УТ, tools/) НЕ форматируем. Конфигурация/гкс_-код — да.
+        if normalized.endswith(".bsl"):
+            if not os.path.isfile(file_path):
+                return None
+            if any(s in normalized for s in ("/external/", "/tools/")):
+                return None
+            if _spawn_bsl_format(file_path):
+                return HookOutput().hook_context(
+                    "[bsl-format] авто-форматирование (bsl_lint --format) запущено фоном — "
+                    "идемпотентно, форматированная версия попадёт в коммит (ADR-036)"
+                )
+            return None
+
         # Only Python files
         if not file_path.replace("\\", "/").endswith(".py"):
             return None
 
-        # Skip non-project files
-        normalized = file_path.replace("\\", "/")
+        # Skip non-project files (normalized уже вычислен выше)
         skip = (
             ".claude/cache/",
             ".claude/hooks/",

@@ -612,6 +612,27 @@
         "cascade-stage2a",
         "scaffold"
       ]
+    },
+    {
+      "id": "ADR-036",
+      "file": "036-promote-high-leverage-1c-tools-variant-a.md",
+      "title": "Промоут high-leverage 1С-инструментов в обязательные (вариант A): bsl_lint --format авто (детачено), impact_analysis conditional-hard (ONEC_TOOLGATE_HARD + config_edit), 1c-debug-hmr BP-trace отдельный opt-in (ONEC_TOOLGATE_DEBUG_HARD), find_callers advisory; default OFF, opt-out ONEC_TOOLGATE_HARD_DISABLE",
+      "status": "accepted",
+      "date": "2026-06-23",
+      "research": "035-mandatory-high-leverage-1c-tools.md",
+      "tags": [
+        "1c-pipeline",
+        "high-leverage-tools",
+        "onec-task-completion-stop",
+        "bsl_lint",
+        "bsl_impact_analysis",
+        "1c-debug-hmr",
+        "find_callers",
+        "conditional-hard",
+        "advisory",
+        "owner-override",
+        "gate-enforcement"
+      ]
     }
   ]
 }
