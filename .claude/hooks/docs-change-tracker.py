@@ -422,6 +422,12 @@ _SKIP_PATTERNS = [
     "/memory/",
     "auto-git-save-state",
     "hook-todos",
+    # ADR — самодокументирующиеся decision-артефакты (Context→Decision→Consequences),
+    # НЕ product-код. Зеркало docs-change-enforcer SKIP_PATTERNS ("architecture-research/adr/"
+    # + "/adr/"): без этого правка ADR матчит общий ".claude/skills/" prefix (см. _CODE_TO_DOCS_SKILLS)
+    # → ложная задача «обнови доки/скиллы» (ADR уже сам себе документация + реестр _index.json).
+    "architecture-research/adr/",
+    "/adr/",
 ]
 
 
