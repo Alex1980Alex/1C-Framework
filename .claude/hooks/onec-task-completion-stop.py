@@ -110,6 +110,12 @@ _CALLERS_TOOLS = {
     "mcp__bsl-code-search__find_callers",
     "mcp__bsl-semantic-search__bsl_call_graph",
 }
+# Тир-2 кандидаты (advisory-only, ADR-035; НЕ влияют на блок — измеряем follow_rate):
+_FORM_TOOLS = {"mcp__edt-mcp__get_form_screenshot"}  # визуальный verify формы без клиента
+# API платформы / документация 8.3.27 (авторитет вместо галлюцинации API) — по префиксу сервера:
+_PLATFORM_CTX_PREFIXES = ("mcp__bsl-platform-context__", "mcp__pdf-vector-graph__")
+# bsl_analyze_method (codepilot1c) — точное имя сервера варьируется → детект по подстроке имени тула
+_ANALYZE_METHOD_MARKER = "bsl_analyze_method"
 ADVISORY_EVENTS_LOG = PROJECT_ROOT / ".claude" / "cache" / "onec-toolgate-events.jsonl"
 ADVISORY_LOG_CAP = 5000  # FIFO-ротация лога advisory-событий (рост не безграничен)
 
@@ -228,6 +234,10 @@ def _collect_signals(transcript_path: str) -> dict:
         "debug_trace": False,
         "ref_search": False,
         "callers": False,
+        # Тир-2 advisory-кандидаты (ADR-035)
+        "form_screenshot": False,
+        "platform_ctx": False,
+        "analyze_method": False,
     }
     if not transcript_path or not Path(transcript_path).exists():
         return sig
@@ -258,6 +268,12 @@ def _collect_signals(transcript_path: str) -> dict:
                 sig["debug_trace"] = True
             elif name in _CALLERS_TOOLS:  # ADR-036 T1 (advisory)
                 sig["callers"] = True
+            elif name in _FORM_TOOLS:  # Тир-2 (advisory)
+                sig["form_screenshot"] = True
+            elif name.startswith(_PLATFORM_CTX_PREFIXES):  # Тир-2 (advisory)
+                sig["platform_ctx"] = True
+            elif _ANALYZE_METHOD_MARKER in name:  # Тир-2 (advisory)
+                sig["analyze_method"] = True
             elif name == "Skill":
                 s = str(inp.get("skill") or inp.get("command") or "")
                 if any(k in s for k in _1C_SKILLS):
@@ -308,6 +324,9 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
             f"| T1 live BP-trace runtime-логики (advisory) | {adv(sig.get('debug_trace'))} |",
             f"| T2 поиск эталона на Планировании (advisory) | {adv(sig.get('ref_search'))} |",
             f"| T1 find_callers/call-graph перед [REFACTOR] (advisory) | {adv(sig.get('callers'))} |",
+            f"| Тир-2 get_form_screenshot (advisory) | {adv(sig.get('form_screenshot'))} |",
+            f"| Тир-2 bsl-platform-context/pdf-vector-graph (advisory) | {adv(sig.get('platform_ctx'))} |",
+            f"| Тир-2 bsl_analyze_method (advisory) | {adv(sig.get('analyze_method'))} |",
             "",
             "_T1-T2 — рекомендательно по умолчанию; при ONEC_TOOLGATE_HARD=1 impact (и при "
             "ONEC_TOOLGATE_DEBUG_HARD=1 — BP-trace) становятся HARD на правке 1С-кода (ADR-036). "
@@ -341,6 +360,9 @@ def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
             "debug_trace": bool(sig.get("debug_trace")),
             "ref_search": bool(sig.get("ref_search")),
             "callers": bool(sig.get("callers")),
+            "form_screenshot": bool(sig.get("form_screenshot")),
+            "platform_ctx": bool(sig.get("platform_ctx")),
+            "analyze_method": bool(sig.get("analyze_method")),
             "config_edit": bool(sig.get("config_edit")),
             "hard_blocked": bool(hard_blocked),
         }
@@ -455,7 +477,10 @@ def main() -> None:
             f"  {tier(sig['debug_trace'], debug_hard)} T1 live BP-trace — `1c-debug-hmr` для bugfix / ≥3 ветвлений"
             f"{' [HARD]' if debug_hard else ''}\n"
             f"  {'✓' if sig['ref_search'] else '•'} T2 поиск эталона — `bsl_search`/`bsl_similar` на Планировании\n"
-            f"  {'✓' if sig['callers'] else '•'} T1 find_callers / `bsl_call_graph` — перед `[REFACTOR]`/удалением символа\n\n"
+            f"  {'✓' if sig['callers'] else '•'} T1 find_callers / `bsl_call_graph` — перед `[REFACTOR]`/удалением символа\n"
+            f"  {'✓' if sig['form_screenshot'] else '•'} Тир-2 `get_form_screenshot` — визуальный verify формы без клиента\n"
+            f"  {'✓' if sig['platform_ctx'] else '•'} Тир-2 `bsl-platform-context`/`pdf-vector-graph` — API/доки 8.3.27 (вместо догадки)\n"
+            f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n\n"
             f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"
             "Закрой ✗ и заверши снова. Opt-out: ONEC_TASK_GATE_DISABLE=1 (вся gate) / "
             "ONEC_TOOLGATE_HARD_DISABLE=1 (только high-leverage hard — для trivial-правок)."
@@ -473,6 +498,9 @@ def main() -> None:
                 debug_trace=sig.get("debug_trace"),
                 ref_search=sig.get("ref_search"),
                 callers=sig.get("callers"),
+                form_screenshot=sig.get("form_screenshot"),
+                platform_ctx=sig.get("platform_ctx"),
+                analyze_method=sig.get("analyze_method"),
             )
         )
         sys.stdout.buffer.write(
