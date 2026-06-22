@@ -1400,6 +1400,36 @@ def _delete_stale_for_paths(
     return total_deleted
 
 
+def _existing_module_paths(client: QdrantClient, collection: str) -> set[str]:
+    """Return the set of distinct `module_path` payload values already present
+    in `collection`.
+
+    Used by --skip-indexed resume mode to skip files that a prior (e.g.
+    crashed) run already wrote. Scrolls the whole collection requesting only
+    the `module_path` payload (no vectors) for memory efficiency on 100k+
+    point collections. Paths are stored as the absolute `str(Path.resolve())`
+    the indexer used (e.g. `C:\\...\\Ext\\Module.bsl`), matching the keys
+    main() compares against, so set membership is exact.
+    """
+    seen: set[str] = set()
+    next_offset = None
+    while True:
+        points, next_offset = client.scroll(
+            collection_name=collection,
+            limit=10000,
+            with_payload=["module_path"],
+            with_vectors=False,
+            offset=next_offset,
+        )
+        for p in points:
+            mp = (p.payload or {}).get("module_path")
+            if mp:
+                seen.add(mp)
+        if next_offset is None:
+            break
+    return seen
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Reindex BSL with embeddings")
     ap.add_argument(
@@ -1446,6 +1476,16 @@ def main() -> None:
         "Legacy bsl_code_v3 dropped 2026-04-30 (§27).",
     )
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")
+    ap.add_argument(
+        "--skip-indexed",
+        action="store_true",
+        help="Resume mode (--project only): skip files whose module_path "
+        "already has chunks in the target collection (queried up-front via "
+        "scroll). Incompatible with --recreate. Lets a crashed full reindex "
+        "continue without re-embedding already-done files. Idempotent and "
+        "re-runnable: if the resume itself crashes, run the same command "
+        "again — it re-skips whatever finished.",
+    )
     ap.add_argument(
         "--enable-sparse",
         action="store_true",
@@ -1511,6 +1551,15 @@ def main() -> None:
         # Incremental mode must NOT drop the collection — that would remove
         # all other projects' chunks too. Refuse the combination explicitly.
         print("ERROR: --recreate is incompatible with --paths (incremental mode)")
+        sys.exit(1)
+    if args.skip_indexed and args.recreate:
+        # Resume needs the prior run's chunks to exist; recreate drops them.
+        print("ERROR: --skip-indexed is incompatible with --recreate (resume needs existing data)")
+        sys.exit(1)
+    if args.skip_indexed and args.paths:
+        # --paths is already an explicit file list; skip-indexed is for the
+        # whole-project resume case. Combining them is undefined — refuse.
+        print("ERROR: --skip-indexed is incompatible with --paths (use --project for resume)")
         sys.exit(1)
 
     if args.paths:
@@ -1777,6 +1826,38 @@ def main() -> None:
         else:
             bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
             print(f"Found {len(bsl_files)} BSL files")
+        if args.skip_indexed:
+            total_before = len(bsl_files)
+            done = _existing_module_paths(qdrant, args.collection)
+            # Compare via normpath: the payload `module_path` is stored as
+            # `os.path.normpath(module.file_path)`, so normalize the rglob side
+            # too. With a resolved absolute --project this is a no-op (verified
+            # 7877/7877 exact match on the ERP collection), but it keeps the
+            # match correct if the indexer is ever run with a relative/symlinked
+            # --project (otherwise resume would silently re-embed everything).
+            bsl_files = [f for f in bsl_files if os.path.normpath(str(f)) not in done]
+            skipped = total_before - len(bsl_files)
+            print(
+                f"[--skip-indexed] {skipped} already-indexed file(s) skipped, "
+                f"{len(bsl_files)} remaining "
+                f"(collection had {len(done)} distinct module paths)"
+            )
+            # Resume granularity is per-module: a file is "done" if it has ANY
+            # chunk in the collection. The narrow edge case — a file whose
+            # chunks straddled a buffer flush and was only partially written
+            # before the crash — is skipped and left incomplete. Surface it so
+            # a re-scan can catch it if exact completeness matters.
+            print(
+                "[--skip-indexed] NOTE: resolution is module-level; a file "
+                "partially written at crash time is treated as done. Re-run a "
+                "full reindex (no --skip-indexed) if exact completeness needed."
+            )
+            _evt(
+                "skip_indexed",
+                skipped=skipped,
+                remaining=len(bsl_files),
+                distinct_paths=len(done),
+            )
     _evt("file_scan_done", count=len(bsl_files))
     _state(total_files=len(bsl_files), file_idx=0, chunks_done=0)
 
@@ -1852,6 +1933,22 @@ def main() -> None:
             print(
                 f"[{i}/{len(bsl_files)}] {total_symbols} symbols, {total_chunks} chunks, {elapsed:.0f}s"
             )
+
+        if i % 200 == 0 and args.embedder == "qwen3-st":
+            # VRAM mitigation (2026-06-22): on the ERP full reindex the CUDA
+            # caching allocator crept to the RTX 3090 24 GB ceiling and the
+            # process died at ~file 8.5k/26.2k — RSS stayed flat (1.7 GB), so
+            # it was reserved-but-cached VRAM growth, not a Python leak. The
+            # PYTORCH_CUDA_ALLOC_CONF gc threshold alone did not bound it.
+            # empty_cache() returns cached free blocks to the driver, keeping
+            # reserved VRAM bounded so a long resume can finish in one process.
+            # Guarded so non-torch embedders (qwen3-tei/Ollama) never import it.
+            try:
+                import torch
+
+                torch.cuda.empty_cache()
+            except Exception:
+                pass
 
     # Flush remaining
     if batch:
