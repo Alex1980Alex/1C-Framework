@@ -2,6 +2,26 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "spravochnik-valyuty-simvolnyy-tsifrovoy-kod": {
+      "title": "Справочник Валюты — символьный код (Наименование, «BYN»/«USD») vs цифровой (Код, «933»); для вывода кода валюты в печать брать Валюта.Наименование, не Код; per-row при мультивалютности",
+      "file": "spravochnik-valyuty-simvolnyy-tsifrovoy-kod.md",
+      "created": "2026-06-23",
+      "last_verified": "2026-06-23",
+      "keywords": [
+        "Справочник Валюты",
+        "символьный код валюты",
+        "цифровой код валюты",
+        "Валюта.Наименование",
+        "Валюта.Код",
+        "BYN USD печать",
+        "код валюты в печатной форме",
+        "ISO 4217"
+      ],
+      "sources": [
+        "https://its.1c.ru/db/content/answers1c/",
+        "https://itsreda.ru/articles/klassifikatory/okv/"
+      ]
+    },
     "registr-svedeniy-podchinennyy-periodichnost-klyuch": {
       "title": "Периодический регистр сведений, подчинённый регистратору — ключ записи (Период+Измерения при календарной, Регистратор+НомерСтроки при RecorderPosition) и коллизия «Запись с такими ключевыми полями существует»; обходы: RecorderPosition / Second / guard СуществуетПлан (эталон УстановкаКвотАссортимента)",
       "file": "registr-svedeniy-podchinennyy-periodichnost-klyuch.md",
