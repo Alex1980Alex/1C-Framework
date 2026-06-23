@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
----
-
-## 2026-04-20 — Initial Bootstrap
-
-**Event:** Wiki schema and log created (Hermes Phase 2)
-
-- Created `SCHEMA.md` — naming rules, frontmatter schema, promotion thresholds, archival policy
-- Created `log.md` — this file
-- DSPy Signatures module created (`src/pdf_framework/prompts/signatures.py`): GraderSignature, HallucinationCheckSignature, RewriterSignature
 - Migrated 3 RAG agent nodes to DSPy: `grader.py`, `rewriter.py`, `hallucination_checker.py`
 
 **Status:** Phase 2 DSPy Deepening in progress. Wiki schema established.
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: create-hook, evaluation-benchmark, code-verify, architecture-research, indexing-pipeline
 - Files changed: 3
 - Summary: Session 2026-06-23. Skills: create-hook, evaluation-benchmark, code-verify, architecture-research, indexing-pipeline, qdrant-operations, analyze-1c-task, analyze-1c-task-v2. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, pipeline/_1c_index.json, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-save ManagerModule.bsl, ANALYSIS-REPORT-T3-Валюта-вида-в-примечании-ТТН.md, spravochnik-valyuty-simvolnyy-tsifrovoy-kod.md +1 more. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-save 01-architecture.md, 02-design.md, 03-implementation.md +1 more
+
+
+## 2026-06-24 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: create-hook, evaluation-benchmark, code-verify, architecture-research, indexing-pipeline
+- Files changed: 2
+- Summary: Session 2026-06-24. Skills: create-hook, evaluation-benchmark, code-verify, architecture-research, indexing-pipeline, qdrant-operations, analyze-1c-task, analyze-1c-task-v2. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: feat: Устойчивый ERP-reindex — batch=1 для длинных чанков + супервизор + deferred no-loss. Commit: chore: auto-save 038-resilient-erp-reindex-batch1-supervisor.md, _index.json, 01-architecture.md +6 more. Commit: chore: auto-commit .pipeline-state.json, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, Конфигурация
 
