@@ -91,7 +91,9 @@ jobs:
             "-Dsonar.sources=$sources"
           # R6 (ADR-034): Quality Gate gate (Clean-as-You-Code, new-code). Hard под SONAR_QG_HARD=1, иначе soft.
           $qgArgs = if ($env:SONAR_QG_HARD -eq "1") { @() } else { @("--soft") }
-          python "${{ env.PROJECT_PATH }}\scripts\sonar_quality_gate_check.py" @qgArgs
+          # Нативной команде — $qgArgs (array-expansion), НЕ @qgArgs: splat-оператор рвёт
+          # строку "--soft" на символы (подтверждено в PS 5.1; $qgArgs корректен в 5.1 и 7).
+          python "${{ env.PROJECT_PATH }}\scripts\sonar_quality_gate_check.py" $qgArgs
           if ($LASTEXITCODE -ne 0) { Write-Host "Quality Gate FAILED (new-code)"; exit $LASTEXITCODE }
 
       - name: Upload BSL Report
