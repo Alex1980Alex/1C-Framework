@@ -306,6 +306,19 @@ class E5Embedder:
         pass
 
 
+def _long_batch1_buckets(
+    buckets: tuple[tuple[int | None, int], ...], threshold: int
+) -> tuple[tuple[int | None, int], ...]:
+    """Part A (ADR-038): копия bucket-таблицы, где чанки длиннее `threshold` токенов
+    форсятся в batch=1 (профилактика тихого CUDA-wedge Qwen3-8B на тяжёлых модулях;
+    короткие чанки сохраняют быстрый batch). Чистая функция → юнит-тестируема."""
+    if threshold <= 0:
+        return buckets
+    return tuple(
+        (upper, (1 if (upper is None or upper > threshold) else bs)) for upper, bs in buckets
+    )
+
+
 class Qwen3STEmbedder:
     """Qwen3-Embedding-8B via sentence-transformers (4096d native, GPU).
 
@@ -361,6 +374,7 @@ class Qwen3STEmbedder:
         buckets: tuple[tuple[int | None, int], ...] | None = None,
         enable_fa2: bool = False,
         max_seq_length: int = 8192,
+        long_batch1_tokens: int = 0,
     ) -> None:
         # Phase 8.12 C4 + roadmap 260518 Phase 2 fix (defense-in-depth — also
         # set at module top in case this class is imported and instantiated
@@ -433,6 +447,13 @@ class Qwen3STEmbedder:
             self.buckets = tuple(
                 (upper, min(default_bs, batch_size)) for upper, default_bs in self.DEFAULT_BUCKETS
             )
+        # Part A (ADR-038): force batch=1 for chunks longer than long_batch1_tokens.
+        # Prevents the silent CUDA wedge observed live on heavy ERP modules — a
+        # god-object emits hundreds of max_seq_length chunks and even batch=8 of
+        # those wedges an 8B model at the 24GB ceiling (no OOM exception, just hang).
+        # Short chunks keep their fast batch → throughput preserved for the ~88%.
+        if long_batch1_tokens > 0:
+            self.buckets = _long_batch1_buckets(self.buckets, long_batch1_tokens)
 
     def _bucket_batch(self, token_len: int) -> int:
         for upper, bs in self.buckets:
@@ -1024,6 +1045,7 @@ def make_embedder(
     batch_size: int = 32,
     enable_fa2: bool = False,
     tei_base_url: str = Qwen3TEIEmbedder.DEFAULT_BASE_URL,
+    long_batch1_tokens: int = 0,
 ) -> Any:
     """Create embedder by name."""
     if name == "e5":
@@ -1033,7 +1055,12 @@ def make_embedder(
 
         return Qwen3EmbeddingService()  # type: ignore[return-value]
     if name == "qwen3-st":
-        return Qwen3STEmbedder(dtype="bfloat16", batch_size=batch_size, enable_fa2=enable_fa2)
+        return Qwen3STEmbedder(
+            dtype="bfloat16",
+            batch_size=batch_size,
+            enable_fa2=enable_fa2,
+            long_batch1_tokens=long_batch1_tokens,
+        )
     if name == "qwen3-tei":
         return Qwen3TEIEmbedder(base_url=tei_base_url, client_batch_size=batch_size)
     raise ValueError(f"Unknown embedder: {name}. Use 'e5', 'qwen3', 'qwen3-st', or 'qwen3-tei'")
@@ -1503,6 +1530,30 @@ def main() -> None:
         "reindexes hybrid automatically.",
     )
     ap.add_argument("--limit", type=int, default=0, help="Max chunks to index (0=all)")
+    ap.add_argument(
+        "--max-file-bytes",
+        type=int,
+        default=0,
+        help="Skip .bsl files larger than N bytes (0=no cap, default). Guards qwen3-st "
+        "OOM/hang on god-object модулях (ERP has single .bsl up to ~10MB → сотни "
+        "max_seq_length=8192 чанков, батч которых виснет на 24GB VRAM). --project mode only.",
+    )
+    ap.add_argument(
+        "--long-batch1-tokens",
+        type=int,
+        default=0,
+        help="qwen3-st only (ADR-038): force batch=1 for chunks longer than N tokens "
+        "(0=off, default). Prevents the silent CUDA wedge on heavy modules — even batch=8 "
+        "of long chunks wedges an 8B model at the 24GB ceiling. Short chunks keep fast batch. "
+        "Recommended: 1024 (long ~8%% of chunks go batch=1, the 88%% short stay fast).",
+    )
+    ap.add_argument(
+        "--paths-file",
+        default=None,
+        help="Part C (ADR-038): read newline-separated .bsl paths from FILE and add to --paths. "
+        "Lets the deferred-list (oversized/poison files) be re-indexed without hitting the Windows "
+        "argv length limit. Combine with --batch-size 1 for the heavy retry pass.",
+    )
     ap.add_argument("--no-context", action="store_true", help="Skip context enrichment")
     ap.add_argument(
         "--dual-vector", action="store_true", help="Use dual named vectors (content + module_path)"
@@ -1548,6 +1599,21 @@ def main() -> None:
         "backwards compat); production reindex MUST add this flag.",
     )
     args = ap.parse_args()
+
+    # Part C (ADR-038): --paths-file → влить в args.paths (обход argv-лимита Windows для
+    # retry монстров/poison из deferred-list).
+    if getattr(args, "paths_file", None):
+        try:
+            _pf = [
+                ln.strip()
+                for ln in Path(args.paths_file).read_text(encoding="utf-8").splitlines()
+                if ln.strip()
+            ]
+            args.paths = (args.paths or []) + _pf
+            print(f"[--paths-file] +{len(_pf)} path(s) from {args.paths_file}")
+        except OSError as e:
+            print(f"ERROR: --paths-file {args.paths_file}: {e}")
+            sys.exit(1)
 
     # Validate --project / --paths combination.
     if not args.project and not args.paths:
@@ -1779,6 +1845,7 @@ def main() -> None:
             batch_size=args.batch_size,
             enable_fa2=args.enable_fa2,
             tei_base_url=args.tei_url,
+            long_batch1_tokens=args.long_batch1_tokens,
         )
     vector_dims = embedder.dims
 
@@ -1866,6 +1933,39 @@ def main() -> None:
         else:
             bsl_files = sorted(f for f in project.rglob("*.bsl") if not should_skip(f))
             print(f"Found {len(bsl_files)} BSL files")
+            if args.max_file_bytes > 0:
+                _oversized = [f for f in bsl_files if f.stat().st_size > args.max_file_bytes]
+                bsl_files = [f for f in bsl_files if f.stat().st_size <= args.max_file_bytes]
+                _capped = len(_oversized)
+                print(
+                    f"[--max-file-bytes {args.max_file_bytes}] skipped {_capped} oversized "
+                    f"file(s), {len(bsl_files)} remaining"
+                )
+                if _oversized:
+                    # Part C (ADR-038) no-loss: пропущенные «монстры» → deferred-list, чтобы
+                    # доиндексировать отдельным проходом `--paths-file <list> --batch-size 1`
+                    # (по одному чанку → минимальный пик VRAM, не виснет). Ничего не теряется.
+                    _deferred = (
+                        Path(__file__).resolve().parents[1]
+                        / "data"
+                        / "reports"
+                        / "reindex_deferred.txt"
+                    )
+                    try:
+                        _deferred.parent.mkdir(parents=True, exist_ok=True)
+                        _deferred.write_text(
+                            "\n".join(os.path.normpath(str(f)) for f in _oversized) + "\n",
+                            encoding="utf-8",
+                        )
+                        print(f"[--max-file-bytes] deferred-list → {_deferred} ({_capped} files)")
+                    except OSError:
+                        pass
+                _evt(
+                    "max_file_bytes_skip",
+                    skipped=_capped,
+                    remaining=len(bsl_files),
+                    cap=args.max_file_bytes,
+                )
         if args.skip_indexed:
             total_before = len(bsl_files)
             done = _existing_module_paths(qdrant, args.collection)

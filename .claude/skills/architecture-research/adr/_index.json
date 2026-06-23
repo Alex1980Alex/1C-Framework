@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-038",
+      "file": "038-resilient-erp-reindex-batch1-supervisor.md",
+      "title": "Устойчивый ERP-reindex — batch=1 для длинных чанков (--long-batch1-tokens, профилактика тихого CUDA-wedge Qwen3-8B на тяжёлых модулях) + внешний супервизор (idle-watchdog + batch-эскалация 32→8→1 + resume) + deferred no-loss (--max-file-bytes deferred-list + --paths-file retry)",
+      "status": "accepted",
+      "date": "2026-06-24",
+      "research": "live-diagnostics session 2026-06-23/24 [exp]",
+      "status_note": "accepted 2026-06-24 — Part A live-проверен (висевший файл прошёл); A/B/C реализованы, ruff/compile/unit 4/4/code-verify PASS; expandable_segments отклонён как вредный",
+      "tags": [
+        "reindex",
+        "qwen3",
+        "embedding",
+        "cuda-wedge",
+        "vram",
+        "supervisor",
+        "no-loss",
+        "bsl"
+      ]
+    },
+    {
       "id": "ADR-035",
       "file": "035-mandatory-high-leverage-1c-tools.md",
       "title": "Обязательное использование высоко-эффективных инструментов 1С-пайплайна — многоуровневый условный мандат (T1 impact_analysis+1c-debug-hmr по типу задачи / T2 reference-search at-stage / T3 conditional / T4 recommended); контекст задачи определяющий; advisory→hard лестница",
