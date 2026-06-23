@@ -2,6 +2,30 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "virtual-table-join-materialize-temp-table": {
+      "title": "Соединение с виртуальной таблицей (СрезПоследних/Остатки/Обороты) → материализация во временную таблицу + ИНДЕКСИРОВАТЬ ПО полям соединения; правило Sonar/BSL JoinWithVirtualTable; проверка эквивалентности через дельту мультимножеств",
+      "file": "virtual-table-join-materialize-temp-table.md",
+      "created": "2026-06-23",
+      "last_verified": "2026-06-23",
+      "keywords": [
+        "соединение с виртуальной таблицей",
+        "Не следует использовать соединения с виртуальными таблицами",
+        "СрезПоследних временная таблица",
+        "ПОМЕСТИТЬ ИНДЕКСИРОВАТЬ ПО",
+        "JoinWithVirtualTable",
+        "bsl-language-server виртуальная таблица",
+        "оптимизация запроса 1С временные таблицы",
+        "материализация виртуальной таблицы",
+        "проверка эквивалентности запроса дельта мультимножеств"
+      ],
+      "sources": [
+        "https://its.1c.ru/db/content/v8std/src/200/200/i8100777.htm",
+        "https://its.1c.ru/db/content/metod8dev/src/developers/scalability/standards/i8105842.htm",
+        "https://infostart.ru/1c/articles/1218921/",
+        "https://infostart.ru/1c/articles/1078667/",
+        "live ИБTransportManagementDevelop гкс_ПечатьТТНСнятиеСХранения 2026-06-23"
+      ]
+    },
     "spravochnik-valyuty-simvolnyy-tsifrovoy-kod": {
       "title": "Справочник Валюты — символьный код (Наименование, «BYN»/«USD») vs цифровой (Код, «933»); для вывода кода валюты в печать брать Валюта.Наименование, не Код; per-row при мультивалютности",
       "file": "spravochnik-valyuty-simvolnyy-tsifrovoy-kod.md",
