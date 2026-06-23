@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Part B (ADR-038): супервизор устойчивого ERP-reindex.
 
-Запускает `reindex_bsl_qwen3.py` (resume) и следит за прогрессом по heartbeat-строкам
-лога. Если прогон «заклинило» (idle > IDLE_LIMIT) — убивает дерево процессов и
-перезапускает с МЕНЬШИМ batch (лестница 32→8→1). `--skip-indexed` сохраняет прогресс,
-batch=1 гарантированно не виснет (один чанк за раз). Так истинный CUDA-wedge Qwen3-8B
-(который длится часами) переживается без потери уже проиндексированного.
+Запускает `reindex_bsl_qwen3.py` (resume) и следит за РОСТОМ числа точек в коллекции
+(реальный индекс-выход). Если индекс не растёт дольше STALL_LIMIT — убивает дерево
+процессов и перезапускает с МЕНЬШИМ batch (лестница 32->8->1). `--skip-indexed`
+сохраняет прогресс; малый буфер на низком batch => частые флаши.
 
-Почему idle, а не poison-by-path: батч-эскалация + resume надёжнее и проще, чем
-вычислять точный «отравленный» файл (буфер копит чанки нескольких файлов, атрибуция
-нечёткая). Part A (`--long-batch1-tokens`) уже снимает почти все зависания заранее —
-супервизор тут страховочная сетка.
+Почему по росту points, а НЕ по heartbeat-idle: idle обновляется по смене файла/флашу,
+и при batch=1 один тяжёлый файл (или один флаш большого буфера) легитимно идёт >20мин ->
+idle давал ЛОЖНЫЙ wedge и убивал рабочий прогон (наблюдалось: points росли 186879->199679,
+а супервизор трижды убил по idle>1200s). Рост points = индекс реально пишется -> надёжный
+liveness. Буфер уменьшается на низком batch, чтобы рост points был частым даже при batch=1.
+
+Почему батч-эскалация, а не poison-by-path: буфер копит чанки нескольких файлов, атрибуция
+нечёткая; resume + меньший batch проще и надёжнее. Part A (`--long-batch1-tokens`) снимает
+почти все зависания заранее — супервизор тут страховочная сетка.
 
 Запуск:
   python scripts/reindex_supervised.py --project <ABS> --collection bsl_code_erp_ref \
@@ -20,45 +24,54 @@ batch=1 гарантированно не виснет (один чанк за �
 """
 
 import argparse
-import re
+import json
 import subprocess
 import sys
 import time
+import urllib.request
 from pathlib import Path
+
+# Windows: при redirect stdout в файл Python берёт locale-кодировку (cp1251/charmap),
+# которая не кодирует часть Юникода -> UnicodeEncodeError рушит супервизор. UTF-8 + replace.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
+QDRANT_URL = "http://localhost:6333"
 
-# Истинный wedge длится часами; легитимный тяжёлый файл на batch=1 — минуты (621KB ~3мин
-# наблюдалось). 20мин чисто разделяет «медленно, но идёт» и «зависло».
-DEFAULT_IDLE_LIMIT = 1200
+# Макс. секунд БЕЗ роста points = реальный wedge. При batch=1 один флаш малого буфера идёт
+# ~1-2мин, поэтому 1500с (25мин) без роста заведомо = зависание, а не медленность.
+DEFAULT_STALL_LIMIT = 1500
 POLL = 30
 BATCH_LADDER = (32, 8, 1)
 
-_IDLE_RE = re.compile(r"idle=([0-9hms.]+)")
+
+def _buffer_for(batch: int) -> int:
+    """Размер буфера флаша под batch: меньше batch -> меньше буфер -> чаще флаши
+    (частый рост points = видимый liveness даже на медленном batch=1)."""
+    if batch >= 32:
+        return 512
+    if batch >= 8:
+        return 128
+    return 32
 
 
-def _parse_idle(token: str) -> float:
-    """'48.2s' / '1m40s' / '3m10s' / '10h35m' → секунды (0.0 при неразборе)."""
-    total = 0.0
-    for num, unit in re.findall(r"([0-9.]+)([hms])", token):
-        v = float(num)
-        total += v * {"h": 3600, "m": 60, "s": 1}[unit]
-    return total
-
-
-def _last_idle(log: Path) -> float | None:
-    """Idle последней [hb]-строки лога (None если строк ещё нет)."""
+def _points_count(collection: str) -> int | None:
+    """Точное число точек в коллекции (для детекта роста) или None при ошибке."""
     try:
-        lines = log.read_text(encoding="utf-8", errors="replace").splitlines()
-    except OSError:
+        req = urllib.request.Request(
+            f"{QDRANT_URL}/collections/{collection}/points/count",
+            data=json.dumps({"exact": True}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return int(json.load(resp)["result"]["count"])
+    except Exception:
         return None
-    for ln in reversed(lines):
-        if ln.startswith("[hb]"):
-            m = _IDLE_RE.search(ln)
-            if m:
-                return _parse_idle(m.group(1))
-    return None
 
 
 def _kill_tree(proc: subprocess.Popen) -> None:
@@ -75,7 +88,7 @@ def _kill_tree(proc: subprocess.Popen) -> None:
             pass
 
 
-def _build_cmd(args, batch: int) -> list[str]:
+def _build_cmd(args, batch: int, buffer: int) -> list[str]:
     cmd = [
         PY,
         str(ROOT / "scripts" / "reindex_bsl_qwen3.py"),
@@ -91,6 +104,8 @@ def _build_cmd(args, batch: int) -> list[str]:
         "--enable-sparse",
         "--batch-size",
         str(batch),
+        "--buffer-size",
+        str(buffer),
     ]
     if args.max_file_bytes:
         cmd += ["--max-file-bytes", str(args.max_file_bytes)]
@@ -100,20 +115,33 @@ def _build_cmd(args, batch: int) -> list[str]:
 
 
 def run_attempt(args, batch: int, log: Path) -> str:
-    """Один прогон reindex под надзором. Вернуть 'ok' | 'wedge' | 'error'."""
-    print(f"[supervisor] старт batch={batch} → log {log.name}", flush=True)
+    """Один прогон reindex под надзором. Вернуть 'ok' | 'wedge' | 'error'.
+
+    Liveness = рост points: если коллекция не растёт дольше stall_limit -> wedge.
+    """
+    buffer = _buffer_for(batch)
+    print(f"[supervisor] старт batch={batch} buffer={buffer} -> log {log.name}", flush=True)
     with log.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen(_build_cmd(args, batch), stdout=fh, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(
+            _build_cmd(args, batch, buffer), stdout=fh, stderr=subprocess.STDOUT
+        )
+    last_count = _points_count(args.collection) or 0
+    last_growth = time.monotonic()
     try:
         while True:
             time.sleep(POLL)
             rc = proc.poll()
             if rc is not None:
                 return "ok" if rc == 0 else "error"
-            idle = _last_idle(log)
-            if idle is not None and idle > args.idle_limit:
+            cnt = _points_count(args.collection)
+            if cnt is not None and cnt > last_count:
+                last_count = cnt
+                last_growth = time.monotonic()
+            stalled = time.monotonic() - last_growth
+            if stalled > args.stall_limit:
                 print(
-                    f"[supervisor] WEDGE: idle={idle:.0f}s > {args.idle_limit}s @ batch={batch} → kill",
+                    f"[supervisor] STALL: points не растут {stalled:.0f}s > {args.stall_limit}s "
+                    f"@ batch={batch} (count={last_count}) -> kill",
                     flush=True,
                 )
                 _kill_tree(proc)
@@ -129,7 +157,12 @@ def main() -> int:
     ap.add_argument("--collection", required=True)
     ap.add_argument("--max-file-bytes", type=int, default=0)
     ap.add_argument("--long-batch1-tokens", type=int, default=1024)
-    ap.add_argument("--idle-limit", type=int, default=DEFAULT_IDLE_LIMIT)
+    ap.add_argument(
+        "--stall-limit",
+        type=int,
+        default=DEFAULT_STALL_LIMIT,
+        help="макс. секунд без роста points -> wedge (default 1500)",
+    )
     ap.add_argument(
         "--ladder",
         default=",".join(map(str, BATCH_LADDER)),
@@ -144,18 +177,16 @@ def main() -> int:
     logdir = ROOT / "logs"
     logdir.mkdir(parents=True, exist_ok=True)
 
-    for i, batch in enumerate(ladder, 1):
+    for batch in ladder:
         log = logdir / f"reindex_supervised_b{batch}.out.log"
         verdict = run_attempt(args, batch, log)
         if verdict == "ok":
             print(f"[supervisor] ГОТОВО — reindex завершён успешно (batch={batch})", flush=True)
             return 0
         if verdict == "wedge":
-            print(f"[supervisor] эскалация: batch {batch} завис → следующий уровень", flush=True)
+            print(f"[supervisor] эскалация: batch {batch} застрял -> следующий уровень", flush=True)
             continue
-        # error: процесс упал не из-за wedge — пробуем тот же уровень ещё раз? нет:
-        # resume идемпотентен, но повторная ошибка = реальная проблема → к меньшему batch.
-        print(f"[supervisor] прогон batch={batch} вышел с ошибкой → следующий уровень", flush=True)
+        print(f"[supervisor] прогон batch={batch} вышел с ошибкой -> следующий уровень", flush=True)
     print("[supervisor] ВСЕ уровни лестницы исчерпаны — требуется ручной разбор", flush=True)
     return 1
 

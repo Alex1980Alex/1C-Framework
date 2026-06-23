@@ -33,6 +33,14 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+# Windows: при redirect stdout в файл (напр. под супервизором reindex_supervised.py)
+# Python берёт locale-кодировку (cp1251/charmap), которая не кодирует '→'/часть Юникода
+# → UnicodeEncodeError рушит прогон. UTF-8 + replace = корректные логи и крах-safe.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # Phase 8.12 C4 + roadmap 260518 Phase 2 fix: на Windows WDDM
 # `expandable_segments:True` позволяет аллокатору расти за пределы физ. VRAM
 # в shared system memory (наблюдалось reserved=49 GB на RTX 3090 24 GB →
@@ -1957,7 +1965,7 @@ def main() -> None:
                             "\n".join(os.path.normpath(str(f)) for f in _oversized) + "\n",
                             encoding="utf-8",
                         )
-                        print(f"[--max-file-bytes] deferred-list → {_deferred} ({_capped} files)")
+                        print(f"[--max-file-bytes] deferred-list -> {_deferred} ({_capped} files)")
                     except OSError:
                         pass
                 _evt(
