@@ -46,7 +46,9 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Sonar Scanner failed!" -ForegroundColor R
 # R6 (ADR-034): Quality Gate gate — Clean-as-You-Code (условия new-code; легаси не блокирует).
 # Hard под $env:SONAR_QG_HARD=1 (валит билд на QG=ERROR), иначе soft (только warn).
 $qgArgs = if ($env:SONAR_QG_HARD -eq "1") { @() } else { @("--soft") }
-& "$ProjectRoot\.venv\Scripts\python.exe" "$ProjectRoot\scripts\sonar_quality_gate_check.py" --host $Host_ @qgArgs
+# Нативной команде передаём $qgArgs (array-expansion), НЕ @qgArgs: splat-оператор в PS 5.1
+# рвёт строку "--soft" на отдельные символы ("- - s o f t" → argparse: unrecognized arguments).
+& "$ProjectRoot\.venv\Scripts\python.exe" "$ProjectRoot\scripts\sonar_quality_gate_check.py" --host $Host_ $qgArgs
 if ($LASTEXITCODE -ne 0) { Write-Host "Quality Gate FAILED (hard, new-code)" -ForegroundColor Red; exit $LASTEXITCODE }
 
 Write-Host "`nDone! Dashboard: $Host_/dashboard?id=upravlenie-transportom-plk" -ForegroundColor Green
