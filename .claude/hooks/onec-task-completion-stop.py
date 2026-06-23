@@ -13,6 +13,10 @@ Purpose: ЕДИНЫЙ task-completion gate для 1С-задачи (консол
     CAPTURE  [hard] — skill-learning capture_pattern/batch_capture / route_and_save /
                       Write `.md` в курируемую память (`/.claude/.../memory/*.md`);
     RESEARCH [hard] — WebSearch / WebFetch (внешний анализ: Infostart + GitHub best-practices);
+    SONAR    [hard, при config_edit] — изменённый/добавленный 1С-код прогнан через SonarQube
+                      с чистой дельтой (0 BLOCKER/CRITICAL на затронутых .bsl), контракт state
+                      `shared.sonar_rescan_state`; verify = scripts/sonar_rescan_verify.py;
+                      Sonar-down → state.skipped → ok; opt-out ONEC_SONAR_GATE_DISABLE=1;
     SKILL    [info] — Skill-вызов analyze-1c-task-v2 / implement-1c-task / va-bdd-testing /
                       run-1c-task / code-verify — уже принудительно на Write через code-skill-enforcer.
   Пайплайн-петля — отдельный концерн (pipeline-protocol-stop, general, ДО нас); тут показана ✓
@@ -59,6 +63,14 @@ except Exception:
 
     def _gp_log(*a, **k):
         return None
+
+
+# Sonar-гейт (мандат): общий контракт состояния re-scan изменённого 1С-кода
+# (graceful — Stop-хук не должен падать на импорте).
+try:
+    from shared.sonar_rescan_state import evaluate as _sonar_rescan_evaluate
+except Exception:
+    _sonar_rescan_evaluate = None
 
 
 _RECALL_TOOLS = {
@@ -319,6 +331,7 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
             f"| RECALL (память) | {m(sig.get('recall'))} |",
             f"| CAPTURE (память) | {m(sig.get('capture'))} |",
             f"| RESEARCH (Infostart+GitHub) | {m(sig.get('research'))} |",
+            f"| SONAR re-scan изменённого/добавленного кода | {m(sig.get('sonar_rescan'))} |",
             f"| SKILL-методика 1С | {skill_cell} |",
             f"| T1 impact-анализ перед правкой (advisory) | {adv(sig.get('impact'))} |",
             f"| T1 live BP-trace runtime-логики (advisory) | {adv(sig.get('debug_trace'))} |",
@@ -421,6 +434,25 @@ def main() -> None:
             sys.exit(0)
 
         task_slug = slug or incomplete
+
+        # Sonar-гейт (мандат пользователя 2026-06-23): изменённый/добавленный 1С-код обязан
+        # пройти Sonar re-scan с чистой дельтой (0 BLOCKER/CRITICAL) по затронутым .bsl.
+        # Default-ON при config_edit (правка 1С-кода в сессии). Guard'ы против дедлока:
+        # opt-out ONEC_SONAR_GATE_DISABLE=1; Sonar-down → verify пишет skipped → evaluate ok;
+        # нет state → block "missing" (выход: прогнать scripts/sonar_rescan_verify.py); graceful → ok.
+        sonar_hard = (
+            bool(sig.get("config_edit"))
+            and os.environ.get("ONEC_SONAR_GATE_DISABLE") != "1"
+            and _sonar_rescan_evaluate is not None
+        )
+        sonar_ok, sonar_status, sonar_detail = True, "n/a", ""
+        if sonar_hard:
+            try:
+                sonar_ok, sonar_status, sonar_detail = _sonar_rescan_evaluate(PROJECT_ROOT, start)
+            except Exception:
+                sonar_ok = True  # graceful: внутренняя ошибка evaluate → не блокируем
+        sig["sonar_rescan"] = sonar_ok
+
         _write_loops_report(task_slug, sig)  # H2: сводка петель -> pipeline/<slug>/LOOPS.md
 
         # Блок-решение — hard-петли recall/capture/research ВСЕГДА. ADR-036 (вариант A промоута
@@ -442,7 +474,7 @@ def main() -> None:
             hard_keys.append("impact")
         if debug_hard:
             hard_keys.append("debug_trace")
-        hard_ok = all(sig[k] for k in hard_keys)
+        hard_ok = all(sig[k] for k in hard_keys) and (sonar_ok or not sonar_hard)
         # ADR-035/036 — лог advisory/hard состояния T1-T2 на КАЖДОЙ 1С-задаче (allow и block)
         _log_advisory_event(task_slug, sig, hard_blocked=not hard_ok)
 
@@ -459,6 +491,8 @@ def main() -> None:
 
         hl_hdr = "HARD при правке кода" if _hard_on else "• = advisory, НЕ блок"
         block_by = "RECALL/CAPTURE/RESEARCH"
+        if sonar_hard:
+            block_by += " + Sonar"
         if impact_hard:
             block_by += " + impact"
         if debug_hard:
@@ -469,6 +503,9 @@ def main() -> None:
             f"  {mark(sig['recall'])} RECALL — `mcp__memory-orchestrator__unified_search` / `search_patterns` (поиск прошлого опыта)\n"
             f"  {mark(sig['capture'])} CAPTURE — `mcp__skill-learning__capture_pattern` после verify PASS (или `route_and_save` / `.md`-память)\n"
             f"  {mark(sig['research'])} RESEARCH — `WebSearch`/`WebFetch` (внешний анализ: Infostart + GitHub best-practices)\n"
+            f"  {(mark(sonar_ok) if sonar_hard else '•')} SONAR — re-scan изменённого/добавленного 1С-кода "
+            f"(0 BLOCKER/CRITICAL на затронутых .bsl): {sonar_detail or sonar_status}\n"
+            "      выход: `scripts/run-sonar-analysis.ps1` (скан) → `python scripts/sonar_rescan_verify.py` (verify дельты)\n"
             f"  {'✓' if sig['skill'] else '⚠'} SKILL [1С-методика] — "
             f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n"
             f"  — — — high-leverage (ADR-035/036; {hl_hdr}) — — —\n"
@@ -483,6 +520,7 @@ def main() -> None:
             f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n\n"
             f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"
             "Закрой ✗ и заверши снова. Opt-out: ONEC_TASK_GATE_DISABLE=1 (вся gate) / "
+            "ONEC_SONAR_GATE_DISABLE=1 (только Sonar-проверка) / "
             "ONEC_TOOLGATE_HARD_DISABLE=1 (только high-leverage hard — для trivial-правок)."
         )
         _gp_log(
@@ -493,6 +531,7 @@ def main() -> None:
                 recall=sig.get("recall"),
                 capture=sig.get("capture"),
                 research=sig.get("research"),
+                sonar_rescan=sig.get("sonar_rescan"),
                 skill=sig.get("skill"),
                 impact=sig.get("impact"),  # ADR-035/036 advisory|hard
                 debug_trace=sig.get("debug_trace"),
