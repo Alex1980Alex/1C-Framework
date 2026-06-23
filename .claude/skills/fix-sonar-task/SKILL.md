@@ -52,7 +52,7 @@ Sonar даёт десятки тысяч issues; среди BLOCKER/CRITICAL е�
 
 ### Шаг 4 — Re-scan + verify (этап Тестирование, evaluator-optimizer R7 ADR-034)
 После фикса — **петля evaluator-optimizer**:
-1. `scripts/run-sonar-analysis.ps1` (профиль «1C BSL Way» 180/180) → `sonar_issues_pull.py` по затронутым файлам → дельта.
+1. `scripts/run-sonar-analysis.ps1` (профиль «1C BSL Way» 180/180) → `sonar_issues_pull.py` по затронутым файлам → дельта (или `python scripts/sonar_rescan_verify.py` — авто-дельта по git-изменённым `.bsl` + запись state-контракта для хард-гейта ADR-037).
 2. **Адверсариальный `code-verify`**: фикс не внёс новых issues и не сломал смежное.
 3. **Критерий приёмки:** BLOCKER/CRITICAL по затронутым файлам = 0 **И** нет новых `new_violations` (`sonar_quality_gate_check.py`).
 4. **Не сошлось → вернуться к Шагу 3.4 (implement)** для кластера (итеративное уточнение фикса), затем повторить оценку. Зафиксировать дельту.
@@ -62,6 +62,7 @@ Sonar даёт десятки тысяч issues; среди BLOCKER/CRITICAL е�
 - Каждый **real**-баг = pipeline-задача с ANALYSIS-REPORT (доменное решение зафиксировано).
 - **FP / extension / placeholder / БСП / cosmetic** → НЕ код-правка: документировать, при необходимости — исключить из скана (`sonar_sources.py`) или добавить расширение в скоуп.
 - Жёсткий QG-блокер (R6, ADR-034) реализован: `sonar_quality_gate_check.py` (Clean-as-You-Code, только новый код), **opt-in** `SONAR_QG_HARD=1` (по умолчанию soft/warn).
+- **Хард-гейт изменённого/добавленного кода (ADR-037, default-ON):** после фикса прогнать `python scripts/sonar_rescan_verify.py` — Stop-гейт `onec-task-completion-stop` блокирует завершение 1С-задачи, если изменённый/новый `.bsl` под `/src/` не прошёл Sonar с чистой дельтой (0 BLOCKER/CRITICAL на затронутых файлах). Автоматизирует критерий приёмки Шага 4 для своих правок. Sonar-down → skip; opt-out `ONEC_SONAR_GATE_DISABLE=1`.
 
 ## Связанные
 - Скрипты: `scripts/sonar_issues_pull.py`, `scripts/run-sonar-analysis.ps1`, `scripts/sonar_setup_quality_profile.py` (профиль 180/180).

@@ -15,6 +15,7 @@ commands:
 
 > **4-этапная парадигма (ADR-019 B′, G5/G2):** этот skill реализует **Этап 3 «Кодирование»** (Этапы 0–3:
 > preflight→подготовка→валидация→BSL-write) и **Этап 4 «Тестирование»** (Этапы 4–6 + `/write-1c-tests`/`/run-1c-tests`).
+> **Sonar обязателен (ADR-037):** после BSL-правок — `scripts/run-sonar-analysis.ps1` → `python scripts/sonar_rescan_verify.py`; Stop-гейт `onec-task-completion-stop` блокирует завершение, если изменённый/добавленный `.bsl` под `/src/` не прошёл Sonar с чистой дельтой (0 BLOCKER/CRITICAL). Sonar-down→skip; opt-out `ONEC_SONAR_GATE_DISABLE=1`.
 > Артефакт — `IMPLEMENTATION-PROGRESS.md`. `pipeline/<slug>/.pipeline-state.json` ведётся **автоматически** (preflight-мост
 > F-1, advance F-1.5). **Гейт (F-2):** запуск БЛОКИРУЕТСЯ, пока дизайн (этап 2, ANALYSIS-REPORT) не одобрен —
 > `pipeline_state.py approve <slug>`. См. [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
