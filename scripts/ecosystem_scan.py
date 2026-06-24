@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
-"""Ecosystem scan (ADR-039 V2) — on-demand «что в экосистеме за N дней» по free-источникам.
+"""Ecosystem scan (ADR-039 V2+V3) — on-demand «что в экосистеме за N дней» по free-источникам.
 
-Опрашивает Hacker News (Algolia), StackOverflow (StackExchange API), GitHub (search API) — БЕЗ
-cookies, платных API и скрапинга (в отличие от full last30days; ADR-039 SKIP). Ранжирует по
-engagement через переиспользуемый shared/engagement_rank (relevance × популярность), схлопывает
-кросс-источниковые дубли и печатает Markdown-бриф. Ускоритель Фазы 2 architecture-research / tech-
-research + discovery для tooling-adoption (ADR-012..015).
+Опрашивает Hacker News (Algolia), StackOverflow (StackExchange), GitHub (search), Lobsters и Dev.to
+(тег-based, через query->tag) — БЕЗ cookies, платных API и скрапинга (в отличие от full last30days;
+ADR-039 SKIP). Ранжирует по engagement через переиспользуемый shared/engagement_rank
+(relevance x популярность, веса query-adaptive), схлопывает кросс-источниковые дубли и печатает
+Markdown-бриф. Ускоритель Фазы 2 architecture-research / tech-research + discovery для tooling-adoption.
 
-Reddit убран 2026 (public .json -> 403 с 2026-05-30, OAuth закрыт — data-licensing). Замена —
-StackOverflow (free-text q, без ключа, engagement = score). Доп. источники (Lobsters/Dev.to —
-тег-based) рассмотрены, но не free-text — отложены.
+Reddit убран 2026 (public .json -> 403 с 2026-05-30, OAuth закрыт) -> заменён StackOverflow.
+
+V3 (2026-06-24):
+  - query-adaptive веса: discovery-запрос (best/trending/2026) -> популярность важнее (0.5/0.5);
+    precision-запрос (версия/ошибка/fix) -> релевантность важнее (0.85/0.15); иначе 0.7/0.3.
+  - Lobsters/Dev.to через query->tag-маппинг (закрытый набор тегов; нет тега -> источник пропущен).
+  - кеш сканов в data/reports/ecosystem/ (TTL, --no-cache).
 
 Запуск:
   python scripts/ecosystem_scan.py "RAG embeddings reranking 2026" --days 30 --top 10
   python scripts/ecosystem_scan.py "claude code mcp" --out data/reports/ecosystem/mcp.md
-  python scripts/ecosystem_scan.py "langgraph" --json     # машинный вывод
+  python scripts/ecosystem_scan.py "langgraph" --json --no-cache
 
-Сеть изолирована (fetch_*), graceful per-source (источник упал -> пропущен, остальные работают).
-Ядро (build_ranked / to_markdown) — чистое, без сети -> unit-тестируемо.
-GitHub: использует GITHUB_TOKEN из env при наличии (выше rate-limit), иначе анонимно.
+Сеть изолирована (fetch_*), graceful per-source. Ядро (build_ranked / to_markdown / _query_weights /
+_map_query_to_tags / кеш) — чистое/тестируемое. GitHub: GITHUB_TOKEN из env (опц., выше rate-limit).
 """
 
 from __future__ import annotations
@@ -27,6 +30,7 @@ import argparse
 import html
 import json
 import os
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -53,9 +57,40 @@ UA = "ecosystem-scan/1.0 (+pdf-vector-graph framework; ADR-039)"
 HN_API = "https://hn.algolia.com/api/v1/search_by_date"
 STACKEXCHANGE_API = "https://api.stackexchange.com/2.3/search/advanced"
 GITHUB_API = "https://api.github.com/search/repositories"
+LOBSTERS_TAG_URL = "https://lobste.rs/t/{tag}.json"
+DEVTO_API = "https://dev.to/api/articles"
+CACHE_DIR = Path(__file__).resolve().parent.parent / "data" / "reports" / "ecosystem"
+
+# query-adaptive веса (#3): тип запроса -> (w_relevance, w_engagement).
+_DISCOVERY_RE = re.compile(
+    r"\b(best|top|trending|popular|awesome|alternativ\w*|compare|2025|2026"
+    r"|лучш\w*|тренд\w*|популярн\w*|сравн\w*|обзор)\b",
+    re.I | re.U,
+)
+_PRECISION_RE = re.compile(
+    r"(\d+\.\d+|\berror\b|\bexception\b|\bfix\b|\bbug\b|traceback|\w*error\b|ошибк\w*)",
+    re.I | re.U,
+)
+
+# query->tag (#1): закрытый набор тегов Lobsters/Dev.to (тег-based, не free-text).
+_TAG_SYNONYMS = {
+    "python": "python", "rust": "rust", "go": "go", "golang": "go",
+    "javascript": "javascript", "js": "javascript", "typescript": "javascript",
+    "java": "java", "ruby": "ruby", "php": "php",
+    "ai": "ai", "ml": "ai", "llm": "ai", "llms": "ai", "rag": "ai", "agent": "ai",
+    "agents": "ai", "embedding": "ai", "embeddings": "ai", "langchain": "ai",
+    "langgraph": "ai", "gpt": "ai", "neural": "ai", "nlp": "ai",
+    "security": "security", "infosec": "security",
+    "database": "databases", "databases": "databases", "sql": "databases",
+    "postgres": "databases", "postgresql": "databases",
+    "web": "web", "frontend": "web", "react": "web",
+    "devops": "devops", "kubernetes": "devops", "k8s": "devops", "docker": "devops",
+    "linux": "linux", "android": "android", "ios": "ios",
+}
 
 
-def _http_json(url: str, headers: dict | None = None, timeout: float = 8.0) -> dict | None:
+def _http_json(url: str, headers: dict | None = None, timeout: float = 8.0):
+    """GET + parse JSON (dict ИЛИ list). Любая ошибка -> None (graceful)."""
     try:
         req = urllib.request.Request(url, headers={"User-Agent": UA, **(headers or {})})
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -66,6 +101,32 @@ def _http_json(url: str, headers: dict | None = None, timeout: float = 8.0) -> d
 
 def _norm_token(s: str) -> str:
     return " ".join((s or "").lower().split())
+
+
+def _query_weights(query: str) -> tuple[float, float]:
+    """query-adaptive веса (#3): (w_relevance, w_engagement) по типу запроса.
+
+    precision (версия/ошибка/fix) -> релевантность важнее; discovery (best/trending/2026) ->
+    популярность важнее; иначе дефолт 0.7/0.3. precision проверяется первым (диагностический интент).
+    """
+    q = query or ""
+    if _PRECISION_RE.search(q):
+        return (0.85, 0.15)
+    if _DISCOVERY_RE.search(q):
+        return (0.5, 0.5)
+    return (0.7, 0.3)
+
+
+def _map_query_to_tags(query: str, limit: int = 2) -> list[str]:
+    """Сопоставить токены запроса закрытому набору тегов (Lobsters/Dev.to тег-based). Нет совпадений -> []."""
+    out: list[str] = []
+    for tok in re.findall(r"[a-z0-9]+", (query or "").lower()):
+        tag = _TAG_SYNONYMS.get(tok)
+        if tag and tag not in out:
+            out.append(tag)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def fetch_hn(query: str, since_ts: int, limit: int = 30) -> list[dict]:
@@ -142,6 +203,58 @@ def fetch_github(query: str, since_date: str, limit: int = 30) -> list[dict]:
     return out
 
 
+def fetch_lobsters(query: str, limit: int = 25) -> list[dict]:
+    """Lobsters story-feed по тегам (#1; тег-based -> query->tag). engagement = score + comments.
+
+    Закрытый набор тегов: берём до 2 тегов из запроса, далее общий relevance-фильтр в build_ranked.
+    Нет совпадения тега -> [] (не зашумляем generic-лентой). Отдаёт JSON-массив.
+    """
+    out: list[dict] = []
+    for tag in _map_query_to_tags(query):
+        data = _http_json(LOBSTERS_TAG_URL.format(tag=tag))
+        for s in (data if isinstance(data, list) else [])[:limit]:
+            title = (s.get("title") or "").strip()
+            if not title:
+                continue
+            eng = int(s.get("score") or 0) + int(s.get("comment_count") or 0)
+            out.append(
+                {
+                    "source": f"Lobsters/{tag}",
+                    "title": title,
+                    "url": s.get("short_id_url") or s.get("url") or "",
+                    "engagement": eng,
+                }
+            )
+    return out
+
+
+def fetch_devto(query: str, days: int, limit: int = 30) -> list[dict]:
+    """Dev.to (forem) статьи по тегу (#1; тег-based -> query->tag). engagement = public_reactions_count.
+
+    Берёт лучший тег запроса; top=<days> = топ статей за окно. Нет тега -> []. Отдаёт JSON-массив.
+    """
+    tags = _map_query_to_tags(query, limit=1)
+    if not tags:
+        return []
+    top = max(1, min(days, 365))
+    url = f"{DEVTO_API}?tag={urllib.parse.quote(tags[0])}&top={top}&per_page={limit}"
+    data = _http_json(url)
+    out: list[dict] = []
+    for a in data if isinstance(data, list) else []:
+        title = (a.get("title") or "").strip()
+        if not title:
+            continue
+        out.append(
+            {
+                "source": "DevTo",
+                "title": title,
+                "url": a.get("url") or "",
+                "engagement": int(a.get("public_reactions_count") or 0),
+            }
+        )
+    return out
+
+
 def _relevance(query_variants: list[str], title: str) -> float:
     """0..1 релевантность title к расширенному запросу (rapidfuzz token_set_ratio,
     иначе token-overlap fallback)."""
@@ -176,7 +289,7 @@ def _normalize_engagement_per_source(scored: list[dict]) -> None:
 def build_ranked(
     query: str, items: list[dict], top: int = 10, min_relevance: float = 0.5
 ) -> list[dict]:
-    """Чистое ядро: relevance × engagement ранкинг + кросс-источниковый дедуп. Без сети."""
+    """Чистое ядро: relevance x engagement ранкинг (query-adaptive веса) + дедуп. Без сети."""
     variants = expand_queries(query) if HAS_ENGAGEMENT else [query]
     scored: list[dict] = []
     for it in items:
@@ -188,7 +301,14 @@ def build_ranked(
         return []
     if HAS_ENGAGEMENT:
         _normalize_engagement_per_source(scored)
-        ranked = rank_items(scored, engagement_key="eng_norm", engagement_cap=1.0)
+        w_rel, w_eng = _query_weights(query)
+        ranked = rank_items(
+            scored,
+            engagement_key="eng_norm",
+            engagement_cap=1.0,
+            w_relevance=w_rel,
+            w_engagement=w_eng,
+        )
         ranked = dedup_by_entity(ranked, lambda it: _norm_token(it.get("title", ""))[:80] or None)
     else:
         ranked = sorted(scored, key=lambda x: x.get("relevance", 0), reverse=True)
@@ -197,13 +317,50 @@ def build_ranked(
     return ranked[:top]
 
 
+def _slugify(text: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
+    return (s or "scan")[:50]
+
+
+def _cache_path(query: str, days: int) -> Path:
+    return CACHE_DIR / f"{_slugify(query)}_{days}d.json"
+
+
+def _cache_load(path: Path, ttl_hours: float) -> list[dict] | None:
+    """Прочитать кеш, если свежее ttl_hours. Иначе/ошибка -> None (graceful)."""
+    try:
+        if not path.exists():
+            return None
+        age_h = (datetime.now(UTC).timestamp() - path.stat().st_mtime) / 3600.0
+        if age_h > ttl_hours:
+            return None
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data.get("items") if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+def _cache_save(path: Path, query: str, days: int, items: list[dict]) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "query": query,
+            "days": days,
+            "generated_at": datetime.now(UTC).isoformat(),
+            "items": items,
+        }
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    except Exception:
+        pass
+
+
 def to_markdown(query: str, ranked: list[dict], days: int) -> str:
     """Markdown-бриф (чистая функция)."""
     lines = [f"# Ecosystem scan: «{query}» (последние {days} дн.)", ""]
     if not ranked:
         lines.append("_Ничего релевантного не найдено (или все источники недоступны)._")
         return "\n".join(lines)
-    lines.append(f"Топ-{len(ranked)} по engagement × relevance (free HN/StackOverflow/GitHub):")
+    lines.append(f"Топ-{len(ranked)} по engagement × relevance (free HN/SO/GitHub/Lobsters/Dev.to):")
     lines.append("")
     for i, it in enumerate(ranked, 1):
         eng = int(it.get("engagement") or 0)
@@ -215,8 +372,22 @@ def to_markdown(query: str, ranked: list[dict], days: int) -> str:
     return "\n".join(lines)
 
 
-def scan(query: str, days: int = 30, top: int = 10) -> list[dict]:
-    """Опросить все источники (сеть) + ранжировать. Каждый источник graceful."""
+def scan(
+    query: str,
+    days: int = 30,
+    top: int = 10,
+    use_cache: bool = True,
+    cache_ttl_hours: float = 12.0,
+) -> list[dict]:
+    """Опросить все источники (сеть) + ранжировать. Кеш (#4): hit в пределах TTL -> без сети.
+
+    Каждый источник graceful. Кеш ключуется (slug запроса, days); хранит top первого прогона.
+    """
+    cache = _cache_path(query, days)
+    if use_cache:
+        cached = _cache_load(cache, cache_ttl_hours)
+        if cached is not None:
+            return cached[:top]
     now = datetime.now(UTC)
     since_ts = int((now - timedelta(days=days)).timestamp())
     since_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
@@ -224,7 +395,12 @@ def scan(query: str, days: int = 30, top: int = 10) -> list[dict]:
     items += fetch_hn(query, since_ts)
     items += fetch_stackexchange(query, since_ts)
     items += fetch_github(query, since_date)
-    return build_ranked(query, items, top=top)
+    items += fetch_lobsters(query)
+    items += fetch_devto(query, days)
+    ranked = build_ranked(query, items, top=top)
+    if use_cache:
+        _cache_save(cache, query, days, ranked)
+    return ranked
 
 
 def main() -> int:
@@ -232,15 +408,25 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, OSError):
         pass
-    ap = argparse.ArgumentParser(description="Ecosystem scan (ADR-039 V2) — free HN/StackOverflow/GitHub")
+    ap = argparse.ArgumentParser(
+        description="Ecosystem scan (ADR-039) — free HN/SO/GitHub/Lobsters/Dev.to"
+    )
     ap.add_argument("query", help="тема для скана")
     ap.add_argument("--days", type=int, default=30, help="окно в днях (default 30)")
     ap.add_argument("--top", type=int, default=10, help="сколько результатов (default 10)")
     ap.add_argument("--out", default=None, help="сохранить Markdown в файл (иначе stdout)")
     ap.add_argument("--json", action="store_true", help="машинный JSON вместо Markdown")
+    ap.add_argument("--no-cache", action="store_true", help="не использовать кеш (всегда сеть)")
+    ap.add_argument("--cache-ttl", type=float, default=12.0, help="TTL кеша в часах (default 12)")
     args = ap.parse_args()
 
-    ranked = scan(args.query, days=args.days, top=args.top)
+    ranked = scan(
+        args.query,
+        days=args.days,
+        top=args.top,
+        use_cache=not args.no_cache,
+        cache_ttl_hours=args.cache_ttl,
+    )
 
     if args.json:
         print(
