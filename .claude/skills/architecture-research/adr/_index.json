@@ -9,6 +9,23 @@
   ],
   "records": [
     {
+      "id": "ADR-039",
+      "file": "039-last30days-skill-adopt-evaluation.md",
+      "title": "last30days-skill (social-trend research, 46k★ MIT) — ADAPT частично, НЕ full-adopt: skip marketplace+cookies+платные (доменный промах 1С/RU + дублирование research-скиллов + секрет-риск public-репо); adopt выборочно free-источники-скан ИЛИ паттерн engagement-ранкинга в prework-github-bp",
+      "status": "accepted",
+      "date": "2026-06-24",
+      "research": "../cache/last30days-skill-tooling-2026.md",
+      "status_note": "accepted 2026-06-24 — оценка внешнего инструмента (паттерн ADR-012..015 tooling-adoption); анализ-only, код не менялся",
+      "tags": [
+        "tooling",
+        "research",
+        "social-trends",
+        "claude-code-skill",
+        "adopt-skip",
+        "ecosystem-scan"
+      ]
+    },
+    {
       "id": "ADR-038",
       "file": "038-resilient-erp-reindex-batch1-supervisor.md",
       "title": "Устойчивый ERP-reindex — batch=1 для длинных чанков (--long-batch1-tokens, профилактика тихого CUDA-wedge Qwen3-8B на тяжёлых модулях) + внешний супервизор (idle-watchdog + batch-эскалация 32→8→1 + resume) + deferred no-loss (--max-file-bytes deferred-list + --paths-file retry)",

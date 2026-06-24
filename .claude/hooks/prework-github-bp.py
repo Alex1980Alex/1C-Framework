@@ -36,6 +36,25 @@ try:
 except ImportError:
     HAS_RAPIDFUZZ = False
 
+# ADR-039 V1: engagement-aware ranking (приём из last30days-skill). Hook-local shared
+# (safe: импортируем только shared.*, без memory.* → insert(0) не конфликтует,
+# ср. [[feedback-hook-src-shared-collision]]).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from shared.engagement_rank import expand_queries, rank_items
+except Exception:  # graceful: relevance-only fallback (== прежнее поведение)
+
+    def expand_queries(q: str, **_kw) -> list[str]:
+        return [q] if q else []
+
+    def rank_items(items, **_kw):
+        out = [dict(it) for it in items]
+        for it in out:
+            it["blended"] = round(float(it.get("relevance", 0.0) or 0.0), 4)
+        out.sort(key=lambda x: x["blended"], reverse=True)
+        return out
+
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CACHE_INDEX = (
     PROJECT_ROOT / ".claude" / "skills" / "architecture-research" / "cache" / "_index.json"
@@ -119,12 +138,18 @@ def _score_topic(prompt_tokens: list[str], topic: dict) -> float:
 
 
 def _build_items(topics: list[dict], prompt: str) -> list[dict]:
-    """Score + filter github topics, return top-K items."""
-    tokens = _tokenize(prompt)
+    """Score + filter github topics, return top-K items.
+
+    ADR-039 V1: multi-query expansion расширяет recall; ранжирование блендит
+    rapidfuzz-relevance с GitHub-engagement (repos + sources) через
+    shared/engagement_rank. Раньше сортировка была relevance-only, а repos_count
+    лишь украшал body — теперь популярность влияет на порядок (вес 0.3).
+    """
+    tokens = _tokenize(" ".join(expand_queries(prompt)))
     if not tokens:
         return []
 
-    scored: list[tuple[float, dict]] = []
+    candidates: list[dict] = []
     for topic in topics:
         if not _has_github_signal(topic):
             continue
@@ -132,12 +157,20 @@ def _build_items(topics: list[dict], prompt: str) -> list[dict]:
             continue
         score = _score_topic(tokens, topic)
         if score >= MIN_SCORE:
-            scored.append((score, topic))
+            candidates.append(
+                {
+                    "topic": topic,
+                    "relevance": score / 100.0,
+                    "engagement": int(topic.get("github_repos_count") or 0)
+                    + int(topic.get("sources_count") or 0),
+                }
+            )
 
-    scored.sort(key=lambda x: x[0], reverse=True)
+    ranked = rank_items(candidates)  # blended = 0.7*relevance + 0.3*engagement
 
     items = []
-    for score, topic in scored[:TOP_K]:
+    for cand in ranked[:TOP_K]:
+        topic = cand["topic"]
         title = topic.get("title", topic.get("file", "?"))
         cache_file = topic.get("file", "")
         repos_count = int(topic.get("github_repos_count") or 0)
@@ -152,7 +185,7 @@ def _build_items(topics: list[dict], prompt: str) -> list[dict]:
             body_parts.append(f"→ cache/{cache_file}")
         body = " | ".join(body_parts)[:MAX_BODY_CHARS]
 
-        items.append({"title": title, "body": body, "score": round(score / 100.0, 3)})
+        items.append({"title": title, "body": body, "score": round(cand["blended"], 3)})
     return items
 
 

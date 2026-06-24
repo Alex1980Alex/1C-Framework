@@ -3,6 +3,15 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "last30days-skill-tooling-2026.md",
+      "title": "last30days-skill — social-trend research (Reddit/X/YT/HN/Polymarket/TikTok, engagement-ранкинг + синтез брифа); Claude Code skill, MIT, 46k★ — факты для adopt/skip",
+      "keywords": [
+        "tooling", "research", "social-trends", "claude-code-skill",
+        "ecosystem-scan", "engagement-ranking", "last30days", "trend-research"
+      ],
+      "last_verified": "2026-06-24"
+    },
+    {
       "file": "pattern-pipeline-orchestration-2026.md",
       "title": "Оркестрация пайплайнов + findings→remediation + gate-композиция — best practices 2026 (Temporal/LangGraph/Dagster, Pixee/Copilot-Autofix/OpenRewrite, OPA, SARIF, Anthropic agent-patterns)",
       "keywords": [
