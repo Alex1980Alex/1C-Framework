@@ -1,0 +1,44 @@
+{
+  "task": "cc-docs-search",
+  "title": "Поиск по докам Claude Code (cc_docs_search: sitemap→trafilatura→TEI→Qdrant cc_docs)",
+  "created_at": "2026-06-25T01:22:00",
+  "updated_at": "2026-06-25T01:22:00",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-06-25T01:22:00"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-25T01:22:00",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-06-25T01:22:00"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-06-25T01:22:00"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-06-25T01:22:00"
+    }
+  ]
+}
