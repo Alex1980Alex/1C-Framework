@@ -15,7 +15,7 @@
       "status": "accepted",
       "date": "2026-06-24",
       "research": "../cache/last30days-skill-tooling-2026.md",
-      "status_note": "accepted 2026-06-24 — оценка внешнего инструмента (паттерн ADR-012..015); V1 РЕАЛИЗОВАН (shared/engagement_rank.py + prework-github-bp блендит relevance×engagement, 8 тестов, code-verify PASS); V2 free-источники-скан отложен, модуль готов",
+      "status_note": "accepted 2026-06-24 — оценка внешнего инструмента (паттерн ADR-012..015); V1+V2 РЕАЛИЗОВАНЫ: shared/engagement_rank.py (приём) + prework-github-bp блендинг (V1, 8 тестов) + scripts/ecosystem_scan.py (V2 free HN/Reddit/GitHub скан, 6 тестов, live-smoke); code-verify PASS",
       "tags": [
         "tooling",
         "research",
