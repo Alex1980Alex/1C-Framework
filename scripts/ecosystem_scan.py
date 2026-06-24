@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Ecosystem scan (ADR-039 V2) — on-demand «что в экосистеме за N дней» по free-источникам.
 
-Опрашивает Hacker News (Algolia), Reddit (public JSON), GitHub (search API) — БЕЗ cookies,
-платных API и скрапинга (в отличие от full last30days; ADR-039 SKIP). Ранжирует по engagement
-через переиспользуемый shared/engagement_rank (relevance × популярность), схлопывает кросс-
-источниковые дубли и печатает Markdown-бриф. Ускоритель Фазы 2 architecture-research / tech-
+Опрашивает Hacker News (Algolia), StackOverflow (StackExchange API), GitHub (search API) — БЕЗ
+cookies, платных API и скрапинга (в отличие от full last30days; ADR-039 SKIP). Ранжирует по
+engagement через переиспользуемый shared/engagement_rank (relevance × популярность), схлопывает
+кросс-источниковые дубли и печатает Markdown-бриф. Ускоритель Фазы 2 architecture-research / tech-
 research + discovery для tooling-adoption (ADR-012..015).
+
+Reddit убран 2026 (public .json -> 403 с 2026-05-30, OAuth закрыт — data-licensing). Замена —
+StackOverflow (free-text q, без ключа, engagement = score). Доп. источники (Lobsters/Dev.to —
+тег-based) рассмотрены, но не free-text — отложены.
 
 Запуск:
   python scripts/ecosystem_scan.py "RAG embeddings reranking 2026" --days 30 --top 10
@@ -20,12 +24,13 @@ GitHub: использует GITHUB_TOKEN из env при наличии (выш
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import os
 import sys
 import urllib.parse
 import urllib.request
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 # Переиспользуем приём из V1 (hook-local shared). Cross-tree import: scripts/ -> .claude/hooks.
@@ -46,7 +51,7 @@ except Exception:
 
 UA = "ecosystem-scan/1.0 (+pdf-vector-graph framework; ADR-039)"
 HN_API = "https://hn.algolia.com/api/v1/search_by_date"
-REDDIT_API = "https://www.reddit.com/search.json"
+STACKEXCHANGE_API = "https://api.stackexchange.com/2.3/search/advanced"
 GITHUB_API = "https://api.github.com/search/repositories"
 
 
@@ -82,26 +87,29 @@ def fetch_hn(query: str, since_ts: int, limit: int = 30) -> list[dict]:
     return out
 
 
-def fetch_reddit(query: str, days: int, limit: int = 30) -> list[dict]:
-    """Reddit posts (public JSON). engagement = ups. Нужен User-Agent (иначе 429)."""
-    t = "week" if days <= 7 else ("month" if days <= 31 else "year")
+def fetch_stackexchange(query: str, since_ts: int, limit: int = 30) -> list[dict]:
+    """StackOverflow вопросы за окно (StackExchange API, free, без ключа). engagement = score.
+
+    Заменил мёртвый Reddit (2026): unauth .json -> 403, OAuth закрыт. SE отдаёт плоский JSON,
+    free-text q, фильтр fromdate. title содержит HTML-entities -> html.unescape.
+    """
     q = urllib.parse.quote(query)
-    url = f"{REDDIT_API}?q={q}&sort=top&t={t}&limit={limit}"
+    url = (
+        f"{STACKEXCHANGE_API}?order=desc&sort=votes&q={q}&fromdate={since_ts}"
+        f"&site=stackoverflow&pagesize={limit}"
+    )
     data = _http_json(url)
     out: list[dict] = []
-    for c in (data or {}).get("data", {}).get("children", []) or []:
-        d = c.get("data", {}) if isinstance(c, dict) else {}
-        title = d.get("title") or ""
+    for r in (data or {}).get("items", []) or []:
+        title = html.unescape(r.get("title") or "")
         if not title:
             continue
-        permalink = d.get("permalink") or ""
-        url_ = f"https://www.reddit.com{permalink}" if permalink else (d.get("url") or "")
         out.append(
             {
-                "source": f"Reddit/r/{d.get('subreddit', '?')}",
+                "source": "StackOverflow",
                 "title": title,
-                "url": url_,
-                "engagement": int(d.get("ups") or 0),
+                "url": r.get("link") or "",
+                "engagement": int(r.get("score") or 0),
             }
         )
     return out
@@ -149,6 +157,22 @@ def _relevance(query_variants: list[str], title: str) -> float:
     return len(qtok & ttok) / len(qtok)
 
 
+def _normalize_engagement_per_source(scored: list[dict]) -> None:
+    """Per-source min-max нормировка engagement в [0,1] (поле eng_norm, in-place).
+
+    Иначе GitHub-звёзды (10^4-10^5) топят HN/SO (10^0-10^2) при едином cap — топ каждого источника
+    получает eng_norm=1.0, источники конкурируют честно -> разнообразие источников в выдаче.
+    """
+    by_source: dict[str, float] = {}
+    for it in scored:
+        s = str(it.get("source", "?")).split("/")[0]
+        by_source[s] = max(by_source.get(s, 0.0), float(it.get("engagement") or 0))
+    for it in scored:
+        s = str(it.get("source", "?")).split("/")[0]
+        smax = by_source.get(s, 0.0)
+        it["eng_norm"] = (float(it.get("engagement") or 0) / smax) if smax > 0 else 0.0
+
+
 def build_ranked(
     query: str, items: list[dict], top: int = 10, min_relevance: float = 0.5
 ) -> list[dict]:
@@ -162,9 +186,9 @@ def build_ranked(
         scored.append({**it, "relevance": rel})
     if not scored:
         return []
-    cap = max((float(it.get("engagement") or 0) for it in scored), default=1.0) or 1.0
     if HAS_ENGAGEMENT:
-        ranked = rank_items(scored, engagement_cap=cap)
+        _normalize_engagement_per_source(scored)
+        ranked = rank_items(scored, engagement_key="eng_norm", engagement_cap=1.0)
         ranked = dedup_by_entity(ranked, lambda it: _norm_token(it.get("title", ""))[:80] or None)
     else:
         ranked = sorted(scored, key=lambda x: x.get("relevance", 0), reverse=True)
@@ -179,7 +203,7 @@ def to_markdown(query: str, ranked: list[dict], days: int) -> str:
     if not ranked:
         lines.append("_Ничего релевантного не найдено (или все источники недоступны)._")
         return "\n".join(lines)
-    lines.append(f"Топ-{len(ranked)} по engagement × relevance (free HN/Reddit/GitHub):")
+    lines.append(f"Топ-{len(ranked)} по engagement × relevance (free HN/StackOverflow/GitHub):")
     lines.append("")
     for i, it in enumerate(ranked, 1):
         eng = int(it.get("engagement") or 0)
@@ -198,7 +222,7 @@ def scan(query: str, days: int = 30, top: int = 10) -> list[dict]:
     since_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
     items: list[dict] = []
     items += fetch_hn(query, since_ts)
-    items += fetch_reddit(query, days)
+    items += fetch_stackexchange(query, since_ts)
     items += fetch_github(query, since_date)
     return build_ranked(query, items, top=top)
 
@@ -208,7 +232,7 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, OSError):
         pass
-    ap = argparse.ArgumentParser(description="Ecosystem scan (ADR-039 V2) — free HN/Reddit/GitHub")
+    ap = argparse.ArgumentParser(description="Ecosystem scan (ADR-039 V2) — free HN/StackOverflow/GitHub")
     ap.add_argument("query", help="тема для скана")
     ap.add_argument("--days", type=int, default=30, help="окно в днях (default 30)")
     ap.add_argument("--top", type=int, default=10, help="сколько результатов (default 10)")
