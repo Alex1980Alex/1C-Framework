@@ -98,6 +98,28 @@
     ]
   },
   "bundles": {
+    "cc-docs": {
+      "keywords": [
+        "code.claude.com",
+        "claude code docs",
+        "Agent SDK",
+        "permission mode",
+        "CLI reference claude",
+        "claude code hooks",
+        "claude code subagent",
+        "claude code settings"
+      ],
+      "weighted_keywords": {
+        "code.claude.com": 5,
+        "agent sdk": 4,
+        "permission mode": 3,
+        "claude code docs": 4
+      },
+      "skills": [
+        "cc-docs"
+      ],
+      "optional": []
+    },
     "its-research": {
       "keywords": [
         "ИТС",
