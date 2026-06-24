@@ -17,7 +17,8 @@
       "bsl-debug",
       "1c-mcp-data",
       "va-bdd",
-      "1c-arch"
+      "1c-arch",
+      "its-research"
     ],
     "framework": [
       "search",
@@ -96,6 +97,28 @@
     ]
   },
   "bundles": {
+    "its-research": {
+      "keywords": [
+        "ИТС",
+        "its.1c.ru",
+        "стандарты разработки 1С",
+        "v8std",
+        "система стандартов",
+        "расширения конфигурации адаптация",
+        "методичка 1С",
+        "дословно с ИТС"
+      ],
+      "weighted_keywords": {
+        "итс": 4,
+        "its.1c.ru": 5,
+        "стандарты разработки": 4,
+        "v8std": 5
+      },
+      "skills": [
+        "its-research"
+      ],
+      "optional": []
+    },
     "1c-arch": {
       "keywords": [
         "архитектура 1С",

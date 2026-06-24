@@ -244,7 +244,7 @@ WebSearch: "[тема] official documentation 2025 OR 2026"
 ```
 
 Ключевые ресурсы:
-- **its.1c.ru** — ИТС, методическая поддержка (приоритет 2)
+- **its.1c.ru** — ИТС, методическая поддержка (приоритет 2). **Дословный контент из-за пейвола** (v8std-стандарты, расширения) — skill [`its-research`](../its-research/SKILL.md): `scripts/its_fetch.py` (Playwright-сессия + trafilatura→markdown)
 - **infostart.ru** — статьи экспертов, решения (приоритет 3)
 - **v8.1c.ru** — форум разработчиков (приоритет 3)
 - **github.com/1c-syntax** — BSL Language Server, EDT

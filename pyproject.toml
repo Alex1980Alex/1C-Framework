@@ -89,6 +89,8 @@ langsmith = ["langsmith[sandbox]>=0.3"]
 langfuse = ["langfuse>=2.0"]
 # Hermes Ф5 Sandbox — E2B Code Interpreter (stateful Jupyter in Firecracker microVM)
 sandbox-e2b = ["e2b-code-interpreter>=1.2.0"]
+# ИТС deep-fetch (scripts/its_fetch.py): авторизованный fetch its.1c.ru + извлечение контента (skill its-research)
+its = ["playwright>=1.40", "trafilatura>=2.0"]
 # All optional dependencies
 all = [
     "pdf-vector-graph-framework[faiss,qdrant,neo4j,unstructured,docling,voyage,nlp,deep,langsmith,langfuse,queue,bsl,memory,llm-rotation,sandbox-e2b]",
