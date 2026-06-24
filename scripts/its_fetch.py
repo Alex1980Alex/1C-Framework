@@ -160,15 +160,35 @@ def do_auto_login() -> int:
 
 
 def _extract_content(page) -> str:
-    """Контент статьи ИТС лежит в iframe (w_metadata_doc_frame, about:srcdoc); fallback body."""
+    """Контент статьи ИТС в iframe (w_metadata_doc_frame).
+
+    trafilatura -> markdown (сохраняет нумерованные правила/таблицы/код «Правильно/Неправильно»);
+    graceful fallback: текст фрейма -> body. trafilatura опциональна (нет -> inner_text).
+    """
+    html = ""
+    text = ""
     for f in page.frames[1:]:
         try:
-            t = f.inner_text("body")
-            if len(t.strip()) > 120:
-                return t
+            if not html:
+                h = f.content()
+                if len(h) > 500:
+                    html = h
+            if not text:
+                t = f.inner_text("body")
+                if len(t.strip()) > 120:
+                    text = t
         except Exception:
             continue
-    return page.inner_text("body")
+    if html:
+        try:
+            import trafilatura
+
+            md = trafilatura.extract(html, output_format="markdown", include_tables=True, include_formatting=True)
+            if md and len(md.strip()) > 80:
+                return md
+        except Exception:
+            pass
+    return text or page.inner_text("body")
 
 
 def do_fetch(url: str, out: str | None) -> int:
