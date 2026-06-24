@@ -34,6 +34,9 @@ COMPONENT_REGISTRY: dict[str, dict[str, Any]] = {
     # context_generator: Contextual Retrieval (1-2 предложения контекста на чанк) — короткая
     # дешёвая задача → free LLM по умолчанию (Phase 5 / ADR-040; платного Anthropic-ключа нет).
     "context_generator": {"category": 1, "max_tokens": 200, "temperature": 0.0},
+    # qa_answer: RAG-ответ /search/ask из чанков эталона. Cat-1 (default-enabled) —
+    # платного Anthropic нет (баланс 0) → синтез всегда через free rotation (ADR-040).
+    "qa_answer": {"category": 1, "max_tokens": 2048, "temperature": 0.0},
     # Category 2: Possible candidates (medium complexity)
     "section_summary": {"category": 2, "max_tokens": 300, "temperature": 0.3},
     "entity_extractor": {"category": 2, "max_tokens": 4096, "temperature": 0.0},
@@ -232,6 +235,11 @@ QUALITY_CRITERIA: dict[str, dict[str, Any]] = {
         "metric": "min_length",
         "min_length": 10,
         "description": "1-2 sentence context for chunk",
+    },
+    "qa_answer": {
+        "metric": "min_length",
+        "min_length": 30,
+        "description": "RAG answer grounded in retrieved chunks",
     },
     "entity_extractor": {
         "metric": "valid_json",

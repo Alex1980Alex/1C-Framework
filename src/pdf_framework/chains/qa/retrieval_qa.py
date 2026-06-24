@@ -10,6 +10,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.config import AgentSettings
 from src.pdf_framework.schemas.documents import SearchResponse
+from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,12 @@ class RetrievalQAChain:
         if self._settings.base_url:
             llm_kwargs["base_url"] = self._settings.base_url
 
-        self._llm = ChatAnthropic(**llm_kwargs)
+        # ChatAnthropic — платный путь; мягкая конструкция: нет ключа -> None ->
+        # генерация ответа идёт через free-LLM rotation (ADR-040, платного ключа нет).
+        try:
+            self._llm = ChatAnthropic(**llm_kwargs)
+        except Exception:
+            self._llm = None
         self._parser = StrOutputParser()
 
     async def answer(
@@ -81,9 +87,24 @@ class RetrievalQAChain:
         → enriches context → regenerates answer.
         """
         context = self._build_context(search_response)
+        system_text = _SYSTEM_PROMPT.format(context=context)
+
+        # Free-LLM путь: нет платного ключа (self._llm is None) или явно включён cheap.
+        # Enrichment (Phase 42) использует платный fast_llm -> при cheap пропускается.
+        if self._llm is None or is_cheap_llm_enabled("qa_answer"):
+            text = await cheap_llm_call(
+                prompt=question,
+                system_prompt=system_text,
+                component="qa_answer",
+                max_tokens=self._settings.max_tokens,
+                temperature=self._settings.temperature,
+            )
+            from src.pdf_framework.utils.section_refs import append_section_refs
+
+            return append_section_refs(text or "", search_response.results)
 
         messages = [
-            SystemMessage(content=_SYSTEM_PROMPT.format(context=context)),
+            SystemMessage(content=system_text),
             HumanMessage(content=question),
         ]
 
@@ -138,9 +159,23 @@ class RetrievalQAChain:
     ) -> AsyncIterator[str]:
         """Stream answer tokens via ChatAnthropic.astream()."""
         context = self._build_context(search_response)
+        system_text = _SYSTEM_PROMPT.format(context=context)
+
+        # Free-LLM: нет платного ключа -> отдаём ответ одним блоком (rotation не стримит).
+        if self._llm is None or is_cheap_llm_enabled("qa_answer"):
+            text = await cheap_llm_call(
+                prompt=question,
+                system_prompt=system_text,
+                component="qa_answer",
+                max_tokens=self._settings.max_tokens,
+                temperature=self._settings.temperature,
+            )
+            if text:
+                yield text
+            return
 
         messages = [
-            SystemMessage(content=_SYSTEM_PROMPT.format(context=context)),
+            SystemMessage(content=system_text),
             HumanMessage(content=question),
         ]
 
