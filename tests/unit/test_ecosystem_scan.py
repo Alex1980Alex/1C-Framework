@@ -66,8 +66,31 @@ def test_build_ranked_dedup_cross_source_keeps_max():
         },
     ]
     r = _m.build_ranked("langgraph orchestration patterns", dup, min_relevance=0.5)
-    assert len(r) == 1  # один тайтл из 2 источников → схлопнут
-    assert r[0]["engagement"] == 50  # оставлен максимум по blended
+    assert len(r) == 1  # один тайтл из 2 источников → схлопнут (cross-source dedup)
+    # per-source нормировка: топ каждого источника → eng_norm=1.0 → blended tie; семантика
+    # «keeps-max» покрыта test_engagement_rank::test_dedup_by_entity_keeps_best
+
+
+def test_per_source_normalization_prevents_domination():
+    # GitHub-звёзды (1000) НЕ должны топить релевантный HN (eng 2): per-source норма → оба eng_norm=1.0
+    items = [
+        {
+            "source": "GitHub",
+            "title": "langgraph orchestration toolkit",
+            "url": "g",
+            "engagement": 1000,
+        },
+        {
+            "source": "HN",
+            "title": "langgraph orchestration discussion",
+            "url": "h",
+            "engagement": 2,
+        },
+    ]
+    r = _m.build_ranked("langgraph orchestration", items, top=10, min_relevance=0.5)
+    assert {it["source"] for it in r} == {"GitHub", "HN"}  # оба источника представлены
+    # топ каждого источника получил eng_norm=1.0 → balls близкие (не доминирование звёздами)
+    assert all(abs(it["blended"] - r[0]["blended"]) < 0.2 for it in r)
 
 
 def test_build_ranked_empty_when_nothing_relevant():
