@@ -357,6 +357,7 @@ def discover_unregistered_components() -> list[dict[str, str]]:
         "classifier.py",
         "section_summary.py",
         "context_generator.py",
+        "retrieval_qa.py",
         "entity_extractor.py",
         "summarizer.py",
         # Infrastructure (not candidates)

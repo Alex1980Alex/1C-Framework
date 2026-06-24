@@ -68,7 +68,8 @@ class RetrievalQAChain:
         # генерация ответа идёт через free-LLM rotation (ADR-040, платного ключа нет).
         try:
             self._llm = ChatAnthropic(**llm_kwargs)
-        except Exception:
+        except Exception as exc:
+            logger.warning("[QA] ChatAnthropic init failed: %s — using free LLM rotation", exc)
             self._llm = None
         self._parser = StrOutputParser()
 
