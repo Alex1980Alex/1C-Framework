@@ -1,0 +1,33 @@
+# ADR-040 Фаза 1+2 — free RU web-search (SearXNG) + cross-encoder reranker (TEI CPU).
+# Запуск:   docker compose -f docker/docker-compose.search.yml up -d
+# Остановка: docker compose -f docker/docker-compose.search.yml down
+#
+# CPU-only сознательно: GPU занят (embedder/модели, ~24/24 GB). bge-reranker-v2-m3 = 278M,
+# на CPU достаточно для low-volume 1С-research (несколько запросов). Порты 8888/8082 (8080 — TEI-эмбеддер).
+# Клиент: scripts/onec_search.py (env SEARXNG_URL / TEI_RERANK_URL).
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: onec-searxng
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8888/
+      - SEARXNG_SECRET=onec-search-local-dev-0a1b2c3d4e5f
+    restart: unless-stopped
+
+  tei-reranker:
+    # CPU-образ TEI (GPU занят). bge-reranker-v2-m3 — multilingual cross-encoder (RU ок).
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.7.2
+    container_name: onec-tei-reranker
+    ports:
+      - "8082:80"
+    volumes:
+      - tei_reranker_data:/data
+    command: ["--model-id", "BAAI/bge-reranker-v2-m3"]
+    restart: unless-stopped
+
+volumes:
+  tei_reranker_data:
