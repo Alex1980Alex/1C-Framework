@@ -15,7 +15,7 @@
       "status": "proposed",
       "date": "2026-06-24",
       "research": "../cache/1c-search-relevance-stack-2026.md",
-      "status_note": "proposed 2026-06-24 — рекомендация по 4 research-направлениям (RU embeddings/rerankers, free web-search, content+engagement extraction, relevance-техники); встраивается в 1c-doc-research Фаза 2, реюз TEI/engagement_rank/RRF; реализация фазами по решению пользователя",
+      "status_note": "accepted 2026-06-24 — Фаза 1+2 РЕАЛИЗОВАНЫ live: SearXNG (docker/docker-compose.search.yml :8888) + bge-reranker-v2-m3 через TEI GPU (:8082) + scripts/onec_search.py (7 unit, code-verify PASS); TEI cpu-образ отклонён — Intel-MKL SGEMM crash на AMD Ryzen → GPU candle (memory feedback-tei-cpu-amd-mkl-crash); GPU-бюджет эмбеддер 16GB+reranker 2GB<24GB. Фазы 3-5 (RAG-Fusion/trafilatura/Contextual) — по решению",
       "tags": [
         "1c",
         "search",

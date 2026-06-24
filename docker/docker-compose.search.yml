@@ -19,15 +19,24 @@ services:
     restart: unless-stopped
 
   tei-reranker:
-    # CPU-образ TEI (GPU занят). bge-reranker-v2-m3 — multilingual cross-encoder (RU ок).
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.7.2
+    # GPU-образ TEI (GPU освобождён остановкой ERP-reindex). candle CUDA — БЕЗ Intel-MKL,
+    # поэтому работает на AMD-хосте (cpu-образ крэшил: MKL SGEMM "Parameter 13" на AMD Ryzen).
+    # bge-reranker-v2-m3 — multilingual cross-encoder (RU ок), ~2 GB на GPU (укладывается с эмбеддером).
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7.2
     container_name: onec-tei-reranker
     ports:
       - "8082:80"
     volumes:
       - tei_reranker_data:/data
-    command: ["--model-id", "BAAI/bge-reranker-v2-m3"]
+    command: ["--model-id", "BAAI/bge-reranker-v2-m3", "--dtype", "float16"]
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   tei_reranker_data:
