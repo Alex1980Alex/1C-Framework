@@ -35,7 +35,17 @@ HOOK_ID = "factory-enforcer-hook"
 # Paths that are NOT new skills/hooks (skip — handled elsewhere or not skill artifacts):
 # cache facts (knowledge-cache-reminder), ADR decision records (created routinely per auto-ADR
 # convention — NOT new skills), index/template files.
-SKIP_PATHS = ["/cache/", "\\cache\\", "/adr/", "\\adr\\", "_index.json", "_topic_template.md"]
+# `hooks/shared/` + `hooks/base/` — БИБЛИОТЕКИ (переиспользуемые модули чистых функций / базовые
+# классы), а НЕ event-хуки: их не регистрируют в settings.json (ср. auto_save_core.py / pr_helpers.py
+# / engagement_rank.py). Без этого skip факт-хуки рождали фантомные ШАГ 4/5 (register/verify).
+SKIP_PATHS = [
+    "/cache/",
+    "/adr/",
+    "_index.json",
+    "_topic_template.md",
+    "/hooks/shared/",
+    "/hooks/base/",
+]
 
 
 class FactoryEnforcer(BaseHook):
