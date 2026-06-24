@@ -3,6 +3,17 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "1c-search-relevance-stack-2026.md",
+      "title": "Стек повышения релевантности RU/1С-поиска (Infostart+web): RU embeddings (bge-m3/USER/e5) + rerankers (bge-reranker-v2-m3/Qwen3) + SearXNG(Yandex) + trafilatura/crawl4ai + Contextual Retrieval/RAG-Fusion/HyDE — факты с числами 2026",
+      "keywords": [
+        "ru embeddings", "bge-m3", "user-bge-m3", "multilingual-e5", "reranker",
+        "bge-reranker-v2-m3", "qwen3-reranker", "searxng", "yandex search", "ddgs ratelimit",
+        "trafilatura", "crawl4ai", "firecrawl", "contextual retrieval", "rag-fusion", "rrf",
+        "hyde", "infostart", "relevance", "rusbeir"
+      ],
+      "last_verified": "2026-06-24"
+    },
+    {
       "file": "last30days-skill-tooling-2026.md",
       "title": "last30days-skill — social-trend research (Reddit/X/YT/HN/Polymarket/TikTok, engagement-ранкинг + синтез брифа); Claude Code skill, MIT, 46k★ — факты для adopt/skip",
       "keywords": [
