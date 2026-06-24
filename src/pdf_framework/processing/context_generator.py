@@ -127,7 +127,12 @@ class ContextGenerator:
         }
         if self._settings.base_url:
             llm_kwargs["base_url"] = self._settings.base_url
-        self._llm = ChatAnthropic(**llm_kwargs)
+        # ChatAnthropic — лишь платный fallback; мягкая конструкция: нет ключа → None →
+        # работает cheap-LLM путь через llm_rotation (Phase 5 / ADR-040, платного ключа нет).
+        try:
+            self._llm = ChatAnthropic(**llm_kwargs)
+        except Exception:
+            self._llm = None
         self._model_name = model
 
         # Concurrency limiter

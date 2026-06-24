@@ -31,9 +31,11 @@ COMPONENT_REGISTRY: dict[str, dict[str, Any]] = {
     "query_expansion": {"category": 1, "max_tokens": 300, "temperature": 0.7},
     "hyde": {"category": 1, "max_tokens": 512, "temperature": 0.3},
     "search_classifier": {"category": 1, "max_tokens": 100, "temperature": 0.0},
+    # context_generator: Contextual Retrieval (1-2 предложения контекста на чанк) — короткая
+    # дешёвая задача → free LLM по умолчанию (Phase 5 / ADR-040; платного Anthropic-ключа нет).
+    "context_generator": {"category": 1, "max_tokens": 200, "temperature": 0.0},
     # Category 2: Possible candidates (medium complexity)
     "section_summary": {"category": 2, "max_tokens": 300, "temperature": 0.3},
-    "context_generator": {"category": 2, "max_tokens": 200, "temperature": 0.0},
     "entity_extractor": {"category": 2, "max_tokens": 4096, "temperature": 0.0},
     "community_summarizer": {"category": 2, "max_tokens": 1024, "temperature": 0.0},
 }
