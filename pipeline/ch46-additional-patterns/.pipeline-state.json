@@ -1,0 +1,44 @@
+{
+  "task": "ch46-additional-patterns",
+  "title": "46.8 Дополнительные паттерны оркестрации (7) + связь 46.1/TOC",
+  "created_at": "2026-06-25T02:06:38",
+  "updated_at": "2026-06-25T02:06:39",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-06-25T02:06:39"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-06-25T02:06:39",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-06-25T02:06:39"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-06-25T02:06:39"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-06-25T02:06:39"
+    }
+  ]
+}
