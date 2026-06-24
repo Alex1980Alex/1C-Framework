@@ -159,6 +159,18 @@ def do_auto_login() -> int:
     return 4
 
 
+def _extract_content(page) -> str:
+    """Контент статьи ИТС лежит в iframe (w_metadata_doc_frame, about:srcdoc); fallback body."""
+    for f in page.frames[1:]:
+        try:
+            t = f.inner_text("body")
+            if len(t.strip()) > 120:
+                return t
+        except Exception:
+            continue
+    return page.inner_text("body")
+
+
 def do_fetch(url: str, out: str | None) -> int:
     from playwright.sync_api import sync_playwright
 
@@ -171,7 +183,7 @@ def do_fetch(url: str, out: str | None) -> int:
         page = ctx.new_page()
         page.goto(url, wait_until="networkidle", timeout=30000)
         final_url = page.url
-        text = page.inner_text("body")
+        text = _extract_content(page)
         browser.close()
 
     if re.search(r"/(user/auth|login)(\?|/|$)", final_url) or "login.1c.ru" in final_url:
