@@ -95,4 +95,6 @@ src/
 
 **Архитектура 1С-задачи** (Шаг 2 Дизайн): skill `1c-solution-architecture` (bundle `1c-arch`) + [гл.45](docs/framework%20documentation/45_АРХИТЕКТУРА_1С/45.1_Архитектура_1С_решений.md) — decision-tree расширение↔изменение типовой, матрица выбора регистра, БП-моделирование, чек-лист стандартов. **Свежий/доверенный 1С-поиск** (Infostart+web, relevance×trust(домен)×recency): [`scripts/onec_search.py`](scripts/onec_search.py) (ADR-040, [гл.44.6](docs/framework%20documentation/44_ECOSYSTEM_SCAN/44.6_1C_RU_Search_onec_search.md); инфра `docker/docker-compose.search.yml` SearXNG+TEI-reranker).
 
+**GitHub-поиск (ОБЯЗАТЕЛЬНО)**: репо/библиотеки/best-practices — через `python scripts/ecosystem_scan.py "<query>" --top 8` (ADR-039, [гл.44](docs/framework%20documentation/44_ECOSYSTEM_SCAN/44.1_Обзор.md), engagement×relevance), НЕ голый WebSearch. Хард-энфорсер [`github-search-via-ecosystem-scan.py`](.claude/hooks/github-search-via-ecosystem-scan.py) (PreToolUse:WebSearch блокирует GitHub-намеренный поиск; opt-out `GITHUB_ECOSYSTEM_SCAN_DISABLE=1`). 1С/RU-веб → `onec_search` (гл.44.6).
+
 При вопросах про RAG/ML/Python: протокол в skill `tech-research`.
