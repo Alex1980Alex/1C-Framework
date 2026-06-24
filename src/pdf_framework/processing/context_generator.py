@@ -211,6 +211,10 @@ class ContextGenerator:
             except Exception as e:
                 logger.warning("[CONTEXT] Cheap LLM failed, falling back: %s", e)
 
+        # Платный fallback недоступен (нет Anthropic-ключа) → cheap-LLM путь выше единственный.
+        if self._llm is None:
+            return ""
+
         messages = self._build_messages(chunk, title, doc_excerpt, use_prompt_caching)
 
         # Ralph Wiggum: self-correcting retry for context generation
