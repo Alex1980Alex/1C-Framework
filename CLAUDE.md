@@ -93,4 +93,6 @@ src/
 
 При вопросах про 1С: документация 8.3.27 — первоисточник. Внешние источники (its.1c.ru, infostart.ru) — только дополнение. Каждый факт с атрибуцией. Протокол: skill `1c-doc-research`.
 
+**Архитектура 1С-задачи** (Шаг 2 Дизайн): skill `1c-solution-architecture` (bundle `1c-arch`) + [гл.45](docs/framework%20documentation/45_АРХИТЕКТУРА_1С/45.1_Архитектура_1С_решений.md) — decision-tree расширение↔изменение типовой, матрица выбора регистра, БП-моделирование, чек-лист стандартов. **Свежий/доверенный 1С-поиск** (Infostart+web, relevance×trust(домен)×recency): [`scripts/onec_search.py`](scripts/onec_search.py) (ADR-040, [гл.44.6](docs/framework%20documentation/44_ECOSYSTEM_SCAN/44.6_1C_RU_Search_onec_search.md); инфра `docker/docker-compose.search.yml` SearXNG+TEI-reranker).
+
 При вопросах про RAG/ML/Python: протокол в skill `tech-research`.
