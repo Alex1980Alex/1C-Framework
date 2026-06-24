@@ -41,7 +41,8 @@
       "claude-code-ops",
       "hooks",
       "creation",
-      "docs"
+      "docs",
+      "cc-docs"
     ],
     "langchain": [
       "langchain-core",
