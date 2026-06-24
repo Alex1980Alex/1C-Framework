@@ -2,6 +2,26 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "infostart-домен-элеватор-транспорт-ттн": {
+      "title": "Infostart как источник + предметная область наших задач (элеватор/транспорт/ТТН) — engagement-метрики (рейтинг/просмотры/загрузки/комментарии), нет публичного JSON API/RSS, вердикт: в ecosystem_scan не добавляем (HTML-скрейп хрупкий), покрыто 1c-doc-research Фаза 2",
+      "file": "infostart-домен-элеватор-транспорт-ттн.md",
+      "created": "2026-06-24",
+      "last_verified": "2026-06-24",
+      "keywords": [
+        "infostart источник",
+        "engagement метрики infostart",
+        "рейтинг просмотры загрузки",
+        "элеватор зерно транспорт ттн 1С",
+        "взвешивание разгрузка ТС",
+        "ecosystem_scan 1С домен",
+        "нет JSON API RSS infostart",
+        "WebSearch site:infostart.ru"
+      ],
+      "sources": [
+        "infostart.ru WebSearch 2026-06-24",
+        "infostart.ru/public/14800 WebFetch 2026-06-24"
+      ]
+    },
     "virtual-table-join-materialize-temp-table": {
       "title": "Соединение с виртуальной таблицей (СрезПоследних/Остатки/Обороты) → материализация во временную таблицу + ИНДЕКСИРОВАТЬ ПО полям соединения; правило Sonar/BSL JoinWithVirtualTable; проверка эквивалентности через дельту мультимножеств",
       "file": "virtual-table-join-materialize-temp-table.md",
