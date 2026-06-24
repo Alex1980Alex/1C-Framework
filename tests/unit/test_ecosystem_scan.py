@@ -118,3 +118,34 @@ def test_relevance_high_vs_low():
     high = _m._relevance(variants, "langgraph orchestration guide")
     low = _m._relevance(variants, "totally different unrelated topic")
     assert high > low
+
+
+def test_query_weights_by_type():
+    # #3 query-adaptive: precision (ошибка/версия) → релевантность важнее
+    assert _m._query_weights("rankify ImportError fix") == (0.85, 0.15)
+    assert _m._query_weights("django 4.2 upgrade") == (0.85, 0.15)
+    # discovery (best/trending/2026) → популярность важнее
+    assert _m._query_weights("best RAG framework 2026") == (0.5, 0.5)
+    # нейтрально → дефолт
+    assert _m._query_weights("langgraph memory") == (0.7, 0.3)
+
+
+def test_map_query_to_tags():
+    # #1 query→tag: синонимы сводятся к каноническому тегу
+    assert _m._map_query_to_tags("langgraph memory agent") == ["ai"]
+    assert _m._map_query_to_tags("rust async runtime") == ["rust"]
+    # нет совпадения тега → пусто (источник пропускается, не зашумляем generic-лентой)
+    assert _m._map_query_to_tags("гкс печать ттн снятие") == []
+    # ограничение количества тегов
+    assert len(_m._map_query_to_tags("python rust go java", limit=2)) == 2
+
+
+def test_cache_roundtrip_and_ttl(tmp_path):
+    # #4 кеш: save → load round-trip + TTL
+    p = tmp_path / "scan.json"
+    items = [{"source": "HN", "title": "T", "url": "U", "engagement": 3, "blended": 0.5}]
+    _m._cache_save(p, "q", 30, items)
+    assert p.exists()
+    assert _m._cache_load(p, ttl_hours=12.0) == items  # свежий → hit
+    assert _m._cache_load(p, ttl_hours=0.0) is None  # TTL=0 → протух
+    assert _m._cache_load(tmp_path / "nope.json", 12.0) is None  # нет файла → None
