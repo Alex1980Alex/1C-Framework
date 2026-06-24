@@ -115,6 +115,7 @@ description: "Используй этот скилл для понимания �
 | `framework-caching` | 3-уровневое кеширование |
 | `audit-docs` | Аудит Code ↔ Docs ↔ Skills |
 | `indexing-pipeline` | PDF индексация pipeline |
+| `bsl-reindex` | Реиндекс BSL/кода: qwen3-st/tei, supervised ADR-038, bsl_code_*/framework_code_v1 |
 | `search-pipeline-debug` | 16 стратегий поиска, debug |
 | `evaluation-benchmark` | RAGAS, AutoRAG, метрики |
 | `embedding-models` | E5/Giga/BGE-M3, backends |

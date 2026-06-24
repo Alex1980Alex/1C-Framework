@@ -21,6 +21,7 @@
     "framework": [
       "search",
       "indexing",
+      "bsl-reindex",
       "framework-search",
       "eval-benchmark",
       "graph",
@@ -79,6 +80,7 @@
       "task-evaluation"
     ],
     "indexing-pipeline": [],
+    "bsl-reindex": [],
     "search-pipeline-debug": [
       "pdf-search"
     ],
@@ -579,6 +581,44 @@
         "загрузи этот документ в систему",
         "обнови коллекцию сохранённых документов",
         "подготовь файлы для семантического поиска"
+      ]
+    },
+    "bsl-reindex": {
+      "keywords": [
+        "реиндекс bsl",
+        "проиндексировать конфигурацию",
+        "переиндексировать конфигурацию",
+        "реиндекс конфигурации",
+        "supervised reindex",
+        "reindex_bsl_qwen3",
+        "reindex_supervised",
+        "bsl_code_erp_ref",
+        "reference_1c_code",
+        "индексация конфигурации",
+        "реиндекс эталона",
+        "cuda wedge"
+      ],
+      "skills": [
+        "bsl-reindex"
+      ],
+      "optional": [
+        "post-indexing-analysis"
+      ],
+      "weighted_keywords": {
+        "реиндекс bsl": 4,
+        "проиндексировать конфигурацию": 4,
+        "переиндексировать конфигурацию": 4,
+        "реиндекс конфигурации": 4,
+        "reindex_supervised": 4,
+        "bsl_code_erp_ref": 4,
+        "supervised reindex": 3
+      },
+      "utterances": [
+        "переиндексировать 1С-конфигурацию в векторную базу",
+        "запустить устойчивый реиндекс эталона ERP",
+        "индексация зависла с CUDA wedge — что делать",
+        "проиндексировать BSL-код в bsl_code_erp_ref",
+        "reindex the 1C configuration into the vector store"
       ]
     },
     "framework-search": {
