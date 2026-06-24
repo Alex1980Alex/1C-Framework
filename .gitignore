@@ -160,3 +160,7 @@ external/1c-reference-src/
 
 # stray subagent/format-probe scratch
 _tmp_fmt_check/
+
+# ИТС auth (its_fetch.py) — сессия и креды НЕ в git
+playwright/.auth/
+.env.its
