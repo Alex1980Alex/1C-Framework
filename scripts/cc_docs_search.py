@@ -101,6 +101,8 @@ def do_index(limit: int | None) -> int:
             title = title_m.group(1).strip() if title_m else url.rsplit("/", 1)[-1]
             chunks = chunk_md(md)
             vectors = tei_embed(chunks)
+            if len(vectors) != len(chunks):
+                sys.stderr.write(f"[cc_docs] warn: TEI {len(vectors)}/{len(chunks)} векторов для {url}\n")
             if dim is None and vectors:
                 dim = len(vectors[0])
                 _ensure_collection(dim)
@@ -115,7 +117,7 @@ def do_index(limit: int | None) -> int:
             if n % 20 == 0:
                 sys.stderr.write(f"[cc_docs] {n}/{len(urls)} (ok={ok})\n")
         except Exception as e:  # одна страница не валит прогон
-            sys.stderr.write(f"[cc_docs] skip {url}: {type(e).__name__}\n")
+            sys.stderr.write(f"[cc_docs] skip {url}: {type(e).__name__}: {e}\n")
     if points:
         _req("PUT", f"{QDRANT}/collections/{COLL}/points", {"points": points})
     sys.stderr.write(f"[cc_docs] готово: проиндексировано страниц={ok}\n")
