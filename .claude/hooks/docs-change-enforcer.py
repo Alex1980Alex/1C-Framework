@@ -80,6 +80,8 @@ CODE_TO_DOMAIN = [
     # DocumentIndexer = индексация (03/34), не Hybrid Search (инцидент 2026-06-12).
     ("src/pdf_framework/vector_store/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
     ("src/pdf_framework/vector_store/", "04_ПОИСК", "qdrant-operations"),
+    # QA/RAG answer-цепочки (RetrievalQAChain → /search/ask), free-LLM синтез ADR-040 (был UNMAPPED 2026-06-24):
+    ("src/pdf_framework/chains/", "04_ПОИСК", "search-pipeline-debug"),
     ("src/pdf_framework/config/", "02_БЫСТРЫЙ_СТАРТ", "framework-config"),
     ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
     ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
