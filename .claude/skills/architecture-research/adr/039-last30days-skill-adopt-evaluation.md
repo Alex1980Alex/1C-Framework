@@ -55,7 +55,10 @@ Python-совместимость есть (требует 3.12+, `.venv` = 3.13
   (`_has_github_signal`/`_is_fresh`), `MIN_SCORE`, `TOP_K`, форма item сохранены.
 - `tests/unit/test_engagement_rank.py` — 8 тестов; code-verify PASS; smoke: high-engagement
   топик (eng=50) встаёт первым (1.0) против relevance-tie.
-- **V2** (opt-in free-источники HN/Reddit/GitHub скан) — отложен; модуль готов к переиспользованию.
+- **V2 (РЕАЛИЗОВАН 2026-06-24)** — [`scripts/ecosystem_scan.py`](../../../../scripts/ecosystem_scan.py):
+  opt-in CLI скан HN(Algolia)/Reddit(JSON)/GitHub(search) по FREE public API (БЕЗ cookies/платных/
+  скрапинга), переиспользует `engagement_rank` (relevance×engagement + cross-source dedup); ядро
+  чистое → 6 unit-тестов; live-smoke: Rankify 677★ ранжирован #1. `tests/unit/test_ecosystem_scan.py`.
 
 ## Связанные файлы
 - **NEW** `.claude/hooks/shared/engagement_rank.py`; **V1** `.claude/hooks/prework-github-bp.py`;
