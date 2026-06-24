@@ -16,7 +16,8 @@
       "bsl-dev",
       "bsl-debug",
       "1c-mcp-data",
-      "va-bdd"
+      "va-bdd",
+      "1c-arch"
     ],
     "framework": [
       "search",
