@@ -3,6 +3,16 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "js-rendered-engagement-extraction-2026.md",
+      "title": "Извлечение JS-рендеренного engagement из SPA (Infostart): статика невозможна (нет в HTML/SSR-hydration/JSON-LD/сниппетах, бандл обфусцирован) → пути: внутренний JSON-API (лёгкий runtime, discovery нужен браузер, риск signing) ИЛИ JS-render Scrapling DynamicFetcher/Playwright (тяжёлый браузер, adaptive selectors); факты 2026",
+      "keywords": [
+        "js-rendered engagement", "spa scraping", "hidden api", "scrapling", "dynamicfetcher",
+        "playwright", "splash", "infostart engagement", "reverse-engineer api", "xhr devtools",
+        "adaptive selectors", "stealthyfetcher", "patchright"
+      ],
+      "last_verified": "2026-06-24"
+    },
+    {
       "file": "1c-search-relevance-stack-2026.md",
       "title": "Стек повышения релевантности RU/1С-поиска (Infostart+web): RU embeddings (bge-m3/USER/e5) + rerankers (bge-reranker-v2-m3/Qwen3) + SearXNG(Yandex) + trafilatura/crawl4ai + Contextual Retrieval/RAG-Fusion/HyDE — факты с числами 2026",
       "keywords": [
