@@ -38,7 +38,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 # Переиспользуем приём из V1 (hook-local shared). Cross-tree import: scripts/ -> .claude/hooks.
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / ".claude" / "hooks"))
+sys.path.append(str(Path(__file__).resolve().parent.parent / ".claude" / "hooks"))
 try:
     from shared.engagement_rank import dedup_by_entity, expand_queries, rank_items
 

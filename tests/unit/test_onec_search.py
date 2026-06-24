@@ -1,7 +1,7 @@
-"""Unit: scripts/onec_search (ADR-040 Фаза 1+2) — пайплайн без сети (monkeypatch _http).
+"""Unit: scripts/onec_search (ADR-040 Фаза 1+2+3) — пайплайн без сети (monkeypatch _http).
 
-Сеть (SearXNG/TEI) изолирована в _http → подменяется. Тестируется парсинг, rerank-слияние,
-graceful-fallback при недоступном TEI, markdown.
+Сеть (SearXNG/TEI) изолирована в _http → подменяется. Тестируется парсинг, RRF-слияние (Фаза 3),
+rerank-слияние, graceful-fallback при недоступном TEI, multi-query fusion, markdown.
 """
 
 import importlib.util
@@ -16,9 +16,7 @@ if str(_ROOT) not in sys.path:
 
 _IMPORT_OK = True
 try:
-    _spec = importlib.util.spec_from_file_location(
-        "onec_search", _ROOT / "scripts" / "onec_search.py"
-    )
+    _spec = importlib.util.spec_from_file_location("onec_search", _ROOT / "scripts" / "onec_search.py")
     _m = importlib.util.module_from_spec(_spec)
     _spec.loader.exec_module(_m)
 except Exception:
@@ -64,7 +62,7 @@ def test_rerank_graceful_when_tei_down(monkeypatch):
     items = [{"title": "A", "content": ""}, {"title": "B", "content": ""}]
     monkeypatch.setattr(_m, "_http", lambda *a, **k: None)  # TEI недоступен
     r = _m.rerank_tei("q", items, top=10)
-    assert [x["title"] for x in r] == ["A", "B"]  # исходный порядок SearXNG (fallback)
+    assert [x["title"] for x in r] == ["A", "B"]  # исходный порядок (fallback)
     assert r[0]["rerank_score"] is None
 
 
@@ -79,3 +77,49 @@ def test_to_markdown_empty():
 def test_to_markdown_lists():
     md = _m.to_markdown("q", [{"title": "T", "url": "U", "engine": "bing", "rerank_score": 0.5}])
     assert "[bing]" in md and "U" in md and "score=0.5" in md
+
+
+def test_rrf_fuse_combines_and_dedups():
+    # Фаза 3: документ из 2 списков поднимается; дедуп по url; rrf_score проставлен
+    l1 = [{"title": "A", "url": "ua"}, {"title": "B", "url": "ub"}]
+    l2 = [{"title": "B", "url": "ub"}, {"title": "C", "url": "uc"}]  # B в обоих
+    fused = _m._rrf_fuse([l1, l2])
+    urls = [it["url"] for it in fused]
+    assert urls[0] == "ub"  # B встретился в 2 списках → выше по RRF
+    assert set(urls) == {"ua", "ub", "uc"}  # дедуп
+    assert all("rrf_score" in it for it in fused)
+
+
+def test_rrf_fuse_empty():
+    assert _m._rrf_fuse([]) == []
+    assert _m._rrf_fuse([[]]) == []
+
+
+def test_search_fusion_multi_query(monkeypatch):
+    # RAG-Fusion: expand_queries → 2 варианта → 2 SearXNG-запроса → RRF → rerank
+    monkeypatch.setattr(_m, "_HAS_EXPAND", True)
+    monkeypatch.setattr(_m, "expand_queries", lambda q, **k: [q, q + " вариант"])
+    calls = {"n": 0}
+
+    def fake_searx(query, **kw):
+        calls["n"] += 1
+        return [{"title": f"R{calls['n']}", "url": f"u{calls['n']}", "content": ""}]
+
+    monkeypatch.setattr(_m, "search_searxng", fake_searx)
+    monkeypatch.setattr(_m, "rerank_tei", lambda q, items, top=10: items[:top])
+    r = _m.search("тест", top=5)
+    assert calls["n"] == 2  # 2 варианта → 2 запроса (RAG-Fusion)
+    assert len(r) >= 1
+
+
+def test_search_no_fusion_single_query(monkeypatch):
+    calls = {"n": 0}
+
+    def fake_searx(query, **kw):
+        calls["n"] += 1
+        return [{"title": "R", "url": "u", "content": ""}]
+
+    monkeypatch.setattr(_m, "search_searxng", fake_searx)
+    monkeypatch.setattr(_m, "rerank_tei", lambda q, items, top=10: items[:top])
+    _m.search("тест", top=5, fusion=False)
+    assert calls["n"] == 1  # одиночный запрос (без RAG-Fusion)
