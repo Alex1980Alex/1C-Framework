@@ -7,6 +7,19 @@ $ErrorActionPreference = "Stop"
 # Auto-root (надёжнее хардкода; устраняет до-миграционный D:\1С-Framework)
 $ProjectRoot = (git rev-parse --show-toplevel).Trim()
 if (-not $ProjectRoot) { $ProjectRoot = "C:\1С-Framework" }
+
+# .env (gitignored) -> $env:* для не-заданных ключей (env > .env). ADR-041 follow-up.
+$envFile = Join-Path $ProjectRoot ".env"
+if (Test-Path $envFile) {
+    foreach ($line in Get-Content $envFile) {
+        $l = $line.Trim()
+        if ($l -and -not $l.StartsWith('#') -and $l.Contains('=')) {
+            $k, $v = $l -split '=', 2
+            $k = $k.Trim(); $v = $v.Trim().Trim('"').Trim("'")
+            if ($k -and -not [Environment]::GetEnvironmentVariable($k, 'Process')) { Set-Item "env:$k" $v }
+        }
+    }
+}
 $Host_ = if ($env:SONAR_HOST_URL) { $env:SONAR_HOST_URL } else { "http://localhost:9000" }
 
 # 1. reachability-gate — нет сервера → чистый выход (не падаем)

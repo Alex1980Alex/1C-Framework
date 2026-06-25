@@ -30,6 +30,18 @@ import os
 import urllib.parse
 import urllib.request
 
+# .env loader (gitignored секреты: SONAR_TOKEN/SONAR_HOST_URL); env > .env. ADR-041 follow-up.
+try:
+    import os as _o
+    import sys as _s
+
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    from _dotenv import load_dotenv as _ld
+
+    _ld()
+except Exception:
+    pass
+
 SEV_ORDER = {"BLOCKER": 0, "CRITICAL": 1, "MAJOR": 2, "MINOR": 3, "INFO": 4}
 
 # R4 (ADR-034): severity -> уровень SARIF 2.1.0
