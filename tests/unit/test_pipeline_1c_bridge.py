@@ -283,6 +283,152 @@ def test_gate_pipeline_approved_skips_openspec(monkeypatch):
     assert res["ok"] is True and res["hard"] is False and "source" not in res
 
 
+# --- ADR-041 R2: sync_approval — мост state↔yaml (проекция OpenSpec→pipeline, one-way) ---
+
+
+def _inject_fake_ps_with_approve(monkeypatch, current, pipelines, calls):
+    """Фейковый shared.pipeline_state с РАБОЧИМ approve (записывает в calls + ставит approved)."""
+    fake = types.ModuleType("shared.pipeline_state")
+    fake.resolve_current = lambda: current
+    fake.load = lambda s=None: pipelines.get(s if s else current)
+
+    def _approve(slug, by="human", n=2):
+        calls.append((slug, by))
+        st = next((x for x in pipelines[slug]["stages"] if x.get("n") == 2), None)
+        if st:
+            st["approved"] = True
+        return pipelines[slug]
+
+    fake.approve = _approve
+    shared = types.ModuleType("shared")
+    shared.pipeline_state = fake
+    monkeypatch.setitem(sys.modules, "shared", shared)
+    monkeypatch.setitem(sys.modules, "shared.pipeline_state", fake)
+
+
+def test_sync_approval_projects_openspec_to_pipeline(monkeypatch):
+    # R2 ГВОЗДЬ: OpenSpec approved + pipeline НЕ approved -> проекция (approve вызван by=openspec-bridge)
+    calls = []
+    pipelines = {
+        "GKSTCPLK-20": {
+            "title": "1С-задача (analyze-1c-task): GKSTCPLK-20",
+            "stages": [{"n": 2, "status": "done", "approved": False}],
+        }
+    }
+    _inject_fake_ps_with_approve(monkeypatch, "GKSTCPLK-20", pipelines, calls)
+    _inject_fake_approval_state(monkeypatch, approved=True)
+    res = bridge.sync_approval("/implement-1c-task GKSTCPLK-20 x")
+    assert res["openspec_approved"] is True and res["synced"] is True
+    assert calls == [("GKSTCPLK-20", "openspec-bridge")]
+
+
+def test_sync_approval_already_synced_no_write(monkeypatch):
+    # ИДЕМПОТЕНТНОСТЬ: pipeline уже approved -> already-synced, approve НЕ вызван
+    calls = []
+    pipelines = {
+        "GKSTCPLK-21": {
+            "title": "1С-задача (analyze-1c-task): GKSTCPLK-21",
+            "stages": [{"n": 2, "status": "done", "approved": True}],
+        }
+    }
+    _inject_fake_ps_with_approve(monkeypatch, "GKSTCPLK-21", pipelines, calls)
+    _inject_fake_approval_state(monkeypatch, approved=True)
+    res = bridge.sync_approval("/implement-1c-task GKSTCPLK-21 x")
+    assert res["synced"] is False and res["reason"] == "already-synced" and calls == []
+
+
+def test_sync_approval_openspec_not_approved_no_write(monkeypatch):
+    # OpenSpec НЕ approved -> проекции нет (мост не выдумывает одобрение)
+    calls = []
+    pipelines = {
+        "GKSTCPLK-22": {
+            "title": "1С-задача (analyze-1c-task): GKSTCPLK-22",
+            "stages": [{"n": 2, "status": "done", "approved": False}],
+        }
+    }
+    _inject_fake_ps_with_approve(monkeypatch, "GKSTCPLK-22", pipelines, calls)
+    _inject_fake_approval_state(monkeypatch, approved=False)
+    res = bridge.sync_approval("/implement-1c-task GKSTCPLK-22 x")
+    assert res["openspec_approved"] is False and res["synced"] is False and calls == []
+
+
+def test_sync_approval_no_jira(monkeypatch):
+    res = bridge.sync_approval("реализовать доработку без джиры")
+    assert res["openspec_approved"] is False and res["reason"] == "no-jira"
+
+
+def test_sync_approval_best_effort(monkeypatch):
+    # сбой импорта shared -> не кидает, openspec_approved False (fail-open)
+    _force_shared_import_failure(monkeypatch)
+    res = bridge.sync_approval("/implement-1c-task GKSTCPLK-1 x")
+    assert res["openspec_approved"] is False
+
+def test_sync_approval_systemexit_no_leak(monkeypatch):
+    # РЕГРЕСС (code-verify R2): approve кидает SystemExit (BaseException) → sync НЕ всплывает,
+    # synced=False, reason approve-failed (openspec_approved уже True — дизайн одобрен через SDD)
+    pipelines = {
+        "GKSTCPLK-30": {
+            "title": "1С-задача (analyze-1c-task): GKSTCPLK-30",
+            "stages": [{"n": 2, "status": "done", "approved": False}],
+        }
+    }
+    fake = types.ModuleType("shared.pipeline_state")
+    fake.resolve_current = lambda: "GKSTCPLK-30"
+    fake.load = lambda s=None: pipelines.get(s if s else "GKSTCPLK-30")
+
+    def _boom(slug, by="human", n=2):
+        raise SystemExit("pipeline: нет этапа 2")
+
+    fake.approve = _boom
+    shared = types.ModuleType("shared")
+    shared.pipeline_state = fake
+    monkeypatch.setitem(sys.modules, "shared", shared)
+    monkeypatch.setitem(sys.modules, "shared.pipeline_state", fake)
+    _inject_fake_approval_state(monkeypatch, approved=True)
+    res = bridge.sync_approval("/implement-1c-task GKSTCPLK-30 x")  # НЕ должно кинуть
+    assert res["openspec_approved"] is True and res["synced"] is False
+    assert res["reason"] == "approve-failed"
+
+
+def test_sync_approval_no_stage2_skips_approve(monkeypatch):
+    # этапа 2 нет (malformed) → no-stage-2, approve НЕ зовётся (иначе SystemExit)
+    calls = []
+    pipelines = {
+        "GKSTCPLK-31": {
+            "title": "1С-задача (analyze-1c-task): GKSTCPLK-31",
+            "stages": [{"n": 1, "status": "done"}],
+        }
+    }
+    _inject_fake_ps_with_approve(monkeypatch, "GKSTCPLK-31", pipelines, calls)
+    _inject_fake_approval_state(monkeypatch, approved=True)
+    res = bridge.sync_approval("/implement-1c-task GKSTCPLK-31 x")
+    assert res["reason"] == "no-stage-2" and res["synced"] is False and calls == []
+
+
+def test_gate_systemexit_no_leak(monkeypatch):
+    # РЕГРЕСС: approve→SystemExit, но гейт НЕ падает → allow(source=openspec) (fail-open сохранён)
+    pipelines = {
+        "GKSTCPLK-32": {
+            "title": "1С-задача (analyze-1c-task): GKSTCPLK-32",
+            "stages": [{"n": 2, "status": "done", "approved": False}],
+        }
+    }
+    fake = types.ModuleType("shared.pipeline_state")
+    fake.resolve_current = lambda: "GKSTCPLK-32"
+    fake.load = lambda s=None: pipelines.get(s if s else "GKSTCPLK-32")
+
+    def _boom2(slug, by="human", n=2):
+        raise SystemExit("boom")
+
+    fake.approve = _boom2
+    shared = types.ModuleType("shared")
+    shared.pipeline_state = fake
+    monkeypatch.setitem(sys.modules, "shared", shared)
+    monkeypatch.setitem(sys.modules, "shared.pipeline_state", fake)
+    _inject_fake_approval_state(monkeypatch, approved=True)
+    res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-32 x")  # НЕ должно кинуть
+    assert res["ok"] is True and res["hard"] is False and res.get("source") == "openspec"
+
 # --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
 
 

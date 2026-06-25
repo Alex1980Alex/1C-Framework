@@ -222,7 +222,7 @@ def gate_1c_implement(prompt: str) -> dict:
             try:
                 if sync_approval(prompt).get("openspec_approved"):
                     return {"ok": True, "hard": False, "reason": "", "source": "openspec"}
-            except Exception:
+            except (Exception, SystemExit):
                 pass
         return {
             "ok": False,
@@ -272,14 +272,22 @@ def sync_approval(prompt: str) -> dict:
             out["reason"] = "no-1c-pipeline"
             return out
         st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
-        if st2 and st2.get("approved"):
+        if st2 is None:
+            out["reason"] = "no-stage-2"  # malformed state — не зовём approve (он кинул бы SystemExit)
+            return out
+        if st2.get("approved"):
             out["reason"] = "already-synced"
             return out
-        pipeline_state.approve(slug, by="openspec-bridge")
-        out["synced"] = True
-        out["reason"] = "projected openspec->pipeline"
+        # pipeline_state.approve — CLI-функция, на ошибке кидает SystemExit (BaseException, НЕ Exception)
+        # → ловим (Exception, SystemExit), иначе утечёт сквозь гейт на UPS (нарушит fail-open).
+        try:
+            pipeline_state.approve(slug, by="openspec-bridge")
+            out["synced"] = True
+            out["reason"] = "projected openspec->pipeline"
+        except (Exception, SystemExit):
+            out["reason"] = "approve-failed"
         return out
-    except Exception:
+    except (Exception, SystemExit):
         return out
 
 

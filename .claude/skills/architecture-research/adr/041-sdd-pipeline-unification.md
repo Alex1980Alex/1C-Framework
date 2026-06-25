@@ -39,7 +39,7 @@ GitHub-эталон **spec-kit** [WebFetch github/spec-kit]: **один** state-
   `approval-gate.py` переведён на общий ридер + decision-log `gate_policy`. behavior-preserving: 97 unit +
   code-verify PASS (4 инварианта). R2-R4 — proposed.
 - **R2.** Единый источник одобрения: мост `.pipeline-state.json` ↔ `.openspec.yaml` — `/opsx:approve` и
-  `pipeline_state approve` пишут/читают одно состояние (одно — проекция другого), а не два независимых.
+  `pipeline_state approve` пишут/читают одно состояние (одно — проекция другого), а не два независимых. **[РЕАЛИЗОВАНО 2026-06-25]** `pipeline_1c_bridge.sync_approval` — односторонняя проекция OpenSpec→pipeline (idempotent, JIRA-gated, `by="openspec-bridge"`); вызывается из `gate_1c_implement` (R1-плечо). code-verify: iter1 FAIL (SystemExit от approve — BaseException, утечка) → фикс (guard `no-stage-2` + `except (Exception, SystemExit)`) → 105 unit; R3-R4 proposed.
 - **R3.** Lineage вместо дублирования: `ANALYSIS-REPORT.md` → (генерация) → `proposal.md`/`specs/` как
   односторонний downstream (как spec→plan→tasks у spec-kit) + consistency-чек (аналог `/analyze`) перед
   implement — флагует дрейф ANALYSIS-REPORT ↔ proposal/specs.
