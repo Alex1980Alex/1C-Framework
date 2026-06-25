@@ -3,6 +3,23 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "sonarqube-mcp-server-2026.md",
+      "title": "SonarQube MCP Server (SonarSource official): MCP-доступ к issues/quality-gate/rules/triage; self-hosted Server (SONARQUBE_URL+USER token), Docker/JAR; базовые tools не edition-gated, advanced = Cloud/Enterprise 2025.4+",
+      "keywords": [
+        "sonarqube",
+        "mcp",
+        "sonar mcp server",
+        "quality gate",
+        "code quality",
+        "self-hosted",
+        "community build",
+        "bsl",
+        "triage",
+        "lazy-mcp"
+      ],
+      "last_verified": "2026-06-25"
+    },
+    {
       "file": "spec-driven-pipeline-integration-2026.md",
       "title": "Spec-driven <-> implementation-pipeline интеграция (GitHub): spec-kit (единая spec-папка specs/<id>/, downstream spec->plan->tasks, /analyze consistency перед implement, чекпойнты != авто-гейты) + BMAD (2-фазный agent-based) + OpenSpec (change-proposal+approval+archive-merge) - факты 2026",
       "keywords": [
