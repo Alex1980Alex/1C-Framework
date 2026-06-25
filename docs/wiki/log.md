@@ -29,15 +29,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
 
-- Pattern: `Architecture Decision: use SQLite adjacency list i` (confidence: 0.85)
-- Draft: `docs/wiki/drafts/architecture-decision-use-sqlite-adjacency-list-i.md`
-
-**Status:** Pending review
-
----
-
-## 2026-06-15 — Auto-promoted: GKSTCPLK-2573 (предпросмотр PDF на форме присоедин
-
 **Event:** L2 pattern promoted to wiki draft
 
 - Pattern: `GKSTCPLK-2573 (предпросмотр PDF на форме присоедин` (confidence: 0.80)
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: 1c-doc-research, tech-research
 - Files changed: 2
 - Summary: Session 2026-06-25. Skills: 1c-doc-research, tech-research. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(1c-research): index architect ITS v8std standards cache. Commit: feat(its): extract ITS content iframe (w_metadata_doc_frame) for clean article text. Commit: feat(its): real 1C SSO login flow + --auto-login in its_fetch (live-verified)
+
+
+## 2026-06-26 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr
+- Files changed: 2
+- Summary: Session 2026-06-26. Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(research): кэш best-practices отладки фоновых заданий 1С (RDBG auto-attach). Commit: chore(ext): bump 1c_mcp submodule — re-sync extension src + mcp_ОтладкаВыполненияКода. Commit: fix(mcp): keep BSL_PLATFORM_PATH=2214 (offline API ref works); only ONEC_V8_PATH->1936
 
