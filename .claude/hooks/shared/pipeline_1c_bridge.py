@@ -213,16 +213,14 @@ def gate_1c_implement(prompt: str) -> dict:
                 "hard": False,
                 "reason": "",
             }  # дизайн одобрен (pipeline-state) → allow
-        # R1 (ADR-041): дизайн мог быть одобрен через SDD-обёртку — /opsx:approve пишет
-        # openspec/changes/<id>/.openspec.yaml (approval.status), а НЕ pipeline-state → honor
-        # OpenSpec-approval, иначе ложный G4-блок implement в SDD-потоке (расхождение двух сторов —
-        # корневой баг). JIRA-gated: non-JIRA путь нетронут (нет JIRA → плечо не срабатывает →
-        # поведение прежнее: pipeline-state G4 решает).
+        # R1+R2 (ADR-041): дизайн мог быть одобрен через SDD-обёртку — /opsx:approve пишет
+        # openspec/changes/<id>/.openspec.yaml (approval.status), а НЕ pipeline-state. sync_approval:
+        # (R1) honor OpenSpec-approval — иначе ложный G4-блок implement в SDD-потоке (расхождение
+        # сторов); (R2) проецирует одобрение в pipeline-state → сторы СХОДЯТСЯ (единый источник).
+        # JIRA-gated: non-JIRA путь нетронут (нет JIRA → плечо не срабатывает → G4 по pipeline-state).
         if _JIRA.search(prompt or ""):
             try:
-                from shared.approval_state import is_design_approved_via_openspec
-
-                if is_design_approved_via_openspec(prompt):
+                if sync_approval(prompt).get("openspec_approved"):
                     return {"ok": True, "hard": False, "reason": "", "source": "openspec"}
             except Exception:
                 pass
@@ -236,6 +234,53 @@ def gate_1c_implement(prompt: str) -> dict:
         }
     except Exception:
         return {"ok": True, "hard": False, "reason": ""}  # best-effort: не блокируем при сбое
+
+
+def sync_approval(prompt: str) -> dict:
+    """R2 (ADR-041): мост state↔yaml — односторонняя проекция OpenSpec-approval → pipeline-state.
+
+    Единый источник одобрения: если дизайн одобрен через SDD (``/opsx:approve`` пишет ``.openspec.yaml``),
+    проецируем это в ``.pipeline-state.json`` (этап 2 approved, ``by="openspec-bridge"``) — чтобы оба стора
+    СХОДИЛИСЬ, а не расходились (корень R1/R2). **Одностороннe**: pipeline-approve НЕ пишет обратно в
+    OpenSpec (обошло бы human-review ``/opsx:approve``). best-effort, идемпотентно, JIRA-gated.
+
+    Возврат ``{openspec_approved, synced, slug, reason}``.
+    """
+    out = {"openspec_approved": False, "synced": False, "slug": None, "reason": ""}
+    try:
+        if not _JIRA.search(prompt or ""):
+            out["reason"] = "no-jira"
+            return out
+        from shared.approval_state import is_design_approved_via_openspec
+
+        if not is_design_approved_via_openspec(prompt):
+            out["reason"] = "openspec-not-approved"
+            return out
+        out["openspec_approved"] = True
+        slug = resolve_active_1c_slug(prompt)
+        out["slug"] = slug
+        if not slug:
+            out["reason"] = "no-pipeline-slug"
+            return out
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared import pipeline_state
+
+        data = pipeline_state.load(slug)
+        if not data or not is_1c_task_title(data.get("title")):
+            out["reason"] = "no-1c-pipeline"
+            return out
+        st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
+        if st2 and st2.get("approved"):
+            out["reason"] = "already-synced"
+            return out
+        pipeline_state.approve(slug, by="openspec-bridge")
+        out["synced"] = True
+        out["reason"] = "projected openspec->pipeline"
+        return out
+    except Exception:
+        return out
 
 
 def advance_test_done(file_path: str) -> tuple[int, ...] | None:
