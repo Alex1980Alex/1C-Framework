@@ -42,7 +42,7 @@ GitHub-эталон **spec-kit** [WebFetch github/spec-kit]: **один** state-
   `pipeline_state approve` пишут/читают одно состояние (одно — проекция другого), а не два независимых. **[РЕАЛИЗОВАНО 2026-06-25]** `pipeline_1c_bridge.sync_approval` — односторонняя проекция OpenSpec→pipeline (idempotent, JIRA-gated, `by="openspec-bridge"`); вызывается из `gate_1c_implement` (R1-плечо). code-verify: iter1 FAIL (SystemExit от approve — BaseException, утечка) → фикс (guard `no-stage-2` + `except (Exception, SystemExit)`) → 105 unit; R3-R4 proposed.
 - **R3.** Lineage вместо дублирования: `ANALYSIS-REPORT.md` → (генерация) → `proposal.md`/`specs/` как
   односторонний downstream (как spec→plan→tasks у spec-kit) + consistency-чек (аналог `/analyze`) перед
-  implement — флагует дрейф ANALYSIS-REPORT ↔ proposal/specs.
+  implement — флагует дрейф ANALYSIS-REPORT ↔ proposal/specs. **[РЕАЛИЗОВАНО 2026-06-25]** `pipeline_1c_bridge.check_lineage` (+`_lineage_issues`/`_find_analysis_report`) — structural coverage (proposal/tasks/specs) + staleness (proposal старше ANALYSIS-REPORT → дрейф); **advisory** в `pipeline-gate` на implement pass-path (system_message, НЕ блок — чекпойнт как spec-kit /analyze). best-effort, JIRA-gated, bounded glob. 111 unit + code-verify PASS. R4 proposed.
 - **R4.** SDD-aware маршрутизация: `route_1c_task` принимает **одно** решение, включающее SDD-vs-plain
   (trivial→голый пайплайн; medium/complex→SDD-обёртка opsx), вместо двух несвязанных правил.
 

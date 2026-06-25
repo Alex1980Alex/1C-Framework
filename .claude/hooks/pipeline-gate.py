@@ -48,6 +48,20 @@ class PipelineGate(BaseHook):
             if not res["ok"] and res["hard"]:
                 _gp_log(_gp_decision("pipeline-gate:1c-implement", False, res["reason"]))
                 return HookOutput().block(f"[PIPELINE-GATE] {res['reason']}")
+            # R3 (ADR-041): advisory consistency-чек lineage ANALYSIS-REPORT<->proposal/specs
+            # (НЕ блок — чекпойнт как spec-kit /analyze; best-effort).
+            try:
+                from shared.pipeline_1c_bridge import check_lineage
+
+                lin = check_lineage(inp.prompt or "")
+                if lin.get("checked") and not lin.get("consistent"):
+                    items = "; ".join(lin.get("issues", []))
+                    return HookOutput().system_message(
+                        f"[LINEAGE-CHECK] SDD-change '{lin.get('change_id')}': {items}. "
+                        "Сверь ANALYSIS-REPORT <-> proposal/specs (аналог /analyze) перед реализацией."
+                    )
+            except Exception:
+                pass
             return None
         if cmd not in PIPELINE_COMMANDS:
             return None  # не наш пайплайн — пропускаем (non-breaking)

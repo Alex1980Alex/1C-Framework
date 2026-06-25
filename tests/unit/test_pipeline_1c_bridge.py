@@ -429,6 +429,72 @@ def test_gate_systemexit_no_leak(monkeypatch):
     res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-32 x")  # НЕ должно кинуть
     assert res["ok"] is True and res["hard"] is False and res.get("source") == "openspec"
 
+# --- ADR-041 R3: check_lineage — consistency-чек ANALYSIS-REPORT<->proposal/specs (advisory) ---
+
+
+def test_lineage_issues_consistent(tmp_path):
+    ch = tmp_path / "ch"
+    ch.mkdir()
+    (ch / "proposal.md").write_text("# P\n" + "x" * 100, encoding="utf-8")
+    (ch / "tasks.md").write_text("- [ ] 1.1\n", encoding="utf-8")
+    (ch / "specs").mkdir()
+    (ch / "specs" / "spec.md").write_text("## ADDED\n", encoding="utf-8")
+    assert bridge._lineage_issues(str(ch)) == []
+
+
+def test_lineage_issues_missing_artifacts(tmp_path):
+    ch = tmp_path / "ch"
+    ch.mkdir()
+    (ch / "proposal.md").write_text("# P\n" + "x" * 100, encoding="utf-8")
+    issues = bridge._lineage_issues(str(ch))  # нет tasks.md, нет specs/
+    assert any("tasks.md" in i for i in issues) and any("specs/" in i for i in issues)
+
+
+def test_lineage_issues_staleness(tmp_path):
+    import os as _os
+
+    ch = tmp_path / "ch"
+    ch.mkdir()
+    (ch / "proposal.md").write_text("# P\n" + "x" * 100, encoding="utf-8")
+    (ch / "tasks.md").write_text("- [ ] 1.1\n", encoding="utf-8")
+    (ch / "specs").mkdir()
+    (ch / "specs" / "spec.md").write_text("## ADDED\n", encoding="utf-8")
+    ar = tmp_path / "GKSTCPLK-1-ANALYSIS-REPORT.md"
+    ar.write_text("# Анализ\n", encoding="utf-8")
+    _os.utime(ch / "proposal.md", (1000, 1000))  # proposal старше
+    _os.utime(ar, (2000, 2000))  # AR новее -> дрейф
+    issues = bridge._lineage_issues(str(ch), str(ar))
+    assert any("дрейф" in i for i in issues)
+
+
+def test_check_lineage_no_jira():
+    assert bridge.check_lineage("реализовать без джиры")["checked"] is False
+
+
+def test_check_lineage_best_effort(monkeypatch):
+    _force_shared_import_failure(monkeypatch)
+    res = bridge.check_lineage("/implement-1c-task GKSTCPLK-1 x")
+    assert res["checked"] is False
+
+
+def test_check_lineage_wires_change(monkeypatch, tmp_path):
+    # discovery: JIRA -> связанный change -> _lineage_issues; checked=True, consistent=False (нет tasks/specs)
+    change = tmp_path / "openspec" / "changes" / "gkstcplk-50-x"
+    change.mkdir(parents=True)
+    (change / ".openspec.yaml").write_text("approval:\n  status: approved\n", encoding="utf-8")
+    (change / "proposal.md").write_text("# P\n" + "x" * 100, encoding="utf-8")
+    yaml_path = str(change / ".openspec.yaml")
+    fake_as = types.ModuleType("shared.approval_state")
+    fake_as.list_active_changes = lambda root=None: [("gkstcplk-50-x", yaml_path)]
+    fake_as.change_matches_jira = lambda name, yp, jira: True
+    monkeypatch.setitem(sys.modules, "shared.approval_state", fake_as)
+    sh = sys.modules.get("shared") or types.ModuleType("shared")
+    monkeypatch.setitem(sys.modules, "shared", sh)
+    monkeypatch.setattr(sh, "approval_state", fake_as, raising=False)
+    res = bridge.check_lineage("/implement-1c-task GKSTCPLK-50 x")
+    assert res["checked"] is True and res["change_id"] == "gkstcplk-50-x"
+    assert res["consistent"] is False and any("tasks.md" in i for i in res["issues"])
+
 # --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
 
 

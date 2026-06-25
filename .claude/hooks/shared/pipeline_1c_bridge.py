@@ -291,6 +291,95 @@ def sync_approval(prompt: str) -> dict:
         return out
 
 
+def _lineage_issues(change_dir: str, analysis_report: str | None = None) -> list:
+    """R3 (ADR-041): чистый детектор дрейфа SDD-change — structural coverage + staleness vs ANALYSIS-REPORT.
+
+    Возврат списка проблем (пустой = consistent). Чистая функция (tmp_path-тестируема).
+    """
+    issues = []
+    prop = os.path.join(change_dir, "proposal.md")
+    has_prop = os.path.isfile(prop) and os.path.getsize(prop) > 50
+    if not has_prop:
+        issues.append("proposal.md отсутствует/пустой")
+    if not os.path.isfile(os.path.join(change_dir, "tasks.md")):
+        issues.append("tasks.md отсутствует")
+    specs_dir = os.path.join(change_dir, "specs")
+    specs_ok = False
+    try:
+        if os.path.isdir(specs_dir):
+            with os.scandir(specs_dir) as _it:
+                specs_ok = any(_it)
+    except OSError:
+        specs_ok = False
+    if not specs_ok:
+        issues.append("specs/ отсутствует/пустой (нет delta-спек)")
+    if analysis_report and has_prop and os.path.isfile(analysis_report):
+        try:
+            if os.path.getmtime(prop) < os.path.getmtime(analysis_report):
+                issues.append(
+                    "proposal.md старше ANALYSIS-REPORT → возможен дрейф (перегенерируй /opsx:propose)"
+                )
+        except OSError:
+            pass
+    return issues
+
+
+def _find_analysis_report(prompt: str) -> str | None:
+    """ANALYSIS-REPORT.md задачи через реестр 1С (state_dir → папка задачи). best-effort → None."""
+    try:
+        import glob
+
+        slug = resolve_active_1c_slug(prompt)
+        if not slug:
+            return None
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared import pipeline_state
+
+        d = pipeline_state.state_dir(slug)
+        hits = glob.glob(os.path.join(str(d), "*ANALYSIS-REPORT*.md"))
+        return hits[0] if hits else None
+    except Exception:
+        return None
+
+
+def check_lineage(prompt: str, root: str | None = None) -> dict:
+    """R3 (ADR-041): consistency-чек lineage ANALYSIS-REPORT → OpenSpec proposal/specs (аналог spec-kit /analyze).
+
+    ADVISORY (НЕ блок — чекпойнт, не авто-гейт): флагует дрейф/неполноту SDD-артефактов перед implement.
+    Возврат {checked, consistent, issues, change_id}. best-effort, JIRA-gated. checked=False, если нет JIRA
+    или нет связанного OpenSpec change (голый пайплайн → lineage неприменим).
+    """
+    out = {"checked": False, "consistent": True, "issues": [], "change_id": None}
+    try:
+        m = _JIRA.search(prompt or "")
+        if not m:
+            return out
+        jira = m.group(0).upper()
+        hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if hooks not in sys.path:
+            sys.path.insert(0, hooks)
+        from shared.approval_state import change_matches_jira, list_active_changes
+
+        change_dir = None
+        change_id = None
+        for name, yaml_path in list_active_changes(root):
+            if change_matches_jira(name, yaml_path, jira):
+                change_id = name
+                change_dir = os.path.dirname(yaml_path)
+                break
+        if not change_dir:
+            return out
+        out["checked"] = True
+        out["change_id"] = change_id
+        issues = _lineage_issues(change_dir, _find_analysis_report(prompt))
+        out["issues"] = issues
+        out["consistent"] = not issues
+        return out
+    except Exception:
+        return out
+
 def advance_test_done(file_path: str) -> tuple[int, ...] | None:
     """F-1.6: запись `features/<task>/.run-state.json` со ВСЕМИ секциями passed → этап 4 (Тестирование) done.
 
