@@ -33,6 +33,11 @@ GitHub-эталон **spec-kit** [WebFetch github/spec-kit]: **один** state-
 - **R1 (приоритет, низкий риск — механизм уже есть).** Свести два approval-гейта в **один** через
   `shared/gate_policy.py` (ADR-034 R3, оба гейта уже логируют через него): единое решение «дизайн одобрен?»
   из **одного авторитетного источника**. Устраняет двойной блок/дивергенцию.
+  **[РЕАЛИЗОВАНО 2026-06-25]** Чтение OpenSpec-approval вынесено в `shared/approval_state.py` (DRY — один
+  ридер для обоих гейтов); `gate_1c_implement` (G4) теперь honors OpenSpec-approval (OR-семантика: pipeline-state
+  approved ИЛИ связанный OpenSpec change `approved` → allow; JIRA-gated, non-JIRA путь не затронут);
+  `approval-gate.py` переведён на общий ридер + decision-log `gate_policy`. behavior-preserving: 97 unit +
+  code-verify PASS (4 инварианта). R2-R4 — proposed.
 - **R2.** Единый источник одобрения: мост `.pipeline-state.json` ↔ `.openspec.yaml` — `/opsx:approve` и
   `pipeline_state approve` пишут/читают одно состояние (одно — проекция другого), а не два независимых.
 - **R3.** Lineage вместо дублирования: `ANALYSIS-REPORT.md` → (генерация) → `proposal.md`/`specs/` как

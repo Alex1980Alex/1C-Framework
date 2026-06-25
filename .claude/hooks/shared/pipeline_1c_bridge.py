@@ -208,7 +208,24 @@ def gate_1c_implement(prompt: str) -> dict:
             return {"ok": True, "hard": False, "reason": ""}  # нет активного 1С-пайплайна → no-op
         st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
         if st2 and st2.get("status") == "done" and st2.get("approved"):
-            return {"ok": True, "hard": False, "reason": ""}  # дизайн одобрен → allow
+            return {
+                "ok": True,
+                "hard": False,
+                "reason": "",
+            }  # дизайн одобрен (pipeline-state) → allow
+        # R1 (ADR-041): дизайн мог быть одобрен через SDD-обёртку — /opsx:approve пишет
+        # openspec/changes/<id>/.openspec.yaml (approval.status), а НЕ pipeline-state → honor
+        # OpenSpec-approval, иначе ложный G4-блок implement в SDD-потоке (расхождение двух сторов —
+        # корневой баг). JIRA-gated: non-JIRA путь нетронут (нет JIRA → плечо не срабатывает →
+        # поведение прежнее: pipeline-state G4 решает).
+        if _JIRA.search(prompt or ""):
+            try:
+                from shared.approval_state import is_design_approved_via_openspec
+
+                if is_design_approved_via_openspec(prompt):
+                    return {"ok": True, "hard": False, "reason": "", "source": "openspec"}
+            except Exception:
+                pass
         return {
             "ok": False,
             "hard": True,

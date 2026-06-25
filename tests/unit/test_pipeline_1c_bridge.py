@@ -225,6 +225,64 @@ def test_gate_non_jira_blocks_when_design_not_approved(monkeypatch):
     assert res["ok"] is False and res["hard"] is True
 
 
+# --- ADR-041 R1: G4 honors OpenSpec-approval (нет расхождения двух гейтов) ---
+
+
+def _inject_fake_approval_state(monkeypatch, approved: bool):
+    """Фейковый shared.approval_state.is_design_approved_via_openspec → approved (R1-плечо G4)."""
+    fake = types.ModuleType("shared.approval_state")
+    fake.is_design_approved_via_openspec = lambda text, root=None: approved
+    monkeypatch.setitem(sys.modules, "shared.approval_state", fake)
+    sh = sys.modules.get("shared")
+    if sh is not None:
+        monkeypatch.setattr(sh, "approval_state", fake, raising=False)
+
+
+def test_gate_honors_openspec_approval(monkeypatch):
+    # R1 ГВОЗДЬ: pipeline-state этап-2 НЕ approved, но OpenSpec change для JIRA == approved →
+    # G4 пропускает (раньше — ложный блок implement в SDD-потоке). source=openspec.
+    not_approved = {
+        "title": "1С-задача (analyze-1c-task): GKSTCPLK-7",
+        "stages": [{"n": 2, "status": "done", "approved": False}],
+    }
+    _inject_fake_pipeline_state(
+        monkeypatch, current="GKSTCPLK-7", pipelines={"GKSTCPLK-7": not_approved}
+    )
+    _inject_fake_approval_state(monkeypatch, approved=True)
+    res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-7 реализация")
+    assert res["ok"] is True and res["hard"] is False and res.get("source") == "openspec"
+
+
+def test_gate_openspec_pending_still_blocks(monkeypatch):
+    # ИНВАРИАНТ: OpenSpec НЕ approved (pending) И pipeline НЕ approved → блок (поведение прежнее).
+    not_approved = {
+        "title": "1С-задача (analyze-1c-task): GKSTCPLK-8",
+        "stages": [{"n": 2, "status": "done", "approved": False}],
+    }
+    _inject_fake_pipeline_state(
+        monkeypatch, current="GKSTCPLK-8", pipelines={"GKSTCPLK-8": not_approved}
+    )
+    _inject_fake_approval_state(monkeypatch, approved=False)
+    res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-8 реализация")
+    assert res["ok"] is False and res["hard"] is True
+
+
+def test_gate_pipeline_approved_skips_openspec(monkeypatch):
+    # ИНВАРИАНТ: pipeline-state approved → allow СРАЗУ (openspec-плечо даже не нужно).
+    approved = {
+        "title": "1С-задача (analyze-1c-task): GKSTCPLK-9",
+        "stages": [{"n": 2, "status": "done", "approved": True}],
+    }
+    _inject_fake_pipeline_state(
+        monkeypatch, current="GKSTCPLK-9", pipelines={"GKSTCPLK-9": approved}
+    )
+    _inject_fake_approval_state(
+        monkeypatch, approved=False
+    )  # openspec бы заблокировал — но не зовётся
+    res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-9 реализация")
+    assert res["ok"] is True and res["hard"] is False and "source" not in res
+
+
 # --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
 
 

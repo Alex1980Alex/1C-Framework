@@ -9,6 +9,11 @@ Timeout: 3s
 
 Part of SDD Phase 3: Approval Gate.
 Prevents AI from implementing code changes without human approval of the design.
+
+ADR-041 R1: чтение .openspec.yaml-статуса/профиля и список active changes вынесены в ЕДИНЫЙ модуль
+shared/approval_state.py — тот же ридер использует pipeline_1c_bridge.gate_1c_implement (G4 honors
+OpenSpec-approval → нет расхождения двух гейтов). Решения логируются в единый decision-log через
+shared/gate_policy (как pipeline-gate). Поведение блокировки НЕ изменено (тот же ридер, тот же критерий).
 """
 
 import os
@@ -19,6 +24,22 @@ sys.path.insert(0, _HOOK_DIR)
 
 
 from base.protocol import BaseHook, HookInput, HookOutput
+from shared.approval_state import list_active_changes as _get_active_changes
+from shared.approval_state import read_approval_status as _read_approval_status
+from shared.approval_state import read_profile as _read_profile
+
+# ADR-034 R3: единый decision-log гейтов (best-effort, не ронять гейт)
+try:
+    from shared.gate_policy import decision as _gp_decision
+    from shared.gate_policy import log_decision as _gp_log
+except Exception:
+
+    def _gp_decision(*a, **k):
+        return {}
+
+    def _gp_log(*a, **k):
+        return None
+
 
 # Skills that require approval before execution
 _IMPLEMENTATION_SKILLS = {
@@ -27,82 +48,6 @@ _IMPLEMENTATION_SKILLS = {
     "opsx:apply",
     "opsx-apply",
 }
-
-# Project root (hooks/ -> .claude/ -> project root)
-_PROJECT_ROOT = os.path.normpath(os.path.join(_HOOK_DIR, "..", ".."))
-_CHANGES_DIR = os.path.join(_PROJECT_ROOT, "openspec", "changes")
-
-
-def _get_active_changes():
-    """Find all active (non-archived) change directories with .openspec.yaml."""
-    if not os.path.isdir(_CHANGES_DIR):
-        return []
-
-    changes = []
-    for entry in os.listdir(_CHANGES_DIR):
-        if entry == "archive":
-            continue
-        change_dir = os.path.join(_CHANGES_DIR, entry)
-        if os.path.isdir(change_dir):
-            yaml_path = os.path.join(change_dir, ".openspec.yaml")
-            if os.path.isfile(yaml_path):
-                changes.append((entry, yaml_path))
-    return changes
-
-
-def _read_approval_status(yaml_path):
-    """Read approval.status from .openspec.yaml (no pyyaml dependency)."""
-    try:
-        with open(yaml_path, encoding="utf-8") as f:
-            content = f.read()
-        in_approval = False
-        for line in content.splitlines():
-            stripped = line.strip()
-            if stripped == "approval:" or stripped.startswith("approval:"):
-                # Check if inline value: "approval: {status: approved}"
-                after = stripped.split(":", 1)[1].strip()
-                if after and after != "":
-                    # Try to extract status from inline format
-                    if "status:" in after:
-                        for part in after.replace("{", "").replace("}", "").split(","):
-                            if "status:" in part:
-                                return part.split(":", 1)[1].strip().strip("'\"")
-                in_approval = True
-                continue
-            if in_approval:
-                if stripped.startswith("status:"):
-                    return stripped.split(":", 1)[1].strip().strip("'\"")
-                # If we hit a non-indented line, approval section ended
-                if not line.startswith(" ") and not line.startswith("\t") and stripped:
-                    break
-        return None  # No approval section found
-    except Exception:
-        return None
-
-
-def _read_profile(yaml_path):
-    """Read top-level `profile` field from .openspec.yaml.
-
-    Returns the profile name (e.g. "python-framework") or "1c-bsl" as default
-    when the field is absent (backward-compat for existing BSL changes).
-    """
-    try:
-        with open(yaml_path, encoding="utf-8") as f:
-            content = f.read()
-        for line in content.splitlines():
-            stripped = line.strip()
-            # Top-level field only (no leading indent)
-            if (
-                not line.startswith(" ")
-                and not line.startswith("\t")
-                and stripped.startswith("profile:")
-            ):
-                value = stripped.split(":", 1)[1].strip().strip("'\"")
-                if value:
-                    return value
-        return "1c-bsl"  # default for existing changes without profile field
-    except Exception:
-        return "1c-bsl"
 
 
 class ApprovalGate(BaseHook):
@@ -128,6 +73,7 @@ class ApprovalGate(BaseHook):
                 unapproved.append((name, status or "pending", profile))
 
         if not unapproved:
+            _gp_log(_gp_decision("approval-gate", True, "all active changes approved"))
             return None  # All approved
 
         change_list = "\n".join(
@@ -135,6 +81,7 @@ class ApprovalGate(BaseHook):
             for name, status, profile in unapproved
         )
         first_name = unapproved[0][0]
+        _gp_log(_gp_decision("approval-gate", False, f"unapproved: {[u[0] for u in unapproved]}"))
         return HookOutput().block(
             f"APPROVAL GATE: Design must be approved before implementation.\n\n"
             f"Unapproved changes:\n{change_list}\n\n"
