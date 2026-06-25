@@ -1226,6 +1226,32 @@
         "стандартные подсистемы",
         "постановка на поддержку"
       ]
+    },
+    "отладка-фоновых-заданий-rdbg": {
+      "title": "Отладка фоновых заданий 1С (RDBG) — почему BP не срабатывает + best-practice (auto-attach фильтр, thin-client Solution C)",
+      "file": "отладка-фоновых-заданий-rdbg.md",
+      "created": "2026-06-25",
+      "last_verified": "2026-06-25",
+      "keywords": [
+        "отладка",
+        "фоновое задание",
+        "background job",
+        "rphost",
+        "RDBG",
+        "автоподключение",
+        "auto-attach",
+        "setAutoAttachSettings",
+        "breakpoint не срабатывает",
+        "предметы отладки",
+        "DBGUIExtCmdInfoStarted",
+        "thin-client"
+      ],
+      "sources": [
+        "GitHub yukon39/bsl-debug-server HTTPDebugClient.java:174-271",
+        "its.1c.ru edtdoc t000068/t000421",
+        "infostart.ru/1c/articles/634948",
+        "roadmap 260508 §10-11 / 260510 / 260511 §P0.5"
+      ]
     }
   }
 }
