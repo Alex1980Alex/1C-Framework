@@ -3,12 +3,41 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "spec-driven-pipeline-integration-2026.md",
+      "title": "Spec-driven <-> implementation-pipeline интеграция (GitHub): spec-kit (единая spec-папка specs/<id>/, downstream spec->plan->tasks, /analyze consistency перед implement, чекпойнты != авто-гейты) + BMAD (2-фазный agent-based) + OpenSpec (change-proposal+approval+archive-merge) - факты 2026",
+      "keywords": [
+        "spec-driven",
+        "spec-kit",
+        "openspec",
+        "bmad",
+        "pipeline integration",
+        "state machine",
+        "approval gate",
+        "single source of truth",
+        "artifact lineage",
+        "consistency check",
+        "downstream generation",
+        "constitution"
+      ],
+      "last_verified": "2026-06-25"
+    },
+    {
       "file": "js-rendered-engagement-extraction-2026.md",
       "title": "Извлечение JS-рендеренного engagement из SPA (Infostart): статика невозможна (нет в HTML/SSR-hydration/JSON-LD/сниппетах, бандл обфусцирован) → пути: внутренний JSON-API (лёгкий runtime, discovery нужен браузер, риск signing) ИЛИ JS-render Scrapling DynamicFetcher/Playwright (тяжёлый браузер, adaptive selectors); факты 2026",
       "keywords": [
-        "js-rendered engagement", "spa scraping", "hidden api", "scrapling", "dynamicfetcher",
-        "playwright", "splash", "infostart engagement", "reverse-engineer api", "xhr devtools",
-        "adaptive selectors", "stealthyfetcher", "patchright"
+        "js-rendered engagement",
+        "spa scraping",
+        "hidden api",
+        "scrapling",
+        "dynamicfetcher",
+        "playwright",
+        "splash",
+        "infostart engagement",
+        "reverse-engineer api",
+        "xhr devtools",
+        "adaptive selectors",
+        "stealthyfetcher",
+        "patchright"
       ],
       "last_verified": "2026-06-24"
     },
@@ -16,10 +45,26 @@
       "file": "1c-search-relevance-stack-2026.md",
       "title": "Стек повышения релевантности RU/1С-поиска (Infostart+web): RU embeddings (bge-m3/USER/e5) + rerankers (bge-reranker-v2-m3/Qwen3) + SearXNG(Yandex) + trafilatura/crawl4ai + Contextual Retrieval/RAG-Fusion/HyDE — факты с числами 2026",
       "keywords": [
-        "ru embeddings", "bge-m3", "user-bge-m3", "multilingual-e5", "reranker",
-        "bge-reranker-v2-m3", "qwen3-reranker", "searxng", "yandex search", "ddgs ratelimit",
-        "trafilatura", "crawl4ai", "firecrawl", "contextual retrieval", "rag-fusion", "rrf",
-        "hyde", "infostart", "relevance", "rusbeir"
+        "ru embeddings",
+        "bge-m3",
+        "user-bge-m3",
+        "multilingual-e5",
+        "reranker",
+        "bge-reranker-v2-m3",
+        "qwen3-reranker",
+        "searxng",
+        "yandex search",
+        "ddgs ratelimit",
+        "trafilatura",
+        "crawl4ai",
+        "firecrawl",
+        "contextual retrieval",
+        "rag-fusion",
+        "rrf",
+        "hyde",
+        "infostart",
+        "relevance",
+        "rusbeir"
       ],
       "last_verified": "2026-06-24"
     },
@@ -27,8 +72,14 @@
       "file": "last30days-skill-tooling-2026.md",
       "title": "last30days-skill — social-trend research (Reddit/X/YT/HN/Polymarket/TikTok, engagement-ранкинг + синтез брифа); Claude Code skill, MIT, 46k★ — факты для adopt/skip",
       "keywords": [
-        "tooling", "research", "social-trends", "claude-code-skill",
-        "ecosystem-scan", "engagement-ranking", "last30days", "trend-research"
+        "tooling",
+        "research",
+        "social-trends",
+        "claude-code-skill",
+        "ecosystem-scan",
+        "engagement-ranking",
+        "last30days",
+        "trend-research"
       ],
       "last_verified": "2026-06-24"
     },
@@ -36,9 +87,21 @@
       "file": "pattern-pipeline-orchestration-2026.md",
       "title": "Оркестрация пайплайнов + findings→remediation + gate-композиция — best practices 2026 (Temporal/LangGraph/Dagster, Pixee/Copilot-Autofix/OpenRewrite, OPA, SARIF, Anthropic agent-patterns)",
       "keywords": [
-        "orchestration", "durable-execution", "langgraph", "temporal", "dagster",
-        "findings-remediation", "pixee", "copilot-autofix", "openrewrite", "sarif",
-        "opa", "policy-as-code", "pipeline", "agent-patterns", "orchestrator-workers"
+        "orchestration",
+        "durable-execution",
+        "langgraph",
+        "temporal",
+        "dagster",
+        "findings-remediation",
+        "pixee",
+        "copilot-autofix",
+        "openrewrite",
+        "sarif",
+        "opa",
+        "policy-as-code",
+        "pipeline",
+        "agent-patterns",
+        "orchestrator-workers"
       ],
       "last_verified": "2026-06-21"
     },

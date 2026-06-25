@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-041",
+      "file": "041-sdd-pipeline-unification.md",
+      "title": "Унификация SDD/OpenSpec (гл.24) <-> 1С-пайплайн (гл.43): один approval-гейт через gate_policy (R1) + единый источник одобрения (R2) + lineage ANALYSIS-REPORT->proposal + /analyze-consistency (R3) + SDD-aware route_1c_task (R4); downstream от spec-kit; оба слоя сохранены",
+      "status": "proposed",
+      "date": "2026-06-25",
+      "research": "../cache/spec-driven-pipeline-integration-2026.md",
+      "tags": [
+        "sdd",
+        "openspec",
+        "pipeline",
+        "gate",
+        "gate-policy",
+        "state",
+        "routing",
+        "spec-kit",
+        "unification"
+      ]
+    },
+    {
       "id": "ADR-040",
       "file": "040-1c-search-relevance-stack.md",
       "title": "Стек повышения релевантности 1С-поиска (Infostart + интернет) — ROI-фазы поверх имеющегося: SearXNG(Yandex) вместо сломанного DDG + bge-reranker-v2-m3 через TEI + RAG-Fusion(multi-query+RRF) + trafilatura(engagement) + Contextual Retrieval для индекс-доков; НЕ менять Qwen3-эмбеддер без RU-eval",
