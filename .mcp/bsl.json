@@ -66,24 +66,15 @@
       "timeout": 60000
     },
     "mcp-onec-test-runner": {
-      "command": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64\\bin\\java.exe",
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": [
-        "-Dfile.encoding=UTF-8",
-        "-jar",
-        "C:\\1С-Framework\\tools\\mcp-jars\\mcp-yaxunit-runner-0.5.1.jar",
-        "--v8-path",
-        "C:\\Program Files\\1cv8\\8.3.27.2214",
-        "--connection-string",
-        "Srvr=\"KOMPUTER\";Ref=\"TestDB\"",
-        "--db-user",
-        "a.novozhenin.da@sodrugestvo.local",
-        "--db-pwd",
-        "Alex1980Alex"
+        "C:\\1С-Framework\\scripts\\onec_test_runner_launch.py"
       ],
       "env": {
         "JAVA_HOME": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64"
       },
-      "timeout": 120000
+      "timeout": 120000,
+      "cwd": "C:\\1С-Framework"
     }
   }
 }
