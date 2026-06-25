@@ -140,7 +140,7 @@ categories:
     servers:
       skill-learning-mcp:
         command: "C:/1С-Framework/.venv/Scripts/python.exe"
-        args: ["-m", "src.memory.skill_learning.mcp"]
+        args: ["-m", "src.memory.skill_learning.server"]
         cwd: "C:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
@@ -154,12 +154,6 @@ categories:
   file-operations:
     description: "Операции с файлами - поиск, чтение, запись"
     servers:
-      ripgrep:
-        command: "npx"
-        args: ["-y", "mcp-ripgrep"]
-        description: "Продвинутый поиск по файлам (rg) с regex"
-        type: "npx"
-        timeout: 30000
 
       filesystem:
         command: "npx"
