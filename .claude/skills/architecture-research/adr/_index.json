@@ -9,6 +9,23 @@
   ],
   "records": [
     {
+      "id": "ADR-042",
+      "file": "042-sonarqube-mcp-server-adoption.md",
+      "title": "Adopt SonarQube MCP Server (SonarSource) on-demand via lazy-mcp (code-quality; launcher sonar_mcp_launch.py, creds из .env SONAR_TOKEN->SONARQUBE_TOKEN); smoke GREEN на CB (BSL BLOCKER issues через MCP); sonar_*.py остаются fallback/CI",
+      "status": "accepted",
+      "date": "2026-06-25",
+      "research": "../cache/sonarqube-mcp-server-2026.md",
+      "tags": [
+        "sonarqube",
+        "mcp",
+        "lazy-mcp",
+        "code-quality",
+        "bsl",
+        "adoption",
+        "tooling"
+      ]
+    },
+    {
       "id": "ADR-041",
       "file": "041-sdd-pipeline-unification.md",
       "title": "Унификация SDD/OpenSpec (гл.24) <-> 1С-пайплайн (гл.43): один approval-гейт через gate_policy (R1) + единый источник одобрения (R2) + lineage ANALYSIS-REPORT->proposal + /analyze-consistency (R3) + SDD-aware route_1c_task (R4); downstream от spec-kit; оба слоя сохранены",
