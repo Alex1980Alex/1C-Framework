@@ -45,7 +45,7 @@
         "-jar",
         "C:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
         "--platform-path",
-        "C:\\Program Files\\1cv8\\8.3.27.1859",
+        "C:\\Program Files\\1cv8\\8.3.27.2214",
         "--verbose"
       ],
       "env": {
@@ -71,7 +71,7 @@
     },
     "memory-ai": {
       "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "src.memory.ai_memory.mcp"],
+      "args": ["-m", "src.memory.ai_memory.server"],
       "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8"
@@ -80,7 +80,7 @@
     },
     "vector-memory": {
       "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "src.memory.vector_memory.mcp"],
+      "args": ["-m", "src.memory.vector_memory.server"],
       "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8"
