@@ -11,8 +11,8 @@ categories:
     description: "Инструменты разработки 1С:Предприятие - анализ BSL, API платформы, семантический поиск"
     servers:
       ast-grep-mcp:
-        command: "D:/1С-Framework/tools/ast-grep-mcp/.venv/Scripts/python.exe"
-        args: ["D:/1С-Framework/tools/ast-grep-mcp/main.py"]
+        command: "C:/1С-Framework/tools/ast-grep-mcp/.venv/Scripts/python.exe"
+        args: ["C:/1С-Framework/tools/ast-grep-mcp/main.py"]
         env:
           PYTHONIOENCODING: "utf-8"
           PYTHONUTF8: "1"
@@ -20,17 +20,17 @@ categories:
         timeout: 60000
 
       bsl-platform-context:
-        command: "java"
-        args: ["-jar", "D:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar", "--platform-path", "C:/Program Files/1cv8/8.3.27.1859/bin", "--verbose"]
+        command: "C:/Program Files/1C/1CE/components/axiom-jdk-full-17.0.16+12-x86_64/bin/java.exe"
+        args: ["-jar", "C:/1С-Framework/tools/mcp-jars/mcp-bsl-context-0.3.1.jar", "--platform-path", "C:/Program Files/1cv8/8.3.27.2214/bin", "--verbose"]
         env:
-          JAVA_HOME: "C:/Program Files/Zulu/zulu-17"
+          JAVA_HOME: "C:/Program Files/1C/1CE/components/axiom-jdk-full-17.0.16+12-x86_64"
         description: "API платформы 1С - типы, методы, свойства."
         timeout: 30000
 
       bsl-semantic-search:
-        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        command: "C:/1С-Framework/.venv/Scripts/python.exe"
         args: ["-m", "src.bsl.semantic_search.mcp"]
-        cwd: "D:/1С-Framework"
+        cwd: "C:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
         description: "Семантический поиск по BSL коду конфигураций"
@@ -38,7 +38,7 @@ categories:
 
       bsl-debugger:
         command: "node"
-        args: ["D:/1С-Framework/tools/bsl-debugger/dist/index.js"]
+        args: ["C:/1С-Framework/tools/bsl-debugger/dist/index.js"]
         env:
           NODE_ENV: "production"
         description: "Отладка BSL кода - 10 инструментов отладки"
@@ -46,11 +46,11 @@ categories:
 
       bsl-semantic-diff:
         command: "python"
-        args: ["D:/1С-Framework/tools/bsl-semantic-diff/mcp_server.py"]
-        cwd: "D:/1С-Framework/tools/bsl-semantic-diff"
+        args: ["C:/1С-Framework/tools/bsl-semantic-diff/mcp_server.py"]
+        cwd: "C:/1С-Framework/tools/bsl-semantic-diff"
         env:
           PYTHONIOENCODING: "utf-8"
-          PYTHONPATH: "D:/1С-Framework/tools/bsl-semantic-diff"
+          PYTHONPATH: "C:/1С-Framework/tools/bsl-semantic-diff"
         description: "BSL Semantic Diff - семантическое сравнение BSL кода"
         timeout: 30000
 
@@ -61,12 +61,12 @@ categories:
     description: "Поиск по документации, генерация документов, RAG системы"
     servers:
       1c-docs-rag:
-        command: "D:/1С-Framework/tools/1c-docs-rag/.venv/Scripts/python.exe"
+        command: "C:/1С-Framework/tools/1c-docs-rag/.venv/Scripts/python.exe"
         args: ["src/mcp_server.py"]
-        cwd: "D:/1С-Framework/tools/1c-docs-rag"
+        cwd: "C:/1С-Framework/tools/1c-docs-rag"
         env:
           PYTHONIOENCODING: "utf-8"
-          DOCS_ROOT: "D:/1С-Framework/docs"
+          DOCS_ROOT: "C:/1С-Framework/docs"
         description: "RAG поиск по документации 1С (15 tools, FTS5 + Semantic)"
         timeout: 7200000
 
@@ -77,9 +77,9 @@ categories:
     description: "Системы памяти - сохранение контекста, история, knowledge graph"
     servers:
       unified-memory:
-        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        command: "C:/1С-Framework/.venv/Scripts/python.exe"
         args: ["-m", "src.memory.unified.mcp"]
-        cwd: "D:/1С-Framework"
+        cwd: "C:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
           QDRANT_URL: "http://localhost:6333"
@@ -87,9 +87,9 @@ categories:
         timeout: 90000
 
       memory-ai:
-        command: "D:/1С-Framework/.venv/Scripts/python.exe"
-        args: ["-m", "src.memory.ai_memory.mcp"]
-        cwd: "D:/1С-Framework"
+        command: "C:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.ai_memory.server"]
+        cwd: "C:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
         description: "AI Memory - важные сообщения с приоритетами"
@@ -99,15 +99,15 @@ categories:
         command: "npx"
         args: ["-y", "mcp-memory-libsql"]
         env:
-          LIBSQL_URL: "file:D:/1С-Framework/data/memory-libsql/memory.db"
+          LIBSQL_URL: "file:C:/1С-Framework/data/memory-libsql/memory.db"
         description: "Альтернативная память на LibSQL"
         type: "npx"
         timeout: 60000
 
       vector-memory-mcp:
-        command: "D:/1С-Framework/.venv/Scripts/python.exe"
-        args: ["-m", "src.memory.vector_memory.mcp"]
-        cwd: "D:/1С-Framework"
+        command: "C:/1С-Framework/.venv/Scripts/python.exe"
+        args: ["-m", "src.memory.vector_memory.server"]
+        cwd: "C:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
           QDRANT_URL: "http://localhost:6333"
@@ -122,12 +122,12 @@ categories:
     description: "Система самообучающихся навыков - захват паттернов, оценка уверенности"
     servers:
       skill-learning-mcp:
-        command: "D:/1С-Framework/.venv/Scripts/python.exe"
+        command: "C:/1С-Framework/.venv/Scripts/python.exe"
         args: ["-m", "src.memory.skill_learning.mcp"]
-        cwd: "D:/1С-Framework"
+        cwd: "C:/1С-Framework"
         env:
           PYTHONIOENCODING: "utf-8"
-          SKILLS_DIR: "D:/1С-Framework/.claude/learned-skills"
+          SKILLS_DIR: "C:/1С-Framework/.claude/learned-skills"
         description: "Захват паттернов из успешных tool use (PostToolUse hook)"
         timeout: 60000
 
@@ -146,7 +146,7 @@ categories:
 
       filesystem:
         command: "npx"
-        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1С-Framework"]
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "C:/1С-Framework"]
         description: "Файловые операции - read, write, edit, directory tree"
         type: "npx"
         timeout: 30000
@@ -176,7 +176,7 @@ categories:
       reasoner:
         command: "node"
         args: ["dist/index.js"]
-        cwd: "D:/1С-Framework/tools/mcp-reasoner"
+        cwd: "C:/1С-Framework/tools/mcp-reasoner"
         env:
           NODE_ENV: "production"
           NODE_OPTIONS: "--max-old-space-size=4096"
@@ -222,7 +222,7 @@ categories:
 
       filesystem-extended:
         command: "npx"
-        args: ["-y", "@modelcontextprotocol/server-filesystem", "D:/1С-Framework"]
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "C:/1С-Framework"]
         description: "Filesystem operations (Native NPX)"
         type: "npx"
         timeout: 30000

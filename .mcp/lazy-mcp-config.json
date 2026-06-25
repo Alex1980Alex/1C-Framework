@@ -7,7 +7,6 @@
       "servers": [
         "bsl-semantic-search",
         "bsl-platform-context",
-        "serena",
         "ast-grep-mcp"
       ],
       "keywords": [
@@ -24,7 +23,6 @@
       "description": "Documentation generation + live version-specific library docs (Context7)",
       "servers": [
         "auto-documenter",
-        "markitdown",
         "context7"
       ],
       "keywords": [
@@ -69,8 +67,7 @@
     "file-operations": {
       "description": "File system operations",
       "servers": [
-        "filesystem",
-        "ripgrep"
+        "filesystem"
       ],
       "keywords": [
         "файл",
@@ -78,18 +75,6 @@
         "найти",
         "search",
         "grep"
-      ]
-    },
-    "reasoning": {
-      "description": "Deep reasoning and analysis",
-      "servers": [
-        "deep-code-reasoning"
-      ],
-      "keywords": [
-        "анализ",
-        "reasoning",
-        "deep",
-        "сложный"
       ]
     },
     "web": {
@@ -172,7 +157,7 @@
       "timeout": 60000
     },
     "bsl-platform-context": {
-      "command": "java",
+      "command": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64\\bin\\java.exe",
       "args": [
         "-Dfile.encoding=UTF-8",
         "-jar",
@@ -182,19 +167,9 @@
         "--verbose"
       ],
       "env": {
-        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
+        "JAVA_HOME": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64"
       },
       "timeout": 30000
-    },
-    "serena": {
-      "command": "C:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
-      "args": [
-        "start-mcp-server",
-        "--context",
-        "ide-assistant"
-      ],
-      "cwd": "C:\\1С-Framework\\tools\\serena",
-      "timeout": 180000
     },
     "ast-grep-mcp": {
       "command": "C:\\1С-Framework\\tools\\ast-grep-mcp\\.venv\\Scripts\\python.exe",
@@ -242,33 +217,6 @@
         "PYTHONIOENCODING": "utf-8"
       },
       "timeout": 60000
-    },
-    "deep-code-reasoning": {
-      "command": "node",
-      "args": [
-        "index.js"
-      ],
-      "cwd": "C:\\1С-Framework\\tools\\deep-code-reasoning",
-      "env": {
-        "NODE_OPTIONS": "--max-old-space-size=4096"
-      },
-      "timeout": 180000
-    },
-    "ripgrep": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@anthropic-ai/ripgrep-mcp"
-      ],
-      "timeout": 30000
-    },
-    "markitdown": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "markitdown-mcp"
-      ],
-      "timeout": 120000
     },
     "memory-orchestrator": {
       "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",

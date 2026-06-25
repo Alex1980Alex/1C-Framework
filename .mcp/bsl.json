@@ -3,7 +3,9 @@
   "mcpServers": {
     "auto-documenter": {
       "command": "node",
-      "args": ["mcp-start.js"],
+      "args": [
+        "mcp-start.js"
+      ],
       "cwd": "C:\\1С-Framework\\tools\\auto-documenter",
       "env": {
         "NODE_OPTIONS": "--max-old-space-size=4096",
@@ -15,7 +17,10 @@
     },
     "bsl-semantic-search": {
       "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "src.bsl.semantic_search.mcp"],
+      "args": [
+        "-m",
+        "src.bsl.semantic_search.mcp"
+      ],
       "cwd": "C:\\1С-Framework",
       "env": {
         "PYTHONIOENCODING": "utf-8"
@@ -24,7 +29,9 @@
     },
     "bsl-debugger": {
       "command": "node",
-      "args": ["dist/index.js"],
+      "args": [
+        "dist/index.js"
+      ],
       "cwd": "C:\\1С-Framework\\tools\\bsl-debugger",
       "env": {
         "NODE_ENV": "production"
@@ -32,7 +39,7 @@
       "timeout": 60000
     },
     "bsl-platform-context": {
-      "command": "java",
+      "command": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64\\bin\\java.exe",
       "args": [
         "-Dfile.encoding=UTF-8",
         "-jar",
@@ -42,19 +49,15 @@
         "--verbose"
       ],
       "env": {
-        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
+        "JAVA_HOME": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64"
       },
       "timeout": 30000
     },
-    "serena": {
-      "command": "C:\\1С-Framework\\tools\\serena\\.venv\\Scripts\\serena.exe",
-      "args": ["start-mcp-server", "--context", "ide-assistant"],
-      "cwd": "C:\\1С-Framework\\tools\\serena",
-      "timeout": 180000
-    },
     "ast-grep-mcp": {
       "command": "C:\\1С-Framework\\tools\\ast-grep-mcp\\.venv\\Scripts\\python.exe",
-      "args": ["main.py"],
+      "args": [
+        "main.py"
+      ],
       "cwd": "C:\\1С-Framework\\tools\\ast-grep-mcp",
       "env": {
         "PYTHONIOENCODING": "utf-8",
@@ -63,7 +66,7 @@
       "timeout": 60000
     },
     "mcp-onec-test-runner": {
-      "command": "java",
+      "command": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64\\bin\\java.exe",
       "args": [
         "-Dfile.encoding=UTF-8",
         "-jar",
@@ -78,7 +81,7 @@
         "Alex1980Alex"
       ],
       "env": {
-        "JAVA_HOME": "C:\\Program Files\\Zulu\\zulu-17"
+        "JAVA_HOME": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64"
       },
       "timeout": 120000
     }
