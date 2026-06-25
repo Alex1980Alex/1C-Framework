@@ -44,3 +44,6 @@ zero-dep скрипты `scripts/sonar_*.py` (pull/QG/rescan). SonarSource вы�
 - `scripts/sonar_mcp_launch.py` (launcher), `.mcp/lazy-mcp-config.json` (категория code-quality + serverDef sonarqube).
 - `scripts/sonar_issues_pull.py` / `sonar_quality_gate_check.py` / `sonar_rescan_verify.py` (fallback/CI).
 - Док: гл.43.9.9 (статанализ), гл.26 (lazy-mcp).
+
+## Коррекция (2026-06-25, deep launch-audit)
+Реальный конфиг lazy-mcp-прокси — `infra/lazy-mcp/config/registry.yaml` (грузит server.py), НЕ `.mcp/lazy-mcp-config.json` (vestigial, 0 ссылок → удалён). sonarqube (+category code-quality) и context7 внесены в registry.yaml; прокси: 10 категорий / 25 серверов.
