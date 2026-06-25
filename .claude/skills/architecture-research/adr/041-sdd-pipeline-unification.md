@@ -1,7 +1,7 @@
 # ADR-041: Унификация взаимодействия SDD/OpenSpec (гл.24) ↔ 1С-пайплайн (гл.43)
 
 **Дата:** 2026-06-25
-**Статус:** proposed
+**Статус:** accepted (R1-R4 реализованы 2026-06-25, каждый code-verify PASS)
 **Исследование:** [cache/spec-driven-pipeline-integration-2026.md](../cache/spec-driven-pipeline-integration-2026.md)
 **Связано:** ADR-012 (OpenSpec core), ADR-017/018/019 (generic+1С пайплайн), ADR-034 R3 (gate_policy)
 
@@ -44,7 +44,7 @@ GitHub-эталон **spec-kit** [WebFetch github/spec-kit]: **один** state-
   односторонний downstream (как spec→plan→tasks у spec-kit) + consistency-чек (аналог `/analyze`) перед
   implement — флагует дрейф ANALYSIS-REPORT ↔ proposal/specs. **[РЕАЛИЗОВАНО 2026-06-25]** `pipeline_1c_bridge.check_lineage` (+`_lineage_issues`/`_find_analysis_report`) — structural coverage (proposal/tasks/specs) + staleness (proposal старше ANALYSIS-REPORT → дрейф); **advisory** в `pipeline-gate` на implement pass-path (system_message, НЕ блок — чекпойнт как spec-kit /analyze). best-effort, JIRA-gated, bounded glob. 111 unit + code-verify PASS. R4 proposed.
 - **R4.** SDD-aware маршрутизация: `route_1c_task` принимает **одно** решение, включающее SDD-vs-plain
-  (trivial→голый пайплайн; medium/complex→SDD-обёртка opsx), вместо двух несвязанных правил.
+  (trivial→голый пайплайн; medium/complex→SDD-обёртка opsx), вместо двух несвязанных правил. **[РЕАЛИЗОВАНО 2026-06-25]** `route_1c_task` отдаёт ключ `use_sdd` (medium/complex→True / simple·actionless·не-1C→False) — единое решение SDD-vs-plain; reasons medium/complex упоминают opsx; consumer `onec-task-input` сёрфит SDD-обёртку. behavior-preserving (use_sdd аддитивен), 116 unit + code-verify PASS.
 
 ## Последствия
 

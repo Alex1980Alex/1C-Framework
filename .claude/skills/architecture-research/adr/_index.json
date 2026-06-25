@@ -12,7 +12,7 @@
       "id": "ADR-041",
       "file": "041-sdd-pipeline-unification.md",
       "title": "Унификация SDD/OpenSpec (гл.24) <-> 1С-пайплайн (гл.43): один approval-гейт через gate_policy (R1) + единый источник одобрения (R2) + lineage ANALYSIS-REPORT->proposal + /analyze-consistency (R3) + SDD-aware route_1c_task (R4); downstream от spec-kit; оба слоя сохранены",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-06-25",
       "research": "../cache/spec-driven-pipeline-integration-2026.md",
       "tags": [
@@ -25,7 +25,8 @@
         "routing",
         "spec-kit",
         "unification"
-      ]
+      ],
+      "status_note": "R1-R4 реализованы 2026-06-25 (gate unification + state bridge + lineage check + SDD-aware routing); каждый code-verify PASS; 116 unit"
     },
     {
       "id": "ADR-040",

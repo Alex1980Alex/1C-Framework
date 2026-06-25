@@ -495,6 +495,36 @@ def test_check_lineage_wires_change(monkeypatch, tmp_path):
     assert res["checked"] is True and res["change_id"] == "gkstcplk-50-x"
     assert res["consistent"] is False and any("tasks.md" in i for i in res["issues"])
 
+# --- ADR-041 R4: use_sdd — единое решение SDD-обёртка vs голый пайплайн в route_1c_task ---
+
+
+def test_route_use_sdd_simple_false():
+    r = bridge.route_1c_task("GKSTCPLK-1 исправить опечатку в наименовании гкс_Справочник")
+    assert r["complexity"] == "simple" and r["flow"] == "auto" and r["use_sdd"] is False
+
+
+def test_route_use_sdd_medium_true():
+    r = bridge.route_1c_task("доработать обработку гкс_ЗагрузкаДанных, добавить колонку")
+    assert r["complexity"] == "medium" and r["flow"] == "ask_flow" and r["use_sdd"] is True
+
+
+def test_route_use_sdd_complex_true():
+    r = bridge.route_1c_task("GKSTCPLK-2 создать новый документ Перемещение с регистром накопления")
+    assert r["complexity"] == "complex" and r["flow"] == "gated" and r["use_sdd"] is True
+
+
+def test_route_use_sdd_actionless_false():
+    # actionless (simple, действие не названо) → use_sdd False (нет SDD для не-задачи)
+    r = bridge.route_1c_task("РегистрыСведений.гкс_СостоянияРегистрации.СрезПоследних(&Дата)")
+    assert r["actionless"] is True and r["use_sdd"] is False
+
+
+def test_route_use_sdd_key_all_branches():
+    # ключ use_sdd во ВСЕХ ветках возврата (none / ask_1c / confident)
+    assert bridge.route_1c_task("как работает RAG embeddings")["use_sdd"] is False  # none
+    assert bridge.route_1c_task("исправить ошибку при проведении")["use_sdd"] is False  # ask_1c weak
+    assert "use_sdd" in bridge.route_1c_task("GKSTCPLK-1 доработать форму, добавить колонку")  # confident
+
 # --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
 
 

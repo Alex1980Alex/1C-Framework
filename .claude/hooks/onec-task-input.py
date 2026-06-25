@@ -75,6 +75,11 @@ class OnecTaskInput(BaseHook):
                 "**`/implement-1c-task`** (контроль анализа перед кодом)."
             )
 
+        if r.get("use_sdd"):
+            parts.append(
+                "• SDD-обёртка (medium/complex): оформи через **`/opsx:propose`** → `/opsx:approve` → "
+                "`/opsx:apply` (спека-источник + approval-гейт); тривиальные — голый пайплайн без opsx."
+            )
         if r.get("jira"):
             parts.append(
                 f"• JIRA {r.get('jira')} — собери ВСЕ артефакты папки (spec + скриншоты + чат-диалог + история), не один *ТЗ*.md"

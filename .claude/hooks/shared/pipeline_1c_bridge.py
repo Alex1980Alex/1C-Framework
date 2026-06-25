@@ -790,7 +790,7 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     не-1С/сомнение-в-1С → спросить, сомнение-в-потоке → спросить.
 
     flow ∈ {none, ask_1c, auto, ask_flow, ask_action, gated}. Возврат = classify ∪ estimate ∪
-    {flow, reason, confident_1c}. ask_flow = средняя сложность («AUTO или гейт?»); ask_action =
+    {flow, reason, confident_1c, use_sdd}. use_sdd (R4 ADR-041) = medium/complex → SDD-обёртка (opsx:propose→approve→apply), simple → голый пайплайн — единое решение SDD-vs-plain (раньше это правило жило отдельно в гл.24.1). ask_flow = средняя сложность («AUTO или гейт?»); ask_action =
     actionless («что сделать?») — РАЗНЫЕ значения (C1: enum самодостаточен, не нужен доп-ключ actionless).
     """
     cl = classify_1c_task(prompt)
@@ -825,6 +825,7 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
             "confident_1c": False,
             "flow": "none",
             "actionless": False,
+            "use_sdd": False,
             "reason": (
                 "НЕ-1С тех-контекст перевесил слабый 1С-сигнал" if non_1c_ctx else "не 1С-задача"
             ),
@@ -844,6 +845,7 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     if not confident:
         out["flow"] = "ask_1c"
         out["actionless"] = False  # actionless-гейт живёт только в confident+simple ветке (ниже)
+        out["use_sdd"] = False  # R4: не confident → SDD-решение отложено (сначала подтвердить 1С)
         if semantic_hit and not cl.get("is_1c"):
             out["ask"] = True  # семантика-промоут (нет JIRA/маркера) → подтвердить
             out["reason"] = (
@@ -862,6 +864,9 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
         comp == "simple" and not bool(_TASK_VERB.search(prompt or "")) and not eff.get("signals")
     )
     out["actionless"] = actionless
+    # R4 (ADR-041): SDD-vs-plain в ОДНОМ решении — medium/complex → SDD-обёртка (opsx), simple → голый
+    # пайплайн. Единый источник маршрута (раньше правило жило отдельно в гл.24.1, не в route_1c_task).
+    out["use_sdd"] = comp in ("medium", "complex")
     if actionless:
         # C1: отдельное значение flow (не перегружаем ask_flow) — потребителю не нужно
         # доп-проверять ключ actionless. (Ключ actionless сохранён для наблюдаемости/совместимости.)
@@ -875,11 +880,11 @@ def route_1c_task(prompt: str, is_folder: bool = False, cfg: dict | None = None)
     elif comp == "complex":
         out["flow"], out["reason"] = (
             "gated",
-            "сложная → гейтованный /analyze-1c-task + /implement-1c-task (ревью анализа)",
+            "сложная → гейтованный /analyze-1c-task + /implement-1c-task (ревью анализа); SDD-обёртка /opsx:propose→approve→apply",
         )
     else:
         out["flow"], out["reason"] = (
             "ask_flow",
-            "средняя → спросить: /run-1c-task (AUTO) или гейтованный поток",
+            "средняя → спросить: /run-1c-task (AUTO) или гейтованный поток; для medium/complex — SDD-обёртка (opsx)",
         )
     return out
