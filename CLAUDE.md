@@ -97,4 +97,6 @@ src/
 
 **GitHub-поиск (ОБЯЗАТЕЛЬНО)**: репо/библиотеки/best-practices — через `python scripts/ecosystem_scan.py "<query>" --top 8` (ADR-039, [гл.44](docs/framework%20documentation/44_ECOSYSTEM_SCAN/44.1_Обзор.md), engagement×relevance), НЕ голый WebSearch. Хард-энфорсер [`github-search-via-ecosystem-scan.py`](.claude/hooks/github-search-via-ecosystem-scan.py) (PreToolUse:WebSearch блокирует GitHub-намеренный поиск; opt-out `GITHUB_ECOSYSTEM_SCAN_DISABLE=1`). 1С/RU-веб → `onec_search` (гл.44.6).
 
+**ИТС deep-fetch** (дословный контент its.1c.ru под подпиской): skill `its-research` + [`scripts/its_fetch.py`](scripts/its_fetch.py) — Playwright storageState SSO + trafilatura→markdown; креды в gitignored `.env.its`; [гл.44.7](docs/framework%20documentation/44_ECOSYSTEM_SCAN/44.7_ITS_Deep_Fetch.md). **Поиск по докам Claude Code**: `/cc-docs` + skill `cc-docs` + [`scripts/cc_docs_search.py`](scripts/cc_docs_search.py) — sitemap→trafilatura→TEI→Qdrant `cc_docs` + freshness (`check`/`index --incremental`); [гл.44.8](docs/framework%20documentation/44_ECOSYSTEM_SCAN/44.8_CC_Docs_Search.md).
+
 При вопросах про RAG/ML/Python: протокол в skill `tech-research`.
