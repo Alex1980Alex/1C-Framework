@@ -77,7 +77,15 @@ app:
   tools:
     builder: DESIGNER
     enterprise:
-      additional-launch-keys: ["/TESTMANAGER"]
+      # Headless-исполнение тонкого клиента (доказано live 2026-06-26):
+      #  - БЕЗ /TESTMANAGER — это режим менеджера UI-тестов, клиент висит в ожидании
+      #    подключения тест-клиента и не исполняет RunUnitTests (прежний "сел в простой").
+      #  - /DisableStartupDialogs + /DisableStartupMessages — иначе стартовый диалог
+      #    БСП (первый запуск / обновление ИБ) блокирует прогон до &После-обработчика.
+      # Доп.требование (вне launcher): расширение YAXUNIT должно быть подключено с
+      # выключенным безопасным режимом — иначе чтение config.json запрещено
+      # (ЮТПараметрыЗапускаСлужебный: "Расширение подключено в безопасном режиме").
+      additional-launch-keys: ["/DisableStartupDialogs", "/DisableStartupMessages"]
 """,
     encoding="utf-8",
 )

@@ -25,5 +25,19 @@ launcher: reviewer FAIL (`.runtime/` не в gitignore) → исправлено
 yq(platform_version) применён. Функциональные пункты PASS. Повторный live-probe = раннер стартует.
 
 ## Критерий «готово» (этого трека)
-Раннер стартует, принимает app.*-конфиг, валидирует и запускает прогон — **достигнуто**. Полный зелёный Smoke
-(JUnit PASS) упирается в headless-исполнение тонкого клиента — вынесено в follow-up.
+Раннер стартует, принимает app.*-конфиг, валидирует и запускает прогон — **достигнуто**.
+
+## ✅ Follow-up закрыт (2026-06-26) — headless-исполнение тонкого клиента
+Прямой live-прогон `1cv8c.exe ENTERPRISE … /C "RunUnitTests=<config.json>"` дал **JUnit PASS 2/2 за 15с,
+ExitCode=0, report.xml + exitcode.txt записаны** (`ЮТТПримерТест`). Два корня прежнего «сел в простой»:
+1. **`/TESTMANAGER`** в `additional-launch-keys` = режим менеджера UI-тестов → клиент ждал подключения
+   тест-клиента, не исполняя `RunUnitTests`. **Убран.**
+2. Нет **`/DisableStartupDialogs` + `/DisableStartupMessages`** → стартовый диалог БСП блокировал прогон
+   до `&После("ПриНачалеРаботыСистемы")`. **Добавлены.**
+3. Расширение YAXUNIT было подключено в **безопасном режиме** → `ПрочитатьКонфигурационныйФайл` бросал
+   «Расширение подключено в безопасном режиме», параметры сбрасывались → прогон молча не шёл.
+   **Безопасный режим снят** (требование вне launcher; см. память `feedback_yaxunit_headless_thin_client`).
+
+Правка: `scripts/onec_test_runner_launch.py` → `tools.enterprise.additional-launch-keys`
+`["/TESTMANAGER"]` → `["/DisableStartupDialogs","/DisableStartupMessages"]`.
+Финальная сверка jar-пути: `/mcp reconnect` (перегенерит application.yml) → `run_all_tests`.
