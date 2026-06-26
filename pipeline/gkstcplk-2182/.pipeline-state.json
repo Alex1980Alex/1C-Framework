@@ -1,0 +1,44 @@
+{
+  "task": "gkstcplk-2182",
+  "title": "1С-задача (analyze-1c-task): GKSTCPLK-2182",
+  "created_at": "2026-06-26T15:50:59",
+  "updated_at": "2026-06-26T15:50:59",
+  "current_stage": 1,
+  "stages": [
+    {
+      "n": 1,
+      "name": "planning",
+      "command": "pl-plan",
+      "artifact": "ANALYSIS-REPORT.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "ANALYSIS-REPORT.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "IMPLEMENTATION-PROGRESS.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": ".run-state.json",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}

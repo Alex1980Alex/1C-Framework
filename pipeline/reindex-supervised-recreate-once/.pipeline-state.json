@@ -1,0 +1,44 @@
+{
+  "task": "reindex-supervised-recreate-once",
+  "title": "Фича: --recreate-once для reindex_supervised.py (чистый rebuild без ручного дропа)",
+  "created_at": "2026-06-26T15:00:10",
+  "updated_at": "2026-06-26T15:24:54",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T15:18:32"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T15:18:32",
+      "approved": true,
+      "approved_by": "claude-code-review",
+      "approved_at": "2026-06-26T15:18:32"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T15:18:33"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T15:24:54"
+    }
+  ]
+}
