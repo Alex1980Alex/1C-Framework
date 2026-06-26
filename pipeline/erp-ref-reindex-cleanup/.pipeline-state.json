@@ -1,0 +1,44 @@
+{
+  "task": "erp-ref-reindex-cleanup",
+  "title": "Диагностика и чистый rebuild ERP-эталона (bsl_code_erp_ref)",
+  "created_at": "2026-06-26T14:47:32",
+  "updated_at": "2026-06-26T14:47:32",
+  "current_stage": 4,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T14:47:32"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T14:47:32",
+      "approved": true,
+      "approved_by": "user",
+      "approved_at": "2026-06-26T14:47:32"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-26T14:47:32"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
