@@ -321,6 +321,53 @@
         "1c-doc-research"
       ]
     },
+    "yaxunit": {
+      "keywords": [
+        "yaxunit",
+        "YAxUnit",
+        "unit тест 1С",
+        "unit-тест BSL",
+        "ЮТест",
+        "ЮТТесты",
+        "ИсполняемыеСценарии",
+        "ДобавитьСерверныйТест",
+        "ОжидаетЧто",
+        "Мокито",
+        "тест-модуль расширения",
+        "run_module_tests",
+        "run_all_tests",
+        "write-1c-unit-tests",
+        "run-1c-unit-tests",
+        "UnitTests расширение"
+      ],
+      "weighted_keywords": {
+        "yaxunit": 5,
+        "ЮТест": 5,
+        "ИсполняемыеСценарии": 5,
+        "ДобавитьСерверныйТест": 5,
+        "run_module_tests": 5,
+        "ОжидаетЧто": 4,
+        "Мокито": 4,
+        "unit тест 1с": 4,
+        "unit-тест bsl": 4,
+        "тест-модуль": 3,
+        "серверный тест": 3
+      },
+      "utterances": [
+        "напиши unit тест для процедуры 1С",
+        "покрой метод менеджера тестом YAxUnit",
+        "создай тест-модуль в расширении UnitTests",
+        "запусти unit тесты через mcp-onec-test-runner",
+        "как написать ЮТест для общего модуля",
+        "протестируй серверную функцию без UI"
+      ],
+      "skills": [
+        "yaxunit-unit-testing"
+      ],
+      "optional": [
+        "1c-doc-research"
+      ]
+    },
     "bsl-dev": {
       "keywords": [
         "BSL",

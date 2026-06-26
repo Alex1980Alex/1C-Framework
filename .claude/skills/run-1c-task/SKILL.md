@@ -90,9 +90,19 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
 6. Запись `IMPLEMENTATION-PROGRESS.md` авто-продвинет этап 3 (F-1.5). Тот же хук запускает advisory-валидатор;
    само-проверка: `python scripts/lint_1c_artifacts.py "<папка>/IMPLEMENTATION-PROGRESS.md"` → score ✓ (≥70).
 
-### Этап 4 — Тестирование (методика va-bdd-testing / run-1c-tests)
+### Этап 4 — Тестирование (BDD-трек + YAxUnit-трек)
+
+**BDD-трек (UI-сценарии):**
 7. **Активируй skill `va-bdd-testing`** (или команду `/run-1c-tests`) → прогон BDD-сценариев до зелёных.
-8. Зелёный `.run-state.json` (все `chain[].status==passed`) авто-продвинет этап 4 (F-1.6).
+
+**YAxUnit-трек (серверная логика):**
+7.5. **Если реализация затронула серверные методы** (общие модули / модуль объекта / модуль менеджера):
+   - **Активируй skill `yaxunit-unit-testing`** (или команду `/write-1c-unit-tests`) → написание тест-модулей
+     в расширении `src/bsl/exts/UnitTests/` + деплой (`LoadConfigFromFiles + UpdateDBCfg`).
+   - Затем `/run-1c-unit-tests <папка задачи>` → прогон через `mcp-onec-test-runner`.
+   - YAxUnit-записи (`type == "yaxunit"`) добавляются в тот же `.run-state.json` в массив `chain[]`.
+
+8. Зелёный `.run-state.json` (все `chain[].status==passed`, включая `type == "yaxunit"` записи) авто-продвинет этап 4 (F-1.6).
    8.5. **ОБЯЗАТЕЛЬНО после verify PASS** (иначе `onec-task-completion-stop` заблокирует): `mcp__skill-learning__capture_pattern`
    — зафиксировать переиспользуемый приём (+ запись в `.md`-память при новом правиле/граблях заказчика).
 

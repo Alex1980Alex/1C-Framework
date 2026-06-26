@@ -674,6 +674,15 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 **ВАЖНО:** Этот этап ИНТЕРАКТИВНЫЙ — требует участия пользователя для проведения документов и (часто) для обновления БД.
 Если пользователь не может провести сейчас — пометить как "ожидает ручного тестирования", при этом SQL-симуляция должна быть выполнена в любом случае.
 
+**YAxUnit unit-тесты (first-class deliverable, параллельно с live-тестированием):**
+Если реализация затронула серверные методы (общий модуль / модуль объекта / модуль менеджера) —
+выполнить `/write-1c-unit-tests <папка задачи>` → skill `yaxunit-unit-testing`:
+- Написать тест-модули в `src/bsl/exts/UnitTests/CommonModules/` (positive + boundary + negative кейсы)
+- Задеплоить расширение UnitTests (`LoadConfigFromFiles + UpdateDBCfg`)
+- Smoke-прогон `mcp__mcp-onec-test-runner__run_module_tests` → `passed > 0, failed == 0`
+Полный прогон с обновлением `.run-state.json` — через `/run-1c-unit-tests <папка задачи>`.
+YAxUnit дополняет `run_yaxunit_tests` (EDT-MCP, быстрый smoke) и BDD-трек (`/run-1c-tests`), но не заменяет их.
+
 ---
 
 ### Этап 7: Документация
