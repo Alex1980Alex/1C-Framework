@@ -95,6 +95,10 @@ temp_*.txt
 # Ralph Wiggum state files (runtime, prevents stop-hook infinite loop)
 .claude/hooks/.ralph_*
 
+# YAxUnit runner config (содержит креды ИБ — НИКОГДА не коммитить; .runtime генерит launcher)
+tools/mcp-jars/.runtime/
+tools/mcp-jars/application-*.yml
+
 # MCP/tool logs
 *.mcp-server.log
 mcp_debug.log
