@@ -16,11 +16,17 @@ liveness. Буфер уменьшается на низком batch, чтобы 
 нечёткая; resume + меньший batch проще и надёжнее. Part A (`--long-batch1-tokens`) снимает
 почти все зависания заранее — супервизор тут страховочная сетка.
 
-Запуск:
+Запуск (resume — продолжить существующую коллекцию):
   python scripts/reindex_supervised.py --project <ABS> --collection bsl_code_erp_ref \
       --max-file-bytes 2097152 --long-batch1-tokens 1024
 
-Идемпотентно: повторный запуск продолжает с того же места (resume).
+Чистый rebuild (--recreate-once: супервизор дропает коллекцию ОДИН раз перед лестницей,
+дальше resume создаёт её заново hybrid) — для «переехал корень источника / нужна свежая
+коллекция без дублей»:
+  python scripts/reindex_supervised.py --project <ABS> --collection bsl_code_erp_ref \
+      --recreate-once --max-file-bytes 2097152 --long-batch1-tokens 1024
+
+Идемпотентно: повторный запуск БЕЗ --recreate-once продолжает с того же места (resume).
 """
 
 import argparse
@@ -28,6 +34,7 @@ import json
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -72,6 +79,21 @@ def _points_count(collection: str) -> int | None:
             return int(json.load(resp)["result"]["count"])
     except Exception:
         return None
+
+
+def _drop_collection(collection: str) -> bool:
+    """DELETE коллекции для --recreate-once. True = коллекции больше нет (удалена ИЛИ её и
+    не было — 404). False = запрос реально не удался (Qdrant недоступен/5xx) → вызывающий
+    прерывает прогон, чтобы не свалиться в resume против стэйл-данных."""
+    try:
+        req = urllib.request.Request(f"{QDRANT_URL}/collections/{collection}", method="DELETE")
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            json.load(resp)
+        return True
+    except urllib.error.HTTPError as e:
+        return e.code == 404  # уже отсутствует = желаемый итог
+    except Exception:
+        return False
 
 
 def _kill_tree(proc: subprocess.Popen) -> None:
@@ -151,12 +173,18 @@ def run_attempt(args, batch: int, log: Path) -> str:
         raise
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Part B (ADR-038) supervised reindex")
     ap.add_argument("--project", required=True, help="ABS project root (для resume-match)")
     ap.add_argument("--collection", required=True)
     ap.add_argument("--max-file-bytes", type=int, default=0)
     ap.add_argument("--long-batch1-tokens", type=int, default=1024)
+    ap.add_argument(
+        "--recreate-once",
+        action="store_true",
+        help="Дроп коллекции ОДИН раз перед лестницей (чистый rebuild без дублей, напр. после "
+        "переезда корня источника); дальше resume пересоздаёт её hybrid. Без флага — обычный resume.",
+    )
     ap.add_argument(
         "--stall-limit",
         type=int,
@@ -168,7 +196,7 @@ def main() -> int:
         default=",".join(map(str, BATCH_LADDER)),
         help="batch-эскалация через запятую (default 32,8,1)",
     )
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     ladder = [int(x) for x in args.ladder.split(",") if x.strip()]
     if not ladder:
@@ -176,6 +204,26 @@ def main() -> int:
         return 1
     logdir = ROOT / "logs"
     logdir.mkdir(parents=True, exist_ok=True)
+
+    # --recreate-once: дроп коллекции ОДИН раз ДО лестницы (детерминированно, в супервизоре —
+    # не зависим от того, дойдёт ли дочерний reindex до своего create_collection). Дальше все
+    # прогоны лестницы — обычный resume; дочерний создаст коллекцию заново hybrid (layout=absent
+    # + --enable-sparse). Дроп не удался (Qdrant down) → ПРЕРЫВАЕМ, чтобы не уйти в resume против
+    # стэйл-данных (иначе тихо нарушили бы контракт «чистый rebuild»).
+    if args.recreate_once:
+        _before = _points_count(args.collection)
+        if not _drop_collection(args.collection):
+            print(
+                f"[supervisor] --recreate-once: не удалось дропнуть '{args.collection}' "
+                "(Qdrant недоступен?) — ПРЕРЫВАЮ, чтобы не уйти в resume против стэйл-данных.",
+                flush=True,
+            )
+            return 1
+        print(
+            f"[supervisor] --recreate-once: коллекция '{args.collection}' дропнута "
+            f"(было {_before if _before is not None else '—'} точек) → дочерний создаст hybrid заново",
+            flush=True,
+        )
 
     for batch in ladder:
         log = logdir / f"reindex_supervised_b{batch}.out.log"
