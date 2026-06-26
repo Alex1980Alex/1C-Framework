@@ -1,0 +1,44 @@
+{
+  "task": "wire-onec-test-runner",
+  "title": "Wire mcp-onec-test-runner: file-ИБ clone + app.* config + launcher",
+  "created_at": "2026-06-26T05:10:43",
+  "updated_at": "2026-06-26T05:10:43",
+  "current_stage": 1,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
