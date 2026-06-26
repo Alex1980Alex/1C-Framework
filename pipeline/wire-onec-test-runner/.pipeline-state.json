@@ -2,8 +2,13 @@
   "task": "wire-onec-test-runner",
   "title": "Wire mcp-onec-test-runner: file-ИБ clone + app.* config + launcher",
   "created_at": "2026-06-26T05:10:43",
-  "updated_at": "2026-06-26T05:59:30",
+  "updated_at": "2026-06-26T06:23:51",
   "current_stage": 5,
+  "headless_followup": {
+    "status": "resolved",
+    "resolved_at": "2026-06-26T06:23:51",
+    "note": "Headless тонкого клиента: убран /TESTMANAGER, добавлены /DisableStartupDialogs+/DisableStartupMessages, снят безопасный режим YAXUNIT. Live JUnit PASS 2/2, ExitCode=0. См. 04-testing.md."
+  },
   "stages": [
     {
       "n": 1,
