@@ -23,7 +23,11 @@ def load_dotenv(path: str | None = None) -> int:
                 continue
             key, _, val = line.partition("=")
             key = key.strip()
-            val = val.strip().strip('"').strip("'")
+            val = val.strip()
+            # снимаем кавычки ТОЛЬКО парой по краям (KEY="value" → value); иначе значения
+            # с внутренними кавычками (connection-строки Srvr="x";Ref="y") теряли закрывающую "
+            if len(val) >= 2 and val[0] == val[-1] and val[0] in ('"', "'"):
+                val = val[1:-1]
             if key and key not in os.environ:
                 os.environ[key] = val
                 n += 1
