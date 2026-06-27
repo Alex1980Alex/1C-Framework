@@ -1523,6 +1523,22 @@
       "last_verified": "2026-06-17",
       "sources_count": 12,
       "github_repos_count": 5
+    },
+    {
+      "file": "qdrant-zero-downtime-reindex-alias-swap-2026.md",
+      "title": "Qdrant zero-downtime reindex через alias-swap: build new collection -> ingest -> атомарный alias switch -> drop old; неразрушающе, конкурентные запросы не затронуты; контраст с деструктивным in-place recreate (факты 2026)",
+      "keywords": [
+        "qdrant",
+        "alias",
+        "zero-downtime",
+        "reindex",
+        "collection-rebuild",
+        "atomic-swap",
+        "migration",
+        "alias swap",
+        "recreate"
+      ],
+      "last_verified": "2026-06-27"
     }
   ]
 }

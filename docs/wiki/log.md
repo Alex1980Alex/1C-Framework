@@ -29,15 +29,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
 
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `GKSTCPLK-2573 (предпросмотр PDF на форме присоедин` (confidence: 0.80)
-- Draft: `docs/wiki/drafts/gkstcplk-2573--pdf---.md`
-
-**Status:** Pending review
-
----
-
 ## 2026-06-18 — Auto-promoted: GKSTCPLK-2567 (ИБTransportManagementDevelop): анал
 
 **Event:** L2 pattern promoted to wiki draft
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr
 - Files changed: 2
 - Summary: Session 2026-06-26. Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr. Changed 2 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: docs(research): кэш best-practices отладки фоновых заданий 1С (RDBG auto-attach). Commit: chore(ext): bump 1c_mcp submodule — re-sync extension src + mcp_ОтладкаВыполненияКода. Commit: fix(mcp): keep BSL_PLATFORM_PATH=2214 (offline API ref works); only ONEC_V8_PATH->1936
+
+
+## 2026-06-27 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development
+- Files changed: 3
+- Summary: Session 2026-06-27. Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development, code-verify, z-ai-delegation, simplicity-discipline. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, tools/bsl-debug-server, ИБTransportManagementDevelop/Конфигурация
 
