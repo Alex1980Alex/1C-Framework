@@ -45,7 +45,9 @@ docker start pdf-rag-tei
 - **Part A** `--long-batch1-tokens 1024` — batch=1 для длинных чанков (профилактика wedge).
 - **Part B** супервизор — **stall-watchdog по росту points** (НЕ idle!) + лестница batch 32→8→1 + resume.
 - **Part C** `--max-file-bytes` → монстры в `data/reports/reindex_deferred.txt`; доиндексация:
-  `python scripts/reindex_bsl_qwen3.py --paths-file data/reports/reindex_deferred.txt --batch-size 1 --embedder qwen3-st --collection <c> --enable-sparse`.
+  `python scripts/reindex_bsl_qwen3.py --project "<ABS-path>" --paths-file data/reports/reindex_deferred.txt --batch-size 1 --embedder qwen3-st --collection <c> --enable-sparse`.
+  **`--project` обязателен для эталонных репо** (`1c-reference-src/{erp,trade}` не в `configuration/<X>/` → без него авто-детект root падает `cannot auto-detect project root` exit 1; `feedback_reindex_paths_file_needs_project`).
+  ⚠️ Одиночный **poison-модуль** (виснет даже batch=1, `chunks_done=0`) исчерпывает лестницу 8→1 → exit 1; супервизор НЕ делает skip-by-path → принять skip 1-2 таких модулей (коллекция остаётся рабочей).
 
 ## Хард-правила (типичные ошибки — детали гл. 31.6 §6)
 - **НЕ** ставить `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` — на Windows WDDM reserved растёт → BSOD + перебивает тюнинг скрипта → зависание. Скрипт сам ставит `garbage_collection_threshold:0.6,max_split_size_mb:512`.
