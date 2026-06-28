@@ -192,6 +192,7 @@ SKIP_PATTERNS = [
     # OpenSpec SDD artifacts (specs/proposals/designs/tasks — self-documenting via openspec-* skills)
     "openspec/",
     ".example",  # любой *.example — config-шаблон, самодокументируем (.env.example, *.json.example и т.п.)
+    "skill-router-config.json",  # реестр скилл-bundle'ов — самодокументируется SKILL.md (логика-тюнинг идёт через roadmap/commit)
     "mcp-server.log",
     # Root-level infra files (Dockerfiles, compose, logs)
     "dockerfile",
