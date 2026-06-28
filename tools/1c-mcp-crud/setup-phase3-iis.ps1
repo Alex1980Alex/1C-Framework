@@ -235,7 +235,7 @@ $testUrl = "http://localhost/TestDB/hs/mcp/health"
 Write-Host "  Testing: $testUrl"
 
 try {
-    $cred = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("a.terletskiy@sodru.com:Alex80Alex"))
+    $cred = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("a.terletskiy@sodru.com:$env:ONEC_PASSWORD"))
     $headers = @{ "Authorization" = "Basic $cred" }
     $response = Invoke-WebRequest -Uri $testUrl -Headers $headers -UseBasicParsing -TimeoutSec 30
     $body = $response.Content

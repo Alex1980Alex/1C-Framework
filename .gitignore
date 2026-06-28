@@ -168,3 +168,7 @@ _tmp_fmt_check/
 # ИТС auth (its_fetch.py) — сессия и креды НЕ в git
 playwright/.auth/
 .env.its
+
+# Локальные 1С-конфиги VA/vrunner с реальным паролём тест-клиента (НЕ в git; шаблоны — *.example)
+/vrunner.json
+/tools/vanessa/vanessa.json

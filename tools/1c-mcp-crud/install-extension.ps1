@@ -8,7 +8,7 @@ param(
     [string]$DbServer = "KOMPUTER",
     [string]$DbRef = "TestDB",
     [string]$User = "a.terletskiy@sodru.com",
-    [string]$Pass = "Alex80Alex",
+    [string]$Pass = $env:ONEC_PASSWORD,
     [string]$ExtensionFile = "D:\1C-Enterprise_Framework\src\external\1c_mcp\build\MCP_Сервер.cfe",
     [string]$ExtensionName = "MCP_Сервер",
     [switch]$UseDesigner

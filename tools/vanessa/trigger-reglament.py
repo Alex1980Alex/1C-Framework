@@ -31,7 +31,7 @@ import yaml
 
 DEFAULT_RPC_URL = os.environ.get("ONEC_RPC_URL", "http://localhost/TestDB/hs/mcp/rpc")
 DEFAULT_USERNAME = os.environ.get("ONEC_USERNAME", "a.terletskiy@sodru.com")
-DEFAULT_PASSWORD = os.environ.get("ONEC_PASSWORD", "Alex80Alex")
+DEFAULT_PASSWORD = os.environ.get("ONEC_PASSWORD", "")
 DEFAULT_JOB = "table_update"
 
 JOBS_DIR = Path(__file__).resolve().parent / "jobs"

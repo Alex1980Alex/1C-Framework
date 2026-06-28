@@ -225,7 +225,7 @@ $proc = Start-Process -FilePath $exe -ArgumentList @(
     'ENTERPRISE',
     '/S"KOMPUTER\TestDB"',
     '/N"a.terletskiy@sodru.com"',
-    '/P"Alex80Alex"',
+    "/P`"$env:ONEC_PASSWORD`"",
     '/DisableStartupMessages',
     '/DisableStartupDialogs',
     '/TESTMANAGER',

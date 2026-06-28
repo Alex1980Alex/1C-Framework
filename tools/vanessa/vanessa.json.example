@@ -8,14 +8,14 @@
 	"ИспользоватьОбычноеПриложениеДляЗапускаТестКлиента": false,
 	"ТаймаутЗапуска1С": 120,
 	"ДиапазонПортовTestclient": "1538-1538",
-	"ДополнительныеПараметрыЗапускаКлиентаТестирования": "/N\"a.terletskiy@sodru.com\" /P\"Alex80Alex\" /DisableStartupMessages /DisableStartupDialogs",
+	"ДополнительныеПараметрыЗапускаКлиентаТестирования": "/N\"a.terletskiy@sodru.com\" /P\"__ONEC_PASSWORD__\" /DisableStartupMessages /DisableStartupDialogs",
 	"ДанныеКлиентовТестирования": [
 		{
 			"Имя": "TestDB",
 			"Синоним": "TestDB",
 			"ПутьКИнфобазе": "Srvr=\"KOMPUTER\";Ref=\"TestDB\";",
 			"ПортЗапускаТестКлиента": 1538,
-			"ДопПараметры": "/N\"a.terletskiy@sodru.com\" /P\"Alex80Alex\" /DisableStartupMessages /DisableStartupDialogs",
+			"ДопПараметры": "/N\"a.terletskiy@sodru.com\" /P\"__ONEC_PASSWORD__\" /DisableStartupMessages /DisableStartupDialogs",
 			"ТипКлиента": "Тонкий",
 			"ИмяКомпьютера": ""
 		}

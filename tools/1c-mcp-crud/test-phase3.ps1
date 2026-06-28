@@ -5,7 +5,7 @@
 param(
     [string]$BaseUrl = "http://localhost/TestDB",
     [string]$User = "a.terletskiy@sodru.com",
-    [string]$Pass = "Alex80Alex",
+    [string]$Pass = $env:ONEC_PASSWORD,
     [switch]$TestOData,
     [switch]$TestProxy
 )
