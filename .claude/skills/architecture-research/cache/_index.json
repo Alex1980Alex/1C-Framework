@@ -3,6 +3,29 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "video-transcription-mcp-2026.md",
+      "title": "MCP-серверы транскрибации видео/аудио (Whisper/STT): faster-whisper (ZahiriNatZuke/whisper-transcribe-mcp, pip, local, large-v3) vs whisper.cpp (eviscerations/whisper-windows-mcp, Vulkan GPU, Windows-native) vs Groq cloud (bis-code/groq-whisper-mcp); экосистема молодая, ★ низкие; вывод для Windows+GPU+RU+приватность",
+      "keywords": [
+        "transcription",
+        "transcribe",
+        "whisper",
+        "faster-whisper",
+        "whisper.cpp",
+        "groq",
+        "speech-to-text",
+        "stt",
+        "mcp",
+        "video",
+        "audio",
+        "russian",
+        "local",
+        "offline",
+        "windows",
+        "gpu"
+      ],
+      "last_verified": "2026-06-29"
+    },
+    {
       "file": "sonarqube-mcp-server-2026.md",
       "title": "SonarQube MCP Server (SonarSource official): MCP-доступ к issues/quality-gate/rules/triage; self-hosted Server (SONARQUBE_URL+USER token), Docker/JAR; базовые tools не edition-gated, advanced = Cloud/Enterprise 2025.4+",
       "keywords": [
