@@ -12,6 +12,29 @@
   ],
   "last_updated": "2026-06-13",
   "topics": {
+    "whisper-transcription-windows-2026": {
+      "file": "whisper-transcription-windows-2026.md",
+      "domain": "tools",
+      "category": "setup",
+      "created": "2026-06-29",
+      "last_verified": "2026-06-29",
+      "version": "faster-whisper 1.2.1 / ctranslate2 4.8.0 / whisper-windows-mcp 2.3.0 / whisper.cpp Vulkan v1.4.0",
+      "summary": "Транскрибация на Windows: faster-whisper (CUDA, pip nvidia-cublas/cudnn + os.add_dll_directory) vs whisper.cpp Vulkan MCP (whisper-windows-mcp, prebuilt бинарь + GGML + .mcp.json). Диагностика: HF-hub hang->curl bypass, cublas64_12.dll missing, MP3 нативно без ffmpeg.",
+      "keywords": [
+        "whisper",
+        "transcription",
+        "faster-whisper",
+        "whisper.cpp",
+        "vulkan",
+        "cuda",
+        "cudnn",
+        "ggml",
+        "mcp",
+        "windows",
+        "gpu",
+        "ffmpeg"
+      ]
+    },
     "memory-surfacing-ranking-2026": {
       "file": "memory-surfacing-ranking-2026.md",
       "domain": "rag",
