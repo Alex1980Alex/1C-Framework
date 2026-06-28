@@ -191,7 +191,7 @@ SKIP_PATTERNS = [
     "sonar-project.properties",
     # OpenSpec SDD artifacts (specs/proposals/designs/tasks — self-documenting via openspec-* skills)
     "openspec/",
-    ".env.example",
+    ".example",  # любой *.example — config-шаблон, самодокументируем (.env.example, *.json.example и т.п.)
     "mcp-server.log",
     # Root-level infra files (Dockerfiles, compose, logs)
     "dockerfile",
