@@ -1,0 +1,44 @@
+{
+  "task": "docs-scene-detect-chapter",
+  "title": "Глава 47 Scene-Detect MCP в документацию фреймворка",
+  "created_at": "2026-06-28T23:54:48",
+  "updated_at": "2026-06-28T23:55:32",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-28T23:55:32"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-28T23:55:32",
+      "approved": true,
+      "approved_by": "auto (trivial docs)",
+      "approved_at": "2026-06-28T23:55:32"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-28T23:55:32"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-28T23:55:32"
+    }
+  ]
+}
