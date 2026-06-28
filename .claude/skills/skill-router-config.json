@@ -21,6 +21,7 @@
       "its-research"
     ],
     "framework": [
+      "scene-detect-mcp",
       "search",
       "indexing",
       "bsl-reindex",
