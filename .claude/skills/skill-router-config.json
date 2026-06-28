@@ -98,6 +98,23 @@
     ]
   },
   "bundles": {
+    "scene-detect-mcp": {
+      "keywords": [
+        "раскадровка видео",
+        "смена сцены",
+        "кадр при смене сцены",
+        "scene detection",
+        "PySceneDetect",
+        "scene-detect MCP",
+        "извлечь кадры из видео",
+        "detect scene changes",
+        "storyboard frames"
+      ],
+      "skills": [
+        "scene-detect-mcp"
+      ],
+      "optional": []
+    },
     "cc-docs": {
       "keywords": [
         "code.claude.com",
