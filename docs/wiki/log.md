@@ -29,15 +29,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
 
----
-
-## 2026-06-18 — Auto-promoted: unnamed-pattern
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `unnamed-pattern` (confidence: 0.81)
-- Draft: `docs/wiki/drafts/unnamed-pattern.md`
-
 **Status:** Pending review
 
 ---
@@ -70,6 +61,17 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - Pattern: `[ANALYSIS GKSTCPLK-2565] Доработать печатную форму` (confidence: 0.80)
 - Draft: `docs/wiki/drafts/analysis-gkstcplk-2565---.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-29 — Auto-promoted: t
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `t` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/t.md`
 
 **Status:** Pending review
 
@@ -496,5 +498,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 - Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development
 - Files changed: 3
-- Summary: Session 2026-06-28. Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development, code-verify, z-ai-delegation, simplicity-discipline. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, tools/bsl-debug-server, ИБTransportManagementDevelop/Конфигурация
-
