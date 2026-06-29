@@ -214,6 +214,9 @@ SKIP_PATTERNS = [
     # EDT project at repo root — same category as configuration/<task>/.
     # Identified by .bsl-language-server.json marker (see src/bsl/project_discovery.py).
     "ИБTransportManagementDevelop/",
+    # SVETLY EDT workspace (submodule Конфигурация registered 2026-06-29) — same category;
+    # a submodule gitlink is a pointer, never framework product code needing docs.
+    "TransportManagementDevelop_SVETLY/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
     # Shared utilities (generic modules like mcp_oauth — not PDF framework core)
