@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]  # repo root
 # Стабильные корни (всегда кандидаты).
 STABLE_ROOTS = [
     "ИБTransportManagementDevelop/Конфигурация",  # главный конфиг (продукт)
+    "TransportManagementDevelop_SVETLY/Конфигурация",  # конфиг базы SVETLY (тот же продукт, отд. база)
     # "src/bsl",  # framework-дамп BSL — отдельный продукт; включить при необходимости
 ]
 
