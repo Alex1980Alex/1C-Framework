@@ -1562,6 +1562,23 @@
         "recreate"
       ],
       "last_verified": "2026-06-27"
+    },
+    {
+      "file": "ornith-1.0-agentic-coding-model-2026.md",
+      "title": "Ornith-1.0 (DeepReinforce) — open-source agentic-coding модель: 9B/31B/35B-MoE/397B, MIT, Gemma4+Qwen3.5, OpenAI-формат tool-calls (qwen3_xml), SWE-Bench-V 9B=69.4/397B=82.4, self-RL-scaffold",
+      "keywords": [
+        "ornith",
+        "ornith-1.0",
+        "deepreinforce",
+        "agentic-coding",
+        "local-llm",
+        "coder-model",
+        "swe-bench",
+        "moe",
+        "delegation",
+        "llm-rotation"
+      ],
+      "last_verified": "2026-06-30"
     }
   ]
 }

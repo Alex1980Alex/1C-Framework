@@ -726,6 +726,26 @@
         "owner-override",
         "gate-enforcement"
       ]
+    },
+    {
+      "id": "ADR-043",
+      "file": "043-ornith-local-coder-provider-pilot.md",
+      "title": "Внедрение Ornith-1.0 (DeepReinforce, MIT) как локального Coder-провайдера в llm-rotation — ПИЛОТ за флагом (9B-Q4 GGUF на CPU, не трогая GPU-эмбеддер); промоут только после закрытия delegation-телеметрии + гейт на golden-set (Ornith>Z.AI по quality&латентности). BSL не покрывается (Opus остаётся), 35B/397B-на-GPU skip (вытеснение retrieval)",
+      "status": "proposed",
+      "date": "2026-06-30",
+      "research": "ornith-1.0-agentic-coding-model-2026.md",
+      "tags": [
+        "ornith-1.0",
+        "local-llm",
+        "coder-model",
+        "delegation",
+        "llm-rotation",
+        "z-ai-write-guard",
+        "pilot",
+        "feature-flag",
+        "tooling-adoption",
+        "gpu-contention"
+      ]
     }
   ]
 }
