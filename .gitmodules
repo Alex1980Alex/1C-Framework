@@ -26,3 +26,7 @@
 	path = tools/multilspy-fork
 	url = https://github.com/Alex1980Alex/multilspy.git
 	branch = feat/bsl-language
+[submodule "TransportManagementDevelop_SVETLY/Конфигурация"]
+	path = TransportManagementDevelop_SVETLY/Конфигурация
+	url = https://github.com/Alex1980Alex/TransportManagementDevelop-SVETLY-Configuration.git
+	branch = master
