@@ -1,0 +1,44 @@
+{
+  "task": "fix-svetly-struct-return-doctype",
+  "title": "EDT typification doc-comment fix (SVETLY ЯмаСилосРазгрузки)",
+  "created_at": "2026-06-29T22:14:40",
+  "updated_at": "2026-06-29T22:15:24",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-29T22:15:23"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-29T22:15:24",
+      "approved": true,
+      "approved_by": "claude",
+      "approved_at": "2026-06-29T22:15:24"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-29T22:15:24"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-29T22:15:24"
+    }
+  ]
+}
