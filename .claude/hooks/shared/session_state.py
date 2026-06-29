@@ -9,6 +9,7 @@ Updated: 2026-02-23 (Added pending_learn support for Skill-First Enforcement)
 
 import json
 import os
+import tempfile
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -74,12 +75,24 @@ class SessionState:
 
     @classmethod
     def _save_state(cls, state: dict[str, Any]) -> None:
-        """Save state to disk."""
+        """Save state to disk atomically (temp + os.replace — защита от corruption при гонке хуков)."""
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         state["last_updated"] = datetime.now().isoformat()
 
-        with open(STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state, f, indent=2, ensure_ascii=False)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(STATE_DIR), prefix=".session-skills.", suffix=".tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            os.replace(tmp_path, STATE_FILE)
+        except Exception:
+            try:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
         cls._state_cache = state
 

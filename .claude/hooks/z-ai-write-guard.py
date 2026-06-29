@@ -131,6 +131,15 @@ class ZAIWriteGuard(BaseHook):
         if line_count <= _LINE_THRESHOLD:
             return None
 
+        # Graceful: провайдеры делегирования недоступны → не форсировать futile-вызов
+        try:
+            from shared.llm_health import is_provider_down
+
+            if is_provider_down():
+                return None
+        except Exception:
+            pass
+
         # Check if Z.AI was used in this session
         try:
             from shared.session_state import SessionState
