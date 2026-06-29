@@ -1344,6 +1344,24 @@
       "sources": [
         "its.1c.ru/db/v8std/content/542/hdoc (fetched 2026-06-26, полный текст стандарта)"
       ]
+    },
+    "edt-tipizaciya-vozvrashchaemoe-znachenie-struktura": {
+      "title": "EDT-типизация возвращаемого значения-Структуры в doc-комментарии: формат `Структура:` + `* Поле - Тип`; устраняет «Свойство X не имеет типа возвращаемого значения»",
+      "file": "edt-tipizaciya-vozvrashchaemoe-znachenie-struktura.md",
+      "created": "2026-06-29",
+      "last_verified": "2026-06-29",
+      "keywords": [
+        "Возвращаемое значение",
+        "Структура",
+        "типизация",
+        "EDT",
+        "doc-комментарий",
+        "Свойство не имеет типа возвращаемого значения",
+        "v8-code-style",
+        "code_typification",
+        "ЗаполнитьЗначенияСвойств",
+        "ЯмаСилосРазгрузки"
+      ]
     }
   }
 }
