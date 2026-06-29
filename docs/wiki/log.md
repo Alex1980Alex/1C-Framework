@@ -29,14 +29,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
 
-**Status:** Pending review
-
----
-
-## 2026-06-21 — Auto-promoted: SDD Approval Gate (Phase 3)
-
-**Event:** L2 pattern promoted to wiki draft
-
 - Pattern: `SDD Approval Gate (Phase 3)` (confidence: 0.80)
 - Draft: `docs/wiki/drafts/sdd-approval-gate-phase-3.md`
 
@@ -72,6 +64,28 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - Pattern: `t` (confidence: 0.81)
 - Draft: `docs/wiki/drafts/t.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-30 — Auto-promoted: Анализ задачи GKSTCPLK-2536 «Разработать печатную 
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `Анализ задачи GKSTCPLK-2536 «Разработать печатную ` (confidence: 0.80)
+- Draft: `docs/wiki/drafts/--gkstcplk-2536---.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-06-30 — Auto-promoted: GKSTCPLK-2567 п.3 (ИБTransportManagementDevelop): 
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `GKSTCPLK-2567 п.3 (ИБTransportManagementDevelop): ` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/gkstcplk-2567-3-transportmanagementdevelop-.md`
 
 **Status:** Pending review
 
@@ -484,17 +498,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 
 ## 2026-06-27 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development
-- Files changed: 3
-- Summary: Session 2026-06-27. Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development, code-verify, z-ai-delegation, simplicity-discipline. Changed 3 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, tools/bsl-debug-server, ИБTransportManagementDevelop/Конфигурация
-
-
-## 2026-06-28 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: evaluation-benchmark, framework-config, deployment, 1c-debug-hmr, bsl-development
-- Files changed: 3
