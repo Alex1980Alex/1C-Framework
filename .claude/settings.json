@@ -318,6 +318,16 @@
         ]
       },
       {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/process-guard.py",
+            "timeout": 3
+          }
+        ]
+      },
+      {
         "matcher": "Skill",
         "hooks": [
           {
