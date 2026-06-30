@@ -18,6 +18,10 @@ venv/
 configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/
 configuration/260416_GKSTCPLK-2368 Восстановить предопределенные элементы справочников/
 
+# Local EDT workspace materialised by edt-mcp (not a git repo; machine-specific).
+# Other EDT workspaces are tracked as submodules; MFM is a plain local checkout.
+MFM/
+
 # Python
 __pycache__/
 *.py[cod]
