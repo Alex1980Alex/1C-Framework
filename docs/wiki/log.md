@@ -28,14 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-
-- Pattern: `SDD Approval Gate (Phase 3)` (confidence: 0.80)
-- Draft: `docs/wiki/drafts/sdd-approval-gate-phase-3.md`
-
-**Status:** Pending review
-
----
-
 ## 2026-06-22 — Auto-promoted: [1c-analysis] GKSTCPLK-2521(?) «Отображение УК на 
 
 **Event:** L2 pattern promoted to wiki draft
@@ -498,3 +490,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 
 ## 2026-06-27 — Session Summary
+## 2026-07-01 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
+- Files changed: 3
+- Summary: Session 2026-07-01. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Changed 3 files in TransportManagementDevelop_SVETLY/Конфигурация, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ransportManagementDevelop_SVETLY/Конфигурация. Commit: chore: auto-commit .pipeline-state.json, pipeline.md, Конфигурация +1 more. Commit: docs(1c-doc-research): re-verify кэш «видимость шаблона ШаблоныСообщений» (GKSTCPLK-2574). Commit: fix(sonar): -Xmx6g для JVM движка анализа — устранение OOM-краша на больших конфигах
+
