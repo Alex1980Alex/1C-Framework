@@ -49,6 +49,15 @@ if (-not (Test-Path $cli)) { Write-Host "scanner-cli не найден: $cli" -F
 $java = (Get-ChildItem "C:\Program Files\1C\1CE\components\axiom-jdk-full-17*\bin\java.exe" -EA SilentlyContinue | Select-Object -First 1).FullName
 if (-not $java) { $java = "java" }   # fallback: system java для CLI-bootstrap
 
+# Куча JVM движка анализа. bsl-language-server-диагностики на больших конфигах (3 корня
+# ИБ+SVETLY+260304, ~33k символов) исчерпывают дефолтную кучу (~1 ГБ) → плагин communitybsl
+# валит каждую диагностику ("Diagnostic computation error") и движок падает ДО старта
+# (прошлый "config-wide краш" = ранний OOM, не дефект кода). -Xmx6g верифицирован 2026-06-30
+# (полный прогон 3 конфигов → EXECUTION SUCCESS, ANALYSIS SUCCESSFUL). Tunable: задать
+# $env:SONAR_SCANNER_JAVA_OPTS / SONAR_SCANNER_OPTS заранее (напр. меньше на CI с малой RAM).
+if (-not $env:SONAR_SCANNER_JAVA_OPTS) { $env:SONAR_SCANNER_JAVA_OPTS = "-Xmx6g" }  # JVM движка (bsl-сенсор)
+if (-not $env:SONAR_SCANNER_OPTS) { $env:SONAR_SCANNER_OPTS = "-Xmx6g" }            # JVM bootstrap CLI
+
 & $java -jar $cli `
     "-Dsonar.host.url=$Host_" `
     "-Dsonar.token=$env:SONAR_TOKEN" `
