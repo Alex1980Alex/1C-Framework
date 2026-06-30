@@ -114,7 +114,7 @@
           {
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/memory-first-hook.py",
-            "timeout": 5
+            "timeout": 10
           },
           {
             "type": "command",
@@ -134,7 +134,7 @@
           {
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/shared/prework_dispatcher.py",
-            "timeout": 5
+            "timeout": 10
           },
           {
             "type": "command",
@@ -688,6 +688,12 @@
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/ci-catchup-on-start.py",
             "timeout": 5,
             "statusMessage": "ci-catchup"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/tei-warmup-on-start.py",
+            "timeout": 5,
+            "statusMessage": "tei-warmup"
           },
           {
             "type": "command",
