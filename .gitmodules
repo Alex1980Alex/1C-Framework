@@ -30,3 +30,6 @@
 	path = TransportManagementDevelop_SVETLY/Конфигурация
 	url = https://github.com/Alex1980Alex/TransportManagementDevelop-SVETLY-Configuration.git
 	branch = master
+[submodule "MFM/Конфигурация"]
+	path = MFM/Конфигурация
+	url = https://github.com/Alex1980Alex/UpravlenieMaterialnymiPotokami-Configuration.git

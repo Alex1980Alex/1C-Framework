@@ -217,6 +217,9 @@ SKIP_PATTERNS = [
     # SVETLY EDT workspace (submodule Конфигурация registered 2026-06-29) — same category;
     # a submodule gitlink is a pointer, never framework product code needing docs.
     "TransportManagementDevelop_SVETLY/",
+    # MFM (УправлениеМатериальнымиПотоками) EDT workspace — submodule Конфигурация
+    # registered 2026-06-30; same category (gitlink pointer, not framework product code).
+    "MFM/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
     # Shared utilities (generic modules like mcp_oauth — not PDF framework core)
