@@ -1,0 +1,44 @@
+{
+  "task": "add-1c-mcp-crud-mfm",
+  "title": "1c-mcp-crud-mfm: публикация Apache /mfm + .mcp.json для базы 260507_DEV_ATERLETSKIY",
+  "created_at": "2026-06-30T11:59:01",
+  "updated_at": "2026-06-30T12:01:05",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T12:01:05"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T12:01:05",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T12:01:05"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T12:01:05"
+    }
+  ]
+}
