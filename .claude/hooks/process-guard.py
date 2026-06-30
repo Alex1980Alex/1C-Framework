@@ -36,7 +36,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput
 
-_CACHE = Path(__file__).resolve().parent.parent / "cache"  # .claude/hooks -> .claude -> .claude/cache
+_CACHE = (
+    Path(__file__).resolve().parent.parent / "cache"
+)  # .claude/hooks -> .claude -> .claude/cache
 
 # Реестр защищённых демонов: lock-файлы с полем `pid` (расширяемо).
 _PROTECTED_LOCKFILES = [

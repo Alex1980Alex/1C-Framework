@@ -1,0 +1,44 @@
+{
+  "task": "fix-reviewer-readonly",
+  "title": "Read-only контракт ревьюера code-verify + PreToolUse process-guard (инцидент 2026-06-30)",
+  "created_at": "2026-06-30T11:29:18",
+  "updated_at": "2026-06-30T11:32:15",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T11:32:14"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T11:32:14",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T11:32:15"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-06-30T11:32:15"
+    }
+  ]
+}
