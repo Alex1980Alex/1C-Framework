@@ -21,6 +21,7 @@ Exit: 0 = pass / skipped; 1 = есть нарушения (гейт заблок
 
 import argparse
 import base64
+import http.client
 import json
 import os
 import sys
@@ -109,33 +110,91 @@ def last_analysis_dt(host, project, token):
         return None
 
 
-def component_exists(host, key, token) -> bool:
+# Per-file component_exists/blocker_critical_count (кириллический component-key → Sonar API 500,
+# reference-sonar-cyrillic-component-api) заменены project-level запросами ниже: ключи файлов
+# приходят в теле ответа (UTF-8) и матчатся локально по суффиксу пути — без 500.
+
+
+def _paged(host, path_base, token, items_key, page_size=500, cap_pages=60):
+    """Собирает все элементы пагинированного Sonar-эндпоинта (project-level).
+
+    componentKeys/component = ASCII-ключ проекта → нет кириллического 500; ключи файлов
+    приходят в теле ответа (UTF-8), фильтруем локально по суффиксу пути. ОДНО keep-alive
+    соединение на все страницы (иначе десятки сокетов → WinError 10048 port exhaustion)."""
+    u = urllib.parse.urlsplit(host)
+    is_https = u.scheme == "https"
+    conn_cls = http.client.HTTPSConnection if is_https else http.client.HTTPConnection
+    conn = conn_cls(u.hostname, u.port or (443 if is_https else 80), timeout=30)
+    hdr = {"Authorization": _auth(token)}
+    out = []
     try:
-        api(host, "/api/components/show?component=" + urllib.parse.quote(key), token)
-        return True
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return False
-        return True  # иная ошибка — не считаем «не проанализирован» (консервативно)
-    except Exception:
-        return True
+        page = 1
+        while page <= cap_pages:
+            path = f"{path_base}&p={page}&ps={page_size}"
+            body = None
+            for attempt in range(3):
+                conn.request("GET", path, headers=hdr)
+                resp = conn.getresponse()
+                raw = resp.read()
+                if resp.status >= 500 and attempt < 2:
+                    time.sleep(0.4 * (attempt + 1))
+                    continue
+                if resp.status >= 400:
+                    raise RuntimeError(f"Sonar {resp.status} на {path[:80]}")
+                body = raw
+                break
+            d = json.loads(body)
+            items = d.get(items_key, [])
+            out.extend(items)
+            total = (d.get("paging") or {}).get("total", d.get("total", len(out)))
+            if not items or len(out) >= total:
+                break
+            page += 1
+    finally:
+        conn.close()
+    return out
 
 
-def blocker_critical_count(host, key, severities, token) -> int:
-    # inNewCodePeriod=true → только НОВЫЕ нарушения (Clean-as-You-Code: «легаси не гейтим»,
-    # ADR-033/034 R6): правка легаси-файла с пред-существующими issue не должна валить гейт.
-    # Требует настроенного new-code period в Sonar; при его отсутствии (первый скан — весь код
-    # «новый») ведёт себя как total (безопасно строже, не пропускает).
-    q = (
+def analyzed_file_keys(host, project, token) -> set[str]:
+    """Ключи всех файловых компонентов проекта (project-level tree, qualifiers=FIL)."""
+    base = (
+        "/api/components/tree?component="
+        + urllib.parse.quote(project)
+        + "&qualifiers=FIL&strategy=all"
+    )
+    return {c["key"] for c in _paged(host, base, token, "components") if c.get("key")}
+
+
+def new_code_counts(host, project, severities, token) -> dict:
+    """component_key -> число NEW-code нарушений заданных severities (один project-level запрос).
+
+    inNewCodePeriod=true → Clean-as-You-Code (легаси-issue не гейтим)."""
+    base = (
         "/api/issues/search?componentKeys="
-        + urllib.parse.quote(key)
-        + "&resolved=false&inNewCodePeriod=true&ps=1&severities="
+        + urllib.parse.quote(project)
+        + "&resolved=false&inNewCodePeriod=true&severities="
         + ",".join(severities)
     )
-    try:
-        return int(api(host, q, token).get("total", 0))
-    except Exception:
-        return -1  # ошибка запроса → пометим как нарушение (безопасно: не пропустить)
+    counts: dict[str, int] = {}
+    for iss in _paged(host, base, token, "issues"):
+        comp = iss.get("component")
+        if comp:
+            counts[comp] = counts.get(comp, 0) + 1
+    return counts
+
+
+def _match_component(rel, project, analyzed) -> str | None:
+    """Ключ анализированного компонента для repo-относительного пути rel.
+
+    Штатно (projectBaseDir = корень репо) точный `project:rel` всегда срабатывает. Суффиксный
+    fallback — только для нестандартного base; при НЕОДНОЗНАЧНОСТИ (>1 кандидата, напр. общий
+    хвост `.../Ext/ObjectModule.bsl`) возвращаем None (fail-closed: не выбираем наугад чужой
+    файл с count=0 → не даём ложный PASS)."""
+    exact = f"{project}:{rel}"
+    if exact in analyzed:
+        return exact
+    cands = [k for k in analyzed if k.endswith(":" + rel) or k.endswith("/" + rel)]
+    return cands[0] if len(cands) == 1 else None
 
 
 def main() -> int:
@@ -187,17 +246,30 @@ def main() -> int:
     nm = newest_mtime(PROJECT_ROOT, changed)
     scan_stale = bool(last_an is None or (nm and last_an.timestamp() < nm))
 
+    # Project-level запросы (обход кириллического component-key 500 в per-file API,
+    # reference-sonar-cyrillic-component-api): один запрос списка файловых компонентов +
+    # один запрос new-code нарушений проекта, матчинг по суффиксу пути локально.
+    try:
+        analyzed = analyzed_file_keys(a.host, a.project, a.token)
+        counts = new_code_counts(a.host, a.project, severities, a.token)
+    except Exception as exc:
+        # API-сбой целиком → консервативно: все файлы «ошибка запроса» (не пропускаем)
+        analyzed, counts, api_error = set(), {}, str(exc)
+    else:
+        api_error = None
+
     fail_files = []
     for rel in changed:
-        key = f"{a.project}:{rel}"
-        if not component_exists(a.host, key, a.token):
+        if api_error is not None:
+            fail_files.append(f"{rel} (ошибка запроса Sonar API: {api_error[:60]})")
+            continue
+        comp_key = _match_component(rel, a.project, analyzed)
+        if comp_key is None:
             fail_files.append(f"{rel} (не проанализирован Sonar)")
             continue
-        bc = blocker_critical_count(a.host, key, severities, a.token)
+        bc = counts.get(comp_key, 0)
         if bc != 0:
-            fail_files.append(
-                f"{rel} ({'ошибка запроса' if bc < 0 else str(bc) + ' BLOCKER/CRITICAL'})"
-            )
+            fail_files.append(f"{rel} ({bc} {','.join(severities)})")
 
     passed = (not scan_stale) and (not fail_files)
     write_state(
