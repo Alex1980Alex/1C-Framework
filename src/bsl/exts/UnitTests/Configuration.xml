@@ -65,6 +65,7 @@
 		<ChildObjects>
 			<Subsystem>ЮТТ_ЮТПодключаемыеМодули</Subsystem>
 			<CommonModule>ЮТТПримерТест</CommonModule>
+			<CommonModule>гкс_РассылкиИОповещенияТест</CommonModule>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>
