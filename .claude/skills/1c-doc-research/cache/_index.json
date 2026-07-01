@@ -2,6 +2,38 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "sonar-bsl-code-quality-rules": {
+      "title": "SonarQube BSL (checkbsl) — правила качества кода: когнитивная/цикломатическая сложность (порог 15/10), MethodSize>100, NestedStatements>4, ветка Иначе, опечатки, дублирование, неиндексированное поле ВТ, серверные вызовы, логирование ошибок",
+      "file": "sonar-bsl-code-quality-rules.md",
+      "created": "2026-07-01",
+      "last_verified": "2026-07-01",
+      "keywords": [
+        "SonarQube",
+        "checkbsl",
+        "bsl-language-server",
+        "когнитивная сложность",
+        "цикломатическая сложность",
+        "brain-overload",
+        "MethodCognitiveComplexity",
+        "CyclomaticComplexity",
+        "MethodSize",
+        "NestedStatements",
+        "ветка Иначе",
+        "IfElseIfEndsWithElse",
+        "опечатка Typo",
+        "неиндексированное поле ВТ",
+        "строковые литералы в константы",
+        "запись ошибки в журнал регистрации",
+        "объединить серверные вызовы",
+        "Extract Method рефакторинг 1С",
+        "GKSTCPLK-2637"
+      ],
+      "sources": [
+        "docs.checkbsl.org/checks/ (MethodCognitiveComplexity порог 15)",
+        "infostart.ru/1c/articles/1089670, 1175305, 1743708 (SonarQube для 1С)",
+        "выгрузка SQ GKSTCPLK-2637 — 35 дефектов гкс_АРМПромежуточныйКомпозит/Форма/Module.bsl (verified 2026-07-01)"
+      ]
+    },
     "bsp-shablony-soobshcheniy-formirovanie-poluchateley": {
       "title": "БСП «Шаблоны сообщений»: программное формирование получателей письма по шаблону (ПриЗаполненииПочтыПолучателейВСообщении) — подписочная «плоский список» (ЗаполнитьПолучателейСообщенияПодписки) vs контекстный реестр-эталон МФМ (НайтиСтроки по полям документа)",
       "file": "bsp-shablony-soobshcheniy-formirovanie-poluchateley.md",
