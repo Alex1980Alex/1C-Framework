@@ -3,7 +3,7 @@
 
 Шаг «Тестирование» для правил «изменённый/добавленный 1С-код обязательно через SonarQube»
 (ADR — см. docs гл. 43). Проверяет, что КАЖДЫЙ изменённый/новый `.bsl` (осн. репо + сабмодули):
-  1) проанализирован Sonar (component существует), 2) имеет 0 BLOCKER/CRITICAL,
+  1) проанализирован Sonar (component существует), 2) имеет 0 НОВЫХ BLOCKER/CRITICAL (Clean-as-You-Code),
   3) последний анализ Sonar СВЕЖЕЕ правок (иначе скан устарел → нужен прогон сканера).
 Пишет `.claude/cache/onec-sonar-rescan-state.json` (контракт для Stop-гейта
 onec-task-completion-stop). Zero-dep (urllib). Auth: SONAR_TOKEN или basic admin:admin.
@@ -24,6 +24,7 @@ import base64
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -64,11 +65,30 @@ def _auth(token):
     return "Basic " + base64.b64encode(cred.encode()).decode()
 
 
-def api(host, path, token=None, timeout=30):
-    req = urllib.request.Request(host.rstrip("/") + path)
-    req.add_header("Authorization", _auth(token))
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.load(r)
+def api(host, path, token=None, timeout=30, retries=3):
+    # Ретрай на ТРАНЗИЕНТНЫХ ошибках (сокет/сеть, напр. WinError 10048 «address already in use»
+    # при частых запросах). HTTPError (4xx/5xx) — не транзиент: пробрасываем сразу, не маскируем
+    # реальный ответ Sonar. Без ретрая транзиент давал ложное «ошибка запроса» → ложный блок гейта.
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(host.rstrip("/") + path)
+            req.add_header("Authorization", _auth(token))
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            # 5xx (напр. транзиентный 500 Sonar во время фоновой индексации свежего скана —
+            # флапает на кириллических ключах компонентов) — ретраим; 4xx (404/400 и пр.) —
+            # не транзиент, пробрасываем сразу (реальный ответ Sonar не маскируем).
+            if e.code >= 500 and attempt < retries - 1:
+                last = e
+                time.sleep(0.4 * (attempt + 1))
+                continue
+            raise
+        except (urllib.error.URLError, OSError) as e:
+            last = e
+            time.sleep(0.4 * (attempt + 1))
+    raise last if last else RuntimeError("api: retries exhausted")
 
 
 def reachable(host) -> bool:
@@ -102,10 +122,14 @@ def component_exists(host, key, token) -> bool:
 
 
 def blocker_critical_count(host, key, severities, token) -> int:
+    # inNewCodePeriod=true → только НОВЫЕ нарушения (Clean-as-You-Code: «легаси не гейтим»,
+    # ADR-033/034 R6): правка легаси-файла с пред-существующими issue не должна валить гейт.
+    # Требует настроенного new-code period в Sonar; при его отсутствии (первый скан — весь код
+    # «новый») ведёт себя как total (безопасно строже, не пропускает).
     q = (
         "/api/issues/search?componentKeys="
         + urllib.parse.quote(key)
-        + "&resolved=false&ps=1&severities="
+        + "&resolved=false&inNewCodePeriod=true&ps=1&severities="
         + ",".join(severities)
     )
     try:
