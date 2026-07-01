@@ -1,0 +1,44 @@
+{
+  "task": "sonar-gkstcplk-2637",
+  "title": "GKSTCPLK-2637 Исправление ошибок SonarQube (гкс_АРМПромежуточныйКомпозит/Форма/Module.bsl)",
+  "created_at": "2026-07-01T10:13:54",
+  "updated_at": "2026-07-01T10:14:11",
+  "current_stage": 2,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260701_GKSTCPLK-2637 Исправление ошибок SQ/260701_GKSTCPLK-2637 Исправление ошибок SQ.md",
+      "status": "done",
+      "completed_at": "2026-07-01T10:14:11"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
