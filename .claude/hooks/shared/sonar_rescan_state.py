@@ -42,7 +42,11 @@ def parse_dt(s) -> datetime | None:
         dt = datetime.fromisoformat(str(s or "").replace("Z", "+00:00"))
     except (ValueError, AttributeError):
         return None
-    return dt.replace(tzinfo=None) if dt.tzinfo else dt
+    # НЕ срезать tzinfo: Sonar-дата приходит UTC (+0000); при срезе .timestamp() трактует
+    # UTC-время как локальное → в TZ ахед UTC анализ выглядит на offset часов «старше» mtime
+    # → ложное stale-scan. Aware-вход остаётся aware (корректный epoch), naive (локальный
+    # state-ts от datetime.now()) остаётся naive — прямое сравнение ts<session_start не ломается.
+    return dt
 
 
 def _git_changed(cwd: str) -> list[str]:
