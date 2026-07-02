@@ -2,6 +2,34 @@
   "doc_version": "8.3.27",
   "last_reindex": null,
   "topics": {
+    "va-scenarnoe-testirovanie-provedeniya-dokumentov": {
+      "title": "Vanessa Automation — сценарное тестирование интерактивного заполнения и проведения документов 1С (BDD/Gherkin): сквозная канва форма→кнопка→проведение→проверка состояния, диалоги Да/Нет, read-only альтернатива через СоздатьДокумент, preflight тест-данных, VA vs YAxUnit",
+      "file": "va-scenarnoe-testirovanie-provedeniya-dokumentov.md",
+      "created": "2026-07-02",
+      "last_verified": "2026-07-02",
+      "keywords": [
+        "Vanessa Automation",
+        "Vanessa-ADD",
+        "сценарное тестирование",
+        "BDD",
+        "Gherkin",
+        "приёмочный сценарий",
+        "проведение документа",
+        "сквозной сценарий",
+        "тест заполнения формы",
+        "e1cib/app обработка",
+        "ФормаПровестиИЗакрыть",
+        "preflight тест-данных",
+        "VA vs YAxUnit",
+        "GKSTCPLK-2616"
+      ],
+      "sources": [
+        "infostart.ru/1c/articles/969637, 984854, 1801764, tools/1501807 (сценарное тестирование VA)",
+        "habr.com/ru/articles/761708 (100+ тестов на VA)",
+        "pr-mex.github.io/vanessa-automation/dev (офиц. документация VA)",
+        "skill va-bdd-testing/SKILL.md (калиброванные шаги проекта, verified 2026-07-02)"
+      ]
+    },
     "sonar-bsl-code-quality-rules": {
       "title": "SonarQube BSL (checkbsl) — правила качества кода: когнитивная/цикломатическая сложность (порог 15/10), MethodSize>100, NestedStatements>4, ветка Иначе, опечатки, дублирование, неиндексированное поле ВТ, серверные вызовы, логирование ошибок",
       "file": "sonar-bsl-code-quality-rules.md",
