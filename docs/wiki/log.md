@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
----
-
-## 2026-06-22 — Auto-promoted: [ANALYSIS GKSTCPLK-2565] Доработать печатную форму
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `[ANALYSIS GKSTCPLK-2565] Доработать печатную форму` (confidence: 0.80)
-- Draft: `docs/wiki/drafts/analysis-gkstcplk-2565---.md`
-
 **Status:** Pending review
 
 ---
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
 - Files changed: 3
 - Summary: Session 2026-07-02. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Changed 3 files in TransportManagementDevelop_SVETLY/Конфигурация, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ransportManagementDevelop_SVETLY/Конфигурация. Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore(submodules): bump ИБTransport gitlink — REQ-1.3 форма ВладелецШаблона fix (dd51411). Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС
+
+
+## 2026-07-03 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
+- Files changed: 0
+- Summary: Session 2026-07-03. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Commit: docs(GKSTCPLK-2637): bump анализ — Q1/Q3 закрыты. Commit: docs(GKSTCPLK-2637): bump анализ — Q2 закрыт (только SVETLY). Commit: chore: auto-commit Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, _1c_index.json
 
