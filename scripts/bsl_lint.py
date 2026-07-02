@@ -122,9 +122,84 @@ def run_format(java: str, src_dir: Path, config: Path) -> tuple[int, str]:
     return proc.returncode, (proc.stderr or "") + (proc.stdout or "")
 
 
+def _split_eol_norm(data: bytes) -> list[bytes]:
+    """Строки с нормализацией EOL к LF (сравнение CRLF/LF-версий по содержимому)."""
+    return data.replace(b"\r\n", b"\n").split(b"\n")
+
+
+def _dominant_crlf(data: bytes) -> bool:
+    crlf = data.count(b"\r\n")
+    return crlf > (data.count(b"\n") - crlf)
+
+
+def _apply_eol(lines: list[bytes], crlf: bool) -> bytes:
+    joined = b"\n".join(lines)
+    return joined.replace(b"\n", b"\r\n") if crlf else joined
+
+
+def _git_head_bytes(target: Path) -> bytes | None:
+    """Содержимое target в HEAD его git-репозитория (raw blob). None: новый файл / не git."""
+    try:
+        r = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(target.parent),
+                "-c",
+                "core.quotepath=false",
+                "show",
+                f"HEAD:./{target.name}",
+            ],
+            capture_output=True,
+            timeout=10,
+        )
+        return r.stdout if r.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def _selective_format(head: bytes | None, before: bytes, after: bytes) -> bytes:
+    """Churn-guard формата (ADR-036): принять форматирование ТОЛЬКО на строках, изменённых
+    относительно HEAD; легаси-строки (совпадающие с HEAD) остаются как были — bsl-ls format
+    на легаси-файле иначе переписывает сотни чужих whitespace-строк, раздувая дифф и ломая
+    SCM-атрибуцию new-code в Sonar. EOL результата приводится к доминирующему стилю before
+    (bsl-ls тихо флипает CRLF→LF). head=None → формат целиком (новый файл)."""
+    import difflib
+
+    want_crlf = _dominant_crlf(before)
+    ab = _split_eol_norm(after)
+    if head is None:
+        return _apply_eol(ab, want_crlf)
+    hb, bb = _split_eol_norm(head), _split_eol_norm(before)
+    edited: set[int] = set()
+    for tag, _i1, _i2, j1, j2 in difflib.SequenceMatcher(
+        None, hb, bb, autojunk=False
+    ).get_opcodes():
+        if tag == "equal":
+            continue
+        edited.update(range(j1, j2))
+        if j1 == j2:
+            edited.add(j1)  # чистое удаление: пометить точку склейки
+    out: list[bytes] = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, bb, ab, autojunk=False).get_opcodes():
+        if tag == "equal":
+            out.extend(bb[i1:i2])
+        elif (i2 - i1) == (j2 - j1):
+            # построчная замена (типичный whitespace-реформат): решение per-line,
+            # иначе грубый replace-блок протащил бы чужой churn вместе с моей строкой
+            for k in range(i2 - i1):
+                out.append(ab[j1 + k] if (i1 + k) in edited else bb[i1 + k])
+        elif edited.intersection(range(i1, i2)) or (i1 == i2 and i1 in edited):
+            out.extend(ab[j1:j2])  # структурная замена/вставка в моей зоне
+        else:
+            out.extend(bb[i1:i2])  # чужой блок — как был
+    return _apply_eol(out, want_crlf)
+
+
 def _do_format(java: str, target: Path, config_arg: str | None) -> int:
     """Отформатировать файл/каталог. Для одиночного файла — write-back ТОЛЬКО при
-    реальном изменении (точные байты → сохраняется BOM/кодировка 1С). Каталог — in-place.
+    реальном изменении (точные байты → сохраняется BOM/кодировка 1С), формат применяется
+    селективно к строкам, изменённым vs HEAD (см. _selective_format). Каталог — in-place.
     Advisory: возвращает 0; при rc!=0 от bsl-ls печатает предупреждение в stderr.
     """
     with tempfile.TemporaryDirectory(prefix="bsl_fmt_") as td:
@@ -153,8 +228,15 @@ def _do_format(java: str, target: Path, config_arg: str | None) -> int:
             else:
                 after = tmp_file.read_bytes()
             if after != before and rc == 0:
-                target.write_bytes(after)
-                print(f"[bsl_lint] {target.name}: отформатирован ✓ (изменён)")
+                merged = _selective_format(_git_head_bytes(target), before, after)
+                if merged != before:
+                    target.write_bytes(merged)
+                    print(f"[bsl_lint] {target.name}: отформатирован ✓ (только изменённые строки)")
+                else:
+                    print(
+                        f"[bsl_lint] {target.name}: формат затронул бы только чужие/легаси "
+                        "строки — не переписан (churn-guard)"
+                    )
             elif (
                 after != before
             ):  # есть отличия, но rc!=0 → не доверяем выводу, оригинал НЕ перезаписан

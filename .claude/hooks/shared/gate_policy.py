@@ -15,7 +15,15 @@ import json
 import os
 import time
 
-_LOG_PATH = os.environ.get("GATE_DECISIONS_LOG", "data/gate-decisions.jsonl")
+# Абсолютный якорь от корня проекта (hooks/shared -> ../../..): относительный путь
+# резолвился от cwd хук-процесса и мусорил data/gate-decisions.jsonl внутрь сабмодулей
+# конфигураций (замечено 2026-07-03: 3 файла в дереве TransportManagementDevelop_SVETLY).
+_PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+_LOG_PATH = os.environ.get(
+    "GATE_DECISIONS_LOG", os.path.join(_PROJECT_ROOT, "data", "gate-decisions.jsonl")
+)
 
 
 def decision(gate, allow, reason="", **metadata):

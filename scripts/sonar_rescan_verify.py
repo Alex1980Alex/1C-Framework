@@ -41,6 +41,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / ".claude" / "hooks"))
 from shared.sonar_rescan_state import (
     changed_bsl_paths,
+    changed_line_ranges,
     newest_mtime,
     parse_dt,
     write_state,
@@ -169,22 +170,69 @@ def analyzed_file_keys(host, project, token) -> set[str]:
     return {c["key"] for c in _paged(host, base, token, "components") if c.get("key")}
 
 
-def new_code_counts(host, project, severities, token) -> dict:
-    """component_key -> число NEW-code нарушений заданных severities (один project-level запрос).
+def file_issue_lines(host, comp_key, severities, token) -> list | None:
+    """[line|None, ...] unresolved issues заданных severities ОДНОГО файлового компонента.
 
-    inNewCodePeriod=true → Clean-as-You-Code (легаси-issue не гейтим)."""
-    base = (
-        "/api/issues/search?componentKeys="
-        + urllib.parse.quote(project)
-        + "&resolved=false&inNewCodePeriod=true&severities="
-        + ",".join(severities)
-    )
-    counts: dict[str, int] = {}
-    for iss in _paged(host, base, token, "issues"):
-        comp = iss.get("component")
-        if comp:
-            counts[comp] = counts.get(comp, 0) + 1
-    return counts
+    Кириллический component-key в issues/search работает на SQ CB 26.x (HTTP 200,
+    ре-проверено live 2026-07-03; прежний 500-баг — reference-sonar-cyrillic-component-api).
+    None = запрос не удался → вызывающий падает на project-wide fallback (усечение 10k)."""
+    try:
+        base = (
+            "/api/issues/search?componentKeys="
+            + urllib.parse.quote(comp_key)
+            + "&resolved=false&severities="
+            + ",".join(severities)
+        )
+        return [i.get("line") for i in _paged(host, base, token, "issues", cap_pages=20)]
+    except Exception:
+        return None
+
+
+def project_issue_lines(host, project, severities, token) -> tuple[dict[str, list], bool]:
+    """FALLBACK: component_key -> [line|None, ...] всех unresolved issues заданных severities
+    project-wide (когда per-file запрос не удался, напр. рецидив кириллического 500).
+
+    БЕЗ inNewCodePeriod: дельту гейт считает сам по изменённым строкам (независимость от
+    server-baseline). ES-лимит Sonar = 10k результатов на запрос → тянем по severity
+    отдельно; total>10k у одной severity → усечение (truncated=True, best-effort)."""
+    lines: dict[str, list] = {}
+    truncated = False
+    for sev in severities:
+        base = (
+            "/api/issues/search?componentKeys="
+            + urllib.parse.quote(project)
+            + "&resolved=false&severities="
+            + sev
+        )
+        items = _paged(host, base, token, "issues", cap_pages=20)  # 20×500 = ES-лимит 10k
+        if len(items) >= 10_000:
+            truncated = True
+        for iss in items:
+            comp = iss.get("component")
+            if comp:
+                lines.setdefault(comp, []).append(iss.get("line"))
+    return lines, truncated
+
+
+def baseline_degenerate(host, project, token) -> tuple[bool, int, int]:
+    """Вырожденный server-baseline new-code: new-issues ≈ all-issues (типично: первый скан
+    проекта — ВСЕ легаси-issue получают creationDate дня скана; или PREVIOUS_VERSION без
+    валидного version-события). → (degenerate, new_total, all_total). Информационная
+    диагностика (не гейтит): без неё расследование «почему 5 CRITICAL на нетронутом файле»
+    занимает часы. Ошибка API → (False, -1, -1)."""
+    try:
+        q = (
+            "/api/issues/search?componentKeys="
+            + urllib.parse.quote(project)
+            + "&resolved=false&ps=1"
+        )
+        all_total = (api(host, q, token).get("paging") or {}).get("total", 0)
+        new_total = (api(host, q + "&inNewCodePeriod=true", token).get("paging") or {}).get(
+            "total", 0
+        )
+        return (all_total >= 200 and new_total >= 0.5 * all_total), new_total, all_total
+    except Exception:
+        return False, -1, -1
 
 
 def _match_component(rel, project, analyzed) -> str | None:
@@ -250,18 +298,19 @@ def main() -> int:
     nm = newest_mtime(PROJECT_ROOT, changed)
     scan_stale = bool(last_an is None or (nm and last_an.timestamp() < nm))
 
-    # Project-level запросы (обход кириллического component-key 500 в per-file API,
-    # reference-sonar-cyrillic-component-api): один запрос списка файловых компонентов +
-    # один запрос new-code нарушений проекта, матчинг по суффиксу пути локально.
     try:
         analyzed = analyzed_file_keys(a.host, a.project, a.token)
-        counts = new_code_counts(a.host, a.project, severities, a.token)
     except Exception as exc:
         # API-сбой целиком → консервативно: все файлы «ошибка запроса» (не пропускаем)
-        analyzed, counts, api_error = set(), {}, str(exc)
+        analyzed, api_error = set(), str(exc)
     else:
         api_error = None
 
+    degenerate, new_total, all_total = baseline_degenerate(a.host, a.project, a.token)
+
+    # per-file запросы точны (нет ES-усечения); project-wide paged — ленивый fallback
+    global_cache: dict[str, list] | None = None
+    truncated = False
     fail_files = []
     for rel in changed:
         if api_error is not None:
@@ -271,9 +320,30 @@ def main() -> int:
         if comp_key is None:
             fail_files.append(f"{rel} (не проанализирован Sonar)")
             continue
-        bc = counts.get(comp_key, 0)
-        if bc != 0:
-            fail_files.append(f"{rel} ({bc} {','.join(severities)})")
+        lns = file_issue_lines(a.host, comp_key, severities, a.token)
+        if lns is None:
+            if global_cache is None:
+                try:
+                    global_cache, truncated = project_issue_lines(
+                        a.host, a.project, severities, a.token
+                    )
+                except Exception as exc:
+                    fail_files.append(f"{rel} (ошибка запроса Sonar API: {str(exc)[:60]})")
+                    continue
+            lns = global_cache.get(comp_key, [])
+        ranges = changed_line_ranges(PROJECT_ROOT, rel)
+        if ranges is None:
+            # новый/untracked файл (или дифф не получен): все его issue — мои,
+            # включая файловые (line=None) — fail-closed
+            hits = len(lns)
+        else:
+            # изменённый файл: гейтим только issue на содержательно изменённых строках;
+            # файловые issue (line=None) на изменённом файле легаси-атрибуции не имеют
+            hits = sum(
+                1 for ln in lns if isinstance(ln, int) and any(s <= ln <= e for s, e in ranges)
+            )
+        if hits:
+            fail_files.append(f"{rel} ({hits} {','.join(severities)} на изменённых строках)")
 
     passed = (not scan_stale) and (not fail_files)
     write_state(
@@ -281,16 +351,32 @@ def main() -> int:
         {
             "ts": now.isoformat(),
             "host": a.host,
+            "mode": "changed-lines",
             "pass": passed,
             "skipped": False,
             "files_verified": changed,
             "fail_files": fail_files,
             "scan_stale": scan_stale,
             "last_analysis": last_an.isoformat() if last_an else None,
+            "baseline_degenerate": degenerate,
+            "issues_truncated": truncated,
         },
     )
 
-    print(f"sonar-rescan: изменённых .bsl={len(changed)}; severities={severities}")
+    print(
+        f"sonar-rescan: изменённых .bsl={len(changed)}; severities={severities}; mode=changed-lines"
+    )
+    if degenerate:
+        print(
+            f"  ⚠ server new-code baseline ВЫРОЖДЕН (new={new_total} ≈ total={all_total}): "
+            "штатный Quality Gate Sonar завышает «новое»; этот гейт независим — дельта "
+            "считается по diff-строкам. Починка сервера: api/new_code_periods/set "
+            "(branch-level SPECIFIC_ANALYSIS на пре-change анализ)"
+        )
+    if truncated:
+        print(
+            "  ⚠ >10k unresolved issues одной severity — выборка усечена ES-лимитом (best-effort)"
+        )
     if scan_stale:
         print("  ⚠ последний анализ Sonar СТАРШЕ правок — прогони сначала run-sonar-analysis.ps1")
     for ff in fail_files:

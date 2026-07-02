@@ -1,17 +1,17 @@
 {
-  "task": "sonar-gkstcplk-2637",
-  "title": "GKSTCPLK-2637 Исправление ошибок SonarQube (гкс_АРМПромежуточныйКомпозит/Форма/Module.bsl)",
-  "created_at": "2026-07-01T10:13:54",
-  "updated_at": "2026-07-03T02:15:00",
+  "task": "sonar-gate-process-improvements",
+  "title": "Улучшения процесса Sonar-гейта: changed-lines verify, baseline, bsl-format churn-guard, скилл/память",
+  "created_at": "2026-07-03T01:52:25",
+  "updated_at": "2026-07-03T02:14:59",
   "current_stage": 5,
   "stages": [
     {
       "n": 1,
       "name": "architecture",
       "command": "pl-plan",
-      "artifact": "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260701_GKSTCPLK-2637 Исправление ошибок SQ/260701_GKSTCPLK-2637 Исправление ошибок SQ.md",
+      "artifact": "01-architecture.md",
       "status": "done",
-      "completed_at": "2026-07-01T10:14:11"
+      "completed_at": "2026-07-03T02:14:58"
     },
     {
       "n": 2,
@@ -30,7 +30,7 @@
       "command": "pl-code",
       "artifact": "03-implementation.md",
       "status": "done",
-      "completed_at": "2026-07-03T02:15:00"
+      "completed_at": "2026-07-03T02:14:59"
     },
     {
       "n": 4,
@@ -38,7 +38,7 @@
       "command": "pl-test",
       "artifact": "04-testing.md",
       "status": "done",
-      "completed_at": "2026-07-03T02:15:00"
+      "completed_at": "2026-07-03T02:14:59"
     }
   ]
 }

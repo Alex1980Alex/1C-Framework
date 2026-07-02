@@ -73,3 +73,42 @@ def test_tmp_missing_warns_no_write(tmp_path, monkeypatch, capsys):
     bsl_lint._do_format("java", target, None)
     assert target.read_bytes() == orig
     assert "временный srcDir" in capsys.readouterr().err
+
+
+# --- _selective_format: churn-guard (формат только своих строк) + EOL-preserve ---
+
+
+def test_selective_format_no_head_full_format_keeps_crlf():
+    # Новый файл (head=None): формат целиком, но CRLF-стиль исходника сохраняется
+    before = b"A=1;\r\nB=2;\r\n"
+    after = b"\tA = 1;\n\tB = 2;\n"  # bsl-ls тихо флипает EOL в LF
+    merged = bsl_lint._selective_format(None, before, after)
+    assert merged == b"\tA = 1;\r\n\tB = 2;\r\n"
+
+
+def test_selective_format_keeps_legacy_lines():
+    # Правка только строки 2 (MyOld→MyNew); формат почистил и легаси-строки (1, 3) —
+    # легаси-whitespace НЕ течёт в результат, формат применён только к моей строке
+    head = b"Legacy1\t\nMyOld\nLegacy3  \n"
+    before = b"Legacy1\t\nMyNew\nLegacy3  \n"
+    after = b"Legacy1\nMyNew_f\nLegacy3\n"
+    merged = bsl_lint._selective_format(head, before, after)
+    assert merged == b"Legacy1\t\nMyNew_f\nLegacy3  \n"
+
+
+def test_selective_format_insert_at_my_edit():
+    # Вставленная мной строка форматируется, чужие остаются
+    head = b"L1  \nL2\n"
+    before = b"L1  \nMine\nL2\n"
+    after = b"L1\n\tMine\nL2\n"
+    merged = bsl_lint._selective_format(head, before, after)
+    assert merged == b"L1  \n\tMine\nL2\n"
+
+
+def test_selective_format_all_legacy_untouched():
+    # Формат хочет переписать ТОЛЬКО чужие строки → результат == before (write-back не нужен)
+    head = b"L1\t\nL2  \n"
+    before = b"L1\t\nL2  \n"
+    after = b"L1\nL2\n"
+    merged = bsl_lint._selective_format(head, before, after)
+    assert merged == before

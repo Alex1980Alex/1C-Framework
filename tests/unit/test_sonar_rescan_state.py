@@ -147,3 +147,67 @@ def test_evaluate_pass_allows(monkeypatch):
     )
     ok, status, _ = srs.evaluate(".", PAST)
     assert ok and status == "ok"
+
+
+# --- changed-lines дельта (сервер-независимый Clean-as-You-Code) ---
+
+
+def test_parse_hunk_new_ranges_variants():
+    diff = (
+        "@@ -10,2 +12,3 @@ Процедура Х()\n"
+        "@@ -20 +25 @@\n"  # без счётчиков → 1 строка
+        "@@ -30,4 +33,0 @@\n"  # чистое удаление → диапазона нет
+    )
+    assert srs.parse_hunk_new_ranges(diff) == [(12, 14), (25, 25)]
+
+
+def test_parse_hunk_new_ranges_ignores_non_headers():
+    # строки контента с "@@" внутри не матчатся (якорь ^)
+    assert srs.parse_hunk_new_ranges("+ Текст @@ -1 +2 @@ в середине\n") == []
+
+
+def test_owning_tree_resolves_submodule(monkeypatch, tmp_path):
+    monkeypatch.setattr(srs, "_submodule_paths", lambda root: ["sub/conf"])
+    tree, rel = srs._owning_tree(tmp_path, "sub/conf/src/M/Module.bsl")
+    assert tree == tmp_path / "sub/conf"
+    assert rel == "src/M/Module.bsl"
+    tree2, rel2 = srs._owning_tree(tmp_path, "src/Other.bsl")
+    assert tree2 == tmp_path
+    assert rel2 == "src/Other.bsl"
+
+
+class _FakeRun:
+    def __init__(self, returncode, stdout=""):
+        self.returncode = returncode
+        self.stdout = stdout
+
+
+def test_changed_line_ranges_untracked_returns_none(monkeypatch, tmp_path):
+    # untracked файл → None (все строки новые, fail-closed)
+    monkeypatch.setattr(srs, "_submodule_paths", lambda root: [])
+    monkeypatch.setattr(srs.subprocess, "run", lambda *a, **k: _FakeRun(1))
+    assert srs.changed_line_ranges(tmp_path, "src/New.bsl") is None
+
+
+def test_changed_line_ranges_tracked_parses_hunks(monkeypatch, tmp_path):
+    monkeypatch.setattr(srs, "_submodule_paths", lambda root: [])
+
+    def fake_run(cmd, **kw):
+        if "ls-files" in cmd:
+            return _FakeRun(0)
+        assert "-w" in cmd  # whitespace-only правки не считаются моими
+        return _FakeRun(0, "@@ -5,2 +7,4 @@\n+а\n+б\n+в\n+г\n")
+
+    monkeypatch.setattr(srs.subprocess, "run", fake_run)
+    assert srs.changed_line_ranges(tmp_path, "src/M.bsl") == [(7, 10)]
+
+
+def test_changed_line_ranges_whitespace_only_empty(monkeypatch, tmp_path):
+    # дифф -w пуст (только whitespace/EOL-churn) → [] — содержательно моих строк нет
+    monkeypatch.setattr(srs, "_submodule_paths", lambda root: [])
+
+    def fake_run(cmd, **kw):
+        return _FakeRun(0, "")
+
+    monkeypatch.setattr(srs.subprocess, "run", fake_run)
+    assert srs.changed_line_ranges(tmp_path, "src/M.bsl") == []

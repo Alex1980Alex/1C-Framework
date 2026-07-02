@@ -15,7 +15,7 @@ commands:
 
 > **4-этапная парадигма (ADR-019 B′, G5/G2):** этот skill реализует **Этап 3 «Кодирование»** (Этапы 0–3:
 > preflight→подготовка→валидация→BSL-write) и **Этап 4 «Тестирование»** (Этапы 4–6 + `/write-1c-tests`/`/run-1c-tests`).
-> **Sonar обязателен (ADR-037):** после BSL-правок — `scripts/run-sonar-analysis.ps1` → `python scripts/sonar_rescan_verify.py`; Stop-гейт `onec-task-completion-stop` блокирует завершение, если изменённый/добавленный `.bsl` под `/src/` не прошёл Sonar с чистой дельтой (0 BLOCKER/CRITICAL). Sonar-down→skip; opt-out `ONEC_SONAR_GATE_DISABLE=1`.
+> **Sonar обязателен (ADR-037):** после BSL-правок — `scripts/run-sonar-analysis.ps1` → `python scripts/sonar_rescan_verify.py`; Stop-гейт `onec-task-completion-stop` блокирует завершение, если изменённый/добавленный `.bsl` под `/src/` не прошёл Sonar с чистой дельтой (0 BLOCKER/CRITICAL). Sonar-down→skip; opt-out `ONEC_SONAR_GATE_DISABLE=1`. **С 2026-07-03 verify — `mode=changed-lines`:** дельта = пересечение issue-строк с `git diff -w` изменённых файлов (сервер-независимый Clean-as-You-Code; вырожденный server-baseline [первый скан → new≈total] детектится и репортится, но не гейтит). **Норма — ОДИН скан на задачу:** собрать ВСЕ контент-правки (код + док-комменты) → формат → `bsl_lint --fail-on-error` локально → один скан → один verify; каждая правка ПОСЛЕ скана делает его stale (гейт потребует пересканирования, скан — минуты).
 > Артефакт — `IMPLEMENTATION-PROGRESS.md`. `pipeline/<slug>/.pipeline-state.json` ведётся **автоматически** (preflight-мост
 > F-1, advance F-1.5). **Гейт (F-2):** запуск БЛОКИРУЕТСЯ, пока дизайн (этап 2, ANALYSIS-REPORT) не одобрен —
 > `pipeline_state.py approve <slug>`. См. [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
@@ -317,6 +317,10 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Цель:** Внести код в модули **строго в порядке** из ANALYSIS-REPORT.
 
+> **⚠ Правки `.bsl` — батчем, одним вызовом (2026-07-03).** PostToolUse-хук авто-формата (`bsl_lint --format`, ADR-036) срабатывает после каждого Write/Edit и переписывает файл на диске → серия последовательных Edit по одному файлу гоняется с форматером (stale-read, упавшие old_string). Все правки одного модуля собирать в ОДИН вызов: один `write_module_source` ИЛИ один python-скрипт (string-replace + assert-счётчики вхождений). Формат теперь селективный (только строки, изменённые vs HEAD; EOL сохраняется), но гонку Edit-серии это не отменяет.
+>
+> **Док-комментарии — сразу.** Каждый новый/извлечённый метод получает док-коммент (описание, `Параметры:`, `Возвращаемое значение:`) в момент написания, НЕ «потом»: Sonar-правила `MissingParameterDescription`/`MissingReturnedValueDescription` (MAJOR) на новом коде = лишняя итерация правка→скан (скан — минуты).
+
 #### Decision gate: рефакторинг или новый функционал?
 
 Перед началом Этапа 3 для каждой точки модификации определить тип операции:
@@ -413,6 +417,8 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
    ```
    python scripts/bsl_lint.py <module.bsl> --format
      → bsl-ls `--format` правит файл in-place; write-back ТОЛЬКО при изменении (сохраняет BOM/кодировку).
+       Селективно (2026-07-03): формат применяется ТОЛЬКО к строкам, изменённым vs HEAD; легаси-строки
+       и EOL-стиль файла не трогаются (churn-guard: дифф не раздувается, SCM-атрибуция Sonar не ломается).
        Идемпотентно (2-й прогон = «без изменений»). Снимает косметические замечания (MissingSpace и т.п.) до lint.
    ```
    После записи через EDT-MCP — перечитать модуль (`read_module_source`), т.к. файл переписан на диске.
@@ -1044,6 +1050,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 - [ ] **Footer IMPLEMENTATION-PROGRESS.md**: `<!-- debug_session_id: <UUID> -->` записан (если режим Full и BP-verification PASS) — для regression diff на следующем прогоне
 - [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной (минимум — SQL-симуляция, если БД не обновлена)
 - [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
+- [ ] **Sonar-дельта (ADR-037):** ВСЕ контент-правки собраны (вкл. док-комментарии новых методов) → ОДИН `run-sonar-analysis.ps1` → `sonar_rescan_verify.py` PASS (0 BLOCKER/CRITICAL на изменённых строках)
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
 - [ ] Отклонения от ANALYSIS-REPORT зафиксированы
 - [ ] **Git commit:**
