@@ -26,6 +26,7 @@ stdlib-only (subprocess/json/pathlib) — безопасно импортиро�
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -130,6 +131,64 @@ def changed_bsl_paths(root) -> set[str]:
             if _is_config_bsl(full):
                 found.add(full)
     return found
+
+
+def _owning_tree(root: Path, rel: str) -> tuple[Path, str]:
+    """Work-tree (main-репо или сабмодуль), которому принадлежит repo-относительный rel."""
+    for sub in _submodule_paths(root):
+        prefix = sub.rstrip("/") + "/"
+        if rel.startswith(prefix):
+            return root / sub.rstrip("/"), rel[len(prefix) :]
+    return root, rel
+
+
+def parse_hunk_new_ranges(diff_text: str) -> list[tuple[int, int]]:
+    """Диапазоны строк new-стороны unified diff: `@@ -a[,b] +c[,d] @@` → [(start, end)],
+    1-based включительно. d==0 (чистое удаление) диапазона не даёт."""
+    ranges: list[tuple[int, int]] = []
+    for m in re.finditer(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", diff_text, re.MULTILINE):
+        start = int(m.group(1))
+        count = 1 if m.group(2) is None else int(m.group(2))
+        if count > 0:
+            ranges.append((start, start + count - 1))
+    return ranges
+
+
+def changed_line_ranges(root, rel: str) -> list[tuple[int, int]] | None:
+    """Строки rel, СОДЕРЖАТЕЛЬНО изменённые vs HEAD (`diff -w -U0`: whitespace-only и
+    format-churn «моими» не считаются). Сервер-независимая основа Clean-as-You-Code:
+    verify гейтит issue по пересечению с этими строками, а не по inNewCodePeriod.
+
+    None = файл новый/untracked ИЛИ дифф не получен → потребитель считает ВСЕ строки
+    изменёнными (fail-closed). [] = только whitespace/удаления (моих строк нет)."""
+    root = Path(root)
+    tree, rel_in = _owning_tree(root, rel)
+    try:
+        tracked = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "ls-files", "--error-unmatch", rel_in],
+            cwd=str(tree),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=5,
+        )
+        if tracked.returncode != 0:
+            return None  # untracked → все строки новые
+        d = subprocess.run(
+            ["git", "-c", "core.quotepath=false", "diff", "-w", "-U0", "HEAD", "--", rel_in],
+            cwd=str(tree),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=10,
+        )
+        if d.returncode not in (0, 1):
+            return None
+        return parse_hunk_new_ranges(d.stdout)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
 
 
 def newest_mtime(root, paths) -> float:

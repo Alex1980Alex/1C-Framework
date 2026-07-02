@@ -3,7 +3,11 @@
 
 Шаг «Тестирование» для правил «изменённый/добавленный 1С-код обязательно через SonarQube»
 (ADR — см. docs гл. 43). Проверяет, что КАЖДЫЙ изменённый/новый `.bsl` (осн. репо + сабмодули):
-  1) проанализирован Sonar (component существует), 2) имеет 0 НОВЫХ BLOCKER/CRITICAL (Clean-as-You-Code),
+  1) проанализирован Sonar (component существует),
+  2) имеет 0 BLOCKER/CRITICAL **на изменённых строках** (пересечение line issue с
+     `git diff -w` файла — сервер-независимый Clean-as-You-Code; inNewCodePeriod больше
+     НЕ гейтит: вырожденный server-baseline [первый скан → new≈total] давал ложный FAIL
+     на легаси-строках, см. baseline-degenerate детект ниже),
   3) последний анализ Sonar СВЕЖЕЕ правок (иначе скан устарел → нужен прогон сканера).
 Пишет `.claude/cache/onec-sonar-rescan-state.json` (контракт для Stop-гейта
 onec-task-completion-stop). Zero-dep (urllib). Auth: SONAR_TOKEN или basic admin:admin.
