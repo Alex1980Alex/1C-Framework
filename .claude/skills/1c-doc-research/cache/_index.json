@@ -34,7 +34,7 @@
       "title": "SonarQube BSL (checkbsl) — правила качества кода: когнитивная/цикломатическая сложность (порог 15/10), MethodSize>100, NestedStatements>4, ветка Иначе, опечатки, дублирование, неиндексированное поле ВТ, серверные вызовы, логирование ошибок",
       "file": "sonar-bsl-code-quality-rules.md",
       "created": "2026-07-01",
-      "last_verified": "2026-07-01",
+      "last_verified": "2026-07-02",
       "keywords": [
         "SonarQube",
         "checkbsl",
