@@ -54,9 +54,15 @@
         "запись ошибки в журнал регистрации",
         "объединить серверные вызовы",
         "Extract Method рефакторинг 1С",
+        "assign-then-open-once обработчик Выбор",
+        "DuplicateStringLiteral allowedNumberCopies 2 minTextLength 5",
+        "CyclomaticComplexity дефолт 20 Иначе И ИЛИ считаются",
+        "v8std std640 std456 std440 std639 std441",
         "GKSTCPLK-2637"
       ],
       "sources": [
+        "1c-syntax.github.io/bsl-language-server — диагностики Cyclomatic/Cognitive/IfElseIfEndsWithElse/DuplicateStringLiteral (первоисточник правил+порогов, verified 2026-07-02)",
+        "its.1c.ru/db/v8std — content/640,456,440,639,441 (its_fetch.py 2026-07-02, качественные аналоги)",
         "docs.checkbsl.org/checks/ (MethodCognitiveComplexity порог 15)",
         "infostart.ru/1c/articles/1089670, 1175305, 1743708 (SonarQube для 1С)",
         "выгрузка SQ GKSTCPLK-2637 — 35 дефектов гкс_АРМПромежуточныйКомпозит/Форма/Module.bsl (verified 2026-07-01)"
