@@ -218,15 +218,20 @@ def _do_format(java: str, target: Path, config_arg: str | None) -> int:
             rc, log = run_format(java, src_dir, config)
             if (
                 not tmp_file.exists()
-            ):  # bsl-ls не вернул файл → не трактуем как «без изменений» молча
+            ):  # bsl-ls не вернул файл → оригинал не тронут; ранний выход, чтобы stdout
+                # не печатал противоречивое «уже отформатирован» (code-verify finding, 2026-07-03)
                 print(
                     f"[bsl_lint] предупреждение: bsl-ls не вернул файл во временный srcDir "
                     f"(rc={rc}) — оригинал не тронут",
                     file=sys.stderr,
                 )
-                after = before
-            else:
-                after = tmp_file.read_bytes()
+                if rc != 0:
+                    print(
+                        f"[bsl_lint] предупреждение: bsl-ls format rc={rc}\n{log[:800]}",
+                        file=sys.stderr,
+                    )
+                return 0
+            after = tmp_file.read_bytes()
             if after != before and rc == 0:
                 merged = _selective_format(_git_head_bytes(target), before, after)
                 if merged != before:
