@@ -56,10 +56,14 @@ def test_collect_all_signals(tmp_path):
         "research": True,
         "skill": True,
         "config_edit": False,
-        # ADR-035 Фаза 1 — advisory T1-T2 (в этом транскрипте отсутствуют)
+        # ADR-035 Фаза 1 / ADR-036 + Тир-2 — advisory (в этом транскрипте отсутствуют)
         "impact": False,
         "debug_trace": False,
         "ref_search": False,
+        "callers": False,
+        "form_screenshot": False,
+        "platform_ctx": False,
+        "analyze_method": False,
     }
 
 
@@ -75,7 +79,40 @@ def test_collect_none(tmp_path):
         "impact": False,
         "debug_trace": False,
         "ref_search": False,
+        "callers": False,
+        "form_screenshot": False,
+        "platform_ctx": False,
+        "analyze_method": False,
     }
+
+
+def test_collect_research_via_ecosystem_scan(tmp_path):
+    """P0.4 (К-1): канонический research-скрипт через Bash засчитывается RESEARCH."""
+    t = tmp_path / "t.json"
+    _transcript(
+        t,
+        [
+            (
+                "Bash",
+                {"command": ".venv/Scripts/python.exe scripts/ecosystem_scan.py 'query' --top 8"},
+            )
+        ],
+    )
+    assert mod._collect_signals(str(t))["research"] is True
+
+
+def test_collect_research_via_onec_search(tmp_path):
+    """P0.4: onec_search.py (Infostart/RU) тоже RESEARCH."""
+    t = tmp_path / "t.json"
+    _transcript(t, [("Bash", {"command": "python scripts/onec_search.py 'проведение документа'"})])
+    assert mod._collect_signals(str(t))["research"] is True
+
+
+def test_collect_bash_plain_not_research(tmp_path):
+    """P0.4: обычный Bash без research-скрипта НЕ засчитывается RESEARCH."""
+    t = tmp_path / "t.json"
+    _transcript(t, [("Bash", {"command": "git status && ls scripts/"})])
+    assert mod._collect_signals(str(t))["research"] is False
 
 
 def test_collect_partial(tmp_path):

@@ -25,6 +25,108 @@ import unicodedata
 
 _JIRA = re.compile(r"[A-Z]{2,}-\d+")
 
+# Д-1 (roadmap 260703 P0.3): паттерн `[A-Z]{2,}-\d+` матчит технические акронимы вида
+# UTF-8 / SHA-256 / GPT-4 / ISO-8601 → раньше давали confidence 1.0 + veto-иммунитет →
+# «поправь кодировку UTF-8 в отчёте» уходило в flow=auto. Denylist отсекает акронимы как
+# JIRA-коды; allowlist проектных префиксов (env ONEC_JIRA_PREFIXES, csv) даёт им 1.0-уверенность;
+# прочие generic-совпадения → veto-able (не 1.0) — обрабатывается в classify_1c_task.
+_JIRA_ACRONYM_DENY = frozenset(
+    {
+        "UTF",
+        "SHA",
+        "MD",
+        "GPT",
+        "ISO",
+        "AES",
+        "RSA",
+        "TLS",
+        "SSL",
+        "CRC",
+        "HTTP",
+        "HTTPS",
+        "JSON",
+        "XML",
+        "HTML",
+        "CSS",
+        "SQL",
+        "API",
+        "URL",
+        "URI",
+        "UUID",
+        "CPU",
+        "GPU",
+        "RAM",
+        "RFC",
+        "PEP",
+        "ISBN",
+        "UTC",
+        "GMT",
+        "BASE",
+        "MD5",
+        "IEEE",
+        "ANSI",
+        "ASCII",
+        "PDF",
+        "PNG",
+        "JPG",
+        "GIF",
+        "MP3",
+        "MP4",
+        "AV1",
+        "IPV",
+        "ID",
+        "OAUTH",
+        "JWT",
+        "GRPC",
+        "TCP",
+        "UDP",
+        "DNS",
+        "SMTP",
+        "IMAP",
+        "FTP",
+        "SSH",
+        "VPN",
+        "LTS",
+        "EOL",
+        "CI",
+        "CD",
+    }
+)
+_JIRA_PREFIX_ALLOW_DEFAULT = ("GKSTCPLK",)
+
+
+def _jira_prefix_allow() -> set[str]:
+    allow = {p.upper() for p in _JIRA_PREFIX_ALLOW_DEFAULT}
+    env = os.environ.get("ONEC_JIRA_PREFIXES", "")
+    if env:
+        allow |= {x.strip().upper() for x in env.split(",") if x.strip()}
+    return allow
+
+
+def _find_jira(text: str):
+    """Первое JIRA-совпадение, НЕ являющееся техническим акронимом из denylist (Д-1).
+
+    Allowlist-префикс (GKSTCPLK / env ONEC_JIRA_PREFIXES) проходит всегда. Denylist-акроним
+    (UTF/SHA/GPT/…) пропускается (не JIRA). Прочие generic-коды проходят как совпадение, но
+    caller понижает их уверенность (classify → 0.7 veto-able вместо 1.0). Возврат: re.Match|None.
+    """
+    allow = _jira_prefix_allow()
+    for m in _JIRA.finditer(text or ""):
+        prefix = m.group(0).split("-", 1)[0].upper()
+        if prefix in allow:
+            return m
+        if prefix in _JIRA_ACRONYM_DENY:
+            continue
+        return m
+    return None
+
+
+def _jira_is_confident(match) -> bool:
+    """True если префикс JIRA — из allowlist проектных кодов (→ confidence 1.0, veto-иммунитет)."""
+    if not match:
+        return False
+    return match.group(0).split("-", 1)[0].upper() in _jira_prefix_allow()
+
 
 _1C_TITLE_PREFIX = (
     "1С-задача ("  # формат ensure_pipeline_1c / run-1c-task: f"1С-задача ({command}): {slug}"
@@ -42,7 +144,7 @@ def is_1c_task_title(title) -> bool:
 
 def derive_slug(prompt: str) -> str:
     """JIRA-код приоритетно (стабильный ID задачи между командами); иначе ASCII-slug."""
-    m = _JIRA.search(prompt or "")
+    m = _find_jira(prompt or "")
     if m:
         return m.group(0)
     base = (prompt or "").strip().split("\n", 1)[0][:40]
@@ -64,7 +166,7 @@ def resolve_task_input(arg: str) -> dict:
     if a and (os.sep in a or "/" in a) and os.path.isdir(a):
         slug = derive_slug(os.path.basename(os.path.normpath(a)))
         return {"kind": "folder", "slug": slug, "folder": a}
-    m = _JIRA.search(a)
+    m = _find_jira(a)
     if m:
         return {"kind": "jira", "slug": m.group(0), "folder": None}
     return {"kind": "chat", "slug": derive_slug(a), "folder": None}
@@ -79,7 +181,7 @@ def resolve_active_1c_slug(prompt: str) -> str | None:
     best-effort → None (нет JIRA и нет активного 1С-пайплайна / сбой импорта).
     """
     try:
-        m = _JIRA.search(prompt or "")
+        m = _find_jira(prompt or "")
         if m:
             return m.group(0)
         hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -218,7 +320,7 @@ def gate_1c_implement(prompt: str) -> dict:
         # (R1) honor OpenSpec-approval — иначе ложный G4-блок implement в SDD-потоке (расхождение
         # сторов); (R2) проецирует одобрение в pipeline-state → сторы СХОДЯТСЯ (единый источник).
         # JIRA-gated: non-JIRA путь нетронут (нет JIRA → плечо не срабатывает → G4 по pipeline-state).
-        if _JIRA.search(prompt or ""):
+        if _find_jira(prompt or ""):
             try:
                 if sync_approval(prompt).get("openspec_approved"):
                     return {"ok": True, "hard": False, "reason": "", "source": "openspec"}
@@ -248,7 +350,7 @@ def sync_approval(prompt: str) -> dict:
     """
     out = {"openspec_approved": False, "synced": False, "slug": None, "reason": ""}
     try:
-        if not _JIRA.search(prompt or ""):
+        if not _find_jira(prompt or ""):
             out["reason"] = "no-jira"
             return out
         from shared.approval_state import is_design_approved_via_openspec
@@ -273,7 +375,9 @@ def sync_approval(prompt: str) -> dict:
             return out
         st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
         if st2 is None:
-            out["reason"] = "no-stage-2"  # malformed state — не зовём approve (он кинул бы SystemExit)
+            out["reason"] = (
+                "no-stage-2"  # malformed state — не зовём approve (он кинул бы SystemExit)
+            )
             return out
         if st2.get("approved"):
             out["reason"] = "already-synced"
@@ -353,7 +457,7 @@ def check_lineage(prompt: str, root: str | None = None) -> dict:
     """
     out = {"checked": False, "consistent": True, "issues": [], "change_id": None}
     try:
-        m = _JIRA.search(prompt or "")
+        m = _find_jira(prompt or "")
         if not m:
             return out
         jira = m.group(0).upper()
@@ -379,6 +483,7 @@ def check_lineage(prompt: str, root: str | None = None) -> dict:
         return out
     except Exception:
         return out
+
 
 def advance_test_done(file_path: str) -> tuple[int, ...] | None:
     """F-1.6: запись `features/<task>/.run-state.json` со ВСЕМИ секциями passed → этап 4 (Тестирование) done.
@@ -451,7 +556,8 @@ def classify_1c_task(prompt: str) -> dict:
     """
     try:
         p = prompt or ""
-        jira = _JIRA.search(p)
+        jira = _find_jira(p)  # Д-1: технические акронимы (UTF-8/GPT-4) отсеяны
+        jira_confident = _jira_is_confident(jira)  # allowlist-префикс → 1.0; generic → 0.7
         has_verb = bool(_TASK_VERB.search(p))
         code = bool(
             _1C_CODE.search(p)
@@ -474,14 +580,15 @@ def classify_1c_task(prompt: str) -> dict:
                 "confidence": 0.0,
             }
         # Калиброванная уверенность (#2): скор 0..1 = max по силе сигнала. Инвариант:
-        # confident_1c в route = (confidence >= 0.7) ТОЧНО воспроизводит прежнее
-        # `jira ∨ _1C_STRONG ∨ code` — эквивалентность под guard'ом is_1c (вне него confidence=0.0,
-        # а прежнее выражение в route недостижимо после early-return). jira1.0 / code·definitive0.9 /
-        # strong0.7 ≥0.7 → confident; signal+verb0.5 → ask_1c. Mid-band 0.5 — для fall-through (#3 semantic).
-        if jira:
+        # confident_1c в route = (confidence >= 0.7). jira(allowlist)1.0 / code·definitive0.9 /
+        # strong0.7 ≥0.7 → confident; generic-JIRA0.7 (Д-1: не-проектный код veto-able, не 1.0) /
+        # signal+verb0.5 → ask_1c. Mid-band 0.5 — для fall-through (#3 semantic).
+        if jira and jira_confident:
             confidence = 1.0
         elif code or _1C_DEFINITIVE.search(p):
             confidence = 0.9
+        elif jira:  # Д-1: generic JIRA-код (не allowlist) → veto-able 0.7, не veto-иммунный 1.0
+            confidence = 0.7
         elif _1C_STRONG.search(p):
             confidence = 0.7
         else:

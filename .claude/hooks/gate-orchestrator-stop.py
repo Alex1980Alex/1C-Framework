@@ -66,9 +66,15 @@ def main():
             sys.exit(0)
 
         failed = [d for d in verdict["decisions"] if not d.get("allow")]
+        # Многострочный reason (богатый чеклист onec-петли) — самодостаточный блок, печатаем
+        # как есть; короткий (pipeline-protocol) — строкой «✗ gate: reason» (P0.1 читаемость).
+        parts = []
+        for d in failed:
+            r = d.get("reason", "")
+            parts.append(r if "\n" in r else f"  ✗ {d['gate']}: {r}")
         reason = (
             "[GATE-ORCHESTRATOR] Завершение заблокировано (composition — всё недостающее сразу):\n"
-            + "\n".join(f"  ✗ {d['gate']}: {d['reason']}" for d in failed)
+            + "\n".join(parts)
             + "\n\nЗакрой все ✗ и заверши снова. "
             "Opt-out полностью: GATE_ORCHESTRATOR_ENABLE=0 (вернёт старые раздельные гейты)."
         )

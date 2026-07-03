@@ -84,6 +84,16 @@ _CAPTURE_TOOLS = {
     "mcp__memory-orchestrator__route_and_save",
 }
 _RESEARCH_TOOLS = {"WebSearch", "WebFetch"}
+# P0.4 (roadmap 260703 / К-1): канонический внешний анализ идёт НЕ голым WebSearch, а
+# скриптами (GitHub-WebSearch хард-блокируется энфорсером ADR-039; 1С/RU-веб → onec_search).
+# Bash-вызов любого из них засчитывается RESEARCH — иначе следование одному энфорсеру
+# (ecosystem_scan вместо WebSearch) мешало удовлетворить research-петлю этого гейта.
+_RESEARCH_BASH_MARKERS = (
+    "ecosystem_scan.py",
+    "onec_search.py",
+    "its_fetch.py",
+    "cc_docs_search.py",
+)
 _1C_SKILLS = (
     "analyze-1c-task-v2",
     "implement-1c-task",
@@ -290,6 +300,10 @@ def _collect_signals(transcript_path: str) -> dict:
                 s = str(inp.get("skill") or inp.get("command") or "")
                 if any(k in s for k in _1C_SKILLS):
                     sig["skill"] = True
+            elif name in ("Bash", "PowerShell"):  # P0.4: канонический research через скрипты
+                cmd = str(inp.get("command") or "")
+                if any(mk in cmd for mk in _RESEARCH_BASH_MARKERS):
+                    sig["research"] = True
             elif name in ("Write", "Edit", "MultiEdit"):
                 fp = (inp.get("file_path") or "").replace("\\", "/").lower()
                 # курируемая память (`.claude/.../memory/*.md`), не src/memory/ или docs/*/memory/
@@ -391,6 +405,152 @@ def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
         pass
 
 
+def _compute_hard_ok(
+    sig: dict, sonar_ok: bool, sonar_hard: bool, impact_hard: bool, debug_hard: bool
+) -> bool:
+    """Чистое блок-решение (ЕДИНЫЙ источник вердикта — parity живой хук == оркестратор).
+
+    recall/capture/research — ВСЕГДА hard; impact/debug_trace — при hard-флагах ADR-036;
+    Sonar — при sonar_hard. Отдельная pure-функция → тестируется матрицей без I/O (P0.1)."""
+    hard_keys = ["recall", "capture", "research"]
+    if impact_hard:
+        hard_keys.append("impact")
+    if debug_hard:
+        hard_keys.append("debug_trace")
+    return all(sig.get(k) for k in hard_keys) and (sonar_ok or not sonar_hard)
+
+
+def _build_reason(
+    sig: dict,
+    sonar_ok: bool,
+    sonar_status: str,
+    sonar_detail: str,
+    sonar_hard: bool,
+    impact_hard: bool,
+    debug_hard: bool,
+    hard_on: bool,
+) -> str:
+    """Консолидированный блок-чеклист (единый gate, всё недостающее сразу)."""
+
+    def mark(ok: bool) -> str:
+        return "✓" if ok else "✗"
+
+    def tier(ok: bool, is_hard: bool) -> str:
+        return "✓" if ok else ("✗" if is_hard else "•")
+
+    hl_hdr = "HARD при правке кода" if hard_on else "• = advisory, НЕ блок"
+    block_by = "RECALL/CAPTURE/RESEARCH"
+    if sonar_hard:
+        block_by += " + Sonar"
+    if impact_hard:
+        block_by += " + impact"
+    if debug_hard:
+        block_by += " + BP-trace"
+    return (
+        "[ONEC-TASK-GATE] 1С-задача не завершена: незакрыты обязательные петли (единый gate, всё сразу):\n"
+        "  ✓ ПАЙПЛАЙН — pipeline-state заведён (1С-задача детектится по нему)\n"
+        f"  {mark(sig['recall'])} RECALL — `mcp__memory-orchestrator__unified_search` / `search_patterns` (поиск прошлого опыта)\n"
+        f"  {mark(sig['capture'])} CAPTURE — `mcp__skill-learning__capture_pattern` после verify PASS (или `route_and_save` / `.md`-память)\n"
+        f"  {mark(sig['research'])} RESEARCH — `WebSearch`/`WebFetch` или `ecosystem_scan.py`/`onec_search.py` (внешний анализ: Infostart + GitHub)\n"
+        f"  {(mark(sonar_ok) if sonar_hard else '•')} SONAR — re-scan изменённого/добавленного 1С-кода "
+        f"(0 BLOCKER/CRITICAL на затронутых .bsl): {sonar_detail or sonar_status}\n"
+        "      выход: `scripts/run-sonar-analysis.ps1` (скан) → `python scripts/sonar_rescan_verify.py` (verify дельты)\n"
+        f"  {'✓' if sig['skill'] else '⚠'} SKILL [1С-методика] — "
+        f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n"
+        f"  — — — high-leverage (ADR-035/036; {hl_hdr}) — — —\n"
+        f"  {tier(sig['impact'], impact_hard)} T1 impact-анализ — `bsl_impact_analysis` перед правкой экспортного метода"
+        f"{' [HARD: правился 1С-код]' if impact_hard else ''}\n"
+        f"  {tier(sig['debug_trace'], debug_hard)} T1 live BP-trace — `1c-debug-hmr` для bugfix / ≥3 ветвлений"
+        f"{' [HARD]' if debug_hard else ''}\n"
+        f"  {'✓' if sig['ref_search'] else '•'} T2 поиск эталона — `bsl_search`/`bsl_similar` на Планировании\n"
+        f"  {'✓' if sig['callers'] else '•'} T1 find_callers / `bsl_call_graph` — перед `[REFACTOR]`/удалением символа\n"
+        f"  {'✓' if sig['form_screenshot'] else '•'} Тир-2 `get_form_screenshot` — визуальный verify формы без клиента\n"
+        f"  {'✓' if sig['platform_ctx'] else '•'} Тир-2 `bsl-platform-context`/`pdf-vector-graph` — API/доки 8.3.27 (вместо догадки)\n"
+        f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n\n"
+        f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"
+        "Закрой ✗ и заверши снова. Opt-out: ONEC_TASK_GATE_DISABLE=1 (вся gate) / "
+        "ONEC_SONAR_GATE_DISABLE=1 (только Sonar-проверка) / "
+        "ONEC_TOOLGATE_HARD_DISABLE=1 (только high-leverage hard — для trivial-правок)."
+    )
+
+
+def evaluate_completion(root, start, transcript, *, apply_side_effects: bool = True) -> dict | None:
+    """ЕДИНЫЙ источник решения 1С task-completion gate (P0.1, roadmap 260703 / инцидент G-1).
+
+    Зовётся ОБОИМИ путями завершения: ``main()`` живого хука И
+    ``gate_policies.build_context`` (оркестратор при GATE_ORCHESTRATOR_ENABLE=1). До P0.1
+    Sonar-петля и side-effects (LOOPS.md, advisory-event) жили только в ``main()`` → при
+    включённом оркестраторе молча не исполнялись (Sonar-энфорсмент/окно ADR-035 мертвы).
+
+    Возврат ``None`` → 1С-задачи в сессии нет (gate не применим). Иначе dict:
+      {is_1c, task_slug, sig(+sonar_rescan), sonar_ok/status/detail, sonar_hard,
+       impact_hard, debug_hard, hard_ok, reason}.
+    ``apply_side_effects=True`` → пишет LOOPS.md + advisory-event (для активного пути завершения;
+    оба пути взаимоисключаемы по GATE_ORCHESTRATOR_ENABLE → ровно одна запись).
+    """
+    slug = _onec_pipeline_updated(start)  # прямой сигнал: 1С-пайплайн обновлён в этой сессии
+    incomplete = _incomplete_onec_pipeline() if not slug else None  # H5: незавершённый из прошлого
+    if not slug and not incomplete:
+        return None  # 1С-задачи нет вовсе → gate не применим
+
+    sig = _collect_signals(transcript)
+    # H5: «незавершённая из прошлой сессии» применяется лишь при 1С-правке в ЭТОЙ сессии
+    if not slug and not sig.get("config_edit"):
+        return None
+    task_slug = slug or incomplete
+
+    # Sonar-гейт (мандат 2026-06-23): изменённый/добавленный 1С-код обязан пройти Sonar re-scan
+    # с чистой дельтой (0 BLOCKER/CRITICAL). Default-ON при config_edit. Guard'ы против дедлока:
+    # opt-out ONEC_SONAR_GATE_DISABLE=1; Sonar-down → verify skipped → ok; нет state → block missing.
+    sonar_hard = (
+        bool(sig.get("config_edit"))
+        and os.environ.get("ONEC_SONAR_GATE_DISABLE") != "1"
+        and _sonar_rescan_evaluate is not None
+    )
+    sonar_ok, sonar_status, sonar_detail = True, "n/a", ""
+    if sonar_hard:
+        try:
+            sonar_ok, sonar_status, sonar_detail = _sonar_rescan_evaluate(root, start)
+        except Exception:
+            sonar_ok = True  # graceful: внутренняя ошибка evaluate → не блокируем
+    sig["sonar_rescan"] = sonar_ok
+
+    # ADR-036 (вариант A промоута high-leverage): при ONEC_TOOLGATE_HARD=1 И правке 1С-кода impact
+    # → hard; debug_trace — дополнительно при ONEC_TOOLGATE_DEBUG_HARD=1. Default (флаги off) =
+    # прежнее поведение (блок строго по recall/capture/research) — нулевой риск ложных блоков.
+    _hard_disable = os.environ.get("ONEC_TOOLGATE_HARD_DISABLE") == "1"
+    _hard_on = (
+        os.environ.get("ONEC_TOOLGATE_HARD") == "1"
+        and bool(sig.get("config_edit"))
+        and not _hard_disable
+    )
+    impact_hard = _hard_on
+    debug_hard = _hard_on and os.environ.get("ONEC_TOOLGATE_DEBUG_HARD") == "1"
+    hard_ok = _compute_hard_ok(sig, sonar_ok, sonar_hard, impact_hard, debug_hard)
+
+    if apply_side_effects:
+        _write_loops_report(task_slug, sig)  # H2: сводка петель -> pipeline/<slug>/LOOPS.md
+        # ADR-035/036 — лог advisory/hard состояния T1-T2 на КАЖДОЙ 1С-задаче (allow и block)
+        _log_advisory_event(task_slug, sig, hard_blocked=not hard_ok)
+
+    reason = _build_reason(
+        sig, sonar_ok, sonar_status, sonar_detail, sonar_hard, impact_hard, debug_hard, _hard_on
+    )
+    return {
+        "is_1c": True,
+        "task_slug": task_slug,
+        "sig": sig,
+        "sonar_ok": sonar_ok,
+        "sonar_status": sonar_status,
+        "sonar_detail": sonar_detail,
+        "sonar_hard": sonar_hard,
+        "impact_hard": impact_hard,
+        "debug_hard": debug_hard,
+        "hard_ok": hard_ok,
+        "reason": reason,
+    }
+
+
 def main() -> None:
     try:
         from shared.invocation_logger import InvocationTimer
@@ -417,133 +577,36 @@ def main() -> None:
 
     try:
         start = _session_start(sid)
-        slug = _onec_pipeline_updated(start)  # прямой сигнал: 1С-пайплайн обновлён в этой сессии
-        incomplete = (
-            _incomplete_onec_pipeline() if not slug else None
-        )  # H5: незавершённый из прошлой сессии
-        if not slug and not incomplete:
-            if timer:
-                timer.log(outcome="allow")
-            sys.exit(0)  # 1С-задачи нет вовсе → gate не применим
-
-        sig = _collect_signals(transcript)
-        # H5: «незавершённая из прошлой сессии» применяется лишь при 1С-правке в ЭТОЙ сессии
-        if not slug and not sig.get("config_edit"):
+        res = evaluate_completion(PROJECT_ROOT, start, transcript, apply_side_effects=True)
+        if res is None or res["hard_ok"]:
             if timer:
                 timer.log(outcome="allow")
             sys.exit(0)
 
-        task_slug = slug or incomplete
-
-        # Sonar-гейт (мандат пользователя 2026-06-23): изменённый/добавленный 1С-код обязан
-        # пройти Sonar re-scan с чистой дельтой (0 BLOCKER/CRITICAL) по затронутым .bsl.
-        # Default-ON при config_edit (правка 1С-кода в сессии). Guard'ы против дедлока:
-        # opt-out ONEC_SONAR_GATE_DISABLE=1; Sonar-down → verify пишет skipped → evaluate ok;
-        # нет state → block "missing" (выход: прогнать scripts/sonar_rescan_verify.py); graceful → ok.
-        sonar_hard = (
-            bool(sig.get("config_edit"))
-            and os.environ.get("ONEC_SONAR_GATE_DISABLE") != "1"
-            and _sonar_rescan_evaluate is not None
-        )
-        sonar_ok, sonar_status, sonar_detail = True, "n/a", ""
-        if sonar_hard:
-            try:
-                sonar_ok, sonar_status, sonar_detail = _sonar_rescan_evaluate(PROJECT_ROOT, start)
-            except Exception:
-                sonar_ok = True  # graceful: внутренняя ошибка evaluate → не блокируем
-        sig["sonar_rescan"] = sonar_ok
-
-        _write_loops_report(task_slug, sig)  # H2: сводка петель -> pipeline/<slug>/LOOPS.md
-
-        # Блок-решение — hard-петли recall/capture/research ВСЕГДА. ADR-036 (вариант A промоута
-        # high-leverage): при ONEC_TOOLGATE_HARD=1 И правке 1С-кода в сессии (config_edit) impact
-        # становится hard; debug_trace — дополнительно при ONEC_TOOLGATE_DEBUG_HARD=1 (мандат live
-        # BP-trace на каждую правку непрактичен → отдельный opt-in). Per-task escape для trivial —
-        # ONEC_TOOLGATE_HARD_DISABLE=1. find_callers — всегда advisory. Default (флаги off) = прежнее
-        # поведение (блок строго по recall/capture/research) — нулевой риск ложных блоков на rollout.
-        _hard_disable = os.environ.get("ONEC_TOOLGATE_HARD_DISABLE") == "1"
-        _hard_on = (
-            os.environ.get("ONEC_TOOLGATE_HARD") == "1"
-            and bool(sig.get("config_edit"))
-            and not _hard_disable
-        )
-        impact_hard = _hard_on
-        debug_hard = _hard_on and os.environ.get("ONEC_TOOLGATE_DEBUG_HARD") == "1"
-        hard_keys = ["recall", "capture", "research"]
-        if impact_hard:
-            hard_keys.append("impact")
-        if debug_hard:
-            hard_keys.append("debug_trace")
-        hard_ok = all(sig[k] for k in hard_keys) and (sonar_ok or not sonar_hard)
-        # ADR-035/036 — лог advisory/hard состояния T1-T2 на КАЖДОЙ 1С-задаче (allow и block)
-        _log_advisory_event(task_slug, sig, hard_blocked=not hard_ok)
-
-        if hard_ok:
-            if timer:
-                timer.log(outcome="allow")
-            sys.exit(0)
-
-        def mark(ok: bool) -> str:
-            return "✓" if ok else "✗"
-
-        def tier(ok: bool, is_hard: bool) -> str:
-            return "✓" if ok else ("✗" if is_hard else "•")
-
-        hl_hdr = "HARD при правке кода" if _hard_on else "• = advisory, НЕ блок"
-        block_by = "RECALL/CAPTURE/RESEARCH"
-        if sonar_hard:
-            block_by += " + Sonar"
-        if impact_hard:
-            block_by += " + impact"
-        if debug_hard:
-            block_by += " + BP-trace"
-        reason = (
-            "[ONEC-TASK-GATE] 1С-задача не завершена: незакрыты обязательные петли (единый gate, всё сразу):\n"
-            "  ✓ ПАЙПЛАЙН — pipeline-state заведён (1С-задача детектится по нему)\n"
-            f"  {mark(sig['recall'])} RECALL — `mcp__memory-orchestrator__unified_search` / `search_patterns` (поиск прошлого опыта)\n"
-            f"  {mark(sig['capture'])} CAPTURE — `mcp__skill-learning__capture_pattern` после verify PASS (или `route_and_save` / `.md`-память)\n"
-            f"  {mark(sig['research'])} RESEARCH — `WebSearch`/`WebFetch` (внешний анализ: Infostart + GitHub best-practices)\n"
-            f"  {(mark(sonar_ok) if sonar_hard else '•')} SONAR — re-scan изменённого/добавленного 1С-кода "
-            f"(0 BLOCKER/CRITICAL на затронутых .bsl): {sonar_detail or sonar_status}\n"
-            "      выход: `scripts/run-sonar-analysis.ps1` (скан) → `python scripts/sonar_rescan_verify.py` (verify дельты)\n"
-            f"  {'✓' if sig['skill'] else '⚠'} SKILL [1С-методика] — "
-            f"{'активирована' if sig['skill'] else 'не видно в транскрипте (на Write принудит. через code-skill-enforcer)'}\n"
-            f"  — — — high-leverage (ADR-035/036; {hl_hdr}) — — —\n"
-            f"  {tier(sig['impact'], impact_hard)} T1 impact-анализ — `bsl_impact_analysis` перед правкой экспортного метода"
-            f"{' [HARD: правился 1С-код]' if impact_hard else ''}\n"
-            f"  {tier(sig['debug_trace'], debug_hard)} T1 live BP-trace — `1c-debug-hmr` для bugfix / ≥3 ветвлений"
-            f"{' [HARD]' if debug_hard else ''}\n"
-            f"  {'✓' if sig['ref_search'] else '•'} T2 поиск эталона — `bsl_search`/`bsl_similar` на Планировании\n"
-            f"  {'✓' if sig['callers'] else '•'} T1 find_callers / `bsl_call_graph` — перед `[REFACTOR]`/удалением символа\n"
-            f"  {'✓' if sig['form_screenshot'] else '•'} Тир-2 `get_form_screenshot` — визуальный verify формы без клиента\n"
-            f"  {'✓' if sig['platform_ctx'] else '•'} Тир-2 `bsl-platform-context`/`pdf-vector-graph` — API/доки 8.3.27 (вместо догадки)\n"
-            f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n\n"
-            f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"
-            "Закрой ✗ и заверши снова. Opt-out: ONEC_TASK_GATE_DISABLE=1 (вся gate) / "
-            "ONEC_SONAR_GATE_DISABLE=1 (только Sonar-проверка) / "
-            "ONEC_TOOLGATE_HARD_DISABLE=1 (только high-leverage hard — для trivial-правок)."
-        )
+        s = res["sig"]
         _gp_log(
             _gp_decision(
                 "onec-task-completion",
                 False,
                 "1С-задача: незакрыты обязательные петли",
-                recall=sig.get("recall"),
-                capture=sig.get("capture"),
-                research=sig.get("research"),
-                sonar_rescan=sig.get("sonar_rescan"),
-                skill=sig.get("skill"),
-                impact=sig.get("impact"),  # ADR-035/036 advisory|hard
-                debug_trace=sig.get("debug_trace"),
-                ref_search=sig.get("ref_search"),
-                callers=sig.get("callers"),
-                form_screenshot=sig.get("form_screenshot"),
-                platform_ctx=sig.get("platform_ctx"),
-                analyze_method=sig.get("analyze_method"),
+                recall=s.get("recall"),
+                capture=s.get("capture"),
+                research=s.get("research"),
+                sonar_rescan=s.get("sonar_rescan"),
+                skill=s.get("skill"),
+                impact=s.get("impact"),  # ADR-035/036 advisory|hard
+                debug_trace=s.get("debug_trace"),
+                ref_search=s.get("ref_search"),
+                callers=s.get("callers"),
+                form_screenshot=s.get("form_screenshot"),
+                platform_ctx=s.get("platform_ctx"),
+                analyze_method=s.get("analyze_method"),
             )
         )
         sys.stdout.buffer.write(
-            json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False).encode("utf-8")
+            json.dumps({"decision": "block", "reason": res["reason"]}, ensure_ascii=False).encode(
+                "utf-8"
+            )
             + b"\n"
         )
         sys.stdout.buffer.flush()

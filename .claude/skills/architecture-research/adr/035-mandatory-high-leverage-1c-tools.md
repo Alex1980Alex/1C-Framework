@@ -63,3 +63,11 @@
 - Память: `feedback_live_bp_trace_mandatory.md`, `project_1c_tool_usage_instrumentation.md` (W-цикл/`tool_usage_report.py`)
 - **Измерительный контур Фазы 1 (2026-06-22, code-verify PASS):** валидатор [`scripts/onec_toolgate_validation.py`](../../../scripts/onec_toolgate_validation.py) (presence_rate per-tool → `promote-candidate`/`keep-advisory`, окно 06-22→07-06, **caveat survivorship-bias** — presence ≠ безопасность hard, нужна ручная проверка применимости) + SessionStart-баннер [`onec-toolgate-validation-on-start.py`](../../../.claude/hooks/onec-toolgate-validation-on-start.py) (раз/день, зарег. в `settings.json`) + FIFO-ротация event-лога (`ADVISORY_LOG_CAP`)
 - Отложено (Фаза 2): hard-промоут (по вердикту валидатора + **ручная проверка применимости** per-tool, НЕ авто-флип) + контекст-классификация типа задачи (`pipeline_1c_bridge`) — отдельной правкой после окна валидации
+
+## Окно валидации: перезапуск (2026-07-03, инцидент G-1, roadmap 260703)
+
+**Окно 06-22→07-06 ПОТЕРЯНО.** Аудит гл. 43 (roadmap [260703](../../../docs/roadmap/260703_ROADMAP_CH43_1C_PIPELINE_AUDIT.md)) вскрыл: с ~2026-06-21 включён opt-in оркестратор гейтов (`GATE_ORCHESTRATOR_ENABLE=1` в `settings.local.json`), а его политики (`gate_policies.py`) до P0.1 реплицировали лишь recall/capture/research и **не звали `_log_advisory_event`** — event-log [`onec-toolgate-events.jsonl`](../../../.claude/cache/) за всё окно получил ровно 1 синтетическую запись. Валидатор `onec_toolgate_validation.py` на этих данных выдаёт `insufficient-data`; presence_rate замерить не на чем.
+
+**Фикс (P0.1):** решение и side-effects (LOOPS.md + advisory-event) вынесены в единый `onec-task-completion-stop.evaluate_completion`, который зовут ОБА пути (живой хук И `build_context` оркестратора, `apply_side_effects=True`) → event-log пишется независимо от режима гейта. Parity-тест `tests/unit/test_gate_parity.py` закрепляет инвариант «вердикт политики == вердикт evaluate_completion».
+
+**Новое окно:** 2026-07-03 → 2026-07-17 (14 дней). Первая не-синтетическая запись в event-log ожидается на ближайшей 1С-задаче с правкой кода. Только после набора данных — решение о hard-промоуте Фазы 2.

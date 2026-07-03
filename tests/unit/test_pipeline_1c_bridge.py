@@ -363,6 +363,7 @@ def test_sync_approval_best_effort(monkeypatch):
     res = bridge.sync_approval("/implement-1c-task GKSTCPLK-1 x")
     assert res["openspec_approved"] is False
 
+
 def test_sync_approval_systemexit_no_leak(monkeypatch):
     # РЕГРЕСС (code-verify R2): approve кидает SystemExit (BaseException) → sync НЕ всплывает,
     # synced=False, reason approve-failed (openspec_approved уже True — дизайн одобрен через SDD)
@@ -428,6 +429,7 @@ def test_gate_systemexit_no_leak(monkeypatch):
     _inject_fake_approval_state(monkeypatch, approved=True)
     res = bridge.gate_1c_implement("/implement-1c-task GKSTCPLK-32 x")  # НЕ должно кинуть
     assert res["ok"] is True and res["hard"] is False and res.get("source") == "openspec"
+
 
 # --- ADR-041 R3: check_lineage — consistency-чек ANALYSIS-REPORT<->proposal/specs (advisory) ---
 
@@ -495,6 +497,7 @@ def test_check_lineage_wires_change(monkeypatch, tmp_path):
     assert res["checked"] is True and res["change_id"] == "gkstcplk-50-x"
     assert res["consistent"] is False and any("tasks.md" in i for i in res["issues"])
 
+
 # --- ADR-041 R4: use_sdd — единое решение SDD-обёртка vs голый пайплайн в route_1c_task ---
 
 
@@ -522,8 +525,13 @@ def test_route_use_sdd_actionless_false():
 def test_route_use_sdd_key_all_branches():
     # ключ use_sdd во ВСЕХ ветках возврата (none / ask_1c / confident)
     assert bridge.route_1c_task("как работает RAG embeddings")["use_sdd"] is False  # none
-    assert bridge.route_1c_task("исправить ошибку при проведении")["use_sdd"] is False  # ask_1c weak
-    assert "use_sdd" in bridge.route_1c_task("GKSTCPLK-1 доработать форму, добавить колонку")  # confident
+    assert (
+        bridge.route_1c_task("исправить ошибку при проведении")["use_sdd"] is False
+    )  # ask_1c weak
+    assert "use_sdd" in bridge.route_1c_task(
+        "GKSTCPLK-1 доработать форму, добавить колонку"
+    )  # confident
+
 
 # --- F-1.6: advance_test_done (collision-immune; all-passed→этап4 — live DoD) ---
 
@@ -559,6 +567,51 @@ def test_classify_non_1c_and_ask():
     assert bridge.classify_1c_task("как работает RAG embeddings")["is_1c"] is False
     c = bridge.classify_1c_task("исправь ошибку в гкс_ЛабораторныйАнализ при проведении")
     assert c["is_1c"] is True and c["ask"] is True  # 1С-сигнал+глагол, нет JIRA → ask
+
+
+# --- Д-1 (P0.3): JIRA-regex denylist технических акронимов + allowlist проектных префиксов ---
+
+
+def test_jira_acronym_denylist_not_1c():
+    """UTF-8/GPT-4/SHA-256 больше НЕ считаются JIRA-кодом → не дают confidence 1.0/veto-иммунитет."""
+    for txt in ("поправь кодировку UTF-8", "сравни ответы GPT-4 и GPT-5", "ошибка в SHA-256"):
+        c = bridge.classify_1c_task(txt)
+        assert c["is_1c"] is False, txt
+        assert c["jira"] is None, txt
+
+
+def test_jira_acronym_downgrades_signal_to_ask():
+    """«UTF-8 в отчёте» — 1С-сигнал «отчёт» есть, но акроним не даёт 1.0 → confidence 0.5 (ask)."""
+    c = bridge.classify_1c_task("поправь кодировку UTF-8 в отчёте")
+    assert c["is_1c"] is True
+    assert c["confidence"] == 0.5  # НЕ 1.0 (акроним не JIRA) → безопасный ask, не auto
+    assert c["jira"] is None
+
+
+def test_jira_allowlist_prefix_confident():
+    """Проектный префикс GKSTCPLK сохраняет confidence 1.0 (veto-иммунитет)."""
+    c = bridge.classify_1c_task("GKSTCPLK-2597 доработать проведение")
+    assert c["is_1c"] is True and c["confidence"] == 1.0 and c["jira"] == "GKSTCPLK-2597"
+
+
+def test_jira_generic_prefix_veto_able():
+    """Generic (не allowlist) JIRA-код → is_1c, но confidence 0.7 (veto-able), не 1.0."""
+    c = bridge.classify_1c_task("ABC-123 fix something")
+    assert c["is_1c"] is True and c["confidence"] == 0.7 and c["jira"] == "ABC-123"
+
+
+def test_jira_env_allowlist(monkeypatch):
+    """env ONEC_JIRA_PREFIXES расширяет allowlist → указанный префикс получает 1.0."""
+    monkeypatch.setenv("ONEC_JIRA_PREFIXES", "PROJ,FOO")
+    c = bridge.classify_1c_task("PROJ-42 доработать документ")
+    assert c["confidence"] == 1.0 and c["jira"] == "PROJ-42"
+
+
+def test_find_jira_skips_acronym_keeps_real_code():
+    """_find_jira: пропускает акроним, но возвращает реальный код если он есть в тексте."""
+    m = bridge._find_jira("кодировка UTF-8 в задаче GKSTCPLK-2597")
+    assert m is not None and m.group(0) == "GKSTCPLK-2597"
+    assert bridge._find_jira("только UTF-8 и SHA-256") is None
 
 
 # --- run-1c-task: resolve_task_input (чистая функция: os.path + derive_slug → collision-immune) ---
