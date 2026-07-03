@@ -30,8 +30,9 @@
       "n": 3,
       "name": "implementation",
       "command": "pl-code",
-      "artifact": "03-implementation.md",
-      "status": "pending"
+      "artifact": "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260701_GKSTCPLK-2637 Исправление ошибок SQ/IMPLEMENTATION-PROGRESS-260703.md",
+      "status": "done",
+      "completed_at": "2026-07-03T16:45:00"
     },
     {
       "n": 4,
