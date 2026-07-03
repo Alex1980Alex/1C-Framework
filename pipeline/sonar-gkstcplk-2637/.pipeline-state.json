@@ -1,44 +1,44 @@
 {
   "task": "sonar-gkstcplk-2637",
-  "title": "GKSTCPLK-2637 Исправление ошибок SonarQube (гкс_АРМПромежуточныйКомпозит/Форма/Module.bsl)",
+  "title": "GKSTCPLK-2637 Исправление ошибок SonarQube (гкс_АРМПромежуточныйКомпозит — раунд 260703, полный worklist форм)",
   "created_at": "2026-07-01T10:13:54",
-  "updated_at": "2026-07-03T02:15:00",
-  "current_stage": 5,
+  "updated_at": "2026-07-03T12:31:00",
+  "current_stage": 3,
+  "round": "260703",
+  "note": "Раунд 260702 (6 замечаний) завершён ранее — история в git. Раунд 260703 = оставшийся worklist (~20 замечаний, 2 модуля форм). Анализ+дизайн выполнены, ожидают одобрения пользователя перед реализацией.",
   "stages": [
     {
       "n": 1,
       "name": "architecture",
       "command": "pl-plan",
-      "artifact": "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260701_GKSTCPLK-2637 Исправление ошибок SQ/260701_GKSTCPLK-2637 Исправление ошибок SQ.md",
+      "artifact": "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260701_GKSTCPLK-2637 Исправление ошибок SQ/260703_GKSTCPLK-2637 Исправить замечания SQ.md",
       "status": "done",
-      "completed_at": "2026-07-01T10:14:11"
+      "completed_at": "2026-07-03T12:31:00"
     },
     {
       "n": 2,
       "name": "design",
       "command": "pl-design",
-      "artifact": "02-design.md",
+      "artifact": "configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС/docs/260701_GKSTCPLK-2637 Исправление ошибок SQ/ANALYSIS-REPORT-260703.md",
       "status": "done",
-      "completed_at": "2026-07-03T02:14:59",
+      "completed_at": "2026-07-03T12:31:00",
       "approved": true,
       "approved_by": "user",
-      "approved_at": "2026-07-03T02:14:59"
+      "approved_at": "2026-07-03T13:05:00"
     },
     {
       "n": 3,
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "done",
-      "completed_at": "2026-07-03T02:15:00"
+      "status": "pending"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
       "artifact": "04-testing.md",
-      "status": "done",
-      "completed_at": "2026-07-03T02:15:00"
+      "status": "pending"
     }
   ]
 }
