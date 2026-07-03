@@ -142,16 +142,28 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"[{'ok' if st in (200, 204) else 'WARN'}] gate -> проект {args.project} (status={st})")
 
-    # 4. new-code = previous_version (Clean-as-You-Code baseline)
-    st, _ = _call(
-        args.host,
-        "/api/new_code_periods/set",
-        auth,
-        {"type": "previous_version", "project": args.project},
+    # 4. new-code baseline (Clean-as-You-Code). Явный branch-level SPECIFIC_ANALYSIS —
+    # осознанный пин (для легаси-первого-скана PREVIOUS_VERSION вырожден: весь код «новый»,
+    # см. memory reference-sonar-changed-lines-gate) — НЕ затирать: project-level set
+    # сбрасывает и branch-запись (2026-07-03: каждый run-sonar клобберил пин).
+    st, ncp = _call(
+        args.host, "/api/new_code_periods/list", auth, {"project": args.project}, method="GET"
     )
-    print(
-        f"[{'ok' if st in (200, 204) else 'WARN'}] new-code period = previous_version (status={st})"
+    pinned = st == 200 and any(
+        p.get("type") == "SPECIFIC_ANALYSIS" for p in ncp.get("newCodePeriods", [])
     )
+    if pinned:
+        print("[ok] new-code period: branch-level SPECIFIC_ANALYSIS запинен — не трогаем")
+    else:
+        st, _ = _call(
+            args.host,
+            "/api/new_code_periods/set",
+            auth,
+            {"type": "previous_version", "project": args.project},
+        )
+        print(
+            f"[{'ok' if st in (200, 204) else 'WARN'}] new-code period = previous_version (status={st})"
+        )
 
     # 5. опц. default
     if args.set_default:
