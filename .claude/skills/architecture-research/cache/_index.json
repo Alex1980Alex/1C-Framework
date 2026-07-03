@@ -3,6 +3,31 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "agentic-quality-gate-workflow-templates-2026.md",
+      "title": "Agentic workflow-шаблоны с quality-gate-петлями (июль 2026): doordash agentico (FSM+критики плана+bounded iteration), AWS AI-DLC (3 фазы+адаптивная глубина+steering rules), koto (YAML FSM, exit-code gate + fix-петля {{gate_output}}), Graybark (11 этапов, verify.sh, 3 параллельных рецензента, compound learning, needs-human-p0/p1/p2)",
+      "keywords": [
+        "agentic-workflow",
+        "quality-gates",
+        "fsm",
+        "exit-code-gate",
+        "fix-loop",
+        "gate-output-feedback",
+        "bounded-iteration",
+        "escalation-labels",
+        "worktree-isolation",
+        "compound-learning",
+        "ai-dlc",
+        "steering-rules",
+        "adaptive-depth",
+        "plan-critics",
+        "parallel-reviewers",
+        "agentico",
+        "koto",
+        "graybark"
+      ],
+      "last_verified": "2026-07-03"
+    },
+    {
       "file": "video-transcription-mcp-2026.md",
       "title": "MCP-серверы транскрибации видео/аудио (Whisper/STT): faster-whisper (ZahiriNatZuke/whisper-transcribe-mcp, pip, local, large-v3) vs whisper.cpp (eviscerations/whisper-windows-mcp, Vulkan GPU, Windows-native) vs Groq cloud (bis-code/groq-whisper-mcp); экосистема молодая, ★ низкие; вывод для Windows+GPU+RU+приватность",
       "keywords": [
