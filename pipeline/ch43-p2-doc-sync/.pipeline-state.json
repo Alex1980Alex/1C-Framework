@@ -2,8 +2,8 @@
   "task": "ch43-p2-doc-sync",
   "title": "P2 синхронизация главы 43 с кодом (roadmap 260703)",
   "created_at": "2026-07-03T20:36:51",
-  "updated_at": "2026-07-03T20:36:51",
-  "current_stage": 2,
+  "updated_at": "2026-07-03T20:50:52",
+  "current_stage": 5,
   "stages": [
     {
       "n": 1,
@@ -18,8 +18,8 @@
       "name": "design",
       "command": "pl-design",
       "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
+      "status": "done",
+      "completed_at": "2026-07-03T20:50:52",
       "approved": false,
       "approved_by": null,
       "approved_at": null
@@ -29,16 +29,16 @@
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-03T20:50:52"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
       "artifact": "04-testing.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-03T20:50:52"
     }
   ]
 }
