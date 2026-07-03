@@ -246,6 +246,38 @@ def _artifact_has_content(file_path: str, min_chars: int = _ARTIFACT_MIN_CHARS) 
     return len("".join(body.split())) >= min_chars
 
 
+def _owning_1c_slug(file_path: str, pipeline_state) -> str | None:
+    """Зарегистрированный 1С-пайплайн, которому ПРИНАДЛЕЖИТ артефакт (P1.5, класс «чужой задачи»).
+
+    Артефакт (ANALYSIS-REPORT/IMPLEMENTATION-PROGRESS) лежит В папке своей задачи → владелец =
+    пайплайн, чей ``state_dir`` — предок пути артефакта (точная привязка). Fallback: JIRA в пути
+    совпал с зарегистрированным slug. None → caller использует CURRENT (прежнее поведение).
+    Без этого запись артефакта задачи B продвигала/переносила state задачи A (CURRENT)."""
+    try:
+        art = os.path.abspath(file_path or "")
+        pairs = list(pipeline_state.iter_states())
+        for slug, data in pairs:
+            if not is_1c_task_title(data.get("title")):
+                continue
+            sd = os.path.abspath(str(pipeline_state.state_dir(slug)))
+            if art == sd or art.startswith(sd + os.sep):
+                return slug
+        # fallback: ЛЮБОЙ JIRA в пути (nested-путь `…/260304_GKSTCPLK-2182/docs/…_GKSTCPLK-2637/…`
+        # несёт и родителя, и задачу) совпал с зарегистрированным 1С-slug'ом.
+        jiras = {_slug_norm(mm.group(0)) for mm in _JIRA.finditer(file_path or "")}
+        if jiras:
+            for slug, data in pairs:
+                if is_1c_task_title(data.get("title")) and _slug_norm(slug) in jiras:
+                    return slug
+    except Exception:
+        pass
+    return None
+
+
+def _slug_norm(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (s or "").lower())
+
+
 def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
     """Продвинуть этапы CURRENT 1С-пайплайна по записи 1С-артефакта (F-1.5). best-effort → None.
 
@@ -265,7 +297,9 @@ def advance_for_artifact(file_path: str) -> tuple[int, ...] | None:
             sys.path.insert(0, hooks)
         from shared import pipeline_state
 
-        slug = pipeline_state.resolve_current()
+        # P1.5: сперва владелец по пути артефакта (state_dir-предок / JIRA), иначе CURRENT (legacy).
+        # Без этого запись артефакта задачи B продвигала CURRENT (задачу A) и переносила её state.
+        slug = _owning_1c_slug(file_path, pipeline_state) or pipeline_state.resolve_current()
         data = pipeline_state.load(slug) if slug else None
         if not data or not is_1c_task_title(data.get("title")):
             return None  # guard: только 1С-пайплайн (метка ensure_pipeline_1c)
@@ -307,7 +341,18 @@ def gate_1c_implement(prompt: str) -> dict:
         slug = resolve_active_1c_slug(prompt)
         data = pipeline_state.load(slug) if slug else None
         if not data or not is_1c_task_title(data.get("title")):
-            return {"ok": True, "hard": False, "reason": ""}  # нет активного 1С-пайплайна → no-op
+            # P1.3 (К-4): /implement вызван, но активный 1С-пайплайн (дизайн) не найден →
+            # раньше молчаливый no-op. Advisory сообщает, что G4 НЕ применён (не блок).
+            return {
+                "ok": True,
+                "hard": False,
+                "reason": "",
+                "advisory": (
+                    "активный 1С-пайплайн (дизайн) не найден — G4-гейт «Дизайн→Кодирование» НЕ "
+                    "применён. Убедись, что `/analyze-1c-task` создал pipeline-state этой задачи, "
+                    "или укажи JIRA-код в промпте (проверь: `pipeline_state.py status`)."
+                ),
+            }
         st2 = next((s for s in data.get("stages", []) if s.get("n") == 2), None)
         if st2 and st2.get("status") == "done" and st2.get("approved"):
             return {
@@ -827,7 +872,22 @@ def _semantic_sim_safe(prompt: str) -> float:
 
 
 # ADR-025 stage-2a′: SetFit-гейт — обучаемый слой ② поверх/вместо TF-IDF (opt-in, по умолчанию спит).
+# Fallback-порог, если gate.threshold() недоступен (env → 0.5). Основной путь — калиброванный (P1.1).
 _SETFIT_THRESHOLD = float(os.environ.get("ONEC_SETFIT_THRESHOLD", "0.5"))
+
+
+def _setfit_threshold_safe() -> float:
+    """Калиброванный SetFit-порог из onec_setfit_gate.threshold() (env → meta.json → 0.5).
+
+    P1.1 (Д-2): раньше мост сравнивал с собственной import-time константой `_SETFIT_THRESHOLD`,
+    игнорируя калибровку обучения (`meta.json.threshold`, подбирается eval_1c_detector.py --setfit).
+    """
+    try:
+        from shared.onec_setfit_gate import threshold
+
+        return threshold()
+    except Exception:
+        return _SETFIT_THRESHOLD
 
 
 def _setfit_prob_safe(prompt: str) -> float | None:
@@ -852,7 +912,7 @@ def _semantic_signal(prompt: str) -> tuple[float, str, bool]:
     """
     prob = _setfit_prob_safe(prompt)
     if prob is not None:
-        return prob, "setfit", prob >= _SETFIT_THRESHOLD
+        return prob, "setfit", prob >= _setfit_threshold_safe()  # P1.1: калиброванный порог
     sem = _semantic_sim_safe(prompt)
     return sem, "tfidf", sem >= _SEM_THRESHOLD
 

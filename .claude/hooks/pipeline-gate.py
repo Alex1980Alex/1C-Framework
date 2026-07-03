@@ -48,6 +48,9 @@ class PipelineGate(BaseHook):
             if not res["ok"] and res["hard"]:
                 _gp_log(_gp_decision("pipeline-gate:1c-implement", False, res["reason"]))
                 return HookOutput().block(f"[PIPELINE-GATE] {res['reason']}")
+            # P1.3 (К-4): активный 1С-пайплайн не найден → advisory (не блок), чтобы G4-no-op не был молчаливым
+            if res.get("advisory"):
+                return HookOutput().system_message(f"[PIPELINE-GATE] {res['advisory']}")
             # R3 (ADR-041): advisory consistency-чек lineage ANALYSIS-REPORT<->proposal/specs
             # (НЕ блок — чекпойнт как spec-kit /analyze; best-effort).
             try:

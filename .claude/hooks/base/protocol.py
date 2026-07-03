@@ -202,6 +202,15 @@ class BaseHook(ABC):
             try:
                 from shared.invocation_logger import log_invocation
 
+                # P1.2 (К-2): пробросить run_id (симметрично mcp-invocation-logger) → нативные тулы
+                # (Read/Write/Edit/Bash) получают correlationid=run_id, а не session → tool_usage_report
+                # --run-id их видит. Аддитивно: нет run_id (вне slash-команды) → прежний session-fallback.
+                try:
+                    from shared.run_context import get_run_id
+
+                    _rid = get_run_id(inp.session_id) or ""
+                except Exception:
+                    _rid = ""
                 log_invocation(
                     hook=type(self).__name__,
                     event=inp.detected_event,
@@ -209,6 +218,7 @@ class BaseHook(ABC):
                     elapsed_ms=self.elapsed_ms,
                     outcome=outcome,
                     session_id=inp.session_id,
+                    run_id=_rid,
                     error=error_msg,
                 )
             except Exception:

@@ -33,7 +33,7 @@ Opt-out: ONEC_TASK_GATE_DISABLE=1
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -224,12 +224,32 @@ def _onec_pipeline_updated(start: datetime | None) -> str | None:
 
 
 def _incomplete_onec_pipeline() -> str | None:
-    """slug 1С-пайплайна с НЕ-завершёнными этапами (H5: межсессионная задача из прошлой сессии)."""
+    """slug 1С-пайплайна с НЕ-завершёнными этапами (H5: межсессионная задача из прошлой сессии).
+
+    P1.7 (2.E.5): age-bound + tie-break на САМЫЙ СВЕЖИЙ. У голой BSL-правки нет надёжной привязки
+    к конкретной задаче, поэтому (а) не «оживляем» давно брошенные пайплайны (иначе side-effects
+    LOOPS.md/advisory уходят в чужую старую задачу); (б) среди подходящих берём последний
+    обновлённый (наиболее вероятный владелец). Порог — env ONEC_INCOMPLETE_MAX_AGE_DAYS (default 14;
+    0/пусто → без ограничения, прежнее поведение)."""
+    try:
+        max_age = float(os.environ.get("ONEC_INCOMPLETE_MAX_AGE_DAYS", "14") or 0)
+    except ValueError:
+        max_age = 14.0
+    cutoff = (datetime.now() - timedelta(days=max_age)) if max_age > 0 else None
+    best_slug: str | None = None
+    best_dt: datetime | None = None
     for slug, d in _iter_1c_pipelines():
         stages = d.get("stages", [])
-        if stages and not all(s.get("status") == "done" for s in stages):
-            return slug
-    return None
+        if not stages or all(s.get("status") == "done" for s in stages):
+            continue
+        dt = _parse_dt(d.get("updated_at", ""))
+        # Скипаем ТОЛЬКО заведомо-старые (парсибельный dt < cutoff). Отсутствие/непарс метки →
+        # не повод исключать (реальный state всегда несёт updated_at; missing = не доказано-старый).
+        if cutoff is not None and dt is not None and dt < cutoff:
+            continue
+        if best_slug is None or (dt is not None and (best_dt is None or dt > best_dt)):
+            best_slug, best_dt = slug, dt
+    return best_slug
 
 
 def _iter_tool_uses(obj):
@@ -511,8 +531,11 @@ def evaluate_completion(root, start, transcript, *, apply_side_effects: bool = T
     if sonar_hard:
         try:
             sonar_ok, sonar_status, sonar_detail = _sonar_rescan_evaluate(root, start)
-        except Exception:
+        except Exception as e:
             sonar_ok = True  # graceful: внутренняя ошибка evaluate → не блокируем
+            sonar_status, sonar_detail = "degraded", f"{type(e).__name__}: {e}"
+            # P1.8 (2.E.4): fail-open Sonar-ветки виден в decision-log (не молчаливый allow)
+            _gp_log(_gp_decision("onec-task-completion:sonar", True, f"degraded:{sonar_detail}"))
     sig["sonar_rescan"] = sonar_ok
 
     # ADR-036 (вариант A промоута high-leverage): при ONEC_TOOLGATE_HARD=1 И правке 1С-кода impact
@@ -578,7 +601,25 @@ def main() -> None:
     try:
         start = _session_start(sid)
         res = evaluate_completion(PROJECT_ROOT, start, transcript, apply_side_effects=True)
-        if res is None or res["hard_ok"]:
+        if res is None:
+            if timer:
+                timer.log(outcome="allow")
+            sys.exit(0)  # 1С-задачи нет → decision-log не пишем (не наш концерн)
+        if res["hard_ok"]:
+            # P1.6: логируем и ALLOW реальной 1С-задачи (симметрия decision-log — иначе периоды
+            # в gate-decisions.jsonl между deny-only и allow+deny режимами несравнимы).
+            s = res["sig"]
+            _gp_log(
+                _gp_decision(
+                    "onec-task-completion",
+                    True,
+                    "обязательные петли закрыты",
+                    recall=s.get("recall"),
+                    capture=s.get("capture"),
+                    research=s.get("research"),
+                    sonar_rescan=s.get("sonar_rescan"),
+                )
+            )
             if timer:
                 timer.log(outcome="allow")
             sys.exit(0)

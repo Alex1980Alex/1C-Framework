@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -229,6 +229,46 @@ def test_incomplete_onec_pipeline_h5(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     assert mod._incomplete_onec_pipeline() is None
+
+
+def test_incomplete_age_bound_skips_stale(tmp_path, monkeypatch):
+    """P1.7: давно брошенный незавершённый пайплайн (updated_at старше порога) НЕ выбирается."""
+    _isolate_pipeline(monkeypatch, tmp_path)
+    monkeypatch.setenv("ONEC_INCOMPLETE_MAX_AGE_DAYS", "14")
+    old = tmp_path / "stale"
+    old.mkdir(parents=True)
+    (old / ".pipeline-state.json").write_text(
+        json.dumps(
+            {
+                "title": "1С-задача (run-1c-task): stale",
+                "updated_at": "2025-01-01T00:00:00",  # больше года назад
+                "stages": [{"status": "done"}, {"status": "pending"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert mod._incomplete_onec_pipeline() is None
+
+
+def test_incomplete_tie_break_most_recent(tmp_path, monkeypatch):
+    """P1.7: среди нескольких свежих незавершённых берётся ПОСЛЕДНИЙ обновлённый."""
+    _isolate_pipeline(monkeypatch, tmp_path)
+    monkeypatch.setenv("ONEC_INCOMPLETE_MAX_AGE_DAYS", "0")  # без ограничения возраста
+    now = datetime.now()
+    for name, dt in (("older", now - timedelta(days=2)), ("newer", now - timedelta(hours=1))):
+        p = tmp_path / name
+        p.mkdir(parents=True)
+        (p / ".pipeline-state.json").write_text(
+            json.dumps(
+                {
+                    "title": f"1С-задача (run-1c-task): {name}",
+                    "updated_at": dt.isoformat(),
+                    "stages": [{"status": "done"}, {"status": "pending"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+    assert mod._incomplete_onec_pipeline() == "newer"
 
 
 # ─── ADR-035 Фаза 1 — advisory T1-T2 ────────────────────────────────────────

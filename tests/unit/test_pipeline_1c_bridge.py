@@ -614,6 +614,97 @@ def test_find_jira_skips_acronym_keeps_real_code():
     assert bridge._find_jira("только UTF-8 и SHA-256") is None
 
 
+# --- P1.1 (Д-2): SetFit-порог из калиброванного onec_setfit_gate.threshold() ---
+
+
+def test_setfit_threshold_safe_uses_gate(monkeypatch):
+    """_setfit_threshold_safe делегирует onec_setfit_gate.threshold() (калиброванный), не константе."""
+    import types
+
+    fake = types.ModuleType("shared.onec_setfit_gate")
+    fake.threshold = lambda: 0.83
+    monkeypatch.setitem(sys.modules, "shared.onec_setfit_gate", fake)
+    assert bridge._setfit_threshold_safe() == 0.83
+
+
+def test_setfit_threshold_safe_fallback(monkeypatch):
+    """Сбой импорта гейта → fallback на константу _SETFIT_THRESHOLD (не падаем)."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def boom(name, *a, **k):
+        if name == "shared.onec_setfit_gate":
+            raise ImportError("no gate")
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", boom)
+    assert bridge._setfit_threshold_safe() == bridge._SETFIT_THRESHOLD
+
+
+# --- P1.3 (К-4): gate_1c_implement advisory при отсутствии активного 1С-пайплайна ---
+
+
+def test_gate_implement_advisory_when_no_pipeline(monkeypatch):
+    """Нет активного 1С-пайплайна → ok=True (не блок) + advisory-поле (G4 no-op не молчалив)."""
+    monkeypatch.setattr(bridge, "resolve_active_1c_slug", lambda p: None)
+    res = bridge.gate_1c_implement("реализуй что-то без jira и без пайплайна")
+    assert res["ok"] is True and res["hard"] is False
+    assert "advisory" in res and "G4" in res["advisory"]
+
+
+# --- P1.5 (класс «чужой задачи»): _owning_1c_slug — владелец артефакта по пути ---
+
+
+def test_owning_slug_by_statedir_ancestor(tmp_path):
+    """Владелец = пайплайн, чей state_dir — предок артефакта (точная привязка, не CURRENT)."""
+
+    class FakePS:
+        @staticmethod
+        def iter_states():
+            yield "GKSTCPLK-1", {"title": "1С-задача (analyze): a"}
+            yield "GKSTCPLK-2", {"title": "1С-задача (analyze): b"}
+
+        @staticmethod
+        def state_dir(slug):
+            return tmp_path / slug
+
+    (tmp_path / "GKSTCPLK-2").mkdir()
+    art = tmp_path / "GKSTCPLK-2" / "ANALYSIS-REPORT.md"
+    assert bridge._owning_1c_slug(str(art), FakePS) == "GKSTCPLK-2"
+
+
+def test_owning_slug_by_jira_fallback(tmp_path):
+    """Fallback: JIRA в пути совпал с зарегистрированным slug (когда state_dir не предок)."""
+
+    class FakePS:
+        @staticmethod
+        def iter_states():
+            yield "GKSTCPLK-2637", {"title": "1С-задача (analyze): sonar"}
+
+        @staticmethod
+        def state_dir(slug):
+            return tmp_path / "elsewhere" / slug
+
+    art = "configuration/260304_GKSTCPLK-2182/docs/260701_GKSTCPLK-2637/ANALYSIS-REPORT.md"
+    assert bridge._owning_1c_slug(art, FakePS) == "GKSTCPLK-2637"
+
+
+def test_owning_slug_none_when_unregistered(tmp_path):
+    """Артефакт вне зарегистрированных задач → None (caller падает на CURRENT-legacy)."""
+
+    class FakePS:
+        @staticmethod
+        def iter_states():
+            yield "GKSTCPLK-9", {"title": "1С-задача (analyze): x"}
+
+        @staticmethod
+        def state_dir(slug):
+            return tmp_path / slug
+
+    assert bridge._owning_1c_slug(str(tmp_path / "other" / "REPORT.md"), FakePS) is None
+
+
 # --- run-1c-task: resolve_task_input (чистая функция: os.path + derive_slug → collision-immune) ---
 
 

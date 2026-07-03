@@ -17,6 +17,17 @@ from shared.gate_policy import decision
 _HOOKS_DIR = Path(__file__).resolve().parent.parent  # .claude/hooks
 
 
+def _log_degraded(where: str, err: Exception) -> None:
+    """P1.8: пишет degraded-запись (decision=allow, reason=degraded:<err>) в decision-log —
+    fail-open (safe-allow дефолты) больше не молчалив. best-effort, никогда не кидает."""
+    try:
+        from shared.gate_policy import log_decision
+
+        log_decision(decision(where, True, f"degraded:{type(err).__name__}: {err}"))
+    except Exception:
+        pass
+
+
 def _load(modname, filename):
     spec = importlib.util.spec_from_file_location(modname, str(_HOOKS_DIR / filename))
     m = importlib.util.module_from_spec(spec)
@@ -45,7 +56,10 @@ def build_context(sid, transcript_path):
     try:
         pp = _load("_pp_stop", "pipeline-protocol-stop.py")
         oc = _load("_oc_stop", "onec-task-completion-stop.py")
-    except Exception:
+    except Exception as e:
+        # P1.8 (2.E.2): полный сбой загрузки glue → оркестратор глохнет в safe-allow. Раньше молча;
+        # теперь пишем degraded-запись в decision-log, чтобы fail-open был виден в аудите.
+        _log_degraded("build_context:load", e)
         return ctx
 
     # Сигнал пайплайн-протокола (ADR-018): были ли правки без пайплайна
@@ -83,8 +97,10 @@ def build_context(sid, transcript_path):
             ctx["capture"] = sig.get("capture", False)
             ctx["research"] = sig.get("research", False)
             ctx["skill"] = sig.get("skill", False)
-    except Exception:
-        pass
+    except Exception as e:
+        _log_degraded(
+            "build_context:onec-eval", e
+        )  # P1.8: сбой 1С-оценки → safe-allow виден в аудите
     return ctx
 
 
