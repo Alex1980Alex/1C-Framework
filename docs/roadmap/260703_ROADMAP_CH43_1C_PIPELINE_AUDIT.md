@@ -204,6 +204,7 @@ P3.2 ─→ P3.6 (эскалация порождает learning-вход)
 3. **P2 — большой батч правок доков**: риск нового дрейфа при длинной раскатке. Митигация: P2 исполнять одним срезом после P0/P1; P3.5-линтер закрепляет.
 4. **Оценки** — по практике roadmap'ов переоцениваются на 1.5-3× (memory `project-roadmap-audit-pattern`); суммарно P0+P1+P2 ≈ 4-6 рабочих дней с буфером.
 5. Аудит покрывал главу 43 и её код-опору; смежные главы (17.x, 40.x, 45) не проверялись — переносить выводы на них нельзя.
+6. **Пред-существующая тест-инфра (обнаружено при P0, НЕ регресс):** полный сбор `pytest tests/unit/` падает на семействе хук-`shared`-тестов (`test_gate_policies`/`test_gate_policy`/`test_llm_health`/`test_sonar_rescan_state` + новый `test_gate_parity`) — бареный `shared` кэшируется как `src/shared` под `--import-mode=importlib`, затеняя `.claude/hooks/shared` ([[feedback-hook-src-shared-collision]]). Воспроизведено БЕЗ моих файлов → пред-существующее (CI уже красный по этой и др. причинам с 06-28). P0-тесты верифицированы таргетными прогонами. **Кандидат-фикс (P1/P2):** conftest, эвиктящий/изолирующий `shared` для хук-тестов, ИЛИ importlib-загрузка хук-модулей по пути под уникальным именем.
 
 ## §6 Acceptance всего roadmap
 
@@ -219,5 +220,6 @@ P3.2 ─→ P3.6 (эскалация порождает learning-вход)
 | Дата | Фаза | Событие | Артефакт |
 |---|---|---|---|
 | 2026-07-03 | Аудит | 4-агентный аудит 27 файлов главы ↔ код (2 боевых бага подтверждены живьём: JIRA-FP, run_id-разрыв; инцидент G-1 оркестратора вскрыт по `gate-decisions.jsonl`) + GitHub-исследование (ecosystem_scan + deep-fetch agentico/AI-DLC/koto/Graybark) + этот roadmap | этот файл + кеш [agentic-quality-gate-workflow-templates-2026](../../.claude/skills/architecture-research/cache/agentic-quality-gate-workflow-templates-2026.md) |
+| 2026-07-03 | **P0 РЕАЛИЗОВАН** | **P0.1** single-source `evaluate_completion` (sonar + LOOPS.md + advisory-event вынесены из `main()`; `build_context`/`onec_completion_policy` делегируют; оркестратор рендерит богатый reason) + parity-тест `test_gate_parity.py` (16-комбинационная матрица + инцидент-тест «Sonar теперь deny»). **P0.3** `_find_jira` denylist акронимов (UTF/SHA/GPT/…) + allowlist проектных префиксов (env `ONEC_JIRA_PREFIXES`); generic-JIRA→0.7 veto-able; живой прогон: «UTF-8»→none, GKSTCPLK→1.0. **P0.4** research-сигнал засчитывает Bash `ecosystem_scan.py`/`onec_search.py`/`its_fetch.py`. **P0.5** реликты лога удалены. **P0.2** ADR-035 окно перезапущено (06-22→07-06 потеряно → 07-03→07-17). Тесты: 173 таргетных passed (parity 20 + bridge 115 + onec 15 + gate 23), ruff+compile чисто. | `onec-task-completion-stop.py` + `shared/gate_policies.py` + `gate-orchestrator-stop.py` + `shared/pipeline_1c_bridge.py` + 3 теста + ADR-035 |
 
 > Триггеры обновления §18 (memory `feedback-roadmap-progress-log-protocol`): закрытие фазы, ADR, снятый блокер → строка + коммит `docs(roadmap):`.
