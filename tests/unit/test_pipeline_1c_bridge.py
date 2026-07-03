@@ -674,6 +674,23 @@ def test_owning_slug_by_statedir_ancestor(tmp_path):
     assert bridge._owning_1c_slug(str(art), FakePS) == "GKSTCPLK-2"
 
 
+def test_owning_slug_prefers_deepest_ancestor(tmp_path):
+    """P1.5 harden: среди нескольких state_dir-предков выбирается САМЫЙ ГЛУБОКИЙ (специфичный)."""
+
+    class FakePS:
+        @staticmethod
+        def iter_states():
+            yield "PARENT", {"title": "1С-задача (analyze): parent"}
+            yield "CHILD", {"title": "1С-задача (analyze): child"}
+
+        @staticmethod
+        def state_dir(slug):
+            return tmp_path if slug == "PARENT" else tmp_path / "sub" / "task"
+
+    art = tmp_path / "sub" / "task" / "ANALYSIS-REPORT.md"
+    assert bridge._owning_1c_slug(str(art), FakePS) == "CHILD"
+
+
 def test_owning_slug_by_jira_fallback(tmp_path):
     """Fallback: JIRA в пути совпал с зарегистрированным slug (когда state_dir не предок)."""
 

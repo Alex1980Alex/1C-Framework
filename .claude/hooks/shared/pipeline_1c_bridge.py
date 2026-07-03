@@ -256,12 +256,17 @@ def _owning_1c_slug(file_path: str, pipeline_state) -> str | None:
     try:
         art = os.path.abspath(file_path or "")
         pairs = list(pipeline_state.iter_states())
+        # Самый ГЛУБОКИЙ state_dir-предок = наиболее специфичный владелец (снимает латентную
+        # неоднозначность, если родительская и дочерняя задачи зарегистрированы на вложенные папки).
+        best_slug, best_len = None, -1
         for slug, data in pairs:
             if not is_1c_task_title(data.get("title")):
                 continue
             sd = os.path.abspath(str(pipeline_state.state_dir(slug)))
-            if art == sd or art.startswith(sd + os.sep):
-                return slug
+            if (art == sd or art.startswith(sd + os.sep)) and len(sd) > best_len:
+                best_slug, best_len = slug, len(sd)
+        if best_slug:
+            return best_slug
         # fallback: ЛЮБОЙ JIRA в пути (nested-путь `…/260304_GKSTCPLK-2182/docs/…_GKSTCPLK-2637/…`
         # несёт и родителя, и задачу) совпал с зарегистрированным 1С-slug'ом.
         jiras = {_slug_norm(mm.group(0)) for mm in _JIRA.finditer(file_path or "")}
