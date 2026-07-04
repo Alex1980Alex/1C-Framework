@@ -83,7 +83,7 @@ Lightweight Python job:
 - Modify `scripts/ci_failure_cache.py`: add `--ci-mode` flag (no TEI/Qdrant, no local file, append via gh api)
 - New file: `scripts/ci_cache_rotate.py` (nightly squash)
 - Tests: `tests/integration/test_ci_failure_cache_ci_mode.py`
-- Doc: `docs/framework documentation/42_MONITOR_CI/42.5_GitHub_Actions_Webhook.md`
+- Doc: `docs/framework documentation/7_ПРОВЕРКА/7.10_MONITOR_CI/42.5_GitHub_Actions_Webhook.md`
 
 **Estimate:** 1.5-2 дня focused work.
 
@@ -151,7 +151,7 @@ For each thread:
 - New hook: `.claude/hooks/gh-email-intake-on-start.py` (~100 lines, registers как часть SessionStart chain)
 - New helper: `.claude/hooks/shared/gmail_classifier.py` (~80 lines — regex taxonomy)
 - New script: `scripts/gh_email_summary.py` (CLI для manual digest)
-- Doc: `docs/framework documentation/42_MONITOR_CI/42.6_Gmail_Integration.md`
+- Doc: `docs/framework documentation/7_ПРОВЕРКА/7.10_MONITOR_CI/42.6_Gmail_Integration.md`
 
 **Estimate:** 0.5-1 день.
 
@@ -203,7 +203,7 @@ Sections:
 
 - New script: `scripts/ci_digest.py` (~200 lines)
 - Optional skill: `.claude/skills/ci-digest/SKILL.md` (~50 lines)
-- Doc: `docs/framework documentation/42_MONITOR_CI/42.7_Daily_Digest.md`
+- Doc: `docs/framework documentation/7_ПРОВЕРКА/7.10_MONITOR_CI/42.7_Daily_Digest.md`
 
 **Estimate:** 0.5 день.
 
@@ -239,7 +239,7 @@ Sections:
 ## §6 Связанные артефакты
 
 - [PR #54](https://github.com/Alex1980Alex/1C-Framework/pull/54) — Phase 1 base (auto-catchup + bug fix)
-- [Chapter 42 Monitor CI](../framework%20documentation/42_MONITOR_CI/42.1_Обзор.md) — текущая архитектура
+- [Chapter 42 Monitor CI](../framework%20documentation/7_ПРОВЕРКА/7.10_MONITOR_CI/42.1_Обзор.md) — текущая архитектура
 - [Memory `feedback_ci_maximum_autopilot_works`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_ci_maximum_autopilot_works.md) — Phase 0 learnings
 - [Memory `feedback_post_merge_smoke_required`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_post_merge_smoke_required.md) — post-merge protocol
 

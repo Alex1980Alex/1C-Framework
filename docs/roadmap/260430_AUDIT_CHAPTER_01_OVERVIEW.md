@@ -1,4 +1,4 @@
-# Audit: docs/framework documentation/01_ОБЗОР/ vs реальность
+# Audit: docs/framework documentation/0_ВВЕДЕНИЕ/0.1_ОБЗОР/ vs реальность
 
 **Дата:** 2026-04-30 (вечер) → fully closed 2026-05-09
 **Статус:** ✅ FULLY DONE — initial closure 2026-05-01 (P0/P1 numbers + stack alignment), final sweep 2026-05-09: (a) Migration note headers added к 01.1+01.2 (§3.4.1); (b) framework_search + auto-reindex added в 01.1 «Self-search и автоматизация» секцию (§3.3.1); (c) Backend infrastructure (Docker) table с pdf-rag-qdrant/pdf-rag-tei/neo4j/redis added в 01.3 (§3.3.3); (d) CI guard `tests/test_docs_invariants.py` (§3.5.2) — 2 теста (legacy mentions без маркера / Qwen3 must be present in each chapter file) PASS; (e) 35/35 sub-task checkboxes marked DONE.
@@ -197,8 +197,8 @@
 ## 4. Acceptance criteria
 
 После закрытия §3.1-§3.4:
-- [x] **4.1** `git grep -n "E5\|multilingual-e5-large\|1024d" "docs/framework documentation/01_ОБЗОР/"` — все вхождения помечены `(legacy)` или migration note
-- [x] **4.2** `git grep -n "Qdrant 1.15" "docs/framework documentation/01_ОБЗОР/"` — пусто
+- [x] **4.1** `git grep -n "E5\|multilingual-e5-large\|1024d" "docs/framework documentation/0_ВВЕДЕНИЕ/0.1_ОБЗОР/"` — все вхождения помечены `(legacy)` или migration note
+- [x] **4.2** `git grep -n "Qdrant 1.15" "docs/framework documentation/0_ВВЕДЕНИЕ/0.1_ОБЗОР/"` — пусто
 - [x] **4.3** Все три файла упоминают Qwen3 / TEI / chapter 31 как production reference
 - [x] **4.4** Numbers (phases, files, LOC, MCP tools, agents, hooks, skills) — синхронизированы между 01.1 / 01.2 / TOC `00_СОДЕРЖАНИЕ.md`
 - [x] **4.5** Major features post-Phase 8 (framework search, auto-reindex, TEI backend) — упомянуты в 01.1 «Основные возможности»

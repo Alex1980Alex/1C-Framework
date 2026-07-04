@@ -3,14 +3,14 @@
 > **Дата:** 2026-05-05 (создана) → **2026-05-07 (DONE)**
 > **Триггер:** smoke-test реального выполнения команды `/implement-1c-task` — pipeline корректно остановился на Этапе 0 (Preflight v2.3.0).
 > **Скилл:** [implement-1c-task/SKILL.md](../../.claude/skills/implement-1c-task/SKILL.md) (**v2.4.0** — TCP-probe + Stage 5 fallback)
-> **Связанные документы:** [16.5_MCP_серверы_для_1С.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md), [16.6_EDT_MCP_setup.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) (новый), [09.9_MCP_Health_Dashboard.md](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md), [260331_ROADMAP_MCP_IMPROVEMENTS.md](260331_ROADMAP_MCP_IMPROVEMENTS.md)
+> **Связанные документы:** [16.5_MCP_серверы_для_1С.md](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md), [16.6_EDT_MCP_setup.md](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) (новый), [09.9_MCP_Health_Dashboard.md](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md), [260331_ROADMAP_MCP_IMPROVEMENTS.md](260331_ROADMAP_MCP_IMPROVEMENTS.md)
 
 ## Status (2026-05-07)
 
 | Фаза | Статус | Артефакт |
 |---|---|---|
 | Phase 1: восстановить `1c-mcp-crud` | ✅ DONE | Путь мигрирован на `C:\1С-Framework\external\1c_mcp\` (commit `bf887153e`); `MCP_ONEC_PASSWORD` заполнен; mirror-конфиги признаны устаревшими и не добавлены |
-| Phase 2: восстановить `edt-mcp` | ✅ DONE | EDT IDE поднята пользователем, порт `:8765` LISTENING; новый раздел [16.6_EDT_MCP_setup.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) |
+| Phase 2: восстановить `edt-mcp` | ✅ DONE | EDT IDE поднята пользователем, порт `:8765` LISTENING; новый раздел [16.6_EDT_MCP_setup.md](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) |
 | Phase 3: runtime debug 1С (`:1550`) | ✅ DOCUMENTED (2026-05-08) | Smoke-test уже probe'ит `:1550` ([smoke_test_implement_1c_task.py:47-51](../../scripts/smoke_test_implement_1c_task.py#L47)) — отдельной интеграции не требуется. 16.6 §«1С debug agent» расширена: добавлены (а) callout «Когда это реально нужно vs можно пропустить» — runtime-debug опционален для типичных bug-fix/new-procedure прогонов, (б) cross-link на smoke-test, (в) troubleshooting-блок «Если :1550 закрыт» (5 шагов: висящий socket / firewall / версия платформы 8.3.13+ / правильный билд ragent / fallback на static `bsl_analyze`). Операционный запуск ragent.exe -debug -port 1550 остаётся за пользователем. Не блокер — `bsl_analyze` + EDT `get_project_errors` = 0 покрывают Этап 4 |
 | Phase 4: усилить SKILL.md fallback'ами | ✅ DONE | SKILL.md v2.4.0: TCP-probe `:8765`/`:1550` в Stage 0; Stage 5 fallback — `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph` + `bsl-debugger:bsl_analyze` |
 | Phase 5: smoke-test + preflight hook | ✅ DONE | [`scripts/smoke_test_implement_1c_task.py`](../../scripts/smoke_test_implement_1c_task.py) — paths/ports/handshakes, exit 0/1/2 = Full/degraded/unusable. Preflight hook [`.claude/hooks/implement-1c-task-preflight.py`](../../.claude/hooks/implement-1c-task-preflight.py) добавлен 2026-05-07 (UserPromptSubmit, ловит `/implement-1c-task` через `<command-name>`-тег / raw-slash, запускает smoke-test JSON-mode, эмитит `systemMessage` с режимом и нерабочими серверами, лог `category="preflight"` с `run_id` от slash-command-tracker; timeout 30s) |
@@ -106,7 +106,7 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 
 1. **Уточнить актуальное расположение репо `1C-Enterprise_Framework`** (вопрос пользователю — см. раздел 5):
    - **Вариант A:** репо клонирован, но не на ожидаемом пути → перенести/симлинкнуть на `D:\1C-Enterprise_Framework\` либо обновить пути в `.mcp.json`.
-   - **Вариант B:** репо удалён → клонировать заново. Структура `src/external/1c_mcp/` (proxy.py + расширение MCP_Сервер) описана в [16.5_MCP_серверы_для_1С.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md).
+   - **Вариант B:** репо удалён → клонировать заново. Структура `src/external/1c_mcp/` (proxy.py + расширение MCP_Сервер) описана в [16.5_MCP_серверы_для_1С.md](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md).
    - **Вариант C:** репо переехал внутрь основного фреймворка (например, `C:\1С-Framework\external\1c_mcp\`) → обновить путь в `.mcp.json`.
 2. **Создать venv и поставить зависимости** (после доступности исходников):
    ```powershell
@@ -115,7 +115,7 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
    ```
 3. **Обновить 4 секции** в [.mcp.json](../../.mcp.json): `1c-mcp-crud`, `1c-mcp-crud-infeeda`, `1c-mcp-crud-daily`, `1c-mcp-crud-dev39144`. Каждая ссылается на `mcp_entrypoint.py`, отличается только `MCP_ONEC_URL` (TestDB / tm_infeeda / DAILY_TM_BAT / DEV_ATERLETSKIY_39144_MFM).
 4. **Smoke-test:** перезапустить сессию Claude Code, выполнить `mcp__1c-mcp-crud__get_metadata` — должен вернуть структуру конфигурации `TestDB`.
-5. **Backstop:** добавить алёрт на `1c-mcp-crud`/`edt-mcp` в [`scripts/mcp_health_monitor.py`](../../scripts/mcp_health_monitor.py) (см. [09.9](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md)) — запускать при `UserPromptSubmit` для команды `/implement-1c-task` (PreToolUse-подобный preflight на уровне хука).
+5. **Backstop:** добавить алёрт на `1c-mcp-crud`/`edt-mcp` в [`scripts/mcp_health_monitor.py`](../../scripts/mcp_health_monitor.py) (см. [09.9](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md)) — запускать при `UserPromptSubmit` для команды `/implement-1c-task` (PreToolUse-подобный preflight на уровне хука).
 
 **Критерий завершения:** `ToolSearch select:mcp__1c-mcp-crud__get_metadata` возвращает schema, не "No matching deferred tools".
 
@@ -125,7 +125,7 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 
 Цель: вернуть `mcp__edt-mcp__list_projects` / `read_method_source` / `write_module_source` / `validate_query`.
 
-1. **Создать `docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md`** с шагами:
+1. **Создать `docs/framework documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md`** с шагами:
    - Запуск EDT IDE (с какой `workspace`).
    - Активация MCP-плагина (Settings → Tools → MCP Server).
    - Проверка порта: `Test-NetConnection -ComputerName localhost -Port 8765 -InformationLevel Quiet`.
@@ -144,7 +144,7 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 1. Поднять 1С debug agent: `ragent.exe -debug -port 1550` либо запустить «Конфигуратор» с поддержкой отладки.
 2. Проверить порт: `Test-NetConnection -ComputerName localhost -Port 1550 -InformationLevel Quiet`.
 3. Smoke-test: `mcp__1c-debug__debug_targets` возвращает список debug-сессий вместо пустого/error-ответа.
-4. Документировать в `16.6_EDT_MCP_setup.md` или в [09.9 Dashboard](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md).
+4. Документировать в `16.6_EDT_MCP_setup.md` или в [09.9 Dashboard](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.9_MCP_Health_Dashboard.md).
 
 **Не блокер для Этапа 3** — `bsl_analyze` (статический анализатор `bsl-debugger`) работает без agent и покрывает базовый Этап 4.
 
@@ -184,8 +184,8 @@ bf887153e chore(mcp): migrate .mcp.json D:/1С-Framework -> C:/1С-Framework
 
 ### Фаза 6 — Документация (P2) — 0.5 дня
 
-1. Обновить [16.5_MCP_серверы_для_1С.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md): актуализировать пути после Фазы 1, убрать упоминания устаревшего MCPToolkit (см. [memory: 1c-mcp-toolkit deprecation](../../../Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_1c_mcp_replacement.md)).
-2. Создать `docs/framework documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md` (см. Фаза 2.1).
+1. Обновить [16.5_MCP_серверы_для_1С.md](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md): актуализировать пути после Фазы 1, убрать упоминания устаревшего MCPToolkit (см. [memory: 1c-mcp-toolkit deprecation](../../../Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/project_1c_mcp_replacement.md)).
+2. Создать `docs/framework documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md` (см. Фаза 2.1).
 3. В [КОМАНДЫ_CLAUDE_CODE.md](../framework%20documentation/КОМАНДЫ_CLAUDE_CODE.md) рядом с `/implement-1c-task` добавить блок «Требования к среде» со ссылкой на этот roadmap и smoke-test скрипт.
 4. Добавить запись в `MEMORY.md` (категория `feedback`): «путь `D:\1C-Enterprise_Framework` в `.mcp.json` устарел; при правках конфига сверяться с этим roadmap» — чтобы при следующих авто-правках не залить старое значение из истории.
 

@@ -189,7 +189,7 @@ git branch -D dev-master  # was b9cba8cb1
 2. ✅ PR #2 auto-rebase trigger от `gh pr edit --base master` — PR #2 merged 2026-05-23 (commit `c3867f055`)
 3. ✅ Smoke на `.claude/hooks/post-task-push-pr.py` с `AUTO_PR_BASE=master` — PASS (dry-run + real PR #11 created с base=master, then cleaned up). Verified: hook читает новый env, `head-ref` fallback works, AUTO_PR_AUTO_MERGE=0 honored, AUTO_PR_NO_TESTS=1 honored.
 4. ✅ Update `.claude/settings.json` env: `"AUTO_PR_BASE": "master"` — 2026-05-24
-5. ✅ Update [40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) — добавлен banner "dev-master SUPERSEDED" (исторический контекст сохранён)
+5. ✅ Update [40.4_Дорожная_карта.md](../framework%20documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/40.4_Дорожная_карта.md) — добавлен banner "dev-master SUPERSEDED" (исторический контекст сохранён)
 6. ✅ Update CLAUDE.md — `AUTO_PR_BASE=dev-master` → `AUTO_PR_BASE=master`
 
 ---
@@ -336,7 +336,7 @@ git branch -D dev-master  # was b9cba8cb1
 
 - [260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md) — SUPERSEDED (Phase 1 only)
 - [260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md) — SUPERSEDED (DONE via PR #4)
-- [40_PR_AUTOMATION/40.4_Дорожная_карта.md](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) §«Rounds 3-6» + §«Round-6 fixes» — round-by-round PR #4 chronicle
+- [40_PR_AUTOMATION/40.4_Дорожная_карта.md](../framework%20documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/40.4_Дорожная_карта.md) §«Rounds 3-6» + §«Round-6 fixes» — round-by-round PR #4 chronicle
 - CLAUDE.md — раздел про PR-automation hook `post-task-push-pr.py` P0-P3 batch (2026-05-22)
 
 ### Memory

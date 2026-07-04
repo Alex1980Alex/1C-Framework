@@ -111,7 +111,7 @@ Output `IMPLEMENTATION-PROGRESS.md`. [docs: implement-1c-task/SKILL.md]
   Согласовать с `.run-state.json` (он остаётся детализацией прогона). **DoD:** после тестов state = этап 4 done.
 - **Phase 5 — Сведение с ADR-018.** Убедиться, что `pipeline-protocol-stop.py` видит 1c-профильный state
   (он уже проверяет любой `*/.pipeline-state.json` — достаточно, что 1С-команды его обновляют). Обновить
-  `CLAUDE.md` (1С Pipeline) + [17.5 Команды 1С Pipeline](../framework%20documentation/17_ТЕСТИРОВАНИЕ_1С/17.5_КОМАНДЫ_ПАЙПЛАЙНА.md) единым описанием потока. **DoD:** 1С-задача больше НЕ требует ручного создания второго пайплайна.
+  `CLAUDE.md` (1С Pipeline) + [17.5 Команды 1С Pipeline](../framework%20documentation/7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.5_КОМАНДЫ_ПАЙПЛАЙНА.md) единым описанием потока. **DoD:** 1С-задача больше НЕ требует ручного создания второго пайплайна.
 - **Phase 6 — Верификация e2e.** Реальная 1С-задача: analyze→approve→implement→tests → один `pipeline/<jira>/`
   со стадиями 1–4 + approval; Stop-хук удовлетворён без ручного пайплайна. **DoD:** зелёный e2e + обновлённая память.
 

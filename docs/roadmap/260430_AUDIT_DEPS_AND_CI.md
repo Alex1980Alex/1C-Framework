@@ -288,4 +288,4 @@ Healthy, ничего не пропущено.
 - Главный roadmap: [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 (tools/CI scope)
 - Tests audit: [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md) — pytest CI job связан с T.1 (framework_search tests)
 - Sibling: [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md), [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md)
-- Chapter 02.1 / 02.2 (нужно update после D.3, D.4): `../framework documentation/02_БЫСТРЫЙ_СТАРТ/`
+- Chapter 02.1 / 02.2 (нужно update после D.3, D.4): `../framework documentation/0_ВВЕДЕНИЕ/0.2_БЫСТРЫЙ_СТАРТ/`

@@ -58,7 +58,7 @@
 - [x] **2.1.2** [`tests/eval/test_smoke_gate.py`](../../tests/eval/test_smoke_gate.py) — 10 tests: 9 schema validation в `TestGoldenDatasetSchema` + 1 quality gate `TestRetrievalQualityGate::test_ndcg_above_threshold`. **Quality gate ACTIVATED 2026-05-16 (v2.1)**: real NDCG@10 calculation against Qdrant + TEI; multi-collection routing через `item.target_collection`; graceful skip if services unreachable; failure-accumulation tolerance (skip only if >10% items fail). Replaced hardcoded `pytest.skip("deferred")` с реальной implementation
 - [x] **2.1.3** Wired в [`.github/workflows/ci.yml:211-214`](../../.github/workflows/ci.yml#L211) внутри `test-unit` job сразу после основного pytest run
 - [x] **2.1.4** Local smoke-test verified 2026-05-16 (v2.1): **10/10 PASS** including `test_ndcg_above_threshold`. Mean NDCG@10 across 50 grounded items ≥ 0.55 threshold (live measurement, 5.7s wall-clock)
-- [x] **2.1.5** Документировано в [`08.5_Smoke_Gate.md`](../framework%20documentation/08_ОЦЕНКА_КАЧЕСТВА/08.5_Smoke_Gate.md)
+- [x] **2.1.5** Документировано в [`08.5_Smoke_Gate.md`](../framework%20documentation/7_ПРОВЕРКА/7.1_ОЦЕНКА_КАЧЕСТВА/08.5_Smoke_Gate.md)
 - [x] **2.1.6** ADR-008 lifecycle: proposed → accepted (2026-05-15, заполнены metrics из `data/eval/hermes/report.md`)
 
 **Closure note (NDCG gate ACTIVE)**: Все 6 items DONE через 3 раунда работы. v1.1 seed → v2.0 grounding (29 items) → v2.1 expansion + activation (50 items, NDCG calc wired). CI quality gate **больше не skip** — производит реальное NDCG measurement и блокирует merge при retrieval regression < 0.55 threshold. Code-verify PASS на NDCG implementation; robustness fixes (narrow exception handler + per-item failure tolerance) applied 2026-05-16.
@@ -106,10 +106,10 @@
 - [x] **2.3.1** Audit `src/api/routes/tenants.py` — все 7 handlers защищены: 4 admin-only через `Depends(require_admin)` (POST `""`, GET `""`, PUT `/{tenant_id}`, DELETE `/{tenant_id}`), 3 self-access через `_assert_tenant_access(...)` (GET `/{tenant_id}`, `/stats`, `/usage`). Wider IDOR coverage: shared helper `assert_tenant_access` из [`src/api/auth/dependencies.py`](../../src/api/auth/dependencies.py) теперь используется в `documents.py`, `jobs.py`, `graph.py` (added 2026-05-09).
 - [x] **2.3.2** Unit tests [`tests/unit/api/test_tenants_idor.py`](../../tests/unit/api/test_tenants_idor.py) — **13 tests PASS**: 9 unit (admin bypass, self-access, viewer/editor cross-tenant rejection, role case-sensitivity, empty strings, unknown roles) + 3 wiring smoke-tests (`documents.py`/`jobs.py`/`graph.py` source-text grep на `assert_tenant_access(` + import) + 1 tenants.py local guard verification. Roadmap §2.3 явно цитирован в docstring.
 - [x] **2.3.3** Integration test (real JWT) → **DEFERRED → §3.6** (Test coverage to 70%): unit-level coverage достаточна для acceptance (guard logic + wiring), integration с реальным FastAPI TestClient + JWT-token issuance относится к §3.6 integration suite. Risk minimal: wiring smoke tests gating `assert_tenant_access(` присутствие в source.
-- [x] **2.3.4** Документировано в [`09.2 Авторизация § IDOR-защита`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.2_Авторизация.md#idor-защита-multi-tenant-security) (lines 79-109): guard usage, 4-row table protected endpoints, 3-step pattern для новых routes, регрессия note про порядок вызова до I/O.
+- [x] **2.3.4** Документировано в [`09.2 Авторизация § IDOR-защита`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.2_Авторизация.md#idor-защита-multi-tenant-security) (lines 79-109): guard usage, 4-row table protected endpoints, 3-step pattern для новых routes, регрессия note про порядок вызова до I/O.
 - [x] **2.3.5** Security checklist:
   - ✅ `pip-audit` через [`.github/workflows/ci.yml:305-327`](../../.github/workflows/ci.yml#L305) — weekly Monday cron + `workflow_dispatch`, `--strict` mode, advisory `continue-on-error`
-  - ✅ JWT secret rotation policy — добавлена в [`09.2 § Политика ротации JWT secret`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.2_Авторизация.md#политика-ротации-jwt-secret-roadmap-260509-235) (triggers: 90-day routine / leak suspect / employee departure / CVSS≥7.0 на pyjwt; процедура generate→rotate→restart→verify; anti-patterns: shortening expiration, multi-key rotation без JWKS, secret reuse cross-env)
+  - ✅ JWT secret rotation policy — добавлена в [`09.2 § Политика ротации JWT secret`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.2_Авторизация.md#политика-ротации-jwt-secret-roadmap-260509-235) (triggers: 90-day routine / leak suspect / employee departure / CVSS≥7.0 на pyjwt; процедура generate→rotate→restart→verify; anti-patterns: shortening expiration, multi-key rotation без JWKS, secret reuse cross-env)
 
 **Closure note (audit-stale + JWT rotation policy)**: 4/5 items уже выполнены в коде/тестах/документации (commit 2026-05-09 для shared `assert_tenant_access` через 4 routes; 13 tests; section 79-109 в 09.2). Сегодня — добавлена rotation policy (§2.3.5). 2.3.3 (integration JWT) deferred to §3.6 как coverage work item.
 
@@ -163,7 +163,7 @@
 - [x] **3.1.3** Env vars wired через `pydantic-settings`: `OBSERVABILITY__LANGFUSE_ENABLED/PUBLIC_KEY/SECRET_KEY/HOST` (см. [`.env.example:71-74`](../../.env.example#L71)). Legacy `LANGFUSE_*` env fallback также supported в `_resolve_credentials`
 - [x] **3.1.4** Auto-instrument LangChain: `LangfuseCallbackHandler` подключается через `llm.callbacks` в `src/pdf_framework/agents/rag/middleware.py` — auto-emit для all LLM/Chain spans
 - [x] **3.1.5** Manual spans: `emit_observation()` helper в `langfuse_setup.py`; используется в `z-ai-delegation-enforcer.py` для `delegation.routing.decision` spans (см. §4.5.3). Foundation для §5c.9 outcome corpus
-- [x] **3.1.6** Документация — [`09.4 Мониторинг.md`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md) (index) → split-out chapters [`09.4.1 Langfuse`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md) (256 lines, full setup guide) + [`09.4.2 Prometheus`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.2_Prometheus.md) (185 lines)
+- [x] **3.1.6** Документация — [`09.4 Мониторинг.md`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.4_Мониторинг.md) (index) → split-out chapters [`09.4.1 Langfuse`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md) (256 lines, full setup guide) + [`09.4.2 Prometheus`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.4.2_Prometheus.md) (185 lines)
 - [ ] **3.1.7** Smoke: end-to-end trace в Langfuse Cloud → **DEFERRED** (требует активный Langfuse account + manual UI inspection; cost-baseline workflow [`.github/workflows/cost-baseline.yml`](../../.github/workflows/cost-baseline.yml) уже использует Langfuse API — implicit smoke через cron job)
 
 **Closure note**: 6/7 items DONE через прошлые сессии. Architectural pivot ot `traceloop-sdk` на direct `LangfuseCallbackHandler` — обоснованное решение (меньше deps, native LangChain integration). 3.1.7 smoke-test требует cloud account; implicit smoke через cost-baseline cron достаточен.
@@ -177,11 +177,11 @@
 
 - [x] **3.2.1** Paper concepts embedded в [`context_generator.py`](../../src/pdf_framework/processing/context_generator.py) docstring + `_CONTEXT_PROMPT` template (Anthropic-style: `<document>` + `<chunk>` + «short context 1-2 sentences situating this chunk»). Stand-alone paper cache как `architecture-research/cache/` — DEFERRED (low value: prompt уже codified)
 - [x] **3.2.2** Implemented as [`src/pdf_framework/processing/context_generator.py`](../../src/pdf_framework/processing/context_generator.py) (different name than planned `ContextualEnricher`, same purpose). Config [`ContextualRetrievalSettings`](../../src/pdf_framework/config/search.py#L44) (Phase 3.1/Phase 50): `enabled=False` default, `max_context_tokens=128`, `model=claude-haiku-4-5`, `batch_concurrency=10`, `min_chunk_tokens=50`, SQLite cache `data/context_cache.db`
-- [x] **3.2.3** Integration via `--contextual` CLI flag в indexing pipeline (см. [`03.2 Опции индексации.md:95`](../framework%20documentation/03_ИНДЕКСАЦИЯ/03.2_Опции_индексации.md#--contextual--contextual-retrieval))
+- [x] **3.2.3** Integration via `--contextual` CLI flag в indexing pipeline (см. [`03.2 Опции индексации.md:95`](../framework%20documentation/2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ/03.2_Опции_индексации.md#--contextual--contextual-retrieval))
 - [x] **3.2.4** Generated context stored в `chunk.metadata["context"]` + combined `chunk.metadata["contextual_content"]` (context + original) — последний используется для embedding/BM25; original preserved для display
 - [ ] **3.2.5** Benchmark на golden_v1 → **BLOCKED by §2.2 grounding**: NDCG@10 measurement требует populated `expected_chunk_ids`. Можно временно использовать keyword recall@10 proxy (как §4.1 Matryoshka), но contextual lift лучше всего видится через NDCG (более sensitive к rank changes)
 - [ ] **3.2.6** Default flip → **DEFERRED → §3.2.5 result**: если +5% NDCG → `ContextualRetrievalSettings.enabled=True` default
-- [ ] **3.2.7** Документация → **PARTIAL**: brief mention в [`03.2 § --contextual`](../framework%20documentation/03_ИНДЕКСАЦИЯ/03.2_Опции_индексации.md#--contextual--contextual-retrieval); dedicated chapter `03.6_Contextual_Retrieval.md` (numbering: 03.5 is last) — DEFERRED until §3.2.5 benchmark provides numerical case for adoption
+- [ ] **3.2.7** Документация → **PARTIAL**: brief mention в [`03.2 § --contextual`](../framework%20documentation/2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ/03.2_Опции_индексации.md#--contextual--contextual-retrieval); dedicated chapter `03.6_Contextual_Retrieval.md` (numbering: 03.5 is last) — DEFERRED until §3.2.5 benchmark provides numerical case for adoption
 
 **Closure note (audit-stale + benchmark-blocked)**: 4/7 items DONE через Phase 50 work; 2 items (3.2.5/3.2.6) blocked by golden_v1 grounding gap (same blocker как §2.1/§4.1); 1 item (3.2.7) deferred until decision-useful numerical data.
 
@@ -228,7 +228,7 @@
 - [x] **3.5.2** Path: `data/feedback/backups/backup_YYYY-MM-DD.jsonl` (UTC date, daily rotation; docstring цитирует roadmap §3.5)
 - [x] **3.5.3** [`scripts/replay_feedback_backup.py`](../../scripts/replay_feedback_backup.py) — Typer CLI с `--dedupe`/`--dry-run`/`--since`/`--until` filters; re-uses `FeedbackCollector.add_feedback` для schema sync; backup-origin-id tracking через `metadata.backup_origin_id`. Docstring цитирует roadmap §3.5
 - [x] **3.5.4** Tests: [`tests/unit/feedback/test_dual_write.py`](../../tests/unit/feedback/test_dual_write.py) — **8/8 PASS**: `test_sqlite_and_jsonl_both_populated`, `test_multiple_entries_appended_one_per_line`, `test_backup_failure_does_not_break_sqlite` (graceful degradation), `test_disabled_backup_writes_no_files`, `test_replay_recovers_all_entries_into_fresh_sqlite`, `test_dedupe_skips_existing_entries`, `test_dry_run_counts_without_writing`, `test_date_range_filter`
-- [x] **3.5.5** Документация → [`08.4_Обратная_связь.md`](../framework%20documentation/08_ОЦЕНКА_КАЧЕСТВА/08.4_Обратная_связь.md)
+- [x] **3.5.5** Документация → [`08.4_Обратная_связь.md`](../framework%20documentation/7_ПРОВЕРКА/7.1_ОЦЕНКА_КАЧЕСТВА/08.4_Обратная_связь.md)
 
 **Closure note**: 5/5 items DONE через предыдущие сессии. Audit-stale: scope estimate 3-5h, actual 0h (audit only).
 
@@ -306,9 +306,9 @@
 **Выгоды:** При delta < 5% — миграция `framework_code_v1` (21k+ points) на 1024d даёт 4× faster search и 4× меньше storage в Qdrant; lower memory footprint позволяет fit'нуть больше коллекций на той же машине; data-driven решение вместо угадывания «4096d is best».
 
 - [x] **4.1.1** Recreate `pdf_documents_mrl_{1024,512}` collections × truncated dims (re-embed Qwen3 GPU bf16, full pass at 4096d → truncate + L2-renormalize, см. [`scripts/matryoshka_bench.py`](../../scripts/matryoshka_bench.py))
-- [x] **4.1.2** Bench метрика — **keyword recall@10** (proxy для NDCG, т.к. `golden_v1.expected_chunk_ids` empty pending §7.5 v2.0 grounding; см. caveat в [04.9](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#caveats-метода)). Результаты: 4096d=0.0563, 1024d=0.0563 (delta=0.0%), 512d=0.0625 (+11% noise); p95 latency 29.2/26.5/22.5ms; report `data/eval/matryoshka_report.json`
+- [x] **4.1.2** Bench метрика — **keyword recall@10** (proxy для NDCG, т.к. `golden_v1.expected_chunk_ids` empty pending §7.5 v2.0 grounding; см. caveat в [04.9](../framework%20documentation/2_КОНТЕКСТ/2.2_ПОИСК/04.9_Matryoshka_Embeddings.md#caveats-метода)). Результаты: 4096d=0.0563, 1024d=0.0563 (delta=0.0%), 512d=0.0625 (+11% noise); p95 latency 29.2/26.5/22.5ms; report `data/eval/matryoshka_report.json`
 - [x] **4.1.3** Verdict: **1024d MIGRATE** (delta 0.0% strict equality → safe). 512d флагнуто как improvement-noise (n=40 CI ~5%).
-- [x] **4.1.4** Документ — [`04.9 Matryoshka Embeddings`](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md) (концепт MRL + acceptance threshold + результаты + caveats + migration plan)
+- [x] **4.1.4** Документ — [`04.9 Matryoshka Embeddings`](../framework%20documentation/2_КОНТЕКСТ/2.2_ПОИСК/04.9_Matryoshka_Embeddings.md) (концепт MRL + acceptance threshold + результаты + caveats + migration plan)
 - [x] **4.1.5** ✅ **DONE 2026-05-16** — production migration test для `framework_code_v1`:
   - `scripts/matryoshka_migrate.py` (252 LoC) — pure-truncate path БЕЗ GPU re-embed
   - Truncated 24,481 chunks × 4096d → 1024d + 512d via L2-renormalize
@@ -316,7 +316,7 @@
   - **Results**: 4096d baseline=0.5645, 1024d=0.5506 (−2.5%, **MIGRATE**), 512d=0.5034 (−10.8%, REJECT)
   - Storage win 1024d: 390 MB → 98 MB (−75%); p95 latency 124ms → 111ms (−11%)
   - Report: [`data/eval/matryoshka_migrate_framework_code_v1.json`](../../data/eval/matryoshka_migrate_framework_code_v1.json)
-  - Updated [04.9 § Production bench results](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md#production-bench-results-ndcg10-46-items-2026-05-16) с full numbers + migration plan
+  - Updated [04.9 § Production bench results](../framework%20documentation/2_КОНТЕКСТ/2.2_ПОИСК/04.9_Matryoshka_Embeddings.md#production-bench-results-ndcg10-46-items-2026-05-16) с full numbers + migration plan
   - **Verdict for production swap**: ✅ READY (manual ~5 мин via Qdrant alias API). Не выполнен в этом commit — отдельный operational step
 
 **Effort:** 3-5 days estimated → **3h actual** (audit-stale pattern: MRL infrastructure already in `Qwen3STEmbedder`, only harness + bench needed).
@@ -361,8 +361,8 @@
 
 **Реализация (closure 2026-05-16):**
 
-- [x] **4.4.1** Inventory complete: **107 occurrences в 25 файлах** `src/`. Breakdown в [09.12 §4.4 closure audit](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#44-closure-audit-roadmap-260509-2026-05-16).
-- [x] **4.4.3** Documented в [09.12 Async Patterns Migration roadmap](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#migration-roadmap-deferred) — расширена таблица с Qdrant row + decision rationale.
+- [x] **4.4.1** Inventory complete: **107 occurrences в 25 файлах** `src/`. Breakdown в [09.12 §4.4 closure audit](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#44-closure-audit-roadmap-260509-2026-05-16).
+- [x] **4.4.3** Documented в [09.12 Async Patterns Migration roadmap](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#migration-roadmap-deferred) — расширена таблица с Qdrant row + decision rationale.
 - [/] **4.4.2** Single realistic candidate identified: **Qdrant в `src/memory/`** (~6-10 sites — `_get_qdrant()` factory + client operations wrapped в `to_thread`, тогда как `src/pdf_framework/vector_store/providers/qdrant.py` уже async). **Deferred follow-up** per cost/benefit: cross-module change, требует атомарной замены factory без breaking MCP back-compat, low real-world QPS. Trigger для активации: thread pool saturation в профилировании или planned API redesign window.
 
 Остальные occurrences (~95) wrap genuinely sync libs (sqlite3, PyMuPDF, sentence-transformers, FlashRank) где нет async alternative — `to_thread` использование semantically correct.
@@ -422,7 +422,7 @@ Beyond base observability: cross-instance sync, encrypted memory at rest, GDPR p
 **Цель:** Inventory + decision matrix для внешних tools (claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server) — keep / replace / remove с обоснованием на каждый.
 
 **Реализация (closed 2026-05-09, verified 2026-05-16):**
-Decision matrix существует в [`26.7 MCP Servers Decision Matrix`](../framework%20documentation/26_LAZY_MCP/26.7_Decision_Matrix.md). Содержит:
+Decision matrix существует в [`26.7 MCP Servers Decision Matrix`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.3_LAZY_MCP/26.7_Decision_Matrix.md). Содержит:
 
 - [x] **4.8.1** Inventory: 5 roadmap candidates audited — **0 из 5 landed** в `.mcp.json`. Все остались closed-by-design (claude-hud, codebase-memory-mcp, parry, sonar-bsl, bsl-language-server) с конкретным обоснованием почему (concept не закрепился / заменён memory-orchestrator / SonarQube heavyweight / tree-sitter approach работает / etc.)
 - [x] **4.8.2** Decision matrix — 20 active servers all **keep** + 27 on-demand lazy-mcp `keep all` (zero startup cost)
@@ -445,7 +445,7 @@ Decision matrix существует в [`26.7 MCP Servers Decision Matrix`](../
   - `Stop::session-memory-save` (p95=3187ms) → ✅ `async: true` применён (header: «advisory, non-blocking»)
   - `UserPromptSubmit::memory-first-hook` (p95=3332ms) → ❌ нельзя async — purpose инжектит `systemMessage` (потеряется в async режиме)
 
-Documentation: [09.12 Async hooks](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#async-hooks-claude-code-async-true-flag-roadmap-260509-49).
+Documentation: [09.12 Async hooks](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.12_Async_Patterns.md#async-hooks-claude-code-async-true-flag-roadmap-260509-49).
 
 **Effort:** original 1 day | actual ~30 мин (audit-stale strict scope; bonus 2 hooks applied) | **Status:** ✅ closed
 
@@ -573,7 +573,7 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 | 5.5 | BSL TODO cleanup | Ad-hoc closure при появлении 1С-задач |
 
 **Side findings:**
-- RCA `SlashCommandTracker` 250s avg = measurement artifact, not bug ([09.13](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.13_Async_Hooks_Audit.md))
+- RCA `SlashCommandTracker` 250s avg = measurement artifact, not bug ([09.13](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.13_Async_Hooks_Audit.md))
 - Project memory recorded: `project_roadmap_audit_pattern.md` — audit-stale lesson для future sessions
 - Enforcer config improved: `docs-change-enforcer.py` mapping override block + SKIP_PATTERNS (codecov.yml, .pre-commit-config.yaml, data/eval/)
 
@@ -603,7 +603,7 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
   - `tools/retrieval/search_tool.py`, `tools/graph_query/graph_tool.py`, `tools/document/index_tool.py` — каждый @tool wrapper emit span с status (ok/error/no-results) + tool-specific метрики (chunks_stored, entities, relations).
   - **Performance opt:** `langfuse_setup.py` refactored с module-level singleton `_get_langfuse_client()` — клиент создаётся 1 раз per process вместо per-call (избегает HTTP handshake overhead на hot-path search). Все спаны на hot-path вызываются с `flush=False` — SDK background thread обрабатывает queue.
 - [ ] **5c.6 Dashboard configuration** ⏳ DEFERRED — требует production traffic. Настроить alerts (latency P95 > 5s, hallucination rate > 0.15, cost per query > $0.50), saved views для daily monitoring. Готово к выполнению после accumulation ~100+ traces в Langfuse Cloud (нужны real-world латенси/cost distributions для пороговых значений).
-- [ ] **5c.7 Cost tracking baseline** 🟡 IMPLEMENTED, awaiting first auto-run 2026-05-17 — code-side complete per [260515 roadmap](260515_ROADMAP_LANGFUSE_COST_BASELINE.md) Phases A-D + §6 risk mitigation. Реализовано в коммите `d141583c4` (+ pricing automation): [`scripts/analyze_langfuse_cost.py`](../../scripts/analyze_langfuse_cost.py) (Typer CLI, 5 секций отчёта, retry, dry-run), [`.github/workflows/cost-baseline.yml`](../../.github/workflows/cost-baseline.yml) (cron Sundays 09:00 UTC + auto-PR), [`scripts/setup_langfuse_local_pricing.py`](../../scripts/setup_langfuse_local_pricing.py) (15 local models registered with $0 pricing — closes §6 Risks row 1 "cost_details.total = null"), документация — [`09.4.1 Langfuse#cost-baseline`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md#cost-baseline). **Файл `docs/architecture/cost-baselines.md` будет создан первым успешным cron-run** (default window today-7..today-1 даст репрезентативный baseline после ~2026-05-24, до тех пор reports будут sparse). Flip в `[x] DONE` — после визуальной проверки первого PR + sanity-check (E.1/E.2 из 260515).
+- [ ] **5c.7 Cost tracking baseline** 🟡 IMPLEMENTED, awaiting first auto-run 2026-05-17 — code-side complete per [260515 roadmap](260515_ROADMAP_LANGFUSE_COST_BASELINE.md) Phases A-D + §6 risk mitigation. Реализовано в коммите `d141583c4` (+ pricing automation): [`scripts/analyze_langfuse_cost.py`](../../scripts/analyze_langfuse_cost.py) (Typer CLI, 5 секций отчёта, retry, dry-run), [`.github/workflows/cost-baseline.yml`](../../.github/workflows/cost-baseline.yml) (cron Sundays 09:00 UTC + auto-PR), [`scripts/setup_langfuse_local_pricing.py`](../../scripts/setup_langfuse_local_pricing.py) (15 local models registered with $0 pricing — closes §6 Risks row 1 "cost_details.total = null"), документация — [`09.4.1 Langfuse#cost-baseline`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md#cost-baseline). **Файл `docs/architecture/cost-baselines.md` будет создан первым успешным cron-run** (default window today-7..today-1 даст репрезентативный baseline после ~2026-05-24, до тех пор reports будут sparse). Flip в `[x] DONE` — после визуальной проверки первого PR + sanity-check (E.1/E.2 из 260515).
 - [ ] **5c.8 Score collection wire-up** ⏳ DEFERRED — UI работа. Кнопки 👍/👎 в Web UI → `langfuse.score()` API → корреляция с feedback loop §3.5. Требует UI design + frontend wiring (вне current scope §5c).
 - [ ] **5c.9 Outcome corpus для §4.5** ⏳ DEFERRED — требует ≥30 дней production traffic. Экспортировать (query, delegated_provider, success, latency, cost) tuples → JSONL для §4.5 Iter 4 trained router training. Pre-requisite: §5c.5 spans (DONE) — corpus собирается автоматически.
 - [x] **5c.10 ADR-010 production observability** — DONE как proposed (`.claude/skills/architecture-research/adr/010-langfuse-production-observability.md`). Lifecycle = proposed → locked-in после первого 30-day production traffic + cost baseline (т.е. зависит от 5c.7).
@@ -618,7 +618,7 @@ CLI dashboard уже достаточен (09.9). Streamlit — low priority. **
 
 **Когда НЕ делать:** если framework планируется только для local dev/research (нет production users, нет cost concerns) — 5c.4-5c.10 overkill, достаточно 5c.1-5c.3 basic setup.
 
-**Кратко по value:** см. memory note `reference_codecov_public.md` (sibling pattern) и chapter [09.4.1 Langfuse](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md).
+**Кратко по value:** см. memory note `reference_codecov_public.md` (sibling pattern) и chapter [09.4.1 Langfuse](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md).
 
 ---
 

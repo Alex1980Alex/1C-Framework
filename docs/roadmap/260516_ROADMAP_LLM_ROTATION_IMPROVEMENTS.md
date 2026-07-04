@@ -88,7 +88,7 @@
 - [ ] **2.3** Verify: `pytest tests/integration/test_llm_rotation.py` — `anthropic-sonnet` activates (previously silently skipped)
 - [ ] **2.4** Smoke: live `cheap_llm_call` через grader-style prompt → measure latency (expect 0.5-2s)
 - [ ] **2.5** Cost monitor: Anthropic dashboard alerts at $50/month threshold (configurable)
-- [ ] **2.6** Documentation: [`09.4.1_Langfuse.md`](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md) update — cost tracking активен через existing Langfuse spans
+- [ ] **2.6** Documentation: [`09.4.1_Langfuse.md`](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.4.1_Langfuse.md) update — cost tracking активен через existing Langfuse spans
 
 **Effort:** **30 minutes** (config-only).
 **Зависимости:** None — provider config-ready since 2026-05-16.

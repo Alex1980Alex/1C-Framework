@@ -91,7 +91,7 @@
 3. **Config**: вычистить упоминания в `infra/lazy-mcp/config/registry.yaml`, `.mcp/full.json`, `.mcp/lazy-mcp-config.json`, `.claude/skills/qdrant-operations/SKILL.md`, `.claude/commands/pdf-search.md`.
 4. **Qdrant**: удалить пустые коллекции `experience_embeddings` + `conversation_memory` (0 точек → потерь нет; snapshot перед delete по гайдрелу §6).
 5. **Stub**: удалить невшитый `experience-embedder.py`; пометить §32.4.1/§32.4.2 в [260426 Phase 8 roadmap](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md) как **superseded by этим ADR**.
-6. **Карта**: привести [27.12 Memory Systems Map](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) в соответствие — убрать обе из списка живых store, добавить строку «deprecated 2026-06-03 (ADR Q1), роль → episodic+semantic».
+6. **Карта**: привести [27.12 Memory Systems Map](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) в соответствие — убрать обе из списка живых store, добавить строку «deprecated 2026-06-03 (ADR Q1), роль → episodic+semantic».
 7. **НЕ трогать** класс `ConversationMemory` (SQLite chat-history) — он легитимен и используется chat-API; deprecate касается только одноимённой Qdrant-коллекции (зафиксировать в commit-message во избежание путаницы).
 
 > Сам ADR (этот файл) = блокер закрытия P1. Шаги 1-7 — часть P1-execution; выполняются под guardrails §26 §6 (reversible — это удаление мёртвого кода, не поведенческий флаг).

@@ -14,7 +14,7 @@
 | **Phase 4** | Benchmark suite + decision на основе recall@10 | ✅ **DONE** (§1.2.5; phase12 PASS, phase123 FAIL) | — | [tests/benchmarks/test_bsl_retrieval_quality.py](../../tests/benchmarks/test_bsl_retrieval_quality.py), [data/bsl_golden_set.json](../../data/bsl_golden_set.json) | LOW |
 | **Phase 5** | Production rollout (alias swap to std_pool config, NOT Late Chunking) | ✅ **DONE 2026-05-20** | — | Alias `bsl_code_v4_late` → physical `bsl_code_v4_late_v2` (std pooling + FA2, 30 404 chunks). +30pp overall recall@10 confirmed post-swap | LOW (snapshot retained) |
 
-**Триггер:** [chapter 31.6 §1](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) указал что 5-10% chunks падают в standard pooling fallback на god-object модулях `ИБTransportManagementDevelop` (>500K chars). Пользователь запросил roadmap для исключения этого fallback'а (session 2026-05-18).
+**Триггер:** [chapter 31.6 §1](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) указал что 5-10% chunks падают в standard pooling fallback на god-object модулях `ИБTransportManagementDevelop` (>500K chars). Пользователь запросил roadmap для исключения этого fallback'а (session 2026-05-18).
 
 **Цель:** снизить fallback с 5-10% до <1% на текущей конфигурации, поддерживая `bsl_code_v4_late` как production коллекцию.
 
@@ -312,7 +312,7 @@ BSL имеет естественные `#Область ... #КонецОбла
 
 ### 2.3 voyage-code-3 (state-of-the-art для code, 2024-12)
 
-Поддерживает **32K context natively** ([voyage-code-3 blog](https://blog.voyageai.com/2024/12/04/voyage-code-3/)) — не нуждается в sliding window для нашего размера модулей. «+13.80% over OpenAI v3-large на 32 code retrieval datasets». Альтернативная стратегия для долгосрочного перехода (closed-source API, deferred — см. [chapter 31.6 §7](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md)).
+Поддерживает **32K context natively** ([voyage-code-3 blog](https://blog.voyageai.com/2024/12/04/voyage-code-3/)) — не нуждается в sliding window для нашего размера модулей. «+13.80% over OpenAI v3-large на 32 code retrieval datasets». Альтернативная стратегия для долгосрочного перехода (closed-source API, deferred — см. [chapter 31.6 §7](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md)).
 
 ### 2.4 Qwen3-Embedding-8B native capabilities
 
@@ -600,8 +600,8 @@ Scaffold создан 2026-05-19 в [tests/benchmarks/test_bsl_retrieval_quality
 
 ### 7.3 Documentation updates после rollout
 
-- [ ] [chapter 31.6](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) §3 — update decision flowchart (full-quality reindex теперь включает Phase 2/3)
-- [ ] [chapter 31.3](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md) — update команды (`--pooling-mode late-chunking` теперь by default Region-aware)
+- [ ] [chapter 31.6](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) §3 — update decision flowchart (full-quality reindex теперь включает Phase 2/3)
+- [ ] [chapter 31.3](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md) — update команды (`--pooling-mode late-chunking` теперь by default Region-aware)
 - [ ] CLAUDE.md — update «Phase 8.12.9» secondary point: «Fallback < 1% после Phase 5»
 - [ ] skill [`bsl-development`](../../.claude/skills/bsl-development/SKILL.md) — упомянуть новый дефолт max_seq_length
 - [ ] MEMORY.md — add entry о новой стратегии fallback handling
@@ -631,9 +631,9 @@ Scaffold создан 2026-05-19 в [tests/benchmarks/test_bsl_retrieval_quality
 
 ## §9 Связанные документы
 
-- [chapter 31.6 Варианты индексации и типичные ошибки](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) — текущая матрица, типичные ошибки
-- [chapter 31.3 Pipeline индексации](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md) — production команды (будет обновлён после Phase 5)
-- [chapter 04.9 Matryoshka Embeddings](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md) — параллельная оптимизация (MIGRATE-3 + REJECT-3, **НЕ затрагивает BSL**)
+- [chapter 31.6 Варианты индексации и типичные ошибки](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md) — текущая матрица, типичные ошибки
+- [chapter 31.3 Pipeline индексации](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md) — production команды (будет обновлён после Phase 5)
+- [chapter 04.9 Matryoshka Embeddings](../framework%20documentation/2_КОНТЕКСТ/2.2_ПОИСК/04.9_Matryoshka_Embeddings.md) — параллельная оптимизация (MIGRATE-3 + REJECT-3, **НЕ затрагивает BSL**)
 - [architecture-research cache: bsl-late-chunking-improvements-2026](../../.claude/skills/architecture-research/cache/bsl-late-chunking-improvements-2026.md) — full research findings (12 sources)
 - [Phase 8 roadmap (closed)](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md) — Phase 8.12.9 introduced Late Chunking
 - Skill [bsl-development](../../.claude/skills/bsl-development/SKILL.md) — decision flowchart, 7 типичных ошибок (будет обновлён после Phase 5)

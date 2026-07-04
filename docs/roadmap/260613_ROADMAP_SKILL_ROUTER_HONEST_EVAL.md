@@ -119,7 +119,7 @@ eval умеет k-fold; есть anti-overfit guardrail. После B test-сп�
 | D2 | Решение по критерию 3: ≥0.75 → PASS честным числом; <0.75 → задокументировать gap + либо обоснованно снизить target, либо назначить C-итерацию (новый under-roadmap) | вердикт критерия 3 обоснован числом | D1 |
 | D3 | Решение по CI-гейту: held-out ≥0.75 стабильно (CV) → снять `continue-on-error` (блокирующий); иначе оставить advisory с записанной причиной | `ci.yml` отражает решение; формулировка == реальность | D2 |
 | D4 | Закрытие окна acceptance 2026-06-27: `skill_system_acceptance.py --final`; вердикт в §18 [260612](260612_ROADMAP_SKILL_SYSTEM_FULL_VERIFICATION.md) + [260613 FOLLOWUP](260613_ROADMAP_SKILL_SYSTEM_VERIFICATION_FOLLOWUP.md) | формальный вердикт зафиксирован | D1 |
-| D5 | Канонизация методологии: если held-out/CV-подход устаканился — занести в [27.12](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) / CLAUDE.md как стандарт оценки роутера | doc == практика | D2 |
+| D5 | Канонизация методологии: если held-out/CV-подход устаканился — занести в [27.12](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) / CLAUDE.md как стандарт оценки роутера | doc == практика | D2 |
 | D6 | Capture финального паттерна (skill-learning) + архив этого roadmap | паттерн pending; roadmap помечен DONE | D4 |
 
 ---

@@ -88,7 +88,7 @@
 | Возможные другие упоминания `bsl_code_v2` или `bsl_code_v3` в этой главе | — | 🔴 | grep по всему файлу |
 
 **Action items:**
-- [x] **A.28.4.1** `grep -n "bsl_code_v[123]\|nomic" docs/framework documentation/28_BSL_SEMANTIC_SEARCH/*.md` — собрать все
+- [x] **A.28.4.1** `grep -n "bsl_code_v[123]\|nomic" docs/framework documentation/2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/*.md` — собрать все
 - [x] **A.28.4.2** Update таблицы коллекций → `bsl_code_v4_late` (production) + `bsl_code_v4` (research baseline std pooling)
 - [x] **A.28.4.3** Footer-бокс «Phase 8 production switchover см. главу 31, ADR-008»
 
@@ -135,7 +135,7 @@
 ### 3.3 `19_ИНДЕКСАЦИЯ_ПРОЕКТОВ/` — может содержать старые BSL collection refs
 
 **Action items:**
-- [x] **A.19.1** `grep -rn "bsl_code_v[23]\|nomic-embed-text" "docs/framework documentation/19_ИНДЕКСАЦИЯ_ПРОЕКТОВ/"` — собрать упоминания
+- [x] **A.19.1** `grep -rn "bsl_code_v[23]\|nomic-embed-text" "docs/framework documentation/2_КОНТЕКСТ/2.5_ИНДЕКСАЦИЯ_ПРОЕКТОВ/"` — собрать упоминания
 - [x] **A.19.2** Если есть — update на `bsl_code_v4_late` + Qwen3
 
 ---
@@ -237,4 +237,4 @@ grep -rn "§32\.\|roadmap.*§32" . | grep -v "260426_ROADMAP_PHASE_8"
 - Tests audit: [`260430_AUDIT_TESTS_COVERAGE.md`](260430_AUDIT_TESTS_COVERAGE.md)
 - Deps + CI audit: [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md)
 - Phase 8 roadmap: [`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md`](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md) §27 cleanup, §30 timeline
-- Глава 31 (production retrieval): [`../framework documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md)
+- Глава 31 (production retrieval): [`../framework documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md`](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md)

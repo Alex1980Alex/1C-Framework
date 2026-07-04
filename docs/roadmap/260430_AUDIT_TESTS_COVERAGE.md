@@ -258,6 +258,6 @@ tests/
 ## 5. Связано
 
 - Главный roadmap: [`260430_ROADMAP_DOC_AND_CODE_AUDIT.md`](260430_ROADMAP_DOC_AND_CODE_AUDIT.md) §1.2 (tests scope)
-- Глава 31 (production retrieval с детализацией framework_search): [`../framework documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md)
-- Phase 9.1 lessons learned (silent dim mismatch): [`../framework documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.5_Миграция_и_итоги.md`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.5_Миграция_и_итоги.md) §«Lessons learned» #2
+- Глава 31 (production retrieval с детализацией framework_search): [`../framework documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md`](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md)
+- Phase 9.1 lessons learned (silent dim mismatch): [`../framework documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.5_Миграция_и_итоги.md`](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.5_Миграция_и_итоги.md) §«Lessons learned» #2
 - Sibling audits: [`260430_AUDIT_CHAPTER_01_OVERVIEW.md`](260430_AUDIT_CHAPTER_01_OVERVIEW.md), [`260430_AUDIT_CHAPTERS_02_30.md`](260430_AUDIT_CHAPTERS_02_30.md), [`260430_AUDIT_DEPS_AND_CI.md`](260430_AUDIT_DEPS_AND_CI.md)

@@ -235,7 +235,7 @@ Roadmap считается выполненным когда:
 - [`260517_PLAN_MRL_FINETUNE_BSL_SKELETON.md`](260517_PLAN_MRL_FINETUNE_BSL_SKELETON.md) — детальный план Phase 1.1/1.2 (corpus + training)
 - [`260517_PLAN_BGE_M3_BENCH_DEFERRED.md`](260517_PLAN_BGE_M3_BENCH_DEFERRED.md) — §4.1.14 retry instructions
 - [`260517_PLAN_HYBRID_BM25_REJECT.md`](260517_PLAN_HYBRID_BM25_REJECT.md) — alternative retrieval path tested (REJECT)
-- [04.9_Matryoshka_Embeddings.md](../framework%20documentation/04_ПОИСК/04.9_Matryoshka_Embeddings.md) — full empirical matrix §4.1.6-16
+- [04.9_Matryoshka_Embeddings.md](../framework%20documentation/2_КОНТЕКСТ/2.2_ПОИСК/04.9_Matryoshka_Embeddings.md) — full empirical matrix §4.1.6-16
 - [`scripts/collect_bsl_finetune_pairs.py`](../../scripts/collect_bsl_finetune_pairs.py) — corpus skeleton
 - [`scripts/finetune_qwen3_bsl_mrl.py`](../../scripts/finetune_qwen3_bsl_mrl.py) — training skeleton
 - Memory: [`feedback_mrl_content_matters.md`](../../.claude/projects/C--1--Framework/memory/feedback_mrl_content_matters.md) — refined hypothesis why BSL REJECT

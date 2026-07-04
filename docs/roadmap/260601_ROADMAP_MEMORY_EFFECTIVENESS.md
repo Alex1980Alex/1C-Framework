@@ -138,11 +138,11 @@ A0–A2 — самостоятельная ценность (наблюдаем�
 - [Awesome-RAG-Evaluation](https://github.com/YHPeter/Awesome-RAG-Evaluation), [Agent_Memory_Techniques](https://github.com/NirDiamant/Agent_Memory_Techniques) — метрики/benchmarks
 - Risk-sensitive contextual bandit для memory-retrieval: [arxiv 2604.27283](https://arxiv.org/html/2604.27283); PURPLE: [arxiv 2601.12078](https://arxiv.org/pdf/2601.12078)
 - WRRF: [uregina paper](https://uregina.ca/~nss373/papers/Rag-CCNC2026.pdf); RRF overview: [emergentmind](https://www.emergentmind.com/topics/reciprocal-rank-fusion-rrf)
-- Внутренние: [27.9](../framework%20documentation/27_UNIFIED_MEMORY/27.9_Confidence_Lifecycle.md), [27.10](../framework%20documentation/27_UNIFIED_MEMORY/27.10_Memory_Surfacing_Quality.md), образец [`post-indexing-analyzer.py`](../../.claude/hooks/post-indexing-analyzer.py) + `analyze_run.py` + chapter 28_1
+- Внутренние: [27.9](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.9_Confidence_Lifecycle.md), [27.10](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.10_Memory_Surfacing_Quality.md), образец [`post-indexing-analyzer.py`](../../.claude/hooks/post-indexing-analyzer.py) + `analyze_run.py` + chapter 28_1
 
 ## 9. Связанные
 
-- [27.9 Confidence Lifecycle](../framework%20documentation/27_UNIFIED_MEMORY/27.9_Confidence_Lifecycle.md) (§22)
-- [27.10 Memory Surfacing Quality](../framework%20documentation/27_UNIFIED_MEMORY/27.10_Memory_Surfacing_Quality.md) (§24)
+- [27.9 Confidence Lifecycle](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.9_Confidence_Lifecycle.md) (§22)
+- [27.10 Memory Surfacing Quality](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.10_Memory_Surfacing_Quality.md) (§24)
 - [260523 §25](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) — родительский указатель
 - Skills: `evaluation-benchmark` (метрики), `memory-unified`, `tech-research`

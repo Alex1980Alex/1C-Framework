@@ -4,7 +4,7 @@
 > [260612 memory-ai](260612_ROADMAP_MEMORY_AI_FULL_VERIFICATION.md) и
 > [260612 pdf-docs](260612_ROADMAP_PDF_DOCS_FULL_VERIFICATION.md)).
 > Объект: `LinkRegistry` — SQLite `data/link_registry.db`, колонка «не контент,
-> а связи» в карте [27.12](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
+> а связи» в карте [27.12](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
 > Методика 260610: каждая цепочка вход→store-инвариант→выход исполняема, отказы честные.
 
 ## 1. Инвентаризация (фактическое состояние 2026-06-12, live-снятие)

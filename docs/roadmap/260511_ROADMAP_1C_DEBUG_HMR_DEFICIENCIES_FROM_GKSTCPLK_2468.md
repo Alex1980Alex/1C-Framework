@@ -9,7 +9,7 @@
 > **Связанные документы:**
 > - [`260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md`](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md) — original post-BP-fire fix (§10/§11 force_recycle Solution A)
 > - [`260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md`](260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) — HMR integration into /analyze-1c-task + /implement-1c-task
-> - [`docs/framework documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md)
+> - [`docs/framework documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/36.7_HMR_Subprocess_Wrapper.md)
 > - [`configuration/260304_GKSTCPLK-2182.../docs/260507_GKSTCPLK_2468.../IMPLEMENTATION-PROGRESS.md`](../../configuration/260304_GKSTCPLK-2182%20Доработать%20создание%20Направление%20на%20разгрузку%20для%20заблокированных%20ТС/docs/260507_GKSTCPLK_2468%20Устранить%20замечания%20по%20результатам%20ОПЭ/IMPLEMENTATION-PROGRESS.md) — source incident
 > - Memory: [`feedback_1c_debug_hmr_alias_validation.md`](../../../Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_1c_debug_hmr_alias_validation.md), [`feedback_1c_debug_hmr_recycle_scope.md`](../../../Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_1c_debug_hmr_recycle_scope.md), [`feedback_1c_debug_url_protocol.md`](../../../Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_1c_debug_url_protocol.md)
 

@@ -1,6 +1,6 @@
 # 260609 — Roadmap: ремедиация Unified Memory (расхождения карты 27.12 + сломанные части)
 
-> **Источник:** аудит при написании глав-детализаций [27.12.1–27.12.7](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) (2026-06-09): каждый блок мастер-схемы сверен с кодом + **эмпирическая проверка живых sink'ов/БД** (lifecycle-log, surfacing-log, link_registry, memory_ai.db, events.*, maintenance-runs).
+> **Источник:** аудит при написании глав-детализаций [27.12.1–27.12.7](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) (2026-06-09): каждый блок мастер-схемы сверен с кодом + **эмпирическая проверка живых sink'ов/БД** (lifecycle-log, surfacing-log, link_registry, memory_ai.db, events.*, maintenance-runs).
 >
 > **Главный вывод:** retrieval-половина системы работает (surfacing инжектит, харвестеры наполняют, maintenance dry-run ходит), но **петля обратной связи §22 разомкнута в production с момента создания** — ни одного реального reinforce за всю историю. Всё, что зависит от роста confidence (gating-ранжирование, wiki-promote, forget-staleness, cascade), работает в «замороженном» режиме prior 0.70.
 
@@ -65,17 +65,17 @@ Maintenance cadence: 2 прогона, оба `applied: false` (dry-run default)
 
 | # | Расхождение | Где зафиксировано |
 |---|---|---|
-| B1 ✅ | ~~`save_to_wiki_log`/`try_promote_patterns`/`_emit_langfuse_span` — стабы (PR#2-регрессия), док заявляет wiki-log~~ **DONE P2.2 (2026-06-10):** 3 функции восстановлены из git `7bc57e463`, доки 27.12.1 §5 / 27.12.5 синхронизированы | [27.12.1 §5](../framework%20documentation/27_UNIFIED_MEMORY/27.12.1_Блок_Вход_Запись.md) |
-| B2 | 27.2: LinkType=6 (реально 10), формулы Propagation, поля MemCube — устарели | [27.12.2](../framework%20documentation/27_UNIFIED_MEMORY/27.12.2_Блок_Координация.md) |
-| B3 | pdf-docs = SQLite FTS5 + опц. Qdrant, а не «Qdrant framework collections» (27.12 §2) | [27.12.3 §4](../framework%20documentation/27_UNIFIED_MEMORY/27.12.3_Блок_Хранилища.md) |
-| B4 | 27.3/27.10: старые веса слоёв (0.35/0.40/0.25), бюджет 4s, плечи exp/conv (удалены §26 Q1) | [27.12.4](../framework%20documentation/27_UNIFIED_MEMORY/27.12.4_Блок_Выход_Чтение.md) |
-| B5 | Харвестеры не бампают epoch → новые паттерны невидимы surfacing'у до 5 мин | [27.12.1 §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12.1_Блок_Вход_Запись.md) |
-| B6 | EventStore: `max_hot_buffer_mb` объявлен, не используется; Audit default-путь `data/audit/` vs фактический `data/services/` | [27.12.5 §2.3](../framework%20documentation/27_UNIFIED_MEMORY/27.12.5_Блок_Отдельно.md) |
-| B7 | Versioning `max_versions=100` прунит только in-memory cache, JSONL растёт вечно | [27.12.6 §2](../framework%20documentation/27_UNIFIED_MEMORY/27.12.6_Блок_Governance.md) |
-| B8 | vector-memory: docstring «1024d» stale; описание `decay_confidence` «deleted» vs реальный archive; docstring хука «2s budget» stale | [27.12.3 §2](../framework%20documentation/27_UNIFIED_MEMORY/27.12.3_Блок_Хранилища.md), [27.12.4](../framework%20documentation/27_UNIFIED_MEMORY/27.12.4_Блок_Выход_Чтение.md) |
-| B9 | skill-learning: rewrite `pending_patterns.jsonl` без atomic `os.replace`; memory-ai/link_registry без WAL | [27.12.3 §3,§7](../framework%20documentation/27_UNIFIED_MEMORY/27.12.3_Блок_Хранилища.md) |
-| B10 | `memory_forget` (MCP) не делает авто-sweep (пустой candidates=[]), стрелка §8 на деле реализована maintenance-вариантом | [27.12.6 §6](../framework%20documentation/27_UNIFIED_MEMORY/27.12.6_Блок_Governance.md) |
-| B11 | TTL `is_expired()` для незарегистрированной сущности = True («unknown=expired») — ловушка семантики | [27.12.6 §1](../framework%20documentation/27_UNIFIED_MEMORY/27.12.6_Блок_Governance.md) |
+| B1 ✅ | ~~`save_to_wiki_log`/`try_promote_patterns`/`_emit_langfuse_span` — стабы (PR#2-регрессия), док заявляет wiki-log~~ **DONE P2.2 (2026-06-10):** 3 функции восстановлены из git `7bc57e463`, доки 27.12.1 §5 / 27.12.5 синхронизированы | [27.12.1 §5](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.1_Блок_Вход_Запись.md) |
+| B2 | 27.2: LinkType=6 (реально 10), формулы Propagation, поля MemCube — устарели | [27.12.2](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.2_Блок_Координация.md) |
+| B3 | pdf-docs = SQLite FTS5 + опц. Qdrant, а не «Qdrant framework collections» (27.12 §2) | [27.12.3 §4](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.3_Блок_Хранилища.md) |
+| B4 | 27.3/27.10: старые веса слоёв (0.35/0.40/0.25), бюджет 4s, плечи exp/conv (удалены §26 Q1) | [27.12.4](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.4_Блок_Выход_Чтение.md) |
+| B5 | Харвестеры не бампают epoch → новые паттерны невидимы surfacing'у до 5 мин | [27.12.1 §10](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.1_Блок_Вход_Запись.md) |
+| B6 | EventStore: `max_hot_buffer_mb` объявлен, не используется; Audit default-путь `data/audit/` vs фактический `data/services/` | [27.12.5 §2.3](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.5_Блок_Отдельно.md) |
+| B7 | Versioning `max_versions=100` прунит только in-memory cache, JSONL растёт вечно | [27.12.6 §2](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.6_Блок_Governance.md) |
+| B8 | vector-memory: docstring «1024d» stale; описание `decay_confidence` «deleted» vs реальный archive; docstring хука «2s budget» stale | [27.12.3 §2](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.3_Блок_Хранилища.md), [27.12.4](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.4_Блок_Выход_Чтение.md) |
+| B9 | skill-learning: rewrite `pending_patterns.jsonl` без atomic `os.replace`; memory-ai/link_registry без WAL | [27.12.3 §3,§7](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.3_Блок_Хранилища.md) |
+| B10 | `memory_forget` (MCP) не делает авто-sweep (пустой candidates=[]), стрелка §8 на деле реализована maintenance-вариантом | [27.12.6 §6](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.6_Блок_Governance.md) |
+| B11 | TTL `is_expired()` для незарегистрированной сущности = True («unknown=expired») — ловушка семантики | [27.12.6 §1](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.6_Блок_Governance.md) |
 
 ---
 

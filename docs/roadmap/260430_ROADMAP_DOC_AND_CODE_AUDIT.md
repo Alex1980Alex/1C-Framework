@@ -418,7 +418,7 @@ def require_admin():
 
 > **✅ DONE 2026-05-01 (commit `34c233f8`).** Все §32.X в chapter 31 (31.1/31.2/31.3/31.5) теперь markdown-ссылки на roadmap anchors. Попутно исправлен typo `§22 LoRA → §32.6.1 LoRA` в 31.1:127.
 
-Главы [`31.1_Обзор.md:121-126`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md) и [`31.2_Архитектура.md`](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.2_Архитектура.md) ссылаются на `§32.2 Reranker`, `§32.3 Hybrid sparse+dense`, `§32.4 Auto-populate`, `§32.5.2 Cleanup snapshots` — эти секции существуют только в **roadmap** (`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md §32`), не в `docs/framework documentation/`.
+Главы [`31.1_Обзор.md:121-126`](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.1_Обзор.md) и [`31.2_Архитектура.md`](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.2_Архитектура.md) ссылаются на `§32.2 Reranker`, `§32.3 Hybrid sparse+dense`, `§32.4 Auto-populate`, `§32.5.2 Cleanup snapshots` — эти секции существуют только в **roadmap** (`260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md §32`), не в `docs/framework documentation/`.
 
 - [x] **2.3.1** Заменить все `§32.X` в chapter 31 на относительные ссылки на roadmap: `[Roadmap §32.2](../../roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md#322-phase-92--cross-encoder-reranker-next-big-win-4-8-часов)`
 - [x] **2.3.2** Опционально — создать `docs/framework documentation/32_FUTURE_RETRIEVAL_QUALITY/` с заголовком и pointer на roadmap §32 (если хочется keeping framework docs self-contained)
@@ -443,7 +443,7 @@ def require_admin():
 
 ### 3.1 P1 — Chapter 27.3 Memory_First_Hook ✅ DONE 2026-05-01 (`ab1e6e12`)
 
-[`27.3_Memory_First_Hook.md:16,78,86-87`](../framework%20documentation/27_UNIFIED_MEMORY/27.3_Memory_First_Hook.md) описывает Layer 2 semantic search через Ollama nomic 768d. Phase 9.1 (commit `ac91c4b7`) заменил это на **TEI Qwen3 4096d**. Hook сейчас работает корректно, доки врут.
+[`27.3_Memory_First_Hook.md:16,78,86-87`](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.3_Memory_First_Hook.md) описывает Layer 2 semantic search через Ollama nomic 768d. Phase 9.1 (commit `ac91c4b7`) заменил это на **TEI Qwen3 4096d**. Hook сейчас работает корректно, доки врут.
 
 #### 3.1.0 Pre-flight
 - [x] **3.1.0.a** Read 27.3 целиком (не только указанные строки) — найти все упоминания эмбеддера
@@ -470,12 +470,12 @@ def require_admin():
 - [x] **3.1.3.c** Link на updated `embedding-models` skill
 
 #### 3.1.4 Verify
-- [x] **3.1.4.a** `grep -n "nomic\|768d" "docs/framework documentation/27_UNIFIED_MEMORY/27.3_Memory_First_Hook.md"` — пусто или только в migration note контексте
+- [x] **3.1.4.a** `grep -n "nomic\|768d" "docs/framework documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.3_Memory_First_Hook.md"` — пусто или только в migration note контексте
 - [x] **3.1.4.b** Smoke test memory-first-hook: запустить `echo '{"prompt":"BSL процедура"}' | python .claude/hooks/memory-first-hook.py` — должны быть результаты с скилами
 
 ### 3.2 P1 — Chapter 04.8 Dual_Vector_Search ✅ DONE 2026-05-01 (`ab1e6e12`)
 
-[`04.8_Dual_Vector_Search.md:23,55,74,90`](../framework%20documentation/04_ПОИСК/04.8_Dual_Vector_Search.md) упоминает `bsl_code_v4` как 768d nomic. Реально `bsl_code_v4` (research) и `bsl_code_v4_late` (production) — оба **4096d Qwen3**.
+[`04.8_Dual_Vector_Search.md:23,55,74,90`](../framework%20documentation/2_КОНТЕКСТ/2.2_ПОИСК/04.8_Dual_Vector_Search.md) упоминает `bsl_code_v4` как 768d nomic. Реально `bsl_code_v4` (research) и `bsl_code_v4_late` (production) — оба **4096d Qwen3**.
 
 #### 3.2.0 Pre-flight
 - [x] **3.2.0.a** Read 04.8 целиком, понять что описывается dual-vector сценарий (`content` + `module_path` 2 named vectors) — был ли он реально реализован или это design doc?
@@ -552,7 +552,7 @@ def require_admin():
 
 ### 3.5 P1 — Chapter 01.3 Технологический_стек ✅ DONE 2026-05-01 (`ab1e6e12`)
 
-[`01.3_Технологический_стек.md:11,26`](../framework%20documentation/01_ОБЗОР/01.3_Технологический_стек.md) — E5 1024d перечислена как default embedding. После Phase 8 — **Qwen3-Embedding-8B 4096d через TEI**.
+[`01.3_Технологический_стек.md:11,26`](../framework%20documentation/0_ВВЕДЕНИЕ/0.1_ОБЗОР/01.3_Технологический_стек.md) — E5 1024d перечислена как default embedding. После Phase 8 — **Qwen3-Embedding-8B 4096d через TEI**.
 
 #### 3.5.0 Pre-flight
 - [x] **3.5.0.a** Read 01.3 целиком — это таблица стека, нужно держать актуальной
@@ -569,10 +569,10 @@ def require_admin():
 
 ### 3.6 P1 — Chapter 26 LAZY_MCP отсутствует в TOC ✅ DONE 2026-05-01 (`ab1e6e12`)
 
-Папка `docs/framework documentation/26_LAZY_MCP/` существует с 6 файлами, но `00_СОДЕРЖАНИЕ.md` её **не упоминает**. Структурный navigation gap.
+Папка `docs/framework documentation/3_ИНСТРУМЕНТЫ/3.3_LAZY_MCP/` существует с 6 файлами, но `00_СОДЕРЖАНИЕ.md` её **не упоминает**. Структурный navigation gap.
 
 #### 3.6.0 Audit
-- [x] **3.6.0.a** `ls "docs/framework documentation/26_LAZY_MCP/"` — точный список 6 файлов
+- [x] **3.6.0.a** `ls "docs/framework documentation/3_ИНСТРУМЕНТЫ/3.3_LAZY_MCP/"` — точный список 6 файлов
 - [x] **3.6.0.b** Read first файл (`26.1_Обзор.md` или first из listing) для извлечения topic summary
 - [x] **3.6.0.c** Verify почему 26 пропущен — есть ли вообще ссылка hidden где-то?
 
@@ -728,7 +728,7 @@ def require_admin():
 - [x] **4.2.3.b** `tests/bsl/sonar/test_cli.py` — mock subprocess через `unittest.mock.patch`, verify cmd construction для analyze
 
 #### 4.2.4 Documentation
-- [x] **4.2.4.a** Создать или обновить `docs/framework documentation/28_BSL_SEMANTIC_SEARCH/28.6_SonarQube.md` (новый файл) — описать полный workflow
+- [x] **4.2.4.a** Создать или обновить `docs/framework documentation/2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.6_SonarQube.md` (новый файл) — описать полный workflow
 - [x] **4.2.4.b** Update `bsl-development` skill — добавить раздел SonarQube
 - [x] **4.2.4.c** Update CLAUDE.md строку 73 — отметить SonarQube CLI как реализованный
 
@@ -888,7 +888,7 @@ def require_admin():
 - [x] **5.1.0.d** Audit usage: `git grep "from src.pdf_framework.guardrails"` — где используется
 - [x] **5.1.0.e** Audit `framework-config` skill — есть ли `GUARDRAILS__*` env vars (из памяти есть `GUARDRAILS__PII_MODE`, `GUARDRAILS__INJECTION_MODE`, `GUARDRAILS__INJECTION_THRESHOLD`, `GUARDRAILS__MAX_QUERY_LENGTH`, `GUARDRAILS__MAX_FILE_SIZE_BYTES` — проверить)
 
-#### 5.1.1 Создать главу `docs/framework documentation/33_GUARDRAILS/`
+#### 5.1.1 Создать главу `docs/framework documentation/7_ПРОВЕРКА/7.6_GUARDRAILS/`
 - [x] **5.1.1.a** Создать `33_GUARDRAILS/33.1_Обзор.md`:
   - Назначение: input validation, PII protection, injection defense
   - Архитектура: где в pipeline применяется guardrail (pre-search, pre-LLM, post-LLM)
@@ -1241,7 +1241,7 @@ ARQ async workers. Описаны в chapter 09 deployment (`09_АДМИНИСТ
 ## Источники
 
 - [Roadmap Phase 8](260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md) — production state context
-- [Framework documentation chapter 31](../framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/) — текущий production guide
+- [Framework documentation chapter 31](../framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/) — текущий production guide
 - Аудит run: 2026-04-30 вечер (2 параллельных Explore subagent'а)
 - Файлы аудита приложены в commit message соответствующего PR
 
@@ -1308,7 +1308,7 @@ Day 7 (P4 maintenance, ~16 ч):
 #### After P0 (§2.1 + §2.2 + §2.3)
 - [x] **11.3.P0.a** Embedding default test: `unset EMBEDDING__MODEL && python -c "from src.pdf_framework.config.embedding import EmbeddingSettings; print(EmbeddingSettings().dimensions)"` → 4096
 - [x] **11.3.P0.b** JWT auth test: `pytest tests/api/auth/ tests/api/test_tenants.py -v` зелёный (≥12 tests)
-- [x] **11.3.P0.c** Chapter 31 links: `grep -n "§32" docs/framework documentation/31_QWEN3_RETRIEVAL_PRODUCTION/` — все ссылки на roadmap (relative path `../../roadmap/260426...`)
+- [x] **11.3.P0.c** Chapter 31 links: `grep -n "§32" docs/framework documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/` — все ссылки на roadmap (relative path `../../roadmap/260426...`)
 - [x] **11.3.P0.d** Production retrieval не сломан: smoke search BSL через MCP вернёт релевантные результаты
 
 #### After P1 (§3.x)

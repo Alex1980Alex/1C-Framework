@@ -1,7 +1,7 @@
 # 260610 — Дорожная карта тестирования цепочек Unified Memory (по мастер-схеме 27.12 §10)
 
 > **Цель:** на реальных примерах прогнать **все** осмысленные цепочки «вход → блоки → выход»
-> мастер-схемы ([27.12 §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md)),
+> мастер-схемы ([27.12 §10](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md)),
 > измерить эффективность каждого потока (write / read / cascade / migrate) и подтвердить,
 > что ремедиации roadmap 260609 (P0.1 reinforce-bridge, P1 write-contract + cache, P2.2/P2.3
 > propagation) работают в production, а не только в unit-тестах.
@@ -9,7 +9,7 @@
 > **Метод:** каждый блок схемы = узел; цепочка = путь от блока «ВХОД» до блока «ВЫХОД»
 > (или до наблюдаемого артефакта governance). Для каждой цепочки — реальный пример
 > (конкретный MCP-вызов / скрипт / промпт), ожидаемый sink-евиденс и критерий PASS.
-> Пошаговые рельсы потоков — [27.12.7 Блок Потоки](../framework%20documentation/27_UNIFIED_MEMORY/27.12.7_Блок_Потоки.md).
+> Пошаговые рельсы потоков — [27.12.7 Блок Потоки](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.7_Блок_Потоки.md).
 
 ---
 
@@ -264,8 +264,8 @@ Observability-diff vs baseline P0 (7d-окно): sinks 8 fresh/2 cold → **9 fr
 
 ## Связанные документы
 
-- [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) — мастер-схема (источник блоков)
-- [27.12.7 Блок Потоки](../framework%20documentation/27_UNIFIED_MEMORY/27.12.7_Блок_Потоки.md) — пошаговые рельсы + точки разрыва
+- [27.12 Memory Systems Map §10](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) — мастер-схема (источник блоков)
+- [27.12.7 Блок Потоки](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12.7_Блок_Потоки.md) — пошаговые рельсы + точки разрыва
 - [260609 Memory Remediation](260609_ROADMAP_MEMORY_REMEDIATION.md) / [260608 Unit-test remediation](260608_ROADMAP_UNIT_TEST_REMEDIATION.md) — фиксы, которые эта карта подтверждает в production
 - [260605 Full Observability](260605_ROADMAP_MEMORY_FULL_OBSERVABILITY.md) — fact-trace / report, используемые как выход R5
 - Skill: `memory-unified`

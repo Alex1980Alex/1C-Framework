@@ -43,7 +43,7 @@ PR-automation подсистема (18 P-items из 40.4) живёт **толь�
 
 ### 2.2 Документация (5 файлов MISSING)
 
-`docs/framework documentation/40_PR_AUTOMATION/{40.1_Обзор, 40.2_Детальная_реализация, 40.3_Best_practices, 40.4_Дорожная_карта, 40.5_Pipeline_Workflow}.md`
+`docs/framework documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/{40.1_Обзор, 40.2_Детальная_реализация, 40.3_Best_practices, 40.4_Дорожная_карта, 40.5_Pipeline_Workflow}.md`
 
 ### 2.3 Файлы dev-master с правками
 
@@ -183,7 +183,7 @@ Semantic commits на feat-branch (4 шт):
 
 ### Phase E — Docs (~20 мин)
 
-15. `git checkout feat/serena-audit-hybrid-refactor -- "docs/framework documentation/40_PR_AUTOMATION/"`
+15. `git checkout feat/serena-audit-hybrid-refactor -- "docs/framework documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/"`
 16. В `CLAUDE.md` добавить раздел про hook (~3-5 строк по образцу feat-ветки)
 17. Опционально: stub-ы для dead-link'ов из 40.4 если они есть
 
@@ -241,4 +241,4 @@ Semantic commits на feat-branch (4 шт):
 | `git log --reverse --oneline -- <files>` | commit archaeology |
 | `git ls-tree` blob hashes | protocol.py divergence detection |
 | Session task#1 PR #3 outcome | head-ref fallback evidence |
-| [40.4 §«Доделки 2026-05-22 evening v3»](../framework%20documentation/40_PR_AUTOMATION/40.4_Дорожная_карта.md) | live-test transcript |
+| [40.4 §«Доделки 2026-05-22 evening v3»](../framework%20documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/40.4_Дорожная_карта.md) | live-test transcript |

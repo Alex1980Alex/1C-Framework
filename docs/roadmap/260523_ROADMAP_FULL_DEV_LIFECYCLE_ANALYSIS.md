@@ -924,7 +924,7 @@ echo '{"tool_name":"Bash","tool_input":{"command":"x"},"tool_response":"FAILED"}
 - [260519_ROADMAP_MASTER_RECONCILIATION.md](260519_ROADMAP_MASTER_RECONCILIATION.md) — SUPERSEDED
 - [260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md](260522_ROADMAP_PR_AUTOMATION_MIGRATION_TO_DEV_MASTER.md) — DONE via PR #4
 - [260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md](260523_ROADMAP_UNIFIED_BRANCH_TOPOLOGY.md) — disjoint reconciliation
-- [40_PR_AUTOMATION/](../framework%20documentation/40_PR_AUTOMATION/) — chapters 40.1-40.5
+- [40_PR_AUTOMATION/](../framework%20documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/) — chapters 40.1-40.5
 
 ### Skills (most relevant)
 
@@ -1734,7 +1734,7 @@ Pivot из mypy-уборки в реальный bugfix (branch `bugfix/api-rout
 - `tests/unit/test_import_smoke.py` + `tests/unit/test_processing_behavior.py` (14 тестов) — behavioral покрытие orphan-классов `src/pdf_framework/processing/` (coverage: versioning 82% / page_renderer 75% / cache 74% / image_processor 49% / section_summary 45% / image_extractor 26% / table_extractor 15%). Marker `unit` → CI-джоб `test-unit`.
 
 **Landed (docs sync, эта сессия — commit `a3bd3df00`):**
-- Новая глава [08.6 Unit / Smoke / Behavioral](../framework%20documentation/08_ОЦЕНКА_КАЧЕСТВА/08.6_Unit_Smoke_Behavioral.md) + регистрация в 00_СОДЕРЖАНИЕ.
+- Новая глава [08.6 Unit / Smoke / Behavioral](../framework%20documentation/7_ПРОВЕРКА/7.1_ОЦЕНКА_КАЧЕСТВА/08.6_Unit_Smoke_Behavioral.md) + регистрация в 00_СОДЕРЖАНИЕ.
 - Синхронизирован stale routing в `11.4_Skill_Enforcement.md` + `09.8_Skill_First_Enforcement.md` (Level A/A.1/C таблицы, JSON-пример, счётчики паттернов: content 17 / research_protocol 4).
 - `30.3_Enforcers.md` — задокументирован `z-ai-write-guard._EXEMPT_PREFIXES` (+`tests/`) + правило больших `.md`.
 - `03.5_Изображения_и_таблицы.md` — кросс-ссылка на 08.6.
@@ -1961,9 +1961,9 @@ Pivot из mypy-уборки в реальный bugfix (branch `bugfix/api-rout
 
 **Landed:**
 - [`scripts/ci_failure_cache.py`](../../scripts/ci_failure_cache.py) — multi-layer cache (JSONL append-only + Qdrant `ci_failures` 1024d MRL Qwen3 + SHA256 dedup + auto-issue creation on `OCCURRENCE_THRESHOLD=3`). CLI: `--pr/--sha/--run-id/--job/--stats/--search`. Code-verify PASS via subagent `acf6d9f923f670ef4` (15 checks).
-- [Chapter 42.4 Failure Caching](../framework%20documentation/42_MONITOR_CI/42.4_Failure_Caching.md) — pipeline doc, storage layers, CLI examples.
+- [Chapter 42.4 Failure Caching](../framework%20documentation/7_ПРОВЕРКА/7.10_MONITOR_CI/42.4_Failure_Caching.md) — pipeline doc, storage layers, CLI examples.
 - Monitor `bkozphbx9` integrated: on FAILURE event → spawn `ci_failure_cache.py --pr N --job <name>` → emit `FAIL PR#N occ=Y [issue_url]`.
-- Fixed `src/memory/infrastructure/retry.py` `raise None` (CodeQL alert #1349, py/illegal-raise error severity). Code-verify PASS via subagent `ac929a17a7847c182` (12 checks). Doc note в [01.2 Архитектура](../framework%20documentation/01_ОБЗОР/01.2_Архитектура.md).
+- Fixed `src/memory/infrastructure/retry.py` `raise None` (CodeQL alert #1349, py/illegal-raise error severity). Code-verify PASS via subagent `ac929a17a7847c182` (12 checks). Doc note в [01.2 Архитектура](../framework%20documentation/0_ВВЕДЕНИЕ/0.1_ОБЗОР/01.2_Архитектура.md).
 - Fixed `.github/workflows/claude.yml` bot filter (`user.type != 'Bot'`) → skip Dependabot PRs (claude-code-action rejects bot authors).
 - Dismissed bulk CodeQL noise: 16 vendored alerts (serena/lazy-mcp/auto-documenter/external) + 20 test-file false positives + ~700 low-value code quality rules (unused vars/imports/cycles/style) via batch script.
 
@@ -2494,7 +2494,7 @@ Research **уточнил** исходное предложение (#1+#2 на�
 
 ## §26 Memory Ingestion & Cross-Store Synchronization (PLANNED, 2026-06-02)
 
-> **Статус:** PLANNED (дизайн + research готовы). **Триггер:** live-наблюдение — `learned_patterns` всего **22 точки** (после dedup), `experience_embeddings`/`conversation_memory` = **0**, skill-learning JSONL = 1 (stale с мая). Машинерия §22/§24/§25 (доверие/surfacing/self-tuning) богатая, но её **нечем кормить**. Полная карта систем: [27.12](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
+> **Статус:** PLANNED (дизайн + research готовы). **Триггер:** live-наблюдение — `learned_patterns` всего **22 точки** (после dedup), `experience_embeddings`/`conversation_memory` = **0**, skill-learning JSONL = 1 (stale с мая). Машинерия §22/§24/§25 (доверие/surfacing/self-tuning) богатая, но её **нечем кормить**. Полная карта систем: [27.12](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
 
 ### 26.1 Проблема (verified live, code-grounded inventory)
 

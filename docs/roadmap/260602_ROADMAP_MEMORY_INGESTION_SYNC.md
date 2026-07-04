@@ -98,7 +98,7 @@
 
 **Deliverables:**
 - D0.1 — добавить поле `content_hash` в `MemoryCube` (заполняется `content_key(content)` при создании); протащить в payload **всех** проекций (`to_vector_memory_payload` / `to_ai_memory_row` / `to_skill_learning_record`).
-- D0.2 — единый «писатель»-контракт: документировать per-store, кто пишет, через какой MemCube-метод, с каким `content_hash`. Таблица в [27.12 Memory Systems Map](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
+- D0.2 — единый «писатель»-контракт: документировать per-store, кто пишет, через какой MemCube-метод, с каким `content_hash`. Таблица в [27.12 Memory Systems Map](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md).
 - D0.3 — ingestion-метрики (`ingest_rate`, `dup_rate`, `store_sizes`, `harvest_skipped`) в существующий [`MetricsCollector`](../../src/memory/infrastructure/metrics.py); проброс в §25 analyzer (`analyze_memory_effectiveness.py`).
 - D0.4 — backfill: разовый проход проставляет `content_hash` существующим 22 паттернам (idempotent, dry-run by default, vector-backup).
 
@@ -109,7 +109,7 @@
 - [x] Backfill на реальном Qdrant: **23/23** точки получили `content_hash`, повторный запуск = no-op (`backfill_content_hash.py`).
 - [x] Reversible: `from_dict` без `content_hash` пересчитывает из content (lazy default); backup записан при apply.
 
-**Артефакты:** `src/memory/orchestrator/content_hash.py` (новый, canonical) · `memcube.py` (+`content_hash` поле/проекции) · `ingest_metrics.py` (новый, D0.3) · `scripts/backfill_content_hash.py` (новый, D0.4) · `dedupe_learned_patterns.py` (делегирует) · доки [27.12 §11](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md). Тесты: 30 unit (content_hash 19 + backfill 5 + ingest 6) + 12 memcube-wiki regression = 42 green.
+**Артефакты:** `src/memory/orchestrator/content_hash.py` (новый, canonical) · `memcube.py` (+`content_hash` поле/проекции) · `ingest_metrics.py` (новый, D0.3) · `scripts/backfill_content_hash.py` (новый, D0.4) · `dedupe_learned_patterns.py` (делегирует) · доки [27.12 §11](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md). Тесты: 30 unit (content_hash 19 + backfill 5 + ingest 6) + 12 memcube-wiki regression = 42 green.
 
 ### P1 — Авто-ingestion харвестеры (по всем слоям) — ✅ DONE (2026-06-03)
 

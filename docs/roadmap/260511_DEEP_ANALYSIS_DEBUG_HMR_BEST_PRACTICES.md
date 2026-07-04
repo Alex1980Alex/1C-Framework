@@ -57,9 +57,9 @@
 
 ### 📚 Документация обновлена
 
-- **NEW** [`36.8_Advanced_Debug_Features.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.8_Advanced_Debug_Features.md) — 280-line chapter: feature catalog, API table (18 tools), workflows, warm-pool ceiling §10
-- [`36.1_Обзор.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.1_Обзор.md) — P0.A-G batch header + TOC entry §36.8
-- [`36.6_Диагностика.md`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/36.6_Диагностика.md) — RDBG limitations: warm-pool ceiling + vendor commitment
+- **NEW** [`36.8_Advanced_Debug_Features.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/36.8_Advanced_Debug_Features.md) — 280-line chapter: feature catalog, API table (18 tools), workflows, warm-pool ceiling §10
+- [`36.1_Обзор.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/36.1_Обзор.md) — P0.A-G batch header + TOC entry §36.8
+- [`36.6_Диагностика.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/36.6_Диагностика.md) — RDBG limitations: warm-pool ceiling + vendor commitment
 - [`.claude/skills/1c-debug-hmr/SKILL.md`](../../.claude/skills/1c-debug-hmr/SKILL.md) — frontmatter: 13→18 tools + P0.A-G keywords; API tables: 3 new tools + extended `debug_set_breakpoint`/`debug_stack_trace`
 - **Cache:**
   - [`bp_propagation_race_patterns.md`](../../.claude/skills/architecture-research/cache/bp_propagation_race_patterns.md) — survey 6 protocols (DAP/CDP/GDB/JDWP/vscode-js-debug/yukon39)

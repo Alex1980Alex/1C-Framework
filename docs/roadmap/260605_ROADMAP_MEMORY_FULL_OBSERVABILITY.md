@@ -1,6 +1,6 @@
 # Roadmap — Memory Full Observability (логирование всех процессов для оценки эффективности)
 
-> **Дата:** 2026-06-05 · **Статус:** ✅ DONE — **P0 ✅ · P1 ✅ · P2 ✅ · P3 ✅ · P4 ✅** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
+> **Дата:** 2026-06-05 · **Статус:** ✅ DONE — **P0 ✅ · P1 ✅ · P2 ✅ · P3 ✅ · P4 ✅** · **Родитель:** [27.12 Memory Systems Map §10](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md) · **Смежные:** [§22 confidence](260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md) · [§25 effectiveness](260601_ROADMAP_MEMORY_EFFECTIVENESS.md) · [§26 ingestion](260602_ROADMAP_MEMORY_INGESTION_SYNC.md)
 >
 > Цель: **каждый процесс памяти оставляет структурный след** (per-event JSONL), чтобы §25-аналитика могла измерять эффективность сквозного цикла **ingestion → consolidation → sync → retrieval → forget**. Инвентаризация — code-grounded аудит 2026-06-05 (8 sink'ов × ~25 процессов, §2).
 

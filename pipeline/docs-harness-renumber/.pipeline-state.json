@@ -1,0 +1,44 @@
+{
+  "task": "docs-harness-renumber",
+  "title": "Перенумерация 48 глав документации по 9 слоям Harness (вложенность)",
+  "created_at": "2026-07-04T13:16:06",
+  "updated_at": "2026-07-04T13:33:49",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T13:33:49"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T13:33:49",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-04T13:33:49"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T13:33:49"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T13:33:49"
+    }
+  ]
+}

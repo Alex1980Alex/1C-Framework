@@ -1,7 +1,7 @@
 # 260612 — Roadmap: полная проверка pdf-docs (DOCS, Qdrant) — вход, выход, место в карте памяти
 
 > Статус: PROPOSED · Создан: 2026-06-12 · Источник: анализ блока `pdf-docs` карты
-> [27.12 §map](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md), по образцу
+> [27.12 §map](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md), по образцу
 > [260612 memory-ai full verification](260612_ROADMAP_MEMORY_AI_FULL_VERIFICATION.md) + методика chain-testing
 > [260610](260610_ROADMAP_MEMORY_CHAIN_TESTING.md)
 > Связанные: [260609 P1 write-contract](260609_ROADMAP_MEMORY_PIPELINE_HARDENING.md), [260611 governance wiring](260611_ROADMAP_MEMORY_GOVERNANCE_WIRING.md), chapter 31 (Qwen3 retrieval), chapter 28_1 (auto-reports)

@@ -119,6 +119,6 @@ Pre-commit hook chain validates `Markdown Lint (wiki)` + `KB Lint (wiki)` + ruff
 ## Связано
 
 - Skill [`auto-git-save`](../../.claude/skills/auto-git-save/SKILL.md) — current chain documentation
-- [Chapter 32 Wiki Knowledge Layer](../framework%20documentation/32_WIKI_KNOWLEDGE_LAYER/32.1_Обзор.md) — primary subsystem owner для Phase A fixes
-- [Chapter 09.7 Система хуков](../framework%20documentation/09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md) — общая глава про hook chain
+- [Chapter 32 Wiki Knowledge Layer](../framework%20documentation/5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.1_Обзор.md) — primary subsystem owner для Phase A fixes
+- [Chapter 09.7 Система хуков](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md) — общая глава про hook chain
 - Skill [`audit-docs`](../../.claude/skills/audit-docs/SKILL.md) — current 6-category audit script

@@ -2,7 +2,7 @@
 
 **Дата:** 2026-07-03 · **Статус:** активный · **Владелец:** framework
 **Метод:** 4 параллельных аудит-агента (27 файлов главы ↔ реальный код хуков/скиллов/команд, все находки верифицированы `file:line`, ключевые — живыми прогонами) + GitHub-исследование через `scripts/ecosystem_scan.py` (ADR-039, 7 запросов) + deep-fetch 4 свежих реализаций + 6 кеш-исследований `architecture-research/cache/`.
-**Связанные документы:** [260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT](260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md) (B′-проводка, закрыт), ADR-034/035/036/037/041, [гл. 43](../framework%20documentation/43_ПАЙПЛАЙН_1С/43.1_ОБЗОР_И_ПАРАДИГМА.md), кеш [agentic-quality-gate-workflow-templates-2026](../../.claude/skills/architecture-research/cache/agentic-quality-gate-workflow-templates-2026.md).
+**Связанные документы:** [260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT](260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md) (B′-проводка, закрыт), ADR-034/035/036/037/041, [гл. 43](../framework%20documentation/4_МЫШЛЕНИЕ/4.4_ПАЙПЛАЙН_1С/43.1_ОБЗОР_И_ПАРАДИГМА.md), кеш [agentic-quality-gate-workflow-templates-2026](../../.claude/skills/architecture-research/cache/agentic-quality-gate-workflow-templates-2026.md).
 
 ---
 
@@ -38,7 +38,7 @@ slash-команды → хуки-гейты → справочник инстр
 | **К-4** | **G4 fail-open при неоднозначности**: `resolve_active_1c_slug` без JIRA опирается на CURRENT; чужой/пустой CURRENT → гейт молча no-op, без advisory. | `pipeline_1c_bridge.py:205-208` (`gate_1c_implement`) | MED |
 | **К-5** | `advance_test_done` не срабатывает, если `.run-state.json` пишет раннер через Bash (хук слушает только Write\|Edit); ветка `MultiEdit` в хуке мертва (матчер settings.json её не покрывает). | [`pipeline-1c-advance.py:58`](../../.claude/hooks/pipeline-1c-advance.py) + settings.json | MED |
 | **Д-2** | **Рассинхрон порога SetFit**: мост берёт `_SETFIT_THRESHOLD` (env, дефолт 0.5), игнорируя калиброванный порог из `meta.json` модели, который умеет читать `onec_setfit_gate.threshold()`. Калибровка обучения до route не доезжает. | `pipeline_1c_bridge.py:723` vs [`onec_setfit_gate.py:56-69`](../../.claude/hooks/shared/onec_setfit_gate.py) | MED |
-| **G-3** | Реликты бага относительного пути лога: `docs/framework documentation/47_SCENE_DETECT_MCP/data/gate-decisions.jsonl` и `.claude/skills/architecture-research/cache/data/gate-decisions.jsonl` не убраны после фикса якоря 2026-07-03. | mtime 06-28/06-29 | LOW |
+| **G-3** | Реликты бага относительного пути лога: `docs/framework documentation/3_ИНСТРУМЕНТЫ/3.6_SCENE_DETECT_MCP/data/gate-decisions.jsonl` и `.claude/skills/architecture-research/cache/data/gate-decisions.jsonl` не убраны после фикса якоря 2026-07-03. | mtime 06-28/06-29 | LOW |
 
 ### 2.B Ошибки док ≠ код (топ; полные списки — в отчётах аудита)
 

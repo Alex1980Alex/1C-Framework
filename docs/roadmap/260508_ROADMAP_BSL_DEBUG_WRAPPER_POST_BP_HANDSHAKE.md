@@ -3,7 +3,7 @@
 **Дата:** 2026-05-08
 **Статус:** ✅ P1 acceptance validated 2026-05-10 (thin client scenario, см. §0 «Validation results»). ❌ Phase 1.5 (`debug_break_on_next` для IIS-pre-existing-rphost) FAILED — `setBreakOnNextStatement` применяется только к attached targets, root cause RDBG-протокола (см. §10 + §11 research follow-up).
 **Приоритет:** Средний
-**Связано:** [`260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md`](260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md), [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md)
+**Связано:** [`260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md`](260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md), [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md), [cache `dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md)
 
 ---
 
@@ -320,7 +320,7 @@ async def _event_loop(self) -> None:
 - [edt.1c.ru — RDBG API reference](https://edt.1c.ru/dev/edt/2022.2/apidocs/com/_1c/g5/v8/dt/debug/model/rdbg/request/response/) — список команд протокола
 - [`tools/bsl-debug-server/mcp_debug_server.py`](../../tools/bsl-debug-server/mcp_debug_server.py) — наш wrapper (~700 строк после правок 2026-05-08)
 - [`cache/dbgs-rdbg-debug-server.md`](../../.claude/skills/1c-doc-research/cache/dbgs-rdbg-debug-server.md) — research findings (12 разделов, magic UUIDs, scenarios B1/B2/B3)
-- [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) — operational guide для Scenario B
+- [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) — operational guide для Scenario B
 
 ---
 
@@ -382,7 +382,7 @@ async def _event_loop(self) -> None:
 
 ### 11.3 Recommended path
 
-**Combo A + B:** Solution B (preflight gate) сразу — minimal effort, честный UX. Solution A (auto-recycle) — отдельным roadmap'ом, опционально через флаг `debug_connect(force_recycle_rphost=true)`. Solution C — обновить документацию ([16.7_Autonomous_Debug_Workflow.md](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) как preferred workflow для dev.
+**Combo A + B:** Solution B (preflight gate) сразу — minimal effort, честный UX. Solution A (auto-recycle) — отдельным roadmap'ом, опционально через флаг `debug_connect(force_recycle_rphost=true)`. Solution C — обновить документацию ([16.7_Autonomous_Debug_Workflow.md](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) как preferred workflow для dev.
 
 **Не рекомендуется:**
 - Coverage41C-style probe loop — fragile, depends on platform internals
@@ -688,5 +688,5 @@ MCP tool с aggregated metrics. Tracking pattern: append-only event log в memor
   - Guard: при `_registered=False` (ibInDebug) force_recycle skip'ается — фильтр не pushed, kill бесполезен
 - [x] **14 unit-тестов** в [`tests/test_mcp_debug_server.py`](../../tools/bsl-debug-server/tests/test_mcp_debug_server.py) (TestDetectPreExistingRphosts × 5, TestForceRecycleRphost × 5, TestDebugConnectPreflight × 4): non-Windows graceful, subprocess failures, CSV parse + malformed PID skip, partial kill failures, OSError capture, no-warning-when-clean, warning-when-pre-existing, force-recycle drives kill, ibInDebug guard. **Total tests pass: 109/109** (95 existing + 14 new), 0 regressions.
 - [ ] **Pending live validation:** Claude Code restart требуется для подгрузки нового параметра `force_recycle_rphost` через MCP. После restart — повторить scenario из §0 «Validation results» для Phase 1.5 с `force_recycle_rphost=true` и убедиться что rphost capture'ится (BPs fire на subsequent IIS-trigger).
-- [x] **Solution C (workflow):** validated 2026-05-10, документация в [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) уже содержит pre-launch thin client guide.
+- [x] **Solution C (workflow):** validated 2026-05-10, документация в [`16.7_Autonomous_Debug_Workflow.md`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md) уже содержит pre-launch thin client guide.
 - [x] **Tentatively closed:** Roadmap [260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md](260510_ROADMAP_BSL_DEBUG_RACE_WINDOW_DEEP_FIX.md) — thin-client validation показала что eval-registration bug не воспроизвёлся; либо был артефактом старого scenario, либо покрыт P1.2 fix'ом. Контекст для possible reopen: документ `гкс_ЛабораторныйАнализ:141` ObjectModule, runID = thin client `d.sokolov@sodru.com` session `e3f71a05-b168-4273-b71d-5bf5caf4c201`.

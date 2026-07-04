@@ -136,4 +136,4 @@ Wrapper:      [poll] ... [poll] ← targetStarted доставлен СЛИШК�
 | 2026-06-03 | **Всестороннее live-тестирование всех 25+ tools** (отдельная задача) — все функциональны. Follow-up: graceful error-envelope для `debug_evaluate`/`debug_variables` (`_rdbg_error_text` извлекает `<descr>`), +5 unit-тестов (227/227), live-verify. `session_diff` провалидирован cross-session (deltas + NO_REGRESSION). | Claude |
 
 > Связанный кеш знаний: [`1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md`](../../.claude/skills/1c-doc-research/cache/rdbg-bp-background-job-auto-attach.md)
-> Связанная документация: [36_AUTONOMOUS_DEBUG_CONTROL](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/)
+> Связанная документация: [36_AUTONOMOUS_DEBUG_CONTROL](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/)

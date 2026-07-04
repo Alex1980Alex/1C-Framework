@@ -83,6 +83,6 @@ P1:
 ## §6 References
 
 - `.github/workflows/ci-1c.yml` — текущий workflow
-- [17.5 КОМАНДЫ_ПАЙПЛАЙНА.md](../framework%20documentation/17_ТЕСТИРОВАНИЕ_1С/17.5_КОМАНДЫ_ПАЙПЛАЙНА.md) — VA BDD local commands
-- [40.5 Pipeline Workflow](../framework%20documentation/40_PR_AUTOMATION/40.5_Pipeline_Workflow.md)
+- [17.5 КОМАНДЫ_ПАЙПЛАЙНА.md](../framework%20documentation/7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.5_КОМАНДЫ_ПАЙПЛАЙНА.md) — VA BDD local commands
+- [40.5 Pipeline Workflow](../framework%20documentation/7_ПРОВЕРКА/7.8_PR_AUTOMATION/40.5_Pipeline_Workflow.md)
 - Memory: `feedback_dev_infobases` — local 1С infobase setup pattern

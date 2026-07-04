@@ -1,7 +1,7 @@
 # 260611 — Roadmap: оживление skill-learning (JSONL pending/saved/rejected) как рабочего контура Claude
 
 > Статус: IMPLEMENTED 2026-06-12 (P0–P3 код, P4 — acceptance-наблюдение 2 недели) · Создан: 2026-06-11 · Источник: анализ блока `skill-learning` карты
-> [27.12 §10](../framework%20documentation/27_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md)
+> [27.12 §10](../framework%20documentation/5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.12_Memory_Systems_Map.md)
 > Связанные: [260609 P1 write-contract](260609_ROADMAP_MEMORY_PIPELINE_HARDENING.md), [260611 governance wiring](260611_ROADMAP_MEMORY_GOVERNANCE_WIRING.md), §26 P2 D2.2 (harvest confirmed)
 
 ## 1. Проблема

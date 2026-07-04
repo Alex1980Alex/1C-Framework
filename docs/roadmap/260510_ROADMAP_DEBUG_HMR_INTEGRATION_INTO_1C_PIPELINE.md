@@ -6,7 +6,7 @@
 **Связано:**
 - [`260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md`](260508_ROADMAP_BSL_DEBUG_WRAPPER_POST_BP_HANDSHAKE.md) — родительский roadmap debug-wrapper'а (P1-P3 closed)
 - [`260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md`](260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md) — preflight-hook для `/implement-1c-task`
-- [`docs/framework documentation/36_AUTONOMOUS_DEBUG_CONTROL/`](../framework%20documentation/36_AUTONOMOUS_DEBUG_CONTROL/) — Level 1/2/3 + 36.7 HMR wrapper
+- [`docs/framework documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/`](../framework%20documentation/3_ИНСТРУМЕНТЫ/3.5_AUTONOMOUS_DEBUG_CONTROL/) — Level 1/2/3 + 36.7 HMR wrapper
 - [`.claude/skills/1c-debug-hmr/SKILL.md`](../../.claude/skills/1c-debug-hmr/SKILL.md)
 
 ---
