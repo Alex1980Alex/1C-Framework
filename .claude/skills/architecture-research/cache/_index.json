@@ -1604,6 +1604,22 @@
         "llm-rotation"
       ],
       "last_verified": "2026-06-30"
+    },
+    {
+      "file": "graphify-codebase-knowledge-graph.md",
+      "title": "Graphify (2026) — codebase→knowledge-graph skill для AI coding assistants (tree-sitter 33 языка + LLM + Leiden + god-nodes); дизамбигуация с legacy kbastani/graphify",
+      "keywords": [
+        "graphify",
+        "knowledge-graph",
+        "code-graph",
+        "tree-sitter",
+        "graphrag",
+        "leiden",
+        "god-nodes",
+        "token-economy",
+        "claude-code-skill"
+      ],
+      "last_verified": "2026-07-04"
     }
   ]
 }

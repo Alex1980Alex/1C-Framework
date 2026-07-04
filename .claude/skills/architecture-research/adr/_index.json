@@ -746,6 +746,14 @@
         "tooling-adoption",
         "gpu-contention"
       ]
+    },
+    {
+      "id": "ADR-045",
+      "file": "045-skip-graphify-optin-devskill-own-python.md",
+      "title": "Graphify — SKIP как зависимость фреймворка; opt-in dev-skill только для собственного Python-кода (1С/BSL tree-sitter не покрывает; дубль graph_store + bsl_call_graph)",
+      "status": "accepted",
+      "date": "2026-07-04",
+      "research": "cache/graphify-codebase-knowledge-graph.md"
     }
   ]
 }
