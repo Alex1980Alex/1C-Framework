@@ -142,7 +142,7 @@ class TestCostBudget:
 
     def test_downgrade_when_low_budget(self):
         budget = CostBudget(per_query_limit=1.0, daily_limit=1.0)
-        # Spend 95% of daily budget (~$0.975)
+        # Spend 62.5% of daily budget (~$0.625 at $5/$25 opus pricing)
         budget.record_usage("claude-opus-4-8", 60_000, 500)
         budget.record_usage("claude-opus-4-8", 60_000, 500)
         # Now remaining should be < 10%
