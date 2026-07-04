@@ -156,22 +156,22 @@ class ProviderState:
 # primary_provider to "anthropic-sonnet" (add via custom providers= arg).
 DEFAULT_PROVIDERS: list[ProviderConfig] = [
     ProviderConfig(
-        name="claude-cli-haiku",
+        name="claude-cli-sonnet",
         base_url="",  # subprocess, no HTTP
         api_key_env="",
-        default_model="haiku",
-        models=["haiku", "sonnet", "opus"],
+        default_model="claude-sonnet-5",
+        models=["claude-sonnet-5", "haiku", "opus"],
         format="claude-cli",
         requires_key=False,
         priority=0,
         rate_limit_rpm=None,  # subscription quota, not RPM-capped
     ),
     ProviderConfig(
-        name="claude-cli-sonnet",
+        name="claude-cli-haiku",
         base_url="",
         api_key_env="",
-        default_model="claude-sonnet-5",
-        models=["claude-sonnet-5", "haiku", "opus"],
+        default_model="haiku",
+        models=["haiku", "sonnet", "opus"],
         format="claude-cli",
         requires_key=False,
         priority=1,

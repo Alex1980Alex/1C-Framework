@@ -10,13 +10,13 @@ from pydantic_settings import BaseSettings
 class LLMRotationSettings(BaseSettings):
     """Settings for LLM Rotation Service.
 
-    Default 3-tier rotation (post-cleanup 2026-05-16, roadmap 260509 §2.2):
-      0. claude-cli-haiku  — subscription quota, fastest CLI model
-      1. claude-cli-sonnet — subscription quota, higher quality
+    Default 3-tier rotation (sonnet-first order, 2026-07-04):
+      0. claude-cli-sonnet — subscription quota, primary (higher quality)
+      1. claude-cli-haiku  — subscription quota, faster CLI fallback
       2. ollama-local      — local Ollama (qwen2.5-coder:7b), $0 fallback
     """
 
-    primary_provider: str = "claude-cli-haiku"
+    primary_provider: str = "claude-cli-sonnet"
     max_retries: int = 3
     # CLI subprocess startup adds ~5s overhead; bump default timeout vs old HTTP defaults
     timeout: int = 90
