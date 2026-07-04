@@ -248,6 +248,13 @@ jobs:
       - name: Run unit tests
         run: pytest tests/ -v -m "unit and not slow" --cov=src --cov-report=term --cov-report=xml
 
+      - name: 1С-detector regression (advisory)
+        # P4.3 (roadmap 260703): регресс детектора маршрутизации на 248-GT (полы много ниже
+        # текущих is_1c F1≈0.97 / route-acc≈0.97 → запас, но правка регекса-детектора со сломом
+        # ловится). Advisory (continue-on-error) — промоут в hard по накоплению доверия.
+        continue-on-error: true
+        run: python scripts/eval_1c_detector.py --min-f1 0.90 --min-route-acc 0.90
+
       - name: Retrieval smoke gate (schema validation)
         # Quality NDCG gate активируется когда golden_v1.json ≥ 50 items.
         # До тех пор — schema validation. Roadmap 260509 §2.1.

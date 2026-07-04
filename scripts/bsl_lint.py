@@ -42,6 +42,46 @@ _EXE = "java.exe" if os.name == "nt" else "java"
 # bsl-ls severity (LSP DiagnosticSeverity): 1=Error 2=Warning 3=Information 4=Hint
 _SEV_NAME = {1: "error", 2: "warning", 3: "info", 4: "hint"}
 _SEV_MIN = {"error": 1, "warning": 2, "info": 3, "hint": 4}
+# P4.1 (ADR-034 R4): bsl-ls severity → уровень SARIF 2.1.0 (единый контракт с sonar_issues_pull).
+_SARIF_LEVEL = {"error": "error", "warning": "warning", "info": "note", "hint": "note"}
+
+
+def build_sarif(diags: list[dict]) -> dict:
+    """P4.1: диагностики bsl-ls → SARIF 2.1.0 (тот же контракт, что sonar_issues_pull.build_sarif —
+    единый findings-формат для будущего findings-роутера, interop с любым дашбордом/сканером)."""
+    rules = sorted({d.get("code") for d in diags if d.get("code")})
+    return {
+        "version": "2.1.0",
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "bsl-language-server",
+                        "informationUri": "https://1c-syntax.github.io/bsl-language-server/",
+                        "rules": [{"id": r} for r in rules],
+                    }
+                },
+                "results": [
+                    {
+                        "ruleId": d.get("code"),
+                        "level": _SARIF_LEVEL.get(d.get("severity"), "warning"),
+                        "message": {"text": d.get("message") or ""},
+                        "properties": {"severity": d.get("severity")},
+                        "locations": [
+                            {
+                                "physicalLocation": {
+                                    "artifactLocation": {"uri": d.get("file") or ""},
+                                    "region": {"startLine": d.get("line") or 1},
+                                }
+                            }
+                        ],
+                    }
+                    for d in diags
+                ],
+            }
+        ],
+    }
 
 
 def _runnable(p: str | os.PathLike) -> bool:
@@ -315,6 +355,9 @@ def main(argv: list[str] | None = None) -> int:
         help="режим форматирования: переписать файл(ы) через bsl-ls (in-place), вместо диагностики",
     )
     ap.add_argument("--java", default=None, help="явный путь к java")
+    ap.add_argument(
+        "--sarif", action="store_true", help="вывод SARIF 2.1.0 (единый findings-контракт, R4)"
+    )
     args = ap.parse_args(argv)
 
     java = find_java(args.java)
@@ -378,7 +421,9 @@ def main(argv: list[str] | None = None) -> int:
         thr = _SEV_MIN[args.severity]
         diags = [d for d in diags if _SEV_MIN.get(d["severity"], 9) <= thr]
 
-    if args.json:
+    if args.sarif:
+        print(json.dumps(build_sarif(diags), ensure_ascii=False, indent=2))
+    elif args.json:
         print(json.dumps(diags, ensure_ascii=False, indent=2))
     else:
         if not diags:

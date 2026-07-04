@@ -189,6 +189,18 @@ def main(argv=None):
         action="store_true",
         help="ADR-025: семантический слой ② через SetFit-гейт (нужна обученная модель; иначе graceful → TF-IDF)",
     )
+    # P4.3 (roadmap 260703): регрессионные пороги для CI-гейта детектора. exit 1 при падении ниже
+    # пола (текущее is_1c F1≈0.97 / route-acc≈0.97 — полы 0.90 дают запас, но ловят реальный регресс
+    # правки регекса). Без флагов → чисто отчёт (advisory).
+    ap.add_argument(
+        "--min-f1", type=float, default=None, help="P4.3: exit 1 если is_1c F1 < порога"
+    )
+    ap.add_argument(
+        "--min-route-acc",
+        type=float,
+        default=None,
+        help="P4.3: exit 1 если route_class_accuracy < порога",
+    )
     args = ap.parse_args(argv)
     if args.setfit:  # включить SetFit-гейт для этого прогона (route_1c_task подхватит env)
         os.environ["ONEC_SETFIT_ENABLE"] = "1"
@@ -208,9 +220,27 @@ def main(argv=None):
     rep = evaluate(rows, llm_tail=args.llm_tail)
     rep["split"] = args.split
 
+    def _regression_rc() -> int:
+        """P4.3: 1 если метрика ниже заданного пола (CI-гейт), иначе 0."""
+        rc = 0
+        if args.min_f1 is not None and rep["is_1c"]["f1"] < args.min_f1:
+            print(
+                f"REGRESSION: is_1c F1={rep['is_1c']['f1']} < --min-f1={args.min_f1}",
+                file=sys.stderr,
+            )
+            rc = 1
+        if args.min_route_acc is not None and rep["route_class_accuracy"] < args.min_route_acc:
+            print(
+                f"REGRESSION: route_class_accuracy={rep['route_class_accuracy']} < "
+                f"--min-route-acc={args.min_route_acc}",
+                file=sys.stderr,
+            )
+            rc = 1
+        return rc
+
     if args.json:
         print(json.dumps(rep, ensure_ascii=False, indent=2))
-        return 0
+        return _regression_rc()
 
     m = rep["is_1c"]
     print("=" * 60)
@@ -247,7 +277,7 @@ def main(argv=None):
             print(f"   exp={mm['exp']:9s} got={mm['got']:9s} conf={mm['conf']} | {mm['text']}")
     elif rep["misses"]:
         print(f"\nMisses: {len(rep['misses'])} (use -v to list)")
-    return 0
+    return _regression_rc()
 
 
 if __name__ == "__main__":
