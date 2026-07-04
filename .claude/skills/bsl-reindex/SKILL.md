@@ -28,7 +28,7 @@ updated: 2026-06-24
 | `framework_code_v1` (alias→`_mrl_1024`) | src/docs/.claude/tools/tests/scripts (**external/ исключён**) | `scripts/index_framework.py` |
 
 ## Решение: какой backend
-- **Full reindex** (`--project <root>`) → **`qwen3-st`** (Late Chunking) + **обязательно `--no-region-aware`** (region-aware = −25pp recall@10). **STOP TEI перед запуском** (`docker stop pdf-rag-tei`; один GPU = OOM с двумя Qwen3-8B), вернуть после.
+- **Full reindex** (`--project <root>`) → **`qwen3-st`** std-pool (Late Chunking SUPERSEDED 2026-05-20 — исторический эксперимент, гл. 31.3/31.6). ⚠ `--no-region-aware` со std-pool НЕ передавать — флаг относился только к late-chunking-оркестратору и при std-pool даёт hard ERROR (гард `reindex_bsl_qwen3.py:1801`; «−25pp recall» касался region-aware группировки late-chunking). **STOP TEI перед запуском** (`docker stop pdf-rag-tei`; один GPU = OOM с двумя Qwen3-8B), вернуть после.
 - **Incremental** (`--paths …`/git post-commit) → **`qwen3-tei`** (TEI остаётся up; std-pool, mixed-quality acceptable).
 - Дефолт query mode коллекций — **hybrid DBSF** (см. гл. 31.7), к индексации флагом не относится.
 

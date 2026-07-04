@@ -4,7 +4,9 @@
 
 .DESCRIPTION
     Wrapper around scripts/reindex_bsl_qwen3.py with optimized flags that
-    DON'T degrade retrieval quality (preserves late-chunking + context).
+    DON'T degrade retrieval quality (std-pool + context enrichment).
+    Late Chunking SUPERSEDED 2026-05-20 (Phase 5 alias swap) — production
+    path = standard pooling + sparse BM25 hybrid; see chapter 31.3/31.6.
 
     Tier 1 (always-on, no extra deps):
       --buffer-size 1024  — fewer Qdrant flushes (5-10% throughput gain)
@@ -18,8 +20,8 @@
 
     Quality-preserving — does NOT use:
       --no-context        (would skip context enrichment, drops recall)
-      --pooling-mode standard  (loses +24% recall@10 from late-chunking)
-      qwen3-tei embedder  (no late-chunking support)
+      --pooling-mode late-chunking  (SUPERSEDED 2026-05-20; historical
+                          experiment, NOT production — chapter 31.3/31.6)
 
 .PARAMETER Project
     Project name (e.g. "ИБTransportManagementDevelop") OR full path.
@@ -89,7 +91,7 @@ if (-not $fa2Available) {
 $pyArgs = @(
     "--project", $Project,
     "--embedder", "qwen3-st",
-    "--pooling-mode", "late-chunking",
+    "--pooling-mode", "standard",
     "--collection", "bsl_code_v4_late",
     "--buffer-size", "1024"
 )

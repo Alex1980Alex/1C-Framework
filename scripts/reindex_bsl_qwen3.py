@@ -1513,7 +1513,8 @@ def main() -> None:
     ap.add_argument(
         "--collection",
         default="bsl_code_v4_late",
-        help="Default: bsl_code_v4_late (Qwen3+Late, production). "
+        help="Default: bsl_code_v4_late (Qwen3 std-pool + sparse bm25 hybrid, production; "
+        "'_late' in name is historical — Late Chunking superseded 2026-05-20). "
         "Legacy bsl_code_v3 dropped 2026-04-30 (§27).",
     )
     ap.add_argument("--recreate", action="store_true", help="Drop and recreate collection")

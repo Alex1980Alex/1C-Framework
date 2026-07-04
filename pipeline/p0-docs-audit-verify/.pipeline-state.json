@@ -1,0 +1,44 @@
+{
+  "task": "p0-docs-audit-verify",
+  "title": "P0 verify roadmap 260704 (code-first)",
+  "created_at": "2026-07-04T22:14:21",
+  "updated_at": "2026-07-04T22:14:21",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:14:21"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:14:21",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-04T22:14:21"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:14:21"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:14:21"
+    }
+  ]
+}
