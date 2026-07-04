@@ -2,43 +2,43 @@
   "task": "harness-map-chapter",
   "title": "Глава 49: системообразующая карта Harness",
   "created_at": "2026-07-04T12:47:15",
-  "updated_at": "2026-07-04T12:47:15",
-  "current_stage": 1,
+  "updated_at": "2026-07-04T12:54:19",
+  "current_stage": 5,
   "stages": [
     {
       "n": 1,
       "name": "architecture",
       "command": "pl-plan",
-      "artifact": "01-architecture.md",
-      "status": "pending",
-      "completed_at": null
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T12:54:19"
     },
     {
       "n": 2,
       "name": "design",
       "command": "pl-design",
-      "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
-      "approved": false,
-      "approved_by": null,
-      "approved_at": null
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T12:54:19",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-04T12:54:19"
     },
     {
       "n": 3,
       "name": "implementation",
       "command": "pl-code",
-      "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T12:54:19"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
-      "artifact": "04-testing.md",
-      "status": "pending",
-      "completed_at": null
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T12:54:19"
     }
   ]
 }
