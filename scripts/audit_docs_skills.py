@@ -345,74 +345,74 @@ SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
 CATEGORY_MAPPING: dict[str, dict[str, Any]] = {
     "endpoint": {
         "docs": [
-            "06_ИНТЕРФЕЙСЫ/06.2_REST_API.md",
+            "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md",
         ],
         "skills": ["framework-api"],
     },
     "mcp_tool": {
         "docs": [
-            "06_ИНТЕРФЕЙСЫ/06.4_MCP_Server.md",
+            "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.4_MCP_Server.md",
         ],
         "skills": ["framework-mcp-ui"],
     },
     "strategy": {
         "docs": [
-            "04_ПОИСК/04.1_Обзор_стратегий.md",
-            "04_ПОИСК/04.7_Расширенный_поиск.md",
+            "2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md",
+            "2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md",
         ],
         "skills": ["search-pipeline-debug"],
     },
     "cli_command": {
         "docs": [
-            "06_ИНТЕРФЕЙСЫ/06.3_CLI.md",
+            "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.3_CLI.md",
         ],
         "skills": ["framework-cli"],
     },
     "config_var": {
         "docs": [
-            "02_БЫСТРЫЙ_СТАРТ/02.2_Конфигурация.md",
+            "0_ВВЕДЕНИЕ/0.2_БЫСТРЫЙ_СТАРТ/02.2_Конфигурация.md",
         ],
         "skills": ["framework-config"],
     },
     "agent": {
         "docs": [
-            "05_RAG_АГЕНТЫ/05.1_Self_RAG.md",
-            "05_RAG_АГЕНТЫ/05.2_Adaptive_RAG.md",
-            "05_RAG_АГЕНТЫ/05.3_Deep_Research.md",
-            "05_RAG_АГЕНТЫ/05.5_Специализированные_агенты.md",
+            "2_КОНТЕКСТ/2.3_RAG_АГЕНТЫ/05.1_Self_RAG.md",
+            "2_КОНТЕКСТ/2.3_RAG_АГЕНТЫ/05.2_Adaptive_RAG.md",
+            "2_КОНТЕКСТ/2.3_RAG_АГЕНТЫ/05.3_Deep_Research.md",
+            "2_КОНТЕКСТ/2.3_RAG_АГЕНТЫ/05.5_Специализированные_агенты.md",
         ],
         "skills": ["agent-orchestration"],
     },
     # Phase B2 extension (2026-05-15, roadmap 260515): 4 new categories
     "memory_subsystem": {
         "docs": [
-            "27_UNIFIED_MEMORY/27.1_Обзор.md",
-            "27_UNIFIED_MEMORY/27.2_Оркестратор.md",
-            "27_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md",
-            "32_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md",
+            "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md",
+            "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md",
+            "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md",
+            "5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md",
         ],
         "skills": ["memory-unified", "wiki-pipeline"],
     },
     "bsl_tool": {
         "docs": [
-            "16_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md",
-            "17_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md",
-            "28_BSL_SEMANTIC_SEARCH/28.1_Обзор.md",
+            "3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md",
+            "7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md",
+            "2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md",
         ],
         "skills": ["bsl-development", "1c-mcp-crud"],
     },
     "hook": {
         "docs": [
-            "09_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md",
-            "13_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md",
+            "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md",
+            "9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md",
         ],
         "skills": ["hooks-skills-mcp-triad", "create-hook"],
     },
     "wiki_component": {
         "docs": [
-            "32_WIKI_KNOWLEDGE_LAYER/32.2_Архитектура.md",
-            "32_WIKI_KNOWLEDGE_LAYER/32.4_Forward_Sync.md",
-            "32_WIKI_KNOWLEDGE_LAYER/32.5_Reverse_Sync.md",
+            "5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.2_Архитектура.md",
+            "5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.4_Forward_Sync.md",
+            "5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.5_Reverse_Sync.md",
         ],
         "skills": ["wiki-pipeline"],
     },
@@ -913,7 +913,7 @@ def _extract_endpoint_description(feature: Feature) -> str:
 
 def update_rest_api_doc(report: AuditReport) -> int:
     """Update REST API documentation with missing endpoints."""
-    doc_path = DOCS_DIR / "06_ИНТЕРФЕЙСЫ" / "06.2_REST_API.md"
+    doc_path = DOCS_DIR / "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ" / "06.2_REST_API.md"
     if not doc_path.exists():
         return 0
 
@@ -1004,7 +1004,7 @@ def update_rest_api_doc(report: AuditReport) -> int:
 
 def update_mcp_doc(report: AuditReport) -> int:
     """Update MCP Server documentation with missing tools."""
-    doc_path = DOCS_DIR / "06_ИНТЕРФЕЙСЫ" / "06.4_MCP_Server.md"
+    doc_path = DOCS_DIR / "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ" / "06.4_MCP_Server.md"
     if not doc_path.exists():
         return 0
 
@@ -1055,7 +1055,7 @@ def update_mcp_doc(report: AuditReport) -> int:
 
 def update_strategies_doc(report: AuditReport) -> int:
     """Update search strategies documentation."""
-    doc_path = DOCS_DIR / "04_ПОИСК" / "04.1_Обзор_стратегий.md"
+    doc_path = DOCS_DIR / "2_КОНТЕКСТ/2.2_ПОИСК" / "04.1_Обзор_стратегий.md"
     if not doc_path.exists():
         return 0
 
@@ -1110,7 +1110,7 @@ def update_strategies_doc(report: AuditReport) -> int:
 
 def update_config_doc(report: AuditReport) -> int:
     """Update configuration documentation with missing env vars."""
-    doc_path = DOCS_DIR / "02_БЫСТРЫЙ_СТАРТ" / "02.2_Конфигурация.md"
+    doc_path = DOCS_DIR / "0_ВВЕДЕНИЕ/0.2_БЫСТРЫЙ_СТАРТ" / "02.2_Конфигурация.md"
     if not doc_path.exists():
         return 0
 
@@ -1239,14 +1239,14 @@ def update_config_doc(report: AuditReport) -> int:
             text += "\n" + "\n".join(new_sections)
 
     if added > 0:
-        doc_path = DOCS_DIR / "02_БЫСТРЫЙ_СТАРТ" / "02.2_Конфигурация.md"
+        doc_path = DOCS_DIR / "0_ВВЕДЕНИЕ/0.2_БЫСТРЫЙ_СТАРТ" / "02.2_Конфигурация.md"
         doc_path.write_text(text, encoding="utf-8")
     return added
 
 
 def update_cli_doc(report: AuditReport) -> int:
     """Update CLI documentation with missing commands."""
-    doc_path = DOCS_DIR / "06_ИНТЕРФЕЙСЫ" / "06.3_CLI.md"
+    doc_path = DOCS_DIR / "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ" / "06.3_CLI.md"
     if not doc_path.exists():
         return 0
 
@@ -1287,7 +1287,7 @@ def update_cli_doc(report: AuditReport) -> int:
 def update_agent_doc(report: AuditReport) -> int:
     """Update agent documentation with missing agent types."""
     # Target: 05.5_Специализированные_агенты.md (catch-all for new agents)
-    doc_path = DOCS_DIR / "05_RAG_АГЕНТЫ" / "05.5_Специализированные_агенты.md"
+    doc_path = DOCS_DIR / "2_КОНТЕКСТ/2.3_RAG_АГЕНТЫ" / "05.5_Специализированные_агенты.md"
     if not doc_path.exists():
         return 0
 

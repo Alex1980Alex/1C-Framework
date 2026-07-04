@@ -69,42 +69,42 @@ DOCS_BASE = "docs/framework documentation"
 
 CODE_TO_DOMAIN = [
     # code_prefix                           docs_subdir              skill_name
-    ("src/pdf_framework/search/", "04_ПОИСК", "search-pipeline-debug"),
-    ("src/pdf_framework/agents/", "05_RAG_АГЕНТЫ", "agent-orchestration"),
-    ("src/pdf_framework/loaders/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
-    ("src/pdf_framework/processing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
-    ("src/pdf_framework/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
-    ("src/pdf_framework/graph_store/", "03_ИНДЕКСАЦИЯ", "graph-operations"),
-    ("src/pdf_framework/embeddings/", "02_БЫСТРЫЙ_СТАРТ", "embedding-models"),
+    ("src/pdf_framework/search/", "2_КОНТЕКСТ/2.2_ПОИСК", "search-pipeline-debug"),
+    ("src/pdf_framework/agents/", "2_КОНТЕКСТ/2.3_RAG_АГЕНТЫ", "agent-orchestration"),
+    ("src/pdf_framework/loaders/", "2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/processing/", "2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/indexing/", "2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/graph_store/", "2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ", "graph-operations"),
+    ("src/pdf_framework/embeddings/", "0_ВВЕДЕНИЕ/0.2_БЫСТРЫЙ_СТАРТ", "embedding-models"),
     # Специфичный префикс ДО общего vector_store/ (first-match-wins, break ниже):
     # DocumentIndexer = индексация (03/34), не Hybrid Search (инцидент 2026-06-12).
-    ("src/pdf_framework/vector_store/indexing/", "03_ИНДЕКСАЦИЯ", "indexing-pipeline"),
-    ("src/pdf_framework/vector_store/", "04_ПОИСК", "qdrant-operations"),
+    ("src/pdf_framework/vector_store/indexing/", "2_КОНТЕКСТ/2.1_ИНДЕКСАЦИЯ", "indexing-pipeline"),
+    ("src/pdf_framework/vector_store/", "2_КОНТЕКСТ/2.2_ПОИСК", "qdrant-operations"),
     # QA/RAG answer-цепочки (RetrievalQAChain → /search/ask), free-LLM синтез ADR-040 (был UNMAPPED 2026-06-24):
-    ("src/pdf_framework/chains/", "04_ПОИСК", "search-pipeline-debug"),
-    ("src/pdf_framework/config/", "02_БЫСТРЫЙ_СТАРТ", "framework-config"),
-    ("src/pdf_framework/evaluation/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
-    ("src/pdf_framework/feedback/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
-    ("src/pdf_framework/optimization/", "08_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
-    ("src/pdf_framework/callbacks/", "07_КЭШИРОВАНИЕ", "framework-caching"),
-    ("src/pdf_framework/multitenancy/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/pdf_framework/observability/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/pdf_framework/guardrails/", "10_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
-    ("src/api/routes/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/pdf_framework/chains/", "2_КОНТЕКСТ/2.2_ПОИСК", "search-pipeline-debug"),
+    ("src/pdf_framework/config/", "0_ВВЕДЕНИЕ/0.2_БЫСТРЫЙ_СТАРТ", "framework-config"),
+    ("src/pdf_framework/evaluation/", "7_ПРОВЕРКА/7.1_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/feedback/", "7_ПРОВЕРКА/7.1_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/optimization/", "7_ПРОВЕРКА/7.1_ОЦЕНКА_КАЧЕСТВА", "evaluation-benchmark"),
+    ("src/pdf_framework/callbacks/", "2_КОНТЕКСТ/2.4_КЭШИРОВАНИЕ", "framework-caching"),
+    ("src/pdf_framework/multitenancy/", "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/observability/", "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/guardrails/", "7_ПРОВЕРКА/7.3_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
+    ("src/api/routes/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "framework-api"),
     # DI-контейнер Components (был UNMAPPED → блокировал Stop, 2026-06-12)
-    ("src/api/dependencies/", "06_ИНТЕРФЕЙСЫ", "framework-api"),
-    ("src/api/middleware/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/api/app.py", "06_ИНТЕРФЕЙСЫ", "framework-api"),
-    ("src/cli/", "06_ИНТЕРФЕЙСЫ", "framework-cli"),
-    ("src/mcp_server/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
-    ("src/ui/", "06_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
-    ("src/workers/", "09_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/pdf_framework/utils/", "01_ОБЗОР", "pdf-knowledge"),
+    ("src/api/dependencies/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/api/middleware/", "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/api/app.py", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "framework-api"),
+    ("src/cli/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "framework-cli"),
+    ("src/mcp_server/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
+    ("src/ui/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "pdf-knowledge"),
+    ("src/workers/", "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ", "deployment"),
+    ("src/pdf_framework/utils/", "0_ВВЕДЕНИЕ/0.1_ОБЗОР", "pdf-knowledge"),
     # BSL (1C Enterprise) modules
-    ("src/bsl/", "06_ИНТЕРФЕЙСЫ", "bsl-development"),
+    ("src/bsl/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "bsl-development"),
     ("src/shared/llm_rotation/", None, "llm-rotation"),
-    ("src/shared/", "01_ОБЗОР", "pdf-knowledge"),
-    ("src/memory/", "01_ОБЗОР", "memory-unified"),
+    ("src/shared/", "0_ВВЕДЕНИЕ/0.1_ОБЗОР", "pdf-knowledge"),
+    ("src/memory/", "0_ВВЕДЕНИЕ/0.1_ОБЗОР", "memory-unified"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -619,7 +619,7 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
         timeout_s: Hard ceiling for combined TEI + Qdrant calls.
 
     Returns:
-        Suggested chapter directory name (e.g. "32_WIKI_KNOWLEDGE_LAYER"),
+        Suggested chapter directory name (e.g. "5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER"),
         or None if not confident / not available.
     """
     import re

@@ -40,7 +40,7 @@ MAP_CHAPTER = (
     PROJECT_ROOT
     / "docs"
     / "framework documentation"
-    / "27_UNIFIED_MEMORY"
+    / "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY"
     / "27.12.4_Блок_Выход_Чтение.md"
 )
 # Политика P0.3 (skill qdrant-operations): physical-коллекции pdf/wiki корпусов
@@ -94,7 +94,7 @@ def _collect_b3() -> bool:
             encoding="utf-8",
             errors="replace",
         )
-        return proc.returncode == 0 and "27_UNIFIED_MEMORY" in (proc.stdout or "")
+        return proc.returncode == 0 and "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY" in (proc.stdout or "")
     except Exception:
         return False
 

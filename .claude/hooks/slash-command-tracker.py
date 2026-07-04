@@ -193,7 +193,7 @@ def _elapsed_since(started_at: str) -> int:
     *full slash-run business duration* (e.g. 22 minutes for a long-running
     `/implement-1c-task`), NOT the time spent inside this hook. Perf-style
     queries on `invocations.elapsed_ms` must exclude `category='slash_run'`
-    rows — see `docs/framework documentation/09_АДМИНИСТРИРОВАНИЕ/09.13_Async_Hooks_Audit.md`.
+    rows — see `docs/framework documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.13_Async_Hooks_Audit.md`.
     """
     if not started_at:
         return 0
