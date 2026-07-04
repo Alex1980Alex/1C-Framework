@@ -51,7 +51,7 @@ class CrossDocumentSynthesizer:
     def __init__(
         self,
         api_key: str = "",
-        model: str = "claude-opus-4-6",
+        model: str = "claude-opus-4-8",
         settings: Settings | None = None,
     ):
         """Initialize the synthesizer.
@@ -324,7 +324,7 @@ def synthesize_cross_document(
     query: str,
     results: list[SearchResult],
     api_key: str = "",
-    model: str = "claude-opus-4-6",
+    model: str = "claude-opus-4-8",
 ) -> SynthesizedAnswer:
     """Convenience function for cross-document synthesis.
 

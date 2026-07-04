@@ -1,0 +1,259 @@
+# Roadmap: Auto-Reports Backlog (T3–T7)
+
+> Извлечено 2026-07-04 из главы [28_1.6 Дорожная карта](../framework%20documentation/2_КОНТЕКСТ/2.7_AUTO_REPORTS/28_1.6_Дорожная_карта.md) (docs cleanup — глава была "bedsheet", incorporated большой backlog внутрь reference-документа). Содержимое перенесено дословно.
+
+> Статус на момент извлечения: 2026-05-22. После T0+T1+T2 (см. [28_1.5](../framework%20documentation/2_КОНТЕКСТ/2.7_AUTO_REPORTS/28_1.5_Расширенная_аналитика.md)). Что реализовано — `commits a4717fe48`, `13f89c20a`, `e0ed1b1ed`.
+
+---
+
+## T3 — Deferred (внешние блокеры)
+
+### T3.1 — Hard-negative recall@10 + lost-in-middle
+
+**Что**: synthetic adversarial probes для retrieval quality. Paraphrase chunk → query вариант → expected top-K hit. Lost-in-middle: бурая фраза в long context → query факт → recall.
+
+**Зачем**: реальный proxy для downstream RAG quality, а не самозаверение через self-recall.
+
+**Блокер**: нужен gold-labelled dataset (chunk_id → variant queries). У нас нет.
+
+**Effort**: 2-3 дня после получения dataset. Сам analyzer-патч ~4ч.
+
+**Решение**: либо собрать ~200 queries вручную для samples из `pdf_documents` / `framework_code_v1`, либо генерировать через Claude (semi-automated). Tracking issue нужен.
+
+### T3.2 — OpenTelemetry traces + Jaeger/Tempo
+
+**Что**: structured spans per chunk через pipeline (load → chunk → embed → upsert). Export to OTLP. Distributed view + tail-based sampling.
+
+**Зачем**: production-grade observability. Корреляция между slow chunks и embedder issues.
+
+**Блокер**: нужен OTEL collector в инфраструктуре (Jaeger или Grafana Tempo). Сейчас нет.
+
+**Effort**: ~1 день после развёртывания collector. OTLP exporter из Python — 2 строки.
+
+**Альтернатива в ожидании**: existing `data/indexing-progress.jsonl` уже даёт spans (stage_start/stage_end). Достаточно для post-mortem; не для distributed.
+
+### T3.3 — HTML report с inline matplotlib charts
+
+**Что**: render Markdown с PNG-base64 charts (norm distribution, recall curves, degree dist).
+
+**Зачем**: красивее для прикрепления к PR/email. Стало бы proper attachment.
+
+**Блокер**: `matplotlib` — heavy dep (~50MB), не хочется в core. Можно opt-in.
+
+**Effort**: ~3-4ч. Маленький `scripts/analyzers/html_report.py` поверх существующего ReportSpec.
+
+**Decision**: low-priority (ASCII charts уже покрывают 80% use cases).
+
+### T3.4 — Live Streamlit dashboard
+
+**Что**: web UI с auto-refresh, читает `data/indexing-progress.jsonl` tail + `data/reports/index.jsonl`. Live progress bar, anomaly feed, last 24h trend chart.
+
+**Зачем**: real-time visibility во время длинных индексирований без терминала.
+
+**Блокер**: streamlit (~20MB) + сервис нужно запустить + порт. Production-сценарий не sketched.
+
+**Effort**: ~1 день.
+
+**Decision**: defer to ops decision (нужен ли продакшен-дэшборд).
+
+---
+
+## T4 — Production observability (next iteration)
+
+### T4.1 — Alert push channels
+
+**Что**: Slack webhook / Telegram bot / email on FAIL verdict. Throttled (не более 1 alert на anomaly fingerprint в час).
+
+**Зачем**: surface critical issues когда никто не смотрит логи.
+
+**Effort**: ~3ч. Простой `scripts/analyzers/alerts.py` с opt-in env (`ALERT_SLACK_WEBHOOK`).
+
+**ROI**: высокий. Уведомления при PR-time или ночном reindex.
+
+### T4.2 — PR comment integration
+
+**Что**: после `index_framework.py` в CI пушится short report в PR comment (top-3 issues + verdict + diff vs base).
+
+**Зачем**: review-time visibility — без необходимости копаться в artifacts.
+
+**Effort**: ~4ч. `scripts/analyze_run.py --pr-comment --pr-number=N` + GitHub Actions step.
+
+### T4.3 — Daily roll-up + weekly trends
+
+**Что**: cron-job (или GH Actions schedule) собирает все ранs за 24h → один aggregate report. Weekly version с trend lines per metric.
+
+**Зачем**: видеть **тренды** (NDCG@10 ↓ за 3 недели), не только point-in-time.
+
+**Effort**: ~5ч. Reuse existing `data/reports/index.jsonl` registry.
+
+### T4.4 — Time-series database export
+
+**Что**: метрики из reports → Prometheus / InfluxDB. Grafana panel.
+
+**Зачем**: long-term retention + arbitrary querying + alerting на slopes.
+
+**Блокер**: Prometheus/InfluxDB инстанс нужен.
+
+**Effort**: ~1 день.
+
+---
+
+## T5 — Closed loop maturation
+
+### T5.1 — Auto-fix PR generation
+
+**Что**: для известных anomaly fingerprints с известным fix-pattern — analyzer открывает PR с predefined patch. Пример: новый stdlib имя в dangling top-15 → PR расширяет `BSL_STDLIB_NAMES`.
+
+**Зачем**: zero-effort resolution для повторяющихся issues.
+
+**Effort**: ~6ч на framework + правила per anomaly type.
+
+**Риск**: спам PR. Mitigate через throttle + opt-in per fingerprint pattern.
+
+### T5.2 — Recurrence analysis dashboard
+
+**Что**: из `anomalies.jsonl` отчёт: top-10 chronic anomalies (по recurrence_count), avg resolution time, anomalies со status=resolved → reopened cycles.
+
+**Зачем**: surface системные issues, которые нужно адресовать на уровне архитектуры (не точечно).
+
+**Effort**: ~3ч. Дополнительный mode `python scripts/analyze_run.py --mode anomaly-trends`.
+
+### T5.3 — SLA per anomaly type
+
+**Что**: разные anomaly fingerprints имеют разный target resolution time. Pass-the-threshold → escalation.
+
+**Effort**: ~2ч + config файл с SLA rules.
+
+### T5.4 — Anomaly resolution feedback loop
+
+**Что**: при auto-resolution analyzer публикует «was-fixed-by» commit SHA (из git log between first_seen and resolved_at). Learning pattern: связь между типом anomaly и fix-commit для статистики.
+
+**Effort**: ~4ч.
+
+---
+
+## T6 — Cross-domain analytics
+
+### T6.1 — Cross-collection aggregate report
+
+**Что**: один отчёт с side-by-side метриками всех production-коллекций. Полезно после batch reindex.
+
+**Effort**: ~3ч. Mode `--mode multi-collection --collections framework_code_v1,bsl_code_v4_late,...`.
+
+### T6.2 — Indexing→Search correlation analytics
+
+**Что**: коррелировать metrics из indexing-отчётов с downstream search quality (RAGAS scores из `tests/integration/test_search.py` или `evaluation-benchmark`).
+
+**Зачем**: ответить на вопрос — improvement в effective rank → improvement в search recall?
+
+**Блокер**: нужен stable benchmark dataset + регулярные eval runs. Часть есть (см. `framework-cli eval`), но не daily.
+
+**Effort**: ~1 день после стабилизации benchmark cadence.
+
+### T6.3 — Graph→Vector quality correlation
+
+**Что**: anomalies в graph (orphans, clustering low) предсказывают ли issues в `graph_embeddings` retrieval (LightRAG quality)?
+
+**Effort**: ~6ч.
+
+### T6.4 — Multi-tenant aggregation
+
+**Что**: если фреймворк используется в multitenant mode — reports per tenant.
+
+**Блокер**: multi-tenant пока не активен в этой инсталляции.
+
+**Effort**: depends on multi-tenant design.
+
+---
+
+## T7 — ML-driven anomaly detection
+
+### T7.1 — Auto-baseline learning
+
+**Что**: вместо hardcoded thresholds (recall ≥0.95, anisotropy <0.5) — обучить baseline на исторических reports. Anomaly = метрика вне learned bounds.
+
+**Зачем**: thresholds текущей системы — magic numbers. Self-tuning адаптируется под конкретные коллекции.
+
+**Effort**: ~1 день. Reuse `data/reports/index.jsonl` history; simple z-score per metric.
+
+### T7.2 — Anomaly detection через isolation forest
+
+**Что**: metric history per collection → IsolationForest → flag unusual runs.
+
+**Зачем**: ловит multi-variate anomalies, которые не surface при one-by-one threshold check.
+
+**Effort**: ~6ч. `sklearn` opt-in.
+
+### T7.3 — Forecasting next-run metrics
+
+**Что**: ARIMA / Prophet на historical reports → предсказать ожидаемые точки/recall для следующего ран. Surface deviation.
+
+**Effort**: ~1 день.
+
+---
+
+## Priority matrix
+
+| Tier | Item | Effort | Blocker | ROI |
+|------|------|--------|---------|-----|
+| **P0 (do next)** | T4.1 Alert push | 3ч | none | high — visibility |
+| **P0** | T4.3 Daily roll-up | 5ч | none | high — trends |
+| **P0** | T5.2 Recurrence dashboard | 3ч | none | high — strategic surface |
+| **P1** | T4.2 PR comment | 4ч | CI access | medium |
+| **P1** | T6.1 Multi-collection | 3ч | none | medium |
+| **P1** | T7.1 Auto-baseline | 8ч | enough history | medium-high |
+| **P2** | T5.1 Auto-fix PR | 6ч | none | medium (risky) |
+| **P2** | T5.4 Resolution feedback | 4ч | none | low-medium |
+| **P3** | T3.1 Hard-negative recall | 2-3д + dataset | dataset | high but blocked |
+| **P3** | T3.2 OTEL traces | 1д + collector | infra | high but blocked |
+| **P3** | T6.2 Search correlation | 1д + benchmark cadence | eval stability | high but blocked |
+| **P3** | T7.2 IsolationForest | 6ч | sklearn | medium |
+| **P4** | T3.3 HTML report | 4ч | matplotlib decision | low |
+| **P4** | T3.4 Streamlit dashboard | 1д | ops decision | medium |
+| **P4** | T4.4 Prometheus export | 1д | infra | medium |
+| **DEFER** | T6.4 Multi-tenant | TBD | multi-tenant design | TBD |
+
+## Dependency graph
+
+```
+T4.1 Alert push ──┐
+T4.3 Daily roll-up ┼─→ T7.1 Auto-baseline (needs history)
+T5.2 Recurrence ──┘                ↓
+                                T7.2 IsolationForest
+                                T7.3 Forecasting
+
+T3.1 Gold dataset ──→ T3.1 Hard-negative recall ──→ T6.2 Search correlation
+
+T3.2 OTEL collector ──→ T3.2 OTEL traces
+T3.4 Streamlit decision ──→ T3.4 Live dashboard
+T4.4 Prometheus instance ──→ T4.4 TS export
+```
+
+## Recommended next sprint
+
+Делать **P0 batch** (~11ч, 3 items):
+
+1. **T4.1 Alert push** — закрывает «не вижу что упало в production»
+2. **T4.3 Daily roll-up** — даёт trend visibility без manual roll-up
+3. **T5.2 Recurrence dashboard** — surface chronic issues для roadmap-entry
+
+После — P1 (T4.2 PR comment + T7.1 Auto-baseline) — ~12ч.
+
+P3 (T3.1/T3.2/T6.2) — параллельно с infrastructure work (gold dataset / OTEL collector / benchmark stabilization).
+
+## Open questions для пользователя
+
+1. **Alert channel**: Slack webhook / Telegram bot / email? (определяет T4.1 implementation)
+2. **CI access**: GH Actions workflow можно расширить для T4.2? Или PR comments через post-commit hook на push?
+3. **Gold dataset** для T3.1 — собирать вручную, генерировать через Claude API, или impossible сейчас?
+4. **Production dashboard**: нужен ли Streamlit (T3.4) или достаточно Markdown reports? Кто consumer?
+5. **OTEL infrastructure** в roadmap? (T3.2 blocker)
+
+## Maintenance protocol
+
+Этот документ обновляется при:
+- Завершении item → отметить ✅ + сноска к коммиту в [28_1.5](../framework%20documentation/2_КОНТЕКСТ/2.7_AUTO_REPORTS/28_1.5_Расширенная_аналитика.md)
+- Появлении нового blocker / dependency
+- Изменении приоритета (с justification в commit message)
+
+Quarterly review: пересматривать всё что осталось `> Q+1`, моливоать или закрывать как stale.

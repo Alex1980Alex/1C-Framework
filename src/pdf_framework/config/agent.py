@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 class AgentSettings(BaseSettings):
     """LangGraph agent configuration."""
 
-    model: str = "claude-opus-4-6"
+    model: str = "claude-opus-4-8"
     temperature: float = 0.0
     max_tokens: int = 4096
     search_k: int = 5
@@ -34,7 +34,7 @@ class AgentSettings(BaseSettings):
     # Phase 54: Model Routing
     model_map_simple: str = "claude-haiku-3-5"
     model_map_moderate: str = "claude-sonnet-4-5-20250929"
-    model_map_complex: str = "claude-opus-4-6"
+    model_map_complex: str = "claude-opus-4-8"
     cost_budget_per_query: float = 0.10  # USD
     cost_budget_daily: float = 50.0  # USD
     model_routing_enabled: bool = False

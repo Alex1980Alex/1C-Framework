@@ -12,14 +12,14 @@ logger = logging.getLogger(__name__)
 
 # Approximate cost per 1M tokens (USD) — input / output
 MODEL_COSTS: dict[str, tuple[float, float]] = {
-    "claude-opus-4-6": (15.0, 75.0),
+    "claude-opus-4-8": (5.0, 25.0),
     "claude-sonnet-4-5-20250929": (3.0, 15.0),
     "claude-haiku-3-5": (0.25, 1.25),
 }
 
 # Fallback order: Opus → Sonnet → Haiku
 _DOWNGRADE_ORDER = [
-    "claude-opus-4-6",
+    "claude-opus-4-8",
     "claude-sonnet-4-5-20250929",
     "claude-haiku-3-5",
 ]

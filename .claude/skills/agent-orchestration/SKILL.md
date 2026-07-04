@@ -143,7 +143,7 @@ analyze_query → execute_search → grade_documents →
 ## Конфиг
 
 ```env
-AGENT__MODEL=claude-opus-4-6
+AGENT__MODEL=claude-opus-4-8
 AGENT__TEMPERATURE=0.0
 AGENT__SEARCH_K=5
 AGENT__RERANKER_ENABLED=true

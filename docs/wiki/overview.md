@@ -77,7 +77,7 @@ RAG-АГЕНТЫ (LangGraph)
 
 | Слой | Что |
 |---|---|
-| Main LLM | Claude Opus 4.6 |
+| Main LLM | Claude Opus 4.8 |
 | Fast LLM / grading / hallucination | Claude Sonnet 4.5 |
 | Embedding | **Qwen3-Embedding-8B 4096d** через TEI Docker (`pdf-rag-tei`) — production default, MTEB-Code 80.68, 32K context |
 | Vector store | Qdrant v1.17.1 — 10 коллекций × 4096d cosine, 80 908 точек |

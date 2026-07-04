@@ -113,9 +113,9 @@ class TestCostBudget:
 
     def test_estimate_cost_opus(self):
         budget = CostBudget()
-        cost = budget.estimate_cost("claude-opus-4-6", 1_000_000, 1_000_000)
-        # Opus: $15/1M input + $75/1M output
-        assert abs(cost - 90.0) < 0.01
+        cost = budget.estimate_cost("claude-opus-4-8", 1_000_000, 1_000_000)
+        # Opus: $5/1M input + $25/1M output
+        assert abs(cost - 30.0) < 0.01
 
     def test_check_budget_allows_within_limit(self):
         budget = CostBudget(per_query_limit=1.0, daily_limit=100.0)
@@ -124,14 +124,14 @@ class TestCostBudget:
 
     def test_check_budget_downgrades_expensive(self):
         budget = CostBudget(per_query_limit=0.001, daily_limit=100.0)
-        model = budget.check_budget("claude-opus-4-6")
+        model = budget.check_budget("claude-opus-4-8")
         assert "haiku" in model.lower()
 
     def test_daily_budget_exhausted(self):
         budget = CostBudget(per_query_limit=1.0, daily_limit=0.001)
         # Record some usage to exhaust budget
         budget.record_usage("claude-sonnet-4-5-20250929", 100_000, 50_000)
-        model = budget.check_budget("claude-opus-4-6")
+        model = budget.check_budget("claude-opus-4-8")
         assert "haiku" in model.lower()
 
     def test_status_over_budget(self):
@@ -143,16 +143,16 @@ class TestCostBudget:
     def test_downgrade_when_low_budget(self):
         budget = CostBudget(per_query_limit=1.0, daily_limit=1.0)
         # Spend 95% of daily budget (~$0.975)
-        budget.record_usage("claude-opus-4-6", 60_000, 500)
-        budget.record_usage("claude-opus-4-6", 60_000, 500)
+        budget.record_usage("claude-opus-4-8", 60_000, 500)
+        budget.record_usage("claude-opus-4-8", 60_000, 500)
         # Now remaining should be < 10%
         status = budget.get_status()
         if status.remaining_daily < budget.daily_limit * 0.1:
-            model = budget.check_budget("claude-opus-4-6")
-            assert model != "claude-opus-4-6"
+            model = budget.check_budget("claude-opus-4-8")
+            assert model != "claude-opus-4-8"
         else:
             # If still above 10%, record more to push below
-            budget.record_usage("claude-opus-4-6", 500_000, 5_000)
-            model = budget.check_budget("claude-opus-4-6")
+            budget.record_usage("claude-opus-4-8", 500_000, 5_000)
+            model = budget.check_budget("claude-opus-4-8")
             # Either downgraded or budget exhausted → cheapest
             assert "haiku" in model.lower() or model == "claude-sonnet-4-5-20250929"

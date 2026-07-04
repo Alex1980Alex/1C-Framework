@@ -68,7 +68,7 @@ class DeepResearchAgent:
         search_manager: SearchManager,
         api_key: str = "",
         decomposer_model: str = "claude-sonnet-4-5-20250929",
-        synthesizer_model: str = "claude-opus-4-6",
+        synthesizer_model: str = "claude-opus-4-8",
         max_retrieval_steps: int = 5,
         settings: Settings | None = None,
     ):

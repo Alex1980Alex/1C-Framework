@@ -11,7 +11,7 @@ Usage:
     from src.pdf_framework.agents.rag.middleware import TokenTracker, with_middleware
 
     tracker = TokenTracker()
-    llm = with_middleware(ChatAnthropic(model="claude-opus-4-6"), tracker)
+    llm = with_middleware(ChatAnthropic(model="claude-opus-4-8"), tracker)
 """
 
 import logging

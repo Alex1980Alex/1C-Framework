@@ -29,7 +29,7 @@ VECTOR_STORE__QDRANT_URL=http://localhost:6333
 
 | Переменная | Default | Описание |
 |------------|---------|----------|
-| `AGENT__MODEL` | `claude-opus-4-6` | Основная модель (ответы, агенты) |
+| `AGENT__MODEL` | `claude-opus-4-8` | Основная модель (ответы, агенты) |
 | `AGENT__FAST_MODEL` | `claude-sonnet-4-5-20250929` | Быстрая модель (grading, rewriting) |
 | `ANTHROPIC__BASE_URL` | `https://api.anthropic.com` | Base URL API (для proxy) |
 | `AGENT__TEMPERATURE` | `0.0` | Температура генерации |
@@ -88,7 +88,7 @@ VECTOR_STORE__QDRANT_URL=http://localhost:6333
 | Переменная | Default | Описание |
 |------------|---------|----------|
 | `SELF_RAG__ENABLED` | `true` | Включить Self-RAG agent |
-| `SELF_RAG__GRADER_MODEL` | `claude-haiku-4-5-20251001` | Модель grading |
+| `SELF_RAG__GRADING_MODEL` | `claude-sonnet-4-5-20250929` | Модель grading |
 | `SELF_RAG__RELEVANCE_THRESHOLD` | `0.5` | Порог релевантности |
 | `SELF_RAG__MAX_REWRITE_ATTEMPTS` | `2` | Макс. попыток rewrite |
 
@@ -283,7 +283,7 @@ AUTH__ENABLED=false
 ```env
 ANTHROPIC__API_KEY=sk-...
 VECTOR_STORE__QDRANT_URL=http://qdrant:6333
-AGENT__MODEL=claude-opus-4-6
+AGENT__MODEL=claude-opus-4-8
 AGENT__RERANKER_TYPE=llm
 CACHE__SEMANTIC_ENABLED=true
 AUTH__ENABLED=true
@@ -294,7 +294,7 @@ LANGFUSE__ENABLED=true
 ### Max Quality
 
 ```env
-AGENT__MODEL=claude-opus-4-6
+AGENT__MODEL=claude-opus-4-8
 AGENT__RERANKER_TYPE=llm
 SELF_RAG__ENABLED=true
 GRAPH_RAG__COMMUNITY_DETECTION=true

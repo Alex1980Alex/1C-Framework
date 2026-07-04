@@ -27,7 +27,7 @@ class ClassificationResult:
 DEFAULT_MODEL_MAP: dict[ComplexityLevel, str] = {
     ComplexityLevel.SIMPLE: "claude-haiku-3-5",
     ComplexityLevel.MODERATE: "claude-sonnet-4-5-20250929",
-    ComplexityLevel.COMPLEX: "claude-opus-4-6",
+    ComplexityLevel.COMPLEX: "claude-opus-4-8",
 }
 
 # Keywords that signal higher complexity

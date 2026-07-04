@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # Cost per 1M tokens (USD) as of 2026
 _PRICING: dict[str, dict[str, float]] = {
-    "claude-opus-4-6": {"input": 15.0, "output": 75.0},
+    "claude-opus-4-8": {"input": 5.0, "output": 25.0},
     "claude-sonnet-4-5-20250929": {"input": 3.0, "output": 15.0},
     "claude-haiku-3-5-20241022": {"input": 0.8, "output": 4.0},
 }
