@@ -112,3 +112,43 @@ def test_selective_format_all_legacy_untouched():
     after = b"L1\nL2\n"
     merged = bsl_lint._selective_format(head, before, after)
     assert merged == before
+
+
+# ─── P4.1: SARIF 2.1.0 вывод (единый findings-контракт, R4) ──────────────────────
+
+
+def test_build_sarif_schema_and_levels():
+    """P4.1: build_sarif → SARIF 2.1.0; severity bsl-ls → уровень SARIF (error/warning/note)."""
+    diags = [
+        {"file": "src/CommonModules/гкс_Т/Module.bsl", "line": 12, "severity": "error", "code": "MethodSize", "message": "m1"},
+        {"file": "x.bsl", "line": None, "severity": "info", "code": None, "message": "m2"},
+        {"file": "y.bsl", "line": 3, "severity": "hint", "code": "R2", "message": "m3"},
+    ]
+    s = bsl_lint.build_sarif(diags)
+    assert s["version"] == "2.1.0" and "sarif-2.1.0" in s["$schema"]
+    res = s["runs"][0]["results"]
+    assert [r["level"] for r in res] == ["error", "note", "note"]  # error→error, info/hint→note
+    assert res[1]["locations"][0]["physicalLocation"]["region"]["startLine"] == 1  # None→1
+    assert res[0]["ruleId"] == "MethodSize"
+    assert res[0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"].endswith("Module.bsl")
+
+
+def test_build_sarif_result_shape_matches_sonar():
+    """P4.1 (единый контракт): форма result идентична sonar_issues_pull.build_sarif."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "sonar_issues_pull_t", Path(__file__).resolve().parents[2] / "scripts" / "sonar_issues_pull.py"
+    )
+    sp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sp)
+    a = bsl_lint.build_sarif([{"file": "f.bsl", "line": 1, "severity": "error", "code": "R", "message": "m"}])
+    b = sp.build_sarif([{"rule": "R", "severity": "BLOCKER", "message": "m", "_file": "f.bsl", "line": 1, "type": "BUG", "_class": "judgment"}], "proj")
+    assert sorted(a["runs"][0]["results"][0].keys()) == sorted(b["runs"][0]["results"][0].keys())
+    assert a["$schema"] == b["$schema"] and a["version"] == b["version"]
+
+
+def test_build_sarif_empty():
+    """Пустой список диагностик → валидный SARIF с 0 results (не крах)."""
+    s = bsl_lint.build_sarif([])
+    assert s["runs"][0]["results"] == [] and s["runs"][0]["tool"]["driver"]["rules"] == []
