@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import importlib.util
 import json
 import re
 import sys
@@ -33,7 +32,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CH = ROOT / "docs" / "framework documentation" / "43_ПАЙПЛАЙН_1С"
 BRIDGE = ROOT / ".claude" / "hooks" / "shared" / "pipeline_1c_bridge.py"
-ONEC_STOP = ROOT / ".claude" / "hooks" / "onec-task-completion-stop.py"
 
 
 @dataclass
@@ -48,21 +46,15 @@ class Finding:
 # ─── Извлечение фактов из кода ───────────────────────────────────────────────────────────
 
 
-def _load_module(path: Path, name: str):
-    """Импорт hook-модуля по пути (standalone-скрипт контролирует sys.path → нет shared-коллизии)."""
-    hooks = str(path.parent.parent) if path.parent.name == "shared" else str(path.parent)
-    if hooks not in sys.path:
-        sys.path.insert(0, hooks)
-    spec = importlib.util.spec_from_file_location(name, str(path))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def code_facts() -> dict:
-    """Собрать факты из кода: flow-значения, группы весов effort, hard-ключи sig."""
+    """Собрать факты из кода: flow-значения, группы весов effort. Никогда не кидает
+    (advisory-линтер не должен падать при рефакторе моста → пустые факты + errors)."""
     facts: dict = {"flow_values": set(), "effort_groups": set(), "errors": []}
-    src = BRIDGE.read_text(encoding="utf-8")
+    try:
+        src = BRIDGE.read_text(encoding="utf-8")
+    except OSError as e:
+        facts["errors"].append(f"read {BRIDGE.name}: {e}")
+        return facts
     # flow-значения: (а) авторитетный enum из docstring `flow ∈ {none, ask_1c, …}`;
     # (б) литеральные присваивания `out["flow"] = "…"` / `"flow": "…"`.
     flows: set[str] = set(re.findall(r'"flow"\]\s*=\s*"(\w+)"', src)) | set(
@@ -88,7 +80,7 @@ def code_facts() -> dict:
                         facts["effort_groups"] = {
                             kk.value for kk in v.keys if isinstance(kk, ast.Constant)
                         }
-    except (SyntaxError, ValueError) as e:
+    except Exception as e:  # рефактор _EFFORT_CFG в не-dict-литерал → AttributeError и т.п.
         facts["errors"].append(f"ast _EFFORT_CFG: {e}")
     return facts
 
@@ -154,7 +146,9 @@ def inv_no_line_anchors(files: dict, facts: dict) -> list[Finding]:
 def inv_flow_enum(files: dict, facts: dict) -> list[Finding]:
     """Явно перечисленный flow-enum должен совпадать с набором значений кода (6)."""
     out = []
-    code_flows = facts["flow_values"] or set(_CANON_FLOW)
+    # union с каноном: даже если docstring-enum переформатируют (извлечение ужмётся),
+    # проверка держит полный набор 6 → нет false-negative-окна.
+    code_flows = facts["flow_values"] | set(_CANON_FLOW)
     # ищем строки-«перечни» вида a/b/c/d/e из flow-токенов (≥4 подряд через / или запятую)
     tok = r"(?:none|ask_1c|ask_action|ask_flow|auto|gated)"
     listing = re.compile(rf"(?:{tok})(?:\s*[/,·|]\s*{tok}){{3,}}")

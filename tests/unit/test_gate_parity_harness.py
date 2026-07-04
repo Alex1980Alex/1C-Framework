@@ -122,10 +122,14 @@ def test_onec_policy_matches_single_source(
     v = onec_completion_policy(ctx)
     assert v["allow"] is res["hard_ok"]
     if not v["allow"]:
-        # deny-reason должен называть незакрытую петлю (иначе оператор не знает что чинить)
-        miss = [k for k in ("recall", "capture", "research") if not sig[k]]
+        # deny-reason должен КОНКРЕТНО называть незакрытые петли (не общий текст) — оператору
+        # нужно знать, ЧТО чинить. Каждая незакрытая петля → её имя (RECALL/…) в reason.
         rlow = v["reason"].lower()
-        assert (not miss) or any(m in rlow for m in miss) or "sonar" in rlow or "петл" in rlow
+        for k in ("recall", "capture", "research"):
+            if not sig[k]:
+                assert k in rlow, f"reason не называет незакрытую петлю {k}"
+        if not sonar_ok and sonar_hard:
+            assert "sonar" in rlow, "reason не называет провал Sonar"
 
 
 @pytest.mark.parametrize("impact_hard,debug_hard", list(product([True, False], repeat=2)))
