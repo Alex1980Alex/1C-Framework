@@ -232,6 +232,13 @@ jobs:
         # so the package must be importable. No external service required.
         run: uv pip install --system -e ".[dev,morphology,qdrant]"
 
+      - name: Gate parity (isolated)
+        # P3.4 (roadmap 260703): parity-harness — оркестратор гейтов обязан давать тот же
+        # вердикт, что живые Stop-хуки (иначе повтор инцидента G-1). Изолированная инвокация
+        # обходит пред-существующую коллизию `shared`→`src/shared` при полном сборе tests/
+        # (эти файлы импортят .claude/hooks/shared, не src/shared; вместе — консистентны).
+        run: pytest tests/unit/test_gate_parity_harness.py tests/unit/test_gate_parity.py tests/unit/test_gate_policies.py tests/unit/test_gate_policy.py tests/unit/test_onec_task_completion_stop.py tests/unit/test_sonar_rescan_state.py -v
+
       - name: Run unit tests
         run: pytest tests/ -v -m "unit and not slow" --cov=src --cov-report=term --cov-report=xml
 
