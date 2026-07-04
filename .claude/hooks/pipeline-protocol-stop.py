@@ -226,7 +226,8 @@ class PipelineProtocolStop(BaseHook):
             "  medium/complex → 01-architecture…04-testing.\n"
             "  затем: pipeline_state.py done <slug> <N> <файл>\n"
             "Для 1С-задачи после пайплайна сработает ЕДИНЫЙ task-completion gate (`onec-task-completion-stop`): "
-            "память (recall+capture) + внешний анализ (`WebSearch` Infostart/GitHub) — закрой всё в этом же проходе.\n"
+            "память (recall+capture) + внешний анализ (`onec_search.py` Infostart / `ecosystem_scan.py` GitHub — "
+            "голый GitHub-`WebSearch` блокирует энфорсер) — закрой всё в этом же проходе.\n"
             "Аварийный обход (если правка не была задачей): PIPELINE_PROTOCOL_DISABLE=1."
         )
 

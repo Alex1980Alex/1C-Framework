@@ -86,6 +86,40 @@ def test_collect_none(tmp_path):
     }
 
 
+def test_fix_recipe_only_failing_loops():
+    """P3.1: fix-recipe даёт copy-paste команды ТОЛЬКО для незакрытых ✗-петель (koto {{gate_output}})."""
+    sig = {k: False for k in mod._collect_signals("")}
+    sig["capture"] = True  # capture закрыт → в рецепте его быть НЕ должно
+    r = mod._fix_recipe(
+        sig,
+        sonar_ok=False,
+        sonar_hard=True,
+        sonar_detail="Module.bsl:120",
+        impact_hard=False,
+        debug_hard=False,
+    )
+    assert "RECALL:" in r and "RESEARCH:" in r  # незакрыты
+    assert "CAPTURE:" not in r  # закрыт → нет
+    assert "SONAR:" in r and "Module.bsl:120" in r  # sonar-детали прокинуты
+    assert "ecosystem_scan.py" in r and "onec_search.py" in r  # канонические скрипты, не WebSearch
+
+
+def test_fix_recipe_empty_when_all_closed():
+    """Все петли закрыты → рецепт пуст (нечего чинить)."""
+    sig = {k: True for k in mod._collect_signals("")}
+    assert (
+        mod._fix_recipe(
+            sig,
+            sonar_ok=True,
+            sonar_hard=True,
+            sonar_detail="",
+            impact_hard=False,
+            debug_hard=False,
+        )
+        == ""
+    )
+
+
 def test_collect_research_via_ecosystem_scan(tmp_path):
     """P0.4 (К-1): канонический research-скрипт через Bash засчитывается RESEARCH."""
     t = tmp_path / "t.json"

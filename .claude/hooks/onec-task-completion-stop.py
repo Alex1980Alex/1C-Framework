@@ -440,6 +440,48 @@ def _compute_hard_ok(
     return all(sig.get(k) for k in hard_keys) and (sonar_ok or not sonar_hard)
 
 
+def _fix_recipe(
+    sig: dict,
+    sonar_ok: bool,
+    sonar_hard: bool,
+    sonar_detail: str,
+    impact_hard: bool,
+    debug_hard: bool,
+) -> str:
+    """P3.1 (koto {{gate_output}}): конкретные copy-paste команды ТОЛЬКО для незакрытых ✗-петель.
+
+    Вывод гейта → готовый вход для фикса (не «догадайся, чем закрыть»). Sonar-детали (fail-файлы
+    из state) уже в sonar_detail — прокидываем в рецепт, чтобы агент видел, ЧТО чинить."""
+    lines = []
+    if not sig.get("recall"):
+        lines.append('  RECALL:   mcp__memory-orchestrator__unified_search(query="<тема задачи>")')
+    if not sig.get("capture"):
+        lines.append(
+            "  CAPTURE:  mcp__skill-learning__capture_pattern(...) ПОСЛЕ verify PASS "
+            "(или route_and_save / Write .md в /.claude/.../memory/)"
+        )
+    if not sig.get("research"):
+        lines.append(
+            '  RESEARCH: python scripts/onec_search.py "<тема>"  # Infostart/RU  |  '
+            'python scripts/ecosystem_scan.py "<тема>" --top 8  # GitHub'
+        )
+    if sonar_hard and not sonar_ok:
+        detail = f"  # {sonar_detail}" if sonar_detail else ""
+        lines.append(
+            "  SONAR:    powershell scripts/run-sonar-analysis.ps1; "
+            f"python scripts/sonar_rescan_verify.py{detail}"
+        )
+    if impact_hard and not sig.get("impact"):
+        lines.append("  IMPACT:   mcp__bsl-semantic-search__bsl_impact_analysis <экспортный_метод>")
+    if debug_hard and not sig.get("debug_trace"):
+        lines.append(
+            "  BP-TRACE: 1c-debug-hmr set_breakpoint/stack_trace/variables на сценарии bugfix"
+        )
+    if not lines:
+        return ""
+    return "\n▶ Как закрыть ✗ (copy-paste):\n" + "\n".join(lines) + "\n"
+
+
 def _build_reason(
     sig: dict,
     sonar_ok: bool,
@@ -486,8 +528,10 @@ def _build_reason(
         f"  {'✓' if sig['callers'] else '•'} T1 find_callers / `bsl_call_graph` — перед `[REFACTOR]`/удалением символа\n"
         f"  {'✓' if sig['form_screenshot'] else '•'} Тир-2 `get_form_screenshot` — визуальный verify формы без клиента\n"
         f"  {'✓' if sig['platform_ctx'] else '•'} Тир-2 `bsl-platform-context`/`pdf-vector-graph` — API/доки 8.3.27 (вместо догадки)\n"
-        f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n\n"
-        f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"
+        f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n"
+        + _fix_recipe(sig, sonar_ok, sonar_hard, sonar_detail, impact_hard, debug_hard)
+        + "\n"
+        + f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"
         "Закрой ✗ и заверши снова. Opt-out: ONEC_TASK_GATE_DISABLE=1 (вся gate) / "
         "ONEC_SONAR_GATE_DISABLE=1 (только Sonar-проверка) / "
         "ONEC_TOOLGATE_HARD_DISABLE=1 (только high-leverage hard — для trivial-правок)."
