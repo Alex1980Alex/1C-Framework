@@ -56,6 +56,12 @@ jobs:
       - name: TOC ↔ filesystem consistency
         run: python scripts/validate_toc.py --json
 
+      - name: Doc-drift lint (глава 43, advisory)
+        # P3.5 (roadmap 260703): сверяет доки гл.43 с кодом по реестру инвариантов
+        # (flow-enum/effort-веса/фантомные тулы/#L-якоря/known-bad). Advisory (без --strict →
+        # exit 0), выводит находки в лог. Промоут в hard = добавить --strict.
+        run: python scripts/lint_ch43_sync.py
+
       - name: Roadmap §18 progress-log lint
         run: |
           if [ -n "${{ github.base_ref }}" ]; then
