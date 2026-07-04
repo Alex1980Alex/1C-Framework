@@ -1,6 +1,6 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-07-04 14:01
+**Generated:** 2026-07-04 14:30
 
 ## Summary
 
@@ -10,13 +10,13 @@
 | bsl_tool | 33 | **32** | **0** | 3.0% | 100.0% |
 | CLI Commands | 17 | **0** | **0** | 100.0% | 100.0% |
 | Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
-| REST API Endpoints | 88 | **0** | **0** | 100.0% | 100.0% |
+| REST API Endpoints | 88 | **4** | **0** | 95.5% | 100.0% |
 | hook | 97 | **76** | **38** | 21.6% | 60.8% |
 | MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
 | memory_subsystem | 62 | **41** | **2** | 33.9% | 96.8% |
 | Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
 | wiki_component | 5 | **0** | **0** | 100.0% | 100.0% |
-| **TOTAL** | **634** | **149** | **40** | | |
+| **TOTAL** | **634** | **153** | **40** | | |
 
 ## Documentation Gaps (in code, NOT in docs)
 
@@ -56,6 +56,15 @@
 | `ReportGenerator` | `src\bsl\sonar\report_generator.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `BSLRule` | `src\bsl\sonar\rules_manager.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `RulesManager` | `src\bsl\sonar\rules_manager.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
+
+### REST API Endpoints (4 gaps)
+
+| Feature | Source | Should be in |
+|---------|--------|-------------|
+| `POST /openai_compat/chat/completions` | `src\api\routes\openai_compat.py` | `3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md` |
+| `POST /openai_compat/embeddings` | `src\api\routes\openai_compat.py` | `3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md` |
+| `GET /openai_compat/models` | `src\api\routes\openai_compat.py` | `3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md` |
+| `WEBSOCKET /websocket/ws/search` | `src\api\routes\websocket.py` | `3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md` |
 
 ### hook (76 gaps)
 
@@ -262,6 +271,12 @@
   - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
   - ... and 12 more
+
+**`3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md`** — 4 missing features:
+  - [ ] Add `POST /openai_compat/chat/completions` (from `src\api\routes\openai_compat.py`)
+  - [ ] Add `POST /openai_compat/embeddings` (from `src\api\routes\openai_compat.py`)
+  - [ ] Add `GET /openai_compat/models` (from `src\api\routes\openai_compat.py`)
+  - [ ] Add `WEBSOCKET /websocket/ws/search` (from `src\api\routes\websocket.py`)
 
 **`3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md`** — 32 missing features:
   - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
