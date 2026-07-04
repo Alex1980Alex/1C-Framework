@@ -43,7 +43,9 @@ va-bdd-testing). Она их **не дублирует** и **не меняет*
    состояние авто-переезжает туда (relocate-on-artifact, хук `pipeline-1c-advance`).
    1.5. **ОБЯЗАТЕЛЬНО в начале** (иначе единый Stop-gate `onec-task-completion-stop` заблокирует
    завершение): **recall** — `mcp__memory-orchestrator__unified_search` (+ `search_patterns`) по теме задачи;
-   **внешний анализ** — `WebSearch`/`WebFetch` (Infostart + GitHub best-practices), с атрибуцией находок.
+   **внешний анализ** — Infostart/RU через `python scripts/onec_search.py`, GitHub через
+   `python scripts/ecosystem_scan.py` (голый GitHub-`WebSearch` блокирует энфорсер ADR-039; `WebFetch`
+   точечных страниц — ок), с атрибуцией находок. Гейт засчитывает research и по Bash-вызовам этих скриптов (P0.4).
 2. **Активируй skill `analyze-1c-task-v2`** и выполни его методику (Фазы 1-5) **ЦЕЛИКОМ** → **ANALYSIS-REPORT.md**.
    - kind=folder → источник ТЗ = папка (spec + скриншоты); kind=jira → по коду; kind=chat → по описанию.
    - Папка реализации: `configuration/<родительская-задача>/docs/<YYMMDD_slug>/` (провизорно; см. память
