@@ -128,6 +128,11 @@ SKIP_PATTERNS = [
     "auto-git-save",
     "_index.json",
     ".lock",
+    # Vendored-skill lockfile from the `skills` CLI (npx skills add ...): pins
+    # source repo + content hash of externally-installed skills. Infra artifact
+    # (like package-lock.json), self-documenting. NB: the ".lock" pattern above
+    # does NOT catch it — filename is "skills-lock.json" (hyphen, not dot-lock).
+    "skills-lock.json",
     # Git/env internals
     ".gitignore",
     ".git/",
