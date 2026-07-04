@@ -1,0 +1,44 @@
+{
+  "task": "p1-roadmap-260704",
+  "title": "P1 roadmap 260704: Langfuse v4 + doc drift",
+  "created_at": "2026-07-04T22:40:12",
+  "updated_at": "2026-07-04T22:40:33",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:40:33"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:40:33",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-04T22:40:33"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:40:33"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T22:40:33"
+    }
+  ]
+}
