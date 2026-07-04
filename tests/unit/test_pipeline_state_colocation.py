@@ -166,3 +166,33 @@ def test_render_status_resolves_task_dir(tmp_path):
     # этап 1 (ANALYSIS-REPORT.md есть в папке задачи) → без пометки «файла нет»
     line1 = next(ln for ln in out.splitlines() if ln.strip().startswith("[ ] 1."))
     assert "файла нет" not in line1
+
+
+def test_bump_attempt_and_exceed(tmp_path, monkeypatch):
+    """P3.2: bump_attempt инкрементит счётчик этапа, exceeded при count > max."""
+    monkeypatch.delenv("ONEC_MAX_FIX_ITERATIONS", raising=False)
+    ps = _load_ps(tmp_path)
+    ps.init_task("T", title="1С-задача (run-1c-task): T")
+    results = [ps.bump_attempt("t", 4, max_iterations=3) for _ in range(4)]
+    assert [r["count"] for r in results] == [1, 2, 3, 4]
+    assert [r["exceeded"] for r in results] == [False, False, False, True]
+    assert ps.load("t")["attempts"] == {"4": 4}
+
+
+def test_bump_attempt_env_max(tmp_path, monkeypatch):
+    """P3.2: max берётся из ONEC_MAX_FIX_ITERATIONS если аргумент не задан."""
+    monkeypatch.setenv("ONEC_MAX_FIX_ITERATIONS", "2")
+    ps = _load_ps(tmp_path)
+    ps.init_task("T", title="1С-задача (run-1c-task): T")
+    assert [ps.bump_attempt("t", 4)["exceeded"] for _ in range(3)] == [False, False, True]
+
+
+def test_set_needs_human(tmp_path):
+    """P3.2: типизированная эскалация p0/p1/p2 в state; невалидный приоритет → p1."""
+    ps = _load_ps(tmp_path)
+    ps.init_task("T", title="1С-задача (run-1c-task): T")
+    ps.set_needs_human("t", "p0", "архитектурный тупик")
+    nh = ps.load("t")["needs_human"]
+    assert nh["priority"] == "p0" and nh["summary"] == "архитектурный тупик" and nh["at"]
+    ps.set_needs_human("t", "bogus", "x")
+    assert ps.load("t")["needs_human"]["priority"] == "p1"  # невалидный → p1
