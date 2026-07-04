@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-**Status:** Pending review
-
----
-
-## 2026-06-29 — Auto-promoted: t
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `t` (confidence: 0.81)
 - Draft: `docs/wiki/drafts/t.md`
 
 **Status:** Pending review
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
 - Files changed: 0
 - Summary: Session 2026-07-03. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Commit: docs(GKSTCPLK-2637): bump анализ — Q1/Q3 закрыты. Commit: docs(GKSTCPLK-2637): bump анализ — Q2 закрыт (только SVETLY). Commit: chore: auto-commit Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, _1c_index.json
+
+
+## 2026-07-04 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
+- Files changed: 1
+- Summary: Session 2026-07-04. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Changed 1 files in configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: docs(43): verify-P2 фикс — 43.2 preflight 5 режимов (пропуск P2.4). Commit: docs(roadmap): 260703 §18 — P2 завершён (синхронизация 27 файлов главы 43). Commit: docs(43): P2.7 якорная политика + P2.8 процедурное правило + verify-фиксы
 
