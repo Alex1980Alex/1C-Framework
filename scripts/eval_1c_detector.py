@@ -221,18 +221,19 @@ def main(argv=None):
     rep["split"] = args.split
 
     def _regression_rc() -> int:
-        """P4.3: 1 если метрика ниже заданного пола (CI-гейт), иначе 0."""
+        """P4.3: 1 если метрика ниже заданного пола (CI-гейт), иначе 0.
+
+        Guard `is not None`: при вырожденном (пустом/отфильтрованном) GT route_class_accuracy
+        может быть None → без guard'а `None < 0.90` дал бы TypeError (рекомендация ревьюера P4)."""
         rc = 0
-        if args.min_f1 is not None and rep["is_1c"]["f1"] < args.min_f1:
-            print(
-                f"REGRESSION: is_1c F1={rep['is_1c']['f1']} < --min-f1={args.min_f1}",
-                file=sys.stderr,
-            )
+        f1 = rep["is_1c"]["f1"]
+        racc = rep["route_class_accuracy"]
+        if args.min_f1 is not None and f1 is not None and f1 < args.min_f1:
+            print(f"REGRESSION: is_1c F1={f1} < --min-f1={args.min_f1}", file=sys.stderr)
             rc = 1
-        if args.min_route_acc is not None and rep["route_class_accuracy"] < args.min_route_acc:
+        if args.min_route_acc is not None and racc is not None and racc < args.min_route_acc:
             print(
-                f"REGRESSION: route_class_accuracy={rep['route_class_accuracy']} < "
-                f"--min-route-acc={args.min_route_acc}",
+                f"REGRESSION: route_class_accuracy={racc} < --min-route-acc={args.min_route_acc}",
                 file=sys.stderr,
             )
             rc = 1
