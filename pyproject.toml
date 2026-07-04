@@ -86,7 +86,7 @@ deep = ["deepagents>=0.1"]
 # LangSmith observability + sandbox (Hermes Ф5)
 langsmith = ["langsmith[sandbox]>=0.3"]
 # Langfuse observability
-langfuse = ["langfuse>=2.0"]
+langfuse = ["langfuse>=4.0,<5.0"]
 # Hermes Ф5 Sandbox — E2B Code Interpreter (stateful Jupyter in Firecracker microVM)
 sandbox-e2b = ["e2b-code-interpreter>=1.2.0"]
 # ИТС deep-fetch (scripts/its_fetch.py): авторизованный fetch its.1c.ru + извлечение контента (skill its-research)

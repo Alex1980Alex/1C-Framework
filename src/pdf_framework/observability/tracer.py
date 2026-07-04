@@ -314,16 +314,20 @@ class LangfuseTracer(BaseTracer):
 
         if self._enabled and self._client:
             try:
-                # Create Langfuse observation
-                self._client.span(
-                    name=span.name,
-                    start_time=span.start_timestamp,
-                    end_time=datetime.now(UTC).isoformat(),
-                    level="ERROR" if status == SpanStatus.ERROR else "DEFAULT",
-                    metadata=span.attributes,
+                # Create Langfuse v4 observation (start → update → end).
+                # v2 client.span() was removed in v4; start_observation returns a
+                # wrapper we update with output/metadata/level then end.
+                obs = self._client.start_observation(name=span.name, as_type="span")
+                obs.update(
                     output=str(output) if output else None,
-                    status_message=error,
+                    level="ERROR" if status == SpanStatus.ERROR else "DEFAULT",
+                    metadata={
+                        **(span.attributes or {}),
+                        "start_time": span.start_timestamp,
+                        "status_message": error,
+                    },
                 )
+                obs.end()
 
                 # Flush immediately for real-time observability
                 self._client.flush()
@@ -350,7 +354,8 @@ class LangfuseTracer(BaseTracer):
         """
         if self._enabled and self._client:
             try:
-                self._client.score(
+                # v4: client.score() → create_score()
+                self._client.create_score(
                     name="search_relevance",
                     value=score or 0.0,
                     comment=f"Query: {query[:100]}",
@@ -383,18 +388,24 @@ class LangfuseTracer(BaseTracer):
         """
         if self._enabled and self._client:
             try:
-                self._client.generation(
-                    name=name,
-                    model=model,
+                # v4: client.generation() → start_observation(as_type="generation").
+                # model/usage/latency folded into metadata to avoid guessing v4
+                # generation-specific kwargs (usage_details/model naming).
+                gen = self._client.start_observation(name=name, as_type="generation")
+                gen.update(
                     input=prompt,
                     output=completion,
-                    usage={
-                        "input": tokens_input,
-                        "output": tokens_output,
-                        "total": tokens_input + tokens_output,
+                    metadata={
+                        "model": model,
+                        "usage": {
+                            "input": tokens_input,
+                            "output": tokens_output,
+                            "total": tokens_input + tokens_output,
+                        },
+                        "latency_ms": latency_ms,
                     },
-                    latency_ms=latency_ms,
                 )
+                gen.end()
                 self._client.flush()
             except Exception as e:
                 logger.warning(f"[TRACE] Failed to create generation in Langfuse: {e}")
