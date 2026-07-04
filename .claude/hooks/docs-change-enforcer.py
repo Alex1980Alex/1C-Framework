@@ -89,7 +89,11 @@ CODE_TO_DOMAIN = [
     ("src/pdf_framework/callbacks/", "2_КОНТЕКСТ/2.4_КЭШИРОВАНИЕ", "framework-caching"),
     ("src/pdf_framework/multitenancy/", "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ", "deployment"),
     ("src/pdf_framework/observability/", "7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ", "deployment"),
-    ("src/pdf_framework/guardrails/", "7_ПРОВЕРКА/7.3_УСТРАНЕНИЕ_НЕПОЛАДОК", "framework-troubleshooting"),
+    (
+        "src/pdf_framework/guardrails/",
+        "7_ПРОВЕРКА/7.3_УСТРАНЕНИЕ_НЕПОЛАДОК",
+        "framework-troubleshooting",
+    ),
     ("src/api/routes/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "framework-api"),
     # DI-контейнер Components (был UNMAPPED → блокировал Stop, 2026-06-12)
     ("src/api/dependencies/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "framework-api"),
@@ -619,10 +623,10 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
         timeout_s: Hard ceiling for combined TEI + Qdrant calls.
 
     Returns:
-        Suggested chapter directory name (e.g. "5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER"),
+        Suggested chapter directory path — nested "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY"
+        (9-layer layout) or flat "27_UNIFIED_MEMORY" (pre-reindex index),
         or None if not confident / not available.
     """
-    import re
     from pathlib import Path
 
     try:
@@ -689,15 +693,25 @@ def semantic_fallback_suggest(file_path: str, timeout_s: float = 2.0) -> str | N
     except Exception:
         return None
 
-    # Extract chapter dir from top hit's relative_path payload
-    chapter_re = re.compile(r"(\d{2,3}_[А-ЯA-Za-z][\w_]+)")
+    # Extract chapter dir from top hit's relative_path payload.
+    # Format-agnostic: works for both the pre-renumbering flat layout
+    # ("27_UNIFIED_MEMORY/...") and the 9-layer nested layout
+    # ("5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/...") — returns the full chapter dir path
+    # regardless of which is currently indexed in framework_code_v1. A flat
+    # regex used to match only "NN_NAME" and silently returned None on the new
+    # dotted/nested paths after a reindex.
+    marker = "framework documentation/"
     for h in hits.points:
         fp = (h.payload or {}).get("relative_path", "")
         if not isinstance(fp, str):
             continue
-        m = chapter_re.search(fp.replace("\\", "/"))
-        if m:
-            return m.group(1)
+        fp = fp.replace("\\", "/")
+        if marker not in fp:
+            continue
+        tail = fp.split(marker, 1)[1]
+        chapter_dir = tail.rsplit("/", 1)[0]  # drop the filename
+        if chapter_dir and chapter_dir != tail:
+            return chapter_dir
     return None
 
 

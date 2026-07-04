@@ -94,7 +94,11 @@ def _collect_b3() -> bool:
             encoding="utf-8",
             errors="replace",
         )
-        return proc.returncode == 0 and "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY" in (proc.stdout or "")
+        # Producer emits the chapter dir path — flat "27_UNIFIED_MEMORY" (pre-reindex)
+        # or nested "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY" (post-renumbering). Match the stable
+        # chapter token so the check survives the framework_code_v1 reindex transition
+        # while still asserting the memory source maps to the memory chapter.
+        return proc.returncode == 0 and "UNIFIED_MEMORY" in (proc.stdout or "")
     except Exception:
         return False
 
