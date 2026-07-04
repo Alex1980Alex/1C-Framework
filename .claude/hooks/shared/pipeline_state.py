@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -373,6 +374,43 @@ def approve(slug: str | None, n: int = APPROVAL_STAGE, by: str = "human") -> dic
     return data
 
 
+def bump_attempt(slug: str | None, stage: int, max_iterations: int | None = None) -> dict:
+    """P3.2 (bounded AUTO): +1 к счётчику попыток этапа. → {count, max, exceeded}.
+
+    Паттерн agentico (max_consecutive_failures) / Graybark (4 итерации). Счётчик в
+    ``data['attempts'][str(stage)]``. max = аргумент ∨ env ONEC_MAX_FIX_ITERATIONS ∨ 4.
+    exceeded=True → оркестратор (run-1c-task) обязан ОСТАНОВИТЬ петлю и эскалировать (set_needs_human)."""
+    slug = _resolve_slug(slug)
+    data = load(slug)
+    if not data:
+        raise SystemExit(f"pipeline: нет состояния для '{slug}'")
+    if max_iterations is None:
+        try:
+            max_iterations = int(os.environ.get("ONEC_MAX_FIX_ITERATIONS", "4") or 4)
+        except ValueError:
+            max_iterations = 4
+    attempts = data.setdefault("attempts", {})
+    count = int(attempts.get(str(stage), 0)) + 1
+    attempts[str(stage)] = count
+    _save(slug, data)
+    return {"count": count, "max": max_iterations, "exceeded": count > max_iterations}
+
+
+def set_needs_human(slug: str | None, priority: str, summary: str) -> dict:
+    """P3.2: типизированная эскалация (Graybark needs-human-p0/p1/p2) в state.
+
+    priority: p0 (архитектурное/продуктовое решение) / p1 (непонятный путь) / p2 (быстрый фикс).
+    Пишет ``data['needs_human'] = {priority, summary, at}`` — сигнал «AUTO застрял, нужен человек»."""
+    slug = _resolve_slug(slug)
+    data = load(slug)
+    if not data:
+        raise SystemExit(f"pipeline: нет состояния для '{slug}'")
+    pr = priority if priority in ("p0", "p1", "p2") else "p1"
+    data["needs_human"] = {"priority": pr, "summary": summary, "at": _now()}
+    _save(slug, data)
+    return data
+
+
 def gate_check(command: str, slug: str | None = None) -> dict:
     """Вернуть {'ok','hard','reason'} для входа в этап команды ``command``.
 
@@ -496,6 +534,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("command")
     p.add_argument("slug", nargs="?", default=None)
 
+    p = sub.add_parser("bump-attempt", help="P3.2: +1 попытка этапа → JSON {count,max,exceeded}")
+    p.add_argument("slug", help="slug или '-' (текущий)")
+    p.add_argument("stage", type=int)
+    p.add_argument("--max", type=int, default=None)
+
+    p = sub.add_parser("needs-human", help="P3.2: эскалация (застрял AUTO)")
+    p.add_argument("slug", help="slug или '-' (текущий)")
+    p.add_argument("priority", choices=["p0", "p1", "p2"])
+    p.add_argument("summary")
+
     args = ap.parse_args(argv)
     if args.cmd == "init":
         d = init_task(args.slug, args.title, task_dir=args.task_dir)
@@ -511,6 +559,11 @@ def main(argv: list[str] | None = None) -> int:
         _emit(render_status(args.slug))
     elif args.cmd == "gate":
         _emit(gate_check(args.command, args.slug))
+    elif args.cmd == "bump-attempt":
+        _emit(bump_attempt(args.slug, args.stage, args.max))
+    elif args.cmd == "needs-human":
+        d = set_needs_human(args.slug, args.priority, args.summary)
+        _emit(f"needs-human {d['needs_human']['priority']}: {d['needs_human']['summary']}")
     return 0
 
 
