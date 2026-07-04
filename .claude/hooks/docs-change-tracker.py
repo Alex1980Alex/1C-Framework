@@ -428,6 +428,9 @@ _SKIP_PATTERNS = [
     # → ложная задача «обнови доки/скиллы» (ADR уже сам себе документация + реестр _index.json).
     "architecture-research/adr/",
     "/adr/",
+    # Stale agent worktrees — снапшоты старых веток, не product-код.
+    # Зеркало docs-change-enforcer SKIP_PATTERNS (added 2026-07-04).
+    ".claude/worktrees/",
 ]
 
 

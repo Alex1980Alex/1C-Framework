@@ -127,6 +127,11 @@ SKIP_PATTERNS = [
     # Internal hook/cache state
     "/cache/",
     "/__pycache__/",
+    # Stale agent worktrees (.claude/worktrees/<agent-id>/...): snapshots of
+    # old branches, not product code — edits there (e.g. secret redaction)
+    # must not demand doc updates. Added 2026-07-04 (P0 audit: worktree file
+    # surfaced as UNMAPPED "agent-..." area).
+    ".claude/worktrees/",
     "hook-todos",
     "active-todos",
     "auto-git-save",
