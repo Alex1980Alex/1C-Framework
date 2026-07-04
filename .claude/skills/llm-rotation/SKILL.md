@@ -26,12 +26,12 @@ ZAIProxy (HTTP server, port 8000)
   └── SSE streaming support
 ```
 
-## Providers (priority order — post-cleanup 2026-05-16, roadmap 260509 §2.2)
+## Providers (priority order — sonnet-first, 2026-07-04)
 
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
-| 0 | **claude-cli-haiku** | `haiku` → claude-haiku-4-5 | **claude-cli** | No (CLI subscription) |
-| 1 | **claude-cli-sonnet** | `claude-sonnet-5` | **claude-cli** | No (CLI subscription) |
+| 0 | **claude-cli-sonnet** | `claude-sonnet-5` | **claude-cli** | No (CLI subscription) — **primary** |
+| 1 | **claude-cli-haiku** | `haiku` → claude-haiku-4-5 | **claude-cli** | No (CLI subscription) |
 | 2 | ollama-local | qwen2.5-coder:7b | ollama | No |
 | 3 | anthropic-sonnet | `claude-sonnet-5` | anthropic | **Yes** (ANTHROPIC_API_KEY — silent skip if unset) |
 
@@ -92,7 +92,7 @@ Pulls (per `pyproject.toml`):
 ## Configuration
 
 ```env
-LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-haiku
+LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-sonnet
 LLM_ROTATION_MAX_RETRIES=3
 LLM_ROTATION_TIMEOUT=90
 LLM_ROTATION_COOLDOWN_SECONDS=300

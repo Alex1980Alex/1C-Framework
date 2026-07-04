@@ -1,0 +1,44 @@
+{
+  "task": "llm-rotation-sonnet-first",
+  "title": "LLM Rotation: sonnet-first primary order",
+  "created_at": "2026-07-04T19:52:39",
+  "updated_at": "2026-07-04T19:57:05",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T19:57:05"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T19:57:05",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-04T19:56:39"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T19:57:05"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-04T19:57:05"
+    }
+  ]
+}
