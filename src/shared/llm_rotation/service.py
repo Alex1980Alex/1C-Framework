@@ -690,11 +690,11 @@ class LLMRotationService:
         # Auto-select timeout by max_tokens tier
         if timeout is None:
             if max_tokens > 3000:
-                timeout = self._settings.timeout_heavy  # 180s
+                timeout = self._settings.timeout_heavy  # 240s
             elif max_tokens > 1024:
-                timeout = self._settings.timeout_generation  # 90s
+                timeout = self._settings.timeout_generation  # 120s
             else:
-                timeout = self._settings.timeout  # 60s
+                timeout = self._settings.timeout  # 90s
 
         # Budget advisory check
         self._budget.check_daily_reset()
