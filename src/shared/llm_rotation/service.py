@@ -170,8 +170,8 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         name="claude-cli-sonnet",
         base_url="",
         api_key_env="",
-        default_model="sonnet",
-        models=["sonnet", "haiku", "opus"],
+        default_model="claude-sonnet-5",
+        models=["claude-sonnet-5", "haiku", "opus"],
         format="claude-cli",
         requires_key=False,
         priority=1,
@@ -195,8 +195,8 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         name="anthropic-sonnet",
         base_url="https://api.anthropic.com",
         api_key_env="ANTHROPIC_API_KEY",
-        default_model="claude-sonnet-4-6",
-        models=["claude-sonnet-4-6", "claude-haiku-4-5", "claude-opus-4-7"],
+        default_model="claude-sonnet-5",
+        models=["claude-sonnet-5", "claude-haiku-4-5", "claude-opus-4-8"],
         format="anthropic",
         priority=3,
         rate_limit_rpm=50,
@@ -495,7 +495,7 @@ class LLMRotationService:
         max_turns=1, permission_mode="bypassPermissions")` actually works.
 
         `model` accepts haiku/sonnet/opus alias OR full model name. Aliases
-        are expanded to claude-haiku-4-5 / claude-sonnet-4-5 / claude-opus-4-7.
+        are expanded to claude-haiku-4-5 / claude-sonnet-5 / claude-opus-4-8.
         """
         # claude-agent-sdk is mandatory dep (pyproject.toml: claude-agent-sdk>=0.2,<0.3).
         # Single try/except — all names guaranteed by version pin.
@@ -517,8 +517,8 @@ class LLMRotationService:
         # Map short aliases to full model names; pass through if already full.
         alias_map = {
             "haiku": "claude-haiku-4-5",
-            "sonnet": "claude-sonnet-4-5",
-            "opus": "claude-opus-4-7",
+            "sonnet": "claude-sonnet-5",
+            "opus": "claude-opus-4-8",
         }
         full_model = alias_map.get(target_alias, target_alias)
 
