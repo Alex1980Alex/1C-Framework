@@ -30,12 +30,39 @@ ZAIProxy (HTTP server, port 8000)
 
 | # | Provider | Model | Format | Key Required |
 |---|----------|-------|--------|-------------|
-| 0 | **claude-cli-haiku** | **haiku** | **claude-cli** | No (CLI subscription) |
-| 1 | **claude-cli-sonnet** | **sonnet** | **claude-cli** | No (CLI subscription) |
+| 0 | **claude-cli-haiku** | `haiku` → claude-haiku-4-5 | **claude-cli** | No (CLI subscription) |
+| 1 | **claude-cli-sonnet** | `claude-sonnet-5` | **claude-cli** | No (CLI subscription) |
 | 2 | ollama-local | qwen2.5-coder:7b | ollama | No |
-| 3 | anthropic-sonnet | claude-sonnet-4-6 | anthropic | **Yes** (ANTHROPIC_API_KEY — silent skip if unset) |
+| 3 | anthropic-sonnet | `claude-sonnet-5` | anthropic | **Yes** (ANTHROPIC_API_KEY — silent skip if unset) |
+
+Model-ID resolution (`service.py` `alias_map` + `DEFAULT_PROVIDERS`, актуализировано 2026-07-04):
+`haiku`→`claude-haiku-4-5`, `sonnet`→`claude-sonnet-5`, `opus`→`claude-opus-4-8`.
+claude-cli-sonnet и anthropic-sonnet прибиты к `claude-sonnet-5` явно. **После правки моделей
+в коде нужен `/mcp reconnect`** — stdio-сервер держит старый код ([[feedback-mcp-stale-code-reconnect]]).
 
 **claude-cli-** providers use `claude -p` subprocess via the user's Claude Code CLI subscription quota (flat-rate, not token-billed). Latency 5-15s per spawn — acceptable for batch/indexing, **not for hot-path** (Self-RAG grader, hallucination check). For hot-path, set `ANTHROPIC_API_KEY` to enable anthropic-sonnet HTTP escape hatch.
+
+## Зачем это: экономия токенов по тиру модели
+
+**Главная цель llm-rotation — не скорость, а экономия токенов/квоты за счёт понижения тира модели.**
+Оркестратор (Claude Code — этот агент) работает на дорогом верхнем тире (**Opus**), который «жжёт»
+квоту в разы быстрее младших моделей. Делегируя рутинную генерацию через `llm_complete`, ты уводишь
+её на **дешёвый тир** (`claude-haiku-4-5` / `claude-sonnet-5`) или на бесплатный локальный `ollama-local` —
+и экономия реальна **даже в рамках одной подписки**, потому что разные тиры расходуют общую квоту с разной
+скоростью (Opus ≫ Sonnet > Haiku). Латентность 20–30 с здесь **не минус, а плата за экономию** — этот путь
+для фоновой/batch-генерации, не для hot-path.
+
+| Тир | Провайдер | Стоимость | Когда |
+|---|---|---|---|
+| Верхний (оркестратор) | Opus (текущая сессия) | Самый дорогой по квоте | Планирование, ревью, сложные решения |
+| Дешёвый делегат | claude-cli-haiku / -sonnet | Та же подписка, младший тир — расход квоты ×N меньше | grader, извлечение сущностей, черновики, summary |
+| Бесплатный | ollama-local (qwen2.5-coder:7b) | $0 (локально) | где хватает 7B, максимум экономии |
+| Платный (выкл.) | anthropic-sonnet | Per-token API — **тратит деньги** | только hot-path <2с при заданном `ANTHROPIC_API_KEY` |
+
+**Правило делегирования** (память `Opus = Planner/Reviewer, delegate generation`): что можно унести
+на младший тир без потери качества — уносить (через `llm_complete` / CheapLLM-адаптер); дорогой
+верхний тир беречь для того, что реально требует силы модели. Мерять эффект — `data/llm-rotation-metrics.jsonl`
+(provider, tokens, fallback) + `llm_get_stats`.
 
 **Removed** (broken / misconfigured per audit): zai-glm5, zhipu, gemini, openrouter, mistral, ollama-cloud. Re-add via custom `providers=` arg to `LLMRotationService` if needed.
 
@@ -72,7 +99,7 @@ LLM_ROTATION_COOLDOWN_SECONDS=300
 LLM_ROTATION_RATE_LIMIT_COOLDOWN=60
 ```
 
-API keys via standard env vars: `ZHIPU_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `MISTRAL_API_KEY`.
+API keys: только `ANTHROPIC_API_KEY` (для `anthropic-sonnet`, опционально — по умолчанию не задан → провайдер молча пропускается). Ключи `ZHIPU/GEMINI/OPENROUTER/MISTRAL` **больше не используются** (провайдеры удалены 2026-05-16; мёртвые записи вычищены из `.mcp.json` 2026-07-04). `ZAI_API_KEY` нужен только автономному `zai_proxy.py`, не самой ротации.
 
 ## CheapLLM Adapter
 
