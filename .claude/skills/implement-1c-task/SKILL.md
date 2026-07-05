@@ -276,39 +276,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 #### Этап 3R: Рефакторинг через bsl-semantic-search refactor (условный)
 
-**Применяется только если decision gate определил операцию как рефакторинг.**
-
-1. **Классифицировать символ** (routing matrix v2 — `src/bsl/semantic_search/refactor/routing_matrix.yaml`):
-   - `local_variable` / `parameter` / `module_local_proc` → ast-grep in-file (confidence 0.95)
-   - `module_export_proc` → ast-grep cross-file через Neo4j граф (confidence 0.85)
-   - `form_handler` → ast-grep + XML (confidence 0.95 после R5.5 calibration)
-   - `unknown` / динамические вызовы (`Выполнить()`) → **manual tier**
-
-2. **Вызвать нужный инструмент** (ВСЕГДА сначала `dry_run: true`):
-   ```
-   mcp__bsl-semantic-search__bsl_rename_symbol(
-       uri: "file:///path/to/Module.bsl",
-       line: N, character: M,
-       new_name: "НовоеИмя",
-       dry_run: true
-   )
-   ```
-   Или `bsl_replace_method_body` / `bsl_insert_after_method` — см. [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md).
-
-3. **Проверить план** (dry_run response):
-   - `status: "plan"` → показать `files_affected` + `edits`
-   - `status: "manual_required"` → переключиться на manual tier (Grep + Edit)
-
-4. **Подтвердить изменения** (`dry_run: false` с `confirm_token` из plan).
-
-5. **Верифицировать через EDT-MCP:**
-   ```
-   EDT-MCP: get_project_errors(project, severity="ERROR") → 0 ошибок
-   ```
-
-6. **Логировать в IMPLEMENTATION-PROGRESS.md:** backend (ast-grep/multilspy/manual), confidence, N файлов изменено.
-
-Полный workflow: [bsl-refactoring-workflow/SKILL.md](../bsl-refactoring-workflow/SKILL.md).
+**Применяется только если decision gate определил операцию как рефакторинг.** Классификация символа → routing matrix, `bsl_rename_symbol`/`bsl_replace_method_body` с `dry_run: true` → проверка плана → confirm → верификация `get_project_errors` → лог в IMPLEMENTATION-PROGRESS.md. Полный 6-шаговый протокол: [references/etap3r-refactoring.md](references/etap3r-refactoring.md); workflow: [bsl-refactoring-workflow/SKILL.md](../bsl-refactoring-workflow/SKILL.md).
 
 #### Стандартный Этап 3: Новый функционал (EDT-MCP)
 
@@ -380,65 +348,11 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 2. **Если `bsl_analyze` падает с parse error** — проверить, попадает ли ошибка в список known false-positive'ов (см. ниже). Если да — фиксируем как tool-limitation и считаем этап пройденным (EDT-валидация в Этапе 3 уже подтвердила корректность кода). Если нет — есть реальная ошибка, исправлять через Этап 3.
 
-3. Для новых процедур с чистой логикой (без обращений к базе):
-   ```
-   bsl-debugger: bsl_execute(code_fragment)
-     → проверить что логика работает (условия, циклы, массивы)
-   ```
-
-4. При сложной логике (вложенные циклы, условия) — пошаговая отладка:
-   ```
-   bsl-debugger: bsl_debug_start(file, breakpoints)
-   bsl-debugger: bsl_debug_step(session, "stepInto")
-   bsl-debugger: bsl_debug_variables(session)
-     → проверить значения на каждом шаге
-   bsl-debugger: bsl_debug_stop(session)
-   ```
-
-5. **Live runtime debug в Этапе 4 — экспериментальный шаг, НЕ путать с обязательной BP-verification Этапа 5.x.**
-
-   Этот шаг используется опционально для проверки сложной чистой логики (вложенные циклы по runtime-данным) ДО выхода в Этап 5. Обязательная live-валидация изменённого кода против ANALYSIS-REPORT — это **Этап 5.x BP verification** (8-шаговый протокол), а не этот шаг.
-
-   Базовый вызов (через `1c-debug-hmr` MCP, fallback к `1c-debug`):
-   ```
-   1c-debug-hmr: debug_connect(infobase_alias="<база>")  # если не connected с Этапа 0
-   1c-debug-hmr: debug_set_breakpoint(object_id="<UUID>", line=42, module_type="ObjectModule")
-   1c-debug-hmr: debug_ping()
-   ```
-   После срабатывания BP (post-BP-fire handshake, roadmap §13 / 2026-05-09):
-   ```
-   1c-debug-hmr: debug_stack_trace()       # без target_id — auto-resolve last_stopped
-   1c-debug-hmr: debug_variables()         # значения переменных в кадре stop'а
-   1c-debug-hmr: debug_evaluate(expression="Контрагент.ИНН")
-   1c-debug-hmr: debug_step(action="StepIn")
-   1c-debug-hmr: debug_step(action="Continue")  # release rphost
-   ```
-   Smoke-проверка инфраструктуры до начала: `python scripts/smoke_test_debug_pipeline.py --probe-only --json` — exit_code=0 значит handshake OK. Если `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` — заменить `1c-debug-hmr` на `1c-debug`.
-
-6. Исправить найденные **реальные** проблемы (повторить Этап 3 для исправлений).
+3-6. Опционально — `bsl_execute` на чистой логике, пошаговая `bsl_debug_start`/`bsl_debug_step`, экспериментальный live runtime debug через `1c-debug-hmr` (НЕ путать с обязательной Этап 5.x BP-verification), исправление реальных проблем (повтор Этапа 3). Known false-positive'ы `bsl_analyze` (директивы препроцессора, chained-call), workaround и правила логирования в IMPLEMENTATION-PROGRESS.md — полный текст: [references/etap4-static-analysis-detail.md](references/etap4-static-analysis-detail.md).
 
 **Контрольная точка:**
 - EDT `get_project_errors(severity="ERRORS") = 0` (авторитетный источник для 1С) — ОБЯЗАТЕЛЬНО
-- `bsl_lint.py --severity error` = 0 (предпочтительно, bsl-ls) ИЛИ `bsl_analyze` = 0 / только known false-positive'ы (fallback)
-
-**Known false-positive'ы `bsl_analyze` (OneScript-парсер ≠ 1С-компилятор):**
-
-| Паттерн | Сообщение парсера | Корректное поведение |
-|---|---|---|
-| `#Если ТолстыйКлиентОбычноеПриложение Или Сервер ... Тогда` (директива препроцессора в строке 1) | `Неожиданный токен: Тогда` | Стандартная BSL-директива препроцессора. EDT компилирует. Игнорировать. |
-| `Запрос.Выполнить().Пустой()` (chained method call) | `Ожидается имя свойства` | Стандартный паттерн 1С. Игнорировать. |
-| `НовыйОбъект.Записать(РежимЗаписиДокумента.Проведение)` (composite ref в аргументе) | разные | Если EDT принимает — игнорировать. |
-
-**Workaround при padении на препроцессоре:** передавать в `bsl_analyze(source=<тело_метода>)` только тело новой функции (без директив препроцессора), а не весь файл через `file=...`.
-
-**Когда ПРОПУСТИТЬ bsl_execute/bsl_debug (но НЕ bsl_analyze):**
-- Код состоит только из вызовов методов 1С (РегистрыСведений, Документы)
-- Код — простой SQL-запрос + проверка результата
-- В этих случаях достаточно bsl_analyze (или его graceful-skip)
-
-**Логирование в IMPLEMENTATION-PROGRESS.md:**
-- `bsl_analyze: 0 errors / N warnings` — успех
-- `bsl_analyze: SKIP (OneScript false-positive on <pattern>); EDT errors = 0` — tool-limitation, проверка через EDT
+- `bsl_lint.py --severity error` = 0 (предпочтительно, bsl-ls) ИЛИ `bsl_analyze` = 0 / только known false-positive'ы (fallback, см. reference)
 
 ---
 
@@ -493,55 +407,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Когда применяется:** для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки модификации из ANALYSIS-REPORT. Точки `[REFACTOR]` (rename / replace body / safe delete) — BP не требуется (изменение тождественно по поведению).
 
-**8-шаговый протокол** (для одной точки модификации):
-
-1. `mcp__1c-debug-hmr__debug_connect(infobase_alias=<имя из workspace>)` — если ещё не connected с Этапа 0. Ответ: `{status: "connected", session_id, attach: "registered"}`.
-2. `mcp__1c-debug-hmr__debug_set_breakpoint(object_id=<UUID>, line=<MODIFIED_LINE>, module_type=<TYPE>)` — `object_id` берётся из EDT-MCP `get_metadata_details(fqn)` или из ANALYSIS-REPORT (если автор указал UUID); `module_type` ∈ {`ObjectModule`, `ManagerModule`, `FormModule`, `CommandModule`, `ValueManagerModule`, `RecordSetModule`}. Wrapper auto-resolves `propertyID`.
-3. `mcp__1c-debug-hmr__debug_get_breakpoints` — verify BP в client cache; ожидаем enabled=true, lineNo совпадает.
-4. **Триггер выполнения** (выбрать один из):
-   - `mcp__1c-mcp-crud__execute_code` с минимальным BSL-harness'ом, вызывающим изменённую процедуру (например, `НовыйОбъект = Документы.<Имя>.СоздатьДокумент(); НовыйОбъект.<Поле> = ...; НовыйОбъект.Записать(РежимЗаписиДокумента.Проведение);`)
-   - `mcp__1c-mcp-crud__execute_query` для HTTP-сервисов / регистров — если изменения в SDBL-логике
-   - **ВАЖНО:** harness должен вызывать обновлённую конфигурацию БД — убедиться что шаг 0 Этапа 6 (`update_database`) выполнен ДО триггера, иначе BP fire на старой версии или вообще не fire'нет
-5. `mcp__1c-debug-hmr__debug_ping` — wait for `callStackFormed` event (max 3 ping iterations с паузой ~500ms между ними). Ответ содержит `last_stopped_target_id` после fire.
-6. **Если stopped:** `mcp__1c-debug-hmr__debug_stack_trace` (без `target_id` — auto-resolve из push event) → assert `frames[0].lineNo == MODIFIED_LINE` и `frames[0].moduleName` содержит ожидаемый объект. Если lineNo не совпадает — pipeline блокируется с error в IMPLEMENTATION-PROGRESS «BP-verification failed: expected line N in <module>, got line M».
-7. **Опционально:** `mcp__1c-debug-hmr__debug_variables` (auto-resolve target/stack) для assertion state'а — проверить значения локальных переменных против ожиданий из ANALYSIS-REPORT (если автор указал invariants).
-8. `mcp__1c-debug-hmr__debug_step(action="Continue")` — release rphost, дать сценарию завершиться. Без этого rphost остаётся в pause-state, следующие тесты падают по таймауту.
-
-**Fallback при BP не fire'нул** (шаг 5 даёт 3 timeout'а подряд):
-
-a. `mcp__1c-debug-hmr__debug_break_on_next` → повторить триггер. Полезно когда BP стоит на неактивной ветке (условие не сработало) — `break_on_next` ловит ЛЮБУЮ следующую BSL-операцию в attached rphost.
-b. Если и `break_on_next` не сработал — **pre-existing rphost gap** (см. roadmap 260508 §10/§11). В dev-среде: `force_recycle_rphost=True` в `debug_connect` — перезапустит rphost, новый процесс получит BP на свежем cold-start (Solution A). В shared base: НЕ recycle (другие пользователи), вместо этого использовать thin client `/Debug` (Solution C, см. 36.7) — оператор открывает Конфигуратор, начинает отладку, BP fire'нет на следующем сценарии.
-c. Если оба fallback'а не сработали — BP-verification помечается SKIP в IMPLEMENTATION-PROGRESS с описанием попыток; **pipeline блокируется** перед переходом на Этап 6, требуется ручная диагностика через `scripts/smoke_test_debug_pipeline.py --probe-only --json`.
-
-**Timeout для user-in-the-loop ветки (Solution C, shared base):** если выбран путь «оператор открывает Конфигуратор и запускает отладку вручную», пipelin'у нужен явный таймаут ожидания (default **15 минут** от начала Solution C wait'а). По истечении — BP-verification помечается `SKIP (user-action timeout, N minutes)` в IMPLEMENTATION-PROGRESS, pipeline продолжает на Этап 6 с warning'ом, что fix не валидирован live-trace'ом. Без таймаута pipeline зависает индефинитно при недоступном операторе. Cleanup: при abort'е/timeout'е Этапа 5.x — **обязательно** вызвать `debug_step(action="Continue")` для всех pending BP, иначе rphost остаётся в pause-state и блокирует следующие сессии (try/finally pattern).
-
-**Success criterion Этапа 5:** ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (либо SKIP с обоснованной причиной). Если хотя бы одна точка не покрыта без причины — **блокировать переход на Этап 6** с error «BP coverage incomplete: N of M MODIFIED points unverified».
-
-**Логирование в IMPLEMENTATION-PROGRESS.md** (для каждой точки):
-
-```markdown
-### Точка N — BP verification
-- Module: <FQN>:<lineNo>
-- BP set: ✓ (propertyID=<auto>, enabled=true)
-- Trigger: execute_code "<краткое описание harness>"
-- Stack hit: frames[0].lineNo=<actual_line>, moduleName=<actual_module> — assert PASS / FAIL
-- Variables (если проверялись): <name=value@stack_level>
-- Step Continue: ✓ released rphost
-```
-
-#### Этап 5.y: Regression diff (опционально, при повторных прогонах)
-
-**Цель:** автоматически детектировать регрессию на повторных запусках `/implement-1c-task` для той же задачи (например, после правки по review).
-
-**Когда применяется:** если в IMPLEMENTATION-PROGRESS.md footer есть `<!-- debug_session_id: <UUID> -->` от предыдущего прогона.
-
-**Шаги:**
-
-1. Прочитать `prev_session_id` из footer существующего IMPLEMENTATION-PROGRESS.md (если файл новый — SKIP с пометкой «no baseline, first run»).
-2. После завершения Этапа 5.x (BP verification успешен) — вызвать `mcp__1c-debug-hmr__debug_session_diff(prev_session_id=<UUID из footer>, curr_session_id=<текущий>)`.
-3. Парсить `verdict` ∈ {`NO_REGRESSION`, `IMPROVEMENT`, `NEUTRAL`, `REGRESSION`}.
-4. **Если `REGRESSION`** — блокировать переход на Этап 6 с error: вывести markdown-таблицу метрик из ответа (UI+ retries, BP fire counts, eval failures) в IMPLEMENTATION-PROGRESS под заголовком «Regression diff vs <prev_session_id>».
-5. **Если `NO_REGRESSION` / `IMPROVEMENT` / `NEUTRAL`** — записать таблицу метрик в PROGRESS, продолжить.
+**Полный 8-шаговый протокол** (`debug_connect`→`debug_set_breakpoint`→`debug_get_breakpoints`→триггер `execute_code`/`execute_query`→`debug_ping`→`debug_stack_trace` assert→`debug_variables`→`debug_step(Continue)`), fallback при не-fire (`debug_break_on_next` → `force_recycle_rphost` / thin client Solution C), 15-минутный timeout user-in-the-loop ветки, success criterion, шаблон логирования в IMPLEMENTATION-PROGRESS.md, и **Этап 5.y Regression diff** (`debug_session_diff` verdict-гейт) — полный текст: [references/etap5x-bp-verification.md](references/etap5x-bp-verification.md).
 
 **Контрольная точка:** Нет новых ошибок, все ссылки на изменённые методы корректны, ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (или обоснованно SKIP), regression verdict ≠ REGRESSION (если baseline есть).
 
@@ -555,80 +421,7 @@ c. Если оба fallback'а не сработали — BP-verification по�
 
 EDT-MCP `write_module_source` правит **исходники** проекта (`src/...`) и помечает изменения для последующей сборки. Запущенная инфобаза 1С работает с **уже скомпилированной** конфигурацией БД. Пока конфигурация БД не обновлена, любой `1c-mcp-crud: execute_code(...)` или проведение документа выполняет **СТАРУЮ** версию изменённой функции. Без шага 0 Этап 6 даёт ложно-отрицательный результат: «фикс не сработал» — потому что live-инфобаза не видит изменений.
 
-**Шаги:**
-
-0. **ОБНОВЛЕНИЕ КОНФИГУРАЦИИ БД** (ОБЯЗАТЕЛЬНО, никогда не пропускать):
-
-   **Основной путь (автоматически):**
-   ```
-   EDT-MCP: get_applications(projectName)
-     → найти applicationId работающего инфобейса
-   EDT-MCP: update_database(projectName, applicationId, fullUpdate=false, autoRestructure=true)
-     → инкрементальное обновление; полное (fullUpdate=true) — если меняется структура хранения
-   ```
-   Примечание: `update_database` модифицирует live-инфобазу — это **shared-state action** (CLAUDE.md). Если в инфобазе работают другие пользователи или это production — ОСТАНОВИТЬСЯ и спросить у пользователя.
-
-   **Программный gate (вместо LLM-judgment):** перед `update_database` обязательно проверить число активных подключений:
-   ```
-   EDT-MCP: get_applications(projectName)
-     → если len(applications) > 1 (есть подключения помимо текущей сессии Claude) —
-       HARD-STOP, явно показать список подключений и запросить подтверждение пользователя.
-   ```
-   Это убирает зависимость от того, «вспомнит» ли LLM о shared-state риске. Без программного gate можно случайно ребилднуть БД при работающих коллегах.
-
-   **Ручной путь (когда `update_database` отсутствует или нужна ручная проверка):**
-   - Сообщить пользователю: «Обнови конфигурацию БД через EDT (Project → Update Database) или через Конфигуратор (F7 → Обновить конфигурацию базы данных). После обновления скажи 'готово'.»
-   - Дождаться подтверждения.
-
-   **Smoke-test что обновление прошло:** вызвать изменённую функцию через `execute_code` на одном тестовом объекте; результат должен соответствовать новой логике.
-
-1. **Подготовка тестовых данных** (если требуется в тест-плане):
-   ```
-   1c-mcp-crud: execute_query(find_test_candidates)
-     → найти подходящие объекты для тестирования
-   1c-mcp-crud: execute_code(create_test_data)
-     → создать тестовые записи согласно тест-плану
-   1c-mcp-crud: execute_query(verify_test_data)
-     → убедиться что тестовые данные созданы
-   ```
-
-2. **Проведение документа** — ПОЛЬЗОВАТЕЛЬ проводит документ вручную в 1С.
-   Claude НЕ МОЖЕТ провести документ (нет GUI). Сообщить пользователю:
-   ```
-   "Проведи документ [ссылка/описание] в 1С:Предприятие.
-   После проведения скажи 'готово' — я проверю результат."
-   ```
-
-3. **Проверка результата**:
-   ```
-   1c-mcp-crud: execute_query(verification_query)
-     → проверить что данные изменились как ожидалось
-   ```
-
-4. **Очистка тестовых данных** (если создавались):
-   ```
-   1c-mcp-crud: execute_code(cleanup_test_data)
-     → вернуть данные к исходному состоянию
-   ```
-
-5. Зафиксировать результаты в IMPLEMENTATION-PROGRESS.md, включая:
-   - Способ обновления БД (auto через update_database / manual через EDT)
-   - Подтверждение что live-вызов изменённой функции вернул новое значение
-
-**Альтернатива при невозможности обновить БД** (production-окружение, другие пользователи в БД, отсутствие applicationId):
-- **SQL-симуляция новой логики** через `execute_query` — построить запрос, повторяющий поведение изменённой функции на тех же данных. Сравнить старое vs новое поведение на репрезентативных кейсах из тест-плана. Зафиксировать как `Тест: симуляция через SQL (без обновления БД)` — это НЕ полная live-валидация, требует пометки в IMPLEMENTATION-PROGRESS.md.
-
-**ВАЖНО:** Этот этап ИНТЕРАКТИВНЫЙ — требует участия пользователя для проведения документов и (часто) для обновления БД.
-Если пользователь не может провести сейчас — пометить как "ожидает ручного тестирования", при этом SQL-симуляция должна быть выполнена в любом случае.
-
-**YAxUnit unit-тесты (first-class deliverable, параллельно с live-тестированием):**
-Если реализация затронула серверные методы (общий модуль / модуль объекта / модуль менеджера) —
-выполнить `/write-1c-unit-tests <папка задачи>` → skill `yaxunit-unit-testing`:
-- Написать тест-модули в `src/bsl/exts/UnitTests/CommonModules/` (positive + boundary + negative кейсы)
-- Задеплоить расширение UnitTests (`LoadConfigFromFiles + UpdateDBCfg`)
-- Smoke-прогон `mcp__mcp-onec-test-runner__run_module_tests` → `passed > 0, failed == 0`
-Полный прогон с обновлением `.run-state.json` — через `/run-1c-unit-tests <папка задачи>`.
-YAxUnit дополняет `run_yaxunit_tests` (EDT-MCP, быстрый smoke) и BDD-трек (`/run-1c-tests`), но не заменяет их.
+**Шаги 0-5** (обновление конфигурации БД через `update_database` с программным gate на активные подключения → подготовка тестовых данных → пользователь проводит документ → проверка результата → очистка → фиксация в PROGRESS), альтернатива SQL-симуляции без обновления БД, и **YAxUnit unit-тесты** (`/write-1c-unit-tests` → `yaxunit-unit-testing`, деплой расширения, smoke `run_module_tests`) — полный текст: [references/etap6-live-testing-detail.md](references/etap6-live-testing-detail.md).
 
 ---
 
@@ -636,154 +429,19 @@ YAxUnit дополняет `run_yaxunit_tests` (EDT-MCP, быстрый smoke) �
 
 **Цель:** Зафиксировать что было сделано.
 
-**Создать/обновить файл IMPLEMENTATION-PROGRESS.md** в той же папке docs/:
-
-```markdown
-# НОМЕР-ЗАДАЧИ — Прогресс реализации
-
-## Статус: В работе / Завершено / Ожидает тестирования
-
-Pipeline mode: Full | Full (no-BP) | Code-only | Read-only verify | Read-only research
-
-## Выполненные точки модификации
-
-### Точка N: Описание
-- **Файл:** путь
-- **Действие:** что сделано
-- **Строки:** актуальные (из EDT-MCP)
-- **Валидация запросов:** validate_query OK / исправлен (описание)
-- **Ошибки EDT:** 0 / исправлены (описание)
-- **bsl_analyze:** 0 ошибок / N предупреждений (список)
-- **BP verification:** PASS (frames[0].lineNo=N) / SKIP (причина) / FAIL (детали)
-- **Тест на данных:** пройден / ожидает / не требуется
-- **Отклонения от ANALYSIS-REPORT:** нет / описание
-
-## Debug session (если режим Full)
-
-- session_id: <UUID>
-- session_summary: вывод `debug_session_summary(format="markdown")` — счётчики BP fire, eval, UI+ retries
-- Regression diff vs prev (если был baseline): verdict, изменения метрик
-
-## Результаты тестирования
-- Тест X.Y: PASS / FAIL / SKIP (причина)
-
-## Открытые вопросы (если есть)
-
-<!-- debug_session_id: <UUID последнего успешного прогона; читается следующим запуском /implement-1c-task для regression diff Этапа 5.y> -->
-```
-
-**Правила footer'а:**
-- `debug_session_id` записывается ТОЛЬКО при успешном завершении всего pipeline (Этап 5.x PASS, Этап 6 PASS).
-- При REGRESSION verdict в Этапе 5.y — footer НЕ перезаписывается (baseline сохраняется для следующей попытки исправления).
-- Если режим не Full и BP-verification была SKIP — footer не создаётся (нет валидной session для diff).
+**Создать/обновить файл IMPLEMENTATION-PROGRESS.md** в той же папке docs/ (статус, pipeline mode, точки модификации, debug session, результаты тестирования, footer `debug_session_id`) — полный шаблон + правила footer'а: [references/etap7-progress-template.md](references/etap7-progress-template.md).
 
 ---
 
 ### Этап 8: Git commit
 
-**Цель:** Закоммитить изменения, аккуратно работая с многоуровневой структурой репозиториев.
+**Цель:** Закоммитить изменения, аккуратно работая с многоуровневой структурой репозиториев (main repo → level-2 обычная директория → level-3 submodule/gitlink).
 
-#### Структура репозиториев
+**Кратко:** submodule с BSL-кодом коммитится отдельно (`git -C "<submodule>" add <file> && commit`), submodule с документацией — отдельно, затем main repo bump'ит оба gitlink'а (`git add "<submodule-path>"` — не `-A`, не голая директория). Identity без `git config` — через per-command `-c user.name=... -c user.email=...`. Кириллические пути — через `-c core.quotepath=false`.
 
-Layout — **трёхуровневый**, при этом level 2 это **обычная директория** main repo (не git-репо, не submodule). Подтверждено 2026-05-07 через `git ls-files --stage` и инспекцию `.git/` в каждой папке цепочки.
+**⚠ НЕ использовать** `git add -A` в submodule и `git add <submodule-dir>` в родителе (индексирует untracked внутри, `fatal: filename too long` на Windows).
 
-```
-Level 1 — MAIN repo (.git здесь)
-C:\1С-Framework\
-│
-├── configuration/                                 ← Level 2: обычная подпапка main, БЕЗ своего .git/
-│   ├── 260304_GKSTCPLK-2182…/                     ← Level 3: SUBMODULE (gitlink in main)
-│   │   ├── .git                                   ← gitlink-файл (содержимое = "gitdir: ...")
-│   │   └── docs/<task>/IMPLEMENTATION-PROGRESS.md
-│   └── 260416_GKSTCPLK-2368…/                     ← Level 3: SUBMODULE (gitlink in main)
-│
-├── ИБTransportManagementDevelop/                  ← Level 2: обычная подпапка main, БЕЗ своего .git/
-│   └── Конфигурация/                              ← Level 3: SUBMODULE (gitlink in main)
-│       ├── .git                                   ← gitlink-файл
-│       └── src/.../*.bsl                          ← BSL-исходники (правит EDT-MCP)
-│
-├── external/1c_mcp/                               ← обычно untracked в main
-└── …
-```
-
-**Ключевые факты:**
-- **Level 1 (main repo):** единственный репозиторий с настоящим каталогом `.git/` в корне. Все gitlink'и хранятся в индексе main.
-- **Level 2 (`configuration/`, `ИБTransportManagementDevelop/`):** просто директории — `git rev-parse --is-inside-work-tree` внутри них всё ещё показывает main, своего `.git/` НЕТ. Сюда нельзя `cd` и сделать локальный коммит — это будет коммит в main.
-- **Level 3 (`configuration/<TaskFolder>/`, `ИБTransportManagementDevelop/Конфигурация/`):** submodule'ы — отдельные git-репозитории со своим `.git`-указателем (gitfile), своей историей и своим `HEAD`.
-- В индексе main путь submodule хранится **цельным** (со слешем): `"configuration/<TaskFolder>"` и `"ИБTransportManagementDevelop/Конфигурация"`. Это и есть аргумент для `git add` при bump'е gitlink'а.
-- `git add ИБTransportManagementDevelop` (без `/Конфигурация`) — **другая** операция: индексирует level-2 директорию как контент main, что обычно нежелательно (см. Diagnostic ниже).
-- Промежуточного git-репо между level 1 и level 3 нет (в отличие от ошибочного описания v2.5.0). Поэтому шага «commit gitlink в middle repo» в этом pipeline не существует.
-
-#### Шаги
-
-1. **Submodule с BSL-кодом** (`ИБTransportManagementDevelop/Конфигурация`):
-   ```bash
-   git -C "ИБTransportManagementDevelop/Конфигурация" add <specific_file_path>
-   git -C "ИБTransportManagementDevelop/Конфигурация" commit -m "feat(НОМЕР-ЗАДАЧИ): краткое описание"
-   ```
-   ⚠ **НЕ использовать `git add -A`** — submodule может содержать чужой dirty state.
-   ⚠ **НЕ использовать `git add <submodule-dir>`** в родителе — git попытается проиндексировать **untracked файлы внутри** (включая длинные пути Windows → fatal: filename too long).
-
-2. **Submodule с документацией** (`configuration/<TaskFolder>`) — закоммитить IMPLEMENTATION-PROGRESS.md:
-   ```bash
-   git -C "configuration/<TaskFolder>" add "docs/<task>/IMPLEMENTATION-PROGRESS.md"
-   git -C "configuration/<TaskFolder>" commit -m "docs(НОМЕР-ЗАДАЧИ): add implementation progress"
-   ```
-
-3. **Main repo** — обновить оба gitlink'а (по одному коммиту на submodule или одним коммитом сразу):
-   ```bash
-   git add "ИБTransportManagementDevelop/Конфигурация"
-   git commit -m "chore(НОМЕР-ЗАДАЧИ): bump Конфигурация submodule ref"
-
-   git add "configuration/<TaskFolder>"
-   git commit -m "chore(НОМЕР-ЗАДАЧИ): bump configuration submodule ref"
-   ```
-   Здесь `git add <submodule_path>` — **корректно**: git распознаёт submodule entry и обновляет только gitlink, не содержимое.
-
-**Итого:** одна задача = до 4 коммитов в 3 репозиториях (BSL submodule, docs submodule, main ×2 gitlink). Если правка только в одном из submodule — соответствующая половина пропускается.
-
-#### Git identity без `git config`
-
-CLAUDE.md запрещает `git config` (включая локальный). Если submodule наследует identity от родителя — коммит проходит. Если в submodule пусто — коммит падает с `fatal: unable to auto-detect email address`. Решение — **per-command override**:
-
-```bash
-git -c user.name="Имя" -c user.email="email@example.com" commit -m "..."
-```
-
-Эти `-c` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Identity берётся из main repo (`git config user.name` + `git config user.email`).
-
-#### Diagnostic: подтвердить 3-уровневый layout перед коммитом
-
-Шаг 1 — убедиться что **level 3** (submodule) действительно зарегистрирован в индексе **level 1** (main):
-
-```bash
-git ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
-# ожидается: 160000 <hash> 0  ИБTransportManagementDevelop/Конфигурация
-git ls-files --stage "configuration/<TaskFolder>"
-# ожидается: 160000 <hash> 0  configuration/<TaskFolder>
-```
-
-Mode `160000` = gitlink (submodule). Если строка пуста или mode ≠ `160000` — submodule не зарегистрирован, остановиться и сверить с пользователем (вероятно сломан `.gitmodules` или рабочий tree разошёлся с индексом).
-
-Шаг 2 — убедиться что **level 2** (`configuration/`, `ИБTransportManagementDevelop/`) — действительно простая директория, а не самозванец:
-
-```bash
-test -d "ИБTransportManagementDevelop/.git" && echo "АНОМАЛИЯ: level 2 имеет свой .git" || echo "OK: level 2 — обычная директория"
-test -d "configuration/.git" && echo "АНОМАЛИЯ: level 2 имеет свой .git" || echo "OK: level 2 — обычная директория"
-```
-
-Ожидание: `OK` для обоих. Если у level-2 директории появился собственный `.git/` — это другой layout (как ошибочно описывала v2.5.0), и git-flow из шагов 1-3 надо переcмотреть отдельно.
-
-Шаг 3 — `git status` в main: типичный `m configuration/<TaskFolder>` или `m ИБTransportManagementDevelop/Конфигурация` (lowercase `m` = submodule modified content) — **нормально**, ожидается перед bump'ом gitlink'а. А вот `M ИБTransportManagementDevelop` (uppercase, без `/Конфигурация`) — **аномалия**: значит внутри level-2 директории появились трекаемые main'ом файлы вне зарегистрированного submodule. Не bump'ить, разобраться сначала.
-
-**⚠ Windows + Cyrillic submodule paths (`ИБTransportManagementDevelop/Конфигурация`):** по умолчанию `core.quotepath=true`, и git выводит кириллицу как octal-escape (`"\320\230\320\221..."`). Это ломает парсинг `git status --porcelain` в скриптах и затрудняет визуальную проверку. CLAUDE.md запрещает `git config` (включая локальный), поэтому решение — **per-command override**:
-
-```bash
-git -c core.quotepath=false status --short
-git -c core.quotepath=false ls-files --stage "ИБTransportManagementDevelop/Конфигурация"
-```
-
-Эти `-c core.quotepath=false` действуют только в рамках одной команды и **не пишутся** в `.git/config`. Без флага кириллические пути нечитаемы. См. memory `git-porcelain-parsing` для деталей парсинга.
+Полная структура репозиториев (3-уровневая диаграмма), пошаговый git-flow, git identity workaround и diagnostic-команды для подтверждения layout перед коммитом: [references/etap8-git-workflow.md](references/etap8-git-workflow.md).
 
 ---
 
