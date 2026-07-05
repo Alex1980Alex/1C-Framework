@@ -22,20 +22,7 @@ commands:
 
 # Реализация задачи 1С — 8-этапный pipeline (v2.8)
 
-> **История версий:**
-> - **v2.8.1 (2026-06-15):** Этап 4 — добавлен опц. шаг 0 «автоформат» (`bsl_lint.py --format` → bsl-ls `--format` in-place, идемпотентно) ПЕРЕД диагностикой. Phase 9 (roadmap 260614). Источник: [ADR-020](../../skills/architecture-research/adr/020-phase9-1c-tooling-adoption-verified.md).
-> - **v2.8.0 (2026-06-15):** Этап 4 — `bsl_lint.py` (bsl-ls, 128+ диагностик) как **предпочтительный** BSL-статанализ (точнее OneScript `bsl_analyze`: нет false-positive на `#Если`/chained-call; OneScript → fallback). Интеграция Phase 9-инструмента (ADR-020) в пайплайн. Источник: [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
-> - **v2.7.0 (2026-05-11):** интеграция `1c-debug-hmr` в Этап 0 (preflight через `debug_health_check`) и Этап 5 (Live BP-verification 8-шаговый протокол для каждой `[ADDED]`/`[MODIFIED]` точки, regression diff через `debug_session_diff` против baseline `prev_session_id` из footer'а IMPLEMENTATION-PROGRESS.md). Capability matrix расширена осью `1c-debug-hmr` с новым режимом **Full (no-BP)** — pipeline работает при отсутствии debug-hmr, BP-verification SKIP. Шаблон IMPLEMENTATION-PROGRESS.md получил блок «Debug session» и footer-маркер `<!-- debug_session_id: <UUID> -->`. Этап 4 актуализирован: переход с `1c-debug` (plain) на `1c-debug-hmr` (default), plain оставлен через `IMPLEMENT_1C_USE_PLAIN_DEBUG=true` для CI. Pre-existing rphost gap покрыт через `force_recycle_rphost=True` (Solution A) для dev и опциональный thin client `/Debug` (Solution C) для shared base. Источник: [roadmap 260510](../../../docs/roadmap/260510_ROADMAP_DEBUG_HMR_INTEGRATION_INTO_1C_PIPELINE.md) Phase 1 (§3.1+§3.2+§3.3).
-> - **v2.6.2 (2026-05-08):** добавлено **Ограничение 3** в раздел «Известные ограничения 1c-mcp-crud» — `execute_code` запрещает `Возврат` вне процедуры/функции (фрагмент оборачивается в анонимный top-level блок, не тело функции). Workaround — переписывать ранние выходы через ветвление `Если/Иначе` с присваиванием `Результат` в каждой ветке. Источник — известное ограничение, обнаруженное в ходе e2e GKSTCPLK-2182-A 2026-05-07 ([roadmap §7](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md#7-validation-end-to-end-2026-05-07)). Никакого нового кода / decision gate / tools — только формулировка раздела ограничений.
-> - **v2.6.1 (2026-05-07):** follow-up к v2.6.0 после повторного e2e на той же сессии. **Этап 8 — переписан layout-блок** под точную 3-уровневую структуру. v2.6.0 описывала main как «tracks два submodule напрямую», но фактически **оба** submodule-пути проходят через обычную (не-git) подпапку: `configuration/` и `ИБTransportManagementDevelop/` — это level 2, регулярные директории main repo без своего `.git/`; submodule (gitlink) сидит на level 3 (`configuration/<TaskFolder>/`, `ИБTransportManagementDevelop/Конфигурация/`). Уточнено что path в индексе main хранится цельным (`"configuration/260304_GKSTCPLK-2182…"`, `"ИБTransportManagementDevelop/Конфигурация"`) и что `git add <subfolder>` без слеша/подсуба родителя — это **другая операция** (модификация level-2 директории), а не bump submodule. Diagnostic-пример обновлён ровно под этот layout. Никакого нового кода / нового decision gate / новых tools — только формулировка Этапа 8.
-> - **v2.6.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2182-A (АРМ «Композитные пробы»). Две правки. **Этап 1 — path-fallback:** ANALYSIS-REPORT'ы пишут Designer-style пути (`Documents/<Имя>/Ext/ManagerModule.bsl`, `DataProcessors/<Имя>/Forms/<Форма>/Ext/Form/Module.bsl`); EDT в проекте flatten'ит их до своих абсолютных путей (напр. `DataProcessors/гкс_АРМКомпозитныеПробы/Forms/Форма/Module.bsl`). При этом `read_method_source(project, <designer_path>, ...)` падает с `File not found`. Добавлен явный шаг-fallback: при File-not-found → `list_modules(project, objectName=<ИмяОбъектаКонфигурации>)` → перебрать возвращённые `module_path`, выбрать совпадающий по типу модуля (Manager / Object / Form), повторить `read_method_source` с EDT-путём. Зафиксировать соответствие Designer→EDT в IMPLEMENTATION-PROGRESS.md (для будущих правок этой же задачи). **Этап 8 — layout:** диаграмма «трёх уровней вложенности» в v2.5.0 описывала `ИБTransportManagementDevelop/` как отдельный standalone-репо (НЕ submodule main). E2e-валидация 2026-05-07 (4 коммита в 3 репозиториях: `d3db501` BSL → `71a9ba481` main gitlink Конфигурация → `c6616817` docs submodule PROGRESS → `907b89ce1` main gitlink configuration) показала: фактически main repo tracks **два submodule напрямую** — `configuration/<TaskFolder>` (документация) и `ИБTransportManagementDevelop/Конфигурация` (BSL-исходники). Папка `ИБTransportManagementDevelop/` сама — обычная подпапка main repo, не отдельный git-репозиторий. Промежуточного «middle repo» с собственным `.git` нет; шаг 2 v2.5.0 (commit gitlink в `ИБTransportManagementDevelop`) удалён. Diagnostic-блок переписан под new-layout (`git ls-files --stage ИБTransportManagementDevelop/Конфигурация` ожидает entry с mode 160000).
-> - **v2.5.0 (2026-05-07):** калибровка после end-to-end прогона на GKSTCPLK-2335. **Этап 4** — явный graceful-skip для `bsl_analyze` на production BSL: OneScript-парсер падает на директивах препроцессора `#Если ... Тогда` и chained-вызовах вида `Запрос.Выполнить().Пустой()` (стандартные 1С-конструкции). Если EDT `get_project_errors` = 0, ошибки `bsl_analyze` на этих паттернах фиксируем как tool-limitation и идём дальше. **Этап 6** — добавлен ОБЯЗАТЕЛЬНЫЙ шаг 0 «Обновление БД» через `mcp__edt-mcp__update_database` (или ручной EDT → Update Database) ПЕРЕД любым `execute_code`-вызовом изменённой функции; без этого live-инфобаза работает на старой скомпилированной конфигурации и `execute_code` возвращает старое поведение. **Этап 8** — переписан раздел git: 3-уровневая структура repo (main / submodule / nested standalone), запрет `git add <submodule-dir>` (подцепляет untracked), pattern `git -c user.name=... -c user.email=...` для submodule без локальной identity (CLAUDE.md запрещает `git config`). Добавлен раздел [Известные ограничения 1c-mcp-crud](#известные-ограничения-1c-mcp-crud) с workaround'ами для сериализации ссылок (`ПРЕДСТАВЛЕНИЕ()`) и пустого `attributes:[]` для регистров.
-> - **v2.4.0 (2026-05-07):** в Preflight добавлен **TCP-probe** портов `:8765` (edt-mcp) и `:1550` (1С debug agent) — отдельный сигнал от наличия MCP-tool в сессии. Добавлен **fallback для Этапа 5** (`find_references` через `bsl-code-search:find_callers` + `bsl-semantic-search:bsl_call_graph`; `get_project_errors` через `bsl-debugger:bsl_analyze` per-file). Кросс-ссылки на новый раздел [16.6 EDT-MCP setup](../../../docs/framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md) и smoke-test `scripts/smoke_test_implement_1c_task.py`. Триггер изменений — выполнение Phase 4 + 5 [roadmap'а 260505](../../../docs/roadmap/260505_ROADMAP_IMPLEMENT_1C_TASK_PIPELINE_FIX.md).
-> - **v2.3.0 (2026-05-05):** добавлен **Preflight** — обязательная проверка доступности `edt-mcp` / `1c-mcp-crud` / `bsl-debugger` перед стартом Этапа 1. Добавлен **fallback для Этапа 1** через `bsl-semantic-search` + `bsl-code-search` + `Read` (когда `edt-mcp` не зарегистрирован). Этапы 2, 3 (write), 5, 6 объявлены **hard-fail без edt-mcp/1c-mcp-crud** — частичный read-only режим возможен, запись кода и валидация на живых данных — нет. Триггер изменения — smoke-test 2026-05-05, в котором обнаружено что `mcp__edt-mcp__*` и `mcp__1c-mcp-crud__*` могут отсутствовать в сессии при проблемах с EDT (порт 8765) или с путями `.mcp.json`.
-> - **v2.2.0 (2026-04-19):** добавлен conditional gate на рефакторинг в Этапе 3 после [Serena Audit Phases 0-7](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md). Новые MCP-инструменты `bsl_rename_symbol`, `bsl_replace_method_body`, `bsl_insert_after_method` (bsl-semantic-search refactor) применяются через [bsl-refactoring-workflow](../bsl-refactoring-workflow/SKILL.md) и [bsl-symbol-editing](../bsl-symbol-editing/SKILL.md) — только для refactoring-задач (rename / замена тела / safe delete). Для нового функционала — текущий путь EDT-MCP без изменений.
-> - **v2.1.1 (2026-04-14):** откат Этапа 0 «Активация проекта в Serena» после [углублённого аудита](../../../docs/roadmap/260414_Serena%20Audit%20углублённый%20анализ%20эффективности.md) — `language: bsl` в `.serena/project.yml` невалиден, LSP на BSL не работает, хук `serena-index-checker.py` не существует. Serena оставлена как опциональный вспомогательный инструмент.
-> - **v2.1.0 (2026-04-14):** добавлен Этап 0 (откачен).
-> - **v2.0.0 (2026-03-13):** 8-этапный pipeline с EDT-MCP + 1c-mcp-crud + bsl-debugger.
+> **История версий:** полный список изменений v2.0.0 → v2.8.1 — [references/version-history.md](references/version-history.md). Текущая версия — 2.8.1 (2026-06-15): Этап 4 получил опциональный шаг 0 «автоформат» (`bsl_lint.py --format`) перед диагностикой.
 
 ## Overview
 
@@ -75,19 +62,7 @@ Skill для реализации задачи по конфигурации 1С
 | `get_applications` | Этап 6: получить applicationId работающего инфобейса (вход для update_database) |
 | `update_database` | Этап 6: обновить конфигурацию БД ПЕРЕД live-вызовом изменённой функции (shared-state action — спросить пользователя) |
 
-**Полный набор EDT-MCP по этапам** (дополняет hot-path таблицу выше; по implement задействовано ~36 из 70 тулов):
-- **Этап 0 Preflight:** `get_edt_version` · `get_server_status` · `list_toolsets` · `enable_toolset` (+ `list_projects`).
-- **Этап 1 Подготовка (read/nav):** + `get_metadata_objects` · `get_metadata_details` · `get_configuration_properties` · `list_subsystems` · `get_subsystem_content` · `go_to_definition` · `get_method_call_hierarchy`.
-- **Этап 3 BSL + CRUD метаданных:** + `create_metadata` · `modify_metadata` · `rename_metadata_object` · `delete_metadata` · `adopt_metadata_object` · `create_project` (kind=extension); settable-свойства — `get_metadata_details(assignable=true)`.
-- **Этап 4 Статанализ (EDT-валидация):** `get_problem_summary` · `get_markers` · `get_check_description` — комплементарно `bsl_lint.py`/`bsl_analyze`.
-- **Этап 5 Верификация:** `revalidate_objects` (+ `find_references` / `get_method_call_hierarchy`).
-- **Этап 6 Тест/применение к БД:** `update_database` · `run_yaxunit_tests` (YAXUnit-юнит-проверка) · `resync_to_disk`.
-- **Recovery (любой этап):** `clean_project`.
-- **Прочее:** discovery по тегам (Этап 1) — `get_tags` · `get_objects_by_tags`; YAXUnit-конфиг (Этап 6) — `list_configurations` (имя runtime-client); сквозное — `get_tool_guide` (preconditions тула перед нетривиальным вызовом); deprecated — ~~`debug_yaxunit_tests`~~ → `run_yaxunit_tests(debug=true)`.
-- **⚠ Деструктивные (confirm-гейт, только по явному запросу):** `update_database` · `delete_metadata` · `rename_metadata_object`.
-- **Вне пайплайна (админ/инфра — НЕ шаги задачи):** `create_infobase` · `delete_infobase` · `create_launch_config` · `delete_launch_config` · `delete_project` · `export_configuration_to_xml` · `import_configuration_from_xml` · `generate_translation_strings` · `translate_configuration` · `get_translation_project_info`.
-
-> Отладочный EDT-MCP-тулсет (`debug_launch` · `debug_status` · `set_breakpoint` · `remove_breakpoint` · `list_breakpoints` · `wait_for_break` · `get_variables` · `evaluate_expression` · `step` · `resume` · `terminate_launch` · `get_applications`) — **альтернатива `1c-debug-hmr`** для BP-verification Этапа 5.x внутри EDT (основной путь — `1c-debug-hmr`, секция ниже). Полный справочник 70 тулов — skill [`edt-mcp`](../edt-mcp/SKILL.md).
+**Полный набор EDT-MCP по этапам** (~36 из 70 тулов, дополняет hot-path таблицу выше): [references/tools-full-reference.md](references/tools-full-reference.md).
 
 ### 1c-mcp-crud — верификация на живых данных
 
@@ -167,41 +142,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
    | `1c-mcp-crud` | `mcp__1c-mcp-crud__get_metadata` (или `ToolSearch query: "+1c crud"`) | в результатах есть `mcp__1c-mcp-crud__*` |
    | `bsl-debugger` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
 
-2. **TCP-probe ключевых портов** — отдельный сигнал от наличия MCP-tool в сессии (tool может быть зарегистрирован, но HTTP-bridge упасть):
-
-   | Порт | Сервис | Команда | Ожидание |
-   |---|---|---|---|
-   | `:8765` | EDT-MCP HTTP-bridge | `Test-NetConnection -ComputerName localhost -Port 8765 -InformationLevel Quiet` | `True` для режимов **Full** и **Code-only** |
-   | `:1550` | 1С debug agent (`ragent.exe -debug`) | `Test-NetConnection -ComputerName localhost -Port 1550 -InformationLevel Quiet` | `True` только если нужна runtime-отладка в Этапе 4 |
-
-   Альтернатива одной командой:
-   ```powershell
-   python scripts/smoke_test_implement_1c_task.py
-   ```
-   Скрипт парсит [.mcp.json](../../../.mcp.json), TCP-probe + MCP-handshake, возвращает exit-code `0` (Full) / `1` (degraded) / `2` (unusable). Подробности: [16.6 EDT-MCP setup](../../../docs/framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md).
-
-3. **Debug environment health** — вызвать `mcp__1c-debug-hmr__debug_health_check(mode="probe")` (structured <1с health-check вместо 5-7 manual probes). Парсить ответ:
-
-   - `ready: true` → BP-verification в Этапе 5 доступна, продолжить
-   - `ready: false` + непустой `auto_prepare_available[]` → предложить пользователю prepare-actions (whitelist: kill-stale-rphosts, restart-ragent через `mode="prepare"`); НЕ запускать без подтверждения (shared-state action)
-   - `ready: false` + manual fix only → BP-verification в Этапе 5 будет SKIP с пометкой; surface `recommended_workflow` token из ответа
-   - tool недоступен (debug-hmr не зарегистрирован) → fallback к `mcp__1c-debug__*` (plain wrapper), либо BP-verification SKIP
-
-4. Сопоставить результат с матрицей капабилити:
-
-   | edt-mcp | 1c-mcp-crud | bsl-debugger | 1c-debug-hmr | Режим pipeline |
-   |---|---|---|---|---|
-   | ✓ | ✓ | ✓ | ✓ | **Full** — все 8 этапов работают как описано, Этап 5 включает BP-verification |
-   | ✓ | ✓ | ✓ | ✗ | **Full (no-BP)** — все этапы работают, Этап 5 BP-verification SKIP (заметка в IMPLEMENTATION-PROGRESS) |
-   | ✓ | ✗ | * | * | **Code-only** — Этапы 1, 3 (write), 4, 5, 7, 8. Этап 2 — только `validate_query` (синтаксис), без `execute_query`. Этап 6 — SKIP с пометкой "ожидает ручного тестирования". BP-verification доступна если debug-hmr ✓ |
-   | ✗ | ✓ | * | * | **Read-only verify** — Этап 2 на данных, Этап 6 на данных. Запись кода невозможна (нет `write_module_source`) → STOP с просьбой запустить EDT |
-   | ✗ | ✗ | * | * | **Read-only research** — только Этап 1 через fallback (см. ниже), сбор контекста. Запись и валидация невозможны → STOP перед Этапом 2 |
-
-   `1c-debug-hmr` — ортогональная ось: его отсутствие НЕ блокирует pipeline, только отключает live BP-verification в Этапе 5 (см. §5.x). Smoke-test `scripts/smoke_test_implement_1c_task.py --json` отражает доступность в поле `mcp_health.debug_hmr`.
-
-5. Если режим не **Full** — сообщить пользователю явно: какие серверы отсутствуют, какие этапы будут пропущены, что нужно поднять (EDT на `localhost:8765`, путь к `1c-mcp-crud` в `.mcp.json`, см. [16.6](../../../docs/framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.6_EDT_MCP_setup.md)). Если debug-hmr unavailable но pipeline-mode иначе Full — это **Full (no-BP)**, не блокировать, только warn. Дождаться решения: продолжить в деградированном режиме или прервать.
-
-6. Сохранить выбранный режим в IMPLEMENTATION-PROGRESS.md под заголовком `Pipeline mode: Full | Full (no-BP) | Code-only | Read-only verify | Read-only research`. Если debug-hmr ✓ — также записать `debug_session_id` (из `debug_health_check` response или `debug_connect` Этапа 5) в footer файла как `<!-- debug_session_id: <UUID> -->` (используется в §5.x regression diff на повторных прогонах той же задачи).
+2-6. TCP-probe портов (`:8765` edt-mcp, `:1550` debug agent, либо `python scripts/smoke_test_implement_1c_task.py`), debug environment health через `debug_health_check(mode="probe")`, сопоставление с матрицей капабилити (Full / Full (no-BP) / Code-only / Read-only verify / Read-only research), сообщение пользователю о деградации, сохранение режима + `debug_session_id` в IMPLEMENTATION-PROGRESS.md footer — полный текст шагов и таблица капабилити: [references/etap0-preflight-detail.md](references/etap0-preflight-detail.md).
 
 **Контрольная точка:** Известен режим pipeline. Все последующие этапы выполняются с учётом ограничений режима.
 
