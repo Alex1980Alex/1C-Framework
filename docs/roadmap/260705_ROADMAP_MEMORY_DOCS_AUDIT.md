@@ -171,6 +171,12 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 
 > Append-only, новые записи сверху.
 
+### 2026-07-05 — Runtime-верификация G2: PASS (все слои)
+- E2E `--apply` на КОПИИ продакшн-силоса: синтетический near-дубль (case/whitespace-вариация) корректно слит (winner=higher-confidence, `.bak` создан), повторный прогон **идемпотентен** (0 merged).
+- Полный CLI-прогон каденса (merge+forget+review_pending+archive+link_stats живьём, Qdrant): дашборд несёт строку `merge: {...}` (:42), RC ok; Stop-хук-спавнер зовёт скрипт без арг-конфликтов — новый job подхватывается автоматически.
+- 20 тестов (TestMergeJob+TestPatternMerger+Dashboard+ForgetGate) passed.
+- Ops-заметка (не G2): дашборд алертит `pdf_documents` STALE (44.6 дн. без run_end) — pre-existing, кандидат на переиндексацию.
+
 ### 2026-07-05 — §БП G2 исполнен (background-консолидация, code-first)
 - `merge_patterns.py::PatternMerger` был **orphaned** (0 вызовов) — вскрыто investigation'ом; wired в maintenance-каденс как job `merge` (`run_merge_patterns`, dry-run default, `.bak`-снапшот, fail-soft).
 - Паттерн лидеров (mem0 ADD-only / Letta dreaming): дорогой similarity-дедуп SAVED-силоса skill_learning ушёл из hot-path Stop-хуков в фон-каденс; hot-path оставлен O(1) `content_hash`.
