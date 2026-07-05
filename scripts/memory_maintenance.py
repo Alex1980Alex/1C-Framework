@@ -265,10 +265,12 @@ def run_merge_patterns(apply: bool, now: datetime) -> dict[str, Any]:
     """§БП G2 (audit 260705) — background consolidation of the skill_learning SAVED silo.
 
     Wires the previously-orphaned ``PatternMerger`` into the cadence. Dedups
-    near-identical learned patterns (normalized-content + name grouping;
-    keep-higher-confidence winner, tag-union, application-count aggregation)
-    that the O(1) write-time ``content_hash`` check cannot catch (it only
-    collapses byte-identical content). This is the mem0 ADD-only / Letta
+    near-identical learned patterns by NORMALIZED content (lowercase +
+    whitespace-collapsed; keep-higher-confidence winner, tag-union,
+    application-count aggregation) that the O(1) write-time ``content_hash``
+    check cannot catch (it only collapses byte-identical content). (Note:
+    PatternMerger computes a ``by_name`` index but does not consume it — the
+    active grouping is normalized-content only.) This is the mem0 ADD-only / Letta
     sleep-time consolidation pattern: expensive similarity-dedup runs in the
     background cadence, NOT in a hot-path Stop-hook.
 
@@ -534,8 +536,8 @@ def main() -> int:
     )
     jobs["review_pending"] = review_pending
     # §БП G2 (audit 260705): background-консолидация SAVED-силоса skill_learning —
-    # раньше PatternMerger был orphaned (0 вызовов). Дедуп-по-содержимому/имени вне
-    # hot-path (mem0 ADD-only / Letta dreaming). Независим от reindex_skill_library
+    # раньше PatternMerger был orphaned (0 вызовов). Дедуп по нормализованному
+    # содержимому вне hot-path (mem0 ADD-only / Letta dreaming). Независим от reindex_skill_library
     # (тот зеркалит КАТАЛОГ .claude/skills/, не patterns.jsonl) → порядок не важен.
     jobs["merge"] = "skipped" if "merge" in skip else run_merge_patterns(args.apply, now)
     # P3.2/P3.3 (roadmap 260612): после reflect — эпизодика консолидирована, можно в архив.
