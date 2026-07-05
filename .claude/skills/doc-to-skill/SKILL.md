@@ -174,6 +174,33 @@ grep -r "keyword" .claude/skills/*/SKILL.md
 
 ---
 
+## Frontmatter-2026, зрелость и plateau (audit 260705 §БП G4/G5/G6)
+
+Официальный Agent Skills контракт 2026 добавил опциональные frontmatter-поля +
+принципы авторства. Внедряй постепенно (`scripts/lint_skills.py` инвентаризирует адопцию):
+
+**G4 — опциональные поля 2026** (добавляй когда реально нужно, не ради галочки):
+| Поле | Когда |
+|------|-------|
+| `when_to_use` | если триггеры в `description` не помещаются (листинг усекает description+when_to_use до 1536 симв.) |
+| `paths` | glob-активация по файлам проекта — альтернатива части enforcer-паттернов (пилотировать осторожно) |
+| `maturity` | зрелость (см. G5) |
+| `disallowed-tools` | скилл не должен звать опасные инструменты |
+
+**G5 — зрелость каталога** (конвенция vercel-labs `.curated`/`.experimental`):
+`maturity: curated | experimental | deprecated` (по умолчанию — unmarked = зрелый).
+skill-lint правило `BADMATURITY` (advisory) ловит значение вне конвенции. Новый/сырой
+скилл → `experimental`; проверенный → `curated`/без поля; отмирающий → `deprecated`.
+
+**G6 — plateau → КОРОТИ** (принцип Anthropic): при плато качества скилл НЕ раздувают
+новыми правилами, а **укорачивают** (over-constrained). Reasoning-«почему» надёжнее
+чем ALWAYS/NEVER/ОБЯЗАТЕЛЬНО. skill-lint правило `OVERCONSTRAINED` (advisory, >25
+императивов-абсолютов на скилл) — сигнал переписать в объясняющем тоне. Наш каталог
+чист (max=12), правило — future-guard.
+
+**Диагностика описаний (G3):** `python scripts/tune_skill_descriptions.py --limit 4` —
+self_recall собственных триггеров через роутер; низкий → описание не активирует скилл.
+
 ## Структура выходных файлов
 
 ```
