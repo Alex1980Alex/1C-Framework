@@ -38,7 +38,10 @@ _EXCLUDE_NAME_TOKENS = ("changelog", "дорожная")
 _COUNTER_KEYWORDS = r"(?:скилл\w*|бандл\w*|bundle\w*|MCP[- ]сервер\w*|хук\w*)"
 _PATTERN_NUM_THEN_WORD = re.compile(r"(?P<num>\d+)\s*" + _COUNTER_KEYWORDS, re.IGNORECASE)
 _PATTERN_WORD_THEN_NUM = re.compile(
-    _COUNTER_KEYWORDS + r"[^\d\n\]/#]{0,10}[:\-]?\s*(?P<num>\d+)", re.IGNORECASE
+    # "(" excluded from the gap class: parenthesised chapter refs like
+    # "MCP-серверов (гл. 44" are cross-references, not counters.
+    _COUNTER_KEYWORDS + r"[^\d\n\]/#(]{0,10}[:\-]?\s*(?P<num>\d+)",
+    re.IGNORECASE,
 )
 
 

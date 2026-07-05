@@ -14,6 +14,7 @@ from scripts.docs_counters import (
     count_mcp_servers,
     count_skills,
     probe_qdrant_collections,
+    scan_drift,
 )
 
 pytestmark = pytest.mark.unit
@@ -106,3 +107,40 @@ def test_probe_qdrant_collections_graceful_on_unavailable(monkeypatch) -> None:
     monkeypatch.setattr("scripts.docs_counters.urllib.request.urlopen", _raise)
 
     assert probe_qdrant_collections() is None
+
+
+def _make_doc(tmp_path: Path, name: str, text: str) -> None:
+    docs_dir = tmp_path / "docs" / "framework documentation" / "9_НАВЫКИ"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    (docs_dir / name).write_text(text, encoding="utf-8")
+
+
+def test_scan_drift_flags_stale_counter(tmp_path: Path) -> None:
+    _make_doc(tmp_path, "11.6_Каталог.md", "В каталоге 57 скиллов на выбор.\n")
+
+    mismatches = scan_drift(tmp_path, {"skills_total": 97})
+
+    assert len(mismatches) == 1
+    assert mismatches[0]["found"] == 57
+    assert mismatches[0]["live"] == 97
+    assert mismatches[0]["counter"] == "skills_total"
+
+
+def test_scan_drift_silent_when_counter_matches(tmp_path: Path) -> None:
+    _make_doc(tmp_path, "11.6_Каталог.md", "В каталоге 97 скиллов на выбор.\n")
+
+    assert scan_drift(tmp_path, {"skills_total": 97}) == []
+
+
+def test_scan_drift_excludes_changelog_and_roadmap_files(tmp_path: Path) -> None:
+    _make_doc(tmp_path, "27.13_Memory_Changelog.md", "Тогда было 44 скилла.\n")
+    _make_doc(tmp_path, "28_1.6_Дорожная_карта.md", "План: 12 скиллов.\n")
+
+    assert scan_drift(tmp_path, {"skills_total": 97}) == []
+
+
+def test_scan_drift_ignores_parenthesised_chapter_refs(tmp_path: Path) -> None:
+    # "скиллов (см. гл. 11" is a cross-reference, not a counter mention.
+    _make_doc(tmp_path, "11.2_Архитектура.md", "Список скиллов (гл. 11) ведётся отдельно.\n")
+
+    assert scan_drift(tmp_path, {"skills_total": 97}) == []
