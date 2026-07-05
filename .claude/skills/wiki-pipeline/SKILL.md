@@ -194,7 +194,6 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 - `LearnedPattern` (src\memory\vector_memory\models.py)
 - `PatternSearchResult` (src\memory\vector_memory\models.py)
 - `LearningStats` (src\memory\vector_memory\models.py)
-- `WikiDecayService` (src\memory\librarian\wiki_decay.py)
 - `CacheEntry` (src\memory\infrastructure\cache.py)
 - `LRUCache` (src\memory\infrastructure\cache.py)
 - `CircuitState` (src\memory\infrastructure\circuit_breaker.py)

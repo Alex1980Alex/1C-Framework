@@ -754,6 +754,14 @@
       "status": "accepted",
       "date": "2026-07-04",
       "research": "cache/graphify-codebase-knowledge-graph.md"
+    },
+    {
+      "id": "ADR-046",
+      "file": "046-retire-wikidecayservice-superseded-by-s22.md",
+      "title": "Ретайр WikiDecayService — вытеснен §22 Beta-count-decay (линейный CLI-decay stored confidence не авторитетен: §22 деривит из succ/fail на чтении; удалён класс+14 тестов+CLI-субкоманда)",
+      "status": "accepted",
+      "date": "2026-07-05",
+      "research": "roadmap 260705 P3-находка"
     }
   ]
 }
