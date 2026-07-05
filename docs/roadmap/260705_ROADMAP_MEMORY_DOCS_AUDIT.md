@@ -38,9 +38,12 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 > 11 drafts мигрированы, kb-lint EXIT 1→0. Доки P0.2–P0.6 переписаны по коду (file:line).
 > Адверсариальный ревьюер PASS; его рекомендации (32.3 content_hash-строка, ci.skip, пин
 > default-пути) применены. ⚠ `/mcp reconnect` нужен (memory_orchestrator).
-> **Новая находка (в P1/R6):** WikiPromoter вероятно недо-промоутит — §22 effective-confidence
-> гейт отсекает кандидатов 0.85/ac=5 → eff 0.75 < 0.8 (5 pre-existing красных тестов
-> test_wiki_promoter.py; в проде промоуты могли прекратиться после §22 P2 lazy decay-on-read).
+> **Находка P0 РАЗРЕШЕНА в P1 (ложная тревога):** «WikiPromoter недо-промоутит» — оказалось
+> **test debt, не прод-баг**. 5 красных тестов `test_wiki_promoter.py` использовали ретированное
+> поле `usage_count` без `succ/fail` → `_resolve_state` (confidence.py:194 читает `application_count`)
+> сидил через legacy n=0 → effective→prior 0.70 < 0.8. Прод-точки несут реальный `application_count`
+> + succ/fail (Beta-posterior кэш = stored `confidence`), промоутятся корректно. Фикс — фикстура
+> `_make_point` под §22-контракт (succ/fail из инварианта `(7+succ)/(10+succ+fail)=confidence`); 15/15 green.
 > Остаточные фантомы нетронутых секций 32.3 (_sanitize_filename, SHA1) и 32.4 (backoff) — в R2.
 
 | # | Файл(ы) | Проблема | Действие |
