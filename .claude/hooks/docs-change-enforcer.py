@@ -108,7 +108,7 @@ CODE_TO_DOMAIN = [
     ("src/bsl/", "3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ", "bsl-development"),
     ("src/shared/llm_rotation/", None, "llm-rotation"),
     ("src/shared/", "0_ВВЕДЕНИЕ/0.1_ОБЗОР", "pdf-knowledge"),
-    ("src/memory/", "0_ВВЕДЕНИЕ/0.1_ОБЗОР", "memory-unified"),
+    ("src/memory/", "5_ПАМЯТЬ/5.1_UNIFIED_MEMORY", "memory-unified"),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════
