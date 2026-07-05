@@ -29,6 +29,20 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 
 ## P0 — Фикции и copy-paste-опасные ошибки (≤ 0.5 дня)
 
+> **✅ DONE 2026-07-05** (commit `10633f4ee` + хвосты ревью). **R1 решён кодом (выбор пользователя):**
+> kb-lint + markdownlint-cli2 восстановлены в pre-commit (scoped `^docs/wiki/`, entities/ исключены,
+> `ci.skip: [kb-lint]`). По пути найдено и исправлено 3 код-бага: (1) upstream kb-lint scanner
+> читал .gitignore без encoding → cp1251-крэш (3-й safety-патч wrapper'а); (2) документированный
+> hook-entry с голым `--ci` линтил бы от корня репо; (3) **писатели drafts нарушали собственный
+> lint-контракт** — `to_wiki_page(status=)` + непустые tags + MD047 newline (+6 тест-пинов),
+> 11 drafts мигрированы, kb-lint EXIT 1→0. Доки P0.2–P0.6 переписаны по коду (file:line).
+> Адверсариальный ревьюер PASS; его рекомендации (32.3 content_hash-строка, ci.skip, пин
+> default-пути) применены. ⚠ `/mcp reconnect` нужен (memory_orchestrator).
+> **Новая находка (в P1/R6):** WikiPromoter вероятно недо-промоутит — §22 effective-confidence
+> гейт отсекает кандидатов 0.85/ac=5 → eff 0.75 < 0.8 (5 pre-existing красных тестов
+> test_wiki_promoter.py; в проде промоуты могли прекратиться после §22 P2 lazy decay-on-read).
+> Остаточные фантомы нетронутых секций 32.3 (_sanitize_filename, SHA1) и 32.4 (backoff) — в R2.
+
 | # | Файл(ы) | Проблема | Действие |
 |---|---|---|---|
 | P0.1 | **32.8 целиком** (+32.1:15, 32.3:3, 37.3) | kb-lint и markdownlint-cli2 **отсутствуют в `.pre-commit-config.yaml`** — цитируемый YAML-фрагмент (32.8:15-34) в файле не существует. Инфраструктура (`scripts/kb_lint_ci.py`, `.kblintrc.yml`) есть, проводки нет. Wiki сейчас не гейтится на commit вообще | **Решение**: (a) восстановить проводку в pre-commit ИЛИ (b) переписать 32.8 в честное «enforcement отключён с <дата>». Выбор — за пользователем (см. §Рекомендации R1) |
@@ -129,6 +143,13 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — P0 исполнен (code-first), commit `10633f4ee`
+- R1 решён восстановлением проводки (не переписыванием доки); wiki снова гейтится на commit.
+- 3 код-бага по пути: encoding-крэш kb-lint scanner, bare-`--ci` root-линт, писатели drafts без status/tags/MD047.
+- Оба хука Passed на 21 файлах; тесты 36/36; адверсариальный ревьюер PASS, рекомендации применены.
+- Находка → P1: WikiPromoter under-promotion после §22 P2 (eff-conf гейт), 5 красных pre-existing тестов.
+- Осталось: P1, P2, R2 (ARCHIVE 5.3), P3-пробелы, §БП G2/G4.
 
 ### 2026-07-05 — Аудит выполнен, дорожная карта создана
 - 2 read-агента: 39/39 файлов, ~70 утверждений сверено с кодом; research лидеров (mem0/Letta/Zep-Graphiti/LangMem) закеширован.

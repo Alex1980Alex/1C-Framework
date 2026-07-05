@@ -159,5 +159,5 @@ ci:
   autoupdate_branch: ''
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
-  skip: []
+  skip: [kb-lint]  # language:system не поддерживается pre-commit.ci; локальный гейт
   submodules: false

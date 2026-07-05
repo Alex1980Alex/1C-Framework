@@ -98,6 +98,14 @@ class TestToWikiPage:
         assert page.endswith("\n")
         assert not page.endswith("\n\n")
 
+    def test_single_trailing_newline_default_path(self, basic_cube: MemoryCube):
+        # Deliberate: entities path (no status) ALSO gets the MD047 newline —
+        # matches what end-of-file-fixer enforced on entities anyway
+        # (adversarial review 260705 A1a: pinned as intentional, not drift).
+        page = basic_cube.to_wiki_page()
+        assert page.endswith("\n")
+        assert not page.endswith("\n\n")
+
 
 # ===== from_wiki_page =====
 
