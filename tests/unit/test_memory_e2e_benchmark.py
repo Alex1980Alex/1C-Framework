@@ -110,3 +110,37 @@ def test_missing_query_id_is_miss():
     out = MOD.evaluate_offline(rows, {}, k=5, harness=H)
     assert out["aggregate"]["hit_rate"] == 0.0
     assert out["aggregate"]["misses"] == ["qX"]
+
+
+def test_prod_collection_guard(monkeypatch):
+    # defense-in-depth: seed_live must refuse to touch a production collection
+    monkeypatch.setattr(MOD, "COLLECTION", "learned_patterns")
+    res = MOD.seed_live([{"id": "q", "fact": "f", "query": "?"}], lambda *a, **k: [0.1], H)
+    assert res["status"] == "error"
+    assert "learned_patterns" in res["reason"]
+
+
+def test_seed_live_qdrant_down_is_graceful(monkeypatch):
+    # Qdrant down (client raises) -> live-deps-unavailable, NOT a traceback.
+    # This pins the reviewer-found P1: only TEI-down was handled before.
+    monkeypatch.setattr(MOD, "COLLECTION", "memory_e2e_eval")
+
+    def _boom():
+        raise ConnectionError("qdrant refused")
+
+    monkeypatch.setattr(MOD, "_qdrant", _boom)
+    res = MOD.seed_live([{"id": "q", "fact": "f", "query": "?"}], lambda *a, **k: [0.1], H)
+    assert res["status"] == "live-deps-unavailable"
+
+
+def test_recall_live_qdrant_search_down_is_graceful(monkeypatch):
+    monkeypatch.setattr(MOD, "COLLECTION", "memory_e2e_eval")
+
+    def _search_boom(*a, **k):
+        raise ConnectionError("qdrant search refused")
+
+    rows = [{"id": "q", "fact": "f", "query": "?"}]
+    res = MOD.recall_live(
+        rows, k=5, embed_fn=lambda *a, **k: [0.1], search_fn=_search_boom, harness=H
+    )
+    assert res["status"] == "live-deps-unavailable"

@@ -19,6 +19,11 @@ Metric functions (``content_hash``, ``hit_at_k``, ``recall_at_k``, ``mrr``,
 ``ndcg_at_k``) are imported from ``memory_golden_harness`` — single source, no
 re-implementation.
 
+Sensitivity: the seed facts are deliberately DISTINCT (mutual distractors), so a
+healthy loop scores near hit_rate=1.0 — this benchmark detects *catastrophic*
+write-path failure (silently indexing 0), NOT fine-grained ranking regressions.
+To make it a sensitive ranking gate, add near-duplicate distractor facts.
+
 Usage:
   python scripts/memory_e2e_benchmark.py run   --k 5           # seed + evaluate + drop
   python scripts/memory_e2e_benchmark.py seed                  # seed only (keep collection)
@@ -150,18 +155,40 @@ def _qdrant():
     return QdrantClient(host="127.0.0.1", port=6333, timeout=15)
 
 
+# Production collections the benchmark must NEVER drop — defense-in-depth guard
+# against a mis-set MEMORY_E2E_COLLECTION clobbering real memory.
+_PROD_COLLECTIONS = frozenset(
+    {"learned_patterns", "skill_library", "framework_code_v1", "wiki_pages_v1", "pdf_documents"}
+)
+
+
 def seed_live(rows: list[dict[str, Any]], embed_fn: Callable, harness: Any) -> dict[str, Any]:
-    """Embed each fact and upsert into the isolated eval collection (recreated)."""
+    """Embed each fact and upsert into the isolated eval collection (recreated).
+
+    Qdrant errors (server down / connection refused) degrade to
+    ``live-deps-unavailable`` — the docstring contract is "either dep down → exit 0",
+    so a Qdrant outage must not raise (only TEI-down was handled before).
+    """
+    if COLLECTION in _PROD_COLLECTIONS:
+        return {
+            "status": "error",
+            "reason": f"refusing to seed a production collection: {COLLECTION}",
+        }
+
     from qdrant_client import models as qm
 
-    client = _qdrant()
-    # recreate_collection is deprecated in qdrant-client >=1.13 → explicit drop+create
-    if client.collection_exists(COLLECTION):
-        client.delete_collection(COLLECTION)
-    client.create_collection(
-        collection_name=COLLECTION,
-        vectors_config=qm.VectorParams(size=VECTOR_SIZE, distance=qm.Distance.COSINE),
-    )
+    try:
+        client = _qdrant()
+        # recreate_collection is deprecated in qdrant-client >=1.13 → explicit drop+create
+        if client.collection_exists(COLLECTION):
+            client.delete_collection(COLLECTION)
+        client.create_collection(
+            collection_name=COLLECTION,
+            vectors_config=qm.VectorParams(size=VECTOR_SIZE, distance=qm.Distance.COSINE),
+        )
+    except Exception as exc:  # Qdrant down / connection refused
+        return {"status": "live-deps-unavailable", "reason": f"qdrant: {type(exc).__name__}"}
+
     points = []
     seeded = 0
     for i, row in enumerate(rows):
@@ -180,7 +207,10 @@ def seed_live(rows: list[dict[str, Any]], embed_fn: Callable, harness: Any) -> d
             )
         )
         seeded += 1
-    client.upsert(collection_name=COLLECTION, points=points)
+    try:
+        client.upsert(collection_name=COLLECTION, points=points)
+    except Exception as exc:
+        return {"status": "live-deps-unavailable", "reason": f"qdrant upsert: {type(exc).__name__}"}
     return {"status": "ok", "seeded": seeded, "collection": COLLECTION}
 
 
@@ -196,7 +226,13 @@ def recall_live(
                 "status": "live-deps-unavailable",
                 "reason": f"embed query failed at {row['id']}",
             }
-        hits = search_fn(COLLECTION, vec, limit=k, timeout=10.0)
+        try:
+            hits = search_fn(COLLECTION, vec, limit=k, timeout=10.0)
+        except Exception as exc:
+            return {
+                "status": "live-deps-unavailable",
+                "reason": f"qdrant search: {type(exc).__name__}",
+            }
         ranked_by_id[row["id"]] = [(h.get("payload") or {}).get("content_hash", "") for h in hits]
     return {"status": "ok", "ranked_by_id": ranked_by_id}
 
