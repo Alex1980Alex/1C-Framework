@@ -17,6 +17,8 @@ title: Opus = Planner/Reviewer, Z.AI = Coder
 unified_id: wiki:obsidian-vault:8d563043-9aa3-4cbe-a9ed-b167dbf2d26b
 updated_at: '2026-07-05T04:22:37.392909'
 version: 1
+status: draft
+
 ---
 
 ## Content

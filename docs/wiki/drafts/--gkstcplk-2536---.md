@@ -19,6 +19,8 @@ title: 'Анализ задачи GKSTCPLK-2536 «Разработать печ�
 unified_id: wiki:obsidian-vault:c6c0ee52-1f9b-4d43-a43d-4ca121bb07cd
 updated_at: '2026-06-30T00:50:43.102770'
 version: 1
+status: draft
+
 ---
 
 ## Content

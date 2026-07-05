@@ -162,7 +162,9 @@ class WikiPromoter:
             what=candidate_payload.get("description"),
         )
         self.drafts_dir.mkdir(parents=True, exist_ok=True)
-        (self.drafts_dir / f"{slug}.md").write_text(cube.to_wiki_page(), encoding="utf-8")
+        (self.drafts_dir / f"{slug}.md").write_text(
+            cube.to_wiki_page(status="draft"), encoding="utf-8"
+        )
         self._append_log(slug, name, candidate_payload.get("confidence", 0.8))
         return slug
 

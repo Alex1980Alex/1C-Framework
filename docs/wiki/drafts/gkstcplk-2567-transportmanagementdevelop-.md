@@ -10,6 +10,10 @@ title: 'GKSTCPLK-2567 (ИБTransportManagementDevelop): анал'
 unified_id: wiki:obsidian-vault:0840299b-559a-42f4-8690-0aeca8f5f2a9
 updated_at: '2026-06-18T00:00:13.545249'
 version: 1
+status: draft
+tags:
+- untagged
+
 ---
 
 ## Content

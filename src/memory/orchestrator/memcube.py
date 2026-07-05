@@ -244,8 +244,16 @@ class MemoryCube:
             "version": self.version,
         }
 
-    def to_wiki_page(self) -> str:
-        """Serialize to Obsidian-compatible markdown with YAML frontmatter."""
+    def to_wiki_page(self, status: str | None = None) -> str:
+        """Serialize to Obsidian-compatible markdown with YAML frontmatter.
+
+        Args:
+            status: Optional lifecycle status emitted as top-level frontmatter
+                field (``draft`` for drafts/ writers). kb-lint
+                (docs/wiki/.kblintrc.yml) requires ``status`` on linted pages
+                (drafts/, patterns/, root) — entities/ are lint-ignored, so
+                the exporter may omit it (backward-compatible default).
+        """
         import yaml
 
         frontmatter = {
@@ -260,10 +268,14 @@ class MemoryCube:
             "importance": self.importance,
             "version": self.version,
         }
+        if status is not None:
+            frontmatter["status"] = status
         if self.title:
             frontmatter["title"] = self.title
-        if self.tags:
-            frontmatter["tags"] = self.tags
+        if status is not None or self.tags:
+            # kb-lint requires a NON-EMPTY `tags` list on linted pages —
+            # status'ed pages without tags get a searchable curation marker.
+            frontmatter["tags"] = list(self.tags) if self.tags else ["untagged"]
         if self.expires_at:
             frontmatter["expires_at"] = self.expires_at.isoformat()
         if self.metadata:
@@ -285,7 +297,8 @@ class MemoryCube:
         if self.content:
             lines.append(f"## Content\n\n{self.content}")
 
-        return "\n".join(lines)
+        # Single trailing newline — POSIX text file / markdownlint MD047.
+        return "\n".join(lines).rstrip("\n") + "\n"
 
     @classmethod
     def from_wiki_page(cls, md: str) -> MemoryCube:

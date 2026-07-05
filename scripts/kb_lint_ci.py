@@ -74,12 +74,43 @@ def _install_cyrillic_safety_patch() -> None:
     fixer.fix_filename_casing = _safe_fix_filename_casing
 
 
+def _install_ignore_spec_encoding_patch() -> None:
+    """Make `kb_lint.scanner._build_ignore_spec` read .gitignore as UTF-8.
+
+    Upstream (kb_lint 0.1.x scanner.py:39-44) opens `<wiki_path>/.gitignore`
+    without an explicit encoding → on Windows (cp1251 locale) any UTF-8
+    content crashes the whole lint run with UnicodeDecodeError BEFORE a
+    single article is scanned. Observed live 2026-07-05: bare `--ci` made
+    wiki_path default to the repo root, whose Cyrillic-commented .gitignore
+    killed the run at scanner.py:41.
+
+    The patched variant reproduces upstream logic with
+    `encoding="utf-8", errors="replace"` (ignore patterns are ASCII-ish;
+    replacement chars in comments are harmless).
+    """
+    from kb_lint import scanner
+
+    def _safe_build_ignore_spec(wiki_path, config):  # type: ignore[no-untyped-def]
+        patterns = list(config.ignore_patterns)
+        gitignore = wiki_path / ".gitignore"
+        if gitignore.is_file():
+            with open(gitignore, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        patterns.append(line)
+        return scanner.pathspec.PathSpec.from_lines("gitignore", patterns)
+
+    scanner._build_ignore_spec = _safe_build_ignore_spec
+
+
 if __name__ == "__main__":
     _reconfigure_utf8()
     # Install patch BEFORE importing cli (which imports fixer). The patch
     # mutates fixer module attribute, so cli's apply_fixes() will pick up
     # the safe variant via fixer.fix_filename_casing lookup at call time.
     _install_cyrillic_safety_patch()
+    _install_ignore_spec_encoding_patch()
     # Forward all argv past argv[0] to kb-lint's main; default to --ci docs/wiki
     # when invoked bare from pre-commit (which passes no extra args because we
     # set pass_filenames: false in .pre-commit-config.yaml).

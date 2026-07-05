@@ -70,6 +70,34 @@ class TestToWikiPage:
         assert page.startswith("---\n")
         assert "## Content" in page
 
+    # ===== audit 260705 P0.1: kb-lint contract for drafts/ writers =====
+
+    def test_status_emitted_when_passed(self, basic_cube: MemoryCube):
+        page = basic_cube.to_wiki_page(status="draft")
+        fm = page.split("---\n")[1]
+        assert "status: draft" in fm
+
+    def test_status_omitted_by_default(self, basic_cube: MemoryCube):
+        page = basic_cube.to_wiki_page()
+        fm = page.split("---\n")[1]
+        assert "status:" not in fm  # entities/ export path unchanged
+
+    def test_status_page_gets_untagged_fallback(self):
+        # kb-lint requires a NON-EMPTY tags list on linted (status'ed) pages.
+        cube = MemoryCube(
+            content_type=ContentType.WIKI, memory_type=MemoryType.WIKI, content="Hello"
+        )
+        page = cube.to_wiki_page(status="draft")
+        fm = page.split("---\n")[1]
+        assert "tags:" in fm
+        assert "untagged" in fm
+
+    def test_single_trailing_newline(self, basic_cube: MemoryCube):
+        # markdownlint MD047 — file must end with exactly one newline.
+        page = basic_cube.to_wiki_page(status="draft")
+        assert page.endswith("\n")
+        assert not page.endswith("\n\n")
+
 
 # ===== from_wiki_page =====
 

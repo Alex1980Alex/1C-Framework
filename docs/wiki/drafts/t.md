@@ -13,6 +13,8 @@ title: t
 unified_id: wiki:obsidian-vault:0a082ea5-993e-4f70-9f98-88e952b3faeb
 updated_at: '2026-06-29T00:11:03.184701'
 version: 1
+status: draft
+
 ---
 
 ## Content

@@ -20,6 +20,8 @@ title: GKSTCPLK-2573 (предпросмотр PDF на форме присое�
 unified_id: wiki:obsidian-vault:cd6041f5-7b31-4446-8974-45d651ccf149
 updated_at: '2026-06-15T00:09:38.178582'
 version: 1
+status: draft
+
 ---
 
 ## Content

@@ -2030,7 +2030,7 @@ class MemoryOrchestrator:
                     importance=(metadata or {}).get("importance", 0.5),
                     tags=(metadata or {}).get("tags", []),
                 )
-                wiki_md = cube.to_wiki_page()
+                wiki_md = cube.to_wiki_page(status="draft")
 
                 drafts_dir = _PROJECT_ROOT / "docs" / "wiki" / "drafts"
                 draft_path = drafts_dir / f"{slug}.md"

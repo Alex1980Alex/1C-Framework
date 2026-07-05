@@ -11,6 +11,8 @@ title: unnamed-pattern
 unified_id: wiki:obsidian-vault:cfa51279-eae3-400d-9cf6-a7bba495f793
 updated_at: '2026-06-18T00:00:13.595784'
 version: 1
+status: draft
+
 ---
 
 ## Content

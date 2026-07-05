@@ -18,6 +18,8 @@ title: '[KNOWN-ISSUE · Sonar BLOCKER · ИБTransportManageme'
 unified_id: wiki:obsidian-vault:219db8a4-0e75-450d-a8ca-297796b436f9
 updated_at: '2026-07-05T04:22:37.330645'
 version: 1
+status: draft
+
 ---
 
 ## Content

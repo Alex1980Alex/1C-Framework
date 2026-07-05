@@ -16,6 +16,8 @@ title: '[1c-analysis] GKSTCPLK-2521(?) «Отображение УК на '
 unified_id: wiki:obsidian-vault:2a48fbb3-39cd-4620-8b72-dda15455bd29
 updated_at: '2026-06-22T00:09:48.016739'
 version: 1
+status: draft
+
 ---
 
 ## Content

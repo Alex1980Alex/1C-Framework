@@ -18,6 +18,8 @@ title: SDD Approval Gate (Phase 3)
 unified_id: wiki:obsidian-vault:d57d85a9-4f1a-407d-b2a6-6b621f040055
 updated_at: '2026-06-21T05:21:39.193973'
 version: 1
+status: draft
+
 ---
 
 ## Content

@@ -94,6 +94,31 @@ repos:
         name: No Direct Commits to Main
         args: ['--branch', 'main']
 
+  # markdownlint-cli2 — markdown validation, wiki-scoped (restored 2026-07-05,
+  # audit 260705 P0.1: the wiring documented in ch. 32.8 was missing — wiki was
+  # not gated on commit at all). entities/ excluded: 2800+ auto-generated
+  # LightRAG pages are data, not curated content (mirrors .kblintrc.yml).
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.18.1
+    hooks:
+      - id: markdownlint-cli2
+        name: Markdown Lint (wiki)
+        files: ^docs/wiki/.*\.md$
+        exclude: ^docs/wiki/(entities/|log\.md)
+
+  # kb-lint — wiki frontmatter/structure validation (restored 2026-07-05, same
+  # P0.1). Wrapper defaults to `--ci docs/wiki` (bare --ci would lint from repo
+  # root!) and carries UTF-8 stdout + Cyrillic-rename + .gitignore-encoding
+  # safety patches. Draft writers emit `status: draft` since the same fix.
+  - repo: local
+    hooks:
+      - id: kb-lint
+        name: KB Lint (wiki)
+        entry: python scripts/kb_lint_ci.py
+        language: system
+        files: ^docs/wiki/.*\.md$
+        pass_filenames: false
+
   # gitleaks — secret scanning (added 2026-05-10 after HF + OpenRouter leak
   # via .claude/settings.local.json). Blocks commits that introduce known
   # secret patterns (HF/OpenAI/Anthropic/AWS/GCP/Slack/GitHub PAT/private keys).

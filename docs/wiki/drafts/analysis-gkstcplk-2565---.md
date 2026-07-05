@@ -17,6 +17,8 @@ title: '[ANALYSIS GKSTCPLK-2565] Доработать печатную форм�
 unified_id: wiki:obsidian-vault:bee040f4-0947-40f5-9307-475a776087aa
 updated_at: '2026-06-22T00:09:48.060975'
 version: 1
+status: draft
+
 ---
 
 ## Content

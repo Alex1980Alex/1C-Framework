@@ -1,0 +1,11 @@
+{
+  // Wiki-scoped markdownlint overrides (audit 260705 P0.1 — restored wiki gate).
+  // Inherits the repo-root relaxations and additionally disables rules that
+  // machine-generated pages (MemoryCube.to_wiki_page drafts, LightRAG entity
+  // exports) cannot guarantee, because they depend on the STORED content:
+  "extends": "../../.markdownlint.jsonc",
+  "MD031": false, // blanks around fences — fences live inside stored payloads
+  "MD012": false, // multiple blank lines — serialization artifact, harmless
+  "MD022": false, // blanks around headings — same as MD031 for stored content
+  "MD034": false  // bare URLs — memory payloads carry raw links routinely
+}
