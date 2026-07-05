@@ -13,69 +13,35 @@ description: "Используй этот скилл для понимания �
 
 ## Текущая конфигурация
 
-### Hooks (17 шт.) — КОГДА
+### Hooks (99 регистраций) — КОГДА
 
-#### UserPromptSubmit (4)
+Полный каталог (событие → хук → matcher → timeout) авто-генерируется из `settings.json`: [`scripts/gen_hooks_catalog.py`](../../../scripts/gen_hooks_catalog.py) → [13.2 Hooks](../../../docs/framework%20documentation/9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md). Не дублируется здесь — при изменении хуков regenerate там, счётчик 99 (UPS 19 / UserPromptExpansion 1 / PreToolUse 21 / PostToolUse 17 / Stop 27 / SessionStart 14) сверяется через `--check`.
+
+Ниже — только назначение ключевых хуков триады (не полный список):
 
 | Hook | Назначение |
 |------|-----------|
-| `skill-router.py` | Config-driven маршрутизация: Layer A+B+C (keyword + fuzzy + TF-IDF) → рекомендация скиллов (25 bundles, config v7 + weighted_keywords) |
-| `research-task-detector.py` | Детекция ВОПРОСОВ → роутинг: Architecture, 1С, Tech |
+| `skill-router.py` | Config-driven маршрутизация: Layer A+B+C (keyword + fuzzy + TF-IDF) → рекомендация скиллов (52 bundles, config v9) |
 | `decision-to-triad.py` | Детекция РЕШЕНИЙ/ИДЕЙ → Фабрика (`triad-factory`, Q1-Q5) |
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
-| `implement-1c-task-preflight.py` | Content-фильтр на `/implement-1c-task` → запуск `scripts/smoke_test_implement_1c_task.py --json` → systemMessage с pipeline mode (Full / **Full (no-BP)** / Code-only / Read-only verify / Read-only research / unusable) + строка «Debug environment: ready/not-ready» по полю `mcp_health.debug_hmr` (2026-05-11 — roadmap 260510 Phase 1 §3.1). Не блокирует. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>`. |
-| `analyze-1c-task-preflight.py` | Content-фильтр на `/analyze-1c-task` (с/без `--trace`) → probe debug-hmr через shared `shared/debug_hmr_health.probe_debug_hmr_ready()` → systemMessage с readiness Phase 2.5 Runtime Trace (2026-05-11 — roadmap 260510 Phase 3 §5.1). Не блокирует — Phase 2.5 opt-in. Лог: `data/hook-invocations.jsonl` category=`preflight`, outcome содержит `debug_hmr=<0\|1>;trace_flag=<0\|1>`. |
-
-#### PreToolUse (5)
-
-| Hook | Matcher | Назначение |
-|------|---------|-----------|
-| `code-skill-enforcer.py` | Write\|Edit\|Bash | Skill-First: BLOCK если скилл не активирован (уровни A-C) |
-| `root-clutter-guard.py` | Write | Блокировка ad-hoc файлов в корне (test_*, debug_*) |
-| `search-optimizer.py` | Bash | Оптимизация параметров Search API |
-| `pre-merge-review-check.py` | Bash | Блокирует `gh pr merge N` если у PR есть unresolved HIGH/MEDIUM bot review comments (gemini-code-assist `![high]`/`![medium]` markers). **Чистый путь — зарезолвить треды** (`gh api graphql … resolveReviewThread`): хук пропускает resolved/outdated через GraphQL `reviewThreads.isResolved/isOutdated` (verified 2026-06-14, PR #77). ⚠ Override `GH_MERGE_REVIEW_OVERRIDE=1` читается из **harness `os.environ`**, а НЕ из инлайн-bash (`VAR=1 gh pr merge` НЕ доходит до PreToolUse-хука — он спавнится harness'ом отдельно). Enforces protocol [`feedback_pre_merge_review_protocol`](file:///C:/Users/Tech.%20Boutique/.claude/projects/C--1--Framework/memory/feedback_pre_merge_review_protocol.md). Timeout 6s. |
-| `approval-gate.py` | Skill | SDD Phase 3: блокировка implementation-skills (`implement-1c-task`, `opsx:apply`) без `approval.status: approved` в `.openspec.yaml`. Читает `profile` field (default `1c-bsl`). Поддерживаемые профили: `1c-bsl` (BSL changes), `python-framework` (Python framework changes, см. `openspec/profiles/python-framework.yaml`). Для new profile добавить YAML файл в `openspec/profiles/` — hook автоматически подхватит через `_read_profile()`. |
+| `code-skill-enforcer.py` | PreToolUse `Write\|Edit\|Bash` — Skill-First: BLOCK если скилл не активирован (уровни A-C) |
+| `root-clutter-guard.py` | PreToolUse `Write\|Edit` — блокировка ad-hoc файлов в корне (test_*, debug_*) |
+| `approval-gate.py` | PreToolUse `Skill` — SDD Phase 3: блокировка implementation-skills (`implement-1c-task`, `opsx:apply`) без `approval.status: approved` в `.openspec.yaml`. Читает `profile` field (default `1c-bsl`). Поддерживаемые профили: `1c-bsl`, `python-framework` (см. `openspec/profiles/python-framework.yaml`). Для new profile добавить YAML в `openspec/profiles/` — hook автоматически подхватит через `_read_profile()`. |
+| `knowledge-cache-reminder.py` | PostToolUse `WebSearch\|WebFetch` — напоминание сохранить в кеш: 1С, Tech, Architecture |
+| `docs-change-tracker.py` | PostToolUse `Write\|Edit` — код изменился → mandatory-задача обновить docs/ + skills/ (маппинг `_CODE_TO_DOCS_SKILLS`). Самозакрытие: правка целевого дока/скилла или git-время целей новее `code_changed_at`. ⚠ Метаданные задачи передавать через `add_task(metadata=…)`, НЕ `update_task_metadata(created_by=…)` — последняя штампует ВСЕ pending-задачи хука (исправлено 2026-06-11) |
+| `code-verify-reminder.py` | Tri-registered (PreToolUse:Write\|Edit + PostToolUse:Write\|Edit\|Skill\|Task + Stop) — mandatory task на code-verify; закрывается по `[CODE-VERIFY-PASS]` маркеру |
+| `task-enforcer.py` | Stop — блокировка без выполнения mandatory задач из hook-todos.json |
+| `git-commit-enforcer.py` | Stop — блокировка без коммита изменений в `.claude/` |
+| `docs-change-enforcer.py` | Stop — блокировка если код изменён без обновления документации; `SKIP_PATTERNS` исключает инфра-файлы (см. корневой `CLAUDE.md`) |
+| `pattern-reinforce-stop.py` | Stop — §22 reinforcement-мост: подкрепляет surfaced-паттерны в Qdrant по эвристике успеха |
+| `ensure-docker-qdrant.py` | SessionStart — проверка Docker engine + контейнера `pdf-rag-qdrant`, фоновый авто-старт при необходимости |
+| `ci-catchup-on-start.py` | SessionStart — auto-backfill `ci-failures.jsonl` пропущенными offline runs |
+| `gh-notif-intake-on-start.py` | SessionStart — auto-summarize unread GitHub notifications |
 
 `code-skill-enforcer.py` читает конфигурацию из `shared/code-skill-patterns.json` (массив правил `{pattern, skill, label, domain}`). Каждое правило связывает regex-паттерн команды/файла с обязательным для активации скиллом. **Важно**: `skill` должен существовать в каталоге `.claude/skills/` — entries с несуществующими target-скиллами создают phantom-блокировки (enforcer требует активации скилла, которого нет), поэтому при удалении скилла нужно сразу чистить соответствующие правила.
 
-#### PostToolUse (13)
-
-| Hook | Matcher | Назначение |
-|------|---------|-----------|
-| `knowledge-cache-reminder.py` | WebSearch\|WebFetch | Напоминание сохранить в кеш: 1С, Tech, Architecture |
-| `code-skill-enforcer.py` | WebSearch\|WebFetch | Research cache reminder (уровень D) |
-| `code-skill-enforcer.py` | Write\|Edit | Post-verification + LEARN phase (уровни E-F) |
-| `factory-enforcer.py` | Write | Контроль ШАГ 4-5 Фабрики: регистрация + верификация |
-| `docs-change-tracker.py` | Write\|Edit | Код изменился → mandatory-задача обновить docs/ + skills/ (маппинг `_CODE_TO_DOCS_SKILLS`; паттерн — строка или кортеж альтернатив). Самозакрытие: правка целевого дока/скилла (`_try_complete_tasks`) или git-время целей новее `code_changed_at` (`_sync_zombie_tasks`). Memory-хуки маппятся на 27.13 Changelog + `memory-unified` (2026-06-11). ⚠ Метаданные задачи передавать через `add_task(metadata=…)`, НЕ `update_task_metadata(created_by=…)` — последняя штампует ВСЕ pending-задачи хука и затирает `code_changed_at` ранних задач → zombie (исправлено 2026-06-11) |
-| `auto-git-save.py` | Write\|Edit\|Bash | Mandatory task на коммит незакоммиченных изменений |
-| `skill-usage-metrics.py` | Skill | Логирование использования скиллов → `data/skill-usage.log` |
-| `bulk-action-guard.py` | Bash | Детекция bulk/destructive операций → Q5 enforcer |
-| `code-verify-reminder.py` | Write\|Edit, Skill, Task, Stop | Mandatory task на code-verify; tri-registered (PreToolUse:Write\|Edit + PostToolUse:Write\|Edit\|Skill\|Task + Stop). PostToolUse:Task закрывает задачу при `[CODE-VERIFY-PASS]`; Stop fallback (v2.4.0) — читает `transcript_path` JSONL и закрывает по rfind-сравнению PASS/FAIL маркеров (workaround #6305 regression на Windows, см. claude-code-hooks-bugs SKILL 2026-04-26) |
-| `posttooluse-quality-feedback.py` | Write\|Edit | ruff check *.py → hookSpecificOutput feedback (Phase 2.1) |
-| `posttooluse-delegation-tracker.py` | mcp__llm-rotation__llm_complete | Z.AI delegation outcomes → delegation-outcomes.jsonl (Phase 1.4) |
-| `posttooluse-web-cache.py` | WebSearch\|WebFetch | Кеширование результатов веб-поиска 24h TTL |
-| `posttooluse-docs-tracker.py` | Write\|Edit | Мгновенный docs-change reminder (Phase 1.3) |
-
-#### Stop (4)
-
-| Hook | Назначение |
-|------|-----------|
-| `task-enforcer.py` | Блокировка без выполнения mandatory задач (incl. code-skill-enforcer) |
-| `git-commit-enforcer.py` | Блокировка без коммита изменений в `.claude/` |
-| `docs-change-enforcer.py` | Блокировка если код изменён без обновления документации. `SKIP_PATTERNS` исключает инфра-файлы, не являющиеся product code: `pyproject.toml`, `.mcp.json`, `.env.example`, `.gitmodules`/`.gitignore`/`.gitattributes`, `tools/`, `scripts/`, `tests/`, `__init__.py`, `configuration/`, `ИБTransportManagementDevelop/` (EDT проект), `src/bsl/`, `openspec/`, `.pre-commit-config.yaml`, `.kblintrc.yml` (kb-lint config; living in `docs/wiki/.kblintrc.yml` per `kb_lint/config.py:60-78`), `codecov.yml`, `data/eval/`. При добавлении нового EDT-проекта в корень — добавить в `SKIP_PATTERNS`, иначе `UNMAPPED` блокировка. (Roadmap: динамическое обнаружение через `.bsl-language-server.json` маркер — см. `src/bsl/project_discovery.py`.) |
-| `ralph_wiggum_stop.py` | Контроль итеративного цикла Ralph |
-| `pattern-reinforce-stop.py` | §22 reinforcement-мост (roadmap 260609 P0.1): на Stop читает surfaced-паттерны сессии (`shared/pattern_reinforce.py`) и подкрепляет их в Qdrant по эвристике успеха (commit/задача). Баннер `[REINFORCE] applied/skipped/missing/errors`; `missing` = легитимно удалённые паттерны (`not_found`-miss ≠ error, roadmap 260611 F14). Advisory exit 0, cap `REINFORCE_CAP=10`, opt-out `P1_REINFORCE_DISABLE=1` |
-
-#### SessionStart (3)
-
-| Hook | Назначение |
-|------|-----------|
-| `ensure-docker-qdrant.py` | Проверка Docker engine + контейнера `pdf-rag-qdrant` при старте сессии; фоновый авто-старт Docker Desktop и `docker compose up -d qdrant` при необходимости. Не блокирует сессию (SessionStart advisory); graceful degradation на Linux/Mac/отсутствие Docker. Timeout 10s. |
-| `ci-catchup-on-start.py` | Auto-backfill `.claude/cache/ci-failures.jsonl` recent FAILURE runs которые могли упасть пока Claude сессия была offline (Monitor `bkozphbx9` session-bound — между сессиями нет auto-trigger). Detached subprocess вызывает `python scripts/ci_failure_cache.py --catchup 20`, hook возвращается за ms. Opt-out `CI_CATCHUP_DISABLE=1`, override `CI_CATCHUP_LIMIT=N`. Timeout 5s (background subprocess до 30s). Док: [42.4 Failure Caching](../../../docs/framework%20documentation/42_MONITOR_CI/42.4_Failure_Caching.md). |
-| `gh-notif-intake-on-start.py` | Auto-summarize unread GitHub notifications через `gh api notifications` → emit systemMessage `[GH-NOTIF] N unread (ci-fail=X, security=Y, ...)` + top-3 priority subjects. Classifier helper `shared/gh_notif_classifier.py` маппит subject+reason на категорию + priority (P0 security / P1 ci-fail+pr-review / P2 dependabot / P3 merged). Opt-out `GH_NOTIF_INTAKE_DISABLE=1`. Timeout 8s. Док: [42.5 GitHub Notifications Intake](../../../docs/framework%20documentation/42_MONITOR_CI/42.5_GH_Notifications_Intake.md). |
-
-### Skills (66 шт.) — КАК / ЧТО
+### Skills (97 шт.) — КАК / ЧТО
 
 #### Доменные (5)
 
