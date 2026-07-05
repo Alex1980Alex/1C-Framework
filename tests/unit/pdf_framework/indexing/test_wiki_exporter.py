@@ -218,6 +218,35 @@ class TestWikiSearchIndexer:
         await idx.remove_page("some-entity")
         hs.remove_document.assert_called_once_with("some-entity")
 
+    @pytest.mark.asyncio
+    async def test_real_hybrid_search_roundtrip(self, tmp_path):
+        # Anti-mock regression (audit 260705 P1 runtime check): MagicMock
+        # fabricates any attribute, so it never caught that
+        # HybridSearchService lacked `remove_document` (it lived only on the
+        # inner BM25Index → AttributeError in prod). Exercise the REAL class:
+        # index two pages, find one via BM25, remove it, verify it's gone.
+        real_hs = pytest.importorskip(
+            "src.memory.orchestrator.search.hybrid_search"
+        ).HybridSearchService()
+
+        (tmp_path / "alpha.md").write_text(
+            "---\nid: a\n---\n\nquantum flux capacitor notes\n", encoding="utf-8"
+        )
+        (tmp_path / "beta.md").write_text(
+            "---\nid: b\n---\n\nordinary gardening tips\n", encoding="utf-8"
+        )
+        idx = WikiSearchIndexer(real_hs, wiki_dir=tmp_path)
+
+        count = await idx.index_all_pages()
+        assert count == 2
+
+        hits = real_hs.bm25_index.search("quantum capacitor", top_k=3)
+        assert hits and hits[0][0] == "alpha"
+
+        await idx.remove_page("alpha")
+        hits_after = real_hs.bm25_index.search("quantum capacitor", top_k=3)
+        assert all(doc_id != "alpha" for doc_id, _ in hits_after)
+
 
 class TestReverseSyncService:
     """Integration tests for wiki->graph reverse sync (REQ-4)."""

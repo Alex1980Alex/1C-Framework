@@ -213,6 +213,16 @@ class HybridSearchService:
         """Index multiple documents."""
         self.bm25_index.add_documents_batch(documents)
 
+    def remove_document(self, doc_id: str) -> bool:
+        """Remove a document from the BM25 index (delegate, mirrors index_document).
+
+        Added 2026-07-05 (audit 260705 P1 runtime check): WikiSearchIndexer.
+        remove_page called this method, but it existed only on the inner
+        BM25Index — AttributeError at runtime; mock-based tests never caught
+        it because MagicMock fabricates any attribute.
+        """
+        return self.bm25_index.remove_document(doc_id)
+
     async def _dense_search(self, query: str, top_k: int) -> list[tuple[str, float]]:
         """Execute dense search via injected adapter."""
         if self._dense_search_fn is None:
