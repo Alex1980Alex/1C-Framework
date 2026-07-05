@@ -129,6 +129,12 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 > Append-only, новые записи сверху.
 
+### 2026-07-06 — BODY500 progressive disclosure (2 крупных offender'а)
+- **va-bdd-testing 1457→495 ✅** — детали в 5 references/ (step-patterns/testdb-precheck/db-verification/business-process-chains/known-issues), нулевое удаление (line-slicing verbatim), BODY500 ушёл.
+- **implement-1c-task 1048→743 🟡** — 9 references/ (etap0/3r/4/5x/7/tools/version-history…), content-preserved (сумма ≈1064), все 8 этапов+режимы+гейты остались actionable. Дальше <500 не дожимал: остаток — ядро 8-этапного протокола, вынос ломает actionability (comprehensive skill легитимно крупный). Честно 🟡, не ✅.
+- **2 маргинальных не трогал** (framework-config 542, triad-factory 534 — ~7% над бюджетом; рефактор ~40 строк не стоит риска). skill-lint: **0 errors / 3 warnings** (blocking gate чист).
+- Урок: progressive disclosure имеет предел — детальные справочники выносятся, но actionable-ядро (workflow/этапы) остаётся; не гнать все скиллы под 500 любой ценой.
+
 ### 2026-07-06 — Закрыт класс renumbering-broke-enforcement (5 кодовых потребителей)
 - Комплексная проверка: 4 потребителя (audit_docs_skills/docs-change-tracker/slash-command-tracker/pdf_docs_acceptance) УЖЕ несли резолвящиеся new-9-layer пути (починены в 260704/260705). Последний реальный мис-маппинг `src/memory/ → 0_ВВЕДЕНИЕ/0.1_ОБЗОР` → `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY` (`docs-change-enforcer.py:111`, commit 8037b81db) — корень рекуррентного docs-enforcer-шума всю сессию.
 - Память `project_docs_renumbering_broke_enforcement` была STALE («pending») → скорректирована на РЕШЕНО (проверка перед доверием, не на веру). Итог 1→0 битых chapter-ref.
