@@ -237,6 +237,8 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 
 ### Pipeline 1: 1С Research
 
+> ⚠️ Иллюстративный pipeline: `research-task-detector.py` в `settings.json` НЕ зарегистрирован (файл есть в `.claude/hooks/`, но не подключён). Роль детекции вопросов сейчас несёт `skill-router.py`.
+
 ```
 ПОЛЬЗОВАТЕЛЬ: "что такое справочники в 1С?"
      │
