@@ -33,6 +33,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
@@ -43,6 +44,8 @@ DESC_BUDGET = 1024
 TRUNC_BUDGET = 1536
 
 _LINK_RE = re.compile(r"\]\(([^)#\s]+\.md)(#[^)]*)?\)")
+# шаблонные плейсхолдеры в примерах (doc-to-skill/references и т.п.) — не DEADLINK
+_PLACEHOLDER_LINK = re.compile(r"(^|/)(path\.md|file\.md)$|path/to/")
 
 
 def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
@@ -132,9 +135,14 @@ def lint_one(skill_dir: Path) -> list[dict[str, Any]]:
         )
 
     for m in _LINK_RE.finditer(text):
-        target = m.group(1)
-        if target.startswith(("http://", "https://")):
+        raw = m.group(1)
+        if raw.startswith(("http://", "https://")):
             continue
+        # url-decode перед резолвом: пути в доках несут %20 (пробел в
+        # "framework documentation") и др. — без unquote всё это false-positive DEADLINK
+        target = unquote(raw)
+        if _PLACEHOLDER_LINK.search(target):
+            continue  # шаблонный пример, не реальная ссылка
         resolved = (md.parent / target).resolve()
         if not resolved.exists():
             findings.append(
