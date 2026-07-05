@@ -105,6 +105,19 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 
 ## P3 — Пробелы покрытия (код без доков)
 
+> **✅ DONE 2026-07-05** (2 агента; facts сверены с кодом, link-sweep 6 файлов PASS). Задокументированы:
+> **retention.py** (27.12.3 §1 «TTL нет» ИСПРАВЛЕНО — есть lazy importance-decay half-life 90д для
+> `session_summary`/`general` + age-archive `archive_episodic` 90д/imp<0.8; `effective_importance`
+> используется в ai-адаптере) · **WikiDecayService** (27.12.6 §7.1 — линейный `decay_rate·days/30` decay
+> `learned_patterns.confidence`, CLI-only из `export_graph_to_wiki`) · **merge-консолидация** (27.12.6 §8,
+> из G2) · **два писателя drafts/** (32.6/37.5 — WikiPromoter batch vs `route_and_save._save_to_target("wiki")`
+> де-факто основной синхронный) · **wiki-tooling пласт** (32.9 — 5 скриптов + `_is_noise_entity_name` +
+> test_incremental_wiki_sync). promote-openspec/openspec/ уже были (P0/P1); merge_patterns — G2.
+> **⚠ КОД-НАХОДКА (не docs, → решение):** WikiDecayService (линейный) и §22 (Beta) ОБА пишут
+> `learned_patterns.confidence` без определённого приоритета. Но §22 деривит confidence из succ/fail
+> **на чтении** → линейные writes WikiDecayService не авторитетны (перезаписываются на след. apply) —
+> вероятно **legacy/superseded**. Кандидат в ADR: ретайр WikiDecayService или явно развести роли.
+
 - `WikiDecayService` (`librarian/wiki_decay.py`) — не упомянут ни в одном 27.x; в карте governance 27.12.6 wiki-decay отсутствует как механизм забывания.
 - `ai_memory/retention.py` (importance-decay half-life 90d + `archive_episodic`) — 27.12.3 §1 утверждает «TTL нет», живой retention не отражён.
 - `skill_learning/merge_patterns.py` — что мержит, кто зовёт — нигде.
@@ -170,6 +183,12 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — P3 пробелы покрытия закрыты (2 агента)
+- retention.py / WikiDecayService / два-писателя-drafts / wiki-tooling пласт — задокументированы с file:line; 27.12.3 «TTL нет» исправлено.
+- Код-находка (→ ADR-кандидат): WikiDecayService (линейный decay) vs §22 (Beta on-read) на одном поле `learned_patterns.confidence` — §22 деривит из счётчиков на чтении → WikiDecayService-writes не авторитетны, вероятно legacy.
+- merge_patterns (G2) + promote-openspec/openspec (P0/P1) — уже закрыты ранее. Link-sweep 6 файлов PASS.
+- Осталось из 260705: R2-физперенос 37.4/37.6/37.7; §БП G4 (memory-бенчмарк).
 
 ### 2026-07-05 — Runtime-верификация G2: PASS (все слои)
 - E2E `--apply` на КОПИИ продакшн-силоса: синтетический near-дубль (case/whitespace-вариация) корректно слит (winner=higher-confidence, `.bak` создан), повторный прогон **идемпотентен** (0 merged).
