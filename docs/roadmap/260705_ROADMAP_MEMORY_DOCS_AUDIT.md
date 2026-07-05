@@ -159,6 +159,12 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 
 > Append-only, новые записи сверху.
 
+### 2026-07-05 — Runtime-верификация P1 поймала ТРЕТИЙ латентный баг, commit `5c81ab395`
+- По запросу «проверь реализацию» прогнан runtime-слой верификации (e2e на РЕАЛЬНЫХ классах — обязанность оркестратора по контракту code-verify, статический ревьюер это не покрывает).
+- **Пойман баг №3:** `HybridSearchService` не имел `remove_document` вовсе — метод жил только на внутреннем `BM25Index` (ревьюер сверил имя по :157, но не класс-владельца); `remove_page` падал AttributeError. MagicMock фабрикует любой атрибут → mock-тест проходил. Фикс: делегат на сервисе + **anti-mock регресс** `test_real_hybrid_search_roundtrip` (реальные классы: index→search→remove→re-search).
+- e2e живьём: 11 drafts проиндексировано, 0 warnings, BM25-hit, remove OK; регресс потребителей hybrid_search — 156 passed.
+- Урок в копилку: mock-тесты не ловят несуществующие атрибуты; runtime-слой верификации обязателен для fixes «интерфейсного шва».
+
 ### 2026-07-05 — P1 исполнен (code-first), commits `1b6bfd812`…`c5ee8edcf`
 - 2 реальных code-fix: test-debt в test_wiki_promoter (не прод-баг) + латентный прод-баг index_page (await на sync index_document → index-search индексировал 0).
 - ~20 doc-правок дрейфа (link-types 8, cap 10, RRF-веса, promotion Popen+F13, WikiSearchIndexer, CLI 9) — 2 агента, file-ownership.
