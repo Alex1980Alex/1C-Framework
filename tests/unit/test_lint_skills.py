@@ -105,3 +105,22 @@ def test_badmaturity_flags_unknown_value(tmp_path):
     # валидное значение -> нет флага
     d2 = _skill(tmp_path, "mat2", "---\nname: mat2\ndescription: d\nmaturity: experimental\n---\n\nbody\n")
     assert not any(f["rule"] == "BADMATURITY" for f in MOD.lint_one(d2))
+
+
+def test_fragmented_flags_many_crumbs(tmp_path):
+    # over-fragmentation: >3 крошечных references -> advisory FRAGMENTED
+    d = _skill(tmp_path, "fragged", "---\nname: fragged\ndescription: d\n---\n\nbody [r](references/a.md)\n")
+    refs = d / "references"
+    refs.mkdir()
+    for i in range(5):  # 5 крошек по 5 строк
+        (refs / f"r{i}.md").write_text("l\n" * 5, encoding="utf-8")
+    assert any(f["rule"] == "FRAGMENTED" for f in MOD.lint_one(d))
+
+
+def test_no_fragmented_on_substantial_refs(tmp_path):
+    d = _skill(tmp_path, "clean-split", "---\nname: clean-split\ndescription: d\n---\n\nbody\n")
+    refs = d / "references"
+    refs.mkdir()
+    for i in range(3):  # 3 крупных reference по 120 строк
+        (refs / f"big{i}.md").write_text("l\n" * 120, encoding="utf-8")
+    assert not any(f["rule"] == "FRAGMENTED" for f in MOD.lint_one(d))
