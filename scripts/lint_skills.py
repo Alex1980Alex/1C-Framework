@@ -47,6 +47,14 @@ _LINK_RE = re.compile(r"\]\(([^)#\s]+\.md)(#[^)]*)?\)")
 # шаблонные плейсхолдеры в примерах (doc-to-skill/references и т.п.) — не DEADLINK
 _PLACEHOLDER_LINK = re.compile(r"(^|/)(path\.md|file\.md)$|path/to/")
 
+# G6 (audit 260705): императивы-абсолюты. Anthropic: при плато КОРОТИТЬ скилл;
+# reasoning-«why» надёжнее ALWAYS/NEVER. Высокая плотность = over-constrained.
+_ABSOLUTE_RE = re.compile(
+    r"\b(ALWAYS|NEVER|MUST|ОБЯЗАТЕЛЬНО|ВСЕГДА|НИКОГДА|НЕЛЬЗЯ|ЗАПРЕЩЕНО|КРИТИЧЕСКИ)\b"
+)
+OVERCONSTRAINED_BUDGET = 25  # абсолютов на скилл; выше → advisory (текущий max каталога=12)
+KNOWN_MATURITY = {"curated", "experimental", "deprecated"}  # G5 конвенция
+
 
 def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     """Minimal YAML-frontmatter parse: top-level key-value scalars only."""
@@ -158,6 +166,27 @@ def lint_one(skill_dir: Path) -> list[dict[str, Any]]:
                         "detail": f"ссылка глубже 1 уровня: {target} (официально: 1 уровень от SKILL.md)",
                     }
                 )
+
+    # G6: over-constrained — избыток императивов-абсолютов
+    n_abs = len(_ABSOLUTE_RE.findall(body))
+    if n_abs > OVERCONSTRAINED_BUDGET:
+        findings.append(
+            {
+                "rule": "OVERCONSTRAINED",
+                "level": "warning",
+                "detail": f"{n_abs} императивов-абсолютов (>{OVERCONSTRAINED_BUDGET}); при плато КОРОТИ, reasoning-why > ALWAYS/NEVER",
+            }
+        )
+    # G5: незнакомое значение maturity (если поле есть — должно быть из конвенции)
+    mat = fm.get("maturity")
+    if mat and mat not in KNOWN_MATURITY:
+        findings.append(
+            {
+                "rule": "BADMATURITY",
+                "level": "warning",
+                "detail": f"maturity={mat!r} не из {sorted(KNOWN_MATURITY)}",
+            }
+        )
     return findings
 
 
@@ -165,6 +194,8 @@ def lint_all(skills_dir: Path = SKILLS_DIR) -> dict[str, Any]:
     """Lint the whole catalog; adds cross-skill NAMEDUP findings."""
     findings_map: dict[str, list[dict[str, Any]]] = {}
     names_seen: dict[str, list[str]] = {}
+    # G4/G5 adoption-инвентарь frontmatter-2026 (не флаг per-skill — сводка)
+    inv = {"when_to_use": 0, "paths": 0, "maturity": {}}
     for d in sorted(skills_dir.iterdir()):
         if not d.is_dir() or d.name.startswith((".", "_")):
             continue
@@ -174,6 +205,12 @@ def lint_all(skills_dir: Path = SKILLS_DIR) -> dict[str, Any]:
             fm, _ = parse_frontmatter(md.read_text(encoding="utf-8", errors="replace"))
             eff_name = fm.get("name") or d.name
             names_seen.setdefault(eff_name, []).append(d.name)
+            if fm.get("when_to_use"):
+                inv["when_to_use"] += 1
+            if fm.get("paths"):
+                inv["paths"] += 1
+            mat = fm.get("maturity") or "(unmarked)"
+            inv["maturity"][mat] = inv["maturity"].get(mat, 0) + 1
         if findings:
             findings_map[d.name] = findings
     for eff_name, dirs in names_seen.items():
@@ -195,6 +232,7 @@ def lint_all(skills_dir: Path = SKILLS_DIR) -> dict[str, Any]:
         "errors": errors,
         "warnings": warnings,
         "per_skill": findings_map,
+        "frontmatter_2026": inv,
     }
 
 
@@ -231,6 +269,12 @@ def main() -> int:
             for f in findings:
                 mark = "E" if f["level"] == "error" else "W"
                 _print_utf8("  [{}] {}: {} — {}".format(mark, sk_name, f["rule"], f["detail"]))
+        inv = report.get("frontmatter_2026", {})
+        _print_utf8(
+            "# frontmatter-2026 adoption (G4/G5): when_to_use={} paths={} maturity={}".format(
+                inv.get("when_to_use", 0), inv.get("paths", 0), inv.get("maturity", {})
+            )
+        )
     if args.strict and report["errors"] > 0:
         return 1
     return 0
