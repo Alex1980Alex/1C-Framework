@@ -54,6 +54,10 @@ _ABSOLUTE_RE = re.compile(
 )
 OVERCONSTRAINED_BUDGET = 25  # абсолютов на скилл; выше → advisory (текущий max каталога=12)
 KNOWN_MATURITY = {"curated", "experimental", "deprecated"}  # G5 конвенция
+# over-fragmentation (audit 260705): reference <CRUMB_LINES строк = крошка; >MAX_CRUMBS
+# крошек = резали по-секционно ради бюджета, а не по связному знанию (анти-паттерн)
+CRUMB_LINES = 60
+MAX_CRUMBS = 3
 
 
 def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
@@ -187,6 +191,27 @@ def lint_one(skill_dir: Path) -> list[dict[str, Any]]:
                 "detail": f"maturity={mat!r} не из {sorted(KNOWN_MATURITY)}",
             }
         )
+    # over-fragmentation: избыток крошечных references = резали по-секционно, не по знанию
+    refs = (
+        list((skill_dir / "references").glob("*.md")) if (skill_dir / "references").is_dir() else []
+    )
+    if refs:
+        crumbs = [
+            r.name
+            for r in refs
+            if len(r.read_text(encoding="utf-8", errors="replace").splitlines()) < CRUMB_LINES
+        ]
+        if len(crumbs) > MAX_CRUMBS:
+            findings.append(
+                {
+                    "rule": "FRAGMENTED",
+                    "level": "warning",
+                    "detail": (
+                        f"{len(crumbs)} references-крошек (<{CRUMB_LINES} строк) из {len(refs)} — "
+                        f"дели по связному знанию, не по-секционно; консолидируй крошки"
+                    ),
+                }
+            )
     return findings
 
 

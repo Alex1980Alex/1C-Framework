@@ -174,6 +174,34 @@ grep -r "keyword" .claude/skills/*/SKILL.md
 
 ---
 
+## Progressive disclosure — КАК расщеплять правильно (audit 260705)
+
+Скилл >500 строк НЕ удаляют, а расщепляют в `references/`. Но расщепление легко
+сделать МЕХАНИЧЕСКИ (нарезать по-секционно на крошки) — это анти-паттерн. Правила:
+
+**3 канонических паттерна** (research `skills-system-best-practices-2026.md`):
+1. **guide + refs** — SKILL.md высокоуровневый гайд + ссылки на `REFERENCE.md`/`EXAMPLES.md`/`FORMS.md`.
+2. **domain-split** — `references/{finance,sales,product}.md` — грузится ТОЛЬКО нужный домен + grep-подсказки.
+3. **conditional** — базовое инлайн, advanced по ссылке.
+
+**Жёсткие правила:**
+- Дели по **СВЯЗНОМУ ЗНАНИЮ/ДОМЕНУ**, НЕ по-секционно/по-этапно. `references/step-patterns.md`
+  (весь справочник паттернов) — да; `references/etap0.md`+`etap1.md`+…+`etap8.md` — **НЕТ** (фрагментация).
+- Reference-файл **≥ ~80–100 строк** (и с TOC сверху если >100). Файл <60 строк = **крошка** →
+  не заслуживает своего файла, слей в связный reference или оставь инлайн.
+- Ссылки на references — **строго 1 уровень** от SKILL.md; глубже → модель превьюит `head -100` и читает неполно.
+- В SKILL.md оставляй **actionable-ядро** (workflow, этапы, критичные правила) + указатель «когда читать какой reference»;
+  выноси СПРАВОЧНИКИ (исчерпывающие таблицы, длинные примеры, edge-cases).
+
+**Анти-паттерн over-fragmentation** (ловит `skill-lint` правило `FRAGMENTED`, advisory):
+≥4 крошек (<60 строк) в одном скилле = резали ради цифры <500, а не по знанию.
+Пример-факт: implement-1c-task 12 references, 7 крошек по-этапно → правильно ~4–5 связных
+(`stage-details.md` + `git-workflow.md` + `gotchas.md` + `tools-reference.md`).
+
+**Verify расщепления (нулевое удаление):** сумма строк (SKILL.md + все references) ≈ исходной;
+все ссылки резолвятся; ключевые разделы/этапы на месте (grep). НЕ гони actionable-ядро в references
+ради бюджета (см. plateau ниже) — reference-heavy ужимается, workflow-heavy честно остаётся ~маргинал.
+
 ## Frontmatter-2026, зрелость и plateau (audit 260705 §БП G4/G5/G6)
 
 Официальный Agent Skills контракт 2026 добавил опциональные frontmatter-поля +
