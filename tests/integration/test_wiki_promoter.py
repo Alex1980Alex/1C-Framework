@@ -17,15 +17,42 @@ def _make_point(idx: int, name: str, confidence: float, usage_count: int):
     """Create a mock Qdrant point matching ``scroll(with_vectors=True)``.
 
     Vector lives on ``point.vector`` — not in payload — as returned by Qdrant.
+
+    Payload matches the CURRENT §22 sufficient-statistics contract: the
+    canonical ``application_count`` field (server-side promote filter) plus
+    explicit ``succ``/``fail`` counts so the client-side
+    ``payload_effective_confidence`` gate resolves deterministically instead
+    of falling back to the Beta prior 0.70. ``last_decay_at`` is pinned recent
+    to keep time-decay negligible. (Pre-2026-05-31 fixtures used the retired
+    ``usage_count`` field with no counts → effective→0.70 < 0.8 → all promote
+    tests failed as stale test debt; fixed 2026-07-05, audit 260705 P1.)
     """
+    from datetime import datetime
+
     point = MagicMock()
     point.id = f"point-{idx}"
     point.vector = [0.1 * (idx + 1)] * 8
+    # Seed succ/fail to satisfy the Beta-posterior invariant that the stored
+    # `confidence` field caches: derive_confidence(succ, fail) == confidence,
+    # i.e. (7+succ)/(10+succ+fail) == confidence. Solving with fail=0:
+    #   succ = (10*conf - 7) / (1 - conf).  This makes the client-side effective
+    #   gate equal to `confidence` (pre-decay), matching a real learned point —
+    #   NOT the legacy raw-ratio seeding (n*conf), which for small n stays below
+    #   the stored confidence and would spuriously fail the promote gate.
+    if confidence < 1.0 and (10.0 * confidence - 7.0) > 0:
+        succ = (10.0 * confidence - 7.0) / (1.0 - confidence)
+        fail = 0.0
+    else:
+        succ, fail = 0.0, 0.0
     point.payload = {
         "name": name,
         "content": f"Content for {name}",
         "confidence": confidence,
-        "usage_count": usage_count,
+        "application_count": usage_count,
+        "usage_count": usage_count,  # legacy mirror (harmless; not read anymore)
+        "succ": succ,
+        "fail": fail,
+        "last_decay_at": datetime.now().isoformat(),
         "tags": ["test"],
         "description": f"Description of {name}",
     }

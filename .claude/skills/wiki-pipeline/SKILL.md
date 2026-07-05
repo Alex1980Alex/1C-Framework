@@ -11,11 +11,11 @@ description: PDF → Structured Wiki Pages pipeline (Hermes Phase 4). Экспо
 
 | Класс | Файл | Назначение |
 |-------|------|------------|
-| `WikiExporter` | [src/pdf_framework/indexing/wiki_exporter.py:131](../../../src/pdf_framework/indexing/wiki_exporter.py#L131) | Graph entity → markdown через `MemoryCube.to_wiki_page()` |
-| `ForwardSyncService` | [wiki_exporter.py:299](../../../src/pdf_framework/indexing/wiki_exporter.py#L299) | Catch-up sync по timestamp (`sync_since`) |
-| `IncrementalWikiSync` | [wiki_exporter.py:392](../../../src/pdf_framework/indexing/wiki_exporter.py#L392) | Event-driven sync (подписка на `graph.*` через EventBus) + DLQ + metrics |
-| `ReverseSyncService` | [wiki_exporter.py:487](../../../src/pdf_framework/indexing/wiki_exporter.py#L487) | Watchdog: Write в `docs/wiki/entities/*.md` → parse frontmatter → update graph |
-| `WikiSearchIndexer` | [wiki_exporter.py:643](../../../src/pdf_framework/indexing/wiki_exporter.py#L643) | Индексация wiki-страниц через `HybridSearchService` (BM25+dense RRF) |
+| `WikiExporter` | [src/pdf_framework/indexing/wiki_exporter.py:158](../../../src/pdf_framework/indexing/wiki_exporter.py#L158) | Graph entity → markdown через `MemoryCube.to_wiki_page()` |
+| `ForwardSyncService` | [wiki_exporter.py:333](../../../src/pdf_framework/indexing/wiki_exporter.py#L333) | Catch-up sync по timestamp (`sync_since`) |
+| `IncrementalWikiSync` | [wiki_exporter.py:432](../../../src/pdf_framework/indexing/wiki_exporter.py#L432) | Event-driven sync (подписка на `graph.*` через EventBus) + DLQ + metrics |
+| `ReverseSyncService` | [wiki_exporter.py:597](../../../src/pdf_framework/indexing/wiki_exporter.py#L597) | Watchdog: Write в `docs/wiki/entities/*.md` → parse frontmatter → update graph |
+| `WikiSearchIndexer` | [wiki_exporter.py:753](../../../src/pdf_framework/indexing/wiki_exporter.py#L753) | Индексация wiki-страниц через `HybridSearchService` (BM25+dense RRF) |
 | `WikiPromoter` | [src/memory/librarian/wiki_promoter.py:21](../../../src/memory/librarian/wiki_promoter.py#L21) | L2→L5: скан `learned_patterns`, дедуп по cosine similarity, создание `docs/wiki/drafts/<slug>.md` через `MemoryCube.to_wiki_page()` + лог в `docs/wiki/log.md` |
 
 ## CLI
@@ -142,14 +142,15 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 
 ## Тесты
 
-**Coverage matrix (53 тестов total, 52 pass + 1 skip; добавлено 26 тестов 2026-05-15):**
+**Coverage matrix (58 тестов total, 57 pass + 1 skip; +26 тестов 2026-05-15, +5 incremental-sync):**
 
 - [tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — **27 тестов** (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, ReverseSyncService 9, ReverseSyncRuntimeWatchdog 1 @pytest.mark.slow via `pytest.importorskip("watchdog")`)
+- [tests/unit/pdf_framework/indexing/test_incremental_wiki_sync.py](../../../tests/unit/pdf_framework/indexing/test_incremental_wiki_sync.py) — **5 тестов** (event-driven sync + DLQ)
 - [tests/unit/memory/librarian/test_wiki_decay.py](../../../tests/unit/memory/librarian/test_wiki_decay.py) — **14 тестов** (TestDecayPoint 11: skip-paths + decay formula + clamps + timezone; TestDecayAll 3: counters aggregation + empty + termination)
 - [tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py](../../../tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py) — **5 тестов** (outgoing only, empty for missing, properties preserve, no incoming)
 - [tests/unit/scripts/test_archive_stale.py](../../../tests/unit/scripts/test_archive_stale.py) — **7 тестов** (qualify, fresh-skip, high-conf-skip, already-archived-skip, missing-frontmatter-skip, collision-suffix, dry-run)
 
-Запуск: `pytest tests/unit/memory/librarian/ tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py tests/unit/pdf_framework/indexing/test_wiki_exporter.py tests/unit/scripts/test_archive_stale.py -q` (slow skipped по default).
+Запуск: `pytest tests/unit/memory/librarian/ tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py tests/unit/pdf_framework/indexing/ tests/unit/scripts/test_archive_stale.py -q` (slow skipped по default).
 
 ## Spec
 
