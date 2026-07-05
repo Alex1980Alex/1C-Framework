@@ -376,6 +376,23 @@ jobs:
         run: pip-audit --strict
         continue-on-error: true  # advisory; fix CVSS >= 7.0 within 7 days, medium in next iteration
 
+  skill-lint:
+    name: Skill Catalog Lint (budgets + dead links — advisory)
+    runs-on: ubuntu-latest
+    # 260705 skills-audit BP G1: официальные бюджеты 2026 (body<500, desc<=1024,
+    # trunc-1536, dead links, name-collisions). Advisory до починки исторических
+    # 49 errors (перенумерация глав сломала ссылки из скиллов); промоут в blocking
+    # (--strict) после зачистки. Pure stdlib.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Lint skill catalog (advisory)
+        run: python scripts/lint_skills.py --top 30
+
   skill-router-gt-lint:
     name: Skill Router GT Lint (schema + no-leakage — blocking)
     runs-on: ubuntu-latest

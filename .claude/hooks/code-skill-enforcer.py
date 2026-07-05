@@ -443,6 +443,18 @@ class CodeSkillEnforcer(BaseHook):
 
     # -------------------------------------------------------------------------
     # POST Mode (advisory only — PostToolUse cannot block)
+    #
+    # ⚠ SUPERSEDED / INTENTIONALLY NOT REGISTERED (audit 260705 P0.1).
+    # This enforcer is registered ONLY on PreToolUse (Write|Edit|Bash) — see
+    # settings.json. The POST contour below is DEAD (never invoked) because each
+    # of its levels was replaced by a dedicated PostToolUse hook:
+    #   Level D (research-cache reminder) → posttooluse-web-cache.py +
+    #                                       knowledge-cache-reminder.py
+    #   Level E (post-verification)       → code-verify-reminder.py
+    #   Level F (LEARN-phase backup)      → PreToolUse phantom-guard already
+    #                                       triggers learning-loop (Level A)
+    # DO NOT re-register this hook on PostToolUse — it would emit DUPLICATE
+    # reminders alongside the dedicated hooks. Retained for reference only.
     # -------------------------------------------------------------------------
 
     def _handle_post(self, inp):
