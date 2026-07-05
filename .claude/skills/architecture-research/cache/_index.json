@@ -3,6 +3,36 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "skills-system-best-practices-2026.md",
+      "title": "Skills-системы у лидеров (июль 2026): официальный контракт SKILL.md (frontmatter 15 полей, 1536-cap описания, 500-строк body, 25k re-attach budget), progressive disclosure (1 уровень ссылок, domain-split), evals-конвейер (evals.json, baseline-delta, blind A/B, description tuning), Caliper pass@k + cheat-детект, SkillSpec skill.spec.yml + Doctor, skill-framework 17 lint-правил + one-tree deploy, master-router (gamedev), Superpowers v6.1.1 drill evals, skills CLI .curated/.experimental",
+      "keywords": [
+        "skill-md",
+        "frontmatter",
+        "skills-contract",
+        "progressive-disclosure",
+        "skill-evals",
+        "pass-at-k",
+        "caliper",
+        "skillspec",
+        "skill-lint",
+        "token-budget",
+        "master-router",
+        "skill-routing",
+        "description-tuning",
+        "baseline-comparison",
+        "skill-creator",
+        "agentskills-standard",
+        "superpowers",
+        "skills-cli",
+        "context-fork",
+        "allowed-tools",
+        "when-to-use",
+        "skill-lifecycle",
+        "curation"
+      ],
+      "last_verified": "2026-07-05"
+    },
+    {
       "file": "agentic-quality-gate-workflow-templates-2026.md",
       "title": "Agentic workflow-шаблоны с quality-gate-петлями (июль 2026): doordash agentico (FSM+критики плана+bounded iteration), AWS AI-DLC (3 фазы+адаптивная глубина+steering rules), koto (YAML FSM, exit-code gate + fix-петля {{gate_output}}), Graybark (11 этапов, verify.sh, 3 параллельных рецензента, compound learning, needs-human-p0/p1/p2)",
       "keywords": [
