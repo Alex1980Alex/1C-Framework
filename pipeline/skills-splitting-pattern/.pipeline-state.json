@@ -1,0 +1,44 @@
+{
+  "task": "skills-splitting-pattern",
+  "title": "skills-splitting-pattern",
+  "created_at": "2026-07-06T02:03:25",
+  "updated_at": "2026-07-06T02:03:26",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "docs/roadmap/260705_ROADMAP_SKILLS_DOCS_AUDIT.md",
+      "status": "done",
+      "completed_at": "2026-07-06T02:03:25"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "docs/roadmap/260705_ROADMAP_SKILLS_DOCS_AUDIT.md",
+      "status": "done",
+      "completed_at": "2026-07-06T02:03:25",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-06T02:03:26"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "docs/roadmap/260705_ROADMAP_SKILLS_DOCS_AUDIT.md",
+      "status": "done",
+      "completed_at": "2026-07-06T02:03:25"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "docs/roadmap/260705_ROADMAP_SKILLS_DOCS_AUDIT.md",
+      "status": "done",
+      "completed_at": "2026-07-06T02:03:25"
+    }
+  ]
+}
