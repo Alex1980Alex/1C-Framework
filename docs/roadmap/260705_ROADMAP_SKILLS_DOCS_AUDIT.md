@@ -32,6 +32,19 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 ## P0 — Ошибки и решение-требующие (≤ 0.5 дня)
 
+> **✅ DONE 2026-07-05** (code-first, 3 агента с chapter-ownership + сам). **P0.1 R1 решён по коду:**
+> POST-контур enforcer НЕ восстанавливать — вытеснен выделенными хуками (D→posttooluse-web-cache/
+> knowledge-cache-reminder, E→code-verify-reminder ×6, F→PreToolUse phantom-guard); восстановление =
+> дубли (анти-паттерн WikiDecayService). Код уже в верном состоянии, добавлен guard-комментарий
+> «DO NOT re-register» + smoke PRE-путь exit 0. Доки (11.1/11.2/11.4/13.2/13.3) помечают D/E/F
+> superseded. P0.2 (.mcp.json не settings.json + D:\→C:/), P0.3 (события 3 хуков по settings.json —
+> factory-enforcer/task-protocol-observer=PreToolUse, auto-git-save=Stop), P0.4 (CREATE внутри
+> субагента, не host — 25.3/25.6), P0.5 (8 доменов из skill-router-config — 11.5/11.6), P0.6 (38 правил
+> не 43) — исправлены, агенты сверяли с settings.json/config напрямую. Link-sweep 72 ссылки PASS.
+> **Бонус §БП G1 (R3) в этой же волне:** `scripts/lint_skills.py` (9 правил бюджетов 2026) + advisory
+> CI-job; первый прогон 49 errors/5 warns по 97 скиллам (массовый DEADLINK от перенумерации глав —
+> подтвердил `project_docs_renumbering_broke_enforcement`). Discrimination-тест PASS.
+
 | # | Файл(ы) | Проблема | Действие |
 |---|---|---|---|
 | P0.1 | 11.1:44-45,68 · 11.2:257-267 · 11.4:206-267 · 13.2:121-122 · 13.3:163-165 | **POST-контур `code-skill-enforcer` (Level D/E/F: cache-reminder, post-verification, LEARN backup) мёртв** — в settings.json одна регистрация PreToolUse `Write\|Edit\|Bash` (:270); POST-mode в коде есть (`code-skill-enforcer.py:445-459`), но не выполняется НИКОГДА. 5 доков описывают как живой | **R1 (выбор пользователя, аналог kb-lint 260705):** (a) вернуть PostToolUse-регистрацию ИЛИ (b) пометить D/E/F «не зарегистрированы» в 5 доках. Код-first → рекомендация (a), если контур ценен |
@@ -103,6 +116,11 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — P0 исполнен (code-first) + §БП G1 skill-lint
+- P0.1 R1 решён по коду: POST-контур enforcer superseded (не восстанавливать — дубли), guard-комментарий + 5 доков помечены. P0.2-P0.6 (MCP-регистрация/события хуков/CREATE-в-субагенте/8 доменов/38 правил) исправлены 3 агентами (сверка с settings.json/config). Link-sweep 72 ссылки PASS.
+- §БП G1: `scripts/lint_skills.py` + advisory CI-job (`skill-lint`, continue-on-error). Первый прогон: 49 errors/5 warns / 97 скиллов — массовый DEADLINK (перенумерация глав), `1c-debug-hmr` DESC1024, BODY500 у va-bdd/implement-1c/hooks-triad. Discrimination-тест PASS.
+- Осталось: P1 (11.3/11.7 переработка + 13.2-генератор + реестр триады + 25.x/29.x аддендумы), P2 (генераторы), §БП G2 (per-skill evals) / G3-G6. Отдельная зачистка 49 skill-lint errors (перенумерация — [[project_docs_renumbering_broke_enforcement]]).
 
 ### 2026-07-05 — Аудит выполнен, дорожная карта создана
 - 3 параллельных агента: аудит 9.1+9.2 (14 находок ranked, счётчики-таблица), аудит 9.3+9.4 (7 находок; 9.4 = фантом, уже SUPERSEDED-баннерован), research (кеш `skills-system-best-practices-2026.md`, 10 фактов + 8 отличий лидеров).
