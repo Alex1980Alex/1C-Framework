@@ -129,6 +129,12 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 > Append-only, новые записи сверху.
 
+### 2026-07-06 — Зачистка skill-lint 48→0 + промоут в blocking + P2.1-генератор + P1
+- **§БП G1 закрыт полностью:** skill-lint errors **48→0** (4 BODY500 warnings — отдельный progressive-disclosure срез). Тул `fix_skill_deadlinks.py` (авто-переразрешение битых ссылок после перенумерации) применил 23 фикса; агент дочистил остаток (6 dead-skill ссылок, 6 NODESC, DESC1024, NOSKILLMD `1c-config-knowledge`). **Найден+исправлен реальный баг в собственном линтере** (`lint_skills` резолвил url-encoded target без `unquote` → все `%20`-пути false-positive DEADLINK; 17 FP устранены). CI-джоб `skill-lint` **промоутнут в blocking** (`--strict`, снят continue-on-error) — регрессия теперь валит CI. +11 unit (test_lint_skills 6 [вкл. пин unquote-бага] + test_gen_hooks_catalog 5).
+- **P2.1 генератор** (P1-волна): `gen_hooks_catalog.py` — каталог хуков из settings.json (99 регистраций), 13.2 регенерирован, реестр триады синхронизирован. P1 доки (11.3 honest-eval, 11.7 CI-gate, 25.x/29.x) — DONE.
+- Закрывает pending-память `project_docs_renumbering_broke_enforcement` (теперь есть тул-ремедиация).
+- Осталось: §БП G2 (per-skill evals с baseline — отдельный крупный build), G3-G6, 4 BODY500 (progressive disclosure).
+
 ### 2026-07-05 — P0 исполнен (code-first) + §БП G1 skill-lint
 - P0.1 R1 решён по коду: POST-контур enforcer superseded (не восстанавливать — дубли), guard-комментарий + 5 доков помечены. P0.2-P0.6 (MCP-регистрация/события хуков/CREATE-в-субагенте/8 доменов/38 правил) исправлены 3 агентами (сверка с settings.json/config). Link-sweep 72 ссылки PASS.
 - §БП G1: `scripts/lint_skills.py` + advisory CI-job (`skill-lint`, continue-on-error). Первый прогон: 49 errors/5 warns / 97 скиллов — массовый DEADLINK (перенумерация глав), `1c-debug-hmr` DESC1024, BODY500 у va-bdd/implement-1c/hooks-triad. Discrimination-тест PASS.
