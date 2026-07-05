@@ -57,6 +57,18 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 
 ## P1 — Устаревшее и внутренние противоречия (1 день)
 
+> **✅ DONE 2026-07-05** (commits `1b6bfd812`…`c5ee8edcf` + хвосты; 2 параллельных агента + сам).
+> **Code-first (2 реальных бага найдено):** (1) `test_wiki_promoter` — 5 красных тестов = test-debt
+> (фикстура на ретированном `usage_count`), НЕ прод-баг (см. баннер P0-раздела); фикс под §22-контракт,
+> 15/15. (2) **Латентный прод-баг** `WikiSearchIndexer.index_page` — `await hybrid_search.index_document(doc_id=, content=, metadata=)` при **sync** 2-арг сигнатуре → `index-search` CLI молча индексировал 0 страниц
+> (каждая падала в per-page `except`); фикс `wiki_exporter.py:772` (+ `remove_page` тот же класс) +3 регресс-теста;
+> флагнут агентом-B при сверке доков. **Доки:** «10 link-типов»→8 (27.12 ×3, 27.12.3 ×2), cap 50→10 (27.9),
+> P5.3 RETIRED-консистентность (27.8), dead test path (27.3), протухшие мета-⚠ сняты (27.12.2/27.12.4 + top-200→500),
+> promotion detached-Popen + F13 (32.6/32.9/37.5), WikiSearchIndexer листинги по коду (32.7/32.2),
+> RRF-веса L3/L4 (37.3/37.8: md=0.15/wiki=0.20), CLI 8→9 (promote-openspec), LoC 692→802, skill wiki-pipeline
+> якоря+test-count. **Открытый флаг:** `HybridSearchService.index_document` sync-без-metadata — 32.7 несёт ноту
+> о расхождении с историческим 4-полевым payload `wiki_pages_v1` (три формата — см. P1-строку 32.7).
+
 - **«10 link-типов» → 8** (ADR-L1): 27.12 ×3 места (167-168, 268, 410) + 27.12.3 ×2 (14, 135) — файл противоречит собственной легенде §10 («8 типов»).
 - **27.2**: фантомные поля MemCube `quality_score`/`access_count`/`last_accessed` (в коде нет); `ContentType` 6 → **7** (есть `WIKI`; 27.1:14 тоже); RRF-веса `{1.0/0.9/0.7}` поданы как дефолты — в коде default `None` → все 1.0.
 - **27.9:69**: reinforcement «cap 50» → в проде **cap 10** (`pattern-reinforce-stop.py:44,105`; 50 — лишь DEFAULT_CAP библиотеки); сам хук `pattern-reinforce-stop.py` в главе не назван.
@@ -146,6 +158,12 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — P1 исполнен (code-first), commits `1b6bfd812`…`c5ee8edcf`
+- 2 реальных code-fix: test-debt в test_wiki_promoter (не прод-баг) + латентный прод-баг index_page (await на sync index_document → index-search индексировал 0).
+- ~20 doc-правок дрейфа (link-types 8, cap 10, RRF-веса, promotion Popen+F13, WikiSearchIndexer, CLI 9) — 2 агента, file-ownership.
+- Тесты: 44 passed (wiki_exporter +3 регресс) + 15/15 promoter; skill wiki-pipeline синхронизирован.
+- Осталось: P2 (обзор→указатель), R2 (ARCHIVE 5.3), P3-пробелы, §БП G2/G4.
 
 ### 2026-07-05 — P0 исполнен (code-first), commit `10633f4ee`
 - R1 решён восстановлением проводки (не переписыванием доки); wiki снова гейтится на commit.
