@@ -211,7 +211,7 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 - **CLI Dashboard** (`scripts/hook-dashboard.py`): `--section skills` показывает `Source` колонку (prompt-detection:N post-tool-use:N), summary показывает `via <source>: N`
 - **Streamlit Dashboard** (`src/ui/pages/hook_dashboard.py`): Tab 2 "Skill Activations" — метрики-карточки по source + колонка Source в таблице
 
-### MCP Server (1 сервер, 14 инструментов) — ЧЕМ
+### MCP Server (1 сервер, 15 инструментов) — ЧЕМ
 
 | Инструмент | Назначение |
 |-----------|-----------|
@@ -229,6 +229,7 @@ skill-router.py          skill-usage-metrics.py     skill-router.py
 | `list_documents` | Список документов |
 | `get_toc` | Оглавление документа |
 | `get_stats` | Статистика индекса |
+| `plan_execute` | Планирование + исполнение multi-step задачи |
 
 ---
 
@@ -393,7 +394,7 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 
 ```
 .claude/
-├── hooks/                         (17 хуков)
+├── hooks/                         (99 регистраций — см. 13.2 Hooks, авто-генерация)
 │   ├── base/
 │   │   ├── __init__.py            (BaseHook, HookInput, HookOutput)
 │   │   ├── protocol.py            (протокол stdin/stdout JSON — РАБОЧАЯ база для всех хуков)
@@ -404,30 +405,27 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   │   ├── tfidf_scorer.py        (TF-IDF scoring: pure numpy, utterance-based corpus, Layer C)
 │   │   └── hook_lock.py           (межхуковая синхронизация)
 │   ├── skill-router.py            (Submit: Layer A+B+C → skill bundles)
-│   ├── research-task-detector.py  (Submit: ВОПРОСЫ → skill routing)
 │   ├── decision-to-triad.py      (Submit: РЕШЕНИЯ → triad-factory)
 │   ├── ralph_activator.py         (Submit: активация Ralph)
 │   ├── document-persistence.py    (Submit: roadmap/plan → docs/)
 │   ├── root-clutter-guard.py      (PreTool: блокировка мусора в корне)
-│   ├── search-optimizer.py        (PreTool: параметры Search API)
 │   ├── knowledge-cache-reminder.py (PostTool: кеш знаний)
 │   ├── factory-enforcer.py        (PostTool: ШАГ 4-5 Фабрики)
 │   ├── docs-change-tracker.py     (PostTool: код → обнови доки)
-│   ├── auto-git-save.py           (PostTool: mandatory commit)
-│   ├── skill-usage-metrics.py     (PostTool: логирование скиллов)
-│   ├── bulk-action-guard.py       (PostTool: защита от bulk ops)
+│   ├── auto-git-save.py           (Stop: mandatory commit)
+│   ├── skill-usage-metrics.py     (PreTool: логирование скиллов)
 │   ├── task-enforcer.py           (Stop: mandatory tasks)
 │   ├── git-commit-enforcer.py     (Stop: блокировка без коммита)
 │   ├── docs-change-enforcer.py    (Stop: код изменён без обновления доков)
-│   └── ralph_wiggum_stop.py       (Stop: контроль Ralph)
-├── skills/                        (47 скиллов)
-│   ├── skill-router-config.json   (25 bundles, v6 → keyword + fuzzy + TF-IDF routing)
+│   └── ...                        (полный список — 13.2 Hooks, generator)
+├── skills/                        (97 скиллов)
+│   ├── skill-router-config.json   (52 bundles, v9 → keyword + fuzzy + TF-IDF routing)
 │   ├── 1c-doc-research/           (+ cache/ — 8 категорий)
 │   ├── tech-research/             (+ cache/ — 7 категорий)
 │   ├── architecture-research/     (+ cache/ + adr/)
 │   ├── langchain-core/            (LangChain ядро)
 │   ├── langgraph-core/            (LangGraph ядро)
-│   ├── ...                        (ещё 41 скилл)
+│   ├── ...                        (ещё скиллы)
 │   └── hooks-skills-mcp-triad/    (ЗНАНИЕ: этот файл)
 ├── cache/
 │   └── hook-todos.json            (задачи от хуков)
@@ -463,31 +461,8 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 | Тяжёлые вычисления в хуке | Timeout (3-5s) | Хуки должны быть лёгкими (keyword matching, file read) |
 
 
-## Незадокументированные hook
+## Полный каталог хуков
 
-- `audit-coverage-check` (.claude\hooks\audit-coverage-check.py)
-- `auto-git-save-prompt` (.claude\hooks\auto-git-save-prompt.py)
-- `bsl-tool-router` (.claude\hooks\bsl-tool-router.py)
-- `code-review-enforcer` (.claude\hooks\code-review-enforcer.py)
-- `delegation-outcome-stop` (.claude\hooks\delegation-outcome-stop.py)
-- `delegation-outcome-tracker` (.claude\hooks\delegation-outcome-tracker.py)
-- `implement-1c-task-smoke-stop-alert` (.claude\hooks\implement-1c-task-smoke-stop-alert.py)
-- `logging-status-banner` (.claude\hooks\logging-status-banner.py)
-- `mcp-invocation-logger` (.claude\hooks\mcp-invocation-logger.py)
-- `posttooluse-auto-git-save` (.claude\hooks\posttooluse-auto-git-save.py)
-- `posttooluse-bash-errors` (.claude\hooks\posttooluse-bash-errors.py)
-- `posttooluse-skill-metrics` (.claude\hooks\posttooluse-skill-metrics.py)
-- `session-context-enforcer` (.claude\hooks\session-context-enforcer.py)
-- `session-mypy-banner` (.claude\hooks\session-mypy-banner.py)
-- `skill-eval-enforcer-shell` (.claude\hooks\skill-eval-enforcer-shell.py)
-- `skill-eval-enforcer` (.claude\hooks\skill-eval-enforcer.py)
-- `skill-quality-monitor` (.claude\hooks\skill-quality-monitor.py)
-- `slash-command-tracker` (.claude\hooks\slash-command-tracker.py)
-- `submodule-status-check` (.claude\hooks\submodule-status-check.py)
-- `task-protocol-enforcer` (.claude\hooks\task-protocol-enforcer.py)
-- `task-protocol-observer` (.claude\hooks\task-protocol-observer.py)
-- `todo-sync` (.claude\hooks\todo-sync.py)
-- `z-ai-delegation-enforcer` (.claude\hooks\z-ai-delegation-enforcer.py)
-- `z-ai-write-guard` (.claude\hooks\z-ai-write-guard.py)
+Раздел «Незадокументированные hook» (список из 24 файлов) снят 2026-07-05 — устарел (P1 аудит 260705): полный список 99 регистраций теперь авто-генерируется из `settings.json` и живёт в [13.2 Hooks](../../../docs/framework%20documentation/9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md), regenerate через `scripts/gen_hooks_catalog.py`.
 
 > 2026-06-14 (security pass): GitHub secret scanning + push protection ENABLED; `.mcp.json` untracked (secrets -> ${ENV}); `registry.yaml` + code env-ref'd. See root `CLAUDE.md` + commits faf8806cb / edb6a1497.
