@@ -28,14 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-
-- Pattern: `Анализ задачи GKSTCPLK-2536 «Разработать печатную ` (confidence: 0.80)
-- Draft: `docs/wiki/drafts/--gkstcplk-2536---.md`
-
-**Status:** Pending review
-
----
-
 ## 2026-06-30 — Auto-promoted: GKSTCPLK-2567 п.3 (ИБTransportManagementDevelop): 
 
 **Event:** L2 pattern promoted to wiki draft
@@ -497,3 +489,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 ## 2026-07-03 — Session Summary
 
 **Event:** Auto-saved session
+
+## 2026-07-06 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: audit-docs, bsl-reindex, framework-config, tech-research, evaluation-benchmark
+- Files changed: 3
+- Summary: Session 2026-07-06. Skills: audit-docs, bsl-reindex, framework-config, tech-research, evaluation-benchmark, architecture-research, claude-api, code-verify. Changed 3 files in .claude/worktrees, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: docs(260705 skills P1): финализация — 13.2 регенерация + реестр триады + roadmap P1 DONE. Commit: chore: auto-save SKILL.md. Commit: chore: auto-commit SKILL.md, agent-a4e6ce0279d63bbb6, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +2 more
+
