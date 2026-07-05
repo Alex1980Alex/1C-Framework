@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: state-graph-class
+  prompt: Как в LangGraph описать граф состояния с узлами? Назови основной класс.
+  expect:
+  - StateGraph
+  must_not: []
+- id: conditional-edges
+  prompt: Как добавить условный переход между узлами графа LangGraph? Назови метод.
+  expect:
+  - add_conditional_edges
+  must_not: []

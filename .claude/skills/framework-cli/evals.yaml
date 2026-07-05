@@ -1,0 +1,14 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: index-with-graph
+  prompt: Какой командой CLI фреймворка проиндексировать PDF с построением графа знаний?
+  expect:
+  - src.cli.main
+  - index
+  must_not: []
+- id: hybrid-search
+  prompt: Как из CLI фреймворка выполнить поиск гибридной стратегией?
+  expect:
+  - search
+  - hybrid
+  must_not: []

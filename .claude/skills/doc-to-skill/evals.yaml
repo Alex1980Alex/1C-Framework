@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: body-budget
+  prompt: Какой лимит строк тела SKILL.md, после которого содержимое выносят в references/?
+  expect:
+  - "500"
+  must_not: []
+- id: router-registration
+  prompt: Куда обязательно добавить новый скилл, чтобы keyword-роутер проекта его находил?
+  expect:
+  - skill-router-config
+  must_not: []

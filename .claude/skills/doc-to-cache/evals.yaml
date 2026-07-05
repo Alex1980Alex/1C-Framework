@@ -1,0 +1,7 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: attribution-tags
+  prompt: Какими тегами атрибуции помечается каждый факт в кеше знаний research-скилла?
+  expect:
+  - "[docs]"
+  must_not: []

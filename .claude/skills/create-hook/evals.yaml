@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: stop-block-exit
+  prompt: Каким exit-кодом Stop-хук Claude Code блокирует остановку сессии?
+  expect:
+  - exit 2
+  must_not: []
+- id: stdin-test
+  prompt: Как быстро протестировать хук из терминала, подав ему JSON на stdin?
+  expect:
+  - hook.py
+  must_not: []

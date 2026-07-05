@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: run-mcp-server
+  prompt: Как запустить MCP-сервер PDF-фреймворка из командной строки?
+  expect:
+  - src.mcp_server
+  must_not: []
+- id: run-web-ui
+  prompt: Как запустить веб-интерфейс (Streamlit UI) фреймворка?
+  expect:
+  - src.ui.app
+  must_not: []

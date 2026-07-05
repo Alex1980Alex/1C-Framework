@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: create-agent
+  prompt: Как в LangChain v0.3 создать агента одной функцией? Назови её.
+  expect:
+  - create_agent
+  must_not: []
+- id: tool-decorator
+  prompt: Как пометить обычную Python-функцию как инструмент LangChain? Назови декоратор.
+  expect:
+  - "@tool"
+  must_not: []

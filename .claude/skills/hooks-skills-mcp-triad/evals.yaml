@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: triad-components
+  prompt: Из каких трёх типов компонентов состоит триада автоматизации фреймворка?
+  expect:
+  - MCP
+  must_not: []
+- id: accuracy-sqlite-table
+  prompt: В какой SQLite-таблице фреймворк хранит факты активации скиллов?
+  expect:
+  - skill_activations
+  must_not: []

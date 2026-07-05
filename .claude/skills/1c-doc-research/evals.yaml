@@ -1,0 +1,14 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+# ⚠ live-baseline требует project-unaware провайдера (llm-rotation fallback'ит на claude-cli
+#   с авто-CLAUDE.md → delta=0). Кейсы измеримы после фикса baseline; сами якоря — durable.
+cases:
+- id: primary-source-version
+  prompt: Какая версия документации платформы 1С считается первоисточником при исследовании вопроса?
+  expect:
+  - "8.3.27"
+  must_not: []
+- id: movements-storage
+  prompt: Где физически хранятся движения документа 1С после проведения — в объекте какого класса метаданных?
+  expect:
+  - регистр
+  must_not: []

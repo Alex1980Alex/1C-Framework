@@ -1,0 +1,12 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: update-flag
+  prompt: Каким флагом команда /audit-docs авто-обновляет документацию и скиллы?
+  expect:
+  - "--update"
+  must_not: []
+- id: json-flag
+  prompt: Как получить результат аудита документации в JSON-формате?
+  expect:
+  - "--json"
+  must_not: []
