@@ -10,6 +10,15 @@
 LLM-judge): expect (regex, должны присутствовать) + must_not (regex, не должны).
 delta = with_pass - baseline_pass — если >0, навык добавляет ценность.
 
+⚠ ЧЕСТНОЕ ОГРАНИЧЕНИЕ (проверено live 2026-07-06): осмысленный delta требует
+ИЗОЛИРОВАННОГО project-unaware провайдера для baseline. В этом окружении
+llm-rotation при недоступности/слабости чистого провайдера (ollama-local) делает
+FALLBACK на claude-cli-*, который авто-грузит CLAUDE.md+skills → baseline «знает»
+проектные факты → delta схлопывается в 0 даже на строго-проектных ассертах
+([CODE-VERIFY-PASS], Ralph). Т.е. каркас+логика верны (unit-тесты пинят delta-математику),
+но production-baseline нужен провайдер с ОТКЛЮЧЁННЫМ fallback и нулевым проектным
+контекстом (raw-API ключ / dedicated ollama-модель). До этого live-delta не показателен.
+
 Формат opt-in: .claude/skills/<name>/evals.yaml
     cases:
       - id: read-attribute
