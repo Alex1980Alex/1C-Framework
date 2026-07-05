@@ -117,6 +117,7 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 > `learned_patterns.confidence` без определённого приоритета. Но §22 деривит confidence из succ/fail
 > **на чтении** → линейные writes WikiDecayService не авторитетны (перезаписываются на след. apply) —
 > вероятно **legacy/superseded**. Кандидат в ADR: ретайр WikiDecayService или явно развести роли.
+> **✅ РЕШЕНО 2026-07-05 ([ADR-046](../../.claude/skills/architecture-research/adr/046-retire-wikidecayservice-superseded-by-s22.md)):** РЕТАЙР (удалён класс + 14 тестов + CLI-субкоманда `decay-confidence`). Behavior-preservation reviewer PASS — 0 живых импортёров, §22 decay независим/цел, все 3 утверждения ADR (effective-не-stored / overwrite-on-apply / двойной-decay legacy) сверены с кодом. Доки: 27.12.6 §7.1 + 32.6/32.10/37.8/01.2 + 2 skill. **Follow-up (не блокер, из ревью):** `WikiPromoter` Qdrant-prefilter (`wiki_promoter.py:57`) всё ещё Range-gte по stored `confidence` (паттерн, снятый в `search_patterns`); post-filter re-gates на effective → под-гейтинга нет, но over-exclusion до пост-фильтра теоретически возможен — отдельная тема.
 
 - `WikiDecayService` (`librarian/wiki_decay.py`) — не упомянут ни в одном 27.x; в карте governance 27.12.6 wiki-decay отсутствует как механизм забывания.
 - `ai_memory/retention.py` (importance-decay half-life 90d + `archive_episodic`) — 27.12.3 §1 утверждает «TTL нет», живой retention не отражён.
@@ -183,6 +184,11 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — WikiDecayService РЕТИРОВАН (ADR-046, code-first) + docs_counters --check
+- Код-находка P3 закрыта решением: DELETE WikiDecayService (3 опции взвешены — не deprecate/repurpose). Удалён класс+14 тестов+CLI-субкоманда; §22 = единый авторитет decay. Behavior-preservation reviewer PASS. ADR-046 accepted. Доки: 27.12.6 §7.1 + 4 secondary + 2 skill; 0 битых ссылок.
+- п.4 `docs_counters --check` прогнан (RC=0): хиты — глобальный counter-дрейф в ДРУГИХ скиллах (hooks-skills-mcp-triad bundle/hook-счётчики, learning-loop size), в основном regex-FP; вне зоны 260705 (память), не трогал.
+- Follow-up (не блокер): WikiPromoter Qdrant-prefilter stored-conf Range-gte — отдельная тема.
 
 ### 2026-07-05 — §БП G4 end-to-end memory-бенчмарк (code-first)
 - `scripts/memory_e2e_benchmark.py` — write→recall над изолированной коллекцией; метрики reuse из memory_golden_harness; 11 unit + живой прогон (n=10, hit_rate=1.0 через реальный TEI+Qdrant).
