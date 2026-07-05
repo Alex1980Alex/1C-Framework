@@ -2417,6 +2417,200 @@
         "bsl-development",
         "1c-solution-architecture"
       ]
+    },
+    "langchain-integrations": {
+      "keywords": [
+        "langchain-openai",
+        "langchain-anthropic",
+        "OpenAIEmbeddings",
+        "ChatOpenAI",
+        "ChatAnthropic",
+        "Chroma langchain",
+        "FAISS langchain",
+        "BM25Retriever langchain",
+        "WebBaseLoader"
+      ],
+      "skills": [
+        "langchain-integrations"
+      ],
+      "optional": []
+    },
+    "langchain-tutorials": {
+      "keywords": [
+        "tutorial langchain",
+        "туториал langchain",
+        "RAG agent tutorial",
+        "SQL agent tutorial",
+        "voice agent tutorial",
+        "semantic search tutorial",
+        "multi-agent tutorial",
+        "пример агента langchain"
+      ],
+      "skills": [
+        "langchain-tutorials"
+      ],
+      "optional": []
+    },
+    "langgraph-production": {
+      "keywords": [
+        "LangSmith",
+        "LangGraph Studio",
+        "langgraph deploy",
+        "langgraph.json",
+        "LangGraph Server",
+        "langgraph-sdk",
+        "Agent Chat UI"
+      ],
+      "skills": [
+        "langgraph-production"
+      ],
+      "optional": []
+    },
+    "deep-agents": {
+      "keywords": [
+        "deepagents",
+        "deepagents-cli",
+        "FilesystemBackend",
+        "StoreBackend",
+        "CompositeBackend",
+        "TodoListMiddleware",
+        "SubAgentMiddleware"
+      ],
+      "skills": [
+        "deep-agents"
+      ],
+      "optional": []
+    },
+    "pdf-knowledge": {
+      "keywords": [
+        "import pdf_framework",
+        "pdf-vector-framework",
+        "QuickRAG",
+        "граф знаний PDF",
+        "pdf search pipeline"
+      ],
+      "skills": [
+        "pdf-knowledge"
+      ],
+      "optional": []
+    },
+    "sandbox-execution": {
+      "keywords": [
+        "sandbox исполнение",
+        "песочница исполнения кода",
+        "execute code agent",
+        "E2B backend",
+        "DryRunBackend",
+        "SandboxBackend",
+        "LangSmith sandbox"
+      ],
+      "skills": [
+        "sandbox-execution"
+      ],
+      "optional": []
+    },
+    "simplicity-discipline": {
+      "keywords": [
+        "упростить",
+        "не усложняй",
+        "минимальная правка",
+        "surgical change",
+        "over-engineering",
+        "over-engineered",
+        "YAGNI",
+        "KISS"
+      ],
+      "skills": [
+        "simplicity-discipline"
+      ],
+      "optional": []
+    },
+    "triad-factory": {
+      "keywords": [
+        "фабрика триады",
+        "triad factory",
+        "создать компонент фреймворка",
+        "формула триады",
+        "шаблон фабрики триады"
+      ],
+      "skills": [
+        "triad-factory"
+      ],
+      "optional": []
+    },
+    "bsl-refactoring-workflow": {
+      "keywords": [
+        "рефакторинг BSL",
+        "refactor BSL",
+        "bsl_rename_symbol",
+        "symbol-first workflow BSL",
+        "переименовать символ BSL",
+        "матрица рефакторинга BSL"
+      ],
+      "skills": [
+        "bsl-refactoring-workflow"
+      ],
+      "optional": []
+    },
+    "bsl-symbol-editing": {
+      "keywords": [
+        "symbol-anchored editing",
+        "read_method_source",
+        "write_module_source",
+        "замена тела метода BSL",
+        "вставка до метода BSL",
+        "вставка после метода BSL"
+      ],
+      "skills": [
+        "bsl-symbol-editing"
+      ],
+      "optional": []
+    },
+    "multi-level-hook-architecture": {
+      "keywords": [
+        "архитектура хуков",
+        "уровни хуков",
+        "hook levels",
+        "hook architecture",
+        "трёхуровневая защита",
+        "порядок хуков",
+        "hook chain",
+        "цепочка хуков"
+      ],
+      "skills": [
+        "multi-level-hook-architecture"
+      ],
+      "optional": []
+    },
+    "git-commit-message": {
+      "keywords": [
+        "сформировать коммит",
+        "создать commit message",
+        "описать изменения для git",
+        "подготовить commit message",
+        "conventional commits",
+        "оформление коммита"
+      ],
+      "skills": [
+        "git-commit-message"
+      ],
+      "optional": []
+    },
+    "auto-git-save": {
+      "keywords": [
+        "auto-git-save",
+        "автокоммит",
+        "sync commit",
+        "авто коммит",
+        "git save hook",
+        "порог коммита",
+        "commit threshold",
+        "zombie task"
+      ],
+      "skills": [
+        "auto-git-save"
+      ],
+      "optional": []
     }
   },
   "min_score_gap": 2,
@@ -2438,5 +2632,25 @@
     "moderate_bonus": 1,
     "timeout_ms": 500,
     "collection": "skill_library"
+  },
+  "_unrouted_intentional": {
+    "_comment": "Скиллы намеренно вне keyword-роутинга — достижимы через slash-команды/делегацию/native. Аудит 2026-07-06 (skills-system-hardening).",
+    "slash_or_delegation": {
+      "analyze-1c-task-v2": "делегируется /analyze-1c-task и /run-1c-task",
+      "analyze-1c-research": "под-скилл analyze-пайплайна",
+      "implement-1c-task": "/implement-1c-task + делегация run-1c-task",
+      "run-1c-task": "/run-1c-task",
+      "fix-sonar-task": "/fix-sonar-task",
+      "brownfield-validate": "SDD-делегация (openspec-apply)",
+      "openspec-apply-change": "/opsx:apply",
+      "openspec-archive-change": "/opsx:archive",
+      "openspec-explore": "/opsx:explore",
+      "openspec-propose": "/opsx:propose",
+      "opsx-approve": "/opsx:approve"
+    },
+    "meta_or_hook": {
+      "find-skills": "meta — обнаружение/установка скиллов (native description-match)",
+      "auto-test-after-write": "документирует hook auto-test-after-write; активируется поведением хука"
+    }
   }
 }
