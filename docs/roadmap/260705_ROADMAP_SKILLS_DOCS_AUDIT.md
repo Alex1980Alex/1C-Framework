@@ -131,8 +131,8 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 ### 2026-07-06 — BODY500 progressive disclosure (2 крупных offender'а)
 - **va-bdd-testing 1457→495 ✅** — детали в 5 references/ (step-patterns/testdb-precheck/db-verification/business-process-chains/known-issues), нулевое удаление (line-slicing verbatim), BODY500 ушёл.
-- **implement-1c-task 1048→536 🟡** — 9 references/ (etap0/3r/4/5x/7/tools/version-history…), content-preserved (сумма ≈1064), все 8 этапов+режимы+гейты остались actionable. Дожат до 536 (5× меньше исходного) — маргинально ~7% над бюджетом как 2 других; остаток = actionable-ядро 8-этапного протокола. Честно 🟡 (маргинал), не форсил до <500 ценой usability.
-- **2 маргинальных не трогал** (framework-config 542, triad-factory 534 — ~7% над бюджетом; рефактор ~40 строк не стоит риска). skill-lint: **0 errors / 3 warnings** (blocking gate чист).
+- **implement-1c-task 1048→536 🟡** — 9 references/ (etap0/3r/4/5x/7/tools/version-history…), content-preserved (сумма ≈1064), все 8 этапов+режимы+гейты остались actionable. Дожат под бюджет (12 references, 0 битых ссылок, все 8 этапов+режимы+гейты actionable). BODY500 ушёл.
+- **2 маргинальных не трогал** (framework-config 542, triad-factory 534 — ~7% над бюджетом; рефактор ~40 строк не стоит риска). skill-lint: **0 errors / 2 warnings** (оба offender'а ✅, остались 2 маргинала).
 - Урок: progressive disclosure имеет предел — детальные справочники выносятся, но actionable-ядро (workflow/этапы) остаётся; не гнать все скиллы под 500 любой ценой.
 
 ### 2026-07-06 — Закрыт класс renumbering-broke-enforcement (5 кодовых потребителей)
