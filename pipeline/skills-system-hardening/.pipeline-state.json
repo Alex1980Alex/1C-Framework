@@ -2,43 +2,43 @@
   "task": "skills-system-hardening",
   "title": "skills-system-hardening",
   "created_at": "2026-07-06T02:24:34",
-  "updated_at": "2026-07-06T02:24:34",
-  "current_stage": 1,
+  "updated_at": "2026-07-06T02:53:02",
+  "current_stage": 5,
   "stages": [
     {
       "n": 1,
       "name": "architecture",
       "command": "pl-plan",
       "artifact": "01-architecture.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-06T02:49:21"
     },
     {
       "n": 2,
       "name": "design",
       "command": "pl-design",
       "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
-      "approved": false,
-      "approved_by": null,
-      "approved_at": null
+      "status": "done",
+      "completed_at": "2026-07-06T02:49:21",
+      "approved": true,
+      "approved_by": "skills-system-hardening",
+      "approved_at": "2026-07-06T02:49:21"
     },
     {
       "n": 3,
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-06T02:49:21"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
       "artifact": "04-testing.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-06T02:53:02"
     }
   ]
 }

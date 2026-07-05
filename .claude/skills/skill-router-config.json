@@ -2427,8 +2427,7 @@
         "ChatAnthropic",
         "Chroma langchain",
         "FAISS langchain",
-        "BM25Retriever langchain",
-        "WebBaseLoader"
+        "BM25Retriever langchain"
       ],
       "skills": [
         "langchain-integrations"
@@ -2454,9 +2453,6 @@
     "langgraph-production": {
       "keywords": [
         "LangSmith",
-        "LangGraph Studio",
-        "langgraph deploy",
-        "langgraph.json",
         "LangGraph Server",
         "langgraph-sdk",
         "Agent Chat UI"
@@ -2468,7 +2464,6 @@
     },
     "deep-agents": {
       "keywords": [
-        "deepagents",
         "deepagents-cli",
         "FilesystemBackend",
         "StoreBackend",
@@ -2485,7 +2480,6 @@
       "keywords": [
         "import pdf_framework",
         "pdf-vector-framework",
-        "QuickRAG",
         "граф знаний PDF",
         "pdf search pipeline"
       ],
@@ -2527,8 +2521,6 @@
     },
     "triad-factory": {
       "keywords": [
-        "фабрика триады",
-        "triad factory",
         "создать компонент фреймворка",
         "формула триады",
         "шаблон фабрики триады"
@@ -2556,7 +2548,6 @@
       "keywords": [
         "symbol-anchored editing",
         "read_method_source",
-        "write_module_source",
         "замена тела метода BSL",
         "вставка до метода BSL",
         "вставка после метода BSL"
@@ -2569,13 +2560,7 @@
     "multi-level-hook-architecture": {
       "keywords": [
         "архитектура хуков",
-        "уровни хуков",
-        "hook levels",
-        "hook architecture",
-        "трёхуровневая защита",
-        "порядок хуков",
-        "hook chain",
-        "цепочка хуков"
+        "hook architecture"
       ],
       "skills": [
         "multi-level-hook-architecture"
