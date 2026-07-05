@@ -1,0 +1,7 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: conventional
+  prompt: По какому стандарту оформлять commit-сообщение в этом проекте?
+  expect:
+  - Conventional Commits|feat|fix|docs|chore
+  must_not: []

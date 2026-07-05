@@ -1,0 +1,15 @@
+# BP G2 per-skill eval (audit 260705) — discriminative (project-specific)
+cases:
+- id: pass-marker
+  prompt: Какой ТОЧНЫЙ текстовый маркер должен вывести ревьюер-субагент в последней
+    строке при успешной верификации кода в этом проекте?
+  expect:
+  - \[CODE-VERIFY-PASS\]
+  must_not: []
+- id: ralph-loop
+  prompt: Как называется итеративный retry-цикл при FAIL верификации в этом проекте
+    и сколько максимум итераций?
+  expect:
+  - Ralph
+  - 3|три
+  must_not: []

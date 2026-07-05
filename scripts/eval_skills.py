@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -46,6 +47,11 @@ BASE_SYS = (
 )
 MAX_TOKENS = 400
 TEMPERATURE = 0.0
+# ⚠ Честный baseline ТРЕБУЕТ project-unaware провайдера: claude-cli-* авто-грузит
+# CLAUDE.md + skills, поэтому baseline знает проектные факты и delta схлопывается в 0.
+# Дефолт — ollama-local (чистый локальный); оба вызова (baseline и with-skill) идут
+# ЧЕРЕЗ ОДИН провайдер — разница только в system_prompt (тело навыка).
+EVAL_PROVIDER = os.getenv("EVAL_SKILLS_PROVIDER", "ollama-local")
 
 
 def _strip_frontmatter(text: str) -> str:
@@ -136,6 +142,7 @@ async def _complete(service: Any, prompt: str, system_prompt: str) -> str:
     res = await service.complete(
         prompt=prompt,
         system_prompt=system_prompt,
+        preferred_provider=EVAL_PROVIDER,
         temperature=TEMPERATURE,
         max_tokens=MAX_TOKENS,
         timeout=60,

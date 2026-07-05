@@ -1,0 +1,14 @@
+# BP G2 per-skill eval (audit 260705) — baseline vs with-skill delta
+cases:
+- id: read-attribute
+  prompt: Как в 1С прочитать реквизит объекта по ссылке без лишнего запроса к базе
+    на каждое чтение? Назови конкретный метод.
+  expect:
+  - ЗначениеРеквизитаОбъекта
+  must_not: []
+- id: string-format
+  prompt: Как в 1С правильно собрать строку из подстановок вместо конкатенации через
+    плюс?
+  expect:
+  - СтрШаблон
+  must_not: []
