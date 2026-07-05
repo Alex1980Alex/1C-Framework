@@ -1,3 +1,8 @@
+---
+name: cc-docs
+description: "Семантический поиск по документации Claude Code (code.claude.com/docs) с проверкой свежести — CLI/SDK/хуки/субагенты/настройки/permissions/MCP/плагины/интеграции. Триггеры: 'документация claude code', 'cc-docs', 'как настроить hooks/subagents/permissions', 'что нового в claude code', 'claude code CLI флаги'. НЕ для BSL/1С-документации — используй 1c-doc-research."
+---
+
 # cc-docs — поиск по документации Claude Code (со свежестью)
 
 Семантический поиск по **code.claude.com/docs** (CLI/SDK/хуки/субагенты/настройки/permissions/MCP/плагины/интеграции).

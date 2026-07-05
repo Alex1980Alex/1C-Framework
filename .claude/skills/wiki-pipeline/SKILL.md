@@ -153,7 +153,7 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 
 ## Spec
 
-[openspec/changes/hermes-llm-wiki/specs/wiki-export-pipeline/spec.md](../../../openspec/changes/hermes-llm-wiki/specs/wiki-export-pipeline/spec.md) — 766 строк, полная спецификация требований (MUST/SHALL/SHOULD).
+[openspec/changes/archive/2026-05-15-hermes-llm-wiki/specs/wiki-export-pipeline/spec.md](../../../openspec/changes/archive/2026-05-15-hermes-llm-wiki/specs/wiki-export-pipeline/spec.md) — 766 строк, полная спецификация требований (MUST/SHALL/SHOULD).
 
 
 ## Незадокументированные memory_subsystem

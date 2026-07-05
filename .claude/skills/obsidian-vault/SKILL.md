@@ -1,3 +1,8 @@
+---
+name: obsidian-vault
+description: "Навигация и создание вики-страниц в Obsidian vault поверх проекта (wiki-links, graph view, шаблоны). Триггеры: 'obsidian', 'vault', 'wiki-страница', 'wiki-link', 'создать страницу в вики', 'граф связей'. НЕ для роадмапов/ADR — используй соответствующие структуры docs/roadmap и architecture-research."
+---
+
 # Obsidian Vault — навигация и создание вики-страниц
 
 Obsidian vault поверх проекта: wiki-links, graph view, шаблоны. Корень vault = корень проекта (`D:\1С-Framework`).

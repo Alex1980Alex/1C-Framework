@@ -314,5 +314,5 @@ build: Сформирован релиз MFM 2024.7.1.0
 
 ## Related Skills
 
-- [1c-development](../1c-development/SKILL.md) - Разработка 1С
-- [create-skill](../create-skill/SKILL.md) - Создание skills
+- [bsl-development](../bsl-development/SKILL.md) - Разработка 1С
+- [doc-to-skill](../doc-to-skill/SKILL.md) - Создание skills

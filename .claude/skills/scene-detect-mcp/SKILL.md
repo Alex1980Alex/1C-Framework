@@ -1,3 +1,8 @@
+---
+name: scene-detect-mcp
+description: "Извлечение кадра на каждую смену сцены через PySceneDetect ContentDetector (HSV-взвешенный детект склеек), точнее ffmpeg select=gt(scene,X). Триггеры: 'раскадровка видео', 'смена сцены', 'кадр при смене сцены', 'scene detection', 'извлечь ключевые кадры', 'PySceneDetect', 'storyboard frames'. НЕ для кадров по таймкоду/интервалу — используй ffmpeg -vf fps=N. НЕ для YouTube-метаданных/транскриптов — используй youtube-mcp."
+---
+
 # scene-detect-mcp — кадры при смене сцены (PySceneDetect)
 
 MCP-сервер `scene-detect` ([`tools/scene-detect-mcp/`](../../../tools/scene-detect-mcp/scene_detect_mcp.py)): извлечение кадра **на каждую смену сцены** через PySceneDetect `ContentDetector` (HSV-взвешенный детект склеек). Точнее ffmpeg-фильтра `select=gt(scene,X)`; не по таймкоду и не по I-frame'ам. ИСПОЛЬЗУЙ когда нужно раскадровать видео по сменам сцен.

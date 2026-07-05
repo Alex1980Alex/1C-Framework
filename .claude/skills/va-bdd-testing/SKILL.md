@@ -1483,11 +1483,11 @@ Maintain a calibration log in feature file comments:
 
 ## Related Skills
 
-- [1c-testing-roadmap](../1c-testing-roadmap/SKILL.md) — Test roadmap creation methodology
-- [1c-forms](../1c-forms/SKILL.md) — Managed forms architecture reference
-- [1c-development](../1c-development/SKILL.md) — General 1C development
+- 1c-testing-roadmap — Test roadmap creation methodology (no dedicated skill yet)
+- 1c-forms — Managed forms architecture reference (no dedicated skill yet)
+- [bsl-development](../bsl-development/SKILL.md) — General 1C/BSL development
 - [analyze-1c-task-v2](../analyze-1c-task-v2/SKILL.md) — Task analysis (precedes test writing)
-- [1c-registers](../1c-registers/SKILL.md) — Register reference (for verification queries)
+- 1c-registers — Register reference for verification queries (no dedicated skill yet)
 - [1c-mcp-crud](../1c-mcp-crud/SKILL.md) — Live database tools (for Stage 4 verification)
 
 ## Supporting Resources
