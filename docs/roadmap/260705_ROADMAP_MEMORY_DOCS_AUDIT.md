@@ -134,7 +134,7 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 | # | Разрыв | Практика лидера | У нас | Оценка |
 |---|---|---|---|---|
 | G1 | **Би-темпоральность** | Graphiti: у факта `valid_from/invalid_at`, инвалидация вместо удаления, запрос «что было истинно в T» | `archived` = hard-exclude, без временных окон; конфликт-резолюция без датировки фактов | Сложность High, ценность Mid — **отложить** до реального кейса темпоральных запросов |
-| G2 | **Hot-path vs background консолидация** | mem0 ADD-only hot-path; Letta «dreaming»; LangMem background manager | Дедуп/merge частично в hot-path хуков (Stop-хуки под таймаутами); `merge_patterns.py` есть, но не в каденсе | Сложность **Low-Mid**, ценность **High** — уже есть `memory-maintenance-cadence.py`, довесить консолидацию туда |
+| G2 ✅ **DONE 2026-07-05** | **Hot-path vs background консолидация** | mem0 ADD-only hot-path; Letta «dreaming»; LangMem background manager | ~~`merge_patterns.py` есть, но не в каденсе~~ → **job `merge`** в `memory_maintenance.py` (`run_merge_patterns`): `PatternMerger` (был orphaned, 0 вызовов) над SAVED-силосом skill_learning; дедуп норм-контент+имя, dry-run default, `.bak`-снапшот, fail-soft. Hot-path оставлен O(1) `content_hash`; дорогой similarity-дедуп ушёл в фон. Тесты `TestMergeJob`(3). Commit — этой сессии | Сложность Low-Mid, ценность High — ✅ closed |
 | G3 | **Entity linking между записями** | mem0: сущности извлекаются/линкуются → retrieval boost | link_registry (8 типов) связывает ЗАПИСИ, но нет автоматического entity-linking по содержимому | Сложность Mid, ценность Mid |
 | G4 | **Memory-бенчмарк end-to-end** | Zep: LongMemEval, LoCoMo как gate | golden-set `tune_memory_surfacing.py` — только surfacing-слой; end-to-end (запись→recall через сессии) не меряется | Сложность Mid, ценность **High** — без метрики споры о памяти вечно субъективны |
 | G5 | **Time-aware retrieval** | mem0: ранжирование правильного датированного экземпляра | recency-буст есть в decay, но запрос «текущее vs прошлое состояние» не различается | Сложность Mid, ценность Low-Mid — после G4 |
@@ -170,6 +170,13 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — §БП G2 исполнен (background-консолидация, code-first)
+- `merge_patterns.py::PatternMerger` был **orphaned** (0 вызовов) — вскрыто investigation'ом; wired в maintenance-каденс как job `merge` (`run_merge_patterns`, dry-run default, `.bak`-снапшот, fail-soft).
+- Паттерн лидеров (mem0 ADD-only / Letta dreaming): дорогой similarity-дедуп SAVED-силоса skill_learning ушёл из hot-path Stop-хуков в фон-каденс; hot-path оставлен O(1) `content_hash`.
+- Найдено по пути: `PatternMerger.similarity_threshold` — мёртвый параметр (реализация делает exact-normalized+name grouping, не fuzzy-cosine) — не трогал (out of scope, поведение корректно).
+- Тесты: `TestMergeJob`(3, wiring) + `TestPatternMerger` (логика, была) — 14 passed в test_memory_maintenance, ruff clean, cadence-smoke dry-run OK (силос 3 паттерна, 0 дублей сейчас — job ловит будущее накопление).
+- Осталось из §БП: G4 (end-to-end memory-бенчмарк типа LongMemEval) — следующий по матрице.
 
 ### 2026-07-05 — P2 исполнен (docs-консолидация), 3 агента
 - Свёртка «обзор→указатель на карту-канон»: 27.2/27.4/27.5/27.6/27.8 (суммарно −327 строк дублей), каноны 27.12.x.
