@@ -142,11 +142,10 @@ python -m scripts.eval_graphrag --compare baseline wiki-enriched
 
 ## Тесты
 
-**Coverage matrix (58 тестов total, 57 pass + 1 skip; +26 тестов 2026-05-15, +5 incremental-sync):**
+**Coverage matrix (44 теста total, 43 pass + 1 skip; WikiDecayService+14 тестов удалены 2026-07-05 — ADR-046 ретайр):**
 
 - [tests/unit/pdf_framework/indexing/test_wiki_exporter.py](../../../tests/unit/pdf_framework/indexing/test_wiki_exporter.py) — **27 тестов** (WikiExporter 7, sanitize_filename 4, ForwardSync 2, IncrementalSync 2, WikiSearchIndexer 2, ReverseSyncService 9, ReverseSyncRuntimeWatchdog 1 @pytest.mark.slow via `pytest.importorskip("watchdog")`)
 - [tests/unit/pdf_framework/indexing/test_incremental_wiki_sync.py](../../../tests/unit/pdf_framework/indexing/test_incremental_wiki_sync.py) — **5 тестов** (event-driven sync + DLQ)
-- [tests/unit/memory/librarian/test_wiki_decay.py](../../../tests/unit/memory/librarian/test_wiki_decay.py) — **14 тестов** (TestDecayPoint 11: skip-paths + decay formula + clamps + timezone; TestDecayAll 3: counters aggregation + empty + termination)
 - [tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py](../../../tests/unit/pdf_framework/graph_store/test_networkx_get_relations.py) — **5 тестов** (outgoing only, empty for missing, properties preserve, no incoming)
 - [tests/unit/scripts/test_archive_stale.py](../../../tests/unit/scripts/test_archive_stale.py) — **7 тестов** (qualify, fresh-skip, high-conf-skip, already-archived-skip, missing-frontmatter-skip, collision-suffix, dry-run)
 
