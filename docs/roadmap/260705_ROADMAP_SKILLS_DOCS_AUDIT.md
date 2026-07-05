@@ -129,6 +129,10 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 > Append-only, новые записи сверху.
 
+### 2026-07-06 — Закрыт класс renumbering-broke-enforcement (5 кодовых потребителей)
+- Комплексная проверка: 4 потребителя (audit_docs_skills/docs-change-tracker/slash-command-tracker/pdf_docs_acceptance) УЖЕ несли резолвящиеся new-9-layer пути (починены в 260704/260705). Последний реальный мис-маппинг `src/memory/ → 0_ВВЕДЕНИЕ/0.1_ОБЗОР` → `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY` (`docs-change-enforcer.py:111`, commit 8037b81db) — корень рекуррентного docs-enforcer-шума всю сессию.
+- Память `project_docs_renumbering_broke_enforcement` была STALE («pending») → скорректирована на РЕШЕНО (проверка перед доверием, не на веру). Итог 1→0 битых chapter-ref.
+
 ### 2026-07-06 — §БП G2 per-skill eval harness (code-first)
 - `scripts/eval_skills.py` — измеряет ЦЕННОСТЬ содержимого навыка (не роутинг): baseline vs with-skill delta по детерминированным ассертам (caliper-стиль). Pure-логика +9 unit; live-путь через llm-rotation работает (реальные вызовы, delta посчитан). 3 пилота opt-in `evals.yaml`.
 - **Честная находка (live):** осмысленный baseline требует ИЗОЛИРОВАННОГО project-unaware провайдера; llm-rotation fallback'ит на claude-cli (авто-грузит проектный контекст) → baseline знает факты → delta=0 даже на строго-проектных ассертах ([CODE-VERIFY-PASS]/Ralph). Каркас+логика верны, live-eval pending чистого провайдера с отключённым fallback. Не приукрашиваю — 🟡, не ✅.
