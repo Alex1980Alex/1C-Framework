@@ -1620,6 +1620,29 @@
         "claude-code-skill"
       ],
       "last_verified": "2026-07-04"
+    },
+    {
+      "file": "llm-agent-memory-best-practices-2026.md",
+      "title": "LLM Agent Memory Systems — ведущие практики (mem0/Letta/Zep-Graphiti/LangMem)",
+      "keywords": [
+        "memory",
+        "mem0",
+        "letta",
+        "memgpt",
+        "zep",
+        "graphiti",
+        "langmem",
+        "bi-temporal",
+        "consolidation",
+        "entity linking",
+        "hot-path",
+        "background",
+        "LongMemEval",
+        "agent memory",
+        "память агента"
+      ],
+      "last_verified": "2026-07-05",
+      "github_repos_count": 4
     }
   ]
 }
