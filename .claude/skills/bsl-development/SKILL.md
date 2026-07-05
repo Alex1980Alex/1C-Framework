@@ -28,7 +28,7 @@ description: "BSL Development — разработка на 1С:Предприя
 | Семантический поиск | `bsl-semantic-search` | Поиск похожего кода (3,908+ модулей) |
 | Автодокументация | `auto-documenter` | generate_documentation, autoreview, autotestplan |
 | Отладка (OneScript, статика) | `bsl-debugger` | breakpoints, step, variables, evaluate — без live 1С |
-| Live отладка (RDBG, Scenario B) | `1c-debug` | post-BP-fire handshake против running 1С: debug_set_breakpoint, debug_variables, debug_evaluate, debug_step (см. [16.7](../../docs/framework%20documentation/16_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) |
+| Live отладка (RDBG, Scenario B) | `1c-debug` | post-BP-fire handshake против running 1С: debug_set_breakpoint, debug_variables, debug_evaluate, debug_step (см. [16.7](../../../docs/framework%20documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.7_Autonomous_Debug_Workflow.md)) |
 | API платформы | `bsl-platform-context` | Типы, методы, свойства 1С:8.3.27 |
 | AST-анализ | `ast-grep-mcp` | Tree-sitter парсинг BSL |
 | LSP | `serena` | Symbol extraction, рефакторинг |
@@ -129,7 +129,7 @@ mcp__bsl-debugger__get_variables()
 
 ## Индексация BSL — варианты и decision flowchart
 
-> **Полная справка:** [chapter 31.6 Варианты индексации и типичные ошибки](../../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md)
+> **Полная справка:** [chapter 31.6 Варианты индексации и типичные ошибки](../../../docs/framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md)
 
 ### Decision flowchart — какой backend выбрать
 

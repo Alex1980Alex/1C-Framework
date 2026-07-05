@@ -140,8 +140,8 @@ UserPromptSubmit (уровень 1) + Stop (уровень 2)
 
 | Скилл | Когда использовать |
 |-------|-------------------|
-| [hook-debugging](.claude/skills/hook-debugging/SKILL.md) | Отладка конкретного хука (canary, логирование) |
-| [create-hook](.claude/skills/create-hook/SKILL.md) | Создание нового хука (шаблон, чеклист) |
-| [multi-level-hook-architecture](.claude/skills/multi-level-hook-architecture/SKILL.md) | Архитектура трёхуровневой защиты |
-| [hook-enforcement-pattern](.claude/skills/hook-enforcement-pattern/SKILL.md) | Паттерн Enforcer для Stop-хуков |
-| [windows-hooks-paths](.claude/skills/windows-hooks-paths/SKILL.md) | Windows: bash съедает `\` в путях хуков |
+| [hook-debugging](../hook-debugging/SKILL.md) | Отладка конкретного хука (canary, логирование) |
+| [create-hook](../create-hook/SKILL.md) | Создание нового хука (шаблон, чеклист) |
+| [multi-level-hook-architecture](../multi-level-hook-architecture/SKILL.md) | Архитектура трёхуровневой защиты |
+| [hook-enforcement-pattern](../hook-enforcement-pattern/SKILL.md) | Паттерн Enforcer для Stop-хуков |
+| [windows-hooks-paths](../windows-hooks-paths/SKILL.md) | Windows: bash съедает `\` в путях хуков |

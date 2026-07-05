@@ -207,9 +207,9 @@ PostToolUse (СЛОМАН):
 
 | Скилл | Связь |
 |-------|-------|
-| [create-hook](.claude/skills/create-hook/SKILL.md) | Шаблон создания нового хука |
-| [hook-debugging](.claude/skills/hook-debugging/SKILL.md) | Диагностика когда хук не работает |
-| [claude-code-hooks-bugs](.claude/skills/claude-code-hooks-bugs/SKILL.md) | Известные баги и workaround-ы |
-| [hook-enforcement-pattern](.claude/skills/hook-enforcement-pattern/SKILL.md) | Паттерн Enforcer для Stop-хуков |
-| [hooks-skills-mcp-triad](.claude/skills/hooks-skills-mcp-triad/SKILL.md) | Общая архитектура триады |
-| [auto-git-save](.claude/skills/auto-git-save/SKILL.md) | Система автокоммита |
+| [create-hook](../create-hook/SKILL.md) | Шаблон создания нового хука |
+| [hook-debugging](../hook-debugging/SKILL.md) | Диагностика когда хук не работает |
+| [claude-code-hooks-bugs](../claude-code-hooks-bugs/SKILL.md) | Известные баги и workaround-ы |
+| [hook-enforcement-pattern](../hook-enforcement-pattern/SKILL.md) | Паттерн Enforcer для Stop-хуков |
+| [hooks-skills-mcp-triad](../hooks-skills-mcp-triad/SKILL.md) | Общая архитектура триады |
+| [auto-git-save](../auto-git-save/SKILL.md) | Система автокоммита |

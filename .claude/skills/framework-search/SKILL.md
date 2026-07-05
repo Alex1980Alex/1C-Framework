@@ -276,4 +276,4 @@ tail cache/framework_search_reindex.log
 
 - Pipeline: [src/framework_search/](src/framework_search/)
 - CLI: [scripts/index_framework.py](scripts/index_framework.py)
-- Roadmap: [docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md §24](docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)
+- Roadmap: [docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md §24](../../../docs/roadmap/260426_ROADMAP_PHASE_8_QWEN3_EMBEDDING_REINDEX.md)

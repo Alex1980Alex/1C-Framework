@@ -8,9 +8,9 @@ updated: 2026-06-24
 # bsl-reindex — реиндекс BSL/кода (оркестратор)
 
 > **Паттерн (как `fix-sonar-task`):** это **указатель-оркестратор**. Полная методика — в
-> [гл. 31.3 Pipeline индексации](../../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md),
-> [гл. 31.6 Варианты и ошибки](../../../docs/framework%20documentation/31_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md),
-> [ADR-038](architecture-research/adr/038-resilient-erp-reindex-batch1-supervisor.md). Здесь — решение
+> [гл. 31.3 Pipeline индексации](../../../docs/framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.3_Pipeline_индексации.md),
+> [гл. 31.6 Варианты и ошибки](../../../docs/framework%20documentation/2_КОНТЕКСТ/2.8_QWEN3_RETRIEVAL_PRODUCTION/31.6_Варианты_индексации_и_типичные_ошибки.md),
+> [ADR-038](../architecture-research/adr/038-resilient-erp-reindex-batch1-supervisor.md). Здесь — решение
 > «что запустить» + хард-правила; детали не дублируются.
 
 ## Когда использовать
@@ -60,6 +60,6 @@ docker start pdf-rag-tei
 
 ## Связанное
 - Доки: гл. 31.3 / 31.6 / 31.7; скрипты [`reindex_bsl_qwen3.py`](../../../scripts/reindex_bsl_qwen3.py), [`reindex_supervised.py`](../../../scripts/reindex_supervised.py), [`index_framework.py`](../../../scripts/index_framework.py).
-- Решение: [ADR-038](architecture-research/adr/038-resilient-erp-reindex-batch1-supervisor.md).
+- Решение: [ADR-038](../architecture-research/adr/038-resilient-erp-reindex-batch1-supervisor.md).
 - Память: `feedback_qwen3_embedding_wedge_heavy_modules`, `feedback_bsl_indexer_backend_choice`, `feedback_mrl_content_matters`.
 - Скиллы: `post-indexing-analysis` (отчёт после), `embedding-models`/`qdrant-operations` (модели/коллекции), `indexing-pipeline` (PDF — другое).
