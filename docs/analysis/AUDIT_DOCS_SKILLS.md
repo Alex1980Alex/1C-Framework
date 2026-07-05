@@ -1,26 +1,26 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-07-04 14:30
+**Generated:** 2026-07-05 04:22
 
 ## Summary
 
 | Category | In Code | Doc Gaps | Skill Gaps | Doc Coverage | Skill Coverage |
 |----------|---------|----------|------------|-------------|----------------|
 | Agent Types | 5 | **0** | **0** | 100.0% | 100.0% |
-| bsl_tool | 33 | **32** | **0** | 3.0% | 100.0% |
+| bsl_tool | 33 | **31** | **0** | 6.1% | 100.0% |
 | CLI Commands | 17 | **0** | **0** | 100.0% | 100.0% |
 | Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
 | REST API Endpoints | 88 | **4** | **0** | 95.5% | 100.0% |
-| hook | 97 | **76** | **38** | 21.6% | 60.8% |
+| hook | 97 | **46** | **38** | 52.6% | 60.8% |
 | MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
-| memory_subsystem | 62 | **41** | **2** | 33.9% | 96.8% |
-| Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
+| memory_subsystem | 62 | **40** | **2** | 35.5% | 96.8% |
+| Search Strategies | 14 | **5** | **0** | 64.3% | 100.0% |
 | wiki_component | 5 | **0** | **0** | 100.0% | 100.0% |
-| **TOTAL** | **634** | **153** | **40** | | |
+| **TOTAL** | **634** | **126** | **40** | | |
 
 ## Documentation Gaps (in code, NOT in docs)
 
-### bsl_tool (32 gaps)
+### bsl_tool (31 gaps)
 
 | Feature | Source | Should be in |
 |---------|--------|-------------|
@@ -34,7 +34,6 @@
 | `MCPHttpServer` | `src\bsl\mcp_server\http_server.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `MCPProxy` | `src\bsl\mcp_server\mcp_server.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `OneCClient` | `src\bsl\mcp_server\onec_client.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
-| `BSLASTParser` | `src\bsl\parser\bsl_ast_parser.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `BSLChunk` | `src\bsl\parser\bsl_chunker.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `BSLChunker` | `src\bsl\parser\bsl_chunker.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
 | `BSLContextEnricher` | `src\bsl\parser\context_enricher.py` | `3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md, 7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md, 2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md` |
@@ -66,30 +65,20 @@
 | `GET /openai_compat/models` | `src\api\routes\openai_compat.py` | `3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md` |
 | `WEBSOCKET /websocket/ws/search` | `src\api\routes\websocket.py` | `3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md` |
 
-### hook (76 gaps)
+### hook (46 gaps)
 
 | Feature | Source | Should be in |
 |---------|--------|-------------|
 | `analyze-1c-task-preflight` | `.claude\hooks\analyze-1c-task-preflight.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `audit-coverage-check` | `.claude\hooks\audit-coverage-check.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `bsl-tool-router` | `.claude\hooks\bsl-tool-router.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `bulk-action-guard` | `.claude\hooks\bulk-action-guard.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `ci-catchup-on-start` | `.claude\hooks\ci-catchup-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `ci-catchup-on-stop` | `.claude\hooks\ci-catchup-on-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `code-review-enforcer` | `.claude\hooks\code-review-enforcer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `delegation-outcome-stop` | `.claude\hooks\delegation-outcome-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `delegation-outcome-tracker` | `.claude\hooks\delegation-outcome-tracker.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `docs-change-tracker` | `.claude\hooks\docs-change-tracker.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `gate-orchestrator-stop` | `.claude\hooks\gate-orchestrator-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `gh-notif-intake-on-start` | `.claude\hooks\gh-notif-intake-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `github-search-via-ecosystem-scan` | `.claude\hooks\github-search-via-ecosystem-scan.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `implement-1c-task-preflight` | `.claude\hooks\implement-1c-task-preflight.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `implement-1c-task-smoke-stop-alert` | `.claude\hooks\implement-1c-task-smoke-stop-alert.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `lifecycle-cache` | `.claude\hooks\lifecycle-cache.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `logging-status-banner` | `.claude\hooks\logging-status-banner.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `mcp-invocation-logger` | `.claude\hooks\mcp-invocation-logger.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `memory-ai-acceptance-on-start` | `.claude\hooks\memory-ai-acceptance-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `memory-curation-candidates-on-start` | `.claude\hooks\memory-curation-candidates-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `memory-effectiveness-analyzer` | `.claude\hooks\memory-effectiveness-analyzer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `memory-first-hook` | `.claude\hooks\memory-first-hook.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `memory-maintenance-cadence` | `.claude\hooks\memory-maintenance-cadence.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
@@ -97,63 +86,42 @@
 | `onec-state-first-guard` | `.claude\hooks\onec-state-first-guard.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `onec-task-completion-stop` | `.claude\hooks\onec-task-completion-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `onec-task-input` | `.claude\hooks\onec-task-input.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `onec-toolgate-validation-on-start` | `.claude\hooks\onec-toolgate-validation-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `openspec-change-coverage` | `.claude\hooks\openspec-change-coverage.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `openspec-task-progress` | `.claude\hooks\openspec-task-progress.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `opsx-apply-postvalidate` | `.claude\hooks\opsx-apply-postvalidate.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `pattern-reinforce-stop` | `.claude\hooks\pattern-reinforce-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `patterns-harvester` | `.claude\hooks\patterns-harvester.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `pipeline-1c-advance` | `.claude\hooks\pipeline-1c-advance.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `pipeline-gate` | `.claude\hooks\pipeline-gate.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `pipeline-protocol-stop` | `.claude\hooks\pipeline-protocol-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `pipeline-protocol` | `.claude\hooks\pipeline-protocol.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `post-indexing-analyzer` | `.claude\hooks\post-indexing-analyzer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `post-merge-revert-stop` | `.claude\hooks\post-merge-revert-stop.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `post-task-push-pr` | `.claude\hooks\post-task-push-pr.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-auto-git-save` | `.claude\hooks\posttooluse-auto-git-save.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-bash-errors` | `.claude\hooks\posttooluse-bash-errors.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-delegation-tracker` | `.claude\hooks\posttooluse-delegation-tracker.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-docs-tracker` | `.claude\hooks\posttooluse-docs-tracker.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-quality-feedback` | `.claude\hooks\posttooluse-quality-feedback.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `posttooluse-skill-metrics` | `.claude\hooks\posttooluse-skill-metrics.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-stackoverflow-on-error` | `.claude\hooks\posttooluse-stackoverflow-on-error.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `posttooluse-web-cache` | `.claude\hooks\posttooluse-web-cache.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `pre-merge-review-check` | `.claude\hooks\pre-merge-review-check.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `prework-architecture` | `.claude\hooks\prework-architecture.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `prework-github-bp` | `.claude\hooks\prework-github-bp.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `prework-similar-code` | `.claude\hooks\prework-similar-code.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `prework-stackoverflow` | `.claude\hooks\prework-stackoverflow.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `process-guard` | `.claude\hooks\process-guard.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `ralph_activator` | `.claude\hooks\ralph_activator.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `roadmap-progress-enforcer` | `.claude\hooks\roadmap-progress-enforcer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `search-optimizer` | `.claude\hooks\search-optimizer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `session-context-enforcer` | `.claude\hooks\session-context-enforcer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `session-memory-save` | `.claude\hooks\session-memory-save.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `session-mypy-banner` | `.claude\hooks\session-mypy-banner.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `skill-learning-acceptance-on-start` | `.claude\hooks\skill-learning-acceptance-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `skill-learning-pending-on-start` | `.claude\hooks\skill-learning-pending-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `skill-quality-monitor` | `.claude\hooks\skill-quality-monitor.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `skill-system-acceptance-on-start` | `.claude\hooks\skill-system-acceptance-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `skill-usage-metrics` | `.claude\hooks\skill-usage-metrics.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `skills-harvester` | `.claude\hooks\skills-harvester.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `slash-command-tracker` | `.claude\hooks\slash-command-tracker.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `stop-feedback-draft-aggregator` | `.claude\hooks\stop-feedback-draft-aggregator.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `submodule-status-check` | `.claude\hooks\submodule-status-check.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `tdd-guard-validation-on-start` | `.claude\hooks\tdd-guard-validation-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `tdd-guard` | `.claude\hooks\tdd-guard.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
-| `tei-warmup-on-start` | `.claude\hooks\tei-warmup-on-start.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `todo-sync` | `.claude\hooks\todo-sync.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `userpromptsubmit-feedback-detector` | `.claude\hooks\userpromptsubmit-feedback-detector.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `z-ai-delegation-enforcer` | `.claude\hooks\z-ai-delegation-enforcer.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 | `z-ai-write-guard` | `.claude\hooks\z-ai-write-guard.py` | `7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md, 9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md` |
 
-### memory_subsystem (41 gaps)
+### memory_subsystem (40 gaps)
 
 | Feature | Source | Should be in |
 |---------|--------|-------------|
 | `StoreRecord` | `src\memory\orchestrator\cross_store_index.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `MirrorLink` | `src\memory\orchestrator\cross_store_sync.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
-| `LinkType` | `src\memory\orchestrator\link_registry.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `EntityLink` | `src\memory\orchestrator\link_registry.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `RelatedEntity` | `src\memory\orchestrator\link_registry.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `AiMemorySearchAdapter` | `src\memory\orchestrator\memory_orchestrator.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
@@ -192,6 +160,16 @@
 | `MetricsTimer` | `src\memory\infrastructure\metrics.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `ManagedSubscription` | `src\memory\infrastructure\subscription_manager.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `SubscriptionManager` | `src\memory\infrastructure\subscription_manager.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+
+### Search Strategies (5 gaps)
+
+| Feature | Source | Should be in |
+|---------|--------|-------------|
+| `graph_r_a_g_auto` | `src\pdf_framework\search\strategies\graphrag_auto.py` | `2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md, 2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md` |
+| `graph_r_a_g_global` | `src\pdf_framework\search\strategies\graphrag_global.py` | `2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md, 2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md` |
+| `light_r_a_g` | `src\pdf_framework\search\strategies\graphrag_light.py` | `2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md, 2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md` |
+| `graph_r_a_g_local` | `src\pdf_framework\search\strategies\graphrag_local.py` | `2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md, 2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md` |
+| `web` | `src\pdf_framework\search\strategies\web_search.py` | `2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md, 2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md` |
 
 ## Skill Gaps (in code, NOT in skills)
 
@@ -249,7 +227,21 @@
 
 ### Documentation updates needed:
 
-**`2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md`** — 32 missing features:
+**`2_КОНТЕКСТ/2.2_ПОИСК/04.1_Обзор_стратегий.md`** — 5 missing features:
+  - [ ] Add `graph_r_a_g_auto` (from `src\pdf_framework\search\strategies\graphrag_auto.py`)
+  - [ ] Add `graph_r_a_g_global` (from `src\pdf_framework\search\strategies\graphrag_global.py`)
+  - [ ] Add `light_r_a_g` (from `src\pdf_framework\search\strategies\graphrag_light.py`)
+  - [ ] Add `graph_r_a_g_local` (from `src\pdf_framework\search\strategies\graphrag_local.py`)
+  - [ ] Add `web` (from `src\pdf_framework\search\strategies\web_search.py`)
+
+**`2_КОНТЕКСТ/2.2_ПОИСК/04.7_Расширенный_поиск.md`** — 5 missing features:
+  - [ ] Add `graph_r_a_g_auto` (from `src\pdf_framework\search\strategies\graphrag_auto.py`)
+  - [ ] Add `graph_r_a_g_global` (from `src\pdf_framework\search\strategies\graphrag_global.py`)
+  - [ ] Add `light_r_a_g` (from `src\pdf_framework\search\strategies\graphrag_light.py`)
+  - [ ] Add `graph_r_a_g_local` (from `src\pdf_framework\search\strategies\graphrag_local.py`)
+  - [ ] Add `web` (from `src\pdf_framework\search\strategies\web_search.py`)
+
+**`2_КОНТЕКСТ/2.6_BSL_SEMANTIC_SEARCH/28.1_Обзор.md`** — 31 missing features:
   - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
   - [ ] Add `BSLStyleProfile` (from `src\bsl\coding_assistant\style_extractor.py`)
   - [ ] Add `BSLStyleExtractor` (from `src\bsl\coding_assistant\style_extractor.py`)
@@ -260,7 +252,6 @@
   - [ ] Add `MCPHttpServer` (from `src\bsl\mcp_server\http_server.py`)
   - [ ] Add `MCPProxy` (from `src\bsl\mcp_server\mcp_server.py`)
   - [ ] Add `OneCClient` (from `src\bsl\mcp_server\onec_client.py`)
-  - [ ] Add `BSLASTParser` (from `src\bsl\parser\bsl_ast_parser.py`)
   - [ ] Add `BSLChunk` (from `src\bsl\parser\bsl_chunker.py`)
   - [ ] Add `BSLChunker` (from `src\bsl\parser\bsl_chunker.py`)
   - [ ] Add `BSLContextEnricher` (from `src\bsl\parser\context_enricher.py`)
@@ -270,7 +261,8 @@
   - [ ] Add `BSLParam` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
-  - ... and 12 more
+  - [ ] Add `BSLVariable` (from `src\bsl\parser\models.py`)
+  - ... and 11 more
 
 **`3_ИНСТРУМЕНТЫ/3.1_ИНТЕРФЕЙСЫ/06.2_REST_API.md`** — 4 missing features:
   - [ ] Add `POST /openai_compat/chat/completions` (from `src\api\routes\openai_compat.py`)
@@ -278,7 +270,7 @@
   - [ ] Add `GET /openai_compat/models` (from `src\api\routes\openai_compat.py`)
   - [ ] Add `WEBSOCKET /websocket/ws/search` (from `src\api\routes\websocket.py`)
 
-**`3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md`** — 32 missing features:
+**`3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.1_Обзор_подключения_1С.md`** — 31 missing features:
   - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
   - [ ] Add `BSLStyleProfile` (from `src\bsl\coding_assistant\style_extractor.py`)
   - [ ] Add `BSLStyleExtractor` (from `src\bsl\coding_assistant\style_extractor.py`)
@@ -289,7 +281,6 @@
   - [ ] Add `MCPHttpServer` (from `src\bsl\mcp_server\http_server.py`)
   - [ ] Add `MCPProxy` (from `src\bsl\mcp_server\mcp_server.py`)
   - [ ] Add `OneCClient` (from `src\bsl\mcp_server\onec_client.py`)
-  - [ ] Add `BSLASTParser` (from `src\bsl\parser\bsl_ast_parser.py`)
   - [ ] Add `BSLChunk` (from `src\bsl\parser\bsl_chunker.py`)
   - [ ] Add `BSLChunker` (from `src\bsl\parser\bsl_chunker.py`)
   - [ ] Add `BSLContextEnricher` (from `src\bsl\parser\context_enricher.py`)
@@ -299,12 +290,12 @@
   - [ ] Add `BSLParam` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
-  - ... and 12 more
+  - [ ] Add `BSLVariable` (from `src\bsl\parser\models.py`)
+  - ... and 11 more
 
-**`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md`** — 41 missing features:
+**`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md`** — 40 missing features:
   - [ ] Add `StoreRecord` (from `src\memory\orchestrator\cross_store_index.py`)
   - [ ] Add `MirrorLink` (from `src\memory\orchestrator\cross_store_sync.py`)
-  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
@@ -322,12 +313,12 @@
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - ... and 21 more
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - ... and 20 more
 
-**`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md`** — 41 missing features:
+**`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md`** — 40 missing features:
   - [ ] Add `StoreRecord` (from `src\memory\orchestrator\cross_store_index.py`)
   - [ ] Add `MirrorLink` (from `src\memory\orchestrator\cross_store_sync.py`)
-  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
@@ -345,12 +336,12 @@
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - ... and 21 more
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - ... and 20 more
 
-**`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md`** — 41 missing features:
+**`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md`** — 40 missing features:
   - [ ] Add `StoreRecord` (from `src\memory\orchestrator\cross_store_index.py`)
   - [ ] Add `MirrorLink` (from `src\memory\orchestrator\cross_store_sync.py`)
-  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
@@ -368,12 +359,12 @@
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - ... and 21 more
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - ... and 20 more
 
-**`5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md`** — 41 missing features:
+**`5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md`** — 40 missing features:
   - [ ] Add `StoreRecord` (from `src\memory\orchestrator\cross_store_index.py`)
   - [ ] Add `MirrorLink` (from `src\memory\orchestrator\cross_store_sync.py`)
-  - [ ] Add `LinkType` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `EntityLink` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `RelatedEntity` (from `src\memory\orchestrator\link_registry.py`)
   - [ ] Add `AiMemorySearchAdapter` (from `src\memory\orchestrator\memory_orchestrator.py`)
@@ -391,32 +382,33 @@
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - ... and 21 more
+  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
+  - ... and 20 more
 
-**`7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md`** — 76 missing features:
+**`7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md`** — 46 missing features:
   - [ ] Add `analyze-1c-task-preflight` (from `.claude\hooks\analyze-1c-task-preflight.py`)
-  - [ ] Add `audit-coverage-check` (from `.claude\hooks\audit-coverage-check.py`)
-  - [ ] Add `bsl-tool-router` (from `.claude\hooks\bsl-tool-router.py`)
   - [ ] Add `bulk-action-guard` (from `.claude\hooks\bulk-action-guard.py`)
-  - [ ] Add `ci-catchup-on-start` (from `.claude\hooks\ci-catchup-on-start.py`)
   - [ ] Add `ci-catchup-on-stop` (from `.claude\hooks\ci-catchup-on-stop.py`)
   - [ ] Add `code-review-enforcer` (from `.claude\hooks\code-review-enforcer.py`)
-  - [ ] Add `delegation-outcome-stop` (from `.claude\hooks\delegation-outcome-stop.py`)
   - [ ] Add `delegation-outcome-tracker` (from `.claude\hooks\delegation-outcome-tracker.py`)
-  - [ ] Add `docs-change-tracker` (from `.claude\hooks\docs-change-tracker.py`)
   - [ ] Add `gate-orchestrator-stop` (from `.claude\hooks\gate-orchestrator-stop.py`)
-  - [ ] Add `gh-notif-intake-on-start` (from `.claude\hooks\gh-notif-intake-on-start.py`)
   - [ ] Add `github-search-via-ecosystem-scan` (from `.claude\hooks\github-search-via-ecosystem-scan.py`)
   - [ ] Add `implement-1c-task-preflight` (from `.claude\hooks\implement-1c-task-preflight.py`)
   - [ ] Add `implement-1c-task-smoke-stop-alert` (from `.claude\hooks\implement-1c-task-smoke-stop-alert.py`)
   - [ ] Add `lifecycle-cache` (from `.claude\hooks\lifecycle-cache.py`)
-  - [ ] Add `logging-status-banner` (from `.claude\hooks\logging-status-banner.py`)
-  - [ ] Add `mcp-invocation-logger` (from `.claude\hooks\mcp-invocation-logger.py`)
-  - [ ] Add `memory-ai-acceptance-on-start` (from `.claude\hooks\memory-ai-acceptance-on-start.py`)
-  - [ ] Add `memory-curation-candidates-on-start` (from `.claude\hooks\memory-curation-candidates-on-start.py`)
-  - ... and 56 more
+  - [ ] Add `memory-effectiveness-analyzer` (from `.claude\hooks\memory-effectiveness-analyzer.py`)
+  - [ ] Add `memory-first-hook` (from `.claude\hooks\memory-first-hook.py`)
+  - [ ] Add `memory-maintenance-cadence` (from `.claude\hooks\memory-maintenance-cadence.py`)
+  - [ ] Add `memory-sync` (from `.claude\hooks\memory-sync.py`)
+  - [ ] Add `onec-state-first-guard` (from `.claude\hooks\onec-state-first-guard.py`)
+  - [ ] Add `onec-task-completion-stop` (from `.claude\hooks\onec-task-completion-stop.py`)
+  - [ ] Add `onec-task-input` (from `.claude\hooks\onec-task-input.py`)
+  - [ ] Add `openspec-task-progress` (from `.claude\hooks\openspec-task-progress.py`)
+  - [ ] Add `opsx-apply-postvalidate` (from `.claude\hooks\opsx-apply-postvalidate.py`)
+  - [ ] Add `pattern-reinforce-stop` (from `.claude\hooks\pattern-reinforce-stop.py`)
+  - ... and 26 more
 
-**`7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md`** — 32 missing features:
+**`7_ПРОВЕРКА/7.4_ТЕСТИРОВАНИЕ_1С/17.2_НАСТРОЙКА_VA_BDD.md`** — 31 missing features:
   - [ ] Add `CallGraphStore` (from `src\bsl\call_graph\store.py`)
   - [ ] Add `BSLStyleProfile` (from `src\bsl\coding_assistant\style_extractor.py`)
   - [ ] Add `BSLStyleExtractor` (from `src\bsl\coding_assistant\style_extractor.py`)
@@ -427,7 +419,6 @@
   - [ ] Add `MCPHttpServer` (from `src\bsl\mcp_server\http_server.py`)
   - [ ] Add `MCPProxy` (from `src\bsl\mcp_server\mcp_server.py`)
   - [ ] Add `OneCClient` (from `src\bsl\mcp_server\onec_client.py`)
-  - [ ] Add `BSLASTParser` (from `src\bsl\parser\bsl_ast_parser.py`)
   - [ ] Add `BSLChunk` (from `src\bsl\parser\bsl_chunker.py`)
   - [ ] Add `BSLChunker` (from `src\bsl\parser\bsl_chunker.py`)
   - [ ] Add `BSLContextEnricher` (from `src\bsl\parser\context_enricher.py`)
@@ -437,30 +428,31 @@
   - [ ] Add `BSLParam` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLCall` (from `src\bsl\parser\models.py`)
   - [ ] Add `BSLSymbol` (from `src\bsl\parser\models.py`)
-  - ... and 12 more
+  - [ ] Add `BSLVariable` (from `src\bsl\parser\models.py`)
+  - ... and 11 more
 
-**`9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md`** — 76 missing features:
+**`9_НАВЫКИ/9.2_ТРИАДА_HOOK_SKILL_MCP/13.2_Hooks.md`** — 46 missing features:
   - [ ] Add `analyze-1c-task-preflight` (from `.claude\hooks\analyze-1c-task-preflight.py`)
-  - [ ] Add `audit-coverage-check` (from `.claude\hooks\audit-coverage-check.py`)
-  - [ ] Add `bsl-tool-router` (from `.claude\hooks\bsl-tool-router.py`)
   - [ ] Add `bulk-action-guard` (from `.claude\hooks\bulk-action-guard.py`)
-  - [ ] Add `ci-catchup-on-start` (from `.claude\hooks\ci-catchup-on-start.py`)
   - [ ] Add `ci-catchup-on-stop` (from `.claude\hooks\ci-catchup-on-stop.py`)
   - [ ] Add `code-review-enforcer` (from `.claude\hooks\code-review-enforcer.py`)
-  - [ ] Add `delegation-outcome-stop` (from `.claude\hooks\delegation-outcome-stop.py`)
   - [ ] Add `delegation-outcome-tracker` (from `.claude\hooks\delegation-outcome-tracker.py`)
-  - [ ] Add `docs-change-tracker` (from `.claude\hooks\docs-change-tracker.py`)
   - [ ] Add `gate-orchestrator-stop` (from `.claude\hooks\gate-orchestrator-stop.py`)
-  - [ ] Add `gh-notif-intake-on-start` (from `.claude\hooks\gh-notif-intake-on-start.py`)
   - [ ] Add `github-search-via-ecosystem-scan` (from `.claude\hooks\github-search-via-ecosystem-scan.py`)
   - [ ] Add `implement-1c-task-preflight` (from `.claude\hooks\implement-1c-task-preflight.py`)
   - [ ] Add `implement-1c-task-smoke-stop-alert` (from `.claude\hooks\implement-1c-task-smoke-stop-alert.py`)
   - [ ] Add `lifecycle-cache` (from `.claude\hooks\lifecycle-cache.py`)
-  - [ ] Add `logging-status-banner` (from `.claude\hooks\logging-status-banner.py`)
-  - [ ] Add `mcp-invocation-logger` (from `.claude\hooks\mcp-invocation-logger.py`)
-  - [ ] Add `memory-ai-acceptance-on-start` (from `.claude\hooks\memory-ai-acceptance-on-start.py`)
-  - [ ] Add `memory-curation-candidates-on-start` (from `.claude\hooks\memory-curation-candidates-on-start.py`)
-  - ... and 56 more
+  - [ ] Add `memory-effectiveness-analyzer` (from `.claude\hooks\memory-effectiveness-analyzer.py`)
+  - [ ] Add `memory-first-hook` (from `.claude\hooks\memory-first-hook.py`)
+  - [ ] Add `memory-maintenance-cadence` (from `.claude\hooks\memory-maintenance-cadence.py`)
+  - [ ] Add `memory-sync` (from `.claude\hooks\memory-sync.py`)
+  - [ ] Add `onec-state-first-guard` (from `.claude\hooks\onec-state-first-guard.py`)
+  - [ ] Add `onec-task-completion-stop` (from `.claude\hooks\onec-task-completion-stop.py`)
+  - [ ] Add `onec-task-input` (from `.claude\hooks\onec-task-input.py`)
+  - [ ] Add `openspec-task-progress` (from `.claude\hooks\openspec-task-progress.py`)
+  - [ ] Add `opsx-apply-postvalidate` (from `.claude\hooks\opsx-apply-postvalidate.py`)
+  - [ ] Add `pattern-reinforce-stop` (from `.claude\hooks\pattern-reinforce-stop.py`)
+  - ... and 26 more
 
 ### Skill updates needed:
 
