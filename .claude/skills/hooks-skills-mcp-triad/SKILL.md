@@ -21,7 +21,7 @@ description: "Используй этот скилл для понимания �
 
 | Hook | Назначение |
 |------|-----------|
-| `skill-router.py` | Config-driven маршрутизация: Layer A+B+C (keyword + fuzzy + TF-IDF) → рекомендация скиллов (52 bundles, config v9) |
+| `skill-router.py` | Config-driven маршрутизация: Layer A+B+C (keyword + fuzzy + TF-IDF) → рекомендация скиллов (53 bundles, config v9) |
 | `decision-to-triad.py` | Детекция РЕШЕНИЙ/ИДЕЙ → Фабрика (`triad-factory`, Q1-Q5) |
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
@@ -41,7 +41,7 @@ description: "Используй этот скилл для понимания �
 
 `code-skill-enforcer.py` читает конфигурацию из `shared/code-skill-patterns.json` (массив правил `{pattern, skill, label, domain}`). Каждое правило связывает regex-паттерн команды/файла с обязательным для активации скиллом. **Важно**: `skill` должен существовать в каталоге `.claude/skills/` — entries с несуществующими target-скиллами создают phantom-блокировки (enforcer требует активации скилла, которого нет), поэтому при удалении скилла нужно сразу чистить соответствующие правила.
 
-### Skills (97 шт.) — КАК / ЧТО
+### Skills (98 шт.) — КАК / ЧТО
 
 #### Доменные (5)
 
@@ -163,7 +163,7 @@ Config-driven маршрутизация промптов к скиллам че
 
 **Honest eval (260613).** Layer A2 — 1С-сигналы по форме текста (CamelCase-кириллица / `гкс_` / `Документ.` / `Srvr=`) + буквальное имя скилла как **целое слово** (`\b…\b`, не подстрочный `in`); веса A2 вынесены в config `a2_signals` (tunable без правки кода, дефолты == хардкод). Гейт acceptance читает **honest pooled `action_f1`** (action-only, без silence-padding) из `eval-skill-router.py` (`--split train|test|all`, `--cv K`), НЕ in-sample padded macro-F1; GT под провенанс-контрактом (`source`/`split`; лик-кандидаты `transcript-router` → `quarantine`, blocking-lint `lint_skill_router_gt.py`). Общий `shared/acceptance_watch.py` `acceptance_banner(window_days=…)` параметризован — раньше «день N/14» хардкодился и врал для 7-дневных окон (напр. tdd-guard). Полные детали + ADR-012..018 — в корневом `CLAUDE.md`.
 
-52 bundles (config v9), 45 из них сгруппированы по 8 доменам: framework (14), claude-code (7), langchain (4), research (3), tools (7), 1c (7), memory (2), llm (1); остальные 7 (langgraph-memory, langchain-mcp, yaxunit, edt-mcp, autoresearch, wiki-pipeline, 1c-debug-hmr) вне доменной группировки в конфиге.
+53 bundles (config v9), 45 из них сгруппированы по 8 доменам: framework (14), claude-code (7), langchain (4), research (3), tools (7), 1c (7), memory (2), llm (1); остальные 7 (langgraph-memory, langchain-mcp, yaxunit, edt-mcp, autoresearch, wiki-pipeline, 1c-debug-hmr) вне доменной группировки в конфиге.
 
 **Домены и bundles (v9)**:
 | Домен | Bundles |
@@ -420,8 +420,8 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── git-commit-enforcer.py     (Stop: блокировка без коммита)
 │   ├── docs-change-enforcer.py    (Stop: код изменён без обновления доков)
 │   └── ...                        (полный список — 13.2 Hooks, generator)
-├── skills/                        (97 скиллов)
-│   ├── skill-router-config.json   (52 bundles, v9 → keyword + fuzzy + TF-IDF routing)
+├── skills/                        (98 скиллов)
+│   ├── skill-router-config.json   (53 bundles, v9 → keyword + fuzzy + TF-IDF routing)
 │   ├── 1c-doc-research/           (+ cache/ — 8 категорий)
 │   ├── tech-research/             (+ cache/ — 7 категорий)
 │   ├── architecture-research/     (+ cache/ + adr/)

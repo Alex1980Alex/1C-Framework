@@ -5,8 +5,13 @@
   "max_bundles": 2,
   "a2_signals": {
     "_doc": "260613 B1 — Layer A2 1C-signal weights, externalized from skill-router.py. Tunable on train-only via tune_skill_router.py (roadmap 260613 Фаза B5/C). Defaults == historical hardcoded values (behavior unchanged).",
-    "bsl_signal_weights": { "bsl-dev": 3, "research-1c": 1 },
-    "conn_str_weights": { "research-1c": 3 },
+    "bsl_signal_weights": {
+      "bsl-dev": 3,
+      "research-1c": 1
+    },
+    "conn_str_weights": {
+      "research-1c": 3
+    },
     "literal_name_weight": 4,
     "literal_name_min_len": 6
   },
@@ -2395,6 +2400,23 @@
         "langchain": 1,
         "MultiServerMCPClient": 6
       }
+    },
+    "1c-config-knowledge": {
+      "keywords": [
+        "что изучено по конфигурации",
+        "карта документов и регистров",
+        "бизнес-процессы УправлениеТранспортомНаПЛК",
+        "конфигурация УправлениеТранспортомНаПЛК",
+        "1c-study cache",
+        "config knowledge cache"
+      ],
+      "skills": [
+        "1c-config-knowledge"
+      ],
+      "optional": [
+        "bsl-development",
+        "1c-solution-architecture"
+      ]
     }
   },
   "min_score_gap": 2,
