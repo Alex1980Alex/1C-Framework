@@ -769,11 +769,13 @@ class WikiSearchIndexer:
             return
 
         entity_id = page_path.stem
-        await self._hybrid_search.index_document(
-            doc_id=entity_id,
-            content=text,
-            metadata={"source": "wiki", "path": str(page_path)},
-        )
+        # HybridSearchService.index_document is SYNC and takes (doc_id, content)
+        # only — it has no `metadata` param and must not be awaited. The prior
+        # `await ...(doc_id=, content=, metadata=)` form raised TypeError on
+        # every page, which index_all_pages swallowed into a per-page warning →
+        # `index-search` silently indexed nothing. Path/source are recoverable
+        # from entity_id (the page stem); BM25 stores only doc_id + text.
+        self._hybrid_search.index_document(entity_id, text)
 
     async def index_all_pages(self) -> int:
         """Index all wiki pages. Returns count."""
@@ -791,7 +793,8 @@ class WikiSearchIndexer:
 
     async def remove_page(self, entity_id: str) -> None:
         """Remove doc from hybrid search index."""
-        await self._hybrid_search.remove_document(entity_id)
+        # remove_document is sync too — do not await (same class of bug).
+        self._hybrid_search.remove_document(entity_id)
 
     def _extract_searchable_text(self, page_path: Path) -> str:
         """Strip YAML frontmatter, resolve wiki-links to display text."""

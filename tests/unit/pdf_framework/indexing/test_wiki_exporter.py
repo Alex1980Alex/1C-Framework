@@ -183,6 +183,41 @@ class TestWikiSearchIndexer:
         assert "AsyncIO" in text
         assert "[[" not in text
 
+    @pytest.mark.asyncio
+    async def test_index_page_calls_sync_index_document(self, tmp_path):
+        # Regression (audit 260705 P1): HybridSearchService.index_document is a
+        # SYNC (doc_id, content) method. index_page must call it positionally
+        # without await/metadata — the old `await ...(doc_id=, content=,
+        # metadata=)` TypeError'd on every page and index-search indexed 0.
+        page = tmp_path / "my-entity.md"
+        page.write_text("---\nid: x\n---\n\nSearchable body text\n", encoding="utf-8")
+        hs = MagicMock()  # sync mock — an AsyncMock would hide the await bug
+        idx = WikiSearchIndexer(hs, wiki_dir=tmp_path)
+
+        await idx.index_page(page)
+
+        hs.index_document.assert_called_once()
+        args, kwargs = hs.index_document.call_args
+        assert kwargs == {}, "index_document takes positional (doc_id, content) only"
+        assert args[0] == "my-entity"  # doc_id = page stem
+        assert "Searchable body text" in args[1]
+
+    @pytest.mark.asyncio
+    async def test_index_page_skips_empty(self, tmp_path):
+        page = tmp_path / "empty.md"
+        page.write_text("---\nid: x\n---\n\n", encoding="utf-8")
+        hs = MagicMock()
+        idx = WikiSearchIndexer(hs, wiki_dir=tmp_path)
+        await idx.index_page(page)
+        hs.index_document.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_remove_page_calls_sync_remove_document(self, tmp_path):
+        hs = MagicMock()
+        idx = WikiSearchIndexer(hs, wiki_dir=tmp_path)
+        await idx.remove_page("some-entity")
+        hs.remove_document.assert_called_once_with("some-entity")
+
 
 class TestReverseSyncService:
     """Integration tests for wiki->graph reverse sync (REQ-4)."""
