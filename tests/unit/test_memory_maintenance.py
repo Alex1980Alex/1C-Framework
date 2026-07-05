@@ -133,3 +133,84 @@ class TestDashboard:
         assert "ForgetGate" in out
         assert "cross_store_dup_rate" in out
         assert "Ingestion" in out
+
+
+class TestMergeJob:
+    """§БП G2 (audit 260705) — background-consolidation job wired into the cadence.
+
+    Guards that ``run_merge_patterns`` runs the previously-orphaned
+    ``PatternMerger`` over the skill_learning SAVED silo: dry-run reports without
+    writing, ``--apply`` rewrites the deduped silo (with .bak backup), fail-soft.
+    """
+
+    @staticmethod
+    def _write_silo(path, records):
+        import json
+
+        path.write_text(
+            "\n".join(json.dumps(r, ensure_ascii=False) for r in records) + "\n",
+            encoding="utf-8",
+        )
+
+    def _patched_module(self, monkeypatch, silo_path):
+        import scripts.memory_maintenance as mm
+
+        monkeypatch.setattr(mm, "SKILL_JSONL", silo_path)
+        return mm
+
+    def test_dry_run_finds_dupes_without_writing(self, tmp_path, monkeypatch):
+        silo = tmp_path / "patterns.jsonl"
+        # two records that normalize to the same content (whitespace/case) —
+        # the exact-hash write-contract would NOT collapse these; the merger does.
+        self._write_silo(
+            silo,
+            [
+                {"pattern_id": "a", "name": "Alpha", "content": "Do  X", "confidence": 0.9},
+                {"pattern_id": "b", "name": "Beta", "content": "do x", "confidence": 0.7},
+                {"pattern_id": "c", "name": "Gamma", "content": "unique thing", "confidence": 0.8},
+            ],
+        )
+        mm = self._patched_module(monkeypatch, silo)
+        before = silo.read_text(encoding="utf-8")
+
+        r = mm.run_merge_patterns(apply=False, now=NOW)
+
+        assert "error" not in r
+        assert r["duplicates_found"] == 1
+        assert r["patterns_merged"] == 1
+        assert r["patterns_kept"] == 2
+        assert r["applied"] is False
+        assert silo.read_text(encoding="utf-8") == before  # dry-run never writes
+        assert not (tmp_path / "patterns.jsonl.bak").exists()
+
+    def test_apply_writes_deduped_with_backup(self, tmp_path, monkeypatch):
+        import json
+
+        silo = tmp_path / "patterns.jsonl"
+        self._write_silo(
+            silo,
+            [
+                {"pattern_id": "a", "name": "Alpha", "content": "Do  X", "confidence": 0.9},
+                {"pattern_id": "b", "name": "Beta", "content": "do x", "confidence": 0.7},
+            ],
+        )
+        mm = self._patched_module(monkeypatch, silo)
+
+        r = mm.run_merge_patterns(apply=True, now=NOW)
+
+        assert r["applied"] is True
+        assert r["patterns_merged"] == 1
+        assert (tmp_path / "patterns.jsonl.bak").exists()  # snapshot before rewrite
+        kept = [json.loads(x) for x in silo.read_text(encoding="utf-8").splitlines() if x.strip()]
+        assert len(kept) == 1
+        assert kept[0]["confidence"] == 0.9  # keep-higher-confidence winner
+
+    def test_fail_soft_on_bad_storage(self, tmp_path, monkeypatch):
+        # storage_dir that cannot be read as a file → PatternMerger.load returns []
+        # (missing file), so the job reports empty rather than raising.
+        missing = tmp_path / "nope" / "patterns.jsonl"
+        mm = self._patched_module(monkeypatch, missing)
+        r = mm.run_merge_patterns(apply=True, now=NOW)
+        assert "error" not in r
+        assert r["patterns_kept"] == 0
+        assert r["applied"] is False

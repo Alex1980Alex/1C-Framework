@@ -24,6 +24,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 import sqlite3
@@ -260,6 +261,37 @@ def run_review_pending(apply: bool, now: datetime) -> dict[str, Any]:
     return summary
 
 
+def run_merge_patterns(apply: bool, now: datetime) -> dict[str, Any]:
+    """§БП G2 (audit 260705) — background consolidation of the skill_learning SAVED silo.
+
+    Wires the previously-orphaned ``PatternMerger`` into the cadence. Dedups
+    near-identical learned patterns (normalized-content + name grouping;
+    keep-higher-confidence winner, tag-union, application-count aggregation)
+    that the O(1) write-time ``content_hash`` check cannot catch (it only
+    collapses byte-identical content). This is the mem0 ADD-only / Letta
+    sleep-time consolidation pattern: expensive similarity-dedup runs in the
+    background cadence, NOT in a hot-path Stop-hook.
+
+    Dry-run by default (only reports duplicate groups); ``--apply`` rewrites
+    ``patterns.jsonl`` (PatternMerger snapshots ``patterns.jsonl.bak`` first).
+    Fail-soft — a merge crash never aborts the cadence.
+    """
+    try:
+        from memory.skill_learning.merge_patterns import PatternMerger
+
+        merger = PatternMerger(SKILL_JSONL.parent)
+        result = asyncio.run(merger.merge_duplicates(dry_run=not apply))
+    except Exception as exc:  # fail-soft
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    return {
+        "duplicates_found": result.duplicates_found,
+        "patterns_merged": result.patterns_merged,
+        "patterns_kept": result.patterns_kept,
+        "space_saved_bytes": result.space_saved_bytes,
+        "applied": bool(apply and result.patterns_merged > 0),
+    }
+
+
 def run_archive_episodic(apply: bool, now: datetime) -> dict[str, Any]:
     """P3.2 (roadmap 260612): bounded growth для эпизодики — archive-stamp.
 
@@ -470,7 +502,7 @@ def main() -> int:
         default="",
         help=(
             "comma list: reflect,sync,promote,reindex_wiki,reindex_skill_library,"
-            "skill_review,forget,review_pending,archive_episodic,rebuild_link_stats"
+            "skill_review,forget,review_pending,merge,archive_episodic,rebuild_link_stats"
         ),
     )
     ap.add_argument("--no-report", action="store_true", help="do not write dashboard file")
@@ -501,6 +533,11 @@ def main() -> int:
         {"skipped": True} if "review_pending" in skip else run_review_pending(args.apply, now)
     )
     jobs["review_pending"] = review_pending
+    # §БП G2 (audit 260705): background-консолидация SAVED-силоса skill_learning —
+    # раньше PatternMerger был orphaned (0 вызовов). Дедуп-по-содержимому/имени вне
+    # hot-path (mem0 ADD-only / Letta dreaming). Независим от reindex_skill_library
+    # (тот зеркалит КАТАЛОГ .claude/skills/, не patterns.jsonl) → порядок не важен.
+    jobs["merge"] = "skipped" if "merge" in skip else run_merge_patterns(args.apply, now)
     # P3.2/P3.3 (roadmap 260612): после reflect — эпизодика консолидирована, можно в архив.
     # Skip — строкой (конвенция reflect/sync/promote): trace-маппинг jobs→rc различает
     # "skipped" / 0 (исполнился) / -1 (error) — acceptance-критерий archive_ran на этом стоит.
