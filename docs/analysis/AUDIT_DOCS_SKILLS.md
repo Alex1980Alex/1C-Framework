@@ -1,6 +1,6 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-07-05 04:22
+**Generated:** 2026-07-05 18:38
 
 ## Summary
 
@@ -137,9 +137,9 @@
 | `SearchResultItem` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `UnifiedSearchResult` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `BaseSearchAdapter` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
+| `ScoreNormalizer` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `Deduplicator` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `LinkEnricher` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
-| `UnifiedSearchEngine` | `src\memory\orchestrator\unified_search.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `PatternType` | `src\memory\vector_memory\models.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `ConfidenceLevel` | `src\memory\vector_memory\models.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `EvidenceSource` | `src\memory\vector_memory\models.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
@@ -311,9 +311,9 @@
   - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `ScoreNormalizer` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
   - ... and 20 more
 
 **`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md`** — 40 missing features:
@@ -334,9 +334,9 @@
   - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `ScoreNormalizer` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
   - ... and 20 more
 
 **`5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md`** — 40 missing features:
@@ -357,9 +357,9 @@
   - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `ScoreNormalizer` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
   - ... and 20 more
 
 **`5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md`** — 40 missing features:
@@ -380,9 +380,9 @@
   - [ ] Add `SearchResultItem` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `UnifiedSearchResult` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `BaseSearchAdapter` (from `src\memory\orchestrator\unified_search.py`)
+  - [ ] Add `ScoreNormalizer` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `Deduplicator` (from `src\memory\orchestrator\unified_search.py`)
   - [ ] Add `LinkEnricher` (from `src\memory\orchestrator\unified_search.py`)
-  - [ ] Add `UnifiedSearchEngine` (from `src\memory\orchestrator\unified_search.py`)
   - ... and 20 more
 
 **`7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.7_Система_хуков.md`** — 46 missing features:
