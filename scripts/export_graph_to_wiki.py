@@ -7,7 +7,6 @@ Usage:
     python -m scripts.export_graph_to_wiki index-search [--wiki-dir PATH]
     python -m scripts.export_graph_to_wiki verify [--output-dir PATH]
     python -m scripts.export_graph_to_wiki promote-patterns [--min-confidence F] [--min-usage N] [--drafts-dir PATH]
-    python -m scripts.export_graph_to_wiki decay-confidence [--min-confidence F] [--dry-run]
     python -m scripts.export_graph_to_wiki archive-stale [--max-age-days N] [--min-confidence F] [--dry-run]
 
 Exit codes: 0 success, 1 partial failure, 2 total failure.
@@ -98,26 +97,6 @@ def parse_args() -> argparse.Namespace:
         help="Qdrant API key (default: $QDRANT__API_KEY env var)",
     )
     p_prom.add_argument("--verbose", "-v", action="store_true")
-
-    # decay-confidence (time-based L3 confidence decay)
-    p_dec = sub.add_parser(
-        "decay-confidence",
-        help="Apply time-based decay to learned_patterns confidence (counter-balance "
-        "asymmetric apply_pattern update so stale patterns don't ossify)",
-    )
-    p_dec.add_argument(
-        "--min-confidence", type=float, default=0.0, help="Floor for decay (default 0.0)"
-    )
-    p_dec.add_argument("--batch-size", type=int, default=100)
-    p_dec.add_argument("--qdrant-url", type=str, default="http://localhost:6333")
-    p_dec.add_argument(
-        "--qdrant-api-key",
-        type=str,
-        default=None,
-        help="Qdrant API key (default: $QDRANT__API_KEY env var)",
-    )
-    p_dec.add_argument("--dry-run", action="store_true")
-    p_dec.add_argument("--verbose", "-v", action="store_true")
 
     # archive-stale (move low-confidence/old wiki entities to archive/YYYY-MM/)
     p_arch = sub.add_parser(
@@ -320,30 +299,6 @@ async def cmd_promote_patterns(args: argparse.Namespace) -> int:
     return 0
 
 
-async def cmd_decay_confidence(args: argparse.Namespace) -> int:
-    import os
-
-    from qdrant_client import QdrantClient
-
-    from src.memory.librarian.wiki_decay import WikiDecayService
-
-    api_key = args.qdrant_api_key or os.environ.get("QDRANT__API_KEY")
-    client = QdrantClient(url=args.qdrant_url, api_key=api_key)
-    service = WikiDecayService(
-        qdrant_client=client,
-        min_confidence=args.min_confidence,
-        batch_size=args.batch_size,
-    )
-    result = await service.decay_all(dry_run=args.dry_run)
-    print(
-        f"Decay {'(dry-run) ' if args.dry_run else ''}— "
-        f"total={result['total']}, "
-        f"decayed={result['decayed']}, "
-        f"skipped={result['skipped']}"
-    )
-    return 0
-
-
 async def cmd_archive_stale(args: argparse.Namespace) -> int:
     import shutil
     from datetime import datetime, timedelta
@@ -473,7 +428,6 @@ async def main() -> int:
         "index-search": cmd_index_search,
         "verify": cmd_verify,
         "promote-patterns": cmd_promote_patterns,
-        "decay-confidence": cmd_decay_confidence,
         "archive-stale": cmd_archive_stale,
         "promote-openspec": cmd_promote_openspec,
     }
