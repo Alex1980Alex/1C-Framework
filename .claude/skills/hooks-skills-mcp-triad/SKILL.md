@@ -163,19 +163,19 @@ Config-driven маршрутизация промптов к скиллам че
 
 **Honest eval (260613).** Layer A2 — 1С-сигналы по форме текста (CamelCase-кириллица / `гкс_` / `Документ.` / `Srvr=`) + буквальное имя скилла как **целое слово** (`\b…\b`, не подстрочный `in`); веса A2 вынесены в config `a2_signals` (tunable без правки кода, дефолты == хардкод). Гейт acceptance читает **honest pooled `action_f1`** (action-only, без silence-padding) из `eval-skill-router.py` (`--split train|test|all`, `--cv K`), НЕ in-sample padded macro-F1; GT под провенанс-контрактом (`source`/`split`; лик-кандидаты `transcript-router` → `quarantine`, blocking-lint `lint_skill_router_gt.py`). Общий `shared/acceptance_watch.py` `acceptance_banner(window_days=…)` параметризован — раньше «день N/14» хардкодился и врал для 7-дневных окон (напр. tdd-guard). Полные детали + ADR-012..018 — в корневом `CLAUDE.md`.
 
-32 bundles сгруппированы по 8 доменам: framework (9), claude-code (6), langchain (2), research (3), tools (5), 1c (4), memory (2), llm (1).
+52 bundles (config v9), 45 из них сгруппированы по 8 доменам: framework (14), claude-code (7), langchain (4), research (3), tools (7), 1c (7), memory (2), llm (1); остальные 7 (langgraph-memory, langchain-mcp, yaxunit, edt-mcp, autoresearch, wiki-pipeline, 1c-debug-hmr) вне доменной группировки в конфиге.
 
-**Домены и bundles (v6)**:
+**Домены и bundles (v9)**:
 | Домен | Bundles |
 |-------|---------|
-| 1c | research-1c, bsl-dev, bsl-debug, 1c-mcp-data |
-| framework | search, indexing, eval-benchmark, graph, agents, data-stores, deploy, framework-use, framework-ops |
-| claude-code | claude-code-dev, claude-code-config, claude-code-ops, hooks, creation, docs |
-| langchain | langchain-core, langchain-infra |
+| 1c | research-1c, bsl-dev, bsl-debug, 1c-mcp-data, va-bdd, 1c-arch, its-research |
+| framework | scene-detect-mcp, search, indexing, bsl-reindex, framework-search, eval-benchmark, graph, agents, data-stores, deploy, framework-use, framework-ops, framework-troubleshoot, framework-cache |
+| claude-code | claude-code-dev, claude-code-config, claude-code-ops, hooks, creation, docs, cc-docs |
+| langchain | langchain-core, langchain-infra, langchain-streaming, langchain-multiagent |
 | research | research-tech, architecture, workflow |
 | memory | memory, bsl-memory |
 | llm | llm-rotation |
-| tools | git-parsing, tenacity-retry, code-verify, learning-loop, task-protocol |
+| tools | git-parsing, tenacity-retry, code-verify, learning-loop, task-protocol, obsidian-vault, duckdb |
 
 ### Skill Accuracy — PER-PROMPT КОРРЕЛЯЦИЯ
 
