@@ -22,7 +22,7 @@ commands:
 
 # Реализация задачи 1С — 8-этапный pipeline (v2.8)
 
-> **История версий:** полный список изменений v2.0.0 → v2.8.1 — [references/version-history.md](references/version-history.md). Текущая версия — 2.8.1 (2026-06-15): Этап 4 получил опциональный шаг 0 «автоформат» (`bsl_lint.py --format`) перед диагностикой.
+> **История версий:** полный список изменений v2.0.0 → v2.8.1 — [references/tools-reference.md#история-версий-implement-1c-task](references/tools-reference.md#история-версий-implement-1c-task). Текущая версия — 2.8.1 (2026-06-15): Этап 4 получил опциональный шаг 0 «автоформат» (`bsl_lint.py --format`) перед диагностикой.
 
 ## Overview
 
@@ -62,7 +62,7 @@ Skill для реализации задачи по конфигурации 1С
 | `get_applications` | Этап 6: получить applicationId работающего инфобейса (вход для update_database) |
 | `update_database` | Этап 6: обновить конфигурацию БД ПЕРЕД live-вызовом изменённой функции (shared-state action — спросить пользователя) |
 
-**Полный набор EDT-MCP по этапам** (~36 из 70 тулов, дополняет hot-path таблицу выше): [references/tools-full-reference.md](references/tools-full-reference.md).
+**Полный набор EDT-MCP по этапам** (~36 из 70 тулов, дополняет hot-path таблицу выше): [references/tools-reference.md#полный-набор-edt-mcp-по-этапам](references/tools-reference.md#полный-набор-edt-mcp-по-этапам).
 
 ### 1c-mcp-crud — верификация на живых данных
 
@@ -97,7 +97,7 @@ Skill для реализации задачи по конфигурации 1С
 
 Plain `1c-debug` (без HMR) — оставлен как CI/production-вариант (нет watcher overhead'а); переключение через env-флаг `IMPLEMENT_1C_USE_PLAIN_DEBUG=true`.
 
-Ключевые инструменты: `debug_health_check` (Этап 0 probe), `debug_connect`/`debug_set_breakpoint`/`debug_get_breakpoints` (установка BP), `debug_ping`/`debug_stack_trace`/`debug_variables`/`debug_step` (Этап 5.x цикл), `debug_session_diff` (Этап 5.y regression). Полная таблица 13 тулов + режимы применения: [references/tools-full-reference.md](references/tools-full-reference.md). Skill: [1c-debug-hmr](../1c-debug-hmr/SKILL.md).
+Ключевые инструменты: `debug_health_check` (Этап 0 probe), `debug_connect`/`debug_set_breakpoint`/`debug_get_breakpoints` (установка BP), `debug_ping`/`debug_stack_trace`/`debug_variables`/`debug_step` (Этап 5.x цикл), `debug_session_diff` (Этап 5.y regression). Полная таблица 13 тулов + режимы применения: [references/tools-reference.md#1c-debug-hmr--полная-таблица-инструментов-этап-5x-bp-verification](references/tools-reference.md#1c-debug-hmr--полная-таблица-инструментов-этап-5x-bp-verification). Skill: [1c-debug-hmr](../1c-debug-hmr/SKILL.md).
 
 ### Вспомогательные
 
@@ -126,7 +126,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
    | `1c-mcp-crud` | `mcp__1c-mcp-crud__get_metadata` (или `ToolSearch query: "+1c crud"`) | в результатах есть `mcp__1c-mcp-crud__*` |
    | `bsl-debugger` | `mcp__bsl-debugger__bsl_analyze` или `mcp__1c-debug__debug_targets` | tool существует |
 
-2-6. TCP-probe портов (`:8765` edt-mcp, `:1550` debug agent, либо `python scripts/smoke_test_implement_1c_task.py`), debug environment health через `debug_health_check(mode="probe")`, сопоставление с матрицей капабилити (Full / Full (no-BP) / Code-only / Read-only verify / Read-only research), сообщение пользователю о деградации, сохранение режима + `debug_session_id` в IMPLEMENTATION-PROGRESS.md footer — полный текст шагов и таблица капабилити: [references/etap0-preflight-detail.md](references/etap0-preflight-detail.md).
+2-6. TCP-probe портов (`:8765` edt-mcp, `:1550` debug agent, либо `python scripts/smoke_test_implement_1c_task.py`), debug environment health через `debug_health_check(mode="probe")`, сопоставление с матрицей капабилити (Full / Full (no-BP) / Code-only / Read-only verify / Read-only research), сообщение пользователю о деградации, сохранение режима + `debug_session_id` в IMPLEMENTATION-PROGRESS.md footer — полный текст шагов и таблица капабилити: [references/stage-details.md#этап-0-preflight--детали-шаги-2-6](references/stage-details.md#этап-0-preflight--детали-шаги-2-6).
 
 **Контрольная точка:** Известен режим pipeline. Все последующие этапы выполняются с учётом ограничений режима.
 
@@ -161,7 +161,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
      → получить текущий код точки вставки
    ```
 
-   **Path-fallback при File-not-found (Designer→EDT flatten)** и **fallback без edt-mcp** (`bsl-code-search`/`bsl-semantic-search`/`Read`, с перечнем ограничений) — полный текст: [references/etap1-preparation-fallback.md](references/etap1-preparation-fallback.md).
+   **Path-fallback при File-not-found (Designer→EDT flatten)** и **fallback без edt-mcp** (`bsl-code-search`/`bsl-semantic-search`/`Read`, с перечнем ограничений) — полный текст: [references/stage-details.md#этап-1-подготовка--детали-fallbackов-шаг-3](references/stage-details.md#этап-1-подготовка--детали-fallbackов-шаг-3).
 
 4. Сверить номера строк из ANALYSIS-REPORT с актуальными.
    - **Full / Code-only:** актуальные = из EDT-MCP.
@@ -232,7 +232,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 #### Этап 3R: Рефакторинг через bsl-semantic-search refactor (условный)
 
-**Применяется только если decision gate определил операцию как рефакторинг.** Классификация символа → routing matrix, `bsl_rename_symbol`/`bsl_replace_method_body` с `dry_run: true` → проверка плана → confirm → верификация `get_project_errors` → лог в IMPLEMENTATION-PROGRESS.md. Полный 6-шаговый протокол: [references/etap3r-refactoring.md](references/etap3r-refactoring.md); workflow: [bsl-refactoring-workflow/SKILL.md](../bsl-refactoring-workflow/SKILL.md).
+**Применяется только если decision gate определил операцию как рефакторинг.** Классификация символа → routing matrix, `bsl_rename_symbol`/`bsl_replace_method_body` с `dry_run: true` → проверка плана → confirm → верификация `get_project_errors` → лог в IMPLEMENTATION-PROGRESS.md. Полный 6-шаговый протокол: [references/stage-details.md#этап-3r-рефакторинг-через-bsl-semantic-search-refactor-условный](references/stage-details.md#этап-3r-рефакторинг-через-bsl-semantic-search-refactor-условный); workflow: [bsl-refactoring-workflow/SKILL.md](../bsl-refactoring-workflow/SKILL.md).
 
 #### Стандартный Этап 3: Новый функционал (EDT-MCP)
 
@@ -304,7 +304,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 2. **Если `bsl_analyze` падает с parse error** — проверить, попадает ли ошибка в список known false-positive'ов (см. ниже). Если да — фиксируем как tool-limitation и считаем этап пройденным (EDT-валидация в Этапе 3 уже подтвердила корректность кода). Если нет — есть реальная ошибка, исправлять через Этап 3.
 
-3-6. Опционально — `bsl_execute` на чистой логике, пошаговая `bsl_debug_start`/`bsl_debug_step`, экспериментальный live runtime debug через `1c-debug-hmr` (НЕ путать с обязательной Этап 5.x BP-verification), исправление реальных проблем (повтор Этапа 3). Known false-positive'ы `bsl_analyze` (директивы препроцессора, chained-call), workaround и правила логирования в IMPLEMENTATION-PROGRESS.md — полный текст: [references/etap4-static-analysis-detail.md](references/etap4-static-analysis-detail.md).
+3-6. Опционально — `bsl_execute` на чистой логике, пошаговая `bsl_debug_start`/`bsl_debug_step`, экспериментальный live runtime debug через `1c-debug-hmr` (НЕ путать с обязательной Этап 5.x BP-verification), исправление реальных проблем (повтор Этапа 3). Known false-positive'ы `bsl_analyze` (директивы препроцессора, chained-call), workaround и правила логирования в IMPLEMENTATION-PROGRESS.md — полный текст: [references/stage-details.md#этап-4-статический-анализ--детали-шаги-3-5-false-positives-логирование](references/stage-details.md#этап-4-статический-анализ--детали-шаги-3-5-false-positives-логирование).
 
 **Контрольная точка:**
 - EDT `get_project_errors(severity="ERRORS") = 0` (авторитетный источник для 1С) — ОБЯЗАТЕЛЬНО
@@ -363,7 +363,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Когда применяется:** для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки модификации из ANALYSIS-REPORT. Точки `[REFACTOR]` (rename / replace body / safe delete) — BP не требуется (изменение тождественно по поведению).
 
-**Полный 8-шаговый протокол** (`debug_connect`→`debug_set_breakpoint`→`debug_get_breakpoints`→триггер `execute_code`/`execute_query`→`debug_ping`→`debug_stack_trace` assert→`debug_variables`→`debug_step(Continue)`), fallback при не-fire (`debug_break_on_next` → `force_recycle_rphost` / thin client Solution C), 15-минутный timeout user-in-the-loop ветки, success criterion, шаблон логирования в IMPLEMENTATION-PROGRESS.md, и **Этап 5.y Regression diff** (`debug_session_diff` verdict-гейт) — полный текст: [references/etap5x-bp-verification.md](references/etap5x-bp-verification.md).
+**Полный 8-шаговый протокол** (`debug_connect`→`debug_set_breakpoint`→`debug_get_breakpoints`→триггер `execute_code`/`execute_query`→`debug_ping`→`debug_stack_trace` assert→`debug_variables`→`debug_step(Continue)`), fallback при не-fire (`debug_break_on_next` → `force_recycle_rphost` / thin client Solution C), 15-минутный timeout user-in-the-loop ветки, success criterion, шаблон логирования в IMPLEMENTATION-PROGRESS.md, и **Этап 5.y Regression diff** (`debug_session_diff` verdict-гейт) — полный текст: [references/stage-details.md#этап-5x-live-bp-verification--8-шаговый-протокол--fallback](references/stage-details.md#этап-5x-live-bp-verification--8-шаговый-протокол--fallback).
 
 **Контрольная точка:** Нет новых ошибок, все ссылки на изменённые методы корректны, ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (или обоснованно SKIP), regression verdict ≠ REGRESSION (если baseline есть).
 
@@ -377,7 +377,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 EDT-MCP `write_module_source` правит **исходники** проекта (`src/...`) и помечает изменения для последующей сборки. Запущенная инфобаза 1С работает с **уже скомпилированной** конфигурацией БД. Пока конфигурация БД не обновлена, любой `1c-mcp-crud: execute_code(...)` или проведение документа выполняет **СТАРУЮ** версию изменённой функции. Без шага 0 Этап 6 даёт ложно-отрицательный результат: «фикс не сработал» — потому что live-инфобаза не видит изменений.
 
-**Шаги 0-5** (обновление конфигурации БД через `update_database` с программным gate на активные подключения → подготовка тестовых данных → пользователь проводит документ → проверка результата → очистка → фиксация в PROGRESS), альтернатива SQL-симуляции без обновления БД, и **YAxUnit unit-тесты** (`/write-1c-unit-tests` → `yaxunit-unit-testing`, деплой расширения, smoke `run_module_tests`) — полный текст: [references/etap6-live-testing-detail.md](references/etap6-live-testing-detail.md).
+**Шаги 0-5** (обновление конфигурации БД через `update_database` с программным gate на активные подключения → подготовка тестовых данных → пользователь проводит документ → проверка результата → очистка → фиксация в PROGRESS), альтернатива SQL-симуляции без обновления БД, и **YAxUnit unit-тесты** (`/write-1c-unit-tests` → `yaxunit-unit-testing`, деплой расширения, smoke `run_module_tests`) — полный текст: [references/stage-details.md#этап-6-тестирование-на-живых-данных--детали-шаги-0-5](references/stage-details.md#этап-6-тестирование-на-живых-данных--детали-шаги-0-5).
 
 ---
 
@@ -385,7 +385,7 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 
 **Цель:** Зафиксировать что было сделано.
 
-**Создать/обновить файл IMPLEMENTATION-PROGRESS.md** в той же папке docs/ (статус, pipeline mode, точки модификации, debug session, результаты тестирования, footer `debug_session_id`) — полный шаблон + правила footer'а: [references/etap7-progress-template.md](references/etap7-progress-template.md).
+**Создать/обновить файл IMPLEMENTATION-PROGRESS.md** в той же папке docs/ (статус, pipeline mode, точки модификации, debug session, результаты тестирования, footer `debug_session_id`) — полный шаблон + правила footer'а: [references/stage-details.md#этап-7-документация--шаблон-implementation-progressmd](references/stage-details.md#этап-7-документация--шаблон-implementation-progressmd).
 
 ---
 
@@ -397,7 +397,7 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 
 **⚠ НЕ использовать** `git add -A` в submodule и `git add <submodule-dir>` в родителе (индексирует untracked внутри, `fatal: filename too long` на Windows).
 
-Полная структура репозиториев (3-уровневая диаграмма), пошаговый git-flow, git identity workaround и diagnostic-команды для подтверждения layout перед коммитом: [references/etap8-git-workflow.md](references/etap8-git-workflow.md).
+Полная структура репозиториев (3-уровневая диаграмма), пошаговый git-flow, git identity workaround и diagnostic-команды для подтверждения layout перед коммитом: [references/git-workflow.md](references/git-workflow.md).
 
 ---
 
@@ -470,13 +470,13 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 
 ## Известные ограничения 1c-mcp-crud
 
-Сервер `1c-mcp-crud` подключается к live-инфобазе через HTTP-сервис расширения `MCP_Сервер`. Три известных артефакта на Этапах 2, 5, 6: (1) `get_metadata` для РС возвращает пустой `attributes:[]` — workaround `execute_query` ПЕРВЫЕ 5; (2) `execute_query` падает на сериализации композитных ссылочных типов — workaround `ПРЕДСТАВЛЕНИЕ()`; (3) `execute_code` запрещает `Возврат` вне процедуры/функции — workaround `Если/Иначе` (кроме случаев с side-effects между early-exit точками — тогда named procedure). Полное описание с примерами: [references/known-limitations-1c-mcp-crud.md](references/known-limitations-1c-mcp-crud.md).
+Сервер `1c-mcp-crud` подключается к live-инфобазе через HTTP-сервис расширения `MCP_Сервер`. Три известных артефакта на Этапах 2, 5, 6: (1) `get_metadata` для РС возвращает пустой `attributes:[]` — workaround `execute_query` ПЕРВЫЕ 5; (2) `execute_query` падает на сериализации композитных ссылочных типов — workaround `ПРЕДСТАВЛЕНИЕ()`; (3) `execute_code` запрещает `Возврат` вне процедуры/функции — workaround `Если/Иначе` (кроме случаев с side-effects между early-exit точками — тогда named procedure). Полное описание с примерами: [references/gotchas.md#известные-ограничения-1c-mcp-crud](references/gotchas.md#известные-ограничения-1c-mcp-crud).
 
 ---
 
 ## Обработка ошибок
 
-Стандартные рецепты триажа: `get_project_errors` (максимум 3 попытки исправления), `validate_query` (проверить имена полей/синтаксис), `execute_query` пустой результат (не ошибка сама по себе), `bsl_analyze` предупреждения (Error обязательно / Warning по ситуации / Info игнор). Полный текст: [references/error-handling.md](references/error-handling.md).
+Стандартные рецепты триажа: `get_project_errors` (максимум 3 попытки исправления), `validate_query` (проверить имена полей/синтаксис), `execute_query` пустой результат (не ошибка сама по себе), `bsl_analyze` предупреждения (Error обязательно / Warning по ситуации / Info игнор). Полный текст: [references/gotchas.md#обработка-ошибок](references/gotchas.md#обработка-ошибок).
 
 ---
 
