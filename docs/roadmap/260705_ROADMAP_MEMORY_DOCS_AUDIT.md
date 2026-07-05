@@ -149,7 +149,7 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 | G1 | **Би-темпоральность** | Graphiti: у факта `valid_from/invalid_at`, инвалидация вместо удаления, запрос «что было истинно в T» | `archived` = hard-exclude, без временных окон; конфликт-резолюция без датировки фактов | Сложность High, ценность Mid — **отложить** до реального кейса темпоральных запросов |
 | G2 ✅ **DONE 2026-07-05** | **Hot-path vs background консолидация** | mem0 ADD-only hot-path; Letta «dreaming»; LangMem background manager | ~~`merge_patterns.py` есть, но не в каденсе~~ → **job `merge`** в `memory_maintenance.py` (`run_merge_patterns`): `PatternMerger` (был orphaned, 0 вызовов) над SAVED-силосом skill_learning; дедуп по нормализованному содержимому (by_name-индекс в PatternMerger — dead code, не потребляется), dry-run default, `.bak`-снапшот, fail-soft. Hot-path оставлен O(1) `content_hash`; дорогой similarity-дедуп ушёл в фон. Тесты `TestMergeJob`(3). Commit — этой сессии | Сложность Low-Mid, ценность High — ✅ closed |
 | G3 | **Entity linking между записями** | mem0: сущности извлекаются/линкуются → retrieval boost | link_registry (8 типов) связывает ЗАПИСИ, но нет автоматического entity-linking по содержимому | Сложность Mid, ценность Mid |
-| G4 | **Memory-бенчмарк end-to-end** | Zep: LongMemEval, LoCoMo как gate | golden-set `tune_memory_surfacing.py` — только surfacing-слой; end-to-end (запись→recall через сессии) не меряется | Сложность Mid, ценность **High** — без метрики споры о памяти вечно субъективны |
+| G4 ✅ **DONE 2026-07-05** | **Memory-бенчмарк end-to-end** | Zep: LongMemEval, LoCoMo как gate | ~~только surfacing-слой~~ → [`scripts/memory_e2e_benchmark.py`](../../scripts/memory_e2e_benchmark.py): пишет факты РЕАЛЬНЫМ эмбеддером в ИЗОЛИРОВАННУЮ коллекцию (`memory_e2e_eval`, prod не трогает) → recall перефраз-запросами → hit/recall/mrr/ndcg. Метрики reuse из `memory_golden_harness` (single source). Ловит класс бага, невидимый surfacing-харнессу (write-path пишет 0). Датасет 10 фактов, 11 unit + живой прогон hit_rate=1.0. Graceful (TEI/Qdrant down → exit 0) + prod-guard. Адверсариальный ревью поймал P1 (Qdrant-down не обрабатывался) → фикс. **Ограничение:** факты различны → потолок метрики, ловит катастрофу write-path, не тонкие ранжир-регрессии (harden = near-dup дистракторы) | Сложность Mid, ценность High — ✅ closed |
 | G5 | **Time-aware retrieval** | mem0: ранжирование правильного датированного экземпляра | recency-буст есть в decay, но запрос «текущее vs прошлое состояние» не различается | Сложность Mid, ценность Low-Mid — после G4 |
 
 ### Evaluation Matrix (что делать первым)
@@ -183,6 +183,15 @@ enforcement** (kb-lint НЕ подключён в pre-commit — wiki ничем
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-05 — §БП G4 end-to-end memory-бенчмарк (code-first)
+- `scripts/memory_e2e_benchmark.py` — write→recall над изолированной коллекцией; метрики reuse из memory_golden_harness; 11 unit + живой прогон (n=10, hit_rate=1.0 через реальный TEI+Qdrant).
+- Адверсариальный ревьюер PARTIAL→FAIL поймал P1 (seed_live не обрабатывал Qdrant-down → traceback вместо exit 0) + prod-guard + honesty-нота → всё исправлено, runtime-проверено (bad-port → live-deps-unavailable; learned_patterns → refused).
+- Датасет data/memory/e2e/dataset.jsonl force-add (data/ gitignored, конвенция data/eval).
+
+### 2026-07-05 — R2 физперенос устаревших Hermes-глав (3/3 ✅)
+- 37.6 Sandbox → 05.6 Sandbox_исполнения (SandboxBackend/E2B/LangSmith/Security); 37.7 OAuth → 09.2 Авторизация (mcp_oauth/*). Оба сведены к redirect-стубам (баннер+указатель), −742 строки дублей, link-sweep PASS, факты сверены с кодом.
+- 37.4 Read-Path → 27.3 Memory_First_Hook: перенесены direct-query MCP-инструменты + antipatterns (остальное 27.3 уже покрывал полнее). R2 ✅ 3/3.
 
 ### 2026-07-05 — P3 пробелы покрытия закрыты (2 агента)
 - retention.py / WikiDecayService / два-писателя-drafts / wiki-tooling пласт — задокументированы с file:line; 27.12.3 «TTL нет» исправлено.
