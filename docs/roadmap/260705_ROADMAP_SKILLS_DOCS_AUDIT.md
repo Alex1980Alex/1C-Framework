@@ -129,6 +129,12 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 > Append-only, новые записи сверху.
 
+### 2026-07-06 — Паттерн правильного расщепления автоматизирован + implement-1c консолидирован
+- **Само-критика:** первый рефактор implement-1c-task нарезал 12 references, 9 крошек (<60 строк) по-этапно = over-fragmentation (резал ради цифры <500, не по знанию). va-bdd был расщеплён правильно (5 связных ≥98 строк).
+- **Автоматизация «КАК» (раньше было только «КОГДА»=BODY500):** skill-lint правило `FRAGMENTED` (advisory, >3 крошек <60 строк) + секция «Progressive disclosure — КАК расщеплять» в `doc-to-skill` (паттерн из research-кеша → actionable: 3 варианта, дели по знанию, ≥80-100 строк/TOC, verify нулевого удаления). +2 unit.
+- **Консолидация implement-1c-task:** 12 крошек → 4 domain-split (stage-details 364 / git-workflow 103 / gotchas 129 / tools-reference 64), FRAGMENTED+BODY500 ушли, 0 битых ссылок, 8-этапное ядро цело, нулевое удаление.
+- Урок: «выноси в references/» без «дели по связному знанию» = фрагментация; теперь это lint+guidance.
+
 ### 2026-07-06 — BODY500 progressive disclosure (2 крупных offender'а)
 - **va-bdd-testing 1457→495 ✅** — детали в 5 references/ (step-patterns/testdb-precheck/db-verification/business-process-chains/known-issues), нулевое удаление (line-slicing verbatim), BODY500 ушёл.
 - **implement-1c-task 1048->491 (body) DONE** -- 11 references/ (etap0/1/3r/4/5x/6/7/8/tools/version-history/known-limitations/error-handling), content-preserved (нулевое удаление, +4% на заголовки/указатели), все 8 этапов+режимы+гейты остались actionable, 0 битых ссылок (cross-skill-ссылки перепутёваны на +1 уровень). BODY500 ушёл, CODE-VERIFY-PASS.
