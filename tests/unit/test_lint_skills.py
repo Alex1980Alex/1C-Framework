@@ -83,3 +83,25 @@ def test_nodesc_and_namedir(tmp_path):
 def test_desc1024_over_budget(tmp_path):
     d = _skill(tmp_path, "verbose", f"---\nname: verbose\ndescription: {'д' * 1100}\n---\n\nbody\n")
     assert any(f["rule"] == "DESC1024" for f in MOD.lint_one(d))
+
+
+def test_overconstrained_fires_on_excess_absolutes(tmp_path):
+    # G6: >25 императивов-абсолютов -> advisory OVERCONSTRAINED
+    body = "\n".join(["ALWAYS делай X. NEVER делай Y. ОБЯЗАТЕЛЬНО Z."] * 10)  # ~30 абсолютов
+    d = _skill(tmp_path, "shouty", f"---\nname: shouty\ndescription: d\n---\n\n{body}\n")
+    rules = {f["rule"] for f in MOD.lint_one(d)}
+    assert "OVERCONSTRAINED" in rules
+
+
+def test_no_overconstrained_on_reasonable(tmp_path):
+    d = _skill(tmp_path, "calm", "---\nname: calm\ndescription: d\n---\n\nОБЯЗАТЕЛЬНО прочитай X.\n")
+    assert not any(f["rule"] == "OVERCONSTRAINED" for f in MOD.lint_one(d))
+
+
+def test_badmaturity_flags_unknown_value(tmp_path):
+    # G5: maturity вне конвенции -> advisory
+    d = _skill(tmp_path, "mat", "---\nname: mat\ndescription: d\nmaturity: bogus\n---\n\nbody\n")
+    assert any(f["rule"] == "BADMATURITY" for f in MOD.lint_one(d))
+    # валидное значение -> нет флага
+    d2 = _skill(tmp_path, "mat2", "---\nname: mat2\ndescription: d\nmaturity: experimental\n---\n\nbody\n")
+    assert not any(f["rule"] == "BADMATURITY" for f in MOD.lint_one(d2))
