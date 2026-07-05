@@ -56,6 +56,18 @@ advisory-gate 0.75 + blocking GT-lint) и **Layer A2 + `a2_signals`** отсут
 
 ## P1 — Устаревшее (1 день)
 
+> **✅ DONE 2026-07-05/06** (code-first, 3 агента chapter-ownership + сам). **Код (P2.1):**
+> `scripts/gen_hooks_catalog.py` (+5 unit) — генератор каталога хуков из settings.json (single
+> source), убивает класс «4×-дрейф»; live 99 регистраций (19/1/21/17/27/14) = аудит, `--check`
+> детектит drift обе стороны. **Доки:** 11.3 (слои A/A2/B/C/D + intent-модификатор + honest-eval
+> 260613: pooled action_f1, GT 95/64-31 split, TF-IDF artifact-имена), 11.7 (CI blocking
+> `skill-router-gt-lint` + advisory `skill-router-eval` 0.75 action_f1 [0.7708]; живые контуры
+> мониторинга), 11.8 (Phase 15 перекрыт, metadata.stats-нота), 13.2 (каталог регенерирован
+> генератором — `<!-- АВТО-ГЕНЕРАЦИЯ -->` блок, `--check` OK), реестр триады (97/v9/52/15/99),
+> 25.x (research-task-detector не зарегистрирован / A3-прогон duckdb-analytics / VERIFY-таблица
+> subagent-vs-host), 29.1/29.4 (дропнутые коллекции + ссылка на 11.3). Link-sweep 87 ссылок PASS,
+> 13.2-числа = генератор. P2.1 (генератор) закрыт этой волной.
+
 - **11.3 (C):** нет Layer **A2** (1С-сигналы + literal skill-name `\b`, `skill-router.py:276,375-383`; конфиг-веса `a2_signals` — вынос 260613 B1); «Layer D = Intent Classification» — факт: D = **semantic fallback** (:429), intent — модификатор порога (:309-315,592-601); нет honest-eval 260613 (pooled action_f1, GT 95 строк 64/31 train/test, карантин 22, CI blocking GT-lint + advisory eval 0.75, факт 0.7708); имена TF-IDF артефактов: `idf_weights.npy`/`centroids_normalized.npy`/`metadata.json` (не `idf.npy`/`centroids.json`).
 - **11.7 (C):** CI-gate описан как blocking macro-F1≥0.70 — факт: blocking = `skill-router-gt-lint` (schema+no-leakage), eval = **advisory** `continue-on-error` 0.75 pooled action_f1; не отражены живые контуры: `skill-usage-metrics`+`posttooluse-skill-metrics`, `skill-quality-monitor`, `tool-effectiveness.jsonl`+`tool_usage_report.py`, acceptance-харнесс + SessionStart-баннер, Qdrant `skill_library`.
 - **13.2 (C):** каталог хуков 25 → ~99 регистраций (UPS 19/Pre 21/Post 17/Stop 27/SessionStart 14); SessionStart описан одним хуком — их 14. **Решение P2.1 — генератор** (см. ниже).
