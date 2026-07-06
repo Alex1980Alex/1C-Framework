@@ -114,6 +114,8 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 | `debug_set_logpoint(object_id, line, message_template, module_type?, property_id?)` | **(P0.B roadmap 260511)** Tracepoint без halt: на каждом fire render'ит `{expr}` placeholders в template через `client.evaluate`, append'ит JSONL entry в `data/debug_logs/<session>.jsonl`, auto-Continue. SECURITY: placeholders execute as BSL в running rphost — не передавай untrusted templates |
 | `debug_get_breakpoints()` | Client-side cache (RDBG не expose'ит server-side getBreakpoints URL) |
 | `debug_break_on_next()` | Global trap — **следующая** BSL-инструкция на ANY rphost для этой infobase'ы остановится. Обходит pre-existing rphost gap (см. §10/§11 roadmap) |
+| `debug_calibrate_lines(object_id, line, module_type?, property_id?, radius=8)` | **(2026-07-07, live-кейс гкс_АсинхронныеСервисы)** Авто-калибровка строк: silent coverage-веер BP на `[line±radius]` (hit + auto-Continue, без видимых остановок). Строки repo/EDT-src бывают смещены относительно deployed-конфигурации → BP по git-строке молча не fire'ит. Workflow: calibrate → trigger (JOB) → `debug_ping` ×2-3 → `debug_calibrate_result` |
+| `debug_calibrate_result(object_id?, clear=True, keep_bp_on_nearest=True)` | Итог калибровки: `fired_lines` (реально исполняемые строки), `nearest_fired`, `offset` (реальная − запрошенная; сдвиг обычно типовой для всего модуля). По умолчанию снимает веер и оставляет ОДИН обычный BP на nearest — следующий проход остановится видимо |
 
 ### Inspection
 
@@ -283,6 +285,24 @@ debug_session_diff(prev_session_id=<UUID-из-footer>, curr_session_id=<current>
 ```
 
 Footer обновляется на текущий `session_id` ТОЛЬКО при успешном завершении всего pipeline (Этап 5.x PASS + Этап 6 PASS), чтобы baseline сохранялся для следующей попытки исправления.
+
+### Шаблон 5a: Авто-калибровка строк перед точечным BP (2026-07-07)
+
+**Когда:** ВСЕГДА перед точечным BP, если строка взята из repo/EDT-src (git-исходники систематически отстают от deployed-конфигурации; live-кейс: BP на 67 молчал, реальная строка 70, сдвиг +3). Дешевле одного «немого» прогона.
+
+```
+1. debug_connect(infobase_alias=<ИБ>)
+2. debug_calibrate_lines(object_id=<UUID>, line=<строка-из-src>, module_type=<TYPE>)
+     ──→ silent-веер [line±8]: hit+auto-Continue, видимых остановок НЕТ
+3. (trigger) execute_code: ФоновыеЗадания.Выполнить("<Модуль>.<Метод>", Параметры)
+4. debug_ping ×2-3 (дать JOB'у пройти веер)
+5. debug_calibrate_result(object_id=<UUID>)
+     ──→ {fired_lines, nearest_fired, offset}; веер снят, на nearest остался
+         ОБЫЧНЫЙ BP (следующий проход остановится видимо)
+6. offset применим ко всему модулю: остальные BP/logpoint ставить на line+offset
+```
+
+**⚠ Окно останова эфемерного JOB ≈ 1–2 с** (платформа принудительно возобновляет halt server-контекста): `debug_variables`/`debug_evaluate` вызывать СРАЗУ после ping с `stopByBP=true`; `debug_step(Step)` уже не успевает. «Предмет отладки не зарегистрирован» = target уже умер, НЕ баг attach. Для чтения переменных без гонки — `debug_set_logpoint` (wrapper eval'ит в момент останова inline). Для интерактивного step — персистентный контекст (тонкий клиент / VA), не JOB.
 
 ### Шаблон 6: JOB-based BP-verification (RC2 warm-pool gap)
 

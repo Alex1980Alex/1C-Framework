@@ -381,7 +381,11 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Когда применяется:** для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки модификации из ANALYSIS-REPORT. Точки `[REFACTOR]` (rename / replace body / safe delete) — BP не требуется (изменение тождественно по поведению).
 
+**Шаг 0 — авто-калибровка строк (ОБЯЗАТЕЛЬНО, 2026-07-07):** номера строк локальных исходников (repo/EDT) систематически смещены относительно deployed-конфигурации — BP по строке из src молча не fire'ит (live-кейс: сдвиг +3). Перед первым точечным BP модуля: `debug_calibrate_lines(object_id, line_из_src)` → триггер фоновым заданием (`ФоновыеЗадания.Выполнить` через `execute_code` — прямой execute_code через HTTP-service НЕ ловится, RC2) → `debug_ping` ×2-3 → `debug_calibrate_result` → реальная строка + `offset` (применим ко всем BP этого модуля; на nearest уже стоит обычный BP). Детали — skill [1c-debug-hmr](../1c-debug-hmr/SKILL.md) Шаблон 5a.
+
 **Полный 8-шаговый протокол** (`debug_connect`→`debug_set_breakpoint`→`debug_get_breakpoints`→триггер `execute_code`/`execute_query`→`debug_ping`→`debug_stack_trace` assert→`debug_variables`→`debug_step(Continue)`), fallback при не-fire (`debug_break_on_next` → `force_recycle_rphost` / thin client Solution C), 15-минутный timeout user-in-the-loop ветки, success criterion, шаблон логирования в IMPLEMENTATION-PROGRESS.md, и **Этап 5.y Regression diff** (`debug_session_diff` verdict-гейт) — полный текст: [references/stage-details.md#этап-5x-live-bp-verification--8-шаговый-протокол--fallback](references/stage-details.md#этап-5x-live-bp-verification--8-шаговый-протокол--fallback).
+
+**⚠ Окно останова эфемерного JOB ≈ 1–2 с** (платформа принудительно возобновляет halt): `debug_variables`/`debug_evaluate` — сразу после ping с `stopByBP=true`; «Предмет отладки не зарегистрирован» = target уже завершился (не баг attach) → повторить прогон или читать переменные через `debug_set_logpoint` (JSONL, без гонки).
 
 **Контрольная точка:** Нет новых ошибок, все ссылки на изменённые методы корректны, ВСЕ `[ADDED]`/`[MODIFIED]` точки покрыты BP-trace'ом (или обоснованно SKIP), regression verdict ≠ REGRESSION (если baseline есть).
 
