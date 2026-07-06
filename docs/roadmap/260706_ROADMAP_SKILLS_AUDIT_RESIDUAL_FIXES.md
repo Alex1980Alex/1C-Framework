@@ -13,15 +13,17 @@
 
 ---
 
-## Найденные ошибки (остаточные)
+## Найденные ошибки (остаточные) — ✅ ВСЕ ИСПРАВЛЕНЫ 2026-07-06
 
-| # | Файл | Проблема | Приоритет |
+| # | Файл | Проблема | Статус |
 |---|---|---|---|
-| F1 | `.claude/skills/hooks-skills-mcp-triad/SKILL.md:24,152,166,424` | **CODE-DRIFT счётчика бандлов**: SKILL.md заявляет 53 (и в :152 — 52, внутренняя несогласованность) vs факт `skill-router-config.json` = **66 bundles**; доменная разбивка :166 (45+7) устарела. Скиллы 98 ✓ / v9 ✓ / 15 tools ✓ | P0 (реестр триады — справочный вход) |
-| F2 | `docs/framework documentation/9_НАВЫКИ/…/29.4_Retrieval_и_Scoring.md:18` | `experience_embeddings` в таблице подан как живой («0, auto-populate ready») — коллекция дропнута 2026-06-03 (§26 Q1 ADR); дроп-нота есть в 29.1:120, в 29.4 отсутствует (помечен только `visual_grounding`) | P1 (глава SUPERSEDED-баннерована, но таблица вводит в заблуждение) |
-| F3 | `.claude/hooks/code-skill-enforcer.py:5-6` | Docstring-шапка декларирует «Event: PreToolUse \| PostToolUse» без оговорки — guard-блок «DO NOT re-register» живёт ниже (:447-458), шапка противоречит ему при беглом чтении | P2 (косметика) |
-| F4 | `.claude/hooks/shared/code-skill-patterns.json:298-305` | Внутренний `metadata.stats` врёт (9 directory / 7 bash, сумма 42 vs факт 38); 11.4:394 честно флагает stats как устаревший, но сам json не чинён — синхронизировать или удалить блок stats | P2 (доки на него не опираются) |
-| F5 | `docs/roadmap/260705_ROADMAP_SKILLS_DOCS_AUDIT.md` (шапка/P1) | Сам роадмап несёт устаревшие цифры: «97 скиллов» (факт 98), разбивка регистраций «19/21/17/27/14 = 98» при итоге 99 (опущен UserPromptExpansion=1, `slash-command-tracker.py`) | P2 (исторический документ; поправить только сводную шапку, §18 append-only) |
+| F1 | `.claude/skills/hooks-skills-mcp-triad/SKILL.md:24,152,166,424` | **CODE-DRIFT счётчика бандлов**: SKILL.md заявляет 53 (и в :152 — 52) vs факт `skill-router-config.json` = **66 bundles**; доменная разбивка :166 (45+7) устарела (45 grouped верно, ungrouped 7→21) | ✅ 53/52→66 во всех 4 местах; ungrouped 7→21; добавлена нота «источник истины — `domains`-ключ, регенерируемо» |
+| F2 | `.../29.4_Retrieval_и_Scoring.md:18` | `experience_embeddings` подан живым («0, auto-populate ready») — дропнута 2026-06-03 (§26 Q1 ADR) | ✅ строка помечена `~~DROPPED 2026-06-03~~` (+ добавлена парная `conversation_memory`) со ссылкой на 260603_ADR_Q1 |
+| F3 | `.claude/hooks/code-skill-enforcer.py:5-6` | Docstring-шапка «Event: PreToolUse \| PostToolUse» без оговорки, противоречит guard-блоку :447 | ✅ шапка переписана: «PreToolUse ONLY», явная нота о нерегистрируемом POST-mode + DO NOT re-register |
+| F4 | `.claude/hooks/shared/code-skill-patterns.json:300-301` | `metadata.stats` врёт: `total_directory_rules=9`/`total_bash_rules=7` (сумма 43) vs факт 8/2 (итог 38) | ✅ 9→8, 7→2; сумма stats = 38 = факт (17+8+2+4+4+3) |
+| F5 | `docs/roadmap/260705_ROADMAP_SKILLS_DOCS_AUDIT.md:23` | Сводная шапка: «97 скиллов / 52 бандла ... синхронны» — факт 98/66 | ✅ шапка исправлена (98/66) + отсылка на F1; §18 не тронут (append-only); строка :61 «19/1/21/17/27/14» уже верна |
+
+**Верификация после правок:** JSON валиден (оба конфига), enforcer парсится, skill-lint `--strict` = 0 errors / 2 warnings (те же маргинальные BODY500), `gen_hooks_catalog --check` OK, остаточных «53/52 bundles» = 0.
 
 ## Подтверждённые pending (НЕ ошибки — честно помечены в 260705)
 
@@ -46,6 +48,12 @@
 ## §18 Прогресс
 
 > Append-only, новые записи сверху.
+
+### 2026-07-06 — F1-F5 исправлены (код → доки)
+- Код: F3 (docstring-шапка enforcer), F4 (metadata.stats 9/7→8/2 = 38). F1 (счётчики триады 53/52→66 ×4 места + ungrouped 7→21).
+- Доки: F2 (дроп-нота 29.4 experience/conversation), F5 (шапка 260705 98/66).
+- Верификация: json valid, enforcer parse OK, skill-lint 0 err/2 warn, catalog --check OK, 0 residual stale counts.
+- Урок: класс «дрейф счётчика бандлов» в SKILL.md не покрыт генератором (gen_hooks_catalog покрывает только хуки 13.2). Кандидат в backlog — расширить генератор/docs_counters на bundle/skill-счётчики триады (P2.2 260705 закрыт наполовину).
 
 ### 2026-07-06 — Верификация 260705 выполнена, карта создана
 - Код-контур 260705 подтверждён полностью (тулы/тесты/CI); доки P0 6/6, P1/P2 4/6 FIXED.
