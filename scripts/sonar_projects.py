@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -92,13 +93,27 @@ def project_for_path(rel: str) -> tuple[str, str, str] | None:
     return best
 
 
+def split_enabled() -> bool:
+    """Split-режим (per-project скан+verify) включён? `SONAR_SPLIT_PROJECTS=1`.
+
+    Default OFF (флаг не задан) = legacy mono `upravlenie-transportom-plk` бит-в-бит
+    (P3.A opt-in; флип дефолта — P3.C после провижининга проектов на сервере)."""
+    return os.environ.get("SONAR_SPLIT_PROJECTS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Реестр Sonar-проектов по конфигурациям (ADR-048)")
     ap.add_argument("--list", action="store_true", help="key<TAB>root по строке (диагностика)")
     ap.add_argument(
         "--list-json", action="store_true", help="JSON [{key,root,name}] для ps1/verify"
     )
+    ap.add_argument(
+        "--split-enabled", action="store_true", help="печать on/off split-режима (env) и выход"
+    )
     a = ap.parse_args(argv)
+    if a.split_enabled:
+        sys.stdout.buffer.write((("on" if split_enabled() else "off") + "\n").encode("utf-8"))
+        return 0
     ps = projects()
     if a.list_json:
         # stdout UTF-8 байтами (cp1251-консоль на Windows иначе ломает кириллицу)

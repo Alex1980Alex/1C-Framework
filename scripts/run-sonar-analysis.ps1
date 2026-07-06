@@ -2,7 +2,9 @@
 # Требует: поднятый SonarQube CB 26.6 (docker-compose.sonarqube.yml) на :9000 + $env:SONAR_TOKEN.
 # Verified 2026-06-15: scanner-cli + server-JRE-provisioning (сенсор bsl = JDK 21).
 # -LogFile <path>: писать UTF-8-лог сканера в файл (P1.2, native-safe; внешний *>&1 НЕ нужен).
-param([string]$LogFile = "")
+# -Project <key|all>: split-режим — скан per-project по реестру sonar_projects.py (P3.A wiring;
+#   иначе legacy mono. Активен также при $env:SONAR_SPLIT_PROJECTS=1).
+param([string]$LogFile = "", [string]$Project = "")
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
@@ -76,69 +78,115 @@ if (-not $java) { $java = "java" }   # fallback: system java для CLI-bootstra
 if (-not $env:SONAR_SCANNER_JAVA_OPTS) { $env:SONAR_SCANNER_JAVA_OPTS = "-Xmx6g" }  # JVM движка (bsl-сенсор)
 if (-not $env:SONAR_SCANNER_OPTS) { $env:SONAR_SCANNER_OPTS = "-Xmx6g" }            # JVM bootstrap CLI
 
-# Аргументы сканера массивом (array-expansion `& $java $arr`, НЕ splat @ — см. QG ниже).
-$scanArgs = @(
-    "-jar", $cli,
-    "-Dsonar.host.url=$Host_",
-    "-Dsonar.token=$env:SONAR_TOKEN",
-    "-Dsonar.projectBaseDir=$ProjectRoot",
-    "-Dsonar.sources=$sources"
-)
-if ($LogFile) {
-    # P1.2 (I1+I2): свой UTF-8-лог. Локальный EAP=Continue — иначе stderr сенсора под EAP=Stop
-    # роняет скрипт (NativeCommandError на не-фатальном варнинге). Out-File -Encoding utf8 —
-    # вместо PS-редиректа UTF-16. Вызывающим НИКОГДА не нужен внешний *>&1.
-    $prevEAP = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
-    & $java $scanArgs *>&1 | Out-File -FilePath $LogFile -Encoding utf8
-    $scanExit = $LASTEXITCODE
-    $ErrorActionPreference = $prevEAP
-    Write-Host "  scanner log -> $LogFile (UTF-8)"
-}
-else {
-    & $java $scanArgs
-    $scanExit = $LASTEXITCODE
-}
-if ($scanExit -ne 0) { Write-Host "Sonar Scanner failed!" -ForegroundColor Red; exit 1 }
-
 # P1.1 (I4): CE-handoff — дождаться финализации Compute Engine по .scannerwork/report-task.txt
 # (verify после скана никогда не увидит in-progress). Осознанно НЕ sonar.qualitygate.wait=true
 # (связал бы exit сканера с QG, у нас QG сознательно soft — R6). FAILED → exit 1.
-$reportTask = Join-Path $ProjectRoot ".scannerwork\report-task.txt"
-if (Test-Path $reportTask) {
+function Wait-CeHandoff {
+    param([string]$BaseDir = $ProjectRoot)  # split: .scannerwork в корне КОНФИГА (projectBaseDir), не репо
+    $reportTask = Join-Path $BaseDir ".scannerwork\report-task.txt"
+    if (-not (Test-Path $reportTask)) { return }
     $ceTaskId = (((Get-Content $reportTask) | Where-Object { $_ -like "ceTaskId=*" } | Select-Object -First 1) -replace "^ceTaskId=", "").Trim()
-    if ($ceTaskId) {
-        $ceAuth = @{ Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($env:SONAR_TOKEN):")) }
-        $deadline = (Get-Date).AddMinutes(10)
-        $ceStatus = "PENDING"; $ce = $null
-        Write-Host "  CE task $ceTaskId — жду финализации анализа..."
-        while ((Get-Date) -lt $deadline) {
-            try {
-                $ce = Invoke-RestMethod -Uri "$Host_/api/ce/task?id=$ceTaskId" -Headers $ceAuth -TimeoutSec 15
-                $ceStatus = $ce.task.status
-            }
-            catch { $ceStatus = "PENDING" }  # транзиент (индексация/404) → продолжаем до дедлайна
-            if ($ceStatus -in @("SUCCESS", "FAILED", "CANCELED")) { break }
-            Start-Sleep -Seconds 5
+    if (-not $ceTaskId) { return }
+    $ceAuth = @{ Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($env:SONAR_TOKEN):")) }
+    $deadline = (Get-Date).AddMinutes(10)
+    $ceStatus = "PENDING"; $ce = $null
+    Write-Host "  CE task $ceTaskId — жду финализации анализа..."
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $ce = Invoke-RestMethod -Uri "$Host_/api/ce/task?id=$ceTaskId" -Headers $ceAuth -TimeoutSec 15
+            $ceStatus = $ce.task.status
         }
-        if ($ceStatus -eq "SUCCESS") {
-            Write-Host "  CE analysis SUCCESS (analysisId=$($ce.task.analysisId))" -ForegroundColor Green
-        }
-        elseif ($ceStatus -eq "FAILED") {
-            Write-Host "  CE analysis FAILED — анализ не загружен на сервер" -ForegroundColor Red; exit 1
-        }
-        else {
-            Write-Host "  CE analysis статус=$ceStatus (таймаут/отменён) — verify может увидеть устаревший анализ" -ForegroundColor Yellow
-        }
+        catch { $ceStatus = "PENDING" }  # транзиент (индексация/404) → продолжаем до дедлайна
+        if ($ceStatus -in @("SUCCESS", "FAILED", "CANCELED")) { break }
+        Start-Sleep -Seconds 5
+    }
+    if ($ceStatus -eq "SUCCESS") {
+        Write-Host "  CE analysis SUCCESS (analysisId=$($ce.task.analysisId))" -ForegroundColor Green
+    }
+    elseif ($ceStatus -eq "FAILED") {
+        Write-Host "  CE analysis FAILED — анализ не загружен на сервер" -ForegroundColor Red; exit 1
+    }
+    else {
+        Write-Host "  CE analysis статус=$ceStatus (таймаут/отменён) — verify может увидеть устаревший анализ" -ForegroundColor Yellow
     }
 }
 
-# R6 (ADR-034): Quality Gate gate — Clean-as-You-Code (условия new-code; легаси не блокирует).
-# Hard под $env:SONAR_QG_HARD=1 (валит билд на QG=ERROR), иначе soft (только warn).
-$qgArgs = if ($env:SONAR_QG_HARD -eq "1") { @() } else { @("--soft") }
-# Нативной команде передаём $qgArgs (array-expansion), НЕ @qgArgs: splat-оператор в PS 5.1
-# рвёт строку "--soft" на отдельные символы ("- - s o f t" → argparse: unrecognized arguments).
-& $py "$ProjectRoot\scripts\sonar_quality_gate_check.py" --host $Host_ $qgArgs
-if ($LASTEXITCODE -ne 0) { Write-Host "Quality Gate FAILED (hard, new-code)" -ForegroundColor Red; exit $LASTEXITCODE }
+function Invoke-SonarScan {
+    param([string[]]$ScanArgs, [string]$Label = "", [string]$BaseDir = $ProjectRoot)
+    $lbl = if ($Label) { " [$Label]" } else { "" }
+    if ($LogFile) {
+        # P1.2 (I1+I2): свой UTF-8-лог. Локальный EAP=Continue — иначе stderr сенсора под EAP=Stop
+        # роняет скрипт (NativeCommandError). -Append: в split проекты пишут в один лог по очереди.
+        $prevEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        & $java $ScanArgs *>&1 | Out-File -FilePath $LogFile -Encoding utf8 -Append
+        $exit = $LASTEXITCODE
+        $ErrorActionPreference = $prevEAP
+        Write-Host "  scanner log$lbl -> $LogFile (UTF-8)"
+    }
+    else {
+        & $java $ScanArgs
+        $exit = $LASTEXITCODE
+    }
+    if ($exit -ne 0) { Write-Host "Sonar Scanner failed$lbl (exit $exit)!" -ForegroundColor Red; exit 1 }
+    Wait-CeHandoff -BaseDir $BaseDir  # каждый проект пишет свой report-task.txt → handoff сразу после скана
+}
 
-Write-Host "`nDone! Dashboard: $Host_/dashboard?id=upravlenie-transportom-plk" -ForegroundColor Green
+# Скан: mono (legacy, default) или split (P3.A). ПОЛНЫЙ split = $env:SONAR_SPLIT_PROJECTS=1 —
+# его читают И этот скрипт, И verify (sonar_projects.split_enabled). `-Project <key>` — точечный
+# скан ОДНОГО проекта (verify без env останется mono → задай env для сквозного split).
+# Аргументы массивом (array-expansion `& $java $arr`, НЕ splat @ — рвёт строки в PS 5.1).
+if ($LogFile) { [System.IO.File]::WriteAllText($LogFile, "") }  # усечь лог на старте (split пишет -Append)
+$splitOn = ((("$env:SONAR_SPLIT_PROJECTS").Trim()) -in @("1", "true", "yes", "on")) -or ($Project -ne "")
+if ($splitOn) {
+    $regJson = & $py "$ProjectRoot\scripts\sonar_projects.py" --list-json
+    if ($LASTEXITCODE -ne 0 -or -not $regJson) {
+        Write-Host "FATAL: sonar_projects.py --list-json не вернул реестр" -ForegroundColor Red; exit 2
+    }
+    $registry = @($regJson | ConvertFrom-Json)
+    if ($Project -and $Project -ne "all") {
+        $registry = @($registry | Where-Object { $_.key -eq $Project })
+        if (-not $registry) { Write-Host "FATAL: проект '$Project' не в реестре" -ForegroundColor Red; exit 2 }
+    }
+    Write-Host "  SPLIT-режим: проектов = $($registry.Count)" -ForegroundColor Cyan
+    foreach ($proj in $registry) {
+        $baseDir = Join-Path $ProjectRoot $proj.root
+        Write-Host "`n  -> скан проекта $($proj.key) ($($proj.root))" -ForegroundColor Cyan
+        # projectBaseDir = корень конфигурации (один git work-tree → SCM blame оживает; ADR-048).
+        # sonar-project.properties НЕ читается вне корня репо → exclusions/encoding явно (зеркало properties).
+        $pArgs = @(
+            "-jar", $cli,
+            "-Dsonar.host.url=$Host_",
+            "-Dsonar.token=$env:SONAR_TOKEN",
+            "-Dsonar.projectKey=$($proj.key)",
+            "-Dsonar.projectName=$($proj.name)",
+            "-Dsonar.projectBaseDir=$baseDir",
+            "-Dsonar.sources=.",
+            "-Dsonar.exclusions=**/docs/**,**/*.md,**/*.xml,**/*.json,**/*.cf,**/*.cfe,**/*.pkl",
+            "-Dsonar.sourceEncoding=UTF-8"
+        )
+        Invoke-SonarScan -ScanArgs $pArgs -Label $proj.key -BaseDir $baseDir
+    }
+    Write-Host "`nDone (SPLIT)! Дашборды per-project: $Host_/projects" -ForegroundColor Green
+}
+else {
+    # mono (legacy): монопроект upravlenie-transportom-plk, projectBaseDir=репо, sources=comma-list
+    $scanArgs = @(
+        "-jar", $cli,
+        "-Dsonar.host.url=$Host_",
+        "-Dsonar.token=$env:SONAR_TOKEN",
+        "-Dsonar.projectBaseDir=$ProjectRoot",
+        "-Dsonar.sources=$sources"
+    )
+    Invoke-SonarScan -ScanArgs $scanArgs
+
+    # R6 (ADR-034): Quality Gate gate — Clean-as-You-Code (условия new-code; легаси не блокирует).
+    # Hard под $env:SONAR_QG_HARD=1 (валит билд на QG=ERROR), иначе soft (только warn).
+    $qgArgs = if ($env:SONAR_QG_HARD -eq "1") { @() } else { @("--soft") }
+    # Нативной команде передаём $qgArgs (array-expansion), НЕ @qgArgs: splat-оператор в PS 5.1
+    # рвёт строку "--soft" на отдельные символы ("- - s o f t" → argparse: unrecognized arguments).
+    & $py "$ProjectRoot\scripts\sonar_quality_gate_check.py" --host $Host_ $qgArgs
+    if ($LASTEXITCODE -ne 0) { Write-Host "Quality Gate FAILED (hard, new-code)" -ForegroundColor Red; exit $LASTEXITCODE }
+
+    Write-Host "`nDone! Dashboard: $Host_/dashboard?id=upravlenie-transportom-plk" -ForegroundColor Green
+}

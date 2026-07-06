@@ -70,6 +70,18 @@ def test_roots_matches_declared():
         assert r in declared
 
 
+def test_split_enabled_env(monkeypatch):
+    # P3.A: SONAR_SPLIT_PROJECTS управляет split-режимом; default OFF (legacy mono)
+    monkeypatch.delenv("SONAR_SPLIT_PROJECTS", raising=False)
+    assert sp.split_enabled() is False
+    for on in ("1", "true", "yes", "on", "ON", " 1 "):
+        monkeypatch.setenv("SONAR_SPLIT_PROJECTS", on)
+        assert sp.split_enabled() is True
+    for off in ("0", "false", "", "no"):
+        monkeypatch.setenv("SONAR_SPLIT_PROJECTS", off)
+        assert sp.split_enabled() is False
+
+
 def test_cli_list_json(capsysbinary):
     # capsysbinary — встроенная фикстура pytest (бинарный stdout; наш CLI пишет UTF-8 байтами)
     assert sp.main(["--list-json"]) == 0

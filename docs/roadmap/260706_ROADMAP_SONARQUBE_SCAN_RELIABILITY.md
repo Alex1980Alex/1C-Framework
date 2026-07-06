@@ -88,7 +88,7 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **P3.A0 Исключение `configuration/` (✅ реализовано 2026-07-06 при approve):** `sonar_sources.py` (`GROWING_PARENTS=[]`, механизм оставлен — возврат одной строкой) + `sonar_rescan_state._is_config_bsl` (префикс-фильтр, гейт не детектит) + 2 unit-теста + докнота 43.9.9. Действует в обоих режимах (сужение скоупа, не часть split-флага). Осознанный риск: будущие правки `.bsl` в `configuration/**/src/` гейт не проверит (принято пользователем).
 - **P3.A Код (opt-in, default OFF):**
   - **P3.A.registry ✅ реализовано 2026-07-06:** реестр `scripts/sonar_projects.py` (единственная точка маппинга `path → {key, root}` = `utp-ib`/`utp-svetly`/`utp-mfm`; `project_for_path`/`roots`/`--list-json`) + A7 закрыт (MFM в скоупе, `sonar_sources STABLE_ROOTS += MFM`, детект без исключения) + 7 unit (`test_sonar_projects.py`) + правка `test_sonar_rescan_state`. 28/28, ruff, code-verify PASS.
-  - **P3.A.wiring (осталось):** `run-sonar-analysis.ps1 -Project <key|all>` (цикл, per-project `projectKey`/`projectBaseDir`/`sources=.`) + `sonar_rescan_verify.py` (группировка изменённых по проектам через `project_for_path`, per-project freshness/issues, state аддитивно `projects:{}`) + обвязка (QG-setup/QG-check/issues_pull циклы). Env `SONAR_SPLIT_PROJECTS` (0 = legacy бит-в-бит).
+  - **P3.A.wiring ✅ реализовано 2026-07-06:** `run-sonar-analysis.ps1 -Project <key|all>` (функции `Invoke-SonarScan`/`Wait-CeHandoff`; split-цикл per-project `projectKey`/`projectName`/`projectBaseDir=корень конфига`/`sources=.`+явные exclusions/encoding+per-project CE-handoff по `<baseDir>/.scannerwork`) + `sonar_rescan_verify.py` (`verify_project()` — ядро mono/split; `_run_split` группирует по `project_for_path`, per-project freshness/issues, агрегатное state + `projects:{}`; гейт читает агрегат). Env `SONAR_SPLIT_PROJECTS` (0 = legacy бит-в-бит, `split_enabled()`). **mono бит-в-бит подтверждён ревьюером**; split fail-closed (unmapped → block). 46 unit, ruff, code-verify PASS (Finding-1 `.scannerwork` per-config — fixed). QG-setup/issues_pull циклы обвязки — при необходимости в P3.B.
   *Acceptance:* при флаге OFF поведение неотличимо от текущего; при ON verify правки SVETLY требует свежести только `utp-svetly`. *Оценка (wiring):* 2–3 ч.
 - **P3.B Сервер:** первый скан каждого проекта (провижининг, фоном) → pin new-code baseline per project (P2.2 скрипт — пререквизит) → smoke verify на живой правке → проверить SCM Publisher (blame ожидаемо оживает). *Пререквизит: P0.1/P0.2* (те же файлы; без CE-wait smoke флапает). *Оценка:* 1–1.5 ч.
 - **P3.C Переключение:** `SONAR_SPLIT_PROJECTS=1` дефолт в `.env`, CI-цикл (`ci-1c.yml`), docs (гл. 43.9.9 + ноты fix-sonar-task/implement-1c-task), старый проект `upravlenie-transportom-plk` — archived read-only (история worklist), удаление ≥30 дней отдельным решением. *Оценка:* ~1 ч.
@@ -104,6 +104,12 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **Свой lock поверх `.sonar_lock`** — остаётся отклонённым: сканер уже сериализует прогоны из одного клона (A5); в split-режиме локи per-project (`.scannerwork` в корне каждого конфига) — коллизий нет.
 
 ## §18 Прогресс
+
+### 2026-07-06 — P3.A.wiring реализован (split-код, opt-in default OFF)
+
+- **ps1** `-Project <key|all>` + `SONAR_SPLIT_PROJECTS`: функции `Invoke-SonarScan`/`Wait-CeHandoff`, split-цикл per-project (projectKey/projectName/projectBaseDir=корень конфига/sources=./exclusions/encoding + per-config CE-handoff). **verify** `verify_project()` (ядро mono/split) + `_run_split` (группировка `_group_by_project`→per-project→агрегат pass/scan_stale/fail_files/files_verified + `projects:{}`); гейт читает агрегат (не менялся). `split_enabled()` (env, default OFF).
+- **mono бит-в-бит подтверждён** ревьюером (state/аргументы/QG/Dashboard/exit неизменны при OFF). split fail-closed (unmapped→block). Ревьюер-находки: №1 (split `.scannerwork` в корне конфига, а не репо → CE-handoff читал не тот) **fixed** (per-project `-BaseDir`), №2 лог-усечение fixed, №4 trim env fixed, №3 док-нота. 46 unit, ruff, ParseFile+BOM, code-verify PASS.
+- Осталось: **P3.B** (провижининг 3 проектов на сервере + baseline-пин + smoke split-verify) → **P3.C** (флип дефолта `split_enabled`).
 
 ### 2026-07-06 — P2 реализован (гигиена: _paged cap, baseline-скрипт, доки, ADR-042)
 

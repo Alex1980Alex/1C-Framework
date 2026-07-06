@@ -59,6 +59,16 @@ try:
 except Exception:
     pass
 
+# Реестр проектов split-режима (P3.A wiring). Defensive: недоступен → mono-only.
+try:
+    from sonar_projects import project_for_path, split_enabled  # scripts/ на sys.path (_dotenv)
+except Exception:  # pragma: no cover
+    project_for_path = None
+
+    def split_enabled() -> bool:
+        return False
+
+
 # Windows-консоль = cp1251: символы ✗/⚠ роняют print → форсим UTF-8 stdout (best-effort)
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -344,6 +354,183 @@ def show_file(host, project, token, rel) -> int:
     return 0
 
 
+def verify_project(host, project, token, files, severities, wait_ce_s) -> dict:
+    """Дельта-verify ОДНОГО Sonar-проекта. Ядро, общее для mono и split (P3.A wiring).
+
+    files = [(repo_rel, comp_rel)]: repo_rel — от корня репо (mtime/diff через PROJECT_ROOT),
+    comp_rel — от projectBaseDir проекта для матчинга component-ключа:
+      - mono: projectBaseDir = корень репо → comp_rel == repo_rel;
+      - split: projectBaseDir = корень конфигурации → comp_rel = путь ВНУТРИ конфигурации.
+    → dict {project, pass, scan_stale, last_analysis, fail_files, verified(repo_rel),
+    baseline_degenerate, new_total, all_total, issues_truncated}."""
+    repo_rels = [fr for fr, _ in files]
+    # P0.1: дождаться финализации CE (иначе ложный stale — сканер exit 0 ≠ анализ дописан)
+    if not wait_ce(host, project, token, wait_ce_s):
+        print(
+            f"  ⚠ [{project}] CE ещё обрабатывает анализ (ждали {wait_ce_s:.0f}с) — freshness может отстать"
+        )
+    last_an = last_analysis_dt(host, project, token)
+    br_an = branches_analysis_dt(host, project, token)
+    if br_an is not None and (last_an is None or br_an > last_an):
+        last_an = br_an  # branches обновляется атомарнее project_analyses (I4)
+    nm = newest_mtime(PROJECT_ROOT, repo_rels)
+    scan_stale = bool(last_an is None or (nm and last_an.timestamp() < nm))
+
+    try:
+        analyzed = analyzed_file_keys(host, project, token)
+    except Exception as exc:
+        analyzed, api_error = set(), str(exc)
+    else:
+        api_error = None
+
+    degenerate, new_total, all_total = baseline_degenerate(host, project, token)
+
+    global_cache: dict[str, list] | None = None
+    truncated = False
+    fail_files: list[str] = []
+    for repo_rel, comp_rel in files:
+        if api_error is not None:
+            fail_files.append(f"{repo_rel} (ошибка запроса Sonar API: {api_error[:60]})")
+            continue
+        comp_key = _match_component(comp_rel, project, analyzed)
+        if comp_key is None:
+            fail_files.append(f"{repo_rel} (не проанализирован Sonar)")
+            continue
+        lns = file_issue_lines(host, comp_key, severities, token)
+        if lns is None:
+            if global_cache is None:
+                try:
+                    global_cache, truncated = project_issue_lines(host, project, severities, token)
+                except Exception as exc:
+                    fail_files.append(f"{repo_rel} (ошибка запроса Sonar API: {str(exc)[:60]})")
+                    continue
+            lns = global_cache.get(comp_key, [])
+        ranges = changed_line_ranges(PROJECT_ROOT, repo_rel)
+        if ranges is None:
+            hits = len(lns)  # новый/untracked → все issue мои (fail-closed)
+        else:
+            hits = sum(
+                1 for ln in lns if isinstance(ln, int) and any(s <= ln <= e for s, e in ranges)
+            )
+        if hits:
+            fail_files.append(f"{repo_rel} ({hits} {','.join(severities)} на изменённых строках)")
+
+    return {
+        "project": project,
+        "pass": (not scan_stale) and (not fail_files),
+        "scan_stale": scan_stale,
+        "last_analysis": last_an.isoformat() if last_an else None,
+        "fail_files": fail_files,
+        "verified": repo_rels,
+        "baseline_degenerate": degenerate,
+        "new_total": new_total,
+        "all_total": all_total,
+        "issues_truncated": truncated,
+    }
+
+
+def _print_project_notes(res: dict, tagged: bool = False) -> None:
+    """Печать диагностических ⚠ (degenerate/truncated/scan_stale) по результату verify_project."""
+    p = f"[{res['project']}] " if tagged else ""
+    if res["baseline_degenerate"]:
+        print(
+            f"  ⚠ {p}server new-code baseline ВЫРОЖДЕН (new={res['new_total']} ≈ total={res['all_total']}): "
+            "штатный Quality Gate Sonar завышает «новое»; этот гейт независим — дельта считается "
+            "по diff-строкам. Починка: scripts/sonar_set_new_code_baseline.py (branch-level SPECIFIC_ANALYSIS)"
+        )
+    if res["issues_truncated"]:
+        print(
+            f"  ⚠ {p}>10k unresolved issues одной severity — выборка усечена ES-лимитом (best-effort)"
+        )
+    if res["scan_stale"]:
+        print(
+            f"  ⚠ {p}последний анализ Sonar СТАРШЕ правок — прогони сначала run-sonar-analysis.ps1"
+        )
+
+
+def _group_by_project(changed) -> tuple[dict, list]:
+    """Группировка изменённых repo-путей по проектам реестра (split-режим, P3.A).
+
+    → (groups {key: {"root", "files":[(repo_rel, comp_rel)]}}, unmapped [repo_rel]).
+    unmapped = `.bsl` под /src/ вне корней реестра (fail-closed у вызывающего)."""
+    groups: dict[str, dict] = {}
+    unmapped: list[str] = []
+    for rel in changed:
+        pr = project_for_path(rel) if project_for_path else None
+        if pr is None:
+            unmapped.append(rel)
+            continue
+        key, root_rel, rel_in = pr
+        groups.setdefault(key, {"root": root_rel, "files": []})
+        groups[key]["files"].append((rel, rel_in))
+    return groups, unmapped
+
+
+def _run_split(a, changed, now, severities) -> int:
+    """Split-режим (SONAR_SPLIT_PROJECTS=1): per-project verify + агрегатное state.
+
+    Гейт (`sonar_rescan_state.evaluate`) читает АГРЕГАТ (pass/scan_stale/fail_files/
+    files_verified/last_analysis) — не меняется; `projects:{}` — детальный срез сверху."""
+    groups, unmapped = _group_by_project(changed)
+    results = []
+    for key in sorted(groups):
+        res = verify_project(a.host, key, a.token, groups[key]["files"], severities, a.wait_ce)
+        res["root"] = groups[key]["root"]
+        results.append(res)
+
+    fail_files = [f for r in results for f in r["fail_files"]]
+    for rel in unmapped:  # вне реестра → fail-closed (нельзя подтвердить чистоту)
+        fail_files.append(f"{rel} (не сопоставлен проекту реестра — вне Sonar-скоупа split)")
+    scan_stale = any(r["scan_stale"] for r in results)
+    passed = (not fail_files) and (not scan_stale)
+    verified = [r_ for r in results for r_ in r["verified"]]  # только сопоставленные
+
+    projects_state = {
+        r["project"]: {
+            "root": r.get("root"),
+            "pass": r["pass"],
+            "scan_stale": r["scan_stale"],
+            "last_analysis": r["last_analysis"],
+            "fail_files": r["fail_files"],
+            "files": r["verified"],
+            "baseline_degenerate": r["baseline_degenerate"],
+        }
+        for r in results
+    }
+    last_all = [r["last_analysis"] for r in results if r["last_analysis"]]
+    write_state(
+        PROJECT_ROOT,
+        {
+            "ts": now.isoformat(),
+            "host": a.host,
+            "mode": "changed-lines",
+            "split": True,
+            "pass": passed,
+            "skipped": False,
+            "files_verified": sorted(verified),
+            "fail_files": fail_files,
+            "scan_stale": scan_stale,
+            "last_analysis": max(last_all) if last_all else None,
+            "projects": projects_state,
+            "issues_truncated": any(r["issues_truncated"] for r in results),
+        },
+    )
+
+    print(
+        f"sonar-rescan [SPLIT]: изменённых .bsl={len(changed)} в {len(groups)} проект(ах); "
+        f"severities={severities}; mode=changed-lines"
+    )
+    for r in results:
+        print(
+            f"  проект {r['project']} ({r.get('root')}): файлов={len(r['verified'])} pass={r['pass']}"
+        )
+        _print_project_notes(r, tagged=True)
+    for ff in fail_files:
+        print("  ✗ " + ff)
+    print("РЕЗУЛЬТАТ:", "PASS" if passed else "FAIL")
+    return 0 if passed else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default=os.environ.get("SONAR_HOST_URL", "http://localhost:9000"))
@@ -404,65 +591,14 @@ def main() -> int:
         print(f"sonar-rescan: SonarQube недоступен ({a.host}) — skip (гейт не блокирует)")
         return 0
 
-    # P0.1: дождаться финализации CE (иначе ложный stale — сканер exit 0 ≠ анализ дописан)
-    if not wait_ce(a.host, a.project, a.token, a.wait_ce):
-        print(f"  ⚠ CE ещё обрабатывает анализ (ждали {a.wait_ce:.0f}с) — freshness может отстать")
+    if split_enabled():  # P3.A: per-project скан+verify (opt-in SONAR_SPLIT_PROJECTS=1)
+        return _run_split(a, changed, now, severities)
 
-    last_an = last_analysis_dt(a.host, a.project, a.token)
-    br_an = branches_analysis_dt(a.host, a.project, a.token)
-    if br_an is not None and (last_an is None or br_an > last_an):
-        last_an = br_an  # branches обновляется атомарнее project_analyses (I4)
-    nm = newest_mtime(PROJECT_ROOT, changed)
-    scan_stale = bool(last_an is None or (nm and last_an.timestamp() < nm))
-
-    try:
-        analyzed = analyzed_file_keys(a.host, a.project, a.token)
-    except Exception as exc:
-        # API-сбой целиком → консервативно: все файлы «ошибка запроса» (не пропускаем)
-        analyzed, api_error = set(), str(exc)
-    else:
-        api_error = None
-
-    degenerate, new_total, all_total = baseline_degenerate(a.host, a.project, a.token)
-
-    # per-file запросы точны (нет ES-усечения); project-wide paged — ленивый fallback
-    global_cache: dict[str, list] | None = None
-    truncated = False
-    fail_files = []
-    for rel in changed:
-        if api_error is not None:
-            fail_files.append(f"{rel} (ошибка запроса Sonar API: {api_error[:60]})")
-            continue
-        comp_key = _match_component(rel, a.project, analyzed)
-        if comp_key is None:
-            fail_files.append(f"{rel} (не проанализирован Sonar)")
-            continue
-        lns = file_issue_lines(a.host, comp_key, severities, a.token)
-        if lns is None:
-            if global_cache is None:
-                try:
-                    global_cache, truncated = project_issue_lines(
-                        a.host, a.project, severities, a.token
-                    )
-                except Exception as exc:
-                    fail_files.append(f"{rel} (ошибка запроса Sonar API: {str(exc)[:60]})")
-                    continue
-            lns = global_cache.get(comp_key, [])
-        ranges = changed_line_ranges(PROJECT_ROOT, rel)
-        if ranges is None:
-            # новый/untracked файл (или дифф не получен): все его issue — мои,
-            # включая файловые (line=None) — fail-closed
-            hits = len(lns)
-        else:
-            # изменённый файл: гейтим только issue на содержательно изменённых строках;
-            # файловые issue (line=None) на изменённом файле легаси-атрибуции не имеют
-            hits = sum(
-                1 for ln in lns if isinstance(ln, int) and any(s <= ln <= e for s, e in ranges)
-            )
-        if hits:
-            fail_files.append(f"{rel} ({hits} {','.join(severities)} на изменённых строках)")
-
-    passed = (not scan_stale) and (not fail_files)
+    # mono (legacy, default) — один проект, projectBaseDir = корень репо → comp_rel == repo_rel
+    res = verify_project(
+        a.host, a.project, a.token, [(r, r) for r in changed], severities, a.wait_ce
+    )
+    passed = res["pass"]
     write_state(
         PROJECT_ROOT,
         {
@@ -472,31 +608,19 @@ def main() -> int:
             "pass": passed,
             "skipped": False,
             "files_verified": changed,
-            "fail_files": fail_files,
-            "scan_stale": scan_stale,
-            "last_analysis": last_an.isoformat() if last_an else None,
-            "baseline_degenerate": degenerate,
-            "issues_truncated": truncated,
+            "fail_files": res["fail_files"],
+            "scan_stale": res["scan_stale"],
+            "last_analysis": res["last_analysis"],
+            "baseline_degenerate": res["baseline_degenerate"],
+            "issues_truncated": res["issues_truncated"],
         },
     )
 
     print(
         f"sonar-rescan: изменённых .bsl={len(changed)}; severities={severities}; mode=changed-lines"
     )
-    if degenerate:
-        print(
-            f"  ⚠ server new-code baseline ВЫРОЖДЕН (new={new_total} ≈ total={all_total}): "
-            "штатный Quality Gate Sonar завышает «новое»; этот гейт независим — дельта "
-            "считается по diff-строкам. Починка сервера: api/new_code_periods/set "
-            "(branch-level SPECIFIC_ANALYSIS на пре-change анализ)"
-        )
-    if truncated:
-        print(
-            "  ⚠ >10k unresolved issues одной severity — выборка усечена ES-лимитом (best-effort)"
-        )
-    if scan_stale:
-        print("  ⚠ последний анализ Sonar СТАРШЕ правок — прогони сначала run-sonar-analysis.ps1")
-    for ff in fail_files:
+    _print_project_notes(res)
+    for ff in res["fail_files"]:
         print("  ✗ " + ff)
     print("РЕЗУЛЬТАТ:", "PASS" if passed else "FAIL")
     return 0 if passed else 1
