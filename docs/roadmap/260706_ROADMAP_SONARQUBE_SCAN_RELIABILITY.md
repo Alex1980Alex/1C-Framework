@@ -47,11 +47,11 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 
 ### P0 — ложные сигналы гейта (сделать первыми)
 
-- **P0.1 CE-wait в verify (гонка I4).** `sonar_rescan_verify.py`: перед freshness-проверкой ждать финализацию CE — poll `GET /api/ce/activity_status?component=<project>` до `pending==0 && inProgress==0` (флаг `--wait-ce <сек>`, default 120, интервал 5с; таймаут → честный `scan_stale`-путь с подсказкой «CE ещё обрабатывает»). Freshness брать как **max**(`project_analyses/search?ps=1`, `project_branches/list.analysisDate`) — branches обновляется атомарнее.
+- **P0.1 CE-wait в verify (гонка I4). ✅ реализовано 2026-07-06.** `sonar_rescan_verify.py`: перед freshness-проверкой ждать финализацию CE — poll `GET /api/ce/activity_status?component=<project>` до `pending==0 && inProgress==0` (флаг `--wait-ce <сек>`, default 120, интервал 5с; таймаут → честный `scan_stale`-путь с подсказкой «CE ещё обрабатывает»). Freshness брать как **max**(`project_analyses/search?ps=1`, `project_branches/list.analysisDate`) — branches обновляется атомарнее.
   *Acceptance:* сценарий «скан exit 0 → немедленно verify» больше не даёт ложный stale (интеграционно: verify сразу после run-sonar-analysis.ps1 → PASS с первого раза).
   *Оценка:* 1–1.5 ч (код + unit на парсинг статусов + прогон).
 
-- **P0.2 Fail-fast + cwd-независимый корень в ps1 (I3).** `run-sonar-analysis.ps1`: (а) первичный якорь корня — `$PSScriptRoot\..` (скрипт лежит в `scripts/`), `git rev-parse` только как sanity/fallback + проверка `Test-Path "$ProjectRoot\scripts\sonar_sources.py"`; (б) отсутствие токена = **exit 2** с красным сообщением (не exit 0); reachability-DOWN оставить exit 0 (осознанный локальный комфорт), но печатать маркер `SCAN-SKIPPED`; (в) после helper-python проверять `$LASTEXITCODE`, пустые `$sources` → exit 2.
+- **P0.2 Fail-fast + cwd-независимый корень в ps1 (I3). ✅ реализовано 2026-07-06 (+P1.4 venv-python попутно).** `run-sonar-analysis.ps1`: (а) первичный якорь корня — `$PSScriptRoot\..` (скрипт лежит в `scripts/`), `git rev-parse` только как sanity/fallback + проверка `Test-Path "$ProjectRoot\scripts\sonar_sources.py"`; (б) отсутствие токена = **exit 2** с красным сообщением (не exit 0); reachability-DOWN оставить exit 0 (осознанный локальный комфорт), но печатать маркер `SCAN-SKIPPED`; (в) после helper-python проверять `$LASTEXITCODE`, пустые `$sources` → exit 2.
   *Acceptance:* запуск из каталога сабмодуля даёт либо корректный скан, либо громкий exit≠0; «exit 0 без скана» невозможен кроме явного `SCAN-SKIPPED` (сервер DOWN).
   *Оценка:* ~1 ч.
 
@@ -100,6 +100,12 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **Свой lock поверх `.sonar_lock`** — остаётся отклонённым: сканер уже сериализует прогоны из одного клона (A5); в split-режиме локи per-project (`.scannerwork` в корне каждого конфига) — коллизий нет.
 
 ## §18 Прогресс
+
+### 2026-07-06 — P0 реализован (wait-ce + fail-fast ps1); попутно BOM-фикс ps1
+
+- **P0.1:** `sonar_rescan_verify.py` — `wait_ce()` (poll `ce/activity_status` до idle, `--wait-ce` default 120с, 404→fast-path R1) + freshness = max(`project_analyses`, `project_branches/list`). **P0.2:** `run-sonar-analysis.ps1` — якорь `$PSScriptRoot\..` + sanity, FATAL exit 2 (токен/sources/helper'ы), `SCAN-SKIPPED`-маркер, venv-python (`P1.4` ✅), guard `KEY=` (R4).
+- **Попутная находка:** ps1 был UTF-8 БЕЗ BOM → PS 5.1 читал cp1251, байт 0x94 из `—` в НОВЫХ двойных строках = типографская `”` (валидный делимитер PS) → parse error. Добавлен BOM + тест-инвариант (R3).
+- Верификация: 27/27 unit (+7 P0, +BOM-инвариант), ruff clean, ParseFile OK, live smoke; code-verify reviewer **PASS** (advisory R2/R5 — noted: multi-branch max при появлении веток фильтровать isMain; интеграционный тест main-wiring — при следующем заходе).
 
 ### 2026-07-06 — Approve ADR-048 с поправкой: configuration/ исключён; P3.A0 реализован
 
