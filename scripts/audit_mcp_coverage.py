@@ -119,13 +119,14 @@ def _lazy_servers() -> set[str]:
         import yaml
 
         d = yaml.safe_load(reg.read_text(encoding="utf-8-sig")) or {}
+        out: set[str] = set()
+        # весь разбор в try: схемно-битый (но синтаксически валидный) YAML → AttributeError
+        for cat in (d.get("categories") or {}).values():
+            out |= set((cat or {}).get("servers") or {})
+        return out
     except Exception as e:
         print(f"WARN: lazy-mcp registry не распарсен: {e}", file=sys.stderr)
         return set()
-    out: set[str] = set()
-    for cat in (d.get("categories") or {}).values():
-        out |= set((cat or {}).get("servers") or {})
-    return out
 
 
 def audit() -> dict:
