@@ -3,7 +3,7 @@
 > Разбор пяти инцидентов live-прогона 2026-07-06 (закрытие Sonar-гейта GKSTCPLK-2634 на машине DESKTOP-TNU600C)
 > + аудит всего Sonar-инструментария репо. Все корни подтверждены по коду (file:line) и live-запросами к
 > SonarQube CB 26.6 (`api/ce/activity_status`, `api/project_branches/list`, `.scannerwork/report-task.txt`).
-> Связанные решения: ADR-021 (wiring), ADR-033 (remediation), ADR-034 (R6/R7), ADR-037 (mandatory гейт), ADR-042 (Sonar MCP).
+> Связанные решения: ADR-021 (wiring), ADR-033 (remediation), ADR-034 (R6/R7), ADR-037 (mandatory гейт), ADR-042 (Sonar MCP), **ADR-048 (split по конфигурациям — P3)**.
 
 ## §1 Инциденты прогона 2026-07-06 и их корни
 
@@ -78,17 +78,31 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **P2.3 Документация:** гл. 43.9.9 (статанализ) — раздел «Операционные ловушки» (I1–I5: не редиректить ps1; запуск из корня/якорь; CE-асинхронность; --show-file), синхронно с [[reference-sonar-changed-lines-gate]].
 - **P2.4 ADR-042 (Sonar MCP) — переоценка после P0/P1:** hand-rolled urllib-клиент в verify растёт; если появится ещё ≥2 API-потребителя — вернуться к adoption-решению MCP-сервера Sonar (сейчас zero-dep оправдан для Stop-хука).
 
-**Матрица приоритетов:** P0.1+P0.2 устраняют оба «критических» корня (ложный stale + тихий no-op) ≈ 2–2.5 ч; P1 целиком ≈ 2–3 ч; P2 — по мере касания. Итого активная часть ≈ **4–5.5 ч** (0.5–0.7 идеального дня).
+### P3 — Разделение Sonar-проекта по конфигурациям (принято 2026-07-06, [ADR-048](../../.claude/skills/architecture-research/adr/048-sonar-project-split-per-configuration.md))
 
-**Порядок внедрения:** P0.1 → P0.2 → P1.1 → P1.2 → P1.3/P1.4 (независимы) → P2. Каждый пункт — через пайплайн (правки Python/ps1 = обычный code-verify цикл; это инфраструктура фреймворка, не 1С-код — Sonar-гейт ADR-037 на неё не распространяется, обычный `code-verify` PASS обязателен).
+> Перенесено из §5 решением пользователя. Монопроект → `utp-ib` / `utp-svetly` / `utp-cfg-<JIRA>` (auto-provision, G19 сохраняется). Ключевой выигрыш: гейтовый скан = только затронутая конфигурация + **per-project `scan_stale`** (правка SVETLY не требует свежести ИБ) + ожидаемая починка SCM blame (projectBaseDir = один git work-tree).
+
+- **P3.A Код (opt-in, default OFF):** реестр `scripts/sonar_projects.py` (единственная точка маппинга `path → {key, root}`; CLI `--list-json`) + `run-sonar-analysis.ps1 -Project <key|all>` (цикл, per-project `projectKey`/`projectBaseDir`/`sources=.`) + `sonar_rescan_verify.py` (группировка изменённых по проектам, per-project freshness/issues, state аддитивно `projects:{}`) + обвязка (QG-setup/QG-check/issues_pull циклы). Env `SONAR_SPLIT_PROJECTS` (0 = legacy бит-в-бит). Unit: маппинг, группировка, legacy-паритет.
+  *Acceptance:* при флаге OFF поведение неотличимо от текущего; при ON verify правки SVETLY требует свежести только `utp-svetly`. *Оценка:* 3–4 ч.
+- **P3.B Сервер:** первый скан каждого проекта (провижининг, фоном) → pin new-code baseline per project (P2.2 скрипт — пререквизит) → smoke verify на живой правке → проверить SCM Publisher (blame ожидаемо оживает). *Пререквизит: P0.1/P0.2* (те же файлы; без CE-wait smoke флапает). *Оценка:* 1–1.5 ч.
+- **P3.C Переключение:** `SONAR_SPLIT_PROJECTS=1` дефолт в `.env`, CI-цикл (`ci-1c.yml`), docs (гл. 43.9.9 + ноты fix-sonar-task/implement-1c-task), старый проект `upravlenie-transportom-plk` — archived read-only (история worklist), удаление ≥30 дней отдельным решением. *Оценка:* ~1 ч.
+
+**Матрица приоритетов:** P0.1+P0.2 устраняют оба «критических» корня (ложный stale + тихий no-op) ≈ 2–2.5 ч; P1 целиком ≈ 2–3 ч; P2 — по мере касания; **P3 (ADR-048) ≈ 5.5–7 ч отдельным пакетом после P0**. Активная часть без P3 ≈ **4–5.5 ч**.
+
+**Порядок внедрения:** P0.1 → P0.2 → **P3.A → P3.B → P3.C** (решение пользователя приоритизирует split; P1.1/P1.2 полезны, но P3.B закрывает ту же боль per-project) → P1.3/P1.4 → P2. Каждый пункт — через пайплайн (правки Python/ps1 = обычный code-verify цикл; это инфраструктура фреймворка, не 1С-код — Sonar-гейт ADR-037 на неё не распространяется, обычный `code-verify` PASS обязателен).
 
 ## §5 Что НЕ делаем (и почему)
 
-- **Разделение Sonar-проекта на 3 конфигурации** — снимает «полный скан ради одного файла» (~минуты на 14.4k файлов), но: ломает единый ключ компонентов (`upravlenie-transportom-plk:<path>`) во всех потребителях (verify, issues_pull, гейт, worklist-история), требует пере-baseline каждого проекта и правок CI. Стоимость > выгоды при текущей частоте сканов. Пересмотреть, если скан станет узким местом (>3–4 прогонов/день).
-- **`sonar.qualitygate.wait=true`** — см. P1.1 (связывает сканер с QG-политикой, у нас QG сознательно soft).
-- **Свой lock поверх `.sonar_lock`** — сканер уже сериализует прогоны из одного клона (A5).
+- ~~Разделение Sonar-проекта на 3 конфигурации~~ — **пересмотрено 2026-07-06 (решение пользователя): ДЕЛАЕМ** → фаза **P3** + [ADR-048](../../.claude/skills/architecture-research/adr/048-sonar-project-split-per-configuration.md). Прежние контр-аргументы сняты дизайном: единая точка маппинга ключей = реестр `sonar_projects.py`, dual-mode `SONAR_SPLIT_PROJECTS` (rollback = флаг), re-baseline закрывает P2.2-скрипт.
+- **`sonar.qualitygate.wait=true`** — остаётся отклонённым: связывает exit-код сканера с QG-политикой (у нас QG сознательно soft, R6 ADR-034) + свой 300с-таймаут; ожидание CE решается P1.1/P0.1 без QG-сцепки.
+- **Свой lock поверх `.sonar_lock`** — остаётся отклонённым: сканер уже сериализует прогоны из одного клона (A5); в split-режиме локи per-project (`.scannerwork` в корне каждого конфига) — коллизий нет.
 
 ## §18 Прогресс
+
+### 2026-07-06 — Разделение Sonar-проекта по конфигурациям ПРИНЯТО (ADR-048, §5 → P3)
+
+- Отказ §5 пересмотрен пользователем → новая фаза P3: реестр `scripts/sonar_projects.py`, ключи `utp-ib`/`utp-svetly`/`utp-cfg-<JIRA>`, dual-mode `SONAR_SPLIT_PROJECTS`, миграция A (код, opt-in) → B (провижининг+baseline+smoke) → C (флип дефолта, archive старого проекта).
+- Ожидаемые выигрыши: скан = только затронутая конфигурация, per-project `scan_stale`, вероятная починка SCM blame (один work-tree). Пререквизит — P0. Порядок внедрения обновлён (P3 сразу после P0).
 
 ### 2026-07-06 — Роадмап создан (разбор инцидентов SQ-прогона + аудит инструментария)
 

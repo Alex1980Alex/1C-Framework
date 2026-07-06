@@ -2,8 +2,8 @@
   "task": "sonar-scan-reliability",
   "title": "SQ-контур: надёжность скан→CE→verify (roadmap 260706)",
   "created_at": "2026-07-06T15:57:49",
-  "updated_at": "2026-07-06T15:57:49",
-  "current_stage": 2,
+  "updated_at": "2026-07-06T16:24:06",
+  "current_stage": 3,
   "stages": [
     {
       "n": 1,
@@ -18,8 +18,8 @@
       "name": "design",
       "command": "pl-design",
       "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
+      "status": "done",
+      "completed_at": "2026-07-06T16:24:06",
       "approved": false,
       "approved_by": null,
       "approved_at": null
