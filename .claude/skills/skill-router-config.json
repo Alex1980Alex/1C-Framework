@@ -2596,6 +2596,52 @@
         "auto-git-save"
       ],
       "optional": []
+    },
+    "codepilot1c": {
+      "keywords": [
+        "codepilot1c",
+        "1С Copilot",
+        "мутация формы",
+        "добавить элемент формы",
+        "флажок на форму",
+        "mutate_form_model",
+        "create_form",
+        "apply_form_recipe",
+        "inspect_form_layout",
+        "схема компоновки данных",
+        "dcs_manage",
+        "права роли 1С",
+        "mutate_role_rights",
+        "макет печатной формы",
+        "render_template"
+      ],
+      "weighted_keywords": {
+        "codepilot1c": 5,
+        "mutate_form_model": 5,
+        "create_form": 4,
+        "apply_form_recipe": 4,
+        "inspect_form_layout": 4,
+        "dcs_manage": 4,
+        "mutate_role_rights": 4,
+        "render_template": 3,
+        "мутация формы": 4,
+        "схема компоновки данных": 4,
+        "права роли 1с": 3,
+        "макет печатной формы": 3,
+        "1с copilot": 4
+      },
+      "utterances": [
+        "добавить флажок на форму",
+        "поменять элемент формы",
+        "создать схему компоновки данных",
+        "изменить права роли",
+        "сгенерировать макет печатной формы",
+        "замутировать форму через copilot"
+      ],
+      "skills": [
+        "codepilot1c"
+      ],
+      "optional": []
     }
   },
   "min_score_gap": 2,
