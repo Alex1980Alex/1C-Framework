@@ -9,6 +9,24 @@
   ],
   "records": [
     {
+      "id": "ADR-048",
+      "file": "048-sonar-project-split-per-configuration.md",
+      "title": "Разделение Sonar-монопроекта upravlenie-transportom-plk на проекты по конфигурациям (utp-ib/utp-svetly/utp-cfg-<JIRA>): реестр scripts/sonar_projects.py + dual-mode SONAR_SPLIT_PROJECTS, projectBaseDir=корень конфига (per-project scan_stale гейта, ожидаемая починка SCM blame), миграция Phase A/B/C (пререквизит P0 roadmap 260706); отменяет отказ §5 roadmap 260706",
+      "status": "accepted",
+      "date": "2026-07-06",
+      "research": "live-аудит roadmap 260706 §1-§3 + инциденты прогона GKSTCPLK-2634",
+      "tags": [
+        "sonarqube",
+        "project-split",
+        "adr-037",
+        "gate",
+        "scanner",
+        "baseline",
+        "scm-blame",
+        "registry"
+      ]
+    },
+    {
       "id": "ADR-047",
       "file": "047-codepilot1c-surfacing-form-mutation.md",
       "title": "Surfacing codepilot1c (1С Copilot) — форм/DCS/роль/макет-мутации, которых нет у EDT-MCP: новый lean-скилл codepilot1c + router-бандл (упреждающий surfacing) + секция в implement-1c-task + cross-ref edt-mcp (mid-task); корень инцидента GKSTCPLK-2640 = нет скилла/бандла -> роутер не подсвечивал",
