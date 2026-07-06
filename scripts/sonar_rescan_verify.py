@@ -166,21 +166,29 @@ def wait_ce(host, project, token, timeout_s, poll_s=5.0):
 # приходят в теле ответа (UTF-8) и матчатся локально по суффиксу пути — без 500.
 
 
-def _paged(host, path_base, token, items_key, page_size=500, cap_pages=60):
+def _paged(host, path_base, token, items_key, page_size=500, cap_pages=100):
     """Собирает все элементы пагинированного Sonar-эндпоинта (project-level).
 
     componentKeys/component = ASCII-ключ проекта → нет кириллического 500; ключи файлов
     приходят в теле ответа (UTF-8), фильтруем локально по суффиксу пути. ОДНО keep-alive
-    соединение на все страницы (иначе десятки сокетов → WinError 10048 port exhaustion)."""
+    соединение на все страницы (иначе десятки сокетов → WinError 10048 port exhaustion).
+
+    P2.1 (roadmap 260706, A2): cap_pages по умолчанию 100 (100×500=50k; проект ~14.4k файлов
+    с запасом). При достижении cap с непрочитанным хвостом — ⚠ печатается (не молчаливое
+    усечение, иначе неполная выборка читается как «всё покрыто»)."""
     u = urllib.parse.urlsplit(host)
     is_https = u.scheme == "https"
     conn_cls = http.client.HTTPSConnection if is_https else http.client.HTTPConnection
     conn = conn_cls(u.hostname, u.port or (443 if is_https else 80), timeout=30)
     hdr = {"Authorization": _auth(token)}
     out = []
+    truncated = False
     try:
         page = 1
-        while page <= cap_pages:
+        while True:
+            if page > cap_pages:
+                truncated = True  # вышли по cap, а не по завершению → хвост не прочитан
+                break
             path = f"{path_base}&p={page}&ps={page_size}"
             body = None
             for attempt in range(3):
@@ -203,6 +211,11 @@ def _paged(host, path_base, token, items_key, page_size=500, cap_pages=60):
             page += 1
     finally:
         conn.close()
+    if truncated:
+        print(
+            f"  ⚠ _paged: усечение выборки '{items_key}' на cap_pages={cap_pages} "
+            f"(>{cap_pages * page_size} элементов) — выборка НЕПОЛНАЯ, подними cap"
+        )
     return out
 
 

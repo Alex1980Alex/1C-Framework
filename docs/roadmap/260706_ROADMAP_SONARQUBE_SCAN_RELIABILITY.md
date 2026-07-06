@@ -76,10 +76,10 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 
 ### P2 — гигиена и отложенное
 
-- **P2.1 Cap-лог `_paged` (A2):** при `len(out) >= page_size*cap_pages` печатать «⚠ усечение»; поднять cap до 100 стр.
-- **P2.2 Скрипт baseline (A4):** `scripts/sonar_set_new_code_baseline.py --to-latest-before <ISO|analysisId>` — обёртка `api/new_code_periods/set` (branch-level SPECIFIC_ANALYSIS, принимается ТОЛЬКО branch-level — project-level set = тихий no-op, проверять `/list`); убирает ручной шаг починки вырожденного baseline и шум soft-QG ERROR.
-- **P2.3 Документация:** гл. 43.9.9 (статанализ) — раздел «Операционные ловушки» (I1–I5: не редиректить ps1; запуск из корня/якорь; CE-асинхронность; --show-file), синхронно с [[reference-sonar-changed-lines-gate]].
-- **P2.4 ADR-042 (Sonar MCP) — переоценка после P0/P1:** hand-rolled urllib-клиент в verify растёт; если появится ещё ≥2 API-потребителя — вернуться к adoption-решению MCP-сервера Sonar (сейчас zero-dep оправдан для Stop-хука).
+- **P2.1 Cap-лог `_paged` (A2). ✅ 2026-07-06.** cap_pages 60→100; при выходе по cap (хвост не прочитан) — ⚠ печать «усечение выборки НЕПОЛНАЯ» (не молча). unit.
+- **P2.2 Скрипт baseline (A4). ✅ 2026-07-06** (live `--show` подтвердил текущий пин `1b0e4fc5`). `scripts/sonar_set_new_code_baseline.py` (`--analysis-id` / `--to-latest-before <ISO>` / `--show`) — обёртка `api/new_code_periods/set` (branch-level SPECIFIC_ANALYSIS; project-level = тихий no-op → verify через `/list`; value = ПОЛНЫЙ UUID). 6 unit (`pick_latest_before`/`_parse_dt`/UUID-детект).
+- **P2.3 Документация. ✅ 2026-07-06.** гл. 43.9.9 — раздел «Операционные ловушки SQ-контура» (I1/I3/I4/I5 + вырожденный baseline + BOM), таблица инструментов += `sonar_projects.py`/`sonar_set_new_code_baseline.py` + скоуп ИБ+SVETLY+MFM.
+- **P2.4 ADR-042 (Sonar MCP) — переоценка. ✅ 2026-07-06: решение подтверждено** — `sonar_*.py` остаются zero-dep (verify исполняется в CI/ps1/Stop-гейт БЕЗ MCP); порог миграции (≥2 Sonar-API-потребителя в сессии) не достигнут; Sonar MCP — интерактивный триаж. Аддендум в [ADR-042](../../.claude/skills/architecture-research/adr/042-sonarqube-mcp-server-adoption.md).
 
 ### P3 — Разделение Sonar-проекта по конфигурациям (принято 2026-07-06, [ADR-048](../../.claude/skills/architecture-research/adr/048-sonar-project-split-per-configuration.md))
 
@@ -104,6 +104,11 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **Свой lock поверх `.sonar_lock`** — остаётся отклонённым: сканер уже сериализует прогоны из одного клона (A5); в split-режиме локи per-project (`.scannerwork` в корне каждого конфига) — коллизий нет.
 
 ## §18 Прогресс
+
+### 2026-07-06 — P2 реализован (гигиена: _paged cap, baseline-скрипт, доки, ADR-042)
+
+- **P2.1** `_paged` cap 60→100 + ⚠ при усечении (не молча). **P2.2** `scripts/sonar_set_new_code_baseline.py` (SPECIFIC_ANALYSIS branch-level; `--show`/`--analysis-id`/`--to-latest-before`) — live `--show` подтвердил пин `1b0e4fc5`; 6 unit. **P2.3** гл.43.9.9 «Операционные ловушки» (I1/I3/I4/I5+baseline+BOM) + таблица. **P2.4** ADR-042 переоценка: verify остаётся zero-dep (CI/ps1/Stop без MCP).
+- 14/14 unit (P2.2 + P0), ruff clean, live `--show`. **Роадмап 260706 закрыт: P0 ✅, P1 ✅, P2 ✅, P3.A0+registry+A7 ✅.** Осталось: P3.A.wiring (ps1 `-Project` + verify per-project) → P3.B (провижининг сервера) → P3.C (флип дефолта).
 
 ### 2026-07-06 — P1 реализован (CE-handoff / -LogFile / --show-file / venv)
 

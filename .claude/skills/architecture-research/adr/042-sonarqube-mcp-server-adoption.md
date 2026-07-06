@@ -47,3 +47,6 @@ zero-dep скрипты `scripts/sonar_*.py` (pull/QG/rescan). SonarSource вы�
 
 ## Коррекция (2026-06-25, deep launch-audit)
 Реальный конфиг lazy-mcp-прокси — `infra/lazy-mcp/config/registry.yaml` (грузит server.py), НЕ `.mcp/lazy-mcp-config.json` (vestigial, 0 ссылок → удалён). sonarqube (+category code-quality) и context7 внесены в registry.yaml; прокси: 10 категорий / 25 серверов.
+
+## Переоценка после P0/P1 (2026-07-06, roadmap 260706 P2.4)
+urllib-клиент в `sonar_rescan_verify.py` вырос (P0/P1: `wait_ce`, `branches_analysis_dt`, `show_file`, `_paged` cap). **Решение подтверждено: `sonar_*.py` остаются zero-dep, НЕ мигрируют на Sonar MCP.** Причина: verify исполняется в контекстах БЕЗ MCP — CI-джоб (`ci-1c.yml`), `run-sonar-analysis.ps1`, а результат читает Stop-гейт `onec-task-completion-stop` (headless). Sonar MCP (Docker on-demand в сессии Claude) там недоступен. Порог миграции (≥2 новых Sonar-API-потребителя ВНЕ gate/CLI-пути) НЕ достигнут — новые функции обслуживают тот же гейт/диагностику. Sonar MCP остаётся для **интерактивного триажа** (search/QG/change-status в сессии). Пересмотреть, если появится потребитель Sonar-API в самой сессии.
