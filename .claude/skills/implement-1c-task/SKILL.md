@@ -32,6 +32,7 @@ Skill для реализации задачи по конфигурации 1С
 
 **Отличия v2 от v1:**
 - EDT-MCP: чтение/запись BSL-модулей прямо в проект EDT, валидация запросов, проверка ошибок
+- **codepilot1c (1С Copilot): мутации форм / DCS / прав ролей / макетов — то, что EDT-MCP НЕ делает**
 - 1c-mcp-crud: верификация SQL на живых данных ДО записи, подготовка тестовых данных, проверка результатов ПОСЛЕ
 - bsl-debugger: статический анализ BSL-кода, отладка чистой логики в OneScript
 
@@ -41,7 +42,7 @@ Skill для реализации задачи по конфигурации 1С
 1. **Путь к docs/** — папка с ANALYSIS-REPORT.md
 2. **Путь к src/** — корень исходников конфигурации (опционально, определяется автоматически)
 
-## Инструменты (3 MCP-сервера + вспомогательные)
+## Инструменты (4 MCP-сервера + вспомогательные)
 
 ### EDT-MCP — основной инструмент записи кода
 
@@ -63,6 +64,23 @@ Skill для реализации задачи по конфигурации 1С
 | `update_database` | Этап 6: обновить конфигурацию БД ПЕРЕД live-вызовом изменённой функции (shared-state action — спросить пользователя) |
 
 **Полный набор EDT-MCP по этапам** (~36 из 70 тулов, дополняет hot-path таблицу выше): [references/tools-reference.md#полный-набор-edt-mcp-по-этапам](references/tools-reference.md#полный-набор-edt-mcp-по-этапам).
+
+### codepilot1c (1С Copilot) — мутации, которые EDT-MCP НЕ делает (форма/DCS/роли/макеты)
+
+> EDT-MCP **не мутирует формы** (только `get_form_screenshot`/`get_form_layout_snapshot`), не трогает DCS, права ролей, макеты печатных форм. Для этих правок — **codepilot1c** (тот же EDT-проект, модельная валидированная правка). **Все мутации требуют `edt_validate_request` → `validation_token` ПЕРЕД** `mutate_*`/`apply_*`/`dcs_manage` (обязательный гейт сервера). Скилл: [`codepilot1c`](../codepilot1c/SKILL.md).
+
+| Инструмент | Когда использовать |
+|---|---|
+| `inspect_form_layout` | Этап 3: прочитать дерево формы (id/dataPath/тип) ПЕРЕД мутацией |
+| `mutate_form_model` | Этап 3: добавить/изменить элемент формы (`add_field` виджет `CHECK_BOX_FIELD`/`INPUT_FIELD` + `data_path`, **вкл. привязку к члену `ConstantsSet` — EDT-MCP это НЕ умеет**) |
+| `apply_form_recipe` | Этап 3: форма + реквизиты формы + layout пакетно |
+| `create_form` | Этап 3: новая управляемая форма для объекта |
+| `dcs_manage` | Этап 3: схема компоновки данных (наборы/параметры/вычисляемые поля) — у EDT-MCP нет |
+| `inspect_role_rights` / `mutate_role_rights` | Этап 3/5: права роли по объектам/флаги (напр. право на новую константу — R-1 из ANALYSIS-REPORT) |
+| `inspect_template` / `render_template` | Этап 3: макет печатной формы (.mxl из секционного JSON) |
+| `qa_plan_scenario`/`qa_generate`/`qa_validate_feature`/`qa_run` · `author_yaxunit_tests` | Этап 6: Vanessa BDD / YAxUnit через MCP-модель (альтернатива va-bdd/yaxunit-скиллам) |
+
+**Правило выбора (форма/DCS/роль/макет):** `inspect_*` → `edt_validate_request` → `mutate_*`/`apply_*`/`dcs_manage`. **НЕ править `Form.form`/`.mxl`/`.dcs` руками** — codepilot1c даёт валидированную модельную правку; ручной XML — только фолбэк при недоступности codepilot1c (тогда кросс-проверять `inspect_form_layout`). Урок GKSTCPLK-2640: флажок на форму набора констант EDT-MCP не привязал (dotted `dataPath` к `ConstantsSet` он трактует как колонку динсписка), нативный путь — `mutate_form_model add_field CHECK_BOX_FIELD data_path=НаборКонстант.<константа>`.
 
 ### 1c-mcp-crud — верификация на живых данных
 

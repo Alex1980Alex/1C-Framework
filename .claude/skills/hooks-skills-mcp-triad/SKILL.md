@@ -21,7 +21,7 @@ description: "Используй этот скилл для понимания �
 
 | Hook | Назначение |
 |------|-----------|
-| `skill-router.py` | Config-driven маршрутизация: Layer A+B+C (keyword + fuzzy + TF-IDF) → рекомендация скиллов (66 bundles, config v9) |
+| `skill-router.py` | Config-driven маршрутизация: Layer A+B+C (keyword + fuzzy + TF-IDF) → рекомендация скиллов (67 bundles, config v9) |
 | `decision-to-triad.py` | Детекция РЕШЕНИЙ/ИДЕЙ → Фабрика (`triad-factory`, Q1-Q5) |
 | `ralph_activator.py` | Активация Ralph Wiggum для сложных многошаговых задач |
 | `document-persistence.py` | Детекция roadmap/analysis/plan → сохранение в docs/ |
@@ -149,7 +149,7 @@ Config-driven маршрутизация промптов к скиллам че
   → skill-router.py (UserPromptSubmit)
     → _detect_skill_activations(): парсит <command-name> теги из предыдущего turn
       → если найден → SessionState.add_activated_skill() + log activate (source=prompt-detection)
-    → Layer A: keyword matching по 66 bundles (config v9, weighted_keywords)
+    → Layer A: keyword matching по 67 bundles (config v9, weighted_keywords)
     → Layer B: fuzzy matching (fuzz.partial_ratio)
     → Layer C: TF-IDF semantic scoring (shared/tfidf_scorer.py, numpy-only)
       → генерирует prompt_id, пишет в SessionState.set_prompt_id() + skill-accuracy.jsonl (recommend)
@@ -163,7 +163,7 @@ Config-driven маршрутизация промптов к скиллам че
 
 **Honest eval (260613).** Layer A2 — 1С-сигналы по форме текста (CamelCase-кириллица / `гкс_` / `Документ.` / `Srvr=`) + буквальное имя скилла как **целое слово** (`\b…\b`, не подстрочный `in`); веса A2 вынесены в config `a2_signals` (tunable без правки кода, дефолты == хардкод). Гейт acceptance читает **honest pooled `action_f1`** (action-only, без silence-padding) из `eval-skill-router.py` (`--split train|test|all`, `--cv K`), НЕ in-sample padded macro-F1; GT под провенанс-контрактом (`source`/`split`; лик-кандидаты `transcript-router` → `quarantine`, blocking-lint `lint_skill_router_gt.py`). Общий `shared/acceptance_watch.py` `acceptance_banner(window_days=…)` параметризован — раньше «день N/14» хардкодился и врал для 7-дневных окон (напр. tdd-guard). Полные детали + ADR-012..018 — в корневом `CLAUDE.md`.
 
-66 bundles (config v9), 45 из них сгруппированы по 8 доменам: framework (14), claude-code (7), langchain (4), research (3), tools (7), 1c (7), memory (2), llm (1); остальные 21 (langgraph-memory, langchain-mcp, yaxunit, edt-mcp, autoresearch, wiki-pipeline, 1c-debug-hmr и др.) вне доменной группировки в конфиге. Источник истины — `domains`-ключ `skill-router-config.json`; счётчики регенерируемы: `python scripts/gen_hooks_catalog.py --router-counts`. **CI-guard** `--verify-doc` (в blocking-джобе `skill-lint`) сверяет заявленные здесь «N bundles»/«(N скиллов)» с фактом — при правке каталога обнови числа в этом файле, иначе CI красный.
+67 bundles (config v9), 45 из них сгруппированы по 8 доменам: framework (14), claude-code (7), langchain (4), research (3), tools (7), 1c (7), memory (2), llm (1); остальные 22 (langgraph-memory, langchain-mcp, yaxunit, edt-mcp, codepilot1c, autoresearch, wiki-pipeline, 1c-debug-hmr и др.) вне доменной группировки в конфиге. Источник истины — `domains`-ключ `skill-router-config.json`; счётчики регенерируемы: `python scripts/gen_hooks_catalog.py --router-counts`. **CI-guard** `--verify-doc` (в blocking-джобе `skill-lint`) сверяет заявленные здесь «N bundles»/«(N скиллов)» с фактом — при правке каталога обнови числа в этом файле, иначе CI красный.
 
 **Домены и bundles (v9)**:
 | Домен | Bundles |
@@ -420,8 +420,8 @@ knowledge-cache-reminder ──[add_task()]──→ hook-todos.json
 │   ├── git-commit-enforcer.py     (Stop: блокировка без коммита)
 │   ├── docs-change-enforcer.py    (Stop: код изменён без обновления доков)
 │   └── ...                        (полный список — 13.2 Hooks, generator)
-├── skills/                        (98 скиллов)
-│   ├── skill-router-config.json   (66 bundles, v9 → keyword + fuzzy + TF-IDF routing)
+├── skills/                        (99 скиллов)
+│   ├── skill-router-config.json   (67 bundles, v9 → keyword + fuzzy + TF-IDF routing)
 │   ├── 1c-doc-research/           (+ cache/ — 8 категорий)
 │   ├── tech-research/             (+ cache/ — 7 категорий)
 │   ├── architecture-research/     (+ cache/ + adr/)

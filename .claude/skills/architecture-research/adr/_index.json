@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-047",
+      "file": "047-codepilot1c-surfacing-form-mutation.md",
+      "title": "Surfacing codepilot1c (1С Copilot) — форм/DCS/роль/макет-мутации, которых нет у EDT-MCP: новый lean-скилл codepilot1c + router-бандл (упреждающий surfacing) + секция в implement-1c-task + cross-ref edt-mcp (mid-task); корень инцидента GKSTCPLK-2640 = нет скилла/бандла -> роутер не подсвечивал",
+      "status": "accepted",
+      "date": "2026-07-06",
+      "research": "inventory codepilot1c discover_tools + инцидент GKSTCPLK-2640",
+      "tags": [
+        "codepilot1c",
+        "1c",
+        "forms",
+        "dcs",
+        "role-rights",
+        "skill-router",
+        "surfacing",
+        "edt-mcp",
+        "tooling"
+      ]
+    },
+    {
       "id": "ADR-042",
       "file": "042-sonarqube-mcp-server-adoption.md",
       "title": "Adopt SonarQube MCP Server (SonarSource) on-demand via lazy-mcp (code-quality; launcher sonar_mcp_launch.py, creds из .env SONAR_TOKEN->SONARQUBE_TOKEN); smoke GREEN на CB (BSL BLOCKER issues через MCP); sonar_*.py остаются fallback/CI",

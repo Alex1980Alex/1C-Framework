@@ -167,6 +167,7 @@ debug_launch(...) → start_profiling(applicationId) → <прогон> → stop
 get_form_screenshot(projectName, formPath="Catalog.X.Forms.ItemForm")   # PNG
 get_form_layout_snapshot(projectName, formPath, mode="compact")         # YAML-раскладка
 ```
+> ⚠ EDT-MCP форму только **читает** (screenshot/snapshot) и НЕ мутирует; `create_metadata` не привязывает поле к члену `ConstantsSet`. **Мутация формы** (добавить/изменить элемент, DCS, макет) → **codepilot1c** `mutate_form_model`/`apply_form_recipe`/`dcs_manage`/`render_template` (skill [`codepilot1c`](../codepilot1c/SKILL.md)).
 ⚠ **Два ортогональных JVM-флага в `1cedt.ini -vmargs`** (см. cache `1c-doc-research/edt-mcp-form-render-flags`):
 - `-DnativeFormBufferedLayoutRender=true` — нужен для **скриншота** (`get_form_screenshot`), иначе PNG пустой.
 - `-DnativeFormLayoutRender=false` — нужен для **per-element bounds** в `get_form_layout_snapshot`. Дефолт EDT `=true` (native C++) → `elementsWithBounds: 0` **by design** (НЕ баг). Bounds считаются только в Java-режиме (`boundsSource: layoutProjection`).
@@ -229,6 +230,7 @@ import_configuration_from_xml(importPath="C:\\dump", projectName="<НОВЫЙ>")
 
 ## Связанные скиллы (НЕ дублировать)
 
+- `codepilot1c` — **мутации, которых нет у EDT-MCP**: элементы форм (`mutate_form_model`/`create_form`), DCS (`dcs_manage`), права ролей (`mutate_role_rights`), макеты (`render_template`). Тот же EDT-проект; гейт `edt_validate_request`.
 - `1c-mcp-crud` — запросы к **данным** БД, `execute_code`, журнал регистрации (другой MCP — Python stdio, не EDT-MCP).
 - `1c-debug-hmr` — живой RDBG BP-trace (в проекте — основной путь отладки; EDT-MCP debug-тулы — альтернатива внутри EDT).
 - `bsl-development` — методика написания BSL-кода/стандарты БСП.
