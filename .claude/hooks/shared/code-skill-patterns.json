@@ -297,8 +297,8 @@
     "last_migration": "2026-02-23",
     "stats": {
       "total_patterns": 17,
-      "total_directory_rules": 9,
-      "total_bash_rules": 7,
+      "total_directory_rules": 8,
+      "total_bash_rules": 2,
       "total_research_rules": 4,
       "total_research_protocol": 4,
       "total_post_verification": 3

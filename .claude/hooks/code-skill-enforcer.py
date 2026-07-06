@@ -2,9 +2,11 @@
 """
 Code Skill Enforcer — Skill-First Enforcement Hook
 
-Event: PreToolUse | PostToolUse
-Matcher: Write|Edit|Bash (PRE), Write|Edit|WebSearch|WebFetch (POST)
-Purpose: Enforce skill usage before/after code operations
+Event: PreToolUse  (ONLY — see guard at POST-mode dispatch below)
+  ⚠ POST-mode (Level D/E/F) exists in code but is INTENTIONALLY NOT REGISTERED in
+  settings.json (audit 260705 P0.1) — superseded by dedicated hooks. DO NOT re-register.
+Matcher: Write|Edit|Bash (PRE)
+Purpose: Enforce skill usage before code operations
 Timeout: 3s
 
 Principle:
