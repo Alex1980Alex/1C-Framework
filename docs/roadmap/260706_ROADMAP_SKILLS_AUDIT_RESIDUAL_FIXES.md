@@ -49,6 +49,12 @@
 
 > Append-only, новые записи сверху.
 
+### 2026-07-06 — P2.2 закрыт: генератор расширен на счётчики триады + self-updating guard
+- `gen_hooks_catalog.py` += `router_counts()` (bundles/version/skills/домены из `skill-router-config.json` + каталог) и `verify_doc()` — сверяет заявленные в `hooks-skills-mcp-triad/SKILL.md` «N bundles»/«(N скиллов)» с фактом БЕЗ хардкода эталона (растёт каталог → правятся доки, guard ловит рассинхрон).
+- CLI `--router-counts`/`--verify-doc`; `--check` принимает `bundles/skills/version`. CI: шаг `--verify-doc` в **blocking**-джобе `skill-lint` → рецидив F1-дрейфа теперь валит CI.
+- Hardening по ревью (PASS): clamp `ungrouped` (домен-оверлап), graceful на недостижимый файл, ленивое `router_counts` (не ломает `--counts`/`--json`/markdown). +6 unit (11 всего), ruff+compile OK.
+- Класс «дрейф счётчика бандлов» (backlog из записи ниже) закрыт тем же паттерном, что убил hook-каталог 13.2. P2.2 роадмапа 260705 закрыт полностью.
+
 ### 2026-07-06 — F1-F5 исправлены (код → доки)
 - Код: F3 (docstring-шапка enforcer), F4 (metadata.stats 9/7→8/2 = 38). F1 (счётчики триады 53/52→66 ×4 места + ungrouped 7→21).
 - Доки: F2 (дроп-нота 29.4 experience/conversation), F5 (шапка 260705 98/66).
