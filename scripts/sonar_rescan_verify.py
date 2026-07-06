@@ -115,6 +115,52 @@ def last_analysis_dt(host, project, token):
         return None
 
 
+def branches_analysis_dt(host, project, token):
+    """Свежайший analysisDate по веткам (project_branches/list).
+
+    P0.1 (roadmap 260706, I4): во время финализации Compute Engine project_analyses?ps=1
+    отдаёт ПРЕДЫДУЩИЙ анализ, а branches.analysisDate уже свежий → freshness берём как
+    max двух источников. Ошибка/пусто → None."""
+    try:
+        d = api(host, f"/api/project_branches/list?project={urllib.parse.quote(project)}", token)
+        dts = [parse_dt(b.get("analysisDate")) for b in d.get("branches", [])]
+        dts = [x for x in dts if x is not None]
+        return max(dts) if dts else None
+    except Exception:
+        return None
+
+
+def wait_ce(host, project, token, timeout_s, poll_s=5.0):
+    """Ждёт финализацию Compute Engine: pending==0 И inProgress==0 (P0.1, I4 roadmap 260706).
+
+    Сканер завершается (exit 0) ДО того, как CE допишет анализ (минуты на большом
+    проекте) → без ожидания verify видит предыдущий анализ → ложный scan_stale.
+    True = CE свободен; False = таймаут (честный stale-путь + подсказка). timeout_s<=0 = не ждать.
+    Транзиентные ошибки API не прерывают ожидание (ждём до дедлайна)."""
+    if timeout_s <= 0:
+        return True
+    deadline = time.monotonic() + timeout_s
+    while True:
+        try:
+            st = api(
+                host,
+                f"/api/ce/activity_status?component={urllib.parse.quote(project)}",
+                token,
+                timeout=10,
+            )
+            if int(st.get("pending", 0)) == 0 and int(st.get("inProgress", 0)) == 0:
+                return True
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return True  # проекта ещё нет (первый прогон/опечатка) — CE ждать нечего (R1)
+            # прочие HTTP-коды — как транзиент, ждём до дедлайна
+        except Exception:
+            pass  # транзиент (рестарт/индексация) — продолжаем до дедлайна
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(poll_s)
+
+
 # Per-file component_exists/blocker_critical_count (кириллический component-key → Sonar API 500,
 # reference-sonar-cyrillic-component-api) заменены project-level запросами ниже: ключи файлов
 # приходят в теле ответа (UTF-8) и матчатся локально по суффиксу пути — без 500.
@@ -255,6 +301,13 @@ def main() -> int:
     ap.add_argument("--project", default="upravlenie-transportom-plk")
     ap.add_argument("--severities", default="BLOCKER,CRITICAL")
     ap.add_argument("--token", default=os.environ.get("SONAR_TOKEN"))
+    ap.add_argument(
+        "--wait-ce",
+        type=float,
+        default=120.0,
+        dest="wait_ce",
+        help="сек ожидания финализации Compute Engine перед freshness-проверкой (0 = не ждать)",
+    )
     a = ap.parse_args()
     severities = [s for s in a.severities.split(",") if s]
     now = datetime.now()
@@ -294,7 +347,14 @@ def main() -> int:
         print(f"sonar-rescan: SonarQube недоступен ({a.host}) — skip (гейт не блокирует)")
         return 0
 
+    # P0.1: дождаться финализации CE (иначе ложный stale — сканер exit 0 ≠ анализ дописан)
+    if not wait_ce(a.host, a.project, a.token, a.wait_ce):
+        print(f"  ⚠ CE ещё обрабатывает анализ (ждали {a.wait_ce:.0f}с) — freshness может отстать")
+
     last_an = last_analysis_dt(a.host, a.project, a.token)
+    br_an = branches_analysis_dt(a.host, a.project, a.token)
+    if br_an is not None and (last_an is None or br_an > last_an):
+        last_an = br_an  # branches обновляется атомарнее project_analyses (I4)
     nm = newest_mtime(PROJECT_ROOT, changed)
     scan_stale = bool(last_an is None or (nm and last_an.timestamp() < nm))
 
