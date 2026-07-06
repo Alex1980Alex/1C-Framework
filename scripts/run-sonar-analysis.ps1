@@ -143,7 +143,9 @@ if ($splitOn) {
     if ($LASTEXITCODE -ne 0 -or -not $regJson) {
         Write-Host "FATAL: sonar_projects.py --list-json не вернул реестр" -ForegroundColor Red; exit 2
     }
-    $registry = @($regJson | ConvertFrom-Json)
+    # PS 5.1: ConvertFrom-Json отдаёт JSON-массив как ОДИН Object[] → НЕ оборачивать @()
+    # (иначе $registry = [Object[3]], $proj в foreach = весь массив → $proj.root = Object[]).
+    $registry = $regJson | ConvertFrom-Json
     if ($Project -and $Project -ne "all") {
         $registry = @($registry | Where-Object { $_.key -eq $Project })
         if (-not $registry) { Write-Host "FATAL: проект '$Project' не в реестре" -ForegroundColor Red; exit 2 }
