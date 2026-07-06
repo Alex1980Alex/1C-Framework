@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-## 2026-06-30 — Auto-promoted: GKSTCPLK-2567 п.3 (ИБTransportManagementDevelop): 
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `GKSTCPLK-2567 п.3 (ИБTransportManagementDevelop): ` (confidence: 0.81)
-- Draft: `docs/wiki/drafts/gkstcplk-2567-3-transportmanagementdevelop-.md`
-
-**Status:** Pending review
-
 ---
 
 ## 2026-07-05 — Auto-promoted: [KNOWN-ISSUE · Sonar BLOCKER · ИБTransportManageme
@@ -56,6 +47,39 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - Pattern: `Opus = Planner/Reviewer, Z.AI = Coder` (confidence: 0.81)
 - Draft: `docs/wiki/drafts/opus--plannerreviewer-zai--coder.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-07-07 — Auto-promoted: GKSTCPLK-2637 «Исправление замечаний SonarQube» (б
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `GKSTCPLK-2637 «Исправление замечаний SonarQube» (б` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/gkstcplk-2637---sonarqube-.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-07-07 — Auto-promoted: Agent model selection and delegation rules
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `Agent model selection and delegation rules` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/agent-model-selection-and-delegation-rules.md`
+
+**Status:** Pending review
+
+---
+
+## 2026-07-07 — Auto-promoted: GKSTCPLK-2574 REQ-2 (подбор получателей в шаблоне,
+
+**Event:** L2 pattern promoted to wiki draft
+
+- Pattern: `GKSTCPLK-2574 REQ-2 (подбор получателей в шаблоне,` (confidence: 0.81)
+- Draft: `docs/wiki/drafts/gkstcplk-2574-req-2----.md`
 
 **Status:** Pending review
 
@@ -474,27 +498,3 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 - Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
 - Files changed: 3
-- Summary: Session 2026-07-01. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Changed 3 files in TransportManagementDevelop_SVETLY/Конфигурация, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ransportManagementDevelop_SVETLY/Конфигурация. Commit: chore: auto-commit .pipeline-state.json, pipeline.md, Конфигурация +1 more. Commit: docs(1c-doc-research): re-verify кэш «видимость шаблона ШаблоныСообщений» (GKSTCPLK-2574). Commit: fix(sonar): -Xmx6g для JVM движка анализа — устранение OOM-краша на больших конфигах
-
-
-## 2026-07-02 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
-- Files changed: 3
-- Summary: Session 2026-07-02. Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome, 1c-mcp-crud, implement-1c-task, analyze-1c-task-v2. Changed 3 files in TransportManagementDevelop_SVETLY/Конфигурация, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ransportManagementDevelop_SVETLY/Конфигурация. Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore(submodules): bump ИБTransport gitlink — REQ-1.3 форма ВладелецШаблона fix (dd51411). Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС
-
-
-## 2026-07-03 — Session Summary
-
-**Event:** Auto-saved session
-
-## 2026-07-06 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: audit-docs, bsl-reindex, framework-config, tech-research, evaluation-benchmark
-- Files changed: 3
-- Summary: Session 2026-07-06. Skills: audit-docs, bsl-reindex, framework-config, tech-research, evaluation-benchmark, architecture-research, claude-api, code-verify. Changed 3 files in .claude/worktrees, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: docs(260705 skills P1): финализация — 13.2 регенерация + реестр триады + roadmap P1 DONE. Commit: chore: auto-save SKILL.md. Commit: chore: auto-commit SKILL.md, agent-a4e6ce0279d63bbb6, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +2 more
-
