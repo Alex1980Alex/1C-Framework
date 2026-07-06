@@ -2642,6 +2642,41 @@
         "codepilot1c"
       ],
       "optional": []
+    },
+    "whisper-transcription": {
+      "keywords": [
+        "whisper",
+        "транскрибировать аудио",
+        "расшифровать видео",
+        "речь в текст",
+        "субтитры из видео",
+        "generate_subtitles",
+        "transcribe_audio",
+        "whisper модель",
+        "batch транскрипция",
+        "SRT из аудио",
+        "транскрипция"
+      ],
+      "weighted_keywords": {
+        "whisper": 5,
+        "transcribe_audio": 5,
+        "generate_subtitles": 5,
+        "транскрибировать аудио": 4,
+        "расшифровать видео": 4,
+        "речь в текст": 4,
+        "субтитры из видео": 4,
+        "транскрипция": 3
+      },
+      "utterances": [
+        "транскрибируй это аудио",
+        "сделай субтитры из видео",
+        "расшифруй запись встречи",
+        "переведи речь в текст"
+      ],
+      "skills": [
+        "whisper-transcription"
+      ],
+      "optional": []
     }
   },
   "min_score_gap": 2,
