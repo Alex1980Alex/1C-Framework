@@ -40,6 +40,15 @@ def test_is_config_bsl_rejects_non_src_and_non_bsl():
     assert not srs._is_config_bsl("ИБ/Конфигурация/src/README.md")  # не .bsl
 
 
+def test_is_config_bsl_excludes_configuration_tree_entirely():
+    # ADR-048 (approve 2026-07-06): configuration/<JIRA> = ведение задач, вне Sonar-скоупа
+    # и вне детекта гейта — даже .bsl под /src/ исторических дампов конфигураций
+    assert not srs._is_config_bsl(
+        "configuration/260304_JIRA/Конфигурация/src/CommonModules/x/Module.bsl"
+    )
+    assert not srs._is_config_bsl("CONFIGURATION/999_X/Конфигурация/src/M/Module.bsl")
+
+
 # ── evaluate: ветки решения гейта ────────────────────────────────────────────
 def _patch(monkeypatch, changed, state, newest=0.0):
     monkeypatch.setattr(srs, "changed_bsl_paths", lambda root: set(changed))
