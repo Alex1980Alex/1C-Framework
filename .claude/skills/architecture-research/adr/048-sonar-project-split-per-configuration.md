@@ -24,13 +24,15 @@ newness живёт на issue creationDate). Первоначальный отк
 1. **Реестр `scripts/sonar_projects.py`** (единственный источник истины, stdlib-only — импортируем и
    из verify, и из ps1 через `--list-json`):
    - Стабильные: `utp-ib` ← `ИБTransportManagementDevelop/Конфигурация`; `utp-svetly` ←
-     `TransportManagementDevelop_SVETLY/Конфигурация`.
+     `TransportManagementDevelop_SVETLY/Конфигурация`; **`utp-mfm` ← `MFM/Конфигурация`**
+     (УправлениеМатериальнымиПотоками; A7 вар.а, решение пользователя — сканируется, слепых зон нет).
    - `configuration/<JIRA>/…` — **ИСКЛЮЧЕНЫ из Sonar-скоупа И из детекта гейта целиком**
      (approve-поправка пользователя 2026-07-06: это папки ведения задач — ТЗ/доки/исторические
-     дампы, живой код не ведётся). Реестр = ровно **два** проекта. Возврат корня при
-     возобновлении правок — одна запись в реестре (+ снять префикс-фильтр в `_is_config_bsl`).
+     дампы, живой код не ведётся). Реестр = **три** проекта. Возврат конфигурации в скоуп —
+     одна запись в `PROJECTS`. `external/`/`tools/` (не продакшн-конфиги: BSL-расширение MCP,
+     тест-фикстуры) — тоже вне детекта гейта (A8, ревью P3.A).
      ~~Вариант `utp-cfg-<цифровой префикс>` авто-проектов~~ — отклонён пользователем.
-   - API: `projects()`, `project_for_path(rel) → (key, rel_in_root) | None`, CLI `--list-json`.
+   - API: `projects()`, `roots()`, `project_for_path(rel) → (key, root, rel_in_root) | None`, CLI `--list`/`--list-json`. **✅ реализован** ([`scripts/sonar_projects.py`](../../../../scripts/sonar_projects.py)).
 2. **Скан:** `run-sonar-analysis.ps1 -Project <key|all>` — цикл по реестру; на проект:
    `-Dsonar.projectKey=<key>`, `-Dsonar.projectBaseDir=<корень конфига>`, `-Dsonar.sources=.`.
    `projectBaseDir` = корень сабмодуля → сканер работает в одном git work-tree → **ожидаемая починка

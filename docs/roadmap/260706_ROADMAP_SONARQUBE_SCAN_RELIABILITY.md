@@ -27,7 +27,9 @@
 | A4 | live: `qualityGateStatus=ERROR` на main — server new-code baseline вырожден (new≈total после полных сканов; `baseline_degenerate` verify:217–235 это детектит, гейт независим). Починка сервера — `api/new_code_periods/set` SPECIFIC_ANALYSIS **branch-level** на пре-change анализ ([[reference-sonar-changed-lines-gate]]) — сейчас руками | сервер / verify | Средний (шум soft-QG) |
 | A5 | Конкурентность: сканер сам держит `.scannerwork/.sonar_lock` (два прогона из одного клона не пересекутся); CE-очередь сериализует. Отдельный лок не нужен — справочно | .scannerwork/ | — |
 | A6 | Heap: дефолт `-Xmx6g` (ps1:58–59, верифицирован 2026-06-30); прогон 2026-07-06 шёл на 8g — но падение было от I1 (редирект), не от OOM. Дефолт не менять; env-override уже есть | run-sonar-analysis.ps1 | — |
-| A7 | Ревью P3.A0 (2026-07-06): сабмодуль **`MFM/Конфигурация`** детектится гейтом (`changed_bsl_paths` перечисляет все сабмодули из `.gitmodules`), но НЕ входит в Sonar-скоуп (нет в STABLE_ROOTS) → первая же правка MFM-`.bsl` упрётся в dead-block «не проанализирован». Pre-existing (не регрессия A0) | sonar_sources.py ↔ sonar_rescan_state.py | Средний (латентный до первой правки MFM) |
+| A7 | ~~MFM/Конфигурация детектится, но не сканируется → dead-block~~ **✅ РЕШЕНО 2026-07-06 (вариант а, решение пользователя):** MFM = свой проект **`utp-mfm`** — `sonar_sources.py STABLE_ROOTS += MFM/Конфигурация` (скан в mono сейчас, слепых зон нет), реестр `sonar_projects.py` += utp-mfm, `_is_config_bsl` детектит MFM (не исключает). Слепой зоны/dead-block больше нет | sonar_sources.py · sonar_projects.py · sonar_rescan_state.py | — |
+| A8 | Ревью P3.A (2026-07-06): `_is_config_bsl` детектил `.bsl` в **`external/1c_mcp/src/`** (18) и **`tools/bsl-debug-server/src/`** (158 фикстур), которых нет в скане → латентный dead-block (класс MFM). **✅ закрыт сразу:** `_is_config_bsl` исключает `external/`/`tools/` (не продакшн-конфиги). Pre-existing (не регрессия P3.A) | sonar_rescan_state.py | — |
+| A9 | `-Xmx6g` калибровался на {ИБ+SVETLY+260304}; теперь mono = {ИБ+SVETLY+MFM} — однократно подтвердить EXECUTION SUCCESS полного mono-прогона с MFM (heap) | run-sonar-analysis.ps1 | Низкий (операционный, до первого full-скана) |
 
 ## §3 Карта инструментария (кто что делает)
 
@@ -81,11 +83,13 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 
 ### P3 — Разделение Sonar-проекта по конфигурациям (принято 2026-07-06, [ADR-048](../../.claude/skills/architecture-research/adr/048-sonar-project-split-per-configuration.md))
 
-> Перенесено из §5 решением пользователя. Монопроект → `utp-ib` / `utp-svetly` (**два** проекта; approve-поправка 2026-07-06: `configuration/<JIRA>` **исключён из Sonar-скоупа и детекта гейта целиком** — это папки ведения задач, ТЗ/доки, живой код не ведётся). Ключевой выигрыш: гейтовый скан = только затронутая конфигурация + **per-project `scan_stale`** (правка SVETLY не требует свежести ИБ) + ожидаемая починка SCM blame (projectBaseDir = один git work-tree).
+> Перенесено из §5 решением пользователя. Монопроект → `utp-ib` / `utp-svetly` / `utp-mfm` (**три** проекта; approve-поправки 2026-07-06: `configuration/<JIRA>` **исключён** из Sonar-скоупа и детекта гейта целиком — папки ведения задач; **`MFM/Конфигурация` = свой проект `utp-mfm`**, A7 вар.а — сканируется, слепых зон нет). Ключевой выигрыш: гейтовый скан = только затронутая конфигурация + **per-project `scan_stale`** (правка SVETLY не требует свежести ИБ) + ожидаемая починка SCM blame (projectBaseDir = один git work-tree).
 
 - **P3.A0 Исключение `configuration/` (✅ реализовано 2026-07-06 при approve):** `sonar_sources.py` (`GROWING_PARENTS=[]`, механизм оставлен — возврат одной строкой) + `sonar_rescan_state._is_config_bsl` (префикс-фильтр, гейт не детектит) + 2 unit-теста + докнота 43.9.9. Действует в обоих режимах (сужение скоупа, не часть split-флага). Осознанный риск: будущие правки `.bsl` в `configuration/**/src/` гейт не проверит (принято пользователем).
-- **P3.A Код (opt-in, default OFF):** реестр `scripts/sonar_projects.py` (единственная точка маппинга `path → {key, root}`; CLI `--list-json`) + `run-sonar-analysis.ps1 -Project <key|all>` (цикл, per-project `projectKey`/`projectBaseDir`/`sources=.`) + `sonar_rescan_verify.py` (группировка изменённых по проектам, per-project freshness/issues, state аддитивно `projects:{}`) + обвязка (QG-setup/QG-check/issues_pull циклы). Env `SONAR_SPLIT_PROJECTS` (0 = legacy бит-в-бит). Unit: маппинг, группировка, legacy-паритет. **Открытый пункт (A7): `MFM/Конфигурация`** — решить при реализации реестра: отдельный проект `utp-mfm` ИЛИ явное исключение из детекта (как `configuration/`); до решения правки MFM-`.bsl` упрутся в гейт.
-  *Acceptance:* при флаге OFF поведение неотличимо от текущего; при ON verify правки SVETLY требует свежести только `utp-svetly`. *Оценка:* 3–4 ч.
+- **P3.A Код (opt-in, default OFF):**
+  - **P3.A.registry ✅ реализовано 2026-07-06:** реестр `scripts/sonar_projects.py` (единственная точка маппинга `path → {key, root}` = `utp-ib`/`utp-svetly`/`utp-mfm`; `project_for_path`/`roots`/`--list-json`) + A7 закрыт (MFM в скоупе, `sonar_sources STABLE_ROOTS += MFM`, детект без исключения) + 7 unit (`test_sonar_projects.py`) + правка `test_sonar_rescan_state`. 28/28, ruff, code-verify PASS.
+  - **P3.A.wiring (осталось):** `run-sonar-analysis.ps1 -Project <key|all>` (цикл, per-project `projectKey`/`projectBaseDir`/`sources=.`) + `sonar_rescan_verify.py` (группировка изменённых по проектам через `project_for_path`, per-project freshness/issues, state аддитивно `projects:{}`) + обвязка (QG-setup/QG-check/issues_pull циклы). Env `SONAR_SPLIT_PROJECTS` (0 = legacy бит-в-бит).
+  *Acceptance:* при флаге OFF поведение неотличимо от текущего; при ON verify правки SVETLY требует свежести только `utp-svetly`. *Оценка (wiring):* 2–3 ч.
 - **P3.B Сервер:** первый скан каждого проекта (провижининг, фоном) → pin new-code baseline per project (P2.2 скрипт — пререквизит) → smoke verify на живой правке → проверить SCM Publisher (blame ожидаемо оживает). *Пререквизит: P0.1/P0.2* (те же файлы; без CE-wait smoke флапает). *Оценка:* 1–1.5 ч.
 - **P3.C Переключение:** `SONAR_SPLIT_PROJECTS=1` дефолт в `.env`, CI-цикл (`ci-1c.yml`), docs (гл. 43.9.9 + ноты fix-sonar-task/implement-1c-task), старый проект `upravlenie-transportom-plk` — archived read-only (история worklist), удаление ≥30 дней отдельным решением. *Оценка:* ~1 ч.
 
@@ -100,6 +104,11 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **Свой lock поверх `.sonar_lock`** — остаётся отклонённым: сканер уже сериализует прогоны из одного клона (A5); в split-режиме локи per-project (`.scannerwork` в корне каждого конфига) — коллизий нет.
 
 ## §18 Прогресс
+
+### 2026-07-06 — P3.A.registry + A7 решён (utp-mfm, вар.а); P0 доказан live
+
+- **A7 (вар.а, решение пользователя):** MFM/Конфигурация = свой проект **`utp-mfm`** (сканировать, слепых зон нет). Реестр `scripts/sonar_projects.py` (utp-ib/utp-svetly/utp-mfm, `project_for_path`/`roots`/`--list-json`); `sonar_sources STABLE_ROOTS += MFM` (скан в mono сейчас); `_is_config_bsl` детектит MFM (не исключает). 7 unit + правка rescan-state теста; 28/28, ruff, code-verify PASS.
+- **P0 доказан live:** `wait_ce` idle→True за 0.04с, `branches_analysis_dt`==`analyses ps=1` (max-freshness), 404-fast-path мгновенный, сервер up. Осталось P3.A.wiring (ps1 `-Project` + verify per-project).
 
 ### 2026-07-06 — P0 реализован (wait-ce + fail-fast ps1); попутно BOM-фикс ps1
 

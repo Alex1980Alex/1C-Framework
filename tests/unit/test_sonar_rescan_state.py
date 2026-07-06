@@ -49,6 +49,23 @@ def test_is_config_bsl_excludes_configuration_tree_entirely():
     assert not srs._is_config_bsl("CONFIGURATION/999_X/Конфигурация/src/M/Module.bsl")
 
 
+def test_is_config_bsl_detects_registry_configs_incl_mfm():
+    # ADR-048 A7 вар.а: MFM/Конфигурация — свой проект utp-mfm, В скоупе → детектится
+    # (не dead-lock, потому что сканируется: sonar_sources STABLE_ROOTS += MFM)
+    assert srs._is_config_bsl("MFM/Конфигурация/src/CommonModules/x/Module.bsl")
+    assert srs._is_config_bsl("ИБTransportManagementDevelop/Конфигурация/src/M/Module.bsl")
+    assert srs._is_config_bsl("TransportManagementDevelop_SVETLY/Конфигурация/src/M/Module.bsl")
+    # configuration/<JIRA> (ведение задач) по-прежнему исключён
+    assert not srs._is_config_bsl("configuration/260304_JIRA/Конфигурация/src/M/Module.bsl")
+
+
+def test_is_config_bsl_excludes_nonproduct_trees():
+    # НЕ продакшн-конфиги в Sonar-скоупе → не детектим (иначе detected-but-not-scanned
+    # dead-block): external/ (BSL-расширение MCP), tools/ (dev-тулинг + тест-фикстуры .bsl)
+    assert not srs._is_config_bsl("external/1c_mcp/src/1c_ext/CommonModules/x/Module.bsl")
+    assert not srs._is_config_bsl("tools/bsl-debug-server/src/test/resources/a/src/M.bsl")
+
+
 # ── evaluate: ветки решения гейта ────────────────────────────────────────────
 def _patch(monkeypatch, changed, state, newest=0.0):
     monkeypatch.setattr(srs, "changed_bsl_paths", lambda root: set(changed))

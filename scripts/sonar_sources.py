@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[1]  # repo root
 STABLE_ROOTS = [
     "ИБTransportManagementDevelop/Конфигурация",  # главный конфиг (продукт)
     "TransportManagementDevelop_SVETLY/Конфигурация",  # конфиг базы SVETLY (тот же продукт, отд. база)
+    "MFM/Конфигурация",  # УправлениеМатериальнымиПотоками (проект utp-mfm; ADR-048 A7 вар.а —
+    # скан в mono сейчас, без слепых зон; в split-режиме → отдельный проект utp-mfm)
     # "src/bsl",  # framework-дамп BSL — отдельный продукт; включить при необходимости
 ]
 

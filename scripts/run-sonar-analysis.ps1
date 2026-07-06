@@ -44,7 +44,7 @@ Write-Host "`n[1/3] Quality gate setup..." -ForegroundColor Cyan
 & $py "$ProjectRoot\scripts\sonar_setup_quality_gate.py" --host $Host_
 if ($LASTEXITCODE -ne 0) { Write-Host "FATAL: QG setup failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit 2 }
 
-# 3. динамический список источников (скоуп = живые конфигурации: ИБ+SVETLY; ADR-048)
+# 3. динамический список источников (скоуп = живые конфигурации: ИБ+SVETLY+MFM; ADR-048/A7)
 Write-Host "`n[2/3] Discover BSL sources..." -ForegroundColor Cyan
 $sources = (& $py "$ProjectRoot\scripts\sonar_sources.py") -join ","
 if ($LASTEXITCODE -ne 0 -or -not $sources) {
@@ -66,7 +66,7 @@ $java = (Get-ChildItem "C:\Program Files\1C\1CE\components\axiom-jdk-full-17*\bi
 if (-not $java) { $java = "java" }   # fallback: system java для CLI-bootstrap
 
 # Куча JVM движка анализа. bsl-language-server-диагностики на больших конфигах (3 корня
-# ИБ+SVETLY+260304, ~33k символов) исчерпывают дефолтную кучу (~1 ГБ) → плагин communitybsl
+# ИБ+SVETLY+MFM, ~33k+ символов) исчерпывают дефолтную кучу (~1 ГБ) → плагин communitybsl
 # валит каждую диагностику ("Diagnostic computation error") и движок падает ДО старта
 # (прошлый "config-wide краш" = ранний OOM, не дефект кода). -Xmx6g верифицирован 2026-06-30
 # (полный прогон 3 конфигов → EXECUTION SUCCESS, ANALYSIS SUCCESSFUL). Tunable: задать
