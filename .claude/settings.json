@@ -36,7 +36,6 @@
       "mcp__memory-orchestrator__*",
       "mcp__vector-memory__*",
       "mcp__skill-learning__*",
-      "mcp__task-master-ai__*",
       "mcp__openspec-mcp__*",
       "mcp__obsidian-mcp__*",
       "mcp__claude_ai_Gmail__*",

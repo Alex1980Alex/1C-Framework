@@ -238,25 +238,6 @@ categories:
         type: "npx"
         timeout: 30000
 
-      slack:
-        command: "npx"
-        args: ["-y", "@modelcontextprotocol/server-slack"]
-        env:
-          SLACK_BOT_TOKEN: "xoxb-xxx"
-          SLACK_TEAM_ID: "T00000000"
-        description: "Slack integration (Native NPX) - требует API key"
-        type: "npx"
-        timeout: 30000
-
-      google-maps:
-        command: "npx"
-        args: ["-y", "@modelcontextprotocol/server-google-maps"]
-        env:
-          GOOGLE_MAPS_API_KEY: "xxx"
-        description: "Google Maps API (Native NPX) - требует API key"
-        type: "npx"
-        timeout: 30000
-
   # ═══════════════════════════════════════════════════════════════════
   # BROWSER - Браузерная автоматизация
   # ═══════════════════════════════════════════════════════════════════

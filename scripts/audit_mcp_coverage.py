@@ -65,7 +65,6 @@ COVERAGE = {
     "openspec-mcp": "intentional",  # slash /opsx:*, _unrouted_intentional
     "pdf-vector-graph": "via:indexing-pipeline",
     "scene-detect": "skill:scene-detect-mcp",
-    "task-master-ai": "dead",  # 0 использований в hooks/scripts; нативный TaskCreate
     "whisper": "skill:whisper-transcription",
     # --- lazy-mcp-only (за прокси infra/lazy-mcp, on-demand; не в .mcp.json напрямую) ---
     #   redundant = дублируется нативным тулом/другим MCP → скилл не нужен, НЕ пробел
@@ -86,8 +85,6 @@ COVERAGE = {
     "puppeteer": "redundant",  # claude-in-chrome
     "playwright": "redundant",  # claude-in-chrome / its-research
     "chrome-devtools": "redundant",  # claude-in-chrome
-    "slack": "dead",  # placeholder-ключ xoxb-xxx (не сконфигурирован)
-    "google-maps": "dead",  # placeholder-ключ xxx (не сконфигурирован)
 }
 
 
