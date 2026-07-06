@@ -392,6 +392,11 @@ jobs:
           python-version: "3.11"
       - name: Lint skill catalog (blocking on errors)
         run: python scripts/lint_skills.py --strict
+      - name: Verify triad SKILL.md counters (bundles/skills, self-updating)
+        # audit 260706: self-updating guard против «дрейфа счётчика бандлов» реестра
+        # триады — сверяет ЗАЯВЛЕННЫЕ в SKILL.md числа с фактом (skill-router-config.json).
+        # Не хардкодит эталон: растёт каталог -> правится доки, guard ловит рассинхрон.
+        run: python scripts/gen_hooks_catalog.py --verify-doc
 
   skill-router-gt-lint:
     name: Skill Router GT Lint (schema + no-leakage — blocking)
