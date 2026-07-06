@@ -1,0 +1,97 @@
+# 260706 — Надёжность SonarQube-контура (скан → CE → verify → гейт)
+
+> Разбор пяти инцидентов live-прогона 2026-07-06 (закрытие Sonar-гейта GKSTCPLK-2634 на машине DESKTOP-TNU600C)
+> + аудит всего Sonar-инструментария репо. Все корни подтверждены по коду (file:line) и live-запросами к
+> SonarQube CB 26.6 (`api/ce/activity_status`, `api/project_branches/list`, `.scannerwork/report-task.txt`).
+> Связанные решения: ADR-021 (wiring), ADR-033 (remediation), ADR-034 (R6/R7), ADR-037 (mandatory гейт), ADR-042 (Sonar MCP).
+
+## §1 Инциденты прогона 2026-07-06 и их корни
+
+| # | Симптом (как проявилось) | Корень | Доказательство | Тяжесть |
+|---|---|---|---|---|
+| **I1** | Скан «упал» на первой же строке `Diagnostic computation error` (не-фатальный варнинг bsl-сенсора) при запуске с `*>&1`/`2>&1`; без редиректа проходит | PS 5.1: редирект stderr нативного exe оборачивает каждую stderr-строку в `NativeCommandError`; внутри скрипта действует `$ErrorActionPreference="Stop"` (`run-sonar-analysis.ps1:4`) → первая же stderr-строка терминирует | ps1:4 + ps1:61 (native `& $java -jar $cli`); повтор без редиректа — EXECUTION SUCCESS | Высокая (ломает любой лог-захват) |
+| **I2** | Лог скана в UTF-16 (не грепается штатно) | PS 5.1 `>` = `Out-File` c дефолтом UTF-16 LE; `[Console]::OutputEncoding=UTF8` (ps1:5) на redirect-кодировку не влияет | семантика PS 5.1 | Низкая |
+| **I3** | Повторный скан «прошёл» (exit 0), но фактически ничего не сканировал — источники/токен не найдены | Компаунд: (а) `$ProjectRoot = git rev-parse --show-toplevel` (ps1:8) **зависит от cwd** — из сабмодуля возвращает корень сабмодуля; (б) `.env` ищется от него (ps1:12) → токен не загружен → ветка «SONAR_TOKEN не задан» = **exit 0** (ps1:43–46); (в) `$LASTEXITCODE` helper-вызовов python (ps1:34, ps1:38) не проверяется, пустые `$sources` не гейтятся | ps1:8,12,34,38,43–46; `sonar_sources.py:25` сам якорится на своё расположение (`parents[1]`) — подводит именно ps1-обвязка | **Критическая** (тихий no-op под маской успеха) |
+| **I4** | verify → ложный FAIL «анализ старше правок» сразу после успешного скана; через минуты — PASS без изменений | **Гонка финализации Compute Engine**: сканер завершается (exit 0) до того, как CE допишет анализ; `sonar_rescan_verify.py` берёт свежесть из `project_analyses/search?ps=1` (`last_analysis_dt`, verify:107–115) **без ожидания CE** → отдаёт предыдущий анализ → `scan_stale=True` (verify:299) | live: во время инцидента `project_analyses ps=1`=05:19:03 при `project_branches/list`=05:29:35; после финализации ps=2 показывает оба (05:29:35, 07:25:40); `ce/activity_status` доступен (`{"pending":0,"failing":0,"inProgress":0}`); сканер пишет `.scannerwork/report-task.txt` с `ceTaskId` — **не используется никем** | **Критическая** (ложный блок гейта ADR-037) |
+| **I5** | Ad-hoc `curl` по файлу с кириллическим путём → `errors`/`total: None` | Ручное построение `componentKeys` без корректного URL-encode/формата ключа (`project:relative/path`); verify это уже решает (per-file `quote()` verify:180–186 + project-tree матчинг `_match_component` verify:238–249 + project-wide fallback) | транскрипт + verify:173–249 | Средняя (только диагностика руками) |
+
+**Важно (вывод по целостности):** гейт ADR-037 в обоих инцидентах **не пропустил брак** — verify честно давал FAIL (stale) и не закрывался, пока не появился реально свежий анализ. Пострадала не корректность, а **время закрытия задачи** (часы вместо минут) и доверие к сигналам (ложный stale, обманчивый exit 0).
+
+## §2 Дополнительные находки аудита (сверх инцидентов)
+
+| # | Находка | Где | Риск |
+|---|---|---|---|
+| A1 | Helper-python зовётся голым `python` (ps1:34,38), тогда как QG-check — правильно через `.venv\Scripts\python.exe` (ps1:73). Store-alias → exit 49/чужое окружение ([[feedback-venv-python-windows]]) | run-sonar-analysis.ps1 | Средний |
+| A2 | `_paged` cap: `page_size=500 × cap_pages=60` = 30k компонентов; проект ~14.4k файлов — сейчас ок, при росте >30k молчаливое усечение `analyzed` → ложное «не проанализирован» | sonar_rescan_verify.py:123–160 | Низкий (отложенный) |
+| A3 | Freshness по fs mtime: пересохранение файла без изменений (mtime bump) после скана → ложный stale. Осознанный fail-safe компромисс — документировать | sonar_rescan_state.py:194–205 + verify:298–299 | Низкий |
+| A4 | live: `qualityGateStatus=ERROR` на main — server new-code baseline вырожден (new≈total после полных сканов; `baseline_degenerate` verify:217–235 это детектит, гейт независим). Починка сервера — `api/new_code_periods/set` SPECIFIC_ANALYSIS **branch-level** на пре-change анализ ([[reference-sonar-changed-lines-gate]]) — сейчас руками | сервер / verify | Средний (шум soft-QG) |
+| A5 | Конкурентность: сканер сам держит `.scannerwork/.sonar_lock` (два прогона из одного клона не пересекутся); CE-очередь сериализует. Отдельный лок не нужен — справочно | .scannerwork/ | — |
+| A6 | Heap: дефолт `-Xmx6g` (ps1:58–59, верифицирован 2026-06-30); прогон 2026-07-06 шёл на 8g — но падение было от I1 (редирект), не от OOM. Дефолт не менять; env-override уже есть | run-sonar-analysis.ps1 | — |
+
+## §3 Карта инструментария (кто что делает)
+
+```
+run-sonar-analysis.ps1 ──┬─ sonar_setup_quality_gate.py (G18, идемпотентно)
+  (скан-оркестратор)     ├─ sonar_sources.py (G19, динамические корни; сам якорится на scripts/..)
+                         ├─ scanner-cli (-Dsonar.projectBaseDir=<root>) → .scannerwork/report-task.txt (ceTaskId) → CE
+                         └─ sonar_quality_gate_check.py (R6 CaYC; soft | SONAR_QG_HARD=1)
+sonar_rescan_verify.py ──── ADR-037 дельта-verify (changed-lines) → .claude/cache/onec-sonar-rescan-state.json
+  └─ shared/sonar_rescan_state.py (DRY-контракт: детект .bsl, diff-строки, parse_dt, evaluate)
+onec-task-completion-stop.py / gate_policies.py ── Stop-гейт читает state (+parity-тесты)
+sonar_issues_pull.py ── worklist MD/JSON/SARIF (+remediation_class) для /fix-sonar-task (ADR-033)
+CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.sonarqube.yml · setup-sonar.ps1
+```
+
+## §4 Дорожная карта исправлений
+
+### P0 — ложные сигналы гейта (сделать первыми)
+
+- **P0.1 CE-wait в verify (гонка I4).** `sonar_rescan_verify.py`: перед freshness-проверкой ждать финализацию CE — poll `GET /api/ce/activity_status?component=<project>` до `pending==0 && inProgress==0` (флаг `--wait-ce <сек>`, default 120, интервал 5с; таймаут → честный `scan_stale`-путь с подсказкой «CE ещё обрабатывает»). Freshness брать как **max**(`project_analyses/search?ps=1`, `project_branches/list.analysisDate`) — branches обновляется атомарнее.
+  *Acceptance:* сценарий «скан exit 0 → немедленно verify» больше не даёт ложный stale (интеграционно: verify сразу после run-sonar-analysis.ps1 → PASS с первого раза).
+  *Оценка:* 1–1.5 ч (код + unit на парсинг статусов + прогон).
+
+- **P0.2 Fail-fast + cwd-независимый корень в ps1 (I3).** `run-sonar-analysis.ps1`: (а) первичный якорь корня — `$PSScriptRoot\..` (скрипт лежит в `scripts/`), `git rev-parse` только как sanity/fallback + проверка `Test-Path "$ProjectRoot\scripts\sonar_sources.py"`; (б) отсутствие токена = **exit 2** с красным сообщением (не exit 0); reachability-DOWN оставить exit 0 (осознанный локальный комфорт), но печатать маркер `SCAN-SKIPPED`; (в) после helper-python проверять `$LASTEXITCODE`, пустые `$sources` → exit 2.
+  *Acceptance:* запуск из каталога сабмодуля даёт либо корректный скан, либо громкий exit≠0; «exit 0 без скана» невозможен кроме явного `SCAN-SKIPPED` (сервер DOWN).
+  *Оценка:* ~1 ч.
+
+### P1 — операбельность и следующая петля
+
+- **P1.1 CE-handoff по `report-task.txt` в ps1 (канонический механизм).** После сканера прочитать `.scannerwork/report-task.txt` → poll `api/ce/task?id=<ceTaskId>` до `SUCCESS|FAILED|CANCELED` (таймаут ~10 мин) → печать `analysisId`/статуса; `FAILED` → exit 1. Осознанно **не** использовать `sonar.qualitygate.wait=true` — он связал бы exit-код сканера с QG (у нас QG сознательно soft, R6) и имеет свой 300с-таймаут.
+  *Acceptance:* ps1 завершается только после финализации CE; verify после него никогда не видит in-progress.
+  *Оценка:* ~1 ч. (После P1.1 `--wait-ce` в verify становится страховкой для ручных прогонов.)
+
+- **P1.2 Встроенный `-LogFile` (I1+I2).** ps1-параметр `-LogFile <path>`: скрипт сам пишет UTF-8-лог (native-safe: `cmd /c "... > log 2>&1"` для java-вызова либо `Start-Process -RedirectStandardOutput/-RedirectStandardError`), вокруг native-блока локально `$ErrorActionPreference='Continue'` (контроль по `$LASTEXITCODE`, ps1:66 уже есть). Вызывающим **никогда** не требуется PS-редирект.
+  *Acceptance:* `run-sonar-analysis.ps1 -LogFile x.log` даёт полный UTF-8 лог; запуск с внешним `*>&1` больше не роняет скрипт (EAP локализован).
+  *Оценка:* 0.5–1 ч.
+
+- **P1.3 Диагностический подрежим verify (I5).** `sonar_rescan_verify.py --show-file <rel>`: печатает разрешённый `component_key` + unresolved issues файла (та же машинерия `_match_component`/`file_issue_lines`) — оператору не нужен ручной curl с кириллическим ключом.
+  *Acceptance:* `--show-file "TransportManagementDevelop_SVETLY/.../ManagerModule.bsl"` → ключ + список issue без ошибок кодировки.
+  *Оценка:* ~0.5 ч.
+
+- **P1.4 `.venv`-python для helper-вызовов (A1).** ps1:34,38 → `& "$ProjectRoot\.venv\Scripts\python.exe"` (как ps1:73), fallback на `python` при отсутствии venv.
+  *Оценка:* 0.2 ч.
+
+### P2 — гигиена и отложенное
+
+- **P2.1 Cap-лог `_paged` (A2):** при `len(out) >= page_size*cap_pages` печатать «⚠ усечение»; поднять cap до 100 стр.
+- **P2.2 Скрипт baseline (A4):** `scripts/sonar_set_new_code_baseline.py --to-latest-before <ISO|analysisId>` — обёртка `api/new_code_periods/set` (branch-level SPECIFIC_ANALYSIS, принимается ТОЛЬКО branch-level — project-level set = тихий no-op, проверять `/list`); убирает ручной шаг починки вырожденного baseline и шум soft-QG ERROR.
+- **P2.3 Документация:** гл. 43.9.9 (статанализ) — раздел «Операционные ловушки» (I1–I5: не редиректить ps1; запуск из корня/якорь; CE-асинхронность; --show-file), синхронно с [[reference-sonar-changed-lines-gate]].
+- **P2.4 ADR-042 (Sonar MCP) — переоценка после P0/P1:** hand-rolled urllib-клиент в verify растёт; если появится ещё ≥2 API-потребителя — вернуться к adoption-решению MCP-сервера Sonar (сейчас zero-dep оправдан для Stop-хука).
+
+**Матрица приоритетов:** P0.1+P0.2 устраняют оба «критических» корня (ложный stale + тихий no-op) ≈ 2–2.5 ч; P1 целиком ≈ 2–3 ч; P2 — по мере касания. Итого активная часть ≈ **4–5.5 ч** (0.5–0.7 идеального дня).
+
+**Порядок внедрения:** P0.1 → P0.2 → P1.1 → P1.2 → P1.3/P1.4 (независимы) → P2. Каждый пункт — через пайплайн (правки Python/ps1 = обычный code-verify цикл; это инфраструктура фреймворка, не 1С-код — Sonar-гейт ADR-037 на неё не распространяется, обычный `code-verify` PASS обязателен).
+
+## §5 Что НЕ делаем (и почему)
+
+- **Разделение Sonar-проекта на 3 конфигурации** — снимает «полный скан ради одного файла» (~минуты на 14.4k файлов), но: ломает единый ключ компонентов (`upravlenie-transportom-plk:<path>`) во всех потребителях (verify, issues_pull, гейт, worklist-история), требует пере-baseline каждого проекта и правок CI. Стоимость > выгоды при текущей частоте сканов. Пересмотреть, если скан станет узким местом (>3–4 прогонов/день).
+- **`sonar.qualitygate.wait=true`** — см. P1.1 (связывает сканер с QG-политикой, у нас QG сознательно soft).
+- **Свой lock поверх `.sonar_lock`** — сканер уже сериализует прогоны из одного клона (A5).
+
+## §18 Прогресс
+
+### 2026-07-06 — Роадмап создан (разбор инцидентов SQ-прогона + аудит инструментария)
+
+- Пять инцидентов live-прогона (GKSTCPLK-2634 гейт) разобраны до корней с file:line; все корни подтверждены кодом и live-API (`ce/activity_status`, `project_branches/list`, `report-task.txt` с ceTaskId).
+- Аудит: +6 доп. находок (A1–A6), карта инструментария, матрица P0–P2 (активная часть ≈ 4–5.5 ч).
+- Ключевой вывод: гейт ADR-037 брак не пропускал — инциденты били по времени закрытия и доверию к сигналам (ложный stale I4, тихий no-op exit 0 I3). P0 закрывает оба.
