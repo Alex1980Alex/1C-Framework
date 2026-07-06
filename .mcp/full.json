@@ -99,15 +99,6 @@
       },
       "timeout": 60000
     },
-    "task-master-ai": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "task-master-ai"
-      ],
-      "cwd": "C:\\1С-Framework",
-      "timeout": 180000
-    },
     "memory-orchestrator": {
       "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
       "args": [
