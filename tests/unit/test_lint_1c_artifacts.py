@@ -93,6 +93,45 @@ def test_thin_impl_flagged():
     assert "Отклонения" in miss and "МЕТАДАННЫЕ" in miss  # ключевые core-секции пойманы
 
 
+_IMPL_METADATA_MENTION_NO_MSG = """
+# GKSTCPLK-1234 — Прогресс
+## Статус: Завершено
+## Выполненные точки модификации
+### Точка 1: ... EDT errors: 0
+## Отклонения от ANALYSIS-REPORT: нет
+## Результаты тестирования
+Тест 1: PASS
+Метаданные объекта проверены через get_metadata.
+"""
+
+_IMPL_WITH_COMMIT_SECTION = """
+# GKSTCPLK-1234 — Прогресс
+## Статус: Завершено
+## Выполненные точки модификации
+### Точка 1: ...
+## Отклонения от ANALYSIS-REPORT: нет
+## Результаты тестирования
+Тест 1: PASS
+## Сообщение коммита
+feat: Доработано X
+Как было: ...
+Как стало/список результатов: ...
+МЕТАДАННЫЕ: GKSTCPLK-1234
+"""
+
+
+def test_impl_metadata_mention_without_commit_message_flagged():
+    # tightening: голое упоминание «метаданные» (без футера МЕТАДАННЫЕ:JIRA и без секции
+    # «## Сообщение коммита») больше НЕ засчитывается за наличие сообщения коммита
+    r = mod.lint_text(_IMPL_METADATA_MENTION_NO_MSG, "implementation")
+    assert any("Сообщение коммита" in m for m in r["missing"])
+
+
+def test_impl_with_commit_section_present():
+    r = mod.lint_text(_IMPL_WITH_COMMIT_SECTION, "implementation")
+    assert not any("Сообщение коммита" in m for m in r["missing"])
+
+
 def test_kind_autodetect():
     assert mod._kind_from_name("/x/ANALYSIS-REPORT.md") == "analysis"
     assert mod._kind_from_name("/x/IMPLEMENTATION-PROGRESS.md") == "implementation"

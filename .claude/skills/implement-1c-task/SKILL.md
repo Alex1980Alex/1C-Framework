@@ -405,11 +405,15 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 
 **Создать/обновить файл IMPLEMENTATION-PROGRESS.md** в той же папке docs/ (статус, pipeline mode, точки модификации, debug session, результаты тестирования, footer `debug_session_id`) — полный шаблон + правила footer'а: [references/stage-details.md#этап-7-документация--шаблон-implementation-progressmd](references/stage-details.md#этап-7-документация--шаблон-implementation-progressmd).
 
+**ОБЯЗАТЕЛЬНО — секция `## Сообщение коммита`** (в конце файла, НИКОГДА не пропускать): готовое сообщение git-коммита, сформированное по скиллу [`git-commit-message`](../git-commit-message/SKILL.md) — формат **«Как было / Как стало/список результатов»** + `Изменённые/добавленные объекты` (термины 1С: «Общий модуль», «Документ», «Регистр сведений», «Запрос» — НЕ имена файлов) + футер `МЕТАДАННЫЕ: GKSTCPLK-XXXX`. Это **то же самое** сообщение, которым коммитится Этап 8 — пользователь копирует его прямо из файла, без переспроса. Наличие секции проверяет advisory-хук `pipeline-1c-advance` (через `scripts/lint_1c_artifacts.py`).
+
 ---
 
 ### Этап 8: Git commit
 
 **Цель:** Закоммитить изменения, аккуратно работая с многоуровневой структурой репозиториев (main repo → level-2 обычная директория → level-3 submodule/gitlink).
+
+**Сообщение коммита — строго по скиллу [`git-commit-message`](../git-commit-message/SKILL.md)** (формат «Как было / Как стало», термины 1С, футер `МЕТАДАННЫЕ: GKSTCPLK-XXXX`). Это **ровно то же** сообщение, что вписано секцией `## Сообщение коммита` в IMPLEMENTATION-PROGRESS.md (Этап 7) — единый источник, не переформулировать заново. Коммитить через файл: `git commit -F <msg-файл>` (кириллица UTF-8; НЕ `-m` из PowerShell — портит кодировку, [[feedback-powershell-git-commit-utf8]]).
 
 **Кратко:** submodule с BSL-кодом коммитится отдельно (`git -C "<submodule>" add <file> && commit`), submodule с документацией — отдельно, затем main repo bump'ит оба gitlink'а (`git add "<submodule-path>"` — не `-A`, не голая директория). Identity без `git config` — через per-command `-c user.name=... -c user.email=...`. Кириллические пути — через `-c core.quotepath=false`.
 
@@ -514,6 +518,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 - [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
 - [ ] **Sonar-дельта (ADR-037):** ВСЕ контент-правки собраны (вкл. док-комментарии новых методов) → ОДИН `run-sonar-analysis.ps1` → `sonar_rescan_verify.py` PASS (0 BLOCKER/CRITICAL на изменённых строках)
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
+- [ ] **IMPLEMENTATION-PROGRESS.md содержит секцию `## Сообщение коммита`** (git-commit-message формат: Как было / Как стало + `МЕТАДАННЫЕ: GKSTCPLK-XXXX`) — то же сообщение, что и git-коммит Этапа 8 (проверяет `lint_1c_artifacts` через `pipeline-1c-advance`)
 - [ ] Отклонения от ANALYSIS-REPORT зафиксированы
 - [ ] **Git commit:**
   - [ ] Коммит во внутреннем repo с BSL (без `git add -A`, без `git add <submodule-dir>`)
