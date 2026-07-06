@@ -11,7 +11,7 @@
     {
       "id": "ADR-048",
       "file": "048-sonar-project-split-per-configuration.md",
-      "title": "Разделение Sonar-монопроекта upravlenie-transportom-plk на проекты по конфигурациям (utp-ib/utp-svetly/utp-cfg-<JIRA>): реестр scripts/sonar_projects.py + dual-mode SONAR_SPLIT_PROJECTS, projectBaseDir=корень конфига (per-project scan_stale гейта, ожидаемая починка SCM blame), миграция Phase A/B/C (пререквизит P0 roadmap 260706); отменяет отказ §5 roadmap 260706",
+      "title": "Разделение Sonar-монопроекта upravlenie-transportom-plk на проекты по конфигурациям (utp-ib/utp-svetly; approve-поправка: configuration/<JIRA> исключён из скоупа И детекта гейта целиком — ведение задач, не код; A0 реализован): реестр scripts/sonar_projects.py + dual-mode SONAR_SPLIT_PROJECTS, projectBaseDir=корень конфига (per-project scan_stale гейта, ожидаемая починка SCM blame), миграция Phase A/B/C (пререквизит P0 roadmap 260706); отменяет отказ §5 roadmap 260706",
       "status": "accepted",
       "date": "2026-07-06",
       "research": "live-аудит roadmap 260706 §1-§3 + инциденты прогона GKSTCPLK-2634",

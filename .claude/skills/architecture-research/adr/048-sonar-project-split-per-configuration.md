@@ -1,7 +1,7 @@
 # ADR-048: Разделение Sonar-монопроекта на проекты по конфигурациям
 
 **Дата:** 2026-07-06
-**Статус:** accepted (решение пользователя 2026-07-06; отменяет отказ §5 [roadmap 260706](../../../../docs/roadmap/260706_ROADMAP_SONARQUBE_SCAN_RELIABILITY.md))
+**Статус:** accepted (решение пользователя 2026-07-06; отменяет отказ §5 [roadmap 260706](../../../../docs/roadmap/260706_ROADMAP_SONARQUBE_SCAN_RELIABILITY.md)). **Approve 2026-07-06 с поправкой:** `configuration/<JIRA>` исключён из Sonar-скоупа и детекта гейта ЦЕЛИКОМ (вместо `utp-cfg-<JIRA>` авто-проектов) — там ведение задач, не код.
 **Исследование:** live-аудит SQ-контура — roadmap 260706 §1–§3 (инциденты прогона GKSTCPLK-2634, live-API `ce/activity_status`/`project_branches/list`/`report-task.txt`)
 **Связь:** ADR-021 (wiring), ADR-037 (mandatory гейт), ADR-034 R6 (QG soft), ADR-042 (Sonar MCP), [[reference-sonar-changed-lines-gate]]
 
@@ -25,9 +25,11 @@ newness живёт на issue creationDate). Первоначальный отк
    из verify, и из ps1 через `--list-json`):
    - Стабильные: `utp-ib` ← `ИБTransportManagementDevelop/Конфигурация`; `utp-svetly` ←
      `TransportManagementDevelop_SVETLY/Конфигурация`.
-   - Растущие (G19 сохраняется): `configuration/<папка>` → ключ `utp-cfg-<цифровой префикс папки>`
-     (напр. `260304_GKSTCPLK-2182 …` → `utp-cfg-260304`), `projectName` = полное имя папки. Пустые
-     (без `.bsl`) — скип, как сейчас. Auto-provision проекта первым сканом.
+   - `configuration/<JIRA>/…` — **ИСКЛЮЧЕНЫ из Sonar-скоупа И из детекта гейта целиком**
+     (approve-поправка пользователя 2026-07-06: это папки ведения задач — ТЗ/доки/исторические
+     дампы, живой код не ведётся). Реестр = ровно **два** проекта. Возврат корня при
+     возобновлении правок — одна запись в реестре (+ снять префикс-фильтр в `_is_config_bsl`).
+     ~~Вариант `utp-cfg-<цифровой префикс>` авто-проектов~~ — отклонён пользователем.
    - API: `projects()`, `project_for_path(rel) → (key, rel_in_root) | None`, CLI `--list-json`.
 2. **Скан:** `run-sonar-analysis.ps1 -Project <key|all>` — цикл по реестру; на проект:
    `-Dsonar.projectKey=<key>`, `-Dsonar.projectBaseDir=<корень конфига>`, `-Dsonar.sources=.`.
@@ -49,8 +51,12 @@ newness живёт на issue creationDate). Первоначальный отк
 
 ### Миграция (фазы)
 
-- **Phase A (код, opt-in, default OFF):** реестр + ps1 + verify/state + обвязка + unit-тесты
-  (маппинг путей, группировка, legacy-паритет). ≈ 3–4 ч.
+- **Phase A0 (реализовано при approve 2026-07-06):** исключение `configuration/` —
+  `sonar_sources.py` (`GROWING_PARENTS=[]`, механизм оставлен) + `sonar_rescan_state._is_config_bsl`
+  (префикс-фильтр) + 2 unit-теста + докнота 43.9.9. Действует в ОБОИХ режимах (это сужение скоупа,
+  не часть split-флага).
+- **Phase A (код, opt-in, default OFF):** реестр (2 проекта) + ps1 + verify/state + обвязка +
+  unit-тесты (маппинг путей, группировка, legacy-паритет). ≈ 2.5–3.5 ч (упростилось без utp-cfg).
 - **Phase B (сервер):** первый скан каждого проекта (провижининг; фоном) → pin baseline per project →
   smoke verify по живой правке → проверка SCM Publisher (blame). ≈ 1–1.5 ч. **Пререквизит: P0.1/P0.2
   roadmap 260706** (CE-wait + fail-fast ps1 — те же файлы, и без CE-wait smoke будет флапать).
@@ -65,9 +71,13 @@ newness живёт на issue creationDate). Первоначальный отк
   не сканирует ИБ) [own, live-замеры Phase B].
 - Per-project `scan_stale` — устраняет класс «чужая конфигурация задерживает мой гейт» [own].
 - Ожидаемая починка SCM blame (один work-tree на скан) → честная new-code атрибуция на сервере [own→verify Phase B].
-- G19 (авто-подхват новых JIRA-конфигов) сохраняется реестром [docs: sonar_sources.py].
+- Скоуп сужен до живых конфигураций: `configuration/<JIRA>` (ведение задач) исключён из скана
+  И детекта гейта [решение пользователя] — G19 (авто-подхват JIRA-конфигов) сознательно упразднён.
 
 ### Отрицательные / компенсации
+- Если правка `.bsl` однажды случится в `configuration/<JIRA>/**/src/` — гейт ADR-037 её НЕ проверит
+  (осознанный риск, принят пользователем: там ведение задач). Компенсация: возврат корня = одна
+  строка реестра + снятие префикс-фильтра `_is_config_bsl` (одна точка).
 - Ключи компонентов меняются во всех потребителях → компенсируется реестром как единственной точкой
   маппинга + dual-mode (старые ключи живы до Phase C).
 - Первый скан ×N проектов → одноразовая стоимость; baseline на каждый — закрывается скриптом P2.2.
@@ -81,10 +91,13 @@ newness живёт на issue creationDate). Первоначальный отк
    трактуются удалёнными, снапшот переписывается [web: модель Sonar].
 3. **Monorepo-фича Sonar** — Developer Edition+; у нас Community Build [web].
 4. **Ветка-на-конфигурацию** — искажает семантику веток/baseline/PR-логики; хак [own].
+5. **`utp-cfg-<JIRA>` авто-проекты для `configuration/<JIRA>`** (исходный дизайн этого ADR) —
+   отклонено пользователем на approve 2026-07-06: в этих папках ведение задач (ТЗ/доки/исторические
+   дампы), живой код не ведётся → исключены из скоупа целиком (см. поправку в Решении).
 
 ## Связанные файлы
 
-`scripts/sonar_projects.py` (новый), `scripts/run-sonar-analysis.ps1`, `scripts/sonar_rescan_verify.py`,
+`scripts/sonar_projects.py` (новый), `scripts/sonar_sources.py` (A0 ✅), `scripts/run-sonar-analysis.ps1`, `scripts/sonar_rescan_verify.py`,
 `.claude/hooks/shared/sonar_rescan_state.py` (схема state — аддитивно), `scripts/sonar_setup_quality_gate.py`,
 `scripts/sonar_quality_gate_check.py`, `scripts/sonar_issues_pull.py`, `.github/workflows/ci-1c.yml`,
 `docs/framework documentation/4_МЫШЛЕНИЕ/4.4_ПАЙПЛАЙН_1С/43.9.9_СТАТАНАЛИЗ_И_КАЧЕСТВО.md`,
