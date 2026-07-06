@@ -295,6 +295,42 @@ def _match_component(rel, project, analyzed) -> str | None:
     return cands[0] if len(cands) == 1 else None
 
 
+def show_file(host, project, token, rel) -> int:
+    """P1.3 (roadmap 260706, I5): печать разрешённого component_key + unresolved issues файла.
+
+    Оператору не нужен ручной curl с кириллическим ключом — та же машинерия
+    `analyzed_file_keys`/`_match_component`/`_paged`. Показывает ВСЕ severities
+    (диагностика). Exit: 0 = ок, 1 = не проанализирован, 2 = Sonar недоступен/ошибка API."""
+    if not reachable(host):
+        print(f"sonar --show-file: SonarQube недоступен ({host})")
+        return 2
+    try:
+        analyzed = analyzed_file_keys(host, project, token)
+    except Exception as exc:
+        print(f"sonar --show-file: ошибка получения компонентов: {str(exc)[:80]}")
+        return 2
+    comp = _match_component(rel, project, analyzed)
+    if comp is None:
+        print(f"✗ {rel}: не проанализирован Sonar (компонент не найден в проекте {project})")
+        return 1
+    print(f"component_key: {comp}")
+    base = "/api/issues/search?componentKeys=" + urllib.parse.quote(comp) + "&resolved=false"
+    try:
+        items = _paged(host, base, token, "issues", cap_pages=20)
+    except Exception as exc:
+        print(f"  ошибка issues/search: {str(exc)[:80]}")
+        return 2
+    items.sort(key=lambda i: i.get("line") or 0)
+    print(f"unresolved issues: {len(items)}")
+    for i in items:
+        ln = i.get("line") or "—"  # file-level issue (line=None/отсутствует) → «—»
+        sev = i.get("severity", "?")
+        rule = i.get("rule", "?")
+        msg = (i.get("message") or "").replace("\n", " ")[:120]
+        print(f"  L{ln}\t{sev}\t{rule}\t{msg}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default=os.environ.get("SONAR_HOST_URL", "http://localhost:9000"))
@@ -308,8 +344,16 @@ def main() -> int:
         dest="wait_ce",
         help="сек ожидания финализации Compute Engine перед freshness-проверкой (0 = не ждать)",
     )
+    ap.add_argument(
+        "--show-file",
+        dest="show_file",
+        default=None,
+        help="диагностика (P1.3): component_key + unresolved issues файла (repo-относительный путь)",
+    )
     a = ap.parse_args()
     severities = [s for s in a.severities.split(",") if s]
+    if a.show_file:  # P1.3: диагностический подрежим (не гейт) — печать и выход
+        return show_file(a.host, a.project, a.token, a.show_file.replace("\\", "/"))
     now = datetime.now()
 
     changed = sorted(changed_bsl_paths(PROJECT_ROOT))

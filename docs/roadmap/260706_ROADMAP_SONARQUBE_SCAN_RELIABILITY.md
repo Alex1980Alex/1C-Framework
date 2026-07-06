@@ -59,19 +59,19 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 
 ### P1 — операбельность и следующая петля
 
-- **P1.1 CE-handoff по `report-task.txt` в ps1 (канонический механизм).** После сканера прочитать `.scannerwork/report-task.txt` → poll `api/ce/task?id=<ceTaskId>` до `SUCCESS|FAILED|CANCELED` (таймаут ~10 мин) → печать `analysisId`/статуса; `FAILED` → exit 1. Осознанно **не** использовать `sonar.qualitygate.wait=true` — он связал бы exit-код сканера с QG (у нас QG сознательно soft, R6) и имеет свой 300с-таймаут.
+- **P1.1 CE-handoff по `report-task.txt` в ps1 (канонический механизм). ✅ реализовано 2026-07-06.** После сканера прочитать `.scannerwork/report-task.txt` → poll `api/ce/task?id=<ceTaskId>` до `SUCCESS|FAILED|CANCELED` (таймаут ~10 мин) → печать `analysisId`/статуса; `FAILED` → exit 1. Осознанно **не** использовать `sonar.qualitygate.wait=true` — он связал бы exit-код сканера с QG (у нас QG сознательно soft, R6) и имеет свой 300с-таймаут.
   *Acceptance:* ps1 завершается только после финализации CE; verify после него никогда не видит in-progress.
   *Оценка:* ~1 ч. (После P1.1 `--wait-ce` в verify становится страховкой для ручных прогонов.)
 
-- **P1.2 Встроенный `-LogFile` (I1+I2).** ps1-параметр `-LogFile <path>`: скрипт сам пишет UTF-8-лог (native-safe: `cmd /c "... > log 2>&1"` для java-вызова либо `Start-Process -RedirectStandardOutput/-RedirectStandardError`), вокруг native-блока локально `$ErrorActionPreference='Continue'` (контроль по `$LASTEXITCODE`, ps1:66 уже есть). Вызывающим **никогда** не требуется PS-редирект.
+- **P1.2 Встроенный `-LogFile` (I1+I2). ✅ реализовано 2026-07-06.** ps1-параметр `-LogFile <path>`: скрипт сам пишет UTF-8-лог (native-safe: `cmd /c "... > log 2>&1"` для java-вызова либо `Start-Process -RedirectStandardOutput/-RedirectStandardError`), вокруг native-блока локально `$ErrorActionPreference='Continue'` (контроль по `$LASTEXITCODE`, ps1:66 уже есть). Вызывающим **никогда** не требуется PS-редирект.
   *Acceptance:* `run-sonar-analysis.ps1 -LogFile x.log` даёт полный UTF-8 лог; запуск с внешним `*>&1` больше не роняет скрипт (EAP локализован).
   *Оценка:* 0.5–1 ч.
 
-- **P1.3 Диагностический подрежим verify (I5).** `sonar_rescan_verify.py --show-file <rel>`: печатает разрешённый `component_key` + unresolved issues файла (та же машинерия `_match_component`/`file_issue_lines`) — оператору не нужен ручной curl с кириллическим ключом.
+- **P1.3 Диагностический подрежим verify (I5). ✅ реализовано 2026-07-06 (live-доказан: кириллический component_key + 56 issues).** `sonar_rescan_verify.py --show-file <rel>`: печатает разрешённый `component_key` + unresolved issues файла (та же машинерия `_match_component`/`file_issue_lines`) — оператору не нужен ручной curl с кириллическим ключом.
   *Acceptance:* `--show-file "TransportManagementDevelop_SVETLY/.../ManagerModule.bsl"` → ключ + список issue без ошибок кодировки.
   *Оценка:* ~0.5 ч.
 
-- **P1.4 `.venv`-python для helper-вызовов (A1).** ps1:34,38 → `& "$ProjectRoot\.venv\Scripts\python.exe"` (как ps1:73), fallback на `python` при отсутствии venv.
+- **P1.4 `.venv`-python для helper-вызовов (A1). ✅ реализовано 2026-07-06 (в составе P0.2).** ps1 helper-вызовы → `& $py` (`$ProjectRoot\.venv\Scripts\python.exe`), fallback на `python` при отсутствии venv.
   *Оценка:* 0.2 ч.
 
 ### P2 — гигиена и отложенное
@@ -104,6 +104,11 @@ CI: .github/workflows/ci-1c.yml (bsl-analysis) · сервер: docker-compose.s
 - **Свой lock поверх `.sonar_lock`** — остаётся отклонённым: сканер уже сериализует прогоны из одного клона (A5); в split-режиме локи per-project (`.scannerwork` в корне каждого конфига) — коллизий нет.
 
 ## §18 Прогресс
+
+### 2026-07-06 — P1 реализован (CE-handoff / -LogFile / --show-file / venv)
+
+- **P1.1** ps1: CE-handoff по `.scannerwork/report-task.txt` (ceTaskId → poll `api/ce/task` до SUCCESS/FAILED/CANCELED, дедлайн 10мин; FAILED→exit 1). Контракт live-подтверждён (api/ce/task → SUCCESS+analysisId). **P1.2** ps1 `-LogFile` (array-args + локальный EAP=Continue + `*>&1 | Out-File utf8` — внешний редирект не нужен). **P1.3** `sonar_rescan_verify.py --show-file` (component_key + issues; live: кириллический ключ + 56 issues). **P1.4** venv-python (в P0.2).
+- ParseFile ps1 OK + BOM цел; 29/29 unit, ruff, code-verify reviewer PASS. Осталось по контуру: P3.A.wiring, P3.B/C, P2.
 
 ### 2026-07-06 — P3.A.registry + A7 решён (utp-mfm, вар.а); P0 доказан live
 

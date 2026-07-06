@@ -1,6 +1,8 @@
 ﻿# Локальный прогон SonarQube-анализа BSL (ADR-021). Зеркалит CI-шаг bsl-analysis.
 # Требует: поднятый SonarQube CB 26.6 (docker-compose.sonarqube.yml) на :9000 + $env:SONAR_TOKEN.
 # Verified 2026-06-15: scanner-cli + server-JRE-provisioning (сенсор bsl = JDK 21).
+# -LogFile <path>: писать UTF-8-лог сканера в файл (P1.2, native-safe; внешний *>&1 НЕ нужен).
+param([string]$LogFile = "")
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
@@ -74,12 +76,62 @@ if (-not $java) { $java = "java" }   # fallback: system java для CLI-bootstra
 if (-not $env:SONAR_SCANNER_JAVA_OPTS) { $env:SONAR_SCANNER_JAVA_OPTS = "-Xmx6g" }  # JVM движка (bsl-сенсор)
 if (-not $env:SONAR_SCANNER_OPTS) { $env:SONAR_SCANNER_OPTS = "-Xmx6g" }            # JVM bootstrap CLI
 
-& $java -jar $cli `
-    "-Dsonar.host.url=$Host_" `
-    "-Dsonar.token=$env:SONAR_TOKEN" `
-    "-Dsonar.projectBaseDir=$ProjectRoot" `
+# Аргументы сканера массивом (array-expansion `& $java $arr`, НЕ splat @ — см. QG ниже).
+$scanArgs = @(
+    "-jar", $cli,
+    "-Dsonar.host.url=$Host_",
+    "-Dsonar.token=$env:SONAR_TOKEN",
+    "-Dsonar.projectBaseDir=$ProjectRoot",
     "-Dsonar.sources=$sources"
-if ($LASTEXITCODE -ne 0) { Write-Host "Sonar Scanner failed!" -ForegroundColor Red; exit 1 }
+)
+if ($LogFile) {
+    # P1.2 (I1+I2): свой UTF-8-лог. Локальный EAP=Continue — иначе stderr сенсора под EAP=Stop
+    # роняет скрипт (NativeCommandError на не-фатальном варнинге). Out-File -Encoding utf8 —
+    # вместо PS-редиректа UTF-16. Вызывающим НИКОГДА не нужен внешний *>&1.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & $java $scanArgs *>&1 | Out-File -FilePath $LogFile -Encoding utf8
+    $scanExit = $LASTEXITCODE
+    $ErrorActionPreference = $prevEAP
+    Write-Host "  scanner log -> $LogFile (UTF-8)"
+}
+else {
+    & $java $scanArgs
+    $scanExit = $LASTEXITCODE
+}
+if ($scanExit -ne 0) { Write-Host "Sonar Scanner failed!" -ForegroundColor Red; exit 1 }
+
+# P1.1 (I4): CE-handoff — дождаться финализации Compute Engine по .scannerwork/report-task.txt
+# (verify после скана никогда не увидит in-progress). Осознанно НЕ sonar.qualitygate.wait=true
+# (связал бы exit сканера с QG, у нас QG сознательно soft — R6). FAILED → exit 1.
+$reportTask = Join-Path $ProjectRoot ".scannerwork\report-task.txt"
+if (Test-Path $reportTask) {
+    $ceTaskId = (((Get-Content $reportTask) | Where-Object { $_ -like "ceTaskId=*" } | Select-Object -First 1) -replace "^ceTaskId=", "").Trim()
+    if ($ceTaskId) {
+        $ceAuth = @{ Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($env:SONAR_TOKEN):")) }
+        $deadline = (Get-Date).AddMinutes(10)
+        $ceStatus = "PENDING"; $ce = $null
+        Write-Host "  CE task $ceTaskId — жду финализации анализа..."
+        while ((Get-Date) -lt $deadline) {
+            try {
+                $ce = Invoke-RestMethod -Uri "$Host_/api/ce/task?id=$ceTaskId" -Headers $ceAuth -TimeoutSec 15
+                $ceStatus = $ce.task.status
+            }
+            catch { $ceStatus = "PENDING" }  # транзиент (индексация/404) → продолжаем до дедлайна
+            if ($ceStatus -in @("SUCCESS", "FAILED", "CANCELED")) { break }
+            Start-Sleep -Seconds 5
+        }
+        if ($ceStatus -eq "SUCCESS") {
+            Write-Host "  CE analysis SUCCESS (analysisId=$($ce.task.analysisId))" -ForegroundColor Green
+        }
+        elseif ($ceStatus -eq "FAILED") {
+            Write-Host "  CE analysis FAILED — анализ не загружен на сервер" -ForegroundColor Red; exit 1
+        }
+        else {
+            Write-Host "  CE analysis статус=$ceStatus (таймаут/отменён) — verify может увидеть устаревший анализ" -ForegroundColor Yellow
+        }
+    }
+}
 
 # R6 (ADR-034): Quality Gate gate — Clean-as-You-Code (условия new-code; легаси не блокирует).
 # Hard под $env:SONAR_QG_HARD=1 (валит билд на QG=ERROR), иначе soft (только warn).
