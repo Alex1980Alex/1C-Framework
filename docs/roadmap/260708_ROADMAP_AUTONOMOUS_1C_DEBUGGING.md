@@ -3,7 +3,9 @@
 > **Дата:** 2026-07-08
 > **Автор запроса:** пользователь — «глубокий анализ 1c-debug-hmr, лучшие практики отладки с GitHub, отладка с максимальной автономностью — реальное чтение кода с реальным получением результата, дорожная карта улучшений»
 > **Связано:** [260511 Deep Analysis](260511_DEEP_ANALYSIS_DEBUG_HMR_BEST_PRACTICES.md) (реализовано P0.A–G/P1/P2.A/P3.B), [260511 Deficiencies](260511_ROADMAP_1C_DEBUG_HMR_DEFICIENCIES_FROM_GKSTCPLK_2468.md), [260603 Long-poll ping](260603_ROADMAP_DEBUG_LONGPOLL_PING.md), skill [`1c-debug-hmr`](../../.claude/skills/1c-debug-hmr/SKILL.md), cache [`bp_propagation_race_patterns.md`](../../.claude/skills/1c-debug-hmr/cache/bp_propagation_race_patterns.md)
-> **Статус:** RESEARCH + ROADMAP (реализация — по approve этапов)
+> **Статус:** RESEARCH + ROADMAP + **W1 РЕАЛИЗОВАН** (2026-07-08, сабмодуль `ce11644`, parent `6030a30f1`, 331 unit passed)
+
+> **⚙ W1 IMPLEMENTED (2026-07-08):** W1.0 рефактор-фундамент (3 хелпера, дедуп 4+4) + A0 `debug_inspect_frame` + A1 `debug_autotrace` (two-phase) + B2 auto-calibrate offset + C0 `debug_collection_info`/`_page`. +33 unit (331 passed, 0 регрессий). Коммиты сабмодуля: 903f449/9496a2f/b2eb39a/51433c7/ce11644. ⚠ **Live E2E требует `/mcp reconnect`** (harness кеширует schema новых tools) + остановленного фрейма. Отложено: C0.3 авто-интеграция paging в A0 (нет size-сигнала без live-сэмпла), transport (a) HTTP one-call, Ф-2 live-проверка порядка фреймов.
 
 ---
 
