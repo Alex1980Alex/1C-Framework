@@ -135,12 +135,29 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 | ID | Инструмент | Что делает | Усилие | Риск | Ценность |
 |---|---|---|---|---|---|
 | **A0** | `debug_inspect_frame(target_id?, stack_level=0, context_radius=3)` | **Топ-идея обоих агентов (ADI/InspectCoder frame-bundle).** Один вызов = богатый бандл: фрейм + `resolved_source` + все локали (auto-discovery через `bsl_locals`+batch-`evaluate`) + аргументы + исходник строки ±`context_radius`. Заменяет дорогую цепочку `stack_trace`→`variables`→N×`evaluate` одним ответом | ~3ч | low (композиция) | ★★★★★ №1 по ценности×применимости |
-| **A1** | `debug_autotrace(object_id, line, module_type, trigger, expect?)` | Один вызов: set_bp(+calibrate) → arm_next_rphost → исполняет `trigger` → ping-loop до fire → `inspect_frame` (A0) → (опц.) сверка с `expect` → **Continue** (release) → `{hit, line, frame, variables, verdict}`. Сворачивает Шаблоны 5/5a/6 в atomic-операцию | ~4ч | low | ★★★★★ убирает P-5 |
+| **A1** | `debug_autotrace(object_id, line, module_type, trigger, expect?)` | Один вызов: set_bp(+calibrate) → arm_next_rphost → исполняет `trigger` → ping-loop до fire → `inspect_frame` (A0) → (опц.) сверка с `expect` → **Continue** (release). **Контракт возврата — `verdict` + `raw` (см. дизайн-ноту ниже).** Сворачивает Шаблоны 5/5a/6 в atomic-операцию | ~4ч | low | ★★★★★ убирает P-5 |
 | **A2** | `debug_root_cause(trigger, exception_filter?)` | На unhandled exception авто-собирает: полный стек + локали **каждого** фрейма + `resolved_source` + значение виновника + JSONL-снимок → структурированный **diagnosis-record** (SWE-Doctor: fault location, runtime symptom, propagation path, observed values) | ~3ч | low | ★★★★★ инцидент-разбор |
 | **A3** | `debug_trace_variable(name, object_id, method, trigger)` | **InspectCoder-паттерн.** Авто-logpoint'ы на все строки-присваивания `name` + upstream-переменные → прогон → таймлайн значений `[{line, value, ts}]`. База (logpoints+coverage) готова | ~4ч | low | ★★★★ «откуда взялось это значение» |
 | **A4** | `debug_diff_runs(trigger_ok, trigger_fail, watch[])` | Differential debugging поверх `session_record`+`session_diff`: два прогона, на общих точках снимает `watch`, возвращает **первую точку расхождения** (bisect по состоянию). «Работало вчера — сегодня нет» | ~4ч | medium | ★★★★ регрессии |
 | **A5** | `debug_hypothesis(assertions[])` | Батч гипотез `{object_id,line,expr,expected}` → условные BP → прогон → per-assertion PASS/FAIL с actual. Runtime-grounded verify-цикл в один вызов | ~3ч | low | ★★★★ verify-этап pipeline |
 | **A6** | Session-режимы + «валидные следующие действия» | InspectWare-enum (Start/Runtime-State/Runtime-Error/Post-Mortem/Done) в каждом ответе tool'а + `correlation_id` через всю сессию (переиспользовать CloudEvents/traceparent контур фреймворка) → агент реже дёргает невалидные команды на эфемерных targets; полный аудит-трейл | ~2ч | low | ★★★ |
+
+**Дизайн-нота A1 — контракт возврата (`verdict` + `raw`)** (решение §5.2, 2026-07-08):
+Все autonomy-tools (A1/A2/A5) возвращают **и** машинный вердикт, **и** сырое состояние — агент не заперт в решении wrapper'а, но и не обязан парсить сырьё, когда `expect` дан:
+```jsonc
+{
+  "verdict": {                    // null, если expect не передан
+    "status": "PASS|FAIL|NO_HIT|INCONCLUSIVE",
+    "reason": "expected line 70, got 70; Итог=Ложь ≠ expect Истина",
+    "checked": [{"expr": "Итог", "expected": "Истина", "actual": "Ложь", "ok": false}]
+  },
+  "raw": {                        // ВСЕГДА присутствует — источник истины для агента
+    "hit": true, "line": 70, "frame": {...resolved_source...},
+    "variables": {...}, "stack": [...], "target_id": "..."
+  }
+}
+```
+Принцип (InspectWare/SWE-Doctor): wrapper даёт **готовое суждение по явному `expect`**, но `raw` — единственный источник истины; при `verdict.status ∈ {INCONCLUSIVE, NO_HIT}` или отсутствии `expect` агент судит сам по `raw`. Wrapper НЕ скрывает состояние за вердиктом.
 
 **Acceptance A:** BP-верификация одной точки = **1 tool-call** (`debug_autotrace`) вместо 6-10. Инспекция остановленного фрейма = **1 tool-call** (`debug_inspect_frame`) вместо 3+N. Root-cause упавшего проведения = **1 tool-call** (`debug_root_cause`).
 
@@ -188,7 +205,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 ## §5. Открытые вопросы (для approve)
 
 1. ~~**B1 требует BSL-модуль в БД** — деплоить во все ИБ или только dev?~~ **✅ РЕШЕНО ([ADR-049](../../.claude/skills/architecture-research/adr/049-debug-worker-in-mcp-server-extension.md)):** модуль `mcp_ОтладкаВыполненияКода` идёт в **расширение `MCP_Сервер`** (`external/1c_mcp/`, префикс `mcp_`, dump-live-first деплой) — не трогаем типовую конфигурацию, деплой существующим пайплайном расширения, доступен везде, где расширение установлено. Рекомендация: позже консолидировать туда же существующий `гкс_ОтладкаВыполненияКода` (Шаблон 6, сейчас в основной конфе) — единый дом debug-хелперов.
-2. **A1 verdict-семантика:** wrapper решает PASS/FAIL сам (по `expect`) или всегда возвращает сырое состояние + агент судит? (рекоменд.: возвращать оба — `verdict` + `raw`).
+2. ~~**A1 verdict-семантика:** wrapper судит или агент?~~ **✅ РЕШЕНО (§3 дизайн-нота A1):** возвращать **оба** — `verdict` (машинное суждение по явному `expect`, может быть `null`) + `raw` (всегда, единственный источник истины). Wrapper не прячет состояние за вердиктом; при `INCONCLUSIVE`/`NO_HIT`/без-`expect` судит агент.
 3. **C3 drop-frame:** тратить research-бюджет на `setExpression` feasibility в RDBG XSD, или окончательно defer до vendor?
 4. **Приоритет автономности vs parity:** согласен ли пользователь, что Эпик A (автономность) важнее C (DAP-gaps)? Карта исходит из «да» по формулировке запроса.
 
