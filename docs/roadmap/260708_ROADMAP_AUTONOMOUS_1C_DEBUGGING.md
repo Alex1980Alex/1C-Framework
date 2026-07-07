@@ -200,7 +200,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 
 | Волна | Состав | Усилие | Результат |
 |---|---|---|---|
-| **W1** (автономность-ядро) | **A0** + A1 + C0 + B2 | ~12ч | Frame-bundle в 1 вызов; autotrace в 1 вызов; paging больших коллекций; BP fire'ит без ручной калибровки |
+| **W1** (автономность-ядро) | **W1.0 (рефактор-фундамент)** + A0 + A1 + C0 + B2 | ~13.5–14.5ч (декомпозиция §7.7) | Frame-bundle в 1 вызов; autotrace (two-phase, one-call как enhancement); paging больших коллекций; BP fire'ит без ручной калибровки |
 | **W2** (надёжность) | B1 + B3 + B5 | ~11ч | Интерактивный JOB-step; sub-second trap; переносимость на SVETLY/MFM |
 | **W3** (диагностика) | A2 + A3 + C1 + B4 | ~11ч | Root-cause diagnosis-record; trace-variable; runtime hypothesis-test; auto-reattach |
 | **W4** (глубина) | A4 + C2 + A6 | ~9ч | Differential debug; function BP; session-режимы + correlation_id |
@@ -226,3 +226,99 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 - ⚠ pre-existing rphost `[48144]` (17 conns) → для чистого BP нужен `force_recycle` или JOB-путь (Шаблон 6)
 
 Следующий шаг для end-to-end демонстрации (по approve): `debug_connect` → `debug_autotrace` (после реализации A1) на реальном методе в `ИБTransportManagementDevelop` с чтением фактических значений переменных в рантайме.
+
+---
+
+## §7. Точная декомпозиция W1–W3 (по анализу кода, 2026-07-08)
+
+> Якоря — `tools/bsl-debug-server/mcp_debug_server.py` (4083 стр). Анализ вскрыл **3 факта, меняющих дизайн**, и дал пошаговую разбивку.
+
+### 7.0 Три факта из кода, меняющих дизайн
+
+**Ф-1. A1-`trigger` — межсерверная граница (главный дизайн-вопрос W1).** `trigger` в Шаблонах 5/6 исполняется через `mcp__1c-mcp-crud__execute_code` — это **другой MCP-сервер**; `mcp_debug_server.py` не может вызвать его tool. Варианты:
+- **(a) Прямой HTTP-POST из wrapper'а** к тому же HTTP-сервису `/hs/mcp/rpc`, который питает 1c-mcp-crud (httpx уже есть; креды из env `MCP_ONEC_*`, как у 1c-mcp-crud в `.mcp.json`). Полный one-call.
+- **(b) Двухфазный режим** `debug_autotrace(phase="arm", ...)` → агент сам триггерит execute_code → `debug_autotrace(phase="collect")`. Без новых кредов/зависимостей, но 3 вызова вместо 1.
+- **Решение W1:** реализовать **(b) сразу** (нулевой риск, уже 3 вызова vs 12) + **(a) как enhancement** в той же волне, если env-креды доступны (fallback на (b) при их отсутствии).
+
+**Ф-2. RDBG отдаёт стек outermost-first — фрейм BP ПОСЛЕДНИЙ.** Подтверждено `coverage.py:31-35` (скан стека с конца: «RDBG отдаёт outermost-first»). Значит verdict-логика A1 сравнивает **`stack[-1].lineNo`** (innermost), НЕ `frames[0]`. ⚠ Шаблон 5 в SKILL (`assert frames[0].lineNo`) — проверить/поправить при реализации (возможный давний баг протокола верификации).
+
+**Ф-3. 4× дублирование резолв-паттернов** — перед A0/A1 обязателен рефактор-шаг:
+- `property_id`-резолв (`MODULE_PROPERTY_IDS` + `ConfigModule`-подмена) продублирован в `debug_set_breakpoint:3176-3180`, `debug_set_logpoint:3229-3233`, `debug_coverage_register`, `debug_calibrate_lines`;
+- `stopped_target`-резолв (`last_stopped_target_id → _find_stopped_target`) продублирован в `debug_stack_trace:3018-3025`, `debug_variables:3074-3081`, `debug_evaluate:3122-3129`, `debug_step`;
+- enrich-loop `resolved_source` инлайн в `debug_stack_trace:3028-3038`.
+
+### 7.1 W1.0 — Рефактор-фундамент (~1.5ч, НОВЫЙ шаг)
+
+| Шаг | Что | Якорь |
+|---|---|---|
+| W1.0.1 | Хелпер `_resolve_property_id(module_type, property_id) -> (xml_module_type, property_id)` — заменить 4 дубля | `:3176`, `:3229`, coverage, calibrate |
+| W1.0.2 | Хелпер `_resolve_stopped_target(client, target_id) -> str \| None` (async) — заменить 4 дубля | `:3018`, `:3074`, `:3122`, step |
+| W1.0.3 | Хелпер `_enrich_stack(stack) -> list` (resolved_source loop) — вынести из stack_trace | `:3028-3038` |
+| W1.0.4 | Новый модуль `autonomy.py` (по традиции `bp_conditions`/`logpoints`/`system_stops`) + **добавить в `--watch` `.mcp.json`** (урок P0.D) | `.mcp.json` |
+| Тест | Существующие 222 unit зелёные (рефактор behavior-preserving) | `tests/test_mcp_debug_server.py` |
+
+### 7.2 A0 `debug_inspect_frame` (~2.5ч после W1.0)
+
+| Шаг | Что | Якорь |
+|---|---|---|
+| A0.1 | Композиция в `autonomy.py::build_frame_bundle(client, target_id, stack_level, context_radius)`: стек из кэша `_last_stack_by_target` (как `eval_locals_auto:1276-1279`) + `_enrich_stack` | `:1276`, `:1151` |
+| A0.2 | Локали: `client.eval_locals_auto(:1261)` — уже batch через `_pending_evals` futures (`:1204-1256`); при пустом результате (нет src) — деградация `{locals_mode:"unavailable"}` | `:1261-1310` |
+| A0.3 | Исходник ±radius: `uuid_index.resolve_uuid(:1292)` → path → read lines `[line-r, line+r]` с маркером `→` на текущей | `uuid_index.py` |
+| A0.4 | Разделение args/locals: v1 БЕЗ разделения (в `bsl_locals.extract_locals_at_line` категории не тегированы); тегирование — отдельный мини-шаг в C3 (AST) | `bsl_locals.py` |
+| A0.5 | MCP-tool `debug_inspect_frame` (после `debug_variables:3105`) — тонкая обёртка над `autonomy.build_frame_bundle` + `_error_json`-envelope | `:3105` |
+| Тест | `tests/test_autonomy.py`: mock client (паттерн 222 существующих), кейсы: полный бандл / нет src / нет stopped target; live-smoke на ИБTransport | — |
+
+### 7.3 A1 `debug_autotrace` (~4ч)
+
+| Шаг | Что | Якорь |
+|---|---|---|
+| A1.1 | Фаза `arm`: `_resolve_property_id` → `client.set_breakpoints(:1490)` (+offset из B2-кэша) → `debug_arm_next_rphost(:3382)`-механика → вернуть `{armed:true, bp:{...}}` | `:1490`, `:3382` |
+| A1.2 | Ожидание fire: `asyncio.Event` per-session (`client._stop_event`), взводится в `_handle_command(callStackFormed)` (`:680-755`, ПОСЛЕ фильтров system_stops/coverage/logpoint — только user-visible stop); wait с timeout (default 20с) вместо ping×3 | `:680` |
+| A1.3 | Фаза `collect`: wait event → `build_frame_bundle` (A0) → verdict по `expect` — **сравнение `stack[-1]` (Ф-2!)** → `debug_step("Continue")` в `finally` (release даже при FAIL — контракт Шаблона 5 шаг 8) | `:1397` |
+| A1.4 | Verdict-движок: `checked[]` через `client.eval_expression(:1312)` по каждому `expect`-выражению; статусы PASS/FAIL/NO_HIT(timeout)/INCONCLUSIVE(eval-error) | `:1312` |
+| A1.5 | (enhancement, если env-креды) transport (a): httpx POST BSL-фрагмента на `/hs/mcp/rpc` — обёртка `ФоновыеЗадания.Выполнить` как в Шаблоне 6; graceful fallback на two-phase | Ф-1 |
+| Тест | unit: arm→fire(mock event)→verdict PASS/FAIL/NO_HIT + Continue-в-finally; live: реальный метод, реальный verdict | — |
+
+### 7.4 C0 variables paging (~2.5ч)
+
+RDBG не имеет «expand»-вызова — paging строится wrapper-side поверх batch-механики `eval_local_variables:1204-1256` (уникальный `expressionResultID` per item — уже готовый конвейер):
+
+| Шаг | Что | Якорь |
+|---|---|---|
+| C0.1 | `debug_collection_info(expression)`: eval `ТипЗнч(X)` + `X.Количество()` → `{type, count}` | `:1312` |
+| C0.2 | `debug_collection_page(expression, start, count, columns?)`: генерация batch-выражений `X[i]` / `X.Получить(i)` / `X[i].Колонка` (по типу из C0.1) → один `evalLocalVariables`-POST | `:1204-1256` |
+| C0.3 | Интеграция в A0: если `resultValueInfo` коллекции содержит признак большого размера → в бандле `{paged:true, preview:первые 10, page_hint}` вместо обрезки | A0.2 |
+| Тест | unit на генерацию выражений по типам (Массив/ТЗ/Соответствие/РезультатЗапроса-выгрузка); live на ТЗ 1000+ строк | — |
+
+### 7.5 B2 auto-calibrate (~3ч)
+
+| Шаг | Что | Якорь |
+|---|---|---|
+| B2.1 | Offset-кэш `client._line_offsets: dict[(object_id,property_id), int]` + персист в `.active.json` (`_persist_active_session:2603` / `_load_active_session:2630`) | `:2603` |
+| B2.2 | Применение в `set_breakpoints`-обёртках (set_breakpoint/set_logpoint/coverage_register): `line += offset` при наличии ключа; в ответе `{applied_offset}` | `:3181` |
+| B2.3 | Заполнение кэша из `debug_calibrate_result` (`offset` уже вычисляется: `nearest_fired - requested`) — просто записать в кэш | `:3593-3680` |
+| B2.4 | Fallback-цепочка в A1 при NO_HIT: авто-`calibrate_lines`-веер → повтор trigger → повтор collect (1 итерация, потом честный NO_HIT) | A1.3 |
+| Тест | unit: offset применён/персистирован/восстановлен после рестарта; live: BP по git-строке со сдвигом +3 fire'ит без ручной калибровки | — |
+
+### 7.6 Якоря W2/W3 (кратко)
+
+| ID | Якоря кода | Ключевой шаг |
+|---|---|---|
+| B1 | `capture_mode:3407` (sticky re-arm), `targetQuit:785-804`; BSL: новый `mcp_ОтладкаВыполненияКода` в расширении (ADR-049) | Worker: цикл ожидания сигнала (временное хранилище/РС) после исполнения; wrapper: `debug_step(Continue)` пишет сигнал освобождения через тот же HTTP-канал Ф-1(a) |
+| B3 | `_ping_loop:505-541` (`PING_INTERVAL_IDLE=2.0/ACTIVE=0.1:501-502`), `_handle_command:631` | Реюз `client._stop_event` из A1.2 — B3 меняет только wait-механику ожидания, контракт A1 не трогает |
+| B5 | `uuid_index.py:66-69` (`DEFAULT_CONFIG_SRC` hardcoded), cache-invalidation `:95-107` (mtime корня) | Map `alias → config_src` (env `BSL_DEBUG_CONFIG_SRC_MAP` или per-alias в `.active.json`); infobase_alias уже известен клиенту |
+| C1 | `eval_expression:1312` (`evalExpr`), enum `setValue:624` (`_handle_command → Skipping:834-838`) | Research-зонд ≤30мин: `evalExpr` с `X = 42` в scope фрейма → проверить side-effect повторным чтением; guard `{old,new}` |
+| A2 | `rteProcessing:757-783` + `exception_bps.py`; стек-обход = A0-бандл per frame | До B1: top-N фреймов inline в `_handle_command` (как `logpoints.fire_logpoint` — внутри halt-окна) |
+
+### 7.7 Уточнённые оценки W1 (после декомпозиции)
+
+| Позиция | Было | Стало | Дельта |
+|---|---|---|---|
+| W1.0 рефактор-фундамент | — | 1.5ч | +1.5ч (снижает риск всех A-шагов) |
+| A0 | 3ч | 2.5ч | −0.5ч (реюз хелперов W1.0) |
+| A1 | 4ч | 4ч (two-phase) +1ч (transport (a), опц.) | Ф-1 учтён |
+| C0 | 2ч | 2.5ч | +0.5ч (два tool'а вместо одного) |
+| B2 | 3ч | 3ч | = |
+| **W1 итого** | ~12ч | **~13.5–14.5ч** | честнее за счёт Ф-1/Ф-3 |
+
+**Порядок исполнения W1:** W1.0 → A0 → B2 → A1 (A1 зависит от A0-бандла и B2-offset-кэша) → C0 (независим, можно параллельно с A1). Ф-2 (`stack[-1]`) — проверить Шаблон 5 SKILL при реализации A1 и поправить, если баг подтверждается live.
