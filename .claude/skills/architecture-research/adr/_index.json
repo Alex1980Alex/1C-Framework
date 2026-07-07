@@ -799,6 +799,14 @@
       "status": "accepted",
       "date": "2026-07-05",
       "research": "roadmap 260705 P3-находка"
+    },
+    {
+      "id": "ADR-049",
+      "file": "049-debug-worker-in-mcp-server-extension.md",
+      "title": "Debug-worker mcp_ОтладкаВыполненияКода — в расширении MCP_Сервер, не в основной конфигурации (B1 persistent JOB-контекст: не трогаем типовую, dump-live-first деплой, скоуп = presence расширения; консолидировать гкс_ОтладкаВыполненияКода позже)",
+      "status": "accepted",
+      "date": "2026-07-08",
+      "research": "cache/autonomous-1c-debugging-2026.md + roadmap 260708 B1"
     }
   ]
 }
