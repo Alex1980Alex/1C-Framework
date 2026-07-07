@@ -1,6 +1,6 @@
 ---
 name: 1c-debug-hmr
-description: "1c-debug-hmr — MCP debug-сервер для 1С:Предприятие с hot-module-reload + persistent session (RDBG-протокол, 25 tools: connect/ping/set_breakpoint/set_logpoint/stack_trace/variables/evaluate/step/attach_targets/arm_warm_rphosts и др., полный список в теле скилла). ИСПОЛЬЗУЙ при отладке BSL-кода (BP, stack, locals, evaluate, step) и при разработке самого debug-wrapper'а — изменения подхватываются без /mcp reconnect; сессия RDBG переживает HMR-restart через `data/debug_sessions/.active.json`. Триггеры: 'отладка 1С', 'breakpoint BSL', 'callStack 1С', 'debug rphost', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'logpoint', 'tracepoint', 'warm pool', 'cascade halt'. НЕ для написания BSL-кода (→ bsl-development), НЕ для запросов к БД (→ 1c-mcp-crud), НЕ для VA BDD UI-тестов (→ va-bdd-testing)."
+description: "1c-debug-hmr — MCP debug-сервер для 1С:Предприятие с hot-module-reload + persistent session (RDBG-протокол, 27 tools: connect/ping/set_breakpoint/set_logpoint/calibrate_lines/stack_trace/variables/evaluate/step/attach_targets/arm_warm_rphosts и др., полный список в теле скилла). ИСПОЛЬЗУЙ при отладке BSL-кода (BP, stack, locals, evaluate, step) и при разработке самого debug-wrapper'а — изменения подхватываются без /mcp reconnect; сессия RDBG переживает HMR-restart через `data/debug_sessions/.active.json`. Триггеры: 'отладка 1С', 'breakpoint BSL', 'callStack 1С', 'debug rphost', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'logpoint', 'tracepoint', 'warm pool', 'cascade halt'. НЕ для написания BSL-кода (→ bsl-development), НЕ для запросов к БД (→ 1c-mcp-crud), НЕ для VA BDD UI-тестов (→ va-bdd-testing)."
 ---
 
 # 1c-debug-hmr — MCP Debug Server для 1С с HMR
@@ -81,7 +81,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 Параллельно живёт `1c-debug` (без HMR) — те же tools, без watchfiles overhead'а.
 
-## API tools (25)
+## API tools (27)
+
+> **Калибровка строк (2026-07-07):** +2 tools — `debug_calibrate_lines` / `debug_calibrate_result` (silent-веер поверх coverage-механизма; live-кейс «BP по git-строке молчит» — сдвиг src↔deployed). См. Шаблон 5a.
 
 > **Roadmap 260511 P2.A + P3.B (2026-05-11, post-P1):** +5 tools — `debug_set_exception_bp` / `debug_clear_exception_bps` / `debug_list_exception_bps` (P3.B filtered exception BPs), `debug_session_record` / `debug_replay_list` / `debug_replay_seek` (P2.A snapshot replay).
 
