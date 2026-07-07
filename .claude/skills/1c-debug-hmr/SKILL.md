@@ -1,6 +1,6 @@
 ---
 name: 1c-debug-hmr
-description: "1c-debug-hmr — MCP debug-сервер для 1С:Предприятие с hot-module-reload + persistent session (RDBG-протокол, 27 tools: connect/ping/set_breakpoint/set_logpoint/calibrate_lines/stack_trace/variables/evaluate/step/attach_targets/arm_warm_rphosts и др., полный список в теле скилла). ИСПОЛЬЗУЙ при отладке BSL-кода (BP, stack, locals, evaluate, step) и при разработке самого debug-wrapper'а — изменения подхватываются без /mcp reconnect; сессия RDBG переживает HMR-restart через `data/debug_sessions/.active.json`. Триггеры: 'отладка 1С', 'breakpoint BSL', 'callStack 1С', 'debug rphost', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'logpoint', 'tracepoint', 'warm pool', 'cascade halt'. НЕ для написания BSL-кода (→ bsl-development), НЕ для запросов к БД (→ 1c-mcp-crud), НЕ для VA BDD UI-тестов (→ va-bdd-testing)."
+description: "1c-debug-hmr — MCP debug-сервер для 1С:Предприятие с hot-module-reload + persistent session (RDBG-протокол, 36 tools: autotrace/inspect_frame (W1 autonomy — весь цикл BP-верификации одним вызовом)/connect/ping/set_breakpoint/set_logpoint/calibrate_lines/stack_trace/variables/evaluate/step/collection_page/arm_warm_rphosts и др., полный список в теле скилла). ИСПОЛЬЗУЙ при отладке BSL-кода (BP, stack, locals, evaluate, step) и при разработке самого debug-wrapper'а — изменения подхватываются без /mcp reconnect; сессия RDBG переживает HMR-restart через `data/debug_sessions/.active.json`. Триггеры: 'отладка 1С', 'breakpoint BSL', 'callStack 1С', 'debug rphost', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'logpoint', 'tracepoint', 'warm pool', 'cascade halt'. НЕ для написания BSL-кода (→ bsl-development), НЕ для запросов к БД (→ 1c-mcp-crud), НЕ для VA BDD UI-тестов (→ va-bdd-testing)."
 ---
 
 # 1c-debug-hmr — MCP Debug Server для 1С с HMR
@@ -81,7 +81,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 Параллельно живёт `1c-debug` (без HMR) — те же tools, без watchfiles overhead'а.
 
-## API tools (27)
+## API tools (36)
+
+> **W1 Autonomy (2026-07-08, roadmap [260708](../../../docs/roadmap/260708_ROADMAP_AUTONOMOUS_1C_DEBUGGING.md) §7, live-verified PASS):** +4 tools — `debug_inspect_frame` (A0: frame-bundle = стек+resolved_source+локали+исходник±radius в 1 вызов), `debug_autotrace` (A1: two-phase `arm`→триггер→`collect`, контракт `{verdict, raw}`, Continue в finally; сворачивает Шаблоны 5/5a/6), `debug_collection_info`/`debug_collection_page` (C0: paging больших ТаблицаЗначений/Массив, cap 200). Плюс B2: `set_breakpoint`/`set_logpoint` авто-применяют offset из `calibrate_result` (`applied_offset` в ответе, persist в `.active.json`). ⚠ Ф-2: callStack-массив outermost-first (BP-фрейм ПОСЛЕДНИЙ), eval-`stackLevel` innermost-first (0 = фрейм BP) — bundle/locals индексируют правильно с 89fbc5d.
 
 > **Калибровка строк (2026-07-07):** +2 tools — `debug_calibrate_lines` / `debug_calibrate_result` (silent-веер поверх coverage-механизма; live-кейс «BP по git-строке молчит» — сдвиг src↔deployed). См. Шаблон 5a.
 
@@ -259,9 +261,14 @@ debug_disconnect  + debug_connect(force_recycle_rphost=True)
      если no stop ──→ fallback (a) debug_break_on_next + retry trigger
                   ──→ fallback (b) debug_connect(force_recycle_rphost=True) + retry
                   ──→ если оба fallback'а не сработали ──→ SKIP с обоснованием, block перехода на Этап 6
-6. debug_stack_trace  ──→  assert frames[0].lineNo == MODIFIED_LINE
+6. debug_stack_trace  ──→  assert frames[ПОСЛЕДНИЙ].lineNo == MODIFIED_LINE
+     ⚠ Ф-2 (live 2026-07-08): RDBG отдаёт callStack OUTERMOST-first — фрейм
+     точки останова = ПОСЛЕДНИЙ элемент массива (frames[-1]), НЕ frames[0].
+     (eval-семантика stackLevel при этом innermost-first: 0 = фрейм BP.)
      если mismatch ──→ FAIL с error «expected line N in <module>, got M in <other>»
                    ──→ still call debug_step(Continue) чтобы release rphost
+     ЛУЧШЕ: debug_autotrace (W1, 2026-07-08) делает шаги 2-8 одним вызовом
+     (two-phase arm→collect, контракт {verdict, raw}) — см. roadmap 260708 §7.3
 7. (опц.) debug_variables  ──→  state assertion против invariants из ANALYSIS-REPORT
 8. debug_step(action="Continue")  ──→  release rphost; обязательно даже на FAIL
 ```
@@ -311,6 +318,8 @@ Footer обновляется на текущий `session_id` ТОЛЬКО пр
 **Когда:** HTTP-service trigger не подходит — IIS warm-pool rphost уже запущен, `debug_arm_next_rphost` потребляется внутри execute_code call chain до нашего BP. Решение: фоновое задание спаунит НОВЫЙ rphost → `DBGUIExtCmdInfoStarted` → auto-attach → BP fires до первой BSL-инструкции.
 
 **Требования:** `гкс_ОтладкаВыполненияКода` (CommonModule, server=true) в БД. Добавлен в `Configuration.mdo` и задеплоен через `update_database`.
+
+> ⚠ **Live-находка 2026-07-08:** модуль ОТСУТСТВУЕТ в живой `ИБTransportManagementDevelop` (`Метаданные.ОбщиеМодули.Найти` → Неопределено; вероятно, БД пересоздана из .dt после 2026-05-12) — Шаблон 6 сейчас НЕ работает. Закроется B1/ADR-049: worker `mcp_ОтладкаВыполненияКода` в расширении MCP_Сервер (roadmap 260708 W2). Обход до тех пор: trigger через `execute_code` при `recycle_strategy="all_rphosts_of_ib"` — свежий HTTP-rphost регистрируется, BP fires (проверено live-прогоном W1).
 
 ```
 1. debug_connect(infobase_alias=<ИБ>, recycle_strategy="none")
