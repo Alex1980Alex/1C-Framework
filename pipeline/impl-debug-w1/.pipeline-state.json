@@ -1,0 +1,44 @@
+{
+  "task": "impl-debug-w1",
+  "title": "W1: автономность-ядро (рефактор-фундамент + inspect_frame + autotrace + paging + auto-calibrate)",
+  "created_at": "2026-07-08T01:21:09",
+  "updated_at": "2026-07-08T01:46:40",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "roadmap 260708 §7 (анализ кода)",
+      "status": "done",
+      "completed_at": "2026-07-08T01:27:12"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "roadmap 260708 §7 (декомпозиция-дизайн)",
+      "status": "done",
+      "completed_at": "2026-07-08T01:27:12",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-08T01:27:12"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "W1 code: A0/A1/B2/C0 + W1.0, 331 unit",
+      "status": "done",
+      "completed_at": "2026-07-08T01:44:44"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "code-verify L1 PASS (331 unit/ruff0); L2 reviewer pending",
+      "status": "done",
+      "completed_at": "2026-07-08T01:46:40"
+    }
+  ]
+}
