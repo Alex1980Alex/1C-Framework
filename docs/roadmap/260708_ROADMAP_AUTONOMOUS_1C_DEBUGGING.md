@@ -15,18 +15,18 @@
 
 Эта карта добавляет **три класса улучшений**:
 - **Эпик A — Autonomy Orchestration Layer** (главная новизна): meta-tools, которые сворачивают «гипотеза→точка→запуск→чтение→вердикт» в один автономный проход.
-- **Эпик B — Root-fixes надёжности**: корневые фиксы хронических болей (эфемерное окно JOB 1-2с, сдвиг строк src↔deployed, long-poll ping).
+- **Эпик B — Root-fixes надёжности**: корневые фиксы хронических болей (эфемерный JOB: lifetime <100ms + halt-окно 1-2с, сдвиг строк src↔deployed, long-poll ping).
 - **Эпик C — Remaining DAP gaps**: function BP, data BP (watch), drop-frame alternative, обогащение replay.
 
 ---
 
-## §1. Глубокий анализ текущего инструментария (27 tools)
+## §1. Глубокий анализ текущего инструментария (32 tools)
 
 ### 1.1 Слои архитектуры
 
 ```
 Claude (агент-оркестратор)
-   │  27 MCP-tools (ручные примитивы)
+   │  32 MCP-tools (ручные примитивы)
    ▼
 mcp_hmr_proc.py  ──watchfiles──►  live-reload без потери session
    │  stdio
@@ -48,14 +48,14 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 
 | Класс | Инструменты | Зрелость |
 |---|---|---|
-| Управление сессией | connect (5 recycle-стратегий), disconnect, ping (+no_fire_diagnostics), targets, target_state, attach_targets, wait_for_target, launch_thin_client, health_check | ✅ production, live-verified |
+| Управление сессией | connect (5 recycle-стратегий), disconnect, ping (+no_fire_diagnostics), targets, target_state, attach_targets, wait_for_target, launch_thin_client, health_check, **capture_mode** (sticky re-arm эфемерных JOB) | ✅ production, live-verified |
 | Breakpoints | set_breakpoint (condition + hit_condition), set_logpoint, get_breakpoints, break_on_next, **calibrate_lines/calibrate_result** | ✅ + калибровка (2026-07-07) |
 | Warm-pool | arm_warm_rphosts, arm_next_rphost (silent) | ✅ закрывает RC2 через JOB |
 | Inspection | stack_trace (+resolved_source per frame), variables (auto-discovery), evaluate (composite types) | ✅ live |
 | Execution | step (Continue/Step/StepIn/StepOut) | ✅ |
 | Coverage/Artifacts | coverage_register, coverage_export, session_summary(artifacts ZIP) | ✅ SonarQube-compatible |
 | Exception BP | set/clear/list_exception_bp (message+module фильтры) | ✅ |
-| Replay | session_record, replay_list, replay_seek | ⚠ post-mortem, НЕ true time-travel |
+| Replay / Diff | session_record, replay_list, replay_seek, **session_diff** (regression verdict) | ⚠ post-mortem, НЕ true time-travel |
 | HMR | persistent session через `.active.json` | ✅ переживает restart |
 
 **DAP-coverage: 14/19 industry-standard features** (было 8/19 до 260511).
@@ -64,7 +64,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 
 | # | Боль | Симптом | Текущий workaround | Корень |
 |---|---|---|---|---|
-| **P-1** | Эфемерное окно останова JOB ≈ 1-2 с | `debug_variables`/`evaluate` успевают, `step` — нет; «Предмет отладки не зарегистрирован» | logpoint (inline eval) вместо интерактива; персистентный контекст (тонкий клиент) | Платформа принудительно возобновляет halt server-контекста фонового задания |
+| **P-1** | Эфемерный JOB — **два разных окна**: (a) lifetime rphost **<100ms** (spawn→строка→quit) — гонка attach/BP; (b) halt-окно после fire BP ≈ **1-2 с** — платформа принудительно возобновляет | (a) BP молча не fire (attach не успел); (b) `variables`/`evaluate` успевают, `step` — нет; «Предмет отладки не зарегистрирован» | (a) `arm_next_rphost`/`capture_mode` (sticky re-arm); (b) logpoint (inline eval) вместо интерактива; персистентный контекст (тонкий клиент) | Платформа не имеет paused-on-entry для JOB и force-resume'ит halt server-контекста |
 | **P-2** | Сдвиг строк src↔deployed | BP по git-строке молча не fire'ит (кейс: 67→70, +3) | `calibrate_lines` (silent-веер) — *детектирует*, но не устраняет | git-исходники систематически отстают от развёрнутой конфигурации |
 | **P-3** | Ping-polling вместо long-poll | 3 итерации × 2с задержки на каждый trap | ping×3 + no_fire_diagnostics | RDBG event-pull синхронный; нет long-poll-обёртки (частично адресовано в 260603) |
 | **P-4** | Warm-pool HTTPService BP ceiling | pre-existing rphost невидим, BP не fire | JOB-based execution (Шаблон 6) — обходной, требует `гкс_ОтладкаВыполненияКода` в БД | Vendor-level: RDBG не умеет attach-by-PID (подтверждено XSD 40+ команд, yukon39, EDT) |
@@ -136,7 +136,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 |---|---|---|---|---|---|
 | **A0** | `debug_inspect_frame(target_id?, stack_level=0, context_radius=3)` | **Топ-идея обоих агентов (ADI/InspectCoder frame-bundle).** Один вызов = богатый бандл: фрейм + `resolved_source` + все локали (auto-discovery через `bsl_locals`+batch-`evaluate`) + аргументы + исходник строки ±`context_radius`. Заменяет дорогую цепочку `stack_trace`→`variables`→N×`evaluate` одним ответом | ~3ч | low (композиция) | ★★★★★ №1 по ценности×применимости |
 | **A1** | `debug_autotrace(object_id, line, module_type, trigger, expect?)` | Один вызов: set_bp(+calibrate) → arm_next_rphost → исполняет `trigger` → ping-loop до fire → `inspect_frame` (A0) → (опц.) сверка с `expect` → **Continue** (release). **Контракт возврата — `verdict` + `raw` (см. дизайн-ноту ниже).** Сворачивает Шаблоны 5/5a/6 в atomic-операцию | ~4ч | low | ★★★★★ убирает P-5 |
-| **A2** | `debug_root_cause(trigger, exception_filter?)` | На unhandled exception авто-собирает: полный стек + локали **каждого** фрейма + `resolved_source` + значение виновника + JSONL-снимок → структурированный **diagnosis-record** (SWE-Doctor: fault location, runtime symptom, propagation path, observed values) | ~3ч | low | ★★★★★ инцидент-разбор |
+| **A2** | `debug_root_cause(trigger, exception_filter?)` | На unhandled exception авто-собирает: полный стек + локали **каждого** фрейма + `resolved_source` + значение виновника + JSONL-снимок → структурированный **diagnosis-record** (SWE-Doctor: fault location, runtime symptom, propagation path, observed values). ⚠ Зависимость: полный обход фреймов на **эфемерном JOB** не влезает в halt-окно 1-2с → до B1 деградирует до top-N фреймов (wrapper собирает inline в момент halt, как logpoint); полный обход — после B1 (W2<W3 ✓) | ~3ч | low | ★★★★★ инцидент-разбор |
 | **A3** | `debug_trace_variable(name, object_id, method, trigger)` | **InspectCoder-паттерн.** Авто-logpoint'ы на все строки-присваивания `name` + upstream-переменные → прогон → таймлайн значений `[{line, value, ts}]`. База (logpoints+coverage) готова | ~4ч | low | ★★★★ «откуда взялось это значение» |
 | **A4** | `debug_diff_runs(trigger_ok, trigger_fail, watch[])` | Differential debugging поверх `session_record`+`session_diff`: два прогона, на общих точках снимает `watch`, возвращает **первую точку расхождения** (bisect по состоянию). «Работало вчера — сегодня нет» | ~4ч | medium | ★★★★ регрессии |
 | **A5** | `debug_hypothesis(assertions[])` | Батч гипотез `{object_id,line,expr,expected}` → условные BP → прогон → per-assertion PASS/FAIL с actual. Runtime-grounded verify-цикл в один вызов | ~3ч | low | ★★★★ verify-этап pipeline |
@@ -167,9 +167,9 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 
 | ID | Задача | Корень | Подход | Усилие | Риск |
 |---|---|---|---|---|---|
-| **B1** | Persistent JOB-контекст (P-1) | JOB-halt эфемерен: rphost фонового задания живёт **<100ms** (spawn→строка→quit до attach+BP) | Спавнить **долгоживущий** debug-worker `mcp_ОтладкаВыполненияКода.ВыполнитьКодСУдержанием` **в расширении `MCP_Сервер`** ([ADR-049](../../.claude/skills/architecture-research/adr/049-debug-worker-in-mcp-server-extension.md)) — после исполнения держит контекст через ожидание сигнала (флаг в РС/врем.хранилище), пока агент читает/шагает; освобождение по `debug_step(Continue)`. Убирает гонку на корне (CDP-модель paused-on-entry). Заодно оформить существующий `debug_capture_mode` (sticky re-arm) как дефолт-политику в начале записи сессии | ~5ч | medium (BSL в расширении + dump-live-first деплой) |
+| **B1** | Persistent JOB-контекст (P-1, **оба окна**) | (a) lifetime rphost **<100ms** — гонка attach/BP; (b) halt-окно 1-2с — платформа force-resume'ит | Спавнить **долгоживущий** debug-worker `mcp_ОтладкаВыполненияКода.ВыполнитьКодСУдержанием` **в расширении `MCP_Сервер`** ([ADR-049](../../.claude/skills/architecture-research/adr/049-debug-worker-in-mcp-server-extension.md)) — после исполнения держит контекст через ожидание сигнала (флаг в РС/врем.хранилище), пока агент читает/шагает; освобождение по `debug_step(Continue)`. Убирает гонку на корне (CDP-модель paused-on-entry). Заодно оформить существующий `debug_capture_mode` (sticky re-arm) как дефолт-политику в начале записи сессии | ~5ч | medium (BSL в расширении + dump-live-first деплой) |
 | **B2** | Sync deployed↔src строк (P-2) | git отстаёт от развёрнутого; `calibrate` — ручной per-module workaround | (a) auto-`calibrate` встроить в `set_breakpoint` по умолчанию (offset применяется молча); (b) preflight-детект «dump живой конфы новее git» → предупреждение; (c) кэш offset per-module в `.active.json`. **Синергия с C1 (function BP устойчив к сдвигу вообще)** | ~3ч | low |
-| **B3** | Long-poll ping (P-3) | синхронный event-pull, латентность = ping-sleep (2с idle) | Завершить [260603](260603_ROADMAP_DEBUG_LONGPOLL_PING.md): фоновый long-poll с backoff вместо ping×3; `debug_autotrace` ждёт event через asyncio.Event, не sleep-loop | ~3ч | medium (event-loop) |
+| **B3** | Long-poll ping (P-3) | синхронный event-pull, латентность = ping-sleep (2с idle) | Завершить [260603](260603_ROADMAP_DEBUG_LONGPOLL_PING.md): фоновый long-poll с backoff вместо ping×3; `debug_autotrace` ждёт event через asyncio.Event, не sleep-loop. **Порядок:** A1 (W1) стартует на ping-loop-fallback, B3 (W2) апгрейдит его wait-механику без изменения контракта | ~3ч | medium (event-loop) |
 | **B4** | dbgs heartbeat + auto-reattach recovery | dbgs может умереть; **UI+ revocation root-cause неизвестен** (RDBG произвольно отзывает UI+ между операциями) | Health-probe в ping-loop: при потере :1550 или UI+ — авто-reconnect + `_reapply_bp_workspace` (метод есть) + replay `.active.json`, surface в статусе | ~2ч | low |
 | **B5** | Переносимость + housekeeping (техдолг код-агента) | `uuid_index.py:66-69` **hardcoded** `C:\1С-Framework\ИБTransportManagementDevelop\…` → блокер на др. ИБ (SVETLY/MFM); UUID-cache invalidation по mtime **корня** src (coarse — вложенный `.mdo` не инвалидирует); ~30 `test_rdbg*` + `.log` в корне; неиспользуемые Java-артефакты (jar 12МБ + vsix 11МБ + `src/`) | (a) config-path через env/`.active.json` per-alias; (b) рекурсивный mtime/hash для cache-invalidation; (c) убрать test_rdbg* в `archive/` или удалить; (d) вынести Java-артефакты | ~3ч | low |
 
@@ -180,12 +180,19 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 | ID | Фича | Реализуемость в RDBG | Усилие | Приоритет |
 |---|---|---|---|---|
 | **C0** | **Variables paging (`indexedVariables`/`namedVariables`)** | **Оба агента: критично именно для 1С.** `ТаблицаЗначений`/`Массив`/`Соответствие`/`РезультатЗапроса` бывают огромными — сейчас агент получает обрезку ИЛИ взрывает контекст. Ленивый доступ `variables(ref, start, count)` | ~2ч | ★★★★★ (узкое место, DAP-канон) |
-| **C1** | `setVariable`/`setExpression` через evaluate-присваивание | Разрешить `evaluate` **мутирующих** выражений (`Перем = Значение`) на паузе → runtime hypothesis-test без правки BSL (InspectCoder reversible experiment). `valueModified`/`setValue` в enum есть, но не задействованы. **Предпосылка для C3 drop-frame** | ~2ч | ★★★★ |
+| **C1** | `setVariable`/`setExpression` через evaluate-присваивание | Разрешить `evaluate` **мутирующих** выражений (`Перем = Значение`) на паузе → runtime hypothesis-test без правки BSL (InspectCoder reversible experiment). `valueModified`/`setValue` в enum есть, но не задействованы. **Предпосылка для C5 drop-frame-эмуляции.** ⚠ Guard: перед мутацией сохранять старое значение (`{old, new}` в ответе) — обратимость эксперимента; та же security-нота, что у logpoints (BSL исполняется в rphost) | ~2ч | ★★★★ |
 | **C2** | Function BP (по имени метода) | Резолв метод→строка через `uuid_index`+`bsl_locals` (парсим `Процедура/Функция`), обычный BP на первую исполняемую. **Устойчив к P-2 сдвигу строк** | ~3ч | ★★★★ (синергия с B2) |
 | **C3** | `breakpointLocations` + AST-усиление calibrate | Вернуть валидные исполняемые строки модуля (закрывает класс «BP на не-исполняемой строке»); усилить `bsl_locals` regex → полноценный AST из BSL Language Server (границы процедур, локали) | ~4ч | ★★★ |
 | **C4** | Data BP / watchpoint | RDBG нет native; эмуляция C1+A3: условный BP на присваиваниях + сравнение с прошлым значением (polling watch) | ~4ч | ★★★ |
 | **C5** | Drop-frame / goto | **Split-defer (§5.3).** Истинный goto отсутствует в RDBG enum (Step/StepIn/StepOut/Continue) → **defer до vendor**. 80% ценности закрывает C1 `setExpression`; оставшиеся 20% (перезапуск метода) — композицией B1+C1+StepOut, не новым примитивом. Выделенный goto НЕ реализуем в текущем RDBG | — | ⏸ defer |
 | **C6** | Precise coverage (callCount) + семантический replay-seek | Block-level счётчики → genericCoverage `count=`; индекс по replay-логу (TTD-timeline-стиль) → `replay_seek("первый halt где Итог<0")` вместо числового индекса | ~4ч | ★★★ |
+| **C7** | Perf-профилирование через `measureResultProcessing` | RDBG **нативно** умеет замеры производительности — событие в enum, сейчас no-op ветка (`_handle_command` → Skipping). Задействовать: `debug_profile_start/stop` → per-method времена → hotspot-отчёт. Закрывает perf-hunting сценарий (260511 BP-4) без массовых logpoint'ов | ~4ч (research 1ч: формат события) | ★★★ (backlog W5+) |
+
+**Операционные ноты реализации (уроки прошлых итераций):**
+1. **HMR watch-list:** каждый новый модуль (`autonomy.py` и т.п.) добавлять в `--watch` аргументы `.mcp.json`, иначе wrapper не перезагрузится при правке (урок P0.D: `system_stops.py` не был в watch-list → фикс «не работал» до `/mcp reconnect`). Новые **параметры** существующих tools всё равно требуют `/mcp reconnect` (harness кеширует JSON-schema).
+2. **Безопасность:** `trigger` в A1/A2/A3 и присваивания C1 исполняют произвольный BSL в rphost — та же security-нота, что у logpoints (не передавать untrusted, `security_note` в ответе при мутациях).
+3. **Измеримость acceptance:** autonomy-tools логируют в существующий контур `data/tool-effectiveness.jsonl` (`tool_calls_saved` = сколько ручных вызовов заменил один meta-call) — подтверждаем «12→1» фактическими данными, не декларацией.
+4. **Тесты:** каждый A/B/C-инструмент — unit (mock RDBGClient, как 222 существующих) + 1 live-smoke на `ИБTransportManagementDevelop`; интеграция в `implement-1c-task` Этап 5.x — только после live-smoke PASS.
 
 ---
 
@@ -197,8 +204,8 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 | **W2** (надёжность) | B1 + B3 + B5 | ~11ч | Интерактивный JOB-step; sub-second trap; переносимость на SVETLY/MFM |
 | **W3** (диагностика) | A2 + A3 + C1 + B4 | ~11ч | Root-cause diagnosis-record; trace-variable; runtime hypothesis-test; auto-reattach |
 | **W4** (глубина) | A4 + C2 + A6 | ~9ч | Differential debug; function BP; session-режимы + correlation_id |
-| **W5** (nice-to-have) | A5 + C3 + C4 + C6 | ~13ч | Verify-батч; breakpointLocations; watchpoint; precise coverage + семантический replay |
-| **Defer** | C5 (drop-frame) | — | до подтверждения feasibility `setExpression`/записи переменной в RDBG XSD |
+| **W5** (nice-to-have) | A5 + C3 + C4 + C6 | ~15ч | Verify-батч; breakpointLocations; watchpoint; precise coverage + семантический replay |
+| **Defer** | C5 (истинный goto/drop-frame) | — | **до vendor-расширения RDBG** (решение §5.3); 80% ценности закрывает C1 (W3), остаток — композиция B1+C1+StepOut |
 
 **ROI:** W1 (~12ч) даёт наибольший leverage — `debug_inspect_frame`+`debug_autotrace`+paging убирают P-5 (ручная оркестрация, 6-10 tool-calls → 1) и P-2 (сдвиг строк). W1+W2+W3 (~34ч) закрывают ≥80% боли автономной отладки. По данным InspectCoder — высокоуровневые примитивы дают **1.67–2.24× эффективности** vs атомарный степпинг.
 
