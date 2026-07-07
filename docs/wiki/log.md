@@ -28,14 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
----
-
-## 2026-07-05 — Auto-promoted: [KNOWN-ISSUE · Sonar BLOCKER · ИБTransportManageme
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `[KNOWN-ISSUE · Sonar BLOCKER · ИБTransportManageme` (confidence: 0.82)
-- Draft: `docs/wiki/drafts/known-issue--sonar-blocker--transportmanageme.md`
 
 **Status:** Pending review
 
@@ -498,3 +490,11 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 
 - Skills: git-porcelain-parsing, create-hook, code-verify, edt-mcp, claude-in-chrome
 - Files changed: 3
+## 2026-07-08 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify
+- Files changed: 5
+- Summary: Session 2026-07-08. Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify, 1c-mcp-crud, learn:1c-metadata-objects, bsl-development. Changed 5 files in MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, ИБTransportManagementDevelop/Конфигурация. Commit: chore: auto-commit Конфигурация, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +2 more. Commit: fix(гкс_ЛабораторныйАнализ): перенести ЗафиксироватьТранзакцию внутрь Попытка-Исключение. Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС
+

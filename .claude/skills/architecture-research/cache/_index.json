@@ -58,6 +58,33 @@
       "last_verified": "2026-07-03"
     },
     {
+      "file": "autonomous-1c-debugging-2026.md",
+      "title": "Автономная отладка 1С (RDBG MCP-сервер 1c-debug-hmr) — best practices 2026: глубокий анализ 27-tool сервера (XML-over-HTTP RDBG, yukon39-реверс), хронические ограничения (эфемерный JOB <100ms, сдвиг строк src↔deployed, warm-pool P0.5 ceiling, ручная оркестрация P-5), LLM-debugging research (ADI frame-bundle, InspectCoder 1.67-2.24×, SWE-Doctor runtime-grounding), топ-10 идей автономности (inspect_frame, variable paging, autotrace, setExpression, root_cause, trace_variable), дорожная карта W1-W5",
+      "keywords": [
+        "1c-debug-hmr",
+        "rdbg",
+        "autonomous-debugging",
+        "debug-adapter-protocol",
+        "frame-bundle",
+        "inspectcoder",
+        "swe-doctor",
+        "agent-centric-debugging",
+        "variable-paging",
+        "setexpression",
+        "debug-autotrace",
+        "root-cause",
+        "trace-variable",
+        "ephemeral-job",
+        "line-offset-calibrate",
+        "warm-pool-ceiling",
+        "time-travel-debugging",
+        "yukon39",
+        "coverage41c",
+        "bsl-debugger"
+      ],
+      "last_verified": "2026-07-08"
+    },
+    {
       "file": "video-transcription-mcp-2026.md",
       "title": "MCP-серверы транскрибации видео/аудио (Whisper/STT): faster-whisper (ZahiriNatZuke/whisper-transcribe-mcp, pip, local, large-v3) vs whisper.cpp (eviscerations/whisper-windows-mcp, Vulkan GPU, Windows-native) vs Groq cloud (bis-code/groq-whisper-mcp); экосистема молодая, ★ низкие; вывод для Windows+GPU+RU+приватность",
       "keywords": [
