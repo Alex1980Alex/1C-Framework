@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-- Pattern: `Opus = Planner/Reviewer, Z.AI = Coder` (confidence: 0.81)
-- Draft: `docs/wiki/drafts/opus--plannerreviewer-zai--coder.md`
-
-**Status:** Pending review
-
----
-
-## 2026-07-07 — Auto-promoted: GKSTCPLK-2637 «Исправление замечаний SonarQube» (б
-
 **Event:** L2 pattern promoted to wiki draft
 
 - Pattern: `GKSTCPLK-2637 «Исправление замечаний SonarQube» (б` (confidence: 0.81)
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify
 - Files changed: 6
 - Summary: Session 2026-07-09. Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify, 1c-mcp-crud, learn:1c-metadata-objects, bsl-development. Changed 6 files in MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, pipeline/w2-b5-debug-portability. Commit: chore: auto-save 01-architecture.md, 02-design.md, 03-implementation.md +1 more. Commit: feat(debug): W2 B5.a/B5.b - per-infobase config + recursive cache-invalidation. Commit: chore: auto-save IMPLEMENTATION-PROGRESS.md, commit_2656.py, ANALYSIS-REPORT.md +4 more
+
+
+## 2026-07-10 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify
+- Files changed: 6
+- Summary: Session 2026-07-10. Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify, 1c-mcp-crud, learn:1c-metadata-objects, bsl-development. Changed 6 files in MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС, pipeline/w2-b3-longpoll-ping. Commit: feat(debug): W2 B3 event-driven long-poll wait + roadmap 260708. Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС
 
