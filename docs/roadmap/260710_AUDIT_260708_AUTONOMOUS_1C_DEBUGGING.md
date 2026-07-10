@@ -7,7 +7,9 @@
 
 ## Статус реализации (волна W-fix, 2026-07-10)
 
-**Все code-side пункты закрыты.** 440 unit passed (+15: 13 регресс-тестов [`test_audit_260710_fixes.py`](../../tools/bsl-debug-server/tests/test_audit_260710_fixes.py) + 2 B2), 0 warnings.
+**Все code-side пункты закрыты + прошли адверсариальное ре-ревью (verdict PASS).** 450 unit passed (+25: 23 регресс-теста [`test_audit_260710_fixes.py`](../../tools/bsl-debug-server/tests/test_audit_260710_fixes.py) + 2 B2), 0 warnings. Коммиты подмодуля: `9ba8b33` (волна) + `8f86599` (follow-up по FAIL-ревью).
+
+**Двухпроходная верификация (сам паттерн - урок §6):** первый адверсариальный ре-ревью дельты дал **FAIL** - поймал 1 внесённую регрессию (`_strip_bsl_strings` не сохранял длину → `find_assignment_lines` резал RHS mid-literal) + 4 стыковых MEDIUM-риска (suppress-fail × M-1/H-2 ghost; M-6 guard без bound; H-1 failure-path через флаги; H-4 push-empty гонка). Все закрыты, второй ре-ревью - **PASS**. Это подтверждает мета-вывод §6.2: per-diff verify пропускает стыки, нужен wave-level проход - причём и на самих фиксах.
 
 | Пункт | Статус | Суть фикса |
 |---|---|---|
