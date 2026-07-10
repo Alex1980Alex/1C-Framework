@@ -5,6 +5,36 @@
 > **Скоуп:** реализованное - W1 (W1.0/A0/A1/C0/B2), W2 (B3/B5.a-d), W3 (A2/A3/B4). НЕ скоуп: нереализованные B1/C1/W4/W5.
 > **Верифицированные заявления роадмапа:** «425 unit passed» - подтверждено живым прогоном (425 passed, 37.5s) ✅; `autonomy.py` в HMR watch-list ✅; lost-wakeup-инвариант B3 - формально подтверждён интерливинг-анализом ✅.
 
+## Статус реализации (волна W-fix, 2026-07-10)
+
+**Все code-side пункты закрыты.** 440 unit passed (+15: 13 регресс-тестов [`test_audit_260710_fixes.py`](../../tools/bsl-debug-server/tests/test_audit_260710_fixes.py) + 2 B2), 0 warnings.
+
+| Пункт | Статус | Суть фикса |
+|---|---|---|
+| C-1 | ⏸ за пользователем | Ротация `Alex80Alex` + history-rewrite публичного форка - outward-facing/необратимо, НЕ автономно |
+| H-1 | ✅ | `_ui_plus_full_reattach_and_retry`: `in_ping_task` guard → `detach(cancel_ping=not in_ping_task)`, не отменять свой ping_task |
+| H-2 | ✅ | `step()`: discard из обоих наборов в `finally` вокруг `_post` |
+| H-3 | ✅ | `exception_bps`: match module_pattern по ВСЕМ фреймам (`_extract_module_names`) |
+| H-4 | ✅ | HMR-restore: `create_task(_push_bp_workspace())` чистит stale RDBG-BP |
+| H-5 | ✅ | `_recent_exceptions` ring + `build_seed_diagnosis` → degraded (`window_closed`) при NO_HIT |
+| H-6 | ✅ | offset-ключ `(oid, pid)`, persist `"oid|pid"` + legacy-толерантность |
+| H-7 | ✅ | calibrate_result `is not None` + pop при offset==0 |
+| M-1 | ✅ | `_user_visible_stops` (после suppress-гейтов) = source of truth `_await_bp_stop` |
+| M-2 | ✅ частично | BP-leak закрыт: autotrace arm пишет `_autotrace_bp`, collect снимает (hit ИЛИ NO_HIT) - паритет с A3-teardown. hit↔armed корреляция (сверка строки хита с armed) отложена к B1 - с M-1 (`_user_visible_stops` фильтрует suppressed) основной ложный-grab уже устранён |
+| M-3 | ✅ | verdict: `[]`/error → INCONCLUSIVE, definitive-mismatch превалирует; `pres` перед typed |
+| M-4 | ✅ | `logpoints.drain_active` перед чтением таймлайна + `pending_evals` |
+| M-5 | ✅ | A3 arm пропускает коллизии с чужими BP/logpoint, `skipped_collisions` |
+| M-6 | ✅ | reconnect: guard активного стопа + exp-backoff + honest `handshake_ok`/`bp_reapply_failed` |
+| M-7 | ✅ | offset в coverage_register (tracker-ключ И BP) |
+| M-8 | ✅ | `apply_offset` opt-out в set_breakpoint |
+| M-9 | ⏸ отложено | conftest autouse `.active.json`→tmp_path (тесты монкипатчат путь индивидуально; отдельная гигиеническая правка) |
+| M-10 | ✅ | collection_page type-probe → hint для Соответствие/РезультатЗапроса |
+| M-11 | — | latency-хвост A2 (свойство halt-окна, корень = B1) |
+| LOW | ✅ | строк-литералы в upstream, `//`-split, A2 dedup, max_frames=0 fault, docstring, sync-asyncio warning |
+| Опер.2 | ✅ | +6 модулей в HMR `--watch` (.mcp.json) |
+
+M-2 (частично) и M-9 (отложено) - не блокеры: M-2's «BP держится до Continue» - штатный контракт autotrace (collect всегда Continue'ит); полное снятие/корреляция осмысленны вместе с B1 (persistent JOB). M-9 - тест-гигиена, не влияет на продакшн.
+
 ## Вердикт
 
 Инженерное качество высокое (честные тесты, системная отработка Ф-2 в ядре, Continue-в-finally, атомарные персисты, backward-compat дисциплина B5), но **аудит нашёл 1 CRITICAL (security) + 6 HIGH (корректность)**, из них два - прямое опровержение заявлений роадмапа («self-cancel класс закрыт» B4; «offset-кэш dict[(object_id, property_id)]» B2). Общий паттерн дефектов: **per-diff code-verify пропускает межфичевые взаимодействия** (A3-logpoint'ы × `_await_bp_stop`-debounce; HMR-restart × two-phase state; UI+ эскалация × heartbeat) и **точечный фикс вместо закрытия класса** (self-cancel починен в одном из двух путей).
