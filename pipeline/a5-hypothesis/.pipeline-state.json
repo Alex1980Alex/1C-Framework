@@ -1,0 +1,44 @@
+{
+  "task": "a5-hypothesis",
+  "title": "a5-hypothesis",
+  "created_at": "2026-07-11T07:06:26",
+  "updated_at": "2026-07-11T07:06:26",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-11T07:06:26"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-11T07:06:26",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-11T07:06:26"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-07-11T07:06:26"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-07-11T07:06:26"
+    }
+  ]
+}

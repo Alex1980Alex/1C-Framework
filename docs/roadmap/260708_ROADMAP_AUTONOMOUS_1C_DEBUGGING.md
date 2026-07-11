@@ -142,7 +142,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 
 > Приоритет: **A (автономность) > B (root-fixes) > C (DAP-gaps)**. A и B дают наибольший leverage: A убирает ручную оркестрацию (P-5), B устраняет хронические гонки (P-1/P-2/P-3).
 
-**Легенда статуса (обновлено 2026-07-11):** ✅ реализовано · 🟡 частично · ⬜ не начато · ⏸ отложено (live-ИБ / vendor). Сделано: **W1** (A0/A1/C0/B2), **W2** (B1 ✅ + B3/B5.a-d), **W3** (A2/A3/B4 + **C1 ✅**). **W2 и W3 полностью закрыты** — B1 + C1 live-validated 2026-07-11 на MFM (B1: BP-trace-с-удержанием; C1: `debug_set_variable` через нативный `modifyValue`). Осталось только W4′/W5′ (nice-to-have; **полная декомпозиция до шагов 0.5-1ч - §8**, волны пересобраны по зависимостям) + C5 (defer до vendor). Детали — в статус-блоках вверху карты.
+**Легенда статуса (обновлено 2026-07-11):** ✅ реализовано · 🟡 частично · ⬜ не начато · ⏸ отложено (live-ИБ / vendor). Сделано: **W1** (A0/A1/C0/B2), **W2** (B1 ✅ + B3/B5.a-d), **W3** (A2/A3/B4 + **C1 ✅**). **W2 и W3 полностью закрыты** — B1 + C1 live-validated 2026-07-11 на MFM (B1: BP-trace-с-удержанием; C1: `debug_set_variable` через нативный `modifyValue`). **W4′ закрыт 2026-07-11** (C3+C2+A5: 3 tool'а + классификатор строк, 48 unit, code-verify PASS ×3). Осталось W5′ (C4+C6+A6+A4, nice-to-have; **декомпозиция §8.4-8.7**) + C5 (defer до vendor). Детали — в статус-блоках вверху карты.
 
 ### ЭПИК A — Autonomy Orchestration Layer 🎯 (главная новизна)
 
@@ -219,7 +219,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 | ✅ **W1** (автономность-ядро) | **W1.0 (рефактор-фундамент)** + A0 + A1 + C0 + B2 | ~13.5–14.5ч (декомпозиция §7.7) | Frame-bundle в 1 вызов; autotrace (two-phase, one-call как enhancement); paging больших коллекций; BP fire'ит без ручной калибровки |
 | ✅ **W2** (надёжность) | **B1 ✅** + **B3 ✅** + **B5 ✅** (a/b/c/d; d = b1+: Python CI, P0 креды, jar untracked) | ~11ч | **Интерактивный JOB-step ✅** (B1 live-validated 2026-07-11: JOB жив 20с vs <100мс, стек+4 локали, release за <1с); **sub-second trap ✅** (B3); **переносимость на SVETLY/MFM ✅** (B5.a/b); **root declutter + живой CI ✅** (B5.c/d) |
 | ✅ **W3** (диагностика) | **A2 ✅** + **A3 ✅** + **C1 ✅** + **B4 ✅** | ~11ч | **Root-cause diagnosis-record ✅** (A2); **trace-variable ✅** (A3); **runtime hypothesis-test ✅** (C1 live-validated 2026-07-11 — `debug_set_variable` через нативный `modifyValue`); **auto-reattach ✅** (B4) |
-| **W4′** (строки и гипотезы) | C3 + C2 + A5 | ~10.5ч | **Пересобрано по зависимостям 2026-07-11 - полная декомпозиция до шагов 0.5-1ч в §8.** Классификатор исполняемых строк -> function BP -> verify-батч гипотез. Инвентаризация §8.0: sticky capture-mode, coverage hit-счётчики, logpoint-конвейер, A3-хелперы УЖЕ в коде |
+| ✅ **W4′** (строки и гипотезы) | **C3 ✅ + C2 ✅ + A5 ✅** | ~10.5ч | ✅ **DONE 2026-07-11** (декомпозиция §8): классификатор исполняемых строк (`debug_breakpoint_locations`) -> function BP (`debug_set_function_breakpoint`) -> verify-батч гипотез (`debug_hypothesis`). 3 сабмодуль-коммита + 48 unit + code-verify PASS ×3. Живой резолв C2 на реальном EDT (3506 объектов); C3 совпал с B1-эмпирикой |
 | **W5′** (наблюдение состояния) | C4 + C6 + A6 + A4 | ~14ч | Watchpoint (A3-сканер+C1 готовы) -> counts-экспорт+semantic seek -> correlation -> differential (A4 последним: собирает C6.2+A6.3). Декомпозиция §8.4-8.7 |
 | **Defer** | C5 (истинный goto/drop-frame) | — | **до vendor-расширения RDBG** (решение §5.3); 80% ценности закрывает C1 (W3), остаток — композиция B1+C1+StepOut |
 
@@ -395,7 +395,9 @@ RDBG не имеет «expand»-вызова — paging строится wrapper
 
 Acceptance: BP по имени метода fire'ит на живой базе без номера строки и без ручной калибровки (устойчив к P-2 сдвигу: имя не сдвигается).
 
-### 8.3 A5 - `debug_hypothesis(assertions[])` verify-батч (~3.5ч)
+### 8.3 ✅ A5 - `debug_hypothesis(assertions[])` verify-батч (~3.5ч)
+
+> ✅ **DONE 2026-07-11 (сабмодуль `03958f6`):** tool `debug_hypothesis(assertions, phase, timeout_sec)` two-phase (arm: группировка ассертов по (oid,pid,line) → logpoint template `{expr1} {expr2}` + silent break-on-next; collect: read JSONL → per-assertion PASS/FAIL/NO_HIT/INCONCLUSIVE/HIT + teardown) - зеркалит A3 `debug_trace_variable`. Хелперы `_a5_eq` (нормализованное равенство, None-guard) + `_a5_read_entries`. 15 unit (вкл. регресс `expected=0`), 532 total. **code-verify FAIL→fix→PASS**: блокер `_a5_eq` схлопывал falsy (`str(x or "")`) → `expected=0` при runtime 0 давал ложный FAIL; фикс None-guard + регресс-тест. Полный live arm→JOB→collect - как C1/C2 требует `/mcp reconnect` (multi-placeholder logpoint = A3 live-проверенный путь). **Отложено:** Rec5 O(n²) per-key set_breakpoints (n≤50, опц.).
 
 Механика - **logpoint-based** (обобщение A3, НЕ новый примитив): assertion = logpoint с eval нужного `expr` на fire (без halt), collect читает JSONL и судит. Контракт `{verdict, raw}` (§3 дизайн-нота: A5 в списке).
 
@@ -463,16 +465,16 @@ Acceptance: «работало вчера - сегодня нет» = 1 вызо
 
 | Порядок | Пункт | Ядро | Зависит от | Live-harness |
 |---|---|---|---|---|
-| 1 | C3 breakpointLocations | 4ч (+1.5ч AST-стретч) | - | веер по worker-модулю + факты B1 |
-| 2 | C2 Function BP | 3ч | C3.1 (или деградация) | FBP на `ВыполнитьКодСУдержанием` |
-| 3 | A5 debug_hypothesis | 3.5ч | logpoints/capture_mode (есть), C3.1 желателен | 10 assertions / 1 прогон held-JOB |
+| 1 | ✅ C3 breakpointLocations | 4ч (+1.5ч AST-стретч) | - | веер по worker-модулю + факты B1 |
+| 2 | ✅ C2 Function BP | 3ч | C3.1 (или деградация) | FBP на `ВыполнитьКодСУдержанием` |
+| 3 | ✅ A5 debug_hypothesis | 3.5ч | logpoints/capture_mode (есть), C3.1 желателен | 10 assertions / 1 прогон held-JOB |
 | 4 | C4 Watchpoint | 4ч | A3-сканер (есть), C1 (есть) | 3 присваивания + C1-инъекция |
 | 5 | C6 counts + semantic seek | 3ч | replay (есть) | replay held-JOB + seek |
 | 6 | A6 režимы + correlation | 2ч | - | смоук + HMR-restore |
 | 7 | A4 debug_diff_runs | 5ч | C6.2, A6.3 | два прогона ok/fail |
 | | **Итого** | **~24.5ч** (+1.5ч стретч) | | ≈ исходная оценка W4 9ч + W5 15ч |
 
-Пересобранные волны: **W4′ «строки и гипотезы»** = C3+C2+A5 (~10.5ч, взаимные пред-реквизиты) -> **W5′ «наблюдение состояния»** = C4+C6+A6+A4 (~14ч, A4 последним - собирает C6.2+A6.3).
+Пересобранные волны: **✅ W4′ «строки и гипотезы»** = C3+C2+A5 (~10.5ч, взаимные пред-реквизиты) - **DONE 2026-07-11** (сабмодули `f373c57`/`eb3d425`/`03958f6`; 3 tool'а `debug_breakpoint_locations`/`debug_set_function_breakpoint`/`debug_hypothesis` + классификатор строк; 48 unit; code-verify PASS ×3 [A5 через FAIL→fix]) -> **W5′ «наблюдение состояния»** = C4+C6+A6+A4 (~14ч, A4 последним - собирает C6.2+A6.3).
 
 **Общие правила реализации (уроки B1/C1, обязательны для каждого пункта):**
 1. Unit-тесты билдеров/парсеров НЕ ловят рантайм-семантику RDBG (сигнатура `ФоновыеЗадания.Выполнить`, `timeout` в мс, success-shape без `processed`) -> **live-зонд на held-JOB harness ДО фиксации дизайна**, спорную семантику зондировать первой.
