@@ -380,7 +380,9 @@ RDBG не имеет «expand»-вызова — paging строится wrapper
 
 Риск: эвристика ≠ парсер - потому advisory-warning, не блок. Acceptance: BP на `КонецЕсли` даёт warning+nearest; calibrate не тратит BP на комменты.
 
-### 8.2 C2 - Function BP по имени метода (~3ч)
+### 8.2 ✅ C2 - Function BP по имени метода (~3ч)
+
+> ✅ **DONE 2026-07-11 (сабмодуль `eb3d425`):** C2.1 `uuid_index._reverse_fqn_entries` (обратная карта fqn→(object_id,module_type), зеркалит `get_source_info`) + `find_by_fqn` (lazy, thread-safe) + C2.2 `_first_executable_line` (через C3-классификатор) + C2.3 tool `debug_set_function_breakpoint` (rpartition→find_by_fqn→resolve→find_method_range→first_executable→делегирует `debug_set_breakpoint`, B2-offset) + C2.5 11 unit + C2.6 live (реальный EDT 3506 объектов/7782 fqn: `ПеревестиТекст` header 11→first_exec 13, `ПараметрыАдминистрированияКластера` 35→37). code-verify PASS (Rec2 гонка `_reverse` под локом - пофикшен). **Отложено:** C2.4 auto_calibrate fallback (B2-offset уже покрывает большинство сдвигов; calibrate - отдельный тул). **Follow-up (пре-существующий, вне C2):** `MODULE_PROPERTY_FILES` (`uuid_index.py:36`) мапит RecordSetModule-pid `9f36fd70`→`ManagerModule.bsl` вместо `RecordSetModule.bsl` (противоречит метке в `MODULE_PROPERTY_IDS:63`) - для регистров с логикой в наборе записей резолв читает не тот файл (обычно вырождается в `method_not_found`; общий баг resolve() с C3 line-BP, не дефект C2).
 
 | Шаг | Что | Оценка |
 |---|---|---|
