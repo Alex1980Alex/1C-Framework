@@ -362,7 +362,9 @@ RDBG не имеет «expand»-вызова — paging строится wrapper
 | uuid→fqn резолв (per-alias) | `uuid_index.get_source_info:360`, `get_index_for_alias:334` | C2 (**обратного fqn→uuid НЕТ** - это C2.1) |
 | B1 held-JOB + C1 set_variable | `held_job.py`, `debug_set_variable` | live-harness ВСЕХ пунктов; C4-инъекция изменений |
 
-### 8.1 C3 - breakpointLocations + классификатор исполняемых строк (~4ч ядро, +1.5ч AST-стретч)
+### 8.1 ✅ C3 - breakpointLocations + классификатор исполняемых строк (~4ч ядро, +1.5ч AST-стретч)
+
+> ✅ **DONE 2026-07-11 (сабмодуль `f373c57`):** C3.1 `bsl_locals.classify_line/classify_lines/nearest_executable` (9 классов, header/structural=uncertain) + C3.2 tool `debug_breakpoint_locations` + C3.3 врезка `debug_set_breakpoint` (поле `location` + `_classify_bp_line` helper, SRC-координата до B2-offset, utf-8-sig BOM-fix) + C3.5 22 unit + C3.6 live-verify (совпал с B1-эмпирикой: стр.66 executable/fired, 68/69/75 structural). **Отложено:** C3.4 (фильтр веера calibrate по executable - минорная оптимизация), C3.7 (AST-апгрейд через tree-sitter-bsl - стретч). code-verify PASS (нашёл+пофикшен BOM-баг чтения).
 
 Первым: его классификатор поднимает качество C2 (first-executable), A5/C4 (не ставить точки на мусор) и calibrate.
 
