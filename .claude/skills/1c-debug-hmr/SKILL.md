@@ -1,6 +1,6 @@
 ---
 name: 1c-debug-hmr
-description: "1c-debug-hmr — MCP debug-сервер для 1С:Предприятие с hot-module-reload + persistent session (RDBG-протокол, 38 tools: autotrace/inspect_frame/root_cause/trace_variable (W1/W3 autonomy — BP-верификация, root-cause и value-timeline одним вызовом)/connect/ping/set_breakpoint/set_logpoint/calibrate_lines/stack_trace/variables/evaluate/step/collection_page/arm_warm_rphosts и др., полный список в теле скилла). ИСПОЛЬЗУЙ при отладке BSL-кода (BP, stack, locals, evaluate, step) и при разработке самого debug-wrapper'а — изменения подхватываются без /mcp reconnect; сессия RDBG переживает HMR-restart через `data/debug_sessions/.active.json`. Триггеры: 'отладка 1С', 'breakpoint BSL', 'callStack 1С', 'debug rphost', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'logpoint', 'tracepoint', 'warm pool', 'cascade halt'. НЕ для написания BSL-кода (→ bsl-development), НЕ для запросов к БД (→ 1c-mcp-crud), НЕ для VA BDD UI-тестов (→ va-bdd-testing)."
+description: "1c-debug-hmr — MCP debug-сервер для 1С:Предприятие с hot-module-reload + persistent session (RDBG-протокол, 39 tools: set_variable (C1 — изменить переменную в halt'е, runtime hypothesis-test)/autotrace/inspect_frame/root_cause/trace_variable (W1/W3 autonomy — BP-верификация, root-cause и value-timeline одним вызовом)/connect/ping/set_breakpoint/set_logpoint/calibrate_lines/stack_trace/variables/evaluate/step/collection_page/arm_warm_rphosts и др., полный список в теле скилла). ИСПОЛЬЗУЙ при отладке BSL-кода (BP, stack, locals, evaluate, step) и при разработке самого debug-wrapper'а — изменения подхватываются без /mcp reconnect; сессия RDBG переживает HMR-restart через `data/debug_sessions/.active.json`. Триггеры: 'отладка 1С', 'breakpoint BSL', 'callStack 1С', 'debug rphost', 'debug_set_breakpoint', 'debug_stack_trace', 'debug_variables', 'debug_evaluate', 'logpoint', 'tracepoint', 'warm pool', 'cascade halt'. НЕ для написания BSL-кода (→ bsl-development), НЕ для запросов к БД (→ 1c-mcp-crud), НЕ для VA BDD UI-тестов (→ va-bdd-testing)."
 ---
 
 # 1c-debug-hmr — MCP Debug Server для 1С с HMR
@@ -81,7 +81,9 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 
 Параллельно живёт `1c-debug` (без HMR) — те же tools, без watchfiles overhead'а.
 
-## API tools (38)
+## API tools (39)
+
+> **C1 setVariable (2026-07-11, roadmap 260708 §7 W3, live-validated):** +1 tool — `debug_set_variable(name, value_expression, target_id?, stack_level=0, verify=True)` — **изменить** значение переменной/свойства в точке останова (runtime hypothesis-test «а что если тут X=0?»). `value_expression` — произвольный BSL, ставит `name` в результат его вычисления (число/строка/дата/`Новый ...`, может читать др. переменные фрейма). Guard `{old, new, changed}` (verify=True: eval до/после) + `processed` + `security_note`. ⚠ **evalExpr НЕ умеет присваивание** (в BSL `=` — сравнение, `Выполнить` void); механизм — нативная RDBG-команда `modifyValue` (`RDBGModifyValueRequest`, `timeout` в **мс**). SECURITY: value_expression исполняется как BSL в rphost — не передавать untrusted (нота как у logpoints). Разблокирует 80% ценности C5 (drop-frame — композиция B1+C1+StepOut).
 
 > **W3 A2/A3/B4 (2026-07-10, roadmap [260708](../../../docs/roadmap/260708_ROADMAP_AUTONOMOUS_1C_DEBUGGING.md) §7.6):** +2 tools —
 > - `debug_root_cause(exception_message?, exception_module?, phase, timeout_sec, max_frames, context_radius)` (**A2**): автономный root-cause на необработанном исключении → structured diagnosis-record (`fault_location` / `runtime_symptom {code,message}` / `propagation_path` [весь стек outermost-first + resolved_source] / `frames_inspected` [top-`max_frames` innermost с локалями+source]). Two-phase (arm=опц.фильтр исключений+silent break-on-next / collect=ждёт rteProcessing event-driven → record → Continue в finally). Контракт `{diagnosis, raw}`. **Bounded top-N** (halt-окно 1-2с), усечение видно в `frames_bounded`/`frames_total`.
@@ -134,6 +136,7 @@ MCP-сервер на FastMCP/Python поверх **1С RDBG-протокола*
 | `debug_stack_trace(target_id?)` | Cache-first (через `last_stopped_target_id`), fallback на `getCallStack` HTTP. Error envelope: при exception возвращает `{"error": "<Type>: <repr>", "target_id": ...}`. **(P0.C roadmap 260511)** Каждый frame обогащён полем `resolved_source: {fqn, file_path, exists}` через `uuid_index.get_source_info` (UUID → `Документ.<name>.МодульМенеджера` + file path) |
 | `debug_variables(target_id?, stack_level=0, expressions?)` | **Auto-discovery** (default) — парсит BSL-source на текущей строке через `uuid_index + bsl_locals`, batch-eval'ит params + `Перем` + assignments. **Explicit names** — `expressions=["A","B"]` пропускает source parsing |
 | `debug_evaluate(expression, target_id?, stack_level=0)` | Eval любого BSL-выражения. Поддерживает composite types (Структура, ДокументСсылка, ЗначениеПеречисления) |
+| `debug_set_variable(name, value_expression, target_id?, stack_level=0, verify=True)` | **(C1, 2026-07-11)** ИЗМЕНИТЬ переменную/свойство в halt'е — `name` := результат BSL `value_expression` (нативный RDBG `modifyValue`, evalExpr присваивать НЕ умеет). Guard `{old,new,changed}` при `verify`. SECURITY: BSL исполняется в rphost |
 
 ### Coverage & Artifacts (P1 batch)
 
