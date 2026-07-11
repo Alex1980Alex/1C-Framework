@@ -142,7 +142,7 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 
 > Приоритет: **A (автономность) > B (root-fixes) > C (DAP-gaps)**. A и B дают наибольший leverage: A убирает ручную оркестрацию (P-5), B устраняет хронические гонки (P-1/P-2/P-3).
 
-**Легенда статуса (обновлено 2026-07-11):** ✅ реализовано · 🟡 частично · ⬜ не начато · ⏸ отложено (live-ИБ / vendor). Сделано: **W1** (A0/A1/C0/B2), **W2** (B1 ✅ + B3/B5.a-d), **W3** (A2/A3/B4 + **C1 ✅**). **W2 и W3 полностью закрыты** — B1 + C1 live-validated 2026-07-11 на MFM (B1: BP-trace-с-удержанием; C1: `debug_set_variable` через нативный `modifyValue`). Осталось только W4/W5 (nice-to-have) + C5 (defer до vendor). Детали — в статус-блоках вверху карты.
+**Легенда статуса (обновлено 2026-07-11):** ✅ реализовано · 🟡 частично · ⬜ не начато · ⏸ отложено (live-ИБ / vendor). Сделано: **W1** (A0/A1/C0/B2), **W2** (B1 ✅ + B3/B5.a-d), **W3** (A2/A3/B4 + **C1 ✅**). **W2 и W3 полностью закрыты** — B1 + C1 live-validated 2026-07-11 на MFM (B1: BP-trace-с-удержанием; C1: `debug_set_variable` через нативный `modifyValue`). Осталось только W4′/W5′ (nice-to-have; **полная декомпозиция до шагов 0.5-1ч - §8**, волны пересобраны по зависимостям) + C5 (defer до vendor). Детали — в статус-блоках вверху карты.
 
 ### ЭПИК A — Autonomy Orchestration Layer 🎯 (главная новизна)
 
@@ -219,8 +219,8 @@ dbgs.exe :1550  ──►  rphost / ManagedClient (debug targets)
 | ✅ **W1** (автономность-ядро) | **W1.0 (рефактор-фундамент)** + A0 + A1 + C0 + B2 | ~13.5–14.5ч (декомпозиция §7.7) | Frame-bundle в 1 вызов; autotrace (two-phase, one-call как enhancement); paging больших коллекций; BP fire'ит без ручной калибровки |
 | ✅ **W2** (надёжность) | **B1 ✅** + **B3 ✅** + **B5 ✅** (a/b/c/d; d = b1+: Python CI, P0 креды, jar untracked) | ~11ч | **Интерактивный JOB-step ✅** (B1 live-validated 2026-07-11: JOB жив 20с vs <100мс, стек+4 локали, release за <1с); **sub-second trap ✅** (B3); **переносимость на SVETLY/MFM ✅** (B5.a/b); **root declutter + живой CI ✅** (B5.c/d) |
 | ✅ **W3** (диагностика) | **A2 ✅** + **A3 ✅** + **C1 ✅** + **B4 ✅** | ~11ч | **Root-cause diagnosis-record ✅** (A2); **trace-variable ✅** (A3); **runtime hypothesis-test ✅** (C1 live-validated 2026-07-11 — `debug_set_variable` через нативный `modifyValue`); **auto-reattach ✅** (B4) |
-| **W4** (глубина) | A4 + C2 + A6 | ~9ч | Differential debug; function BP; session-режимы + correlation_id |
-| **W5** (nice-to-have) | A5 + C3 + C4 + C6 | ~15ч | Verify-батч; breakpointLocations; watchpoint; precise coverage + семантический replay |
+| **W4′** (строки и гипотезы) | C3 + C2 + A5 | ~10.5ч | **Пересобрано по зависимостям 2026-07-11 - полная декомпозиция до шагов 0.5-1ч в §8.** Классификатор исполняемых строк -> function BP -> verify-батч гипотез. Инвентаризация §8.0: sticky capture-mode, coverage hit-счётчики, logpoint-конвейер, A3-хелперы УЖЕ в коде |
+| **W5′** (наблюдение состояния) | C4 + C6 + A6 + A4 | ~14ч | Watchpoint (A3-сканер+C1 готовы) -> counts-экспорт+semantic seek -> correlation -> differential (A4 последним: собирает C6.2+A6.3). Декомпозиция §8.4-8.7 |
 | **Defer** | C5 (истинный goto/drop-frame) | — | **до vendor-расширения RDBG** (решение §5.3); 80% ценности закрывает C1 (W3), остаток — композиция B1+C1+StepOut |
 
 **ROI:** W1 (~12ч) даёт наибольший leverage — `debug_inspect_frame`+`debug_autotrace`+paging убирают P-5 (ручная оркестрация, 6-10 tool-calls → 1) и P-2 (сдвиг строк). W1+W2+W3 (~34ч) закрывают ≥80% боли автономной отладки. По данным InspectCoder — высокоуровневые примитивы дают **1.67–2.24× эффективности** vs атомарный степпинг.
@@ -340,3 +340,139 @@ RDBG не имеет «expand»-вызова — paging строится wrapper
 | **W1 итого** | ~12ч | **~13.5–14.5ч** | честнее за счёт Ф-1/Ф-3 |
 
 **Порядок исполнения W1:** W1.0 → A0 → B2 → A1 (A1 зависит от A0-бандла и B2-offset-кэша) → C0 (независим, можно параллельно с A1). Ф-2 (`stack[-1]`) — проверить Шаблон 5 SKILL при реализации A1 и поправить, если баг подтверждается live.
+
+## §8. Точная декомпозиция W4/W5 (по анализу кода, 2026-07-11)
+
+> W1/W2/W3 закрыты (B1+C1 live-validated 2026-07-11). Ниже - полная декомпозиция оставшихся nice-to-have пунктов до шагов 0.5-1ч: инвентаризация уже готового, якоря кода, live-план на held-JOB harness (B1), acceptance. Волны пересобраны по графу зависимостей (§8.8), не по исходной разбивке W4/W5.
+
+### 8.0 Инвентаризация: что УЖЕ в коде (повторно не строить)
+
+| Готовый примитив | Якорь | Фундамент для |
+|---|---|---|
+| Sticky capture-mode (re-arm после каждого дрейна - каждый новый JOB BP-receptive детерминированно) | `debug_capture_mode:5129`, `client._capture_mode` | A5, C4, A4 (пункт B1 «заодно оформить capture_mode» фактически закрыт отдельным tool'ом ещё 2026-06-03) |
+| Coverage silent-BP + **hit-счётчики уже трекаются** | `_hit_counters:314` (dict `(oid,pid,line)->count`), инкремент `:2008`, `debug_coverage_register:5174` | A5, C6 (осталось ЭКСПОРТИРОВАТЬ счётчики - сбор готов) |
+| Session summary + **metric-diff** (`regression_indicators`) | `debug_session_summary:3561`, `debug_session_diff:3523`, `_diff_summaries` | A4 (каркас диффа сводок есть; НЕТ variable-level state-diff) |
+| Replay-снапшоты стопов (JSONL `{ts, target, reason, stack, exception?}` - **переменных НЕТ**) | `snapshot.py` (P2.A), `debug_session_record`, `data/debug_replays/<session>.jsonl` | A4, C6.2/C6.3 |
+| Autotrace-скелет: two-phase arm/collect + verdict-контракт `{verdict, raw}` + capture-бандл | `debug_autotrace`, `autonomy.build_frame_bundle`, `_await_bp_stop` | A5, A4 |
+| Logpoint-конвейер: eval `{expr}` на fire + JSONL + auto-Continue (без halt) + подавление стопа | `logpoints.py` (P0.B), suppress-gate в `_handle_command`, `_user_visible_stops` (M-1) | A5 (механика оценки expr), C4 (точка врезки компаратора) |
+| A3-хелперы: метод по ИМЕНИ + строки присваиваний + upstream RHS | `autonomy.find_method_range`, `find_assignment_lines:569`, `_extract_upstream:537` | C2 (половина резолва готова), C4 (скан присваиваний готов) |
+| Парс BSL-исходника: span по строке, локали, LHS-регекс | `bsl_locals._function_span_at:108`, `extract_locals_at_line:146`, `:61` | C3 (стартовая regex-инфраструктура) |
+| B2 offset-кэш repo↔deployed (авто-применение в BP-обёртках) | `client._line_offsets` + persist `.active.json` (`:2603/:2630`), применение `:3181` | C2, C3 |
+| Калибровка веером (реально исполняемые строки постфактум) | `debug_calibrate_lines:5253`, `debug_calibrate_result:3593-3680` | C2 fallback, C3.6 live-выверка классификатора |
+| uuid→fqn резолв (per-alias) | `uuid_index.get_source_info:360`, `get_index_for_alias:334` | C2 (**обратного fqn→uuid НЕТ** - это C2.1) |
+| B1 held-JOB + C1 set_variable | `held_job.py`, `debug_set_variable` | live-harness ВСЕХ пунктов; C4-инъекция изменений |
+
+### 8.1 C3 - breakpointLocations + классификатор исполняемых строк (~4ч ядро, +1.5ч AST-стретч)
+
+Первым: его классификатор поднимает качество C2 (first-executable), A5/C4 (не ставить точки на мусор) и calibrate.
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| C3.1 | `bsl_locals.classify_lines(source_lines, from, to) -> {line: class}`: `comment` (`//`) / `blank` / `declaration` (`Перем`) / `directive` (`&НаСервере`...) / `preprocessor` (`#Если/#Область`) / `structural` (`КонецЕсли\|КонецЦикла\|КонецПопытки\|Иначе\|КонецПроцедуры\|КонецФункции\|Попытка`) / `string_continuation` (строка начинается `\|` - многострочный литерал) / `header` (`Процедура\|Функция`) / `executable`. Классы `structural`/`header` пометить `uncertain=True` до live-выверки C3.6 | 1ч |
+| C3.2 | Tool `debug_breakpoint_locations(object_id, from_line, to_line, module_type, property_id)` - резолв исходника через `uuid_index` + классификатор + нота о B2-offset | 0.5ч |
+| C3.3 | Врезка в `debug_set_breakpoint`: целевая строка не-executable -> **warning + `nearest_executable`** в ответе (НЕ блокировать - эвристика может ошибаться) | 0.5ч |
+| C3.4 | Врезка в `debug_calibrate_lines`: веер только по executable-строкам (меньше BP-мусора, эффективно шире radius при том же лимите) | 0.5ч |
+| C3.5 | Unit ×10: все классы, однострочный `Если X Тогда Y; КонецЕсли;`, `\|`-литералы, кириллица/`гкс_`, границы диапазона | 1ч |
+| C3.6 | Live-выверка: coverage-веер на весь `mcp_ОтладкаВыполненияКода` (стр. 39-75) -> сверить фактические fired vs классы (факты B1 уже есть: 66/97 fired). По результату снять `uncertain` | 0.5ч |
+| C3.7 | Стретч (опц., отдельно): AST-апгрейд через tree-sitter-bsl (`ast-grep-mcp` уже парсит BSL) - точные границы стейтментов; эвристика остаётся fallback | +1.5ч |
+
+Риск: эвристика ≠ парсер - потому advisory-warning, не блок. Acceptance: BP на `КонецЕсли` даёт warning+nearest; calibrate не тратит BP на комменты.
+
+### 8.2 C2 - Function BP по имени метода (~3ч)
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| C2.1 | Обратный резолв `uuid_index.find_by_fqn("ОбщийМодуль.X" / "Документ.Y.МодульОбъекта") -> (object_id, property_id, file_path)`: fqn-строитель уже есть внутри `get_source_info:247-273` - вынести, построить reverse-dict при загрузке индекса; нормализация ru/en типов | 0.5ч |
+| C2.2 | `first_executable_line(source_lines, start, end)`: `find_method_range` (A3, по ИМЕНИ) даёт span -> первая executable по C3.1-классификатору (без C3 - мини-скип комментов/`Перем`, деградация) | 0.5ч |
+| C2.3 | Tool `debug_set_function_breakpoint(method_fqn, condition="", hit_condition="", auto_calibrate=False)`: парс `<Объект>.<Метод>` -> C2.1 -> Read src -> C2.2 -> `set_breakpoint` (B2-offset применится сам `:3181`). Ответ `{resolved: {object_id, line, module}, bp}` | 0.5ч |
+| C2.4 | `auto_calibrate=True` fallback: BP молчит после триггера -> веер calibrate по executable-строкам метода -> повтор (1 итерация, потом честный NO_HIT; реюз цепочки B2.4/A1.3) | 0.5ч |
+| C2.5 | Unit ×6: fqn ru/en, метод не найден (error envelope), дубль имени в модуле (первый + warning), директива/`Экспорт`, многострочные параметры, offset-интеграция | 0.5ч |
+| C2.6 | Live MFM: `debug_set_function_breakpoint("ОбщийМодуль.mcp_ОтладкаВыполненияКода.ВыполнитьКодСУдержанием")` -> held-JOB -> fired на first-executable БЕЗ указания строки | 0.5ч |
+
+Acceptance: BP по имени метода fire'ит на живой базе без номера строки и без ручной калибровки (устойчив к P-2 сдвигу: имя не сдвигается).
+
+### 8.3 A5 - `debug_hypothesis(assertions[])` verify-батч (~3.5ч)
+
+Механика - **logpoint-based** (обобщение A3, НЕ новый примитив): assertion = logpoint с eval нужного `expr` на fire (без halt), collect читает JSONL и судит. Контракт `{verdict, raw}` (§3 дизайн-нота: A5 в списке).
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| A5.1 | Схема `assertions: [{object_id, line, module_type?, property_id?, expr, expected?, label?}]` + валидация (cap 50, label дефолт `#i@line`); нормализация `expected`-литералов (число/строка/Истина/Ложь/Неопределено) - реюз verdict-нормализации A1 | 0.5ч |
+| A5.2 | arm: per assertion - logpoint с template `A5:<run_id>:<i>={expr}` (B2-offset в `set_logpoint`-обёртке сам) + `debug_capture_mode(on=True)` для эфемерных JOB; state `client._hypothesis_runs[run_id]` | 1ч |
+| A5.3 | collect: ждать quiet-период по росту JSONL (logpoints не дают user-visible halt - `_await_bp_stop` не нужен), прочитать записи run'а (реюз паттерна `read_trace_timeline` A3), сгруппировать по `#i`: `fired/hits/actual` -> verdict per assertion `PASS/FAIL/NO_HIT/INCONCLUSIVE` | 1ч |
+| A5.4 | Tool `debug_hypothesis(assertions, phase="arm"\|"collect", timeout_sec=30)` two-phase; снятие своих logpoint'ов в finally collect (реюз `_clear_logpoint_keys` A3). Ответ: `{verdict: {passed, failed, no_hit, per_assertion[]}, raw}` | 0.5ч |
+| A5.5 | Unit ×7 (схема/cap, группировка, вердикты вкл. INCONCLUSIVE на eval-error, идемпотентный повторный collect, снятие logpoint'ов) + live MFM: 8-10 assertions по строкам worker'а за ОДИН прогон held-JOB (часть PASS, часть FAIL с actual, часть NO_HIT на недостижимых) | 0.5ч |
+
+Acceptance: 10 гипотез «эти строки исполнятся с такими значениями» за 1 прогон -> полная таблица PASS/FAIL/actual. Интеграция: `analyze-1c-task --trace` Phase 2.5 (§3).
+
+### 8.4 C4 - Watchpoint / data BP (эмуляция C1+A3) (~4ч)
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| C4.1 | План точек: реюз `find_assignment_lines:569` (A3) - строки `Имя = ...` в области метода; обёртка `plan_watchpoints(source, name, method?)` | 0.5ч |
+| C4.2 | arm + компаратор: per строка - механика logpoint с eval `{name}`; в точке решения подавить/показать halt (suppress-gate `_handle_command`, `_user_visible_stops` M-1): значение == `client._watch_last[name]` -> подавить+Continue; изменилось -> record `{line, old, new, ts}` и по режиму held-halt | 1ч |
+| C4.3 | Режимы: `record_only` (таймлайн изменений, всегда Continue) / `break_on_first_change` / `break_when` (предикат по new: `= 0`, `<> Истина` - сравнение через `_extract_eval_value`) | 0.5ч |
+| C4.4 | Tools `debug_set_watchpoint(name, object_id, method?, mode, break_when?)` + `debug_watchpoint_result(clear=True)`; формат таймлайна как A3 | 0.5ч |
+| C4.5 | Unit ×6: скан, компаратор (число/строка/Неопределено), 3 режима, подавление vs halt, clear | 0.5ч |
+| C4.6 | Live MFM ×2: (а) worker-код `Ответ=1;Ответ=1;Ответ=2;` -> halt ТОЛЬКО на 3-й строке (1-я запись old=None, 2-я подавлена - не изменилось); (б) C1-инъекция: на held-halt `debug_set_variable("Ответ","99")` -> следующий fire ловит 99->N | 1ч |
+
+Риск: eval на каждом fire горячей строки в цикле - дорого -> cap fires per line (default 200, как coverage) + предупреждение в ответе при достижении. Acceptance: кейс «где из 15 присваиваний СуммаДокумента обнуляется» = 1 arm + 1 триггер -> halt ровно на строке первого обнуления (`break_when "= 0"`).
+
+### 8.5 C6 - Precise coverage (hit counts) + семантический replay-seek (~3ч)
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| C6.1 | Экспорт счётчиков (сбор УЖЕ есть `_hit_counters:314`): sidecar `<session>.counts.json` `{file, line, count}` рядом с genericCoverage.xml (сам generic-формат counts НЕ поддерживает - XML не трогаем) + `hot_lines` top-N в ответ `debug_coverage_export:5232`; опц. LCOV `DA:<line>,<count>` | 1ч |
+| C6.2 | Снапшоты с переменными: `debug_session_record(capture_variables=False)` opt-in - на user-visible stop дописывать bounded top-K локалей (реюз A0 auto-discovery, cap как A2 halt-окно) в snapshot-entry (`snapshot.py`) | 0.5ч |
+| C6.3 | Семантический seek: `debug_replay_seek(query="Итог < 0")` - парсер предиката `<имя> <оп> <литерал>` (`=,<>,<,>,<=,>=`; литералы число/строка/Истина/Ложь/Неопределено; спец-имена `line/reason/module`) по variables снапшота; числовой `index` продолжает работать (перегрузка аргумента) | 1ч |
+| C6.4 | Unit ×6 (парсер, seek по переменной/спец-имени, снапшот без переменной -> skip, обратная совместимость index) + live: replay held-JOB с capture_variables -> `seek('КлючУдержания = "hold-c1b"')` | 0.5ч |
+
+Acceptance: «первый halt где Итог < 0» - одним вызовом; горячие циклы видны в `hot_lines`.
+
+### 8.6 A6 - Session-режимы (InspectWare) + correlation_id (~2ч)
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| A6.1 | Session-state enum (вычисляемый): `Start` (connected, targets нет) / `Runtime-State` (есть stopped) / `Runtime-Error` (stop reason=exception) / `Post-Mortem` (record включён, живых нет) / `Done` (disconnected) + статическая карта `valid_next` (имена tools, валидных в состоянии) | 0.5ч |
+| A6.2 | Врезка `{session_state, valid_next}` в ответы КЛЮЧЕВЫХ tools (connect/ping/targets/step/target_state) одним хелпером `_state_hint()`; остальные не трогаем (шум) | 0.5ч |
+| A6.3 | `debug_connect(correlation_id="")` (дефолт uuid4) -> persist `.active.json` (переживает HMR) -> прошить в артефакты: logpoint JSONL, snapshot-entry, coverage export, session_summary/ZIP. Формат совместим с CloudEvents `correlationid` фреймворка (`shared/invocation_logger`) | 0.5ч |
+| A6.4 | Unit ×5: enum-переходы, valid_next, persist/restore HMR, метка в 3 артефактах | 0.5ч |
+
+Acceptance: по correlation_id грепается вся цепочка артефактов задачи; агент на эфемерном target видит `valid_next` вместо тыка в 400. Делать ПЕРЕД A4 (label/correlation прогонов нужны диффу).
+
+### 8.7 A4 - `debug_diff_runs(trigger_ok, trigger_fail, watch[])` differential (~5ч, самый большой)
+
+Инвентаризация: `debug_session_diff:3523` уже диффит СВОДКИ (метрики BP/eval/timeline -> `regression_indicators`). НЕ хватает **state-level**: «на строке 200 в ok `Скидка=10`, в fail `Скидка=0`». Предпосылки: C6.2 (variables в снапшотах), A6.3 (label/correlation).
+
+| Шаг | Что | Оценка |
+|---|---|---|
+| A4.1 | Формат прогона: `debug_session_record(label="ok"\|"fail")` + snapshot-entries с variables (C6.2) + монотонный `stop_seq` | 0.5ч |
+| A4.2 | Managed-прогон ×2 внутри tool'а: arm (BP/capture_mode) -> исполнить `trigger_ok` -> собрать стопы с eval `watch[]` на каждом -> то же для `trigger_fail` (реюз autotrace-скелета, два подряд) | 1ч |
+| A4.3 | Alignment: ключ `(module_fqn, line, hit_index_per_location)`; `flow_divergence` = первая позиция расхождения ПОСЛЕДОВАТЕЛЬНОСТЕЙ (в ok стоп есть, в fail нет / наоборот) - часто это и есть баг (ветка не выполнилась) | 1ч |
+| A4.4 | State-diff по выровненным стопам: сравнение watch-значений (pres-строки) -> `first_state_divergence {location, watch, ok, fail}` + полный `diffs[]` (cap `max_stops=200`); `ignore_names`-паттерны (даты/GUID шумят) | 1ч |
+| A4.5 | Ответ `{verdict: {first_divergence: {kind: flow\|state, ...}}, raw: {aligned, diffs}}`; two-infobase режим НЕ кодить - рецепт «два прогона против разных alias = два session_id» в SKILL | 0.5ч |
+| A4.6 | Unit ×6 (alignment, hit_index, flow-div, state-div, ignore, cap) + live MFM: два held-JOB (`Ответ=42` vs `Ответ=0`), `watch=["Ответ"]` -> `first_state_divergence` | 1ч |
+
+Acceptance: «работало вчера - сегодня нет» = 1 вызов -> первая точка расхождения (flow или state) без ручного сравнения глаз.
+
+### 8.8 Сводка: волны по зависимостям, итоги
+
+| Порядок | Пункт | Ядро | Зависит от | Live-harness |
+|---|---|---|---|---|
+| 1 | C3 breakpointLocations | 4ч (+1.5ч AST-стретч) | - | веер по worker-модулю + факты B1 |
+| 2 | C2 Function BP | 3ч | C3.1 (или деградация) | FBP на `ВыполнитьКодСУдержанием` |
+| 3 | A5 debug_hypothesis | 3.5ч | logpoints/capture_mode (есть), C3.1 желателен | 10 assertions / 1 прогон held-JOB |
+| 4 | C4 Watchpoint | 4ч | A3-сканер (есть), C1 (есть) | 3 присваивания + C1-инъекция |
+| 5 | C6 counts + semantic seek | 3ч | replay (есть) | replay held-JOB + seek |
+| 6 | A6 režимы + correlation | 2ч | - | смоук + HMR-restore |
+| 7 | A4 debug_diff_runs | 5ч | C6.2, A6.3 | два прогона ok/fail |
+| | **Итого** | **~24.5ч** (+1.5ч стретч) | | ≈ исходная оценка W4 9ч + W5 15ч |
+
+Пересобранные волны: **W4′ «строки и гипотезы»** = C3+C2+A5 (~10.5ч, взаимные пред-реквизиты) -> **W5′ «наблюдение состояния»** = C4+C6+A6+A4 (~14ч, A4 последним - собирает C6.2+A6.3).
+
+**Общие правила реализации (уроки B1/C1, обязательны для каждого пункта):**
+1. Unit-тесты билдеров/парсеров НЕ ловят рантайм-семантику RDBG (сигнатура `ФоновыеЗадания.Выполнить`, `timeout` в мс, success-shape без `processed`) -> **live-зонд на held-JOB harness ДО фиксации дизайна**, спорную семантику зондировать первой.
+2. Всё, что ждёт триггера, - two-phase `arm/collect` + контракт `{verdict, raw}` (§3); Continue/снятие своих точек - в `finally`.
+3. Захваты bounded (halt-окно 1-2с): top-N с явными полями усечения (`frames_bounded`-паттерн A2).
+4. Новые модули -> `--watch` в `.mcp.json` (урок P0.D); новые ПАРАМЕТРЫ существующих tools -> `/mcp reconnect` (harness кеширует schema).
+5. Каждый пункт = отдельный 4-этапный pipeline (план/дизайн/код/тест) + code-verify субагентом + прогресс в этом роадмапе.
