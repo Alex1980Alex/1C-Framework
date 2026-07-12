@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
----
-
-## 2026-07-07 — Auto-promoted: GKSTCPLK-2574 REQ-2 (подбор получателей в шаблоне,
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `GKSTCPLK-2574 REQ-2 (подбор получателей в шаблоне,` (confidence: 0.81)
-- Draft: `docs/wiki/drafts/gkstcplk-2574-req-2----.md`
-
 **Status:** Pending review
 
 ---
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol
 - Files changed: 6
 - Summary: Session 2026-07-12. Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol. Changed 6 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: docs(w5): роадмап 260708 §8.4-8.7 W5' DONE + gitlink 80941e3. Commit: chore: auto-save 02-design.md, watchpoints.py, mcp_debug_server.py +10 more. Commit: chore: auto-commit Конфигурация, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +2 more
+
+
+## 2026-07-13 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol
+- Files changed: 6
+- Summary: Session 2026-07-13. Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol, learn:docker-configuration, 1c-mcp-crud, 1c-doc-research. Changed 6 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-save feedback_1c_reproduce_caller_params.md, MEMORY.md, edit_fio.py +5 more
 
