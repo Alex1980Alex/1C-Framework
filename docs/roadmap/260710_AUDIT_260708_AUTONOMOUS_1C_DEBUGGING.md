@@ -5,6 +5,18 @@
 > **Скоуп:** реализованное - W1 (W1.0/A0/A1/C0/B2), W2 (B3/B5.a-d), W3 (A2/A3/B4). НЕ скоуп: нереализованные B1/C1/W4/W5.
 > **Верифицированные заявления роадмапа:** «425 unit passed» - подтверждено живым прогоном (425 passed, 37.5s) ✅; `autonomy.py` в HMR watch-list ✅; lost-wakeup-инвариант B3 - формально подтверждён интерливинг-анализом ✅.
 
+## Ре-аудит 2026-07-12 (3 параллельных адверсариальных ревьюера + операционные проверки, после W4′/W5′)
+
+**Вердикты:** W-fix **PASS** (все ✅ таблицы подтверждены по HEAD с file:line; H-1 закрыт как КЛАСС — guard по identity `current_task`, непокрытых путей `detach` из ping-loop не осталось), B1/C1/W5′ **PASS**, W4′ **PARTIAL** (ядро на месте, но: en-fqn НЕ поддержан вообще — reverse-карта только RU; warning на дубль имени метода не реализован; A5-label в deployed-координатах). Живой прогон: **584→592 unit** (см. ниже). **C-1 ПОДТВЕРЖДЁН ОТКРЫТЫМ**: `git show c65d965:start-1c-debug.bat` на public origin всё ещё отдаёт пароль — ротация `Alex80Alex` PENDING за пользователем; сабмодуль ahead 13 (W3..W5′ не запушены — осознанно открытое решение).
+
+**Волна fix-260712 (по находкам ре-аудита, +8 регресс-тестов [`test_reaudit_260712_fixes.py`](../../tools/bsl-debug-server/tests/test_reaudit_260712_fixes.py) → 592 passed):**
+- **F-1/№19 (M-5-класс на стыках, MEDIUM)**: A5 `debug_hypothesis` arm и C4 `debug_set_watchpoint` arm теперь ПРОПУСКАЮТ строки с чужим BP/logpoint (`skipped_collisions` + `no_armable_assertions`/`no_watchable_lines`) — раньше last-writer-wins затирал A3-trace/user-logpoint, а teardown снимал чужой ключ.
+- **A5 teardown → `finally`** (весь collect-путь: drain/read/judging) — правило §8.8-2.
+- **F-2 (M-4-класс, MEDIUM)**: `_drain_snapshot_tasks` перед чтением в `debug_diff_runs`/`debug_replay_list`/`debug_replay_seek` — deferred variables-снапшот последнего стопа больше не теряется.
+- **LOW §4 метрики**: `_stop_events.lineNo`/`_bp_by_location` → innermost `stack[-1]` (Ф-2-sweep завершён; session_summary больше не врёт строку BP).
+- **LOW §4 XML-escape**: `eval_expression`/`eval_local_variables` экранируют выражение (`?(А<Б,…)` больше не ломает запрос; parity с condition/modify_value).
+- Watch-list `.mcp.json`: остаётся только `artifacts.py` вне watch (редко правится). M-9 (conftest) — по-прежнему отложено. Открытые не-code хвосты W4′: en-fqn resolve + дубль-warning — задокументированы, НЕ реализованы (backlog).
+
 ## Статус реализации (волна W-fix, 2026-07-10)
 
 **Все code-side пункты закрыты + прошли адверсариальное ре-ревью (verdict PASS).** 450 unit passed (+25: 23 регресс-теста [`test_audit_260710_fixes.py`](../../tools/bsl-debug-server/tests/test_audit_260710_fixes.py) + 2 B2), 0 warnings. Коммиты подмодуля: `9ba8b33` (волна) + `8f86599` (follow-up по FAIL-ревью).
