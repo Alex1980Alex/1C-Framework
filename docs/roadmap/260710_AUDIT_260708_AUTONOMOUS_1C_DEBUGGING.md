@@ -17,6 +17,16 @@
 - **LOW §4 XML-escape**: `eval_expression`/`eval_local_variables` экранируют выражение (`?(А<Б,…)` больше не ломает запрос; parity с condition/modify_value).
 - Watch-list `.mcp.json`: остаётся только `artifacts.py` вне watch (редко правится). M-9 (conftest) — по-прежнему отложено. Открытые не-code хвосты W4′: en-fqn resolve + дубль-warning — задокументированы, НЕ реализованы (backlog).
 
+**Волна tails-260712 (закрыла ВСЕ code/config/test хвосты, +11 регресс-тестов [`test_reaudit_260712_tails.py`](../../tools/bsl-debug-server/tests/test_reaudit_260712_tails.py) → 602 passed, code-verify PASS без блокеров):**
+- **en-fqn** (`uuid_index._KIND_FQN_EN` + `_reverse_fqn_entries`): reverse-карта строит И RU, И EN ключи (`Document.X.ObjectModule`, `CommonModule.Y`, `Document.Z.Form.W`) через `setdefault` — RU аддитивно не тронут. `find_by_fqn` резолвит обе формы.
+- **дубль-метод warning** (`autonomy.count_method_definitions` + общий `_method_head_re`): `debug_set_function_breakpoint` при >1 определении отдаёт `warning` + `definitions_found`, BP на первом.
+- **F-4** watch-halt в метриках: `_compare_and_decide` halt-ветка пишет `_stop_events` (reason="watchpoint") + `_watch_halt_count`; `debug_session_summary` отдаёт `watch_halts` (гейт `_handle_command` делает early-return ДО BP-метрик → дубля нет).
+- **F-5** `_watch_last` по `(target_id, name)` — параллельные rphost'ы больше не интерливят change-detection.
+- **M-9** `tests/conftest.py` autouse-фикстура монкипатчит `_ACTIVE_SESSION_PATH`→tmp (живой `.active.json` больше не затирается тестами; проверено — файл интактен после прогона).
+- **artifacts.py** добавлен в `--watch` `.mcp.json`.
+
+**Остаётся ТОЛЬКО C-1** (ротация `Alex80Alex` + решение rotation-only vs history-rewrite публичного форка — outward-facing/необратимо, за пользователем) **+ push сабмодуля** (публикация wrapper-кода W3..W5′, ahead 17 — отдельное решение, связано с C-1).
+
 ## Статус реализации (волна W-fix, 2026-07-10)
 
 **Все code-side пункты закрыты + прошли адверсариальное ре-ревью (verdict PASS).** 450 unit passed (+25: 23 регресс-теста [`test_audit_260710_fixes.py`](../../tools/bsl-debug-server/tests/test_audit_260710_fixes.py) + 2 B2), 0 warnings. Коммиты подмодуля: `9ba8b33` (волна) + `8f86599` (follow-up по FAIL-ревью).
