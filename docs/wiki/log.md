@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-## 2026-07-07 — Auto-promoted: Agent model selection and delegation rules
-
-**Event:** L2 pattern promoted to wiki draft
-
-- Pattern: `Agent model selection and delegation rules` (confidence: 0.81)
-- Draft: `docs/wiki/drafts/agent-model-selection-and-delegation-rules.md`
-
-**Status:** Pending review
-
 ---
 
 ## 2026-07-07 — Auto-promoted: GKSTCPLK-2574 REQ-2 (подбор получателей в шаблоне,
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify
 - Files changed: 6
 - Summary: Session 2026-07-11. Skills: implement-1c-task, 1c-doc-research, 1c-debug-hmr, evaluation-benchmark, code-verify, 1c-mcp-crud, learn:1c-metadata-objects, bsl-development. Changed 6 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-commit _1c_index.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore(debug): bump gitlink 8f86599 — follow-up по ре-ревью аудита 260710. Commit: chore: auto-commit .pipeline-state.json, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +1 more
+
+
+## 2026-07-12 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol
+- Files changed: 6
+- Summary: Session 2026-07-12. Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol. Changed 6 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: docs(w5): роадмап 260708 §8.4-8.7 W5' DONE + gitlink 80941e3. Commit: chore: auto-save 02-design.md, watchpoints.py, mcp_debug_server.py +10 more. Commit: chore: auto-commit Конфигурация, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +2 more
 
