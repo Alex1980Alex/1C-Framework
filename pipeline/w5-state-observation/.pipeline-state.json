@@ -1,0 +1,44 @@
+{
+  "task": "w5-state-observation",
+  "title": "W5 state observation C4+C6+A6+A4",
+  "created_at": "2026-07-12T10:14:56",
+  "updated_at": "2026-07-12T10:39:47",
+  "current_stage": 2,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-12T10:39:47"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-12T10:15:50"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-07-12T10:39:47"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-07-12T10:39:47"
+    }
+  ]
+}
