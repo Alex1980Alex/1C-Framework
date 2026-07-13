@@ -84,15 +84,16 @@
 
 ### P0 - корректность самого лога (без этого метрики врут)
 
-- **P0.1 Fix Post-классификации `detected_event` (B1).** В `base/protocol.py` детект PostToolUse по `tool_response` (с легаси-фоллбэком `tool_result`); убрать локальный обход из `mcp-invocation-logger.py`. Регресс-unit на оба payload-формата.
-  *Acceptance:* синтетический Post-payload с `tool_response` → `event="PostToolUse"` у произвольного BaseHook-наследника. *Оценка:* ~1 ч. **Риск:** много хуков наследуют детект - прогнать import-smoke + существующие unit.
-- **P0.2 Прокинуть `agent_id` (B2).** `BaseHook.run()` передаёт `agent_id` из payload в `log_invocation`. *Acceptance:* запись субагентского вызова несёт `agent_id`. *Оценка:* 0.5 ч.
-- **P0.3 Канонический tool-invocation-logger для built-in (B3, B5).** По образцу `mcp-invocation-logger`: один Pre+Post хук с матчером на built-in tools (`Bash|PowerShell|Read|Grep|Glob|Write|Edit|WebSearch|WebFetch|Task|TodoWrite|NotebookEdit`), `category="tool_call"`, `tool_call_id`+`args_hash`, подавление автолога. Enforcer-строки остаются (`category="hook"`) - анализ переходит на canonical rows. *Acceptance:* 1 вызов Bash = ровно 1 строка `category="tool_call"`; Read/Grep получают длительность. *Оценка:* 2-3 ч (+таймаут-бюджет хуков проверить - у нас уже 19 UPS/Post-хуков, новый должен быть <100мс).
-- **P0.4 Дедуп `llm_complete` (B4).** `task-protocol-observer` не логирует mcp-инструменты (skip `mcp__` в автологе) либо помечает `outcome="observer"`. *Оценка:* 0.5 ч.
+- **P0.1 Fix Post-классификации `detected_event` (B1). ✅ реализовано 2026-07-14 (commit b575a2dc3).** В `base/protocol.py` детект PostToolUse по `tool_response` (с легаси-фоллбэком `tool_result`, hook_event_name - приоритет); обход из `mcp-invocation-logger.py` удалён (`event = inp.detected_event`); латентный дубль в `base/base.py` тоже поправлен. 4 регресс-unit. code-verify PASS.
+- **P0.2 Прокинуть `agent_id` (B2). ✅ реализовано 2026-07-14.** `HookInput.agent_id` (из `agent_id`/`agentId`) → `BaseHook.run()` прокидывает в `log_invocation`. Аддитивно: платформа сейчас не шлёт (0/5291 строк) → "". 3 unit.
+- **P0.3 Канонический tool-invocation-logger для built-in (B3, B5). ✅ реализовано 2026-07-14.** Новый `tool-invocation-logger.py` (Pre+Post, matcher built-in tools, `category="tool_call"`, `tool_call_id`+`args_hash`, `_NoAutoLogToolLogger` подавляет автолог), зарегистрирован в `settings.json`. Потребители обобщены: `tool_usage_report._CANONICAL_CATEGORIES={mcp_call,tool_call}`, `audit_query top-tools` считает канонические PostToolUse. 7 unit. **Отклонение от плана:** BaseHook НЕ трогали для built-in (canonical row + фильтр потребителей достаточен, меньше blast-radius).
+- **P0.4 Дедуп `llm_complete` (B4). ✅ реализовано 2026-07-14.** `BaseHook.run()` подавляет автолог mcp__ тула при `outcome=allow` (systemic: покрывает task-protocol-observer и любой будущий хук на mcp-туле; block/error сохранены). 3 unit.
+
+> **Итог P0 (2026-07-14, commit b575a2dc3):** все 4 фикса + 18 unit (test_hook_invocation_logging_p0 + test_tool_invocation_logger) + 28/11 существующих зелёные + code-verify reviewer PASS. Лог инструментов теперь даёт честные счётчики вызовов по каноническим категориям — метрики P1 можно строить на нём.
 
 ### P1 - замкнуть цикл: авто-анализ + health + пороги
 
-- **P1.1 Авто tool-health-отчёт (B10, паттерн `post-indexing-analyzer`).** Stop-хук (cooldown 24 ч, detached) → новый `scripts/analyze_tool_health.py`: DuckDB-views из `audit_query.py` (error-rate, latency p50/p95, top-tools, mcp-latency, per-MCP success-rate) → `data/reports/tools/_latest.md` + JSON sidecar; **пороги**: error-rate инструмента >N% за окно / p95 рост ×2 к baseline / MCP-сервер 0 успешных вызовов при ≥3 попытках → секция ⚠ ALERTS + SessionStart-баннер (паттерн `acceptance_watch`). *Acceptance:* деградация инструмента видна в баннере следующей сессии без ручных действий. *Оценка:* 4-6 ч.
+- **P1.1 Авто tool-health-отчёт (B10, паттерн `post-indexing-analyzer`). ✅ реализовано 2026-07-14.** `scripts/analyze_tool_health.py` (stdlib-only, НЕ duckdb — надёжно в detached-контексте): читает канонические строки за окно 14д → per-tool calls/errors/success-rate/реальная Pre→Post p50-p95/repeats/abandonment → **вердикты §6.1** (broken/degraded/ineffective/unused/healthy) → `data/reports/tools/_latest.md` + `_latest.json` sidecar + `verdicts.jsonl` (append-history) + ratchet `baseline.json`. Stop-хук `tool-health-analyzer-stop.py` (cooldown 24ч, detached-спавн) + SessionStart-баннер `tool-health-banner-on-start.py` (сюрфейсит broken/degraded, эскалирует broken авто-задачей через task_master с 72ч-дедупом, degraded — за человеком; тихо при healthy). 27 unit + code-verify PASS (2 рекомендации применены: `DEGRADED_MIN_CALLS=3` против шума от транзиентных ошибок + tz-guard). **Ключевой FP устранён:** idempotent-polling (100% success + повторы args_hash) = healthy, repeats НЕ движут вердикт. *Acceptance выполнен:* детач-спавн отработал end-to-end (отчёт+verdicts+baseline записаны); баннер молчит при healthy, сюрфейсит alerts иначе. **DuckDB-views из audit_query остаются для интерактива** (аналайзер их не требует).
 - **P1.2 Авто-каденс MCP health-check (B7).** SessionStart-хук (раз/день, detached, паттерн `tei-warmup-on-start`): вызов `health_check` собственных серверов (memory-orchestrator, vector-memory, skill-learning; 1c-debug - `ping`) через lazy-invoke → `data/mcp-health.jsonl` + баннер при down. Учесть [[feedback-mcp-stale-code-reconnect]] (stdio-процессы живут долго). *Оценка:* 3-4 ч.
 - **P1.3 Оживить `tool-effectiveness` (B6).** Вызов `tool_usage_report.py` detached из Stop-хука 1С-гейта (вместо напоминания в `onec-task-completion-stop.py:384`) + weekly `--rollup` внутри P1.1-отчёта. *Оценка:* 1-2 ч.
 - **P1.4 Regression-детектор memory-sinks в каденс (B8).** `memory_observability_report.py --json` (freshness/regression секция) в существующий `memory-maintenance-cadence` Stop-хук; stale-sink → та же ALERTS-секция P1.1. *Оценка:* 1-2 ч.
@@ -145,6 +146,17 @@ Baseline: первый прогон пишет `data/reports/tools/baseline.json
 ## §18 Progress Log
 
 > Append-only, reverse-chronological. Новые записи сверху.
+
+### 2026-07-14 - P1.1 реализован (decision layer: авто-отчёт + вердикты)
+
+- `analyze_tool_health.py` (вердикты §6.1 + verdicts.jsonl + ratchet baseline) + Stop-хук (cooldown 24ч, detached) + SessionStart-баннер (эскалация broken авто-задачей). 27 unit + code-verify PASS. Цикл «лог → анализ → вердикт → действие» замкнут.
+- Отклонения: аналайзер stdlib-only (не duckdb) для надёжности; ineffective = только abandonment (repeats не движут вердикт — FP на polling-тулах); `DEGRADED_MIN_CALLS=3`.
+- Следующее: P1.2 (авто-каденс MCP health-check), P1.3/P1.4.
+
+### 2026-07-14 - P0 реализован (корректность лога)
+
+- B1/B2/B4 в `base/protocol.py` + удалён обход в mcp-логгере + латентный B1 в base.py; B3/B5 новый `tool-invocation-logger.py` (category=tool_call) + settings.json; потребители обобщены на `_CANONICAL_CATEGORIES`. 18 unit + code-verify PASS. Commit b575a2dc3.
+- Следующее: P1.1 (авто tool-health-отчёт + вердикты §6).
 
 ### 2026-07-13 - Добавлен §6 decision layer
 

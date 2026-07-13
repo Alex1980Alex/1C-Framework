@@ -675,6 +675,11 @@
             "type": "command",
             "command": "python .claude/hooks/memory-effectiveness-analyzer.py",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/tool-health-analyzer-stop.py",
+            "timeout": 5
           }
         ]
       }
@@ -693,6 +698,12 @@
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/logging-status-banner.py",
             "timeout": 3,
             "statusMessage": "mcp-slash-logging-status"
+          },
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/tool-health-banner-on-start.py",
+            "timeout": 5,
+            "statusMessage": "tool-health-banner"
           },
           {
             "type": "command",
