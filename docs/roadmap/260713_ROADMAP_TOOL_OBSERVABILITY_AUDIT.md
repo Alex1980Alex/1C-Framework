@@ -10,6 +10,29 @@
 > MCP-спека logging, deepeval/MCP-Bench метрики). Два свежих `ecosystem_scan` (30-дневное окно) - пусто, кеш остаётся
 > актуальной базой. Связанные главы: 42.8 (Claude Code OTel), 28.1 (auto-reports), ADR-035 (advisory toolgate).
 
+## §0 Промежуточные итоги (на 2026-07-14)
+
+> Снимок прогресса. Детальные записи — §18 (снизу вверх), раскладка по пунктам — §5.
+
+**Ядро дорожной карты закрыто.** Цикл «лог → анализ → метрика → вердикт → действие» над главным логом инструментов (`data/hook-invocations.jsonl`), диагностированный как разомкнутый (§2), теперь замкнут: корректность записи вылечена, авто-анализ с вердиктами работает, метрики эффективности считаются, MCP-серверы получили health-probe и внутренний per-call лог.
+
+| Пункт | Статус | Суть |
+|---|---|---|
+| **P0** корректность лога (B1/B2/B3/B4/B5) | ✅ b575a2dc3 | Post-классификация по `tool_response`; `agent_id`; канонический `tool-invocation-logger` (category=tool_call) для built-in; дедуп `llm_complete`. Метрики перестали врать. |
+| **P1.1** decision layer (B10) | ✅ 4597efb87 | `analyze_tool_health.py` — вердикты broken/degraded/ineffective/unused/healthy §6.1 + `verdicts.jsonl` + ratchet-baseline; Stop-авто-отчёт + SessionStart-баннер (broken → авто-задача). |
+| **P1.2** проактивный MCP health-probe (B7) | ✅ cf260aa42 | `probe_mcp_health.py` пробит зависимости серверов (Qdrant/TEI/SQLite) + баннер при down с картой affects. |
+| **P1.4** regression-детектор memory-sinks (B8) | ✅ be5accdb9 | Freshness-детектор замолчавших синков в каденс. Живая находка: 3 stale-синка (propagation/circuit/links >7д). |
+| **P2.1** gen_ai.*-алиасы полей | ✅ fb08d72dc | OTel-совместимые `gen_ai.tool.name`/`gen_ai.tool.call.id`/`error.type` (аддитивно) — будущий OTel-экспорт = переименование. |
+| **P2.2** rule-слой эффективности | ✅ fb08d72dc | single-source `tool_effectiveness.py` + per-server rollup (Tool Success Rate + Step Efficiency). Живая находка: `edt-mcp` retry-rate 14%. |
+| **P2.3** внутренний per-call лог MCP (B9) | ✅ 8a899477c | Shared `mcp_call_log.py` (fail-soft/ротация/opt-out) у memory-orchestrator + 1c-mcp-crud — второй источник истины при падении stdio. |
+
+**Осталось:**
+- **P1.3** (оживить `tool-effectiveness.jsonl` из Stop-хука) — фактически перекрыт P1.1 (аналайзер читает `hook-invocations.jsonl` напрямую); при желании — вызов `tool_usage_report.py --rollup` внутри P1.1-отчёта.
+- **P2.3 хвост** — остальные 6 MCP-серверов инструментируются по мере касания.
+- **P3** (нативный OTel Claude Code → Langfuse self-host + LLM-judge на сэмпле) — тяжёлый путь, отдельным ADR после оценки нагрузки.
+
+**Накопленные находки (сигналы, не баги роадмапа):** 3 замолчавших memory-синка (P1.4); `edt-mcp` retry-rate 14% — кандидат на разбор паттернов взаимодействия (P2.2). **Операционка:** рантайм-эффект P2.3 (правки кода MCP-серверов) — после `/mcp reconnect`; P0–P2 хук/скрипт-часть действует сразу.
+
 ## §1 Как логирование реализовано сейчас (карта)
 
 ### 1.1 Ядро - хук-уровень, единый синк `data/hook-invocations.jsonl`
