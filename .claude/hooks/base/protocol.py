@@ -38,6 +38,12 @@ class HookInput:
         self.reason = raw.get("reason", "")
         # Common
         self.session_id = raw.get("session_id", "")
+        # Phase 7 / P0.2 (B2): subagent id, if the platform ever provides it.
+        # Currently Claude Code does NOT send agent_id in hook stdin (verified
+        # 2026-07-14: 0/5291 log rows carried it; cf. process-guard.py note).
+        # Reading it here is additive and future-proof — stays "" until the
+        # platform starts sending it, then subagent tool-calls become attributable.
+        self.agent_id = raw.get("agent_id") or raw.get("agentId") or ""
 
     @property
     def detected_event(self) -> str:
@@ -50,7 +56,12 @@ class HookInput:
         if explicit:
             return explicit
         if self.tool_name:
-            if "tool_result" in self.raw:
+            # P0.1 (B1): modern Claude Code sends the post-call payload key as
+            # `tool_response`; `tool_result` is the legacy alias. Checking only
+            # `tool_result` misclassified every PostToolUse as PreToolUse in the
+            # fallback path (no hook_event_name), breaking Pre/Post pairing and
+            # built-in tool latency. Check both, response first.
+            if "tool_response" in self.raw or "tool_result" in self.raw:
                 return "PostToolUse"
             return "PreToolUse"
         if self.transcript or self.reason:
@@ -198,31 +209,44 @@ class BaseHook(ABC):
             # Graceful degradation: never block on internal error
             sys.exit(0)
         finally:
-            # Log invocation (always, even on error)
-            try:
-                from shared.invocation_logger import log_invocation
-
-                # P1.2 (К-2): пробросить run_id (симметрично mcp-invocation-logger) → нативные тулы
-                # (Read/Write/Edit/Bash) получают correlationid=run_id, а не session → tool_usage_report
-                # --run-id их видит. Аддитивно: нет run_id (вне slash-команды) → прежний session-fallback.
+            # Log invocation (always, even on error) — unless it is a benign
+            # duplicate. P0.4 (B4): every mcp__ tool call is canonically logged
+            # by mcp-invocation-logger (category="mcp_call"). A second
+            # category="hook" row for the same mcp call from any other matched
+            # hook (e.g. task-protocol-observer on llm_complete) double-counts in
+            # tool views (audit_query `top-tools`). Suppress ONLY the benign
+            # allow-duplicate; keep block/message/error rows — those carry
+            # hook-specific signal the canonical mcp_call row does not.
+            # str(...) guards the finally-block invariant "a hook never fails on
+            # internal error": tool_name is a str by contract, but a truthy
+            # non-str payload would make .startswith raise right here.
+            _skip_dup = str(inp.tool_name or "").startswith("mcp__") and outcome == "allow"
+            if not _skip_dup:
                 try:
-                    from shared.run_context import get_run_id
+                    from shared.invocation_logger import log_invocation
 
-                    _rid = get_run_id(inp.session_id) or ""
+                    # P1.2 (К-2): пробросить run_id (симметрично mcp-invocation-logger) → нативные тулы
+                    # (Read/Write/Edit/Bash) получают correlationid=run_id, а не session → tool_usage_report
+                    # --run-id их видит. Аддитивно: нет run_id (вне slash-команды) → прежний session-fallback.
+                    try:
+                        from shared.run_context import get_run_id
+
+                        _rid = get_run_id(inp.session_id) or ""
+                    except Exception:
+                        _rid = ""
+                    log_invocation(
+                        hook=type(self).__name__,
+                        event=inp.detected_event,
+                        tool=inp.tool_name or None,
+                        elapsed_ms=self.elapsed_ms,
+                        outcome=outcome,
+                        session_id=inp.session_id,
+                        run_id=_rid,
+                        error=error_msg,
+                        agent_id=inp.agent_id,  # P0.2 (B2): subagent attribution
+                    )
                 except Exception:
-                    _rid = ""
-                log_invocation(
-                    hook=type(self).__name__,
-                    event=inp.detected_event,
-                    tool=inp.tool_name or None,
-                    elapsed_ms=self.elapsed_ms,
-                    outcome=outcome,
-                    session_id=inp.session_id,
-                    run_id=_rid,
-                    error=error_msg,
-                )
-            except Exception:
-                pass  # Logging must never block
+                    pass  # Logging must never block
 
     @property
     def elapsed_ms(self) -> int:

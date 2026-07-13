@@ -375,6 +375,16 @@
             "timeout": 3
           }
         ]
+      },
+      {
+        "matcher": "Bash|PowerShell|Read|Write|Edit|MultiEdit|NotebookEdit|Grep|Glob|WebSearch|WebFetch|Task|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput|TodoWrite|ExitPlanMode|Skill|Agent|ToolSearch|Artifact|AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/tool-invocation-logger.py",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -384,6 +394,16 @@
           {
             "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/mcp-invocation-logger.py",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell|Read|Write|Edit|MultiEdit|NotebookEdit|Grep|Glob|WebSearch|WebFetch|Task|TaskCreate|TaskUpdate|TaskGet|TaskList|TaskOutput|TodoWrite|ExitPlanMode|Skill|Agent|ToolSearch|Artifact|AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/tool-invocation-logger.py",
             "timeout": 3
           }
         ]

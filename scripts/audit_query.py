@@ -142,10 +142,18 @@ VIEWS: dict[str, str] = {
         HAVING errors > 0
         ORDER BY error_pct DESC
     """,
+    # roadmap 260713 (B3/B4): считаем ИСТИННЫЕ вызовы — по одной строке на
+    # завершённый вызов из канонических категорий (mcp_call + tool_call),
+    # event=PostToolUse. Раньше COUNT(*) по всем строкам раздувал счёт:
+    # Pre+Post двоили MCP, а N энфорсер-хуков (category=hook) множили каждый
+    # built-in вызов. Caveat: tool_call-строки пишутся с 2026-07-14 (P0.3) →
+    # built-in тулы видны только по go-forward данным (в ротированном логе их нет).
     "top-tools": """
         SELECT tool, COUNT(*) AS calls
         FROM logs
         WHERE tool IS NOT NULL AND tool != ''
+          AND category IN ('mcp_call', 'tool_call')
+          AND event = 'PostToolUse'
         GROUP BY tool
         ORDER BY calls DESC
         LIMIT 20

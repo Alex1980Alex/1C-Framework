@@ -96,7 +96,14 @@ class HookInput:
         tool_name = data.get("tool_name")
         if not detected_event:
             if tool_name:
-                detected_event = "PostToolUse" if "tool_result" in data else "PreToolUse"
+                # P0.1 (B1): modern Claude Code sends `tool_response`; `tool_result`
+                # is the legacy alias. Mirror the fix in protocol.py so this base
+                # (should it ever be used) does not misclassify Post as Pre.
+                detected_event = (
+                    "PostToolUse"
+                    if ("tool_response" in data or "tool_result" in data)
+                    else "PreToolUse"
+                )
             elif data.get("prompt") or data.get("content"):
                 detected_event = "UserPromptSubmit"
             elif data.get("transcript") or data.get("reason"):

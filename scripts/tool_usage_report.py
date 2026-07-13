@@ -30,6 +30,12 @@ ROOT = Path(__file__).resolve().parents[1]
 LOG = ROOT / "data" / "hook-invocations.jsonl"
 EFF = ROOT / "data" / "tool-effectiveness.jsonl"
 
+# Канонические категории строк «один row = один вызов инструмента» (Pre+Post):
+# mcp_call (mcp-invocation-logger) + tool_call (tool-invocation-logger, roadmap
+# 260713 P0.3 — built-in тулы). Обе несут tool_call_id/args_hash и реальную
+# Pre/Post-латентность. category="hook" (автолог энфорсеров) — НЕ вызов тула.
+_CANONICAL_CATEGORIES = ("mcp_call", "tool_call")
+
 
 def _iter_events(log: Path = LOG):
     if not log.exists():
@@ -119,14 +125,20 @@ def _aggregate_mcp(rows: list[dict]) -> dict:
 
 
 def _effectiveness(events: list[dict]) -> dict:
-    """Детерминированная эффективность (ADR-022 P1) по MCP-вызовам (Post = завершённый вызов с outcome/args_hash):
-    `repeats` — повтор идентичного вызова (тот же `args_hash` у тула в одном run = retry); `abandonment` —
-    последняя попытка тула завершилась ошибкой (не восстановились). Только MCP: у нативных тулов outcome =
-    исход хука-наблюдателя, не инструмента. Логику подтвердил Z.AI-ревью (claude-haiku, PASS)."""
+    """Детерминированная эффективность (ADR-022 P1) по каноническим вызовам (Post = завершённый вызов
+    с outcome/args_hash): `repeats` — повтор идентичного вызова (тот же `args_hash` у тула в одном run =
+    retry); `abandonment` — последняя попытка тула завершилась ошибкой (не восстановились). Источник —
+    канонические строки mcp_call + tool_call (roadmap 260713 P0.3): у обеих outcome/args_hash = исход тула,
+    НЕ хука-наблюдателя. ⚠ у built-in тулов детект ошибки best-effort (Bash non-zero exit не isError) →
+    abandonment/repeats built-in консервативны. Логику подтвердил Z.AI-ревью (claude-haiku, PASS)."""
     from collections import defaultdict
 
     calls = sorted(
-        (e for e in events if e.get("category") == "mcp_call" and e.get("event") == "PostToolUse"),
+        (
+            e
+            for e in events
+            if e.get("category") in _CANONICAL_CATEGORIES and e.get("event") == "PostToolUse"
+        ),
         key=lambda e: e.get("ts", ""),
     )
     out: dict[str, dict] = defaultdict(lambda: {"repeats": 0, "abandonment": 0})
@@ -161,15 +173,15 @@ def aggregate(run_id: str | None = None, session: str | None = None, log: Path =
             continue
         matched.append(e)
 
-    mcp_rows = [e for e in matched if e.get("category") == "mcp_call"]
-    by_tool: dict[str, dict] = dict(_aggregate_mcp(mcp_rows))
-    mcp_tools = set(by_tool)  # истина MCP-тулов — только из mcp_call-строк
+    canonical_rows = [e for e in matched if e.get("category") in _CANONICAL_CATEGORIES]
+    by_tool: dict[str, dict] = dict(_aggregate_mcp(canonical_rows))
+    canonical_tools = set(by_tool)  # истина вызовов — только из mcp_call/tool_call-строк
 
     for e in matched:
-        if e.get("category") == "mcp_call":
+        if e.get("category") in _CANONICAL_CATEGORIES:
             continue
         tool = e["tool"]
-        if tool in mcp_tools:  # stray hook-строки MCP-тула не двоим
+        if tool in canonical_tools:  # stray hook-строки канонического тула не двоим
             continue
         a = by_tool.setdefault(tool, {"calls": 0, "errors": 0, "ms": 0, "latency_real": False})
         a["calls"] += 1

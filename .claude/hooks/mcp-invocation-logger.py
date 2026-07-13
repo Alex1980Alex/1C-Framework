@@ -60,15 +60,10 @@ class McpInvocationLogger(BaseHook):
         if not inp.tool_name or not inp.tool_name.startswith("mcp__"):
             return None
 
-        # Workaround: base/protocol.py:46 detected_event checks
-        #   if "tool_result" in self.raw  →  "PostToolUse"
-        # but modern Claude Code sends the key as "tool_response", so the
-        # property misclassifies Post events as Pre. Derive directly here.
-        event = (
-            "PostToolUse"
-            if ("tool_response" in inp.raw or "tool_result" in inp.raw)
-            else "PreToolUse"
-        )
+        # P0.1 (2026-07-14): detected_event now classifies Post correctly via
+        # `tool_response` (base/protocol.py) with hook_event_name priority — the
+        # former local workaround here is obsolete and removed.
+        event = inp.detected_event
 
         outcome, error = self._classify_outcome(inp, event)
         # ADR-022 P0.4: tool_use_id — стабильный join-ключ Pre/Post (если платформа его шлёт;
