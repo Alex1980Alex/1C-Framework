@@ -28,15 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-**Status:** Pending review
-
----
-
-## Format Template
-
-```
-## YYYY-MM-DD — [Title]
-
 **Event:** [Brief description]
 
 - [Change 1]
@@ -497,4 +488,13 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol
 - Files changed: 6
 - Summary: Session 2026-07-13. Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol, learn:docker-configuration, 1c-mcp-crud, 1c-doc-research. Changed 6 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-save feedback_1c_reproduce_caller_params.md, MEMORY.md, edit_fio.py +5 more
+
+
+## 2026-07-14 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol
+- Files changed: 7
+- Summary: Session 2026-07-14. Skills: 1c-debug-hmr, evaluation-benchmark, bsl-development, code-verify, task-protocol, learn:docker-configuration, 1c-mcp-crud, 1c-doc-research. Changed 7 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-save pipeline.md. Commit: feat(observability): P1.1 decision layer — авто tool-health-отчёт + вердикты (roadmap 260713). Commit: fix(observability): P0 корректность лога инструментов (roadmap 260713)
 
