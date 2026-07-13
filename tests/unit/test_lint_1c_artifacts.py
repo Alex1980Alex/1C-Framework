@@ -31,6 +31,8 @@ _CANON_ANALYSIS = """
 ## 6. Риски и открытые вопросы
 ## 7. Тест-план
 ## 9. Резюме
+## 10. Проверка на реальных данных
+База: Srvr=DESKTOP;Ref=ИБ. Документ БАТМ-007435 от 01.07. BP-trace: гипотеза подтверждена.
 ## 11. Следующие шаги: Маршрут /implement-1c-task
 МЕТАДАННЫЕ: GKSTCPLK-1234
 """
@@ -54,6 +56,8 @@ Pipeline mode: Full
 - Отклонения от ANALYSIS-REPORT: нет
 ## Результаты тестирования
 Тест 1: PASS
+## Тестирование на реальных данных
+База Srvr=DESKTOP;Ref=ИБ. Документ БАТМ-007435 от 01.07 - BP frames[-1] PASS.
 ## Сообщение коммита
 МЕТАДАННЫЕ: GKSTCPLK-1234
 """
@@ -130,6 +134,38 @@ def test_impl_metadata_mention_without_commit_message_flagged():
 def test_impl_with_commit_section_present():
     r = mod.lint_text(_IMPL_WITH_COMMIT_SECTION, "implementation")
     assert not any("Сообщение коммита" in m for m in r["missing"])
+
+
+def test_analysis_without_real_data_chapter_flagged():
+    # ADR-050: отчёт без главы «Проверка на реальных данных» (и без [STATIC-ASSUMPTION]) флагается
+    txt = _CANON_ANALYSIS.replace(
+        "## 10. Проверка на реальных данных\n"
+        "База: Srvr=DESKTOP;Ref=ИБ. Документ БАТМ-007435 от 01.07. BP-trace: гипотеза подтверждена.\n",
+        "",
+    )
+    r = mod.lint_text(txt, "analysis")
+    assert any("реальных данных" in m for m in r["missing"])
+
+
+def test_analysis_static_assumption_counts_as_real_data_chapter():
+    # SKIP-вариант главы: явные [STATIC-ASSUMPTION] допущения тоже закрывают секцию
+    txt = _CANON_ANALYSIS.replace(
+        "База: Srvr=DESKTOP;Ref=ИБ. Документ БАТМ-007435 от 01.07. BP-trace: гипотеза подтверждена.",
+        "Live-проверка недоступна (debug env down): допущения помечены [STATIC-ASSUMPTION].",
+    ).replace("## 10. Проверка на реальных данных\n", "## 10. Проверка (SKIP)\n")
+    r = mod.lint_text(txt, "analysis")
+    assert not any("реальных данных" in m for m in r["missing"])
+
+
+def test_impl_zhivye_dannye_lenient_alias():
+    # lenient: «живых данных» (термин Этапа 6 в существующих артефактах) засчитывается
+    txt = _CANON_IMPL.replace(
+        "## Тестирование на реальных данных\n"
+        "База Srvr=DESKTOP;Ref=ИБ. Документ БАТМ-007435 от 01.07 - BP frames[-1] PASS.\n",
+        "## Тестирование на живых данных\nПроверено на живых данных базы.\n",
+    )
+    r = mod.lint_text(txt, "implementation")
+    assert not any("реальных данных" in m for m in r["missing"])
 
 
 def test_kind_autodetect():

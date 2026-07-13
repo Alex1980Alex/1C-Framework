@@ -1,8 +1,8 @@
 ---
 name: implement-1c-task
 description: "Реализация задачи 1С по готовому ANALYSIS-REPORT.md (BSL/XML через EDT-MCP). ТОЛЬКО после /analyze-1c-task-v2, когда есть ANALYSIS-REPORT с точками модификации. НЕ для анализа задач (→ analyze-1c-task-v2), НЕ для Claude Code, НЕ для LangChain."
-version: 2.8.1
-updated: 2026-06-15
+version: 2.9.0
+updated: 2026-07-13
 tags: [1c, implementation, bsl, configuration, edt-mcp, 1c-mcp-crud, bsl-debugger, 1c-debug-hmr]
 triggers:
   - реализовать задачу 1С
@@ -20,9 +20,9 @@ commands:
 > F-1, advance F-1.5). **Гейт (F-2):** запуск БЛОКИРУЕТСЯ, пока дизайн (этап 2, ANALYSIS-REPORT) не одобрен —
 > `pipeline_state.py approve <slug>`. См. [roadmap 260614](../../../docs/roadmap/260614_ROADMAP_1C_COMMANDS_4STAGE_ALIGNMENT.md).
 
-# Реализация задачи 1С — 8-этапный pipeline (v2.8)
+# Реализация задачи 1С — 8-этапный pipeline (v2.9)
 
-> **История версий:** полный список изменений v2.0.0 → v2.8.1 — [references/tools-reference.md#история-версий-implement-1c-task](references/tools-reference.md#история-версий-implement-1c-task). Текущая версия — 2.8.1 (2026-06-15): Этап 4 получил опциональный шаг 0 «автоформат» (`bsl_lint.py --format`) перед диагностикой.
+> **История версий:** полный список изменений v2.0.0 → v2.8.1 — [references/tools-reference.md#история-версий-implement-1c-task](references/tools-reference.md#история-версий-implement-1c-task). Текущая версия - **2.9.0 (2026-07-13)**: Этапы 5.x/6 - верификация и тестирование ОБЯЗАТЕЛЬНО на **реальных данных** живой базы + обязательная глава **«Тестирование на реальных данных»** в IMPLEMENTATION-PROGRESS.md (мандат пользователя, ADR-050; advisory-контроль `lint_1c_artifacts`). Предыдущая - 2.8.1 (2026-06-15): Этап 4, опциональный шаг 0 «автоформат» (`bsl_lint.py --format`).
 
 ## Overview
 
@@ -381,6 +381,8 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 **Когда применяется:** для КАЖДОЙ `[ADDED]`/`[MODIFIED]` точки модификации из ANALYSIS-REPORT. Точки `[REFACTOR]` (rename / replace body / safe delete) — BP не требуется (изменение тождественно по поведению).
 
+**Данные триггера - реальные (v2.9.0, ADR-050):** trigger-harness (`execute_code`/`execute_query`) вызывает изменённый код с **реальными данными живой базы** - кандидатов подбирать `execute_query` по фактическому наличию, параметры воспроизводить функциями ВЫЗЫВАЮЩЕГО (Шаблон 7 skill [1c-debug-hmr](../1c-debug-hmr/SKILL.md)), НЕ выдуманными значениями; синтетика - только при пустой базе, с явной пометкой. Идентификаторы использованных данных (номер/код/дата, ссылка) фиксировать по ходу - они обязаны попасть в главу «Тестирование на реальных данных» (Этап 7).
+
 **Шаг 0 — авто-калибровка строк (ОБЯЗАТЕЛЬНО, 2026-07-07):** номера строк локальных исходников (repo/EDT) систематически смещены относительно deployed-конфигурации — BP по строке из src молча не fire'ит (live-кейс: сдвиг +3). Перед первым точечным BP модуля: `debug_calibrate_lines(object_id, line_из_src)` → триггер фоновым заданием (`ФоновыеЗадания.Выполнить` через `execute_code` — прямой execute_code через HTTP-service НЕ ловится, RC2) → `debug_ping` ×2-3 → `debug_calibrate_result` → реальная строка + `offset` (применим ко всем BP этого модуля; на nearest уже стоит обычный BP). Детали — skill [1c-debug-hmr](../1c-debug-hmr/SKILL.md) Шаблон 5a.
 
 **Полный 8-шаговый протокол** (`debug_connect`→`debug_set_breakpoint`→`debug_get_breakpoints`→триггер `execute_code`/`execute_query`→`debug_ping`→`debug_stack_trace` assert→`debug_variables`→`debug_step(Continue)`), fallback при не-fire (`debug_break_on_next` → `force_recycle_rphost` / thin client Solution C), 15-минутный timeout user-in-the-loop ветки, success criterion, шаблон логирования в IMPLEMENTATION-PROGRESS.md, и **Этап 5.y Regression diff** (`debug_session_diff` verdict-гейт) — полный текст: [references/stage-details.md#этап-5x-live-bp-verification--8-шаговый-протокол--fallback](references/stage-details.md#этап-5x-live-bp-verification--8-шаговый-протокол--fallback).
@@ -393,7 +395,7 @@ Plain `1c-debug` (без HMR) — оставлен как CI/production-вари
 
 ### Этап 6: Тестирование на живых данных
 
-**Цель:** Выполнить тест-план из ANALYSIS-REPORT на реальной базе.
+**Цель:** Выполнить тест-план из ANALYSIS-REPORT на реальной базе - на **реальных данных** (существующие документы/записи, подобранные `execute_query`; каждые использованные данные фиксируются с идентификаторами для главы «Тестирование на реальных данных» Этапа 7).
 
 **КРИТИЧНО — почему этот этап имеет ОБЯЗАТЕЛЬНЫЙ шаг 0:**
 
@@ -410,6 +412,14 @@ EDT-MCP `write_module_source` правит **исходники** проекта
 **Создать/обновить файл IMPLEMENTATION-PROGRESS.md** в той же папке docs/ (статус, pipeline mode, точки модификации, debug session, результаты тестирования, footer `debug_session_id`) — полный шаблон + правила footer'а: [references/stage-details.md#этап-7-документация--шаблон-implementation-progressmd](references/stage-details.md#этап-7-документация--шаблон-implementation-progressmd).
 
 **ОБЯЗАТЕЛЬНО — секция `## Сообщение коммита`** (в конце файла, НИКОГДА не пропускать): готовое сообщение git-коммита, сформированное по скиллу [`git-commit-message`](../git-commit-message/SKILL.md) — формат **«Как было / Как стало/список результатов»** + `Изменённые/добавленные объекты` (термины 1С: «Общий модуль», «Документ», «Регистр сведений», «Запрос» — НЕ имена файлов) + футер `МЕТАДАННЫЕ: GKSTCPLK-XXXX`. Это **то же самое** сообщение, которым коммитится Этап 8 — пользователь копирует его прямо из файла, без переспроса. Наличие секции проверяет advisory-хук `pipeline-1c-advance` (через `scripts/lint_1c_artifacts.py`).
+
+**ОБЯЗАТЕЛЬНО - глава `## Тестирование на реальных данных`** (v2.9.0, мандат пользователя 2026-07-13, ADR-050): на каких данных тестировалось и какие результаты. Структура:
+- **База:** `Srvr=...;Ref=...` / MCP-профиль, на которых шли Этапы 5.x/6.
+- **Таблица данных:** `Объект | Идентификатор (номер/код/ссылка) | Дата | Сценарий` - конкретные реальные документы/записи, использованные BP-триггерами и тест-планом.
+- **Инструменты:** BP-trace `1c-debug-hmr` (модуль:строка, стек frames[-1], значения переменных), `execute_query`/`execute_code`, YAxUnit/VA BDD - что применялось.
+- **Результаты:** per-сценарий PASS/FAIL + итоговый вердикт; синтетические данные/SKIP - явно, с причиной.
+
+Наличие главы проверяет `lint_1c_artifacts` (advisory) через `pipeline-1c-advance`.
 
 ---
 
@@ -521,6 +531,7 @@ Claude НЕ МОЖЕТ проводить документы, нажимать �
 - [ ] Тест-план из ANALYSIS-REPORT: все тесты PASS или помечены SKIP с причиной (минимум — SQL-симуляция, если БД не обновлена)
 - [ ] **Рефакторинг (если применимо):** все `bsl_rename_symbol` / `bsl_replace_method_body` прошли `dry_run` → `apply`, `manual_required` обработаны вручную, routing backend + confidence зафиксированы в IMPLEMENTATION-PROGRESS.md
 - [ ] **Sonar-дельта (ADR-037):** ВСЕ контент-правки собраны (вкл. док-комментарии новых методов) → ОДИН `run-sonar-analysis.ps1` → `sonar_rescan_verify.py` PASS (0 BLOCKER/CRITICAL на изменённых строках)
+- [ ] **Глава `## Тестирование на реальных данных`** в IMPLEMENTATION-PROGRESS.md: база + таблица реальных данных (идентификаторы) + инструменты + результаты PASS/FAIL (v2.9.0, ADR-050; проверяет `lint_1c_artifacts`)
 - [ ] IMPLEMENTATION-PROGRESS.md создан/обновлён
 - [ ] **IMPLEMENTATION-PROGRESS.md содержит секцию `## Сообщение коммита`** (git-commit-message формат: Как было / Как стало + `МЕТАДАННЫЕ: GKSTCPLK-XXXX`) — то же сообщение, что и git-коммит Этапа 8 (проверяет `lint_1c_artifacts` через `pipeline-1c-advance`)
 - [ ] Отклонения от ANALYSIS-REPORT зафиксированы

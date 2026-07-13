@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-050",
+      "file": "050-mandatory-live-data-verification-1c-pipeline.md",
+      "title": "Обязательная live-верификация на реальных данных в Пайплайне 1С (мандат пользователя 2026-07-13): Фаза 2.5 Runtime Trace default-ON (--no-trace opt-out, BP-trace 1c-debug-hmr на реальных данных ДО плана), Этапы 5.x/6 на реальных данных, обязательные главы отчётов (ANALYSIS-REPORT §10 «Проверка на реальных данных» + IMPLEMENTATION-PROGRESS «Тестирование на реальных данных»: база, идентификаторы, результаты); enforcement advisory через lint_1c_artifacts (+2 core-секции); закрывает feedback-live-bp-trace-mandatory (2026-05-11)",
+      "status": "accepted",
+      "date": "2026-07-13",
+      "research": "мандат пользователя + инциденты GKSTCPLK-2468 (static-reading ошибка типа) и АРМ 2026-07-12 (параметры вызывающего, Шаблон 7)",
+      "tags": [
+        "1c-pipeline",
+        "1c-debug-hmr",
+        "runtime-trace",
+        "live-data",
+        "bp-verification",
+        "analyze-1c-task",
+        "implement-1c-task",
+        "report-chapter",
+        "lint_1c_artifacts"
+      ]
+    },
+    {
       "id": "ADR-048",
       "file": "048-sonar-project-split-per-configuration.md",
       "title": "Разделение Sonar-монопроекта upravlenie-transportom-plk на проекты по конфигурациям (utp-ib/utp-svetly; approve-поправка: configuration/<JIRA> исключён из скоупа И детекта гейта целиком — ведение задач, не код; A0 реализован): реестр scripts/sonar_projects.py + dual-mode SONAR_SPLIT_PROJECTS, projectBaseDir=корень конфига (per-project scan_stale гейта, ожидаемая починка SCM blame), миграция Phase A/B/C (пререквизит P0 roadmap 260706); отменяет отказ §5 roadmap 260706",
