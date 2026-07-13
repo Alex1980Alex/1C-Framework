@@ -96,9 +96,20 @@ class ToolHealthAnalyzerStop(BaseHook):
             return None  # cooldown — раз в сутки достаточно
 
         ok = _spawn()
-        _save_last_fire(now)  # пишем даже при неудаче спавна (не долбить каждый Stop)
         if not ok:
-            return None
+            # НЕ сохраняем last_fire: контур не должен умирать тихо на 24ч-циклы
+            # (adversarial-review 260713 #5a). Проверка exists() дешёвая — ретрай
+            # на каждом Stop приемлем, а предупреждение делает поломку видимой.
+            missing = (
+                PYTHON_EXE.name
+                if not PYTHON_EXE.exists()
+                else (ANALYZER.name if not ANALYZER.exists() else "ошибка запуска (OSError)")
+            )
+            return HookOutput().system_message(
+                "[TOOL-HEALTH] ⚠ Не удалось запустить анализ здоровья инструментов "
+                f"({missing}). Контур tool-health не обновляется."
+            )
+        _save_last_fire(now)
         return HookOutput().system_message(
             "[TOOL-HEALTH] Запущен анализ здоровья инструментов (окно 14д). "
             "Отчёт: `data/reports/tools/_latest.md`; вердикты/alerts всплывут в баннере "

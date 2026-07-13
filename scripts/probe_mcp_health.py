@@ -150,12 +150,49 @@ def probe_all(timeout: float = 1.5) -> list[dict]:
     return probes
 
 
+_JSONL_CAP_BYTES = 2_000_000  # ротация истории проб (append не безграничен, review #7)
+
+
 def _atomic_write(path: Path, text: str) -> None:
-    """Атомарная запись через tmp-файл + os.replace."""
+    """Атомарная запись через УНИКАЛЬНЫЙ tmp (mkstemp): фиксированное tmp-имя давало
+    гонку двух параллельных SessionStart на Windows — PermissionError всплывал и баннер
+    о down молча терялся (adversarial-review 260713 #6)."""
+    import tempfile
+
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix=path.stem + "-")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp, str(path))
+    except OSError:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _rotate_jsonl(path: Path, cap_bytes: int = _JSONL_CAP_BYTES) -> None:
+    """Ротация: при превышении cap сохранить новейшую половину (паттерн trace_log)."""
+    import tempfile
+
+    try:
+        if path.exists() and path.stat().st_size > cap_bytes:
+            data = path.read_bytes()[-(cap_bytes // 2) :]
+            idx = data.find(b"\n")
+            if idx != -1:
+                data = data[idx + 1 :]
+            fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix="health-")
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(data)
+                os.replace(tmp, str(path))
+            except OSError:
+                os.unlink(tmp)
+                raise
+    except OSError:
+        pass  # ротация не блокирует пробу
 
 
 def run(timeout: float = 1.5, now: datetime | None = None) -> dict:
@@ -176,6 +213,7 @@ def run(timeout: float = 1.5, now: datetime | None = None) -> dict:
     ]
 
     HEALTH_JSONL.parent.mkdir(parents=True, exist_ok=True)
+    _rotate_jsonl(HEALTH_JSONL)
     with HEALTH_JSONL.open("a", encoding="utf-8") as fh:
         for p in probes:
             fh.write(json.dumps({"ts": ts, **p}, ensure_ascii=False) + "\n")

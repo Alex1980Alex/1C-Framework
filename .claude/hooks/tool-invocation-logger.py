@@ -138,6 +138,18 @@ class ToolInvocationLogger(BaseHook):
                 if response.get("isError") or response.get("is_error"):
                     msg = response.get("error") or response.get("content") or "isError=true"
                     return "error", str(msg)[:300]
+                # Bash/PowerShell: типичный фейл — dict с exit_code/interrupted, НЕ isError
+                # (adversarial-review 260713 P0#6: без этого все Bash-фейлы шли success=True
+                # → вердикты P1.1 слепы к реальным ошибкам исполняемых тулов).
+                exit_code = response.get("exit_code", response.get("exitCode"))
+                if isinstance(exit_code, int) and exit_code != 0:
+                    tail = str(response.get("stderr") or response.get("stdout") or "")[-300:]
+                    return (
+                        "error",
+                        f"exit_code={exit_code}: {tail}" if tail else f"exit_code={exit_code}",
+                    )
+                if response.get("interrupted"):
+                    return "error", "interrupted"
                 content = response.get("content")
                 if isinstance(content, list):
                     for item in content:

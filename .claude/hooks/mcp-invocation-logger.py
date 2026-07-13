@@ -83,6 +83,7 @@ class McpInvocationLogger(BaseHook):
                 outcome=outcome,
                 session_id=inp.session_id,
                 error=error,
+                agent_id=inp.agent_id,  # P0.2 (B2): subagent-атрибуция и у MCP-вызовов
                 category="mcp_call",
                 run_id=get_run_id(inp.session_id),
                 tool_call_id=tool_call_id,

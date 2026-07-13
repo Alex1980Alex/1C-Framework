@@ -91,8 +91,11 @@ class HookInput:
             tool_input = {"_raw": tool_input}
 
         # Auto-detect event type from fields (Claude Code doesn't send
-        # "detected_event" — we infer it the same way as protocol.py)
-        detected_event = data.get("detected_event")
+        # "detected_event" — we infer it the same way as protocol.py).
+        # Полное зеркало protocol.py (adversarial-review 260713 P0#5): приоритет
+        # авторитативного hook_event_name + transcript_path в Stop-детекте — иначе
+        # первый же импортёр этого спящего base получил бы misclassify Stop→None.
+        detected_event = data.get("hook_event_name") or data.get("detected_event")
         tool_name = data.get("tool_name")
         if not detected_event:
             if tool_name:
@@ -106,7 +109,7 @@ class HookInput:
                 )
             elif data.get("prompt") or data.get("content"):
                 detected_event = "UserPromptSubmit"
-            elif data.get("transcript") or data.get("reason"):
+            elif data.get("transcript") or data.get("transcript_path") or data.get("reason"):
                 detected_event = "Stop"
 
         return cls(
@@ -115,7 +118,7 @@ class HookInput:
             tool_input=tool_input,
             prompt=data.get("prompt"),
             invocation_id=data.get("invocation_id"),
-            agent_id=data.get("agent_id"),
+            agent_id=data.get("agent_id") or data.get("agentId"),  # зеркало protocol.py (P0.2)
             raw_data=data,
         )
 

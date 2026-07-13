@@ -63,13 +63,18 @@ def _get_log_file() -> Path:
 
 
 def _rotate_if_needed(filepath: Path) -> None:
-    """Rotate log file if it exceeds MAX_LOG_SIZE."""
+    """Rotate log file if it exceeds MAX_LOG_SIZE.
+
+    os.replace (атомарный overwrite) вместо unlink+rename: раздельные шаги давали
+    межпроцессную гонку — процесс B удалял свежесозданный процессом A архив `.1`,
+    а его собственный rename падал (adversarial-review 260713 P0#3). При проигрыше
+    гонки os.replace у второго процесса источник уже переименован → FileNotFoundError
+    → поглощён except OSError, архив цел.
+    """
     try:
         if filepath.exists() and filepath.stat().st_size > MAX_LOG_SIZE:
             rotated = filepath.with_name("hook-invocations.1.jsonl")
-            if rotated.exists():
-                rotated.unlink()
-            filepath.rename(rotated)
+            os.replace(filepath, rotated)
     except OSError:
         pass
 

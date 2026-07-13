@@ -174,6 +174,16 @@ Baseline: первый прогон пишет `data/reports/tools/baseline.json
 
 > Append-only, reverse-chronological. Новые записи сверху.
 
+### 2026-07-14 - Адверсариальный аудит реализованного (3 ревью-агента) → hardening-батч
+
+Три параллельных адверсариальных ревьюера по срезам P0 / P1.1 / P1.2+P1.4+P2.3 — 20+ подтверждённых находок, все high/medium исправлены (13 файлов, 13 регресс-тестов `test_tool_obs_adversarial_fixes.py`, re-review PASS):
+
+- **P1.1 high:** tz-crash `iter_window_rows` (aware-ts ронял TypeError'ом весь прогон → `_to_naive_local`); baseline-ветки degraded обходили `DEGRADED_MIN_CALLS` (calls=1 er=100% светил degraded); `p95=0.0` при `paired=0` ратчетился в baseline навсегда (детект отключался — теперь skip + self-heal легаси-0.0); «degraded навсегда» без выхода → CLI `--reset-baseline`; unused-вечность → `last_seen`+TTL-prune 30д; тихая смерть контура (spawn fail сохранял cooldown, баннер молчал → warning + retry + stale-warning при 0 alerts); повторные авто-задачи по одному инциденту (cooldown 72ч < окно 14д → 336ч); неполнота окна после двойной ротации молча → `window_incomplete` в sidecar/md/баннер (**сработал на живом логе первым же прогоном**); ротация verdicts.jsonl; mkstemp-атомарность.
+- **P0 med:** `hookSpecificOutput`-хуки на mcp__ тулах глотались P0.4-подавлением (`outcome=message` теперь); `agent_id` не прокидывался в канонический mcp_call (асимметрия B2); межпроцессная гонка ротации `hook-invocations.jsonl` уничтожала свежий архив (`os.replace`); Bash dict `exit_code≠0` шёл success=True (вердикты слепы к реальным фейлам исполняемых тулов — теперь error); спящий `base/base.py` доведён до зеркала protocol.py.
+- **P1.2/P1.4/P2.3 med:** slug 1c-mcp-crud сливал 5 ИБ-инстансов в один per-call лог (`_instance_slug` из `MCP_ONEC_URL` + санитайзер); каденс-вызов отчёта не был ни read-only, ни bounded (`--print --since 14d`; маркер `[REGRESSION]` теперь печатается и в `--print` — producer-side контракт-тест); utf-8 stdout отчёта; mkstemp+ротация в probe.
+
+129 unit (116 существующих + 13 новых) + live smoke (window_incomplete на реальном логе; e2e каденс-парсер 0.2с ловит 3 stale-синка) + re-review PASS. Отклонено осознанно: repeats-как-драйвер вердикта (FP polling), tail-read оптимизация freshness (все синки под 2MB-ротацией trace_log — суммарный worst-case bounded).
+
 ### 2026-07-14 - P2.1 + P2.2 реализованы (gen_ai-алиасы + rule-слой эффективности)
 
 - P2.1: `invocation_logger` пишет OTel-алиасы `gen_ai.tool.name`/`gen_ai.tool.call.id`/`error.type` (аддитивно, единый `err_type`) — подтверждено на живом логе.

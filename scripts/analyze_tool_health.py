@@ -73,13 +73,27 @@ DEGRADED_ERROR_RATE = 0.10
 P95_REGRESSION_FACTOR = 2.0  # p95 > 2× baseline = degraded
 ERROR_RATE_RATCHET = 0.05  # +5пп к baseline error-rate = degraded
 INEFFECTIVE_MIN_CALLS_ABANDON = 3  # abandonment учитывается при calls ≥ этого
+BASELINE_UNUSED_TTL_DAYS = 30  # неактивный тул выбывает из baseline (unused не вечен, #2)
+VERDICTS_CAP_BYTES = 5_000_000  # ротация verdicts.jsonl (append-история не безгранична, #3)
 
 
 # ── чтение лога за окно ───────────────────────────────────────────────────────
 
 
+def _to_naive_local(ts: datetime) -> datetime:
+    """Aware → локальный naive. Класс бага Sonar parse_dt: naive-vs-aware сравнение
+    бросает TypeError — одна aware-строка в логе не должна ронять весь прогон."""
+    if ts.tzinfo is not None:
+        try:
+            return ts.astimezone().replace(tzinfo=None)
+        except (ValueError, OSError, OverflowError):
+            return ts.replace(tzinfo=None)
+    return ts
+
+
 def iter_window_rows(now: datetime, window_days: int, logs: list[Path] | None = None):
-    """Канонические строки вызовов за окно [now-window_days, now]. Битые/чужие пропускаются."""
+    """Канонические строки вызовов за окно [now-window_days, now]. Битые/чужие пропускаются.
+    tz-guard: aware-ts нормализуется к локальному naive (adversarial-review 260713 #9)."""
     cutoff = now - timedelta(days=window_days)
     for log in logs if logs is not None else [LOG, ROTATED]:
         if not log.exists():
@@ -93,14 +107,40 @@ def iter_window_rows(now: datetime, window_days: int, logs: list[Path] | None = 
                     e = json.loads(line)
                 except ValueError:
                     continue
+                if not isinstance(e, dict):  # валидный JSON, но не объект ("123")
+                    continue
                 if e.get("category") not in CANONICAL_CATEGORIES:
                     continue
                 if not e.get("tool"):
                     continue
                 ts = _parse_ts(e.get("ts"))
-                if ts is None or ts < cutoff:
+                if ts is None or _to_naive_local(ts) < cutoff:
                     continue
                 yield e
+
+
+def earliest_log_ts(logs: list[Path] | None = None) -> datetime | None:
+    """Самый ранний валидный ts доступных лог-файлов (первая парсибельная строка самого
+    старого). Детект неполноты окна: двойная ротация могла молча срезать хвост (#7)."""
+    for log in logs if logs is not None else [ROTATED, LOG]:  # ротированный старше текущего
+        if not log.exists():
+            continue
+        try:
+            with open(log, encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        ts = _parse_ts(obj.get("ts")) if isinstance(obj, dict) else None
+                    except ValueError:
+                        continue
+                    if ts is not None:
+                        return _to_naive_local(ts)
+        except OSError:
+            continue
+    return None
 
 
 # ── агрегация per-tool ────────────────────────────────────────────────────────
@@ -153,17 +193,19 @@ def assign_verdict(stats: dict, baseline: dict | None) -> tuple[str, str]:
     if calls >= MIN_CALLS_FOR_BROKEN and sr < BROKEN_SUCCESS_RATE:
         return "broken", f"success-rate {sr:.0%} < 50% при {calls} вызовах"
 
-    # degraded — error-rate порог требует мин. вызовов (иначе единичная транзиентная
-    # ошибка MCP [-32000/500] светила бы degraded ~14д, пока не выпадет из окна).
-    if calls >= DEGRADED_MIN_CALLS and er > DEGRADED_ERROR_RATE:
-        return "degraded", f"error-rate {er:.0%} > 10% ({calls} вызовов)"
-    if baseline:
-        base_p95 = baseline.get("p95_ms") or 0
-        if base_p95 > 0 and stats["p95_ms"] > P95_REGRESSION_FACTOR * base_p95:
-            return "degraded", f"p95 {stats['p95_ms']:.0f}ms > 2× baseline ({base_p95:.0f}ms)"
-        base_er = baseline.get("error_rate")
-        if base_er is not None and er - base_er > ERROR_RATE_RATCHET:
-            return "degraded", f"error-rate +{(er - base_er):.0%} к baseline"
+    # degraded — ВСЕ ветки (абсолютный порог И baseline-сравнения) требуют мин. вызовов:
+    # единичная транзиентная ошибка (calls=1, er=1.0) через baseline-ветку er−base>5пп
+    # иначе светила бы degraded ~14д (adversarial-review 260713 #1b).
+    if calls >= DEGRADED_MIN_CALLS:
+        if er > DEGRADED_ERROR_RATE:
+            return "degraded", f"error-rate {er:.0%} > 10% ({calls} вызовов)"
+        if baseline:
+            base_p95 = baseline.get("p95_ms") or 0
+            if base_p95 > 0 and stats["p95_ms"] > P95_REGRESSION_FACTOR * base_p95:
+                return "degraded", f"p95 {stats['p95_ms']:.0f}ms > 2× baseline ({base_p95:.0f}ms)"
+            base_er = baseline.get("error_rate")
+            if base_er is not None and er - base_er > ERROR_RATE_RATCHET:
+                return "degraded", f"error-rate +{(er - base_er):.0%} к baseline"
 
     # ineffective — в целом работает (error_rate ≤ 10%, иначе выше отдал бы degraded),
     # но ПОСЛЕДНЯЯ попытка провалилась и брошена (abandonment). Это рекуррентный сигнал,
@@ -216,22 +258,52 @@ def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
 # ── ratchet-baseline (паттерн mypy-baseline) ─────────────────────────────────
 
 
-def update_baseline(baseline: dict, stats: dict[str, dict]) -> dict:
+def update_baseline(baseline: dict, stats: dict[str, dict], now: datetime | None = None) -> dict:
     """Ratchet: baseline = лучший (min) p95 и error-rate per-tool. Ухудшение НЕ пишется
-    (чтобы degraded ловился), улучшение обновляет планку."""
-    out = dict(baseline)
+    (чтобы degraded ловился), улучшение обновляет планку.
+
+    Adversarial-review 260713 фиксы:
+      #1c — p95 ратчетится ТОЛЬКО при paired>0: p95_ms=0.0 (нет Pre/Post-пар) затягивал
+            0.0 в baseline навсегда → p95-regression детект отключался перманентно;
+      #2  — записи несут `last_seen`; неактивный тул старше BASELINE_UNUSED_TTL_DAYS
+            выбывает (prune) — unused-вердикт не светит вечно по отключённым серверам.
+    Выход из «degraded навсегда» (легитимное замедление, #1a) — CLI `--reset-baseline`.
+    """
+    now = now or datetime.now()
+    out: dict[str, dict] = {}
+    for tool, prev in baseline.items():
+        if tool in stats:
+            out[tool] = dict(prev)
+            continue
+        # неактивный тул: жив пока last_seen моложе TTL (легаси-записи без last_seen
+        # получают штамп сейчас — один TTL-цикл на выбытие)
+        seen = _parse_ts(prev.get("last_seen")) or now
+        if (now - _to_naive_local(seen)).days <= BASELINE_UNUSED_TTL_DAYS:
+            out[tool] = {**prev, "last_seen": prev.get("last_seen") or now.isoformat()}
+        # иначе — prune (выбыл из baseline, unused-вердикт по нему больше не светит)
     for tool, st in stats.items():
         if st["calls"] < MIN_CALLS_FOR_BROKEN:  # мало данных — не двигаем baseline
+            # но активность фиксируем, чтобы тул не выбыл по TTL
+            if tool in out:
+                out[tool]["last_seen"] = now.isoformat()
             continue
         prev = out.get(tool, {})
-        out[tool] = {
-            "p95_ms": min(prev.get("p95_ms", st["p95_ms"]), st["p95_ms"]) if prev else st["p95_ms"],
+        entry = {
             "error_rate": (
-                min(prev.get("error_rate", st["error_rate"]), st["error_rate"])
-                if prev
+                min(prev["error_rate"], st["error_rate"])
+                if "error_rate" in prev
                 else st["error_rate"]
             ),
+            "last_seen": now.isoformat(),
         }
+        # p95: только реальные Pre/Post-пары; paired=0 даёт p95=0.0 — НЕ ратчетим (#1c);
+        # легаси-запись с затянутым 0.0 лечится заменой на текущее значение
+        if st.get("paired", 0) > 0:
+            prev_p95 = prev.get("p95_ms") or 0
+            entry["p95_ms"] = min(prev_p95, st["p95_ms"]) if prev_p95 > 0 else st["p95_ms"]
+        elif prev.get("p95_ms"):
+            entry["p95_ms"] = prev["p95_ms"]  # сохранить прежнюю планку
+        out[tool] = entry
     return out
 
 
@@ -246,12 +318,46 @@ def _load_json(path: Path, default):
 
 
 def _atomic_write(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
+    """Атомарная запись через уникальный tmp (mkstemp): фиксированное tmp-имя давало
+    гонку двух конкурентных прогонов на Windows (PermissionError, #4)."""
     import os
+    import tempfile
 
-    os.replace(tmp, path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix=path.stem + "-")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp, str(path))
+    except OSError:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def _rotate_jsonl(path: Path, cap_bytes: int) -> None:
+    """Ротация append-истории: при превышении cap сохранить новейшую половину (#3)."""
+    import os
+    import tempfile
+
+    try:
+        if path.exists() and path.stat().st_size > cap_bytes:
+            data = path.read_bytes()[-(cap_bytes // 2) :]
+            idx = data.find(b"\n")
+            if idx != -1:
+                data = data[idx + 1 :]
+            fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix="verdicts-")
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(data)
+                os.replace(tmp, str(path))
+            except OSError:
+                os.unlink(tmp)
+                raise
+    except OSError:
+        pass  # ротация не блокирует прогон
 
 
 _VERDICT_ORDER = {"broken": 0, "degraded": 1, "ineffective": 2, "unused": 3, "healthy": 4}
@@ -283,6 +389,12 @@ def render_md(health: dict, window_days: int) -> str:
         f"{_VERDICT_MARK[v]} {v}={counts[v]}" for v in _VERDICT_ORDER if counts.get(v)
     )
     lines += [f"**Итог:** {summary or 'нет данных'}", ""]
+    if health.get("window_incomplete"):
+        lines += [
+            f"> ⚠ **Окно неполное**: лог покрывает только с {health.get('window_covered_from', '?')} "
+            "(ротация срезала хвост) — вердикты по усечённым данным.",
+            "",
+        ]
 
     if alerts:
         lines += ["## ⚠ ALERTS (broken / degraded)", ""]
@@ -342,6 +454,15 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     baseline = _load_json(REPORTS / "baseline.json", {})
     health = compute_health(rows, baseline, now)
 
+    # неполнота окна (#7): самый ранний доступный ts моложе cutoff → часть окна срезана
+    # ротацией; вердикты по усечённым данным помечаются, а не выдаются как полные
+    cutoff = now - timedelta(days=window_days)
+    earliest = earliest_log_ts()
+    window_incomplete = bool(earliest and earliest > cutoff + timedelta(days=1))
+    if window_incomplete:
+        health["window_incomplete"] = True
+        health["window_covered_from"] = earliest.isoformat(timespec="seconds")
+
     # sidecar json (для SessionStart-баннера): вердикты + alerts
     alerts = [
         {"tool": t, "verdict": s["verdict"], "reason": s["reason"]}
@@ -351,6 +472,7 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     sidecar = {
         "generated": health["generated"],
         "window_days": window_days,
+        "window_incomplete": window_incomplete,
         "alerts": alerts,
         "counts": {
             v: sum(1 for s in health["tools"].values() if s["verdict"] == v) for v in _VERDICT_ORDER
@@ -362,8 +484,9 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     if not json_only:
         _atomic_write(REPORTS / "_latest.md", render_md(health, window_days))
 
-    # verdicts.jsonl — append-only история (тренд/эскалация)
+    # verdicts.jsonl — append-история с ротацией (#3)
     REPORTS.mkdir(parents=True, exist_ok=True)
+    _rotate_jsonl(REPORTS / "verdicts.jsonl", VERDICTS_CAP_BYTES)
     with open(REPORTS / "verdicts.jsonl", "a", encoding="utf-8") as f:
         for tool, s in health["tools"].items():
             f.write(
@@ -382,13 +505,34 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
                 + "\n"
             )
 
-    # ratchet baseline (только по тулам с достаточными данными)
+    # ratchet baseline (только по тулам с достаточными данными; TTL-prune внутри)
     stats_only = {t: s for t, s in health["tools"].items() if s["verdict"] != "unused"}
     _atomic_write(
         REPORTS / "baseline.json",
-        json.dumps(update_baseline(baseline, stats_only), ensure_ascii=False, indent=2),
+        json.dumps(update_baseline(baseline, stats_only, now), ensure_ascii=False, indent=2),
     )
     return sidecar
+
+
+def reset_baseline(tools: list[str] | None = None) -> int:
+    """Сброс ratchet-baseline (#1a): единственный выход из «degraded навсегда» при
+    ЛЕГИТИМНОМ замедлении/росте error-rate. `tools=None` → сброс всего файла;
+    иначе — удалить перечисленные ключи. Возвращает число удалённых записей."""
+    path = REPORTS / "baseline.json"
+    baseline = _load_json(path, {})
+    if not baseline:
+        return 0
+    if tools is None:
+        removed = len(baseline)
+        _atomic_write(path, "{}")
+        return removed
+    removed = 0
+    for t in tools:
+        if t in baseline:
+            del baseline[t]
+            removed += 1
+    _atomic_write(path, json.dumps(baseline, ensure_ascii=False, indent=2))
+    return removed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -399,10 +543,22 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Tool health analyzer (roadmap 260713 P1.1)")
     ap.add_argument("--window-days", type=int, default=14)
     ap.add_argument("--json-only", action="store_true", help="не писать _latest.md")
+    ap.add_argument(
+        "--reset-baseline",
+        nargs="*",
+        metavar="TOOL",
+        help="сбросить ratchet-baseline: без аргументов — целиком, иначе перечисленные тулы "
+        "(выход из «degraded навсегда» при легитимном замедлении)",
+    )
     args = ap.parse_args(argv)
+    if args.reset_baseline is not None:
+        n = reset_baseline(args.reset_baseline or None)
+        print(f"baseline reset: удалено {n} записей → {REPORTS / 'baseline.json'}")
+        return 0
     sidecar = run(window_days=args.window_days, json_only=args.json_only)
+    inc = " ⚠ окно неполное (ротация срезала хвост)" if sidecar.get("window_incomplete") else ""
     print(
-        f"tool-health: {sidecar['counts']} | alerts={len(sidecar['alerts'])} "
+        f"tool-health: {sidecar['counts']} | alerts={len(sidecar['alerts'])}{inc} "
         f"→ {REPORTS / '_latest.md'}"
     )
     return 0

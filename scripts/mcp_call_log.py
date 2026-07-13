@@ -4,10 +4,19 @@ Self-contained helper modeled after ``src/memory/infrastructure/trace_log.py``
 but with **zero internal dependencies** (stdlib only), so it can be imported
 from path-isolated MCP server processes:
 
-  - ``memory-orchestrator`` (``python -m src.memory...`` from project root)
-  - ``1c-mcp-crud`` (launcher chdir's into the ``external/1c_mcp`` submodule)
+  - ``memory-orchestrator`` (``python -m src.memory...`` from project root) —
+    imports it as ``scripts.mcp_call_log`` (namespace package on project root);
+  - ``1c-mcp-crud`` (launcher chdir's into the ``external/1c_mcp`` submodule) —
+    imports it bare (``import mcp_call_log``) with the ``scripts/`` DIR on
+    sys.path: putting the project root on path would shadow the submodule's
+    ``src`` namespace package with the parent's regular ``src`` package.
 
-Both reach it as ``scripts.mcp_call_log`` (namespace package on project root).
+Concurrency note: appends of short (<1KB) lines from multiple processes are
+effectively atomic (single buffered write, append mode); the size-rotation is
+NOT concurrency-safe — a write landing between read_bytes() and os.replace()
+may be lost (~once per cap overflow). Accepted for a metadata-only log; on
+Windows a busy-handle PermissionError is swallowed and rotation retries on the
+next call, so unbounded growth does not occur.
 
 Gives a **second source of truth** for MCP tool invocations that survives when
 the stdio transport crashes/times out *before* the Claude Code Post-hook logs

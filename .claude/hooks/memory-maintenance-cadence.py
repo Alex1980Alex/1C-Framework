@@ -112,14 +112,20 @@ def _launch(apply: bool) -> bool:
 
 
 def _check_regressions(timeout: float = 8.0) -> str | None:
-    """P1.4 (B8): синхронно прогнать observability-отчёт (read-only, <1с) и вернуть
-    строку `[REGRESSION] N stale sink(s): [...]` при замолчавших синках, иначе None.
+    """P1.4 (B8): синхронно прогнать observability-отчёт и вернуть строку
+    `[REGRESSION] N stale sink(s): [...]` при замолчавших синках, иначе None.
+
+    `--print --since 14d` (adversarial-review 260713 #2/#5): --print делает вызов
+    честно read-only (без записи observability-*.md на каждый фаер), --since 14d
+    ограничивает чтение синков окном (без него read_window парсил ВСЮ историю
+    каждого jsonl — на разросшемся memory-metrics.jsonl упирался в timeout →
+    регрессия молча терялась). Маркер в --print печатается с той же даты (контракт).
     best-effort — таймаут/ошибка/нет скрипта → None (каденс не ломается)."""
     if not PYTHON_EXE.exists() or not OBS_SCRIPT.exists():
         return None
     try:
         r = subprocess.run(
-            [str(PYTHON_EXE), str(OBS_SCRIPT)],
+            [str(PYTHON_EXE), str(OBS_SCRIPT), "--print", "--since", "14d"],
             capture_output=True,
             text=True,
             timeout=timeout,

@@ -27,7 +27,10 @@ from base import BaseHook, HookInput, HookOutput
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SIDECAR = PROJECT_ROOT / "data" / "reports" / "tools" / "_latest.json"
 STATE_FILE = PROJECT_ROOT / ".claude" / "cache" / "tool-health-banner-state.json"
-ESCALATE_COOLDOWN_HOURS = 72
+# Cooldown эскалации = окно анализа (14д): broken держится в 14д-окне до 14 дней после
+# фикса (старые ошибки не выпали) → 72ч плодило повторные задачи по ОДНОМУ инциденту
+# (adversarial-review 260713 #6). Одна задача на инцидент-окно; баннер светит всё время.
+ESCALATE_COOLDOWN_HOURS = 336  # 14 дней
 STALE_REPORT_DAYS = 7
 
 
@@ -86,10 +89,21 @@ class ToolHealthBanner(BaseHook):
         if not sidecar:
             return None  # отчёта ещё нет — молчим
         alerts = sidecar.get("alerts") or []
-        if not alerts:
-            return None  # всё healthy — тихо (quiet wakeups rare)
-
         now = datetime.now()
+        if not alerts:
+            # healthy → тихо, НО протухший отчёт = мёртвый контур, о нём молчать нельзя
+            # (adversarial-review 260713 #5a: тихая смерть анализатора была невидима)
+            gen = sidecar.get("generated")
+            try:
+                if gen and now - datetime.fromisoformat(gen) > timedelta(days=STALE_REPORT_DAYS):
+                    return HookOutput().system_message(
+                        f"[TOOL-HEALTH] ⚠ Отчёт здоровья инструментов устарел ({gen}) — "
+                        "анализатор не отрабатывает. Проверить: "
+                        "`python scripts/analyze_tool_health.py` + `_analyzer.log`."
+                    )
+            except (ValueError, TypeError):
+                pass
+            return None  # всё healthy и отчёт свежий — тихо (quiet wakeups rare)
         broken = [a for a in alerts if a.get("verdict") == "broken"]
         degraded = [a for a in alerts if a.get("verdict") == "degraded"]
 
@@ -102,9 +116,10 @@ class ToolHealthBanner(BaseHook):
         if escalated:
             _save_state(state)
 
+        inc = " ⚠ окно неполное" if sidecar.get("window_incomplete") else ""
         lines = [
             "[TOOL-HEALTH] Обнаружены проблемные инструменты (окно "
-            f"{sidecar.get('window_days', '?')}д):"
+            f"{sidecar.get('window_days', '?')}д{inc}):"
         ]
         for a in broken:
             lines.append(f"  🔴 broken `{a['tool']}` — {a.get('reason', '')}")

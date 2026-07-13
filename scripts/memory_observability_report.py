@@ -438,6 +438,10 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 
 def main() -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows pipe = cp1251 → маркер терялся
+    except Exception:
+        pass  # stdout может не поддерживать reconfigure
     ap = argparse.ArgumentParser(description="§27 P4 unified memory observability report")
     ap.add_argument("--since", default=None, help="window: '24h', '7d', or ISO timestamp")
     ap.add_argument("--out-dir", default=str(OUT_DIR))
@@ -455,8 +459,20 @@ def main() -> int:
     report = build_report(args.since, now, args.stale_hours)
     md = render_markdown(report)
 
+    # Машиночитаемый маркер — КОНТРАКТ с memory-maintenance-cadence._check_regressions
+    # (P1.4 roadmap 260713): печатается в ОБОИХ режимах (adversarial-review #3 — в --print
+    # маркер отсутствовал, что делало read-only вызов из каденса слепым к регрессиям).
+    regression_line = (
+        f"[REGRESSION] {len(report['regressions'])} stale sink(s): "
+        f"{[r['source'] for r in report['regressions']]}"
+        if report["regressions"]
+        else None
+    )
+
     if args.print:
         print(md)
+        if regression_line:
+            print(regression_line)
         return 0
 
     out_dir = Path(args.out_dir)
@@ -469,11 +485,8 @@ def main() -> int:
     json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     latest.write_text(md, encoding="utf-8")
     print(f"Report: {md_path}")
-    if report["regressions"]:
-        print(
-            f"[REGRESSION] {len(report['regressions'])} stale sink(s): "
-            f"{[r['source'] for r in report['regressions']]}"
-        )
+    if regression_line:
+        print(regression_line)
     return 0
 
 

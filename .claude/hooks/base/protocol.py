@@ -185,10 +185,13 @@ class BaseHook(ABC):
         try:
             result = self.execute(inp)
             if result is not None:
-                # Determine outcome from result data
+                # Determine outcome from result data. hookSpecificOutput (hook_context —
+                # рабочий PostToolUse-фидбэк) тоже содержательный: без этой ветки хук,
+                # вернувший ТОЛЬКО hook_context на mcp__-туле, попадал под P0.4-подавление
+                # allow-дублей и исчезал из лога (adversarial-review 260713 P0#1).
                 if result._data.get("decision") == "block":
                     outcome = "block"
-                elif result._data.get("systemMessage"):
+                elif result._data.get("systemMessage") or result._data.get("hookSpecificOutput"):
                     outcome = "message"
                 result.emit()
         except Exception as e:

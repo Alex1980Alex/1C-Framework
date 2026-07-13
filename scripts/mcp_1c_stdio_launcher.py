@@ -29,6 +29,29 @@ sys.path.insert(0, str(SUBMODULE_ROOT))
 sys.path.append(str(_PROJECT_ROOT / "scripts"))
 
 
+def _instance_slug() -> str:
+    """Slug per-инстанс: этот лаунчер — единая точка входа ПЯТИ серверов из .mcp.json
+    (1c-mcp-crud / -erp / -trade / -svetly / -mfm), различающихся только MCP_ONEC_URL.
+    Захардкоженный slug сливал 5 ИБ в один лог — терялась диагностика «какая база
+    упала» (adversarial-review 260713 #1). Сегмент пути URL → суффикс slug'а,
+    зеркально имени сервера в .mcp.json (/transport = базовый 1c-mcp-crud)."""
+    try:
+        import re
+        from urllib.parse import urlparse
+
+        # только path-сегмент URL (голый netloc без path НЕ считается инстансом)
+        path = urlparse(os.environ.get("MCP_ONEC_URL", "")).path
+        seg = path.rstrip("/").rsplit("/", 1)[-1].lower()
+        seg = re.sub(r"[^a-z0-9_-]", "", seg)  # санитайзер вместо isidentifier: дефисные
+        # сегменты ("my-base") тоже различаются, а не сливаются молча в общий лог
+        # web-публикация базовой ИБ = /transport; имя MCP-сервера — без суффикса
+        if seg and seg != "transport":
+            return f"1c-mcp-crud-{seg}"
+    except Exception:
+        pass
+    return "1c-mcp-crud"
+
+
 def _instrument_call_tool() -> None:
     """Wrap OneCClient.call_tool with a per-call JSONL log (roadmap 260713 P2.3 / B9).
 
@@ -48,9 +71,10 @@ def _instrument_call_tool() -> None:
         return  # idempotent
 
     _orig_call_tool = OneCClient.call_tool
+    slug = _instance_slug()  # env читается один раз при инструментировании
 
     async def call_tool(self, name, arguments):
-        with track_call("1c-mcp-crud", name) as st:
+        with track_call(slug, name) as st:
             result = await _orig_call_tool(self, name, arguments)
             if getattr(result, "isError", False):
                 st["ok"] = False
