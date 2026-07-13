@@ -2312,6 +2312,21 @@ class MemoryOrchestrator:
 
 app = Server("memory-orchestrator")
 
+# Per-call MCP log (roadmap 260713 P2.3 / B9): second source of truth that
+# survives stdio transport failures before the Claude Code Post-hook logs.
+# Defensive import — a missing helper must never break the server.
+try:
+    from scripts.mcp_call_log import track_call as _track_call
+except Exception:  # pragma: no cover - fail-soft: log helper is optional
+    from contextlib import contextmanager
+
+    @contextmanager
+    def _track_call(server: str, tool: str, **extra):  # type: ignore[misc]
+        yield {"ok": True, "error_type": None}
+
+
+_MCP_SERVER_SLUG = "memory-orchestrator"
+
 _orchestrator: MemoryOrchestrator | None = None
 
 
@@ -2849,6 +2864,11 @@ async def list_tools() -> list[Tool]:
 
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    with _track_call(_MCP_SERVER_SLUG, name) as _st:
+        return await _dispatch_tool(name, arguments, _st)
+
+
+async def _dispatch_tool(name: str, arguments: dict, _st: dict) -> list[TextContent]:
     orch = _get_orchestrator()
     try:
         if name == "unified_search":
@@ -3041,6 +3061,8 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 max_iterations=arguments.get("max_iterations", 100),
             )
         else:
+            _st["ok"] = False
+            _st["error_type"] = "unknown_tool"
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
         return [
@@ -3050,10 +3072,14 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         ]
 
     except OrchestratorError as e:
+        _st["ok"] = False
+        _st["error_type"] = type(e).__name__
         return [
             TextContent(type="text", text=json.dumps({"error": str(e), "type": type(e).__name__}))
         ]
     except Exception as e:
+        _st["ok"] = False
+        _st["error_type"] = type(e).__name__
         logger.error(f"Error in {name}: {e}", exc_info=True)
         return [TextContent(type="text", text=f"Error: {str(e)}")]
 

@@ -102,7 +102,7 @@
 
 - **P2.1 `gen_ai.*`-совместимые имена полей.** В `invocation_logger` дополнить запись алиасами `gen_ai.tool.name`/`gen_ai.tool.call.id`/`error.type` (аддитивно, без ломки потребителей) - будущий OTel-экспорт станет переименованием. *Оценка:* 1 ч.
 - **P2.2 Rule-слой эффективности в P1.1-отчёт.** Tool Success Rate per-tool/per-server, Step Efficiency (% избыточных вызовов), retry-vs-abandonment (цикл «тот же падающий вызов ×N») - функции уже есть в `tool_usage_report._effectiveness`, вынести в общий модуль и считать cross-task. *Оценка:* 2-3 ч.
-- **P2.3 Внутренний per-call лог у критичных MCP-серверов (B9, частично).** Общий helper (по образцу `trace_log.write_trace`) в `call_tool`-обёртку минимум у memory-orchestrator и 1c-mcp-crud (наиболее критичные): `{ts, tool, ok, ms, error_type}` → `.claude/cache/mcp-<server>-calls.jsonl` с ротацией. Остальные серверы - по мере касания. *Оценка:* 2-3 ч на сервер.
+- **P2.3 Внутренний per-call лог у критичных MCP-серверов (B9, частично). ✅ реализовано 2026-07-14.** Общий stdlib-only helper `scripts/mcp_call_log.py` (`log_mcp_call` + контекст-менеджер `track_call` — таймер + auto-лог ok/error_type + ре-райз исключения; ротация 2MB `os.replace`, fail-soft, opt-out `MCP_CALL_LOG_DISABLE=1`) → `.claude/cache/mcp-<server>-calls.jsonl`. **memory-orchestrator** (наш код): защитный импорт `scripts.mcp_call_log` + no-op fallback, `call_tool`→тонкая обёртка `track_call`, тело в `_dispatch_tool`, error-ветки явно метят `state` (без эвристик). **1c-mcp-crud** (вендоренный сабмодуль `external/1c_mcp/` НЕ тронут): монки-патч `OneCClient.call_tool` в лаунчере `scripts/mcp_1c_stdio_launcher.py`, идемпотентный флаг `_mcp_call_logged`, `isError`→`tool_error`. **Регрессия поймана+исправлена:** `sys.path.append(project_root)` тащил регулярный пакет `<root>/src/` в скан → шедоуил namespace-пакет `external/1c_mcp/src/` → ломал `from src.py_server.main import main`; фикс — на path каталог `scripts/` + bare `import mcp_call_log`. 11 unit + code-verify quality-review PASS. **⚠ Рантайм-эффект gated на `/mcp reconnect`** (правит код серверов, stdio держит старый). Остальные 6 серверов — по мере касания. *Оценка была:* 2-3 ч на сервер.
 
 ### P3 - тяжёлый путь (опционально, после P1-P2)
 
@@ -146,6 +146,12 @@ Baseline: первый прогон пишет `data/reports/tools/baseline.json
 ## §18 Progress Log
 
 > Append-only, reverse-chronological. Новые записи сверху.
+
+### 2026-07-14 - P2.3 реализован (внутренний per-call лог MCP-серверов)
+
+- Shared stdlib-only helper `scripts/mcp_call_log.py` (`log_mcp_call`+`track_call`, ротация/fail-soft/opt-out) → `.claude/cache/mcp-<server>-calls.jsonl`. Обёрнуты memory-orchestrator (`call_tool`→`_dispatch_tool`) и 1c-mcp-crud (монки-патч `OneCClient.call_tool` в лаунчере, сабмодуль не тронут). 11 unit + code-verify PASS.
+- Поймана+исправлена регрессия sys.path (корневой `src/` шедоуил namespace-`src` сабмодуля → фикс: scripts-dir на path + bare import). Рантайм-эффект gated на `/mcp reconnect`.
+- Осталось: P2.1 (gen_ai.*-поля), P2.2 (rule-слой эффективности), P1.3 (частично перекрыт P1.1), P3 (OTel, LLM-judge). Остальные 6 MCP-серверов — по мере касания.
 
 ### 2026-07-14 - P1.4 реализован (memory-sinks regression в каденс)
 
