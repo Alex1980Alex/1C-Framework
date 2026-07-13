@@ -45,6 +45,23 @@ LOG = ROOT / "data" / "hook-invocations.jsonl"
 ROTATED = ROOT / "data" / "hook-invocations.1.jsonl"
 REPORTS = ROOT / "data" / "reports" / "tools"
 
+# scripts/ на path — модуль грузится и как скрипт, и через importlib в тестах.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 P2.2)
+    effectiveness_from_posts,
+    pair_durations,
+    parse_ts,
+    percentile,
+    rollup_by_server,
+)
+
+# Обратно-совместимые алиасы (внутренние helper'ы вынесены в tool_effectiveness).
+_parse_ts = parse_ts
+_pct = percentile
+_pair_duration_list = pair_durations
+
 CANONICAL_CATEGORIES = ("mcp_call", "tool_call")
 
 # ── пороги вердиктов (§6.1) — вынесены для тюнинга/тестов ─────────────────────
@@ -59,15 +76,6 @@ INEFFECTIVE_MIN_CALLS_ABANDON = 3  # abandonment учитывается при c
 
 
 # ── чтение лога за окно ───────────────────────────────────────────────────────
-
-
-def _parse_ts(s: str | None) -> datetime | None:
-    if not s:
-        return None
-    try:
-        return datetime.fromisoformat(s)
-    except (ValueError, TypeError):
-        return None
 
 
 def iter_window_rows(now: datetime, window_days: int, logs: list[Path] | None = None):
@@ -98,64 +106,9 @@ def iter_window_rows(now: datetime, window_days: int, logs: list[Path] | None = 
 # ── агрегация per-tool ────────────────────────────────────────────────────────
 
 
-def _pair_duration_list(pres: list[dict], posts: list[dict]) -> list[int]:
-    """Список реальных длительностей Pre→Post (мс). Join по tool_call_id, иначе FIFO
-    (ранний неиспользованный Pre не позже Post). Зеркалит tool_usage_report._pair_durations,
-    но возвращает распределение для перцентилей."""
-    if not posts:
-        return []
-    pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
-    posts_sorted = sorted(posts, key=lambda e: e.get("ts", ""))
-    pre_by_id: dict[str, dict] = {}
-    for p in pres_sorted:
-        cid = p.get("tool_call_id")
-        if cid:
-            pre_by_id.setdefault(cid, p)
-    used: set[int] = set()
-    out: list[int] = []
-    for post in posts_sorted:
-        pre = None
-        cid = post.get("tool_call_id")
-        if cid and cid in pre_by_id and id(pre_by_id[cid]) not in used:
-            pre = pre_by_id[cid]
-        else:
-            for p in pres_sorted:
-                if id(p) in used:
-                    continue
-                if p.get("ts", "") <= post.get("ts", ""):
-                    pre = p
-                    break
-        if pre is None:
-            continue
-        a, b = _parse_ts(pre.get("ts")), _parse_ts(post.get("ts"))
-        if a and b:
-            try:  # tz-guard: naive vs aware вычитание бросает TypeError (класс бага Sonar parse_dt)
-                d = int((b - a).total_seconds() * 1000)
-            except (TypeError, ValueError):
-                continue
-            if d >= 0:
-                used.add(id(pre))
-                out.append(d)
-    return out
-
-
-def _pct(values: list[int], q: float) -> float:
-    """Перцентиль (linear interpolation), q ∈ [0,1]. stdlib, без numpy."""
-    if not values:
-        return 0.0
-    s = sorted(values)
-    if len(s) == 1:
-        return float(s[0])
-    idx = q * (len(s) - 1)
-    lo = int(idx)
-    hi = min(lo + 1, len(s) - 1)
-    frac = idx - lo
-    return s[lo] * (1 - frac) + s[hi] * frac
-
-
 def aggregate_tools(rows: list[dict]) -> dict[str, dict]:
     """Per-tool статистика вызовов. calls = завершённые (Post). Эффективность
-    (repeats/abandonment) — по завершённым Post с args_hash/outcome."""
+    (repeats/abandonment) — по завершённым Post с args_hash/outcome (общий модуль)."""
     pre: dict[str, list] = defaultdict(list)
     post: dict[str, list] = defaultdict(list)
     for e in rows:
@@ -166,20 +119,8 @@ def aggregate_tools(rows: list[dict]) -> dict[str, dict]:
         posts = sorted(post[tool], key=lambda e: e.get("ts", ""))
         calls = len(posts)
         errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
-        durations = _pair_duration_list(pre[tool], posts)
-        # repeats: тот же args_hash у завершённого вызова = повтор (retry)
-        seen: set = set()
-        repeats = 0
-        for p in posts:
-            ah = p.get("args_hash")
-            if ah:
-                if ah in seen:
-                    repeats += 1
-                seen.add(ah)
-        # abandonment: последняя попытка тула завершилась ошибкой
-        abandonment = bool(posts) and (
-            posts[-1].get("outcome") == "error" or posts[-1].get("error")
-        )
+        durations = pair_durations(pre[tool], posts)
+        eff = effectiveness_from_posts(posts)  # retry/abandonment (single-source)
         success = calls - errors
         out[tool] = {
             "calls": calls,
@@ -187,11 +128,11 @@ def aggregate_tools(rows: list[dict]) -> dict[str, dict]:
             "success": success,
             "success_rate": round(success / calls, 4) if calls else 1.0,
             "error_rate": round(errors / calls, 4) if calls else 0.0,
-            "p50_ms": round(_pct(durations, 0.50), 1),
-            "p95_ms": round(_pct(durations, 0.95), 1),
+            "p50_ms": round(percentile(durations, 0.50), 1),
+            "p95_ms": round(percentile(durations, 0.95), 1),
             "paired": len(durations),
-            "repeats": repeats,
-            "abandonment": abandonment,
+            "repeats": eff["repeats"],
+            "abandonment": eff["abandonment"],
         }
     return out
 
@@ -263,7 +204,13 @@ def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
                 "verdict": "unused",
                 "reason": "был в baseline, 0 вызовов в окне (замолчал)",
             }
-    return {"tools": tools, "generated": now.isoformat(timespec="seconds")}
+    # rule-слой P2.2: Tool Success Rate + step efficiency per-server (по активным).
+    servers = rollup_by_server(stats)
+    return {
+        "tools": tools,
+        "servers": servers,
+        "generated": now.isoformat(timespec="seconds"),
+    }
 
 
 # ── ratchet-baseline (паттерн mypy-baseline) ─────────────────────────────────
@@ -345,6 +292,29 @@ def render_md(health: dict, window_days: int) -> str:
             )
         lines += [""]
 
+    # ── rule-слой P2.2: эффективность per-server (Tool Success Rate + step efficiency) ──
+    servers = health.get("servers") or {}
+    active_servers = {s: v for s, v in servers.items() if v.get("calls", 0) > 0}
+    if active_servers:
+        lines += [
+            "## Эффективность (rule-слой, per-server)",
+            "",
+            "| Сервер | Вызовов | success-rate | error-rate | step-eff (retry%) | брошено тулов |",
+            "|---|---|---|---|---|---|",
+        ]
+        for server, v in sorted(active_servers.items(), key=lambda kv: -kv[1]["calls"]):
+            lines.append(
+                f"| `{server}` | {v['calls']} | {v['success_rate']:.0%} | {v['error_rate']:.0%} | "
+                f"{v['step_efficiency']:.0%} | {v['abandonment_tools']}/{v['tools']} |"
+            )
+        lines += [
+            "",
+            "> success-rate = доля вызовов без ошибки; step-eff = доля избыточных вызовов "
+            "(повтор с тем же args_hash = retry, ↓ лучше); «брошено тулов» = сколько инструментов "
+            "сервера завершили окно на ошибке (abandonment).",
+            "",
+        ]
+
     lines += [
         "## Все инструменты",
         "",
@@ -385,6 +355,7 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
         "counts": {
             v: sum(1 for s in health["tools"].values() if s["verdict"] == v) for v in _VERDICT_ORDER
         },
+        "servers": health.get("servers", {}),  # rule-слой P2.2 (per-server эффективность)
         "tools": health["tools"],
     }
     _atomic_write(REPORTS / "_latest.json", json.dumps(sidecar, ensure_ascii=False, indent=2))

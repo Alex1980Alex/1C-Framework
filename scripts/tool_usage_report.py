@@ -23,12 +23,20 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG = ROOT / "data" / "hook-invocations.jsonl"
 EFF = ROOT / "data" / "tool-effectiveness.jsonl"
+
+# scripts/ на path — модуль грузится и как скрипт, и через importlib в тестах.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 P2.2)
+    effectiveness_from_posts,
+    pair_durations,
+)
 
 # Канонические категории строк «один row = один вызов инструмента» (Pre+Post):
 # mcp_call (mcp-invocation-logger) + tool_call (tool-invocation-logger, roadmap
@@ -51,53 +59,11 @@ def _iter_events(log: Path = LOG):
                 continue
 
 
-def _ms_between(a_ts: str | None, b_ts: str | None) -> int | None:
-    """Длительность в мс между двумя ISO-таймстампами (b − a). None при непарсибельности."""
-    if not a_ts or not b_ts:
-        return None
-    try:
-        return int(
-            (datetime.fromisoformat(b_ts) - datetime.fromisoformat(a_ts)).total_seconds() * 1000
-        )
-    except (ValueError, TypeError):
-        return None
-
-
 def _pair_durations(pres: list[dict], posts: list[dict]) -> tuple[int, int]:
-    """Сумма реальных длительностей Pre→Post + число пар (ADR-022 P0.2 — латентность тула, не overhead хука).
-    Join по `tool_call_id` если есть, иначе FIFO: ранний неиспользованный Pre не позже Post."""
-    if not posts:
-        return 0, 0
-    pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
-    posts_sorted = sorted(posts, key=lambda e: e.get("ts", ""))
-    pre_by_id: dict[str, dict] = {}
-    for p in pres_sorted:
-        cid = p.get("tool_call_id")
-        if cid:
-            pre_by_id.setdefault(cid, p)
-    used: set[int] = set()
-    total = 0
-    n = 0
-    for post in posts_sorted:
-        pre = None
-        cid = post.get("tool_call_id")
-        if cid and cid in pre_by_id and id(pre_by_id[cid]) not in used:
-            pre = pre_by_id[cid]
-        else:
-            for p in pres_sorted:
-                if id(p) in used:
-                    continue
-                if p.get("ts", "") <= post.get("ts", ""):
-                    pre = p
-                    break
-        if pre is None:
-            continue
-        d = _ms_between(pre.get("ts"), post.get("ts"))
-        if d is not None and d >= 0:
-            used.add(id(pre))  # R2: помечаем Pre использованным ТОЛЬКО при валидной паре
-            total += d
-            n += 1
-    return total, n
+    """Совокупная длительность реальных пар Pre→Post + их число (ADR-022 P0.2 — латентность
+    тула, не overhead хука). Делегирует общему `tool_effectiveness.pair_durations`."""
+    d = pair_durations(pres, posts)
+    return sum(d), len(d)
 
 
 def _aggregate_mcp(rows: list[dict]) -> dict:
@@ -133,31 +99,19 @@ def _effectiveness(events: list[dict]) -> dict:
     abandonment/repeats built-in консервативны. Логику подтвердил Z.AI-ревью (claude-haiku, PASS)."""
     from collections import defaultdict
 
-    calls = sorted(
-        (
-            e
-            for e in events
-            if e.get("category") in _CANONICAL_CATEGORIES and e.get("event") == "PostToolUse"
-        ),
-        key=lambda e: e.get("ts", ""),
-    )
-    out: dict[str, dict] = defaultdict(lambda: {"repeats": 0, "abandonment": 0})
-    seen: dict[str, set] = defaultdict(set)
     per_tool: dict[str, list] = defaultdict(list)
-    for e in calls:
+    for e in events:
+        if e.get("category") not in _CANONICAL_CATEGORIES or e.get("event") != "PostToolUse":
+            continue
         tool = e.get("tool")
         if not tool:
             continue
         per_tool[tool].append(e)
-        ah = e.get("args_hash")
-        if ah:
-            if ah in seen[tool]:
-                out[tool]["repeats"] += 1
-            seen[tool].add(ah)
+    out: dict[str, dict] = {}
     for tool, evs in per_tool.items():
-        if evs and (evs[-1].get("outcome") == "error" or evs[-1].get("error")):
-            out[tool]["abandonment"] = 1
-    return dict(out)
+        eff = effectiveness_from_posts(evs)  # single-source retry/abandonment
+        out[tool] = {"repeats": eff["repeats"], "abandonment": int(eff["abandonment"])}
+    return out
 
 
 def aggregate(run_id: str | None = None, session: str | None = None, log: Path = LOG) -> dict:

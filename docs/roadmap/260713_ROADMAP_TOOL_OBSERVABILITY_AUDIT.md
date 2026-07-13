@@ -100,8 +100,8 @@
 
 ### P2 - метрики эффективности по консенсусу 2026
 
-- **P2.1 `gen_ai.*`-совместимые имена полей.** В `invocation_logger` дополнить запись алиасами `gen_ai.tool.name`/`gen_ai.tool.call.id`/`error.type` (аддитивно, без ломки потребителей) - будущий OTel-экспорт станет переименованием. *Оценка:* 1 ч.
-- **P2.2 Rule-слой эффективности в P1.1-отчёт.** Tool Success Rate per-tool/per-server, Step Efficiency (% избыточных вызовов), retry-vs-abandonment (цикл «тот же падающий вызов ×N») - функции уже есть в `tool_usage_report._effectiveness`, вынести в общий модуль и считать cross-task. *Оценка:* 2-3 ч.
+- **P2.1 `gen_ai.*`-совместимые имена полей. ✅ реализовано 2026-07-14.** `invocation_logger` пишет аддитивные dotted-алиасы `gen_ai.tool.name`/`gen_ai.tool.call.id`/`error.type` (дословно дублируют плоские `tool`/`tool_call_id`/`error_type`; единый источник `err_type`+`success` — нет дрейфа). Схема `additionalProperties:true` → валидация не ломается; потребители по плоским именам не затронуты; будущий OTel-экспорт = переименование. Подтверждено на живом логе (хуки — свежие субпроцессы, reconnect не нужен). *Оценка была:* 1 ч.
+- **P2.2 Rule-слой эффективности в P1.1-отчёт. ✅ реализовано 2026-07-14.** Дублирующие детерминированные функции (pair-duration/percentile/retry-abandonment) вынесены из `tool_usage_report`+`analyze_tool_health` в single-source [`scripts/tool_effectiveness.py`](../../scripts/tool_effectiveness.py) (stdlib-only); оба потребителя делегируют (алиасы `_pct`/`_pair_duration_list` сохранены для тестов, behavior-preserving). Добавлен **per-server rollup** (Tool Success Rate + Step Efficiency = % избыточных retry-вызовов + abandonment_tools) в `analyze_tool_health` → секция «Эффективность (rule-слой, per-server)» в `_latest.md` + `servers` в sidecar. Cross-task = скользящее окно 14д (уже в P1.1). 90 unit (73 существующих зелёные + 17 новых) + code-verify PASS. **Живая находка:** `edt-mcp` step-eff 14% (retry-rate) — выше прочих серверов. *Оценка была:* 2-3 ч.
 - **P2.3 Внутренний per-call лог у критичных MCP-серверов (B9, частично). ✅ реализовано 2026-07-14.** Общий stdlib-only helper `scripts/mcp_call_log.py` (`log_mcp_call` + контекст-менеджер `track_call` — таймер + auto-лог ok/error_type + ре-райз исключения; ротация 2MB `os.replace`, fail-soft, opt-out `MCP_CALL_LOG_DISABLE=1`) → `.claude/cache/mcp-<server>-calls.jsonl`. **memory-orchestrator** (наш код): защитный импорт `scripts.mcp_call_log` + no-op fallback, `call_tool`→тонкая обёртка `track_call`, тело в `_dispatch_tool`, error-ветки явно метят `state` (без эвристик). **1c-mcp-crud** (вендоренный сабмодуль `external/1c_mcp/` НЕ тронут): монки-патч `OneCClient.call_tool` в лаунчере `scripts/mcp_1c_stdio_launcher.py`, идемпотентный флаг `_mcp_call_logged`, `isError`→`tool_error`. **Регрессия поймана+исправлена:** `sys.path.append(project_root)` тащил регулярный пакет `<root>/src/` в скан → шедоуил namespace-пакет `external/1c_mcp/src/` → ломал `from src.py_server.main import main`; фикс — на path каталог `scripts/` + bare `import mcp_call_log`. 11 unit + code-verify quality-review PASS. **⚠ Рантайм-эффект gated на `/mcp reconnect`** (правит код серверов, stdio держит старый). Остальные 6 серверов — по мере касания. *Оценка была:* 2-3 ч на сервер.
 
 ### P3 - тяжёлый путь (опционально, после P1-P2)
@@ -146,6 +146,12 @@ Baseline: первый прогон пишет `data/reports/tools/baseline.json
 ## §18 Progress Log
 
 > Append-only, reverse-chronological. Новые записи сверху.
+
+### 2026-07-14 - P2.1 + P2.2 реализованы (gen_ai-алиасы + rule-слой эффективности)
+
+- P2.1: `invocation_logger` пишет OTel-алиасы `gen_ai.tool.name`/`gen_ai.tool.call.id`/`error.type` (аддитивно, единый `err_type`) — подтверждено на живом логе.
+- P2.2: single-source `scripts/tool_effectiveness.py` (pair-duration/percentile/retry-abandonment вынесены из 2 дублей) + per-server rollup (Tool Success Rate + step-efficiency) в отчёт P1.1. 90 unit + code-verify PASS. Живая находка: `edt-mcp` retry-rate 14%.
+- **Ядро роадмапа закрыто** (P0, P1.1, P1.2, P1.4, P2.1, P2.2, P2.3). Осталось только: P1.3 (частично перекрыт P1.1), P3 (нативный OTel → Langfuse + LLM-judge — тяжёлый, отдельный ADR).
 
 ### 2026-07-14 - P2.3 реализован (внутренний per-call лог MCP-серверов)
 

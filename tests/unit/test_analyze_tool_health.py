@@ -210,3 +210,68 @@ def test_window_excludes_old_and_noncanonical(tmp_path):
     got = list(ath.iter_window_rows(now, 14, logs=[log]))
     assert len(got) == 1
     assert got[0]["tool"] == "Read"
+
+
+# ── P2.2 rule-слой: per-server rollup в отчёте + sidecar ─────────────────────
+
+
+def test_compute_health_includes_server_rollup():
+    now = datetime(2026, 7, 14, 12, 0, 0)
+    rows = [
+        _row("mcp__srv__a", "PostToolUse", now.isoformat(), outcome="error", args_hash="h"),
+        _row("mcp__srv__a", "PostToolUse", now.isoformat(), outcome="allow", args_hash="h"),
+    ]
+    health = ath.compute_health(rows, {}, now)
+    assert "srv" in health["servers"]
+    srv = health["servers"]["srv"]
+    assert srv["calls"] == 2
+    assert srv["success_rate"] == 0.5
+    assert srv["step_efficiency"] == 0.5  # 1 repeat / 2 calls
+
+
+def test_render_md_has_effectiveness_section():
+    health = {
+        "generated": "2026-07-14T12:00:00",
+        "tools": {
+            "mcp__srv__a": {
+                "calls": 4,
+                "errors": 0,
+                "success": 4,
+                "success_rate": 1.0,
+                "error_rate": 0.0,
+                "p50_ms": 10.0,
+                "p95_ms": 20.0,
+                "paired": 4,
+                "repeats": 1,
+                "abandonment": False,
+                "verdict": "healthy",
+                "reason": "ok",
+            }
+        },
+        "servers": {
+            "srv": {
+                "calls": 4,
+                "errors": 0,
+                "success": 4,
+                "success_rate": 1.0,
+                "error_rate": 0.0,
+                "repeats": 1,
+                "step_efficiency": 0.25,
+                "abandonment_tools": 0,
+                "tools": 1,
+            }
+        },
+    }
+    md = ath.render_md(health, 14)
+    assert "Эффективность (rule-слой, per-server)" in md
+    assert "`srv`" in md
+
+
+def test_sidecar_carries_servers(tmp_path, monkeypatch):
+    now = datetime(2026, 7, 14, 12, 0, 0)
+    monkeypatch.setattr(ath, "REPORTS", tmp_path)
+    rows = [_row("mcp__srv__a", "PostToolUse", now.isoformat())]
+    monkeypatch.setattr(ath, "iter_window_rows", lambda *a, **k: rows)
+    sidecar = ath.run(window_days=14, now=now)
+    assert "servers" in sidecar
+    assert "srv" in sidecar["servers"]

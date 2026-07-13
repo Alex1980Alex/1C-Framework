@@ -166,6 +166,11 @@ def log_invocation(
             except Exception:
                 pass  # never block logging
 
+        # error.type — низкокардинальная категория ошибки, единый источник для
+        # плоского `error_type` и OTel-алиаса `error.type` (roadmap 260713 P2.1).
+        err_type = error_type or ("unknown" if outcome == "error" else "")
+        success = outcome != "error" and not error
+
         entry = {
             "ts": iso_now,
             "hook": hook,
@@ -180,9 +185,16 @@ def log_invocation(
             "run_id": run_id,  # Phase 8
             # --- ADR-022 P0.4: OTel-совместимые поля tool-call (gen_ai.tool.call.id / success / error.type) ---
             "tool_call_id": tool_call_id,
-            "success": (outcome != "error" and not error),
-            "error_type": error_type or ("unknown" if outcome == "error" else ""),
+            "success": success,
+            "error_type": err_type,
             "args_hash": args_hash,  # ADR-022 P1: фингерпринт аргументов (детект retry)
+            # --- OTel GenAI semconv алиасы (roadmap 260713 P2.1) ---
+            # Аддитивно и дублируют плоские поля дословно: будущий OTel-экспорт
+            # становится переименованием, существующие jq/DuckDB-запросы не ломаются.
+            # Dotted-ключи легальны в JSON; потребители по плоским именам их не видят.
+            "gen_ai.tool.name": tool,
+            "gen_ai.tool.call.id": tool_call_id,
+            "error.type": err_type,
             # --- CloudEvents v1.0 envelope (§15 P0) ---
             "specversion": "1.0",
             "id": event_id,
