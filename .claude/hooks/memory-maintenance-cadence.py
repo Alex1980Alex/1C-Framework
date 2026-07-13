@@ -39,6 +39,10 @@ from base import BaseHook, HookInput, HookOutput
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 STATE_FILE = PROJECT_ROOT / ".claude" / "cache" / "memory-maintenance-cadence-state.json"
 SCRIPT = PROJECT_ROOT / "scripts" / "memory_maintenance.py"
+# P1.4 (B8, roadmap 260713): observability-отчёт с freshness/regression-детектором —
+# «замолчавший sink» (писал и перестал). Раньше запускался ТОЛЬКО вручную. Read-only и
+# быстрый (<1с), поэтому дёргаем синхронно при фаере каденса и сюрфейсим regressions в баннер.
+OBS_SCRIPT = PROJECT_ROOT / "scripts" / "memory_observability_report.py"
 PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 LOG = PROJECT_ROOT / "data" / "reports" / "memory" / "_maintenance.log"
 
@@ -107,6 +111,30 @@ def _launch(apply: bool) -> bool:
         return False
 
 
+def _check_regressions(timeout: float = 8.0) -> str | None:
+    """P1.4 (B8): синхронно прогнать observability-отчёт (read-only, <1с) и вернуть
+    строку `[REGRESSION] N stale sink(s): [...]` при замолчавших синках, иначе None.
+    best-effort — таймаут/ошибка/нет скрипта → None (каденс не ломается)."""
+    if not PYTHON_EXE.exists() or not OBS_SCRIPT.exists():
+        return None
+    try:
+        r = subprocess.run(
+            [str(PYTHON_EXE), str(OBS_SCRIPT)],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(PROJECT_ROOT),
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    for line in (r.stdout or "").splitlines():
+        if line.startswith("[REGRESSION]"):
+            return line.strip()
+    return None
+
+
 class MemoryMaintenanceCadence(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
@@ -139,11 +167,26 @@ class MemoryMaintenanceCadence(BaseHook):
             state["pending_sessions"] = []
             state["last_fire"] = _now()
             _save_state(state)
+            # P1.4 (B8): freshness/regression-детектор синхронно (read-only, <1с) —
+            # замолчавшие memory-sinks сюрфейсим сразу в баннере каденса.
+            regr = _check_regressions()
             if ok:
                 mode = "APPLY" if apply else "dry-run"
-                return HookOutput().system_message(
+                msg = (
                     f"[MEMORY-MAINTENANCE] Cadence fired ({mode}; every {every} sessions). "
                     f"Dashboard → data/reports/memory/memory_maintenance_*.md в ~10-60с."
+                )
+                if regr:
+                    msg += (
+                        f"\n⚠ {regr}\n  → sink(s) перестали писать (>7д, observability-регрессия). "
+                        f"Проверь writer'ы; отчёт: data/reports/memory/observability-*.md."
+                    )
+                return HookOutput().system_message(msg)
+            # launch не удался, но регрессию всё равно стоит показать
+            if regr:
+                return HookOutput().system_message(
+                    f"[MEMORY-MAINTENANCE] ⚠ {regr} — sink(s) перестали писать (>7д). "
+                    f"Отчёт: data/reports/memory/observability-*.md."
                 )
             return None
 
