@@ -1,0 +1,44 @@
+{
+  "task": "gkstcplk-2521-comments",
+  "title": "GKSTCPLK-2521: комментарии-якоря к коду и объектам метаданных",
+  "created_at": "2026-07-14T09:31:40",
+  "updated_at": "2026-07-14T09:31:41",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-14T09:31:40"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-14T09:31:41",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-14T09:31:41"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-07-14T09:31:41"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-07-14T09:31:41"
+    }
+  ]
+}
