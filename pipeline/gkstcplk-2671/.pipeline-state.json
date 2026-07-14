@@ -1,0 +1,44 @@
+{
+  "task": "gkstcplk-2671",
+  "title": "GKSTCPLK-2671: индикатор неполноты обязательных показателей в РМ Принятые ТС",
+  "created_at": "2026-07-14T23:22:03",
+  "updated_at": "2026-07-14T23:22:03",
+  "current_stage": 3,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-14T23:22:03"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-14T23:22:03",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-14T23:22:03"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
