@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ExternalDataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e2cd7aac-1aa9-4d4f-a217-3f55c323d535">
+  <producedTypes>
+    <objectType typeId="e934beee-c111-49b8-8d77-1b818467a2ca" valueTypeId="537f4f25-1c1a-44ce-8ed7-f2b5b93a6b98"/>
+  </producedTypes>
+  <name>гкс_ЭмуляцияОбменаCRM</name>
+  <synonym>
+    <key>ru</key>
+    <value>Эмуляция прихода заказа из CRM (GMFM-6470)</value>
+  </synonym>
+  <comment>Время сборки: 2026-07-16 08:40:22</comment>
+  <forms uuid="d34f81a1-c5f8-4a07-8a02-c5b31f5da81f">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Эмуляция прихода заказа из CRM</value>
+    </synonym>
+  </forms>
+</mdclass:ExternalDataProcessor>

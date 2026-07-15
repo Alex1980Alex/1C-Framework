@@ -1,0 +1,44 @@
+{
+  "task": "tz-gmfm6470-p1",
+  "title": "ТЗ GMFM-6470 пункт 1 (стабилизация Инд заказа)",
+  "created_at": "2026-07-15T15:57:35",
+  "updated_at": "2026-07-15T15:58:39",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-15T15:58:39"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-15T15:58:39",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-15T15:58:39"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-15T15:58:39"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-15T15:58:39"
+    }
+  ]
+}
