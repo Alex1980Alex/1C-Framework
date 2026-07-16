@@ -18,6 +18,20 @@ SAFETY (this is a destructive, irreversible Qdrant mutation):
   - test removal is **opt-in** (``--drop-test``) and matches an explicit exact-content
     allowlist only — never broad heuristics.
 
+⚠ KNOWN UNSAFE with link_registry (found 2026-07-16, roadmap 260716 P1) — DO NOT
+``--apply`` until fixed. This planner is blind to ``data/link_registry.db``:
+  1. It DELETES points other entities link to. Live check on the 3 duplicate groups:
+     all 3 delete-candidates carried edges (``derives_from`` to their episodic
+     sources, ``mirrors`` from their duplicates) → 10 dangling edges.
+  2. Worse, it contradicts cross_store_sync's canonical choice. ``mirrors`` points
+     mirror→canonical, so a ``mirrors: A -> B`` edge means B is canonical; but
+     ``pick_survivor`` (richest schema, earliest created_at) picked A and would have
+     deleted B. Two subsystems, two different survivors.
+The fix is not "also delete the links": a dedupe RE-POINTS the losers' edges onto the
+survivor (the fact lives on under one id) and must honour an existing canonical
+designation. Until then, prefer leaving byte-duplicates in place — they are redundant,
+not harmful.
+
 Usage:
   python scripts/dedupe_learned_patterns.py                 # dry-run plan
   python scripts/dedupe_learned_patterns.py --drop-test     # include test records in plan

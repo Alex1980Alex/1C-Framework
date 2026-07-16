@@ -307,25 +307,34 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
         )
 
         for point in qresults.points:
-            payload = point.payload or {}
-            pattern = _pattern_from_payload(str(point.id), payload)
-            similarity = point.score or 0.0
-            results.append(
-                SearchResultItem(
-                    unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
-                    source=SourceServer.VECTOR_MEMORY,
-                    memory_type=MemoryType.SEMANTIC,
-                    content=pattern.content,
-                    title=pattern.name,
-                    raw_score=similarity * pattern.confidence,
-                    created_at=pattern.created_at,
-                    tags=pattern.tags,
-                    metadata={
-                        "pattern_type": pattern.pattern_type.value,
-                        "confidence": pattern.confidence,
-                    },
+            # Per-item isolation (roadmap 260716 P0.2). The no-blanket-except rule
+            # above is about the ARM (TEI/Qdrant down must reach sources_failed) —
+            # it was never meant to make one unreadable point fail the arm. That
+            # conflation is the 2026-07-16 incident: a single point with
+            # pattern_type='requirements' raised out of this loop and the whole
+            # vector arm landed in sources_failed. Skip the point, keep the arm.
+            try:
+                payload = point.payload or {}
+                pattern = _pattern_from_payload(str(point.id), payload)
+                similarity = point.score or 0.0
+                results.append(
+                    SearchResultItem(
+                        unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
+                        source=SourceServer.VECTOR_MEMORY,
+                        memory_type=MemoryType.SEMANTIC,
+                        content=pattern.content,
+                        title=pattern.name,
+                        raw_score=similarity * pattern.confidence,
+                        created_at=pattern.created_at,
+                        tags=pattern.tags,
+                        metadata={
+                            "pattern_type": pattern.pattern_type.value,
+                            "confidence": pattern.confidence,
+                        },
+                    )
                 )
-            )
+            except Exception as exc:
+                logger.warning(f"vector-memory arm: skipped unreadable point {point.id}: {exc}")
 
         return results
 
@@ -371,21 +380,29 @@ class SkillLearningSearchAdapter(BaseSearchAdapter):
                     scored.append((item, score))
 
             scored.sort(key=lambda x: x[1], reverse=True)
+            from ..vector_memory.models import coerce_dt
+
             for item, score in scored[:limit]:
-                results.append(
-                    SearchResultItem(
-                        unified_id=f"learning:skill-learning:{item.get('pattern_id', '')}",
-                        source=SourceServer.SKILL_LEARNING,
-                        memory_type=MemoryType.LEARNING,
-                        content=item.get("content", ""),
-                        title=item.get("name", ""),
-                        raw_score=score,
-                        created_at=datetime.fromisoformat(item["created_at"])
-                        if item.get("created_at")
-                        else None,
-                        tags=item.get("tags", []),
+                # Per-item isolation + tolerant date (roadmap 260716 P0.2): the silo
+                # is written by several producers, so one record with a garbage
+                # `created_at` used to raise out of this loop and drop the whole
+                # skill-learning arm into sources_failed — the same mechanics as the
+                # vector-arm incident, in the sibling arm.
+                try:
+                    results.append(
+                        SearchResultItem(
+                            unified_id=f"learning:skill-learning:{item.get('pattern_id', '')}",
+                            source=SourceServer.SKILL_LEARNING,
+                            memory_type=MemoryType.LEARNING,
+                            content=item.get("content", ""),
+                            title=item.get("name", ""),
+                            raw_score=score,
+                            created_at=coerce_dt(item.get("created_at")),
+                            tags=item.get("tags", []),
+                        )
                     )
-                )
+                except Exception as exc:
+                    logger.warning(f"skill-learning arm: skipped unreadable record: {exc}")
 
         await asyncio.to_thread(_search)
         return results
@@ -826,7 +843,7 @@ class MemoryOrchestrator:
         written), ``False`` otherwise — so a missing entity is *not* counted as
         ``entities_updated``. Blocking store I/O runs in a worker thread.
         """
-        from ..vector_memory.confidence import derive_confidence, seed_counts_from_legacy
+        from ..vector_memory.confidence import _resolve_state, derive_confidence
         from .unified_id import SourceServer, UnifiedID
 
         # Env-override keeps tests off the production DB (P0.2 isolation spirit).
@@ -846,13 +863,17 @@ class MemoryOrchestrator:
                 if not pts:
                     return None  # not a learned_pattern → honest no-op
                 pay = pts[0].payload or {}
-                succ, fail = pay.get("succ"), pay.get("fail")
-                if succ is None or fail is None:
-                    succ, fail = seed_counts_from_legacy(
-                        float(pay.get("confidence", 0.70)),
-                        int(pay.get("application_count", 0) or 0),
-                    )
-                succ, fail = float(succ), float(fail)
+                # Delegate the whole succ/fail resolve to _resolve_state (roadmap
+                # 260716): it already coerces BOTH branches — legacy-seed and
+                # present-but-garbage. Hand-rolling it here left `float(succ)` on a
+                # raw payload, and this handler runs behind a circuit breaker, so one
+                # point with succ:"abc" ticked `propagation:vector-memory` toward OPEN
+                # and then failed the WHOLE arm as failed:circuit_open.
+                # default_confidence=0.70 preserves this writer's historical seeding:
+                # seeding at the Beta prior leaves derive_confidence AT the prior,
+                # while _resolve_state's read-path default (0.5) would drag a legacy
+                # point below it (e.g. n=4 → 0.70 vs 0.643).
+                succ, fail, _lda, _rate = _resolve_state(pay, default_confidence=0.70)
                 if delta >= 0:
                     succ += abs(delta)
                 else:
@@ -1898,8 +1919,23 @@ class MemoryOrchestrator:
                 _ingest("saved")
 
             elif target == "vector-memory":
+                from ..vector_memory.models import coerce_float, normalize_pattern_type
                 from ..vector_memory.server import _get_embedding, _get_qdrant
                 from .content_hash import point_id as _point_id
+
+                # Write-contract (roadmap 260716 P0.3). This branch hand-builds the
+                # payload and bypasses save_pattern's PatternType validation, so
+                # `metadata={"pattern_type": None}` landed in Qdrant verbatim — the
+                # source of the type-less points found by the 260716 audit.
+                # Empty content is rejected rather than coerced: it yields a useless
+                # embedding and collapses every empty point into one in the search
+                # Deduplicator. A LENGTH floor is deliberately NOT applied here —
+                # min-length is the harvester's anti-flood policy; silently dropping
+                # a short-but-real fact from an explicit save API would be worse
+                # than storing it (design Д5).
+                if not (content or "").strip():
+                    raise ValueError("empty content")
+                ptype, original_ptype = normalize_pattern_type((metadata or {}).get("pattern_type"))
 
                 client = await asyncio.to_thread(_get_qdrant)
 
@@ -1926,12 +1962,16 @@ class MemoryOrchestrator:
                 now = datetime.now()
                 payload = {
                     "pattern_id": entity_id,
-                    "pattern_type": (metadata or {}).get("pattern_type", "code-convention"),
+                    "pattern_type": ptype,
                     "name": (metadata or {}).get("name", content[:50]),
                     "description": (metadata or {}).get("description", ""),
                     "content": content,
                     "content_hash": content_hash,
-                    "confidence": (metadata or {}).get("confidence", 0.7),
+                    # Clamped: an out-of-range denorm would skew ranking and the
+                    # server-side confidence prefilter.
+                    "confidence": min(
+                        1.0, max(0.0, coerce_float((metadata or {}).get("confidence"), 0.7))
+                    ),
                     "evidence_sources": [],
                     "created_at": now.isoformat(),
                     "updated_at": now.isoformat(),
@@ -1940,7 +1980,9 @@ class MemoryOrchestrator:
                     "application_count": 0,
                     "version": 1,
                     "tags": (metadata or {}).get("tags", []),
-                    "metadata": {},
+                    "metadata": (
+                        {"original_pattern_type": original_ptype} if original_ptype else {}
+                    ),
                 }
 
                 await asyncio.to_thread(
@@ -1951,6 +1993,17 @@ class MemoryOrchestrator:
                 _ingest("saved", pattern_id=entity_id)
 
             elif target == "skill-learning":
+                from ..vector_memory.models import coerce_float, normalize_pattern_type
+
+                # Same contract as the vector branch (P0.3): the silo is not a
+                # dead end — the Stop-harvest lifts these records into Qdrant, so
+                # a free-form type here becomes a poisoned point there later.
+                if not (content or "").strip():
+                    raise ValueError("empty content")
+                sl_ptype, sl_original_ptype = normalize_pattern_type(
+                    (metadata or {}).get("pattern_type")
+                )
+
                 storage_dir = _PROJECT_ROOT / "data" / "skill_learning"
                 storage_dir.mkdir(parents=True, exist_ok=True)
                 # P0.4 (roadmap 260611): routed-контент идёт в карантин pending,
@@ -1982,15 +2035,21 @@ class MemoryOrchestrator:
 
                 pattern = {
                     "pattern_id": entity_id,
-                    "pattern_type": (metadata or {}).get("pattern_type", "workflow-pattern"),
+                    "pattern_type": sl_ptype,
                     "name": (metadata or {}).get("name", content[:50]),
                     "content": content,
                     "content_hash": content_hash,
                     "description": (metadata or {}).get("description", ""),
-                    "confidence": (metadata or {}).get("confidence", 0.7),
+                    "confidence": min(
+                        1.0, max(0.0, coerce_float((metadata or {}).get("confidence"), 0.7))
+                    ),
                     "tags": (metadata or {}).get("tags", []),
                     "evidence_sources": [],
-                    "metadata": {"routed": True},
+                    "metadata": (
+                        {"routed": True, "original_pattern_type": sl_original_ptype}
+                        if sl_original_ptype
+                        else {"routed": True}
+                    ),
                     "application_count": 0,
                     "success_count": 0,
                     "failure_count": 0,

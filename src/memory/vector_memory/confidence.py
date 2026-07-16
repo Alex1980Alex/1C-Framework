@@ -11,6 +11,8 @@ import math
 from datetime import datetime
 from typing import Any
 
+from .models import PatternType, coerce_dt, coerce_float, coerce_int
+
 # Beta prior hyper-parameters: prior mean = 7/(7+3) = 0.70
 PRIOR_SUCCESS: float = 7.0
 PRIOR_FAILURE: float = 3.0
@@ -169,8 +171,18 @@ def seed_counts_from_legacy(confidence: float, application_count: int) -> tuple[
 def _resolve_state(
     payload: dict[str, Any],
     default_decay_rate: float = DEFAULT_DECAY_RATE,
+    *,
+    default_confidence: float = 0.5,
 ) -> tuple[float, float, datetime | None, float]:
     """Return (succ, fail, last_decay_at, decay_rate) from a Qdrant payload.
+
+    ``default_confidence`` seeds the legacy branch when the payload carries no
+    usable ``confidence``. It is a parameter because callers disagree today:
+    read paths pass 0.5 (historical), while writers that nudge counts pass the
+    Beta prior 0.70 — the self-consistent choice, since seeding at the prior
+    leaves derive_confidence AT the prior instead of dragging a legacy point
+    below it. Unifying the two is roadmap 260716 P1.9; until then the split is
+    explicit here rather than duplicated at each call site.
 
     Lazily migrates legacy points (no succ/fail keys) via
     :func:`seed_counts_from_legacy`.  Used by both :func:`apply_to_payload`
@@ -180,32 +192,39 @@ def _resolve_state(
     Args:
         payload: Qdrant point payload dict (read-only; not mutated).
         default_decay_rate: Fallback decay rate when payload lacks ``decay_rate``.
+        default_confidence: Keyword-only. Seeds the legacy branch when the payload
+            has no usable ``confidence``. Read paths keep 0.5 (historical); writers
+            that nudge counts pass 0.70 (the Beta prior) — see the note above.
 
     Returns:
         ``(succ, fail, last_decay_at, decay_rate)`` ready for
         :func:`decay_counts` / :func:`apply_outcome`.
     """
-    # Resolve succ/fail — lazy migration for legacy points without the fields.
+    # Every read below goes through models.coerce_* — payloads are untrusted
+    # (roadmap 260716 P0.2). `.get(key, default)` alone does NOT cover an explicit
+    # null: `confidence: null` used to reach seed_counts_from_legacy as None and
+    # raise `None * n`, killing search/list/decay for the whole collection.
     raw_succ = payload.get("succ")
     raw_fail = payload.get("fail")
     if raw_succ is None or raw_fail is None:
         succ, fail = seed_counts_from_legacy(
-            payload.get("confidence", 0.5),
-            payload.get("application_count", 0),
+            coerce_float(payload.get("confidence"), default_confidence),
+            coerce_int(payload.get("application_count"), 0),
         )
     else:
-        succ, fail = float(raw_succ), float(raw_fail)
+        succ, fail = coerce_float(raw_succ, 0.0), coerce_float(raw_fail, 0.0)
 
     # Resolve last_decay_at — prefer explicit field, fall back through chain.
+    # An unparsable value no longer stops the chain: try the next key instead.
     last_decay_at: datetime | None = None
     for key in ("last_decay_at", "last_applied", "updated_at", "created_at"):
-        raw = payload.get(key)
-        if raw:
-            last_decay_at = datetime.fromisoformat(raw)
+        parsed = coerce_dt(payload.get(key))
+        if parsed is not None:
+            last_decay_at = parsed
             break
 
-    base = float(payload.get("decay_rate", default_decay_rate))
-    app_count = int(payload.get("application_count", 0))
+    base = coerce_float(payload.get("decay_rate"), default_decay_rate)
+    app_count = coerce_int(payload.get("application_count"), 0)
     decay_rate = stability_adjusted_rate(base, app_count)
     return (succ, fail, last_decay_at, decay_rate)
 
@@ -218,13 +237,23 @@ def is_invariant(pattern_type: str) -> bool:
     They can still be fail-archived if effective confidence falls below
     fail_floor — that branch applies to ALL classes.
 
+    The CANONICAL type governs (roadmap 260716 P0.2 / design Д4): a point stored
+    as ``1c-bsl`` coerces to ``bsl-pattern`` and is therefore invariant, exactly
+    like a point stored canonically — otherwise search would show one type while
+    ForgetGate judged by another. Junk/None coerce to the non-invariant default,
+    so unknown types stay archivable.
+
     Args:
-        pattern_type: Pattern type string (e.g. ``"bsl-pattern"``).
+        pattern_type: Pattern type string (e.g. ``"bsl-pattern"``); any writer
+            value is accepted — it is coerced first.
 
     Returns:
         True iff the pattern type is exempt from staleness-based archival.
     """
-    return pattern_type in ("architectural-principle", "bsl-pattern")
+    return PatternType.coerce(pattern_type) in (
+        PatternType.ARCHITECTURAL_PRINCIPLE,
+        PatternType.BSL_PATTERN,
+    )
 
 
 def should_archive(
@@ -269,16 +298,15 @@ def should_archive(
     # updated_at: those bookkeeping timestamps are bumped by the decay sweep and
     # any write, so they are NOT "last used" signals — using them would make a
     # never-applied pattern look perpetually fresh (idle=0) and evade staleness.
-    anchor_raw: str | None = None
+    # Tolerant parse (P0.2): a garbage timestamp falls through to the next key
+    # rather than raising and taking the whole decay sweep / ForgetGate plan down.
+    anchor: datetime | None = None
     for key in ("last_applied", "created_at"):
-        val = payload.get(key)
-        if val:
-            anchor_raw = val
+        parsed = coerce_dt(payload.get(key))
+        if parsed is not None:
+            anchor = parsed
             break
-    if anchor_raw is None:
-        days_idle = 0
-    else:
-        days_idle = max(0, (now - datetime.fromisoformat(anchor_raw)).days)
+    days_idle = 0 if anchor is None else max(0, (now - anchor).days)
 
     inv = is_invariant(payload.get("pattern_type", ""))
 
@@ -342,7 +370,10 @@ def apply_to_payload(
         "fail": fail,
         "last_decay_at": now.isoformat(),
         "confidence": new_conf,
-        "application_count": int(payload.get("application_count", 0)) + 1,
+        # coerce_int, not int(): `.get(key, default)` returns None for an explicit
+        # null, and int(None) raised here — after apply_pattern/reinforce_pattern had
+        # already written set_payload. Same field, same treatment as _resolve_state.
+        "application_count": coerce_int(payload.get("application_count"), 0) + 1,
         "last_applied": now.isoformat(),
         "updated_at": now.isoformat(),
         # Revive-on-apply: any application un-archives the pattern (§22 P3).

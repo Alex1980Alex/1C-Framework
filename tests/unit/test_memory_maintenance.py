@@ -93,7 +93,14 @@ class TestForgetGate:
             NOW,
         )
         s = summarize_forget(plan)
-        assert s == {"archive": 1, "keep": 1, "already_archived": 1, "invariant_protected": 0}
+        assert s == {
+            "archive": 1,
+            "keep": 1,
+            "already_archived": 1,
+            "invariant_protected": 0,
+            # roadmap 260716 P0.2: points plan_forget could not evaluate.
+            "unreadable": 0,
+        }
 
 
 class TestDashboard:

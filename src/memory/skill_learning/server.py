@@ -22,6 +22,11 @@ from mcp import stdio_server
 from mcp.server import Server
 from mcp.types import TextContent, Tool
 
+# Shared pattern-type contract (roadmap 260716 P0.1) — stdlib-only module, safe to
+# import here. capture_pattern is where free-form types entered the pipeline:
+# capture → confirm → detach-harvest carried them verbatim into Qdrant.
+from ..vector_memory.models import PatternType, normalize_pattern_type
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -179,11 +184,22 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "pattern_type": {"type": "string"},
+                    # Enum advertises the canonical set to the caller; the handler
+                    # coerces anyway (the MCP SDK does not enforce inputSchema
+                    # server-side, so the schema alone is documentation, not a gate).
+                    "pattern_type": {
+                        "type": "string",
+                        "enum": [pt.value for pt in PatternType],
+                    },
                     "name": {"type": "string"},
                     "content": {"type": "string"},
                     "description": {"type": "string"},
-                    "confidence": {"type": "number", "default": 0.7},
+                    "confidence": {
+                        "type": "number",
+                        "minimum": 0.0,
+                        "maximum": 1.0,
+                        "default": 0.7,
+                    },
                     "tags": {"type": "array", "items": {"type": "string"}},
                     "evidence_sources": {"type": "array", "items": {"type": "object"}},
                     "metadata": {"type": "object"},
@@ -298,9 +314,19 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
                 )
             ]
 
+    # Coerce at the quarantine door (roadmap 260716 P0.3): junk must not reach even
+    # pending, or confirm → detach-harvest would lift it into Qdrant unchanged.
+    # Coerce, don't reject: capture is a fire-and-forget protocol step, so an error
+    # here loses the fact — while save_pattern (explicit API, enum-documented) stays
+    # strict on purpose (design Д3).
+    ptype, original_ptype = normalize_pattern_type(args.get("pattern_type"))
+    pattern_metadata = dict(args.get("metadata") or {})
+    if original_ptype:
+        pattern_metadata["original_pattern_type"] = original_ptype
+
     pattern = {
         "pattern_id": pattern_id,
-        "pattern_type": args["pattern_type"],
+        "pattern_type": ptype,
         "name": args["name"],
         "content": args["content"],
         "content_hash": content_hash,
@@ -308,7 +334,7 @@ async def handle_capture_pattern(args: dict) -> list[TextContent]:
         "confidence": args.get("confidence", 0.7),
         "tags": args.get("tags", []),
         "evidence_sources": args.get("evidence_sources", []),
-        "metadata": args.get("metadata", {}),
+        "metadata": pattern_metadata,
         "application_count": 0,
         "success_count": 0,
         "failure_count": 0,

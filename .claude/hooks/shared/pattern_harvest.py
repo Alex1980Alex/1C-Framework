@@ -84,7 +84,9 @@ try:  # pragma: no cover - import path depends on layout
     import sys
 
     if str(PROJECT_ROOT / "src") not in sys.path:
-        sys.path.insert(0, str(PROJECT_ROOT / "src"))
+        # append, NOT insert(0): src/ carries its own `shared` package, which at
+        # path[0] shadows this hooks-local `shared.*` for every hook importing us.
+        sys.path.append(str(PROJECT_ROOT / "src"))
     from memory.orchestrator.content_hash import hash_content as _hash_content
     from memory.orchestrator.content_hash import point_id as _shared_point_id
 except Exception:  # pragma: no cover
@@ -100,6 +102,35 @@ except Exception:  # pragma: no cover
 
     def _derive_conf(succ: float, fail: float) -> float:
         return (7.0 + succ) / (10.0 + succ + fail)
+
+
+# --- pattern_type: coerce before writing (roadmap 260716 P0.3) ---
+# THE alias table lives in vector_memory.models — never duplicate it here.
+# This module is the main infection channel: `iter_confirmed_skill_patterns` passes
+# whatever `patterns.jsonl` holds straight through, so every Stop re-wrote free-form
+# types ('error-fix', '1c-bsl', 'requirements'...) into Qdrant, where a strict reader
+# then choked on them. The fallback below whitelists canonical values ONLY (it is not
+# a second alias map): with src/ unreachable a hook must still never write a
+# non-canonical type.
+try:  # pragma: no cover
+    from memory.vector_memory.models import normalize_pattern_type as _normalize_ptype
+except Exception:  # pragma: no cover
+    _CANONICAL_TYPES = frozenset(
+        {
+            "code-convention",
+            "workflow-pattern",
+            "debugging-heuristic",
+            "architectural-principle",
+            "project-structure",
+            "bsl-pattern",
+        }
+    )
+
+    def _normalize_ptype(value: Any) -> tuple[str, str | None]:
+        raw = str(value or "").strip()
+        if raw in _CANONICAL_TYPES:
+            return raw, None
+        return "workflow-pattern", (raw or None)
 
 
 @dataclass
@@ -322,9 +353,16 @@ def iter_confirmed_skill_patterns(jsonl_file: Path = SKILL_LEARNING_FILE) -> lis
 def _build_payload(item: HarvestItem, content_hash: str, now: datetime) -> dict[str, Any]:
     """Mirror vector_memory _pattern_to_payload (+ content_hash, §26 P0)."""
     iso = now.isoformat()
+    # Coerce at the write boundary (P0.3): producers upstream (skill-learning silo,
+    # reflection, drafts) supply free-form types; the store must only ever see
+    # canonical ones. The original is preserved in metadata, so nothing is lost.
+    ptype, original_ptype = _normalize_ptype(item.pattern_type)
+    metadata: dict[str, Any] = {"harvested": True, "harvest_source": item.source}
+    if original_ptype:
+        metadata["original_pattern_type"] = original_ptype
     return {
         "pattern_id": _point_id(content_hash),
-        "pattern_type": item.pattern_type,
+        "pattern_type": ptype,
         "name": item.name,
         "description": item.description,
         "content": item.content,
@@ -353,7 +391,7 @@ def _build_payload(item: HarvestItem, content_hash: str, now: datetime) -> dict[
         "application_count": 0,
         "version": 1,
         "tags": item.tags,
-        "metadata": {"harvested": True, "harvest_source": item.source},
+        "metadata": metadata,
     }
 
 
@@ -368,7 +406,7 @@ def _emit_ingest_stats(stats: dict[str, Any], harvester: str | None) -> None:
 
         src_dir = str(PROJECT_ROOT / "src")
         if src_dir not in sys.path:
-            sys.path.insert(0, src_dir)
+            sys.path.append(src_dir)  # append: see the src/shared shadowing note above
         from memory.orchestrator.ingest_metrics import record_ingest
     except Exception:
         return
@@ -654,9 +692,16 @@ def quarantine_items(
             stats["items"].append(it.name)
             continue
         iso = now.isoformat()
+        # Same write-contract as _build_payload (P0.3): the pending silo is not a
+        # dead end — confirm lifts these records into Qdrant — so canonicalize here
+        # too, or the silo simply re-drifts.
+        q_ptype, q_original = _normalize_ptype(it.pattern_type)
+        q_metadata: dict[str, Any] = {"auto_captured": True, "harvest_source": it.source}
+        if q_original:
+            q_metadata["original_pattern_type"] = q_original
         rec = {
             "pattern_id": str(uuid.uuid4()),
-            "pattern_type": it.pattern_type,
+            "pattern_type": q_ptype,
             "name": it.name,
             "content": it.content,
             "content_hash": ch,
@@ -672,7 +717,7 @@ def quarantine_items(
                     "metadata": {},
                 }
             ],
-            "metadata": {"auto_captured": True, "harvest_source": it.source},
+            "metadata": q_metadata,
             "application_count": 0,
             "success_count": 0,
             "failure_count": 0,

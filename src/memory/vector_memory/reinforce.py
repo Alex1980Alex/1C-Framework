@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any
 
 from .confidence import apply_to_payload
+from .models import coerce_float
 
 
 def _log_lifecycle(event: str, **fields: Any) -> None:
@@ -90,6 +91,13 @@ def reinforce_pattern(
             }
 
         payload: dict[str, Any] = points[0].payload or {}
+        # Coerced once, used by both the lifecycle record and the response
+        # (roadmap 260716 M5). Raw `payload["confidence"]` is untrusted: a null/string
+        # value made round(float(...)) raise BELOW — i.e. AFTER set_payload had
+        # already mutated the point — so the write landed while the caller got
+        # success:False and the lifecycle record was lost. Same defect as
+        # handle_apply_pattern; this is the production path of pattern-reinforce-stop.
+        old_confidence = coerce_float(payload.get("confidence"), 0.5)
         updates = apply_to_payload(payload, success, now)
 
         client.set_payload(
@@ -111,7 +119,7 @@ def reinforce_pattern(
             "reinforce",
             pattern_id=pattern_id,
             success=success,
-            old_confidence=round(float(payload.get("confidence", 0.5)), 4),
+            old_confidence=round(old_confidence, 4),
             new_confidence=round(float(updates["confidence"]), 4),
             succ=round(float(updates.get("succ") or 0.0), 4),
             fail=round(float(updates.get("fail") or 0.0), 4),
@@ -121,7 +129,7 @@ def reinforce_pattern(
         return {
             "success": True,
             "pattern_id": pattern_id,
-            "old_confidence": payload.get("confidence", 0.5),
+            "old_confidence": old_confidence,
             "new_confidence": updates["confidence"],
             "application_count": updates["application_count"],
         }

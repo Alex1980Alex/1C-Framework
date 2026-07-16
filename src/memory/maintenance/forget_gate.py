@@ -25,6 +25,7 @@ from src.memory.vector_memory.confidence import (
     payload_effective_confidence,
     should_archive,
 )
+from src.memory.vector_memory.models import coerce_dt
 
 
 @dataclass(frozen=True)
@@ -35,17 +36,24 @@ class ForgetPlan:
     keep: list[str] = field(default_factory=list)
     already_archived: list[str] = field(default_factory=list)
     invariant_protected: list[str] = field(default_factory=list)  # kept but would-be-stale
+    # Points whose payload could not be evaluated (roadmap 260716 P0.2). They are
+    # NOT archived — never destroy what you cannot read — and surface in the report
+    # so a broken point is visible instead of silently killing the whole plan.
+    unreadable: list[str] = field(default_factory=list)
 
 
 def _days_idle(payload: dict[str, Any], now: datetime) -> int:
-    """Days since last actual use (last_applied → created_at). Mirrors should_archive."""
+    """Days since last actual use (last_applied → created_at). Mirrors should_archive.
+
+    A garbage timestamp falls through to the NEXT key rather than returning 0 —
+    an early `return 0` made the point look perpetually fresh here while
+    should_archive (coerce_dt chain) judged it by created_at, so the report could
+    under-count invariant_protected. Same chain, same verdict.
+    """
     for key in ("last_applied", "created_at"):
-        val = payload.get(key)
-        if val:
-            try:
-                return max(0, (now - datetime.fromisoformat(val)).days)
-            except (ValueError, TypeError):
-                return 0
+        parsed = coerce_dt(payload.get(key))
+        if parsed is not None:
+            return max(0, (now - parsed).days)
     return 0
 
 
@@ -83,31 +91,39 @@ def plan_forget(
     keep: list[str] = []
     already: list[str] = []
     protected: list[str] = []
+    unreadable: list[str] = []
     for pt in points:
         payload = pt.get("payload") or {}
         pid = str(pt.get("id"))
-        if payload.get("expired_at"):
-            already.append(pid)
-            continue
-        if should_archive(
-            payload,
-            now,
-            staleness_days=staleness_days,
-            staleness_conf=staleness_conf,
-            fail_floor=fail_floor,
-        ):
-            archive.append(pid)
-        else:
-            keep.append(pid)
-            if is_invariant(payload.get("pattern_type", "")) and _would_be_stale(
-                payload, now, staleness_days=staleness_days, staleness_conf=staleness_conf
+        # Per-item isolation (P0.2): `_days_idle` here already tolerated garbage
+        # dates while delegating to a strict `should_archive` — so one bad point
+        # still killed the whole maintenance plan. Now it costs one point.
+        try:
+            if payload.get("expired_at"):
+                already.append(pid)
+                continue
+            if should_archive(
+                payload,
+                now,
+                staleness_days=staleness_days,
+                staleness_conf=staleness_conf,
+                fail_floor=fail_floor,
             ):
-                protected.append(pid)
+                archive.append(pid)
+            else:
+                keep.append(pid)
+                if is_invariant(payload.get("pattern_type", "")) and _would_be_stale(
+                    payload, now, staleness_days=staleness_days, staleness_conf=staleness_conf
+                ):
+                    protected.append(pid)
+        except Exception:
+            unreadable.append(pid)
     return ForgetPlan(
         archive=archive,
         keep=keep,
         already_archived=already,
         invariant_protected=protected,
+        unreadable=unreadable,
     )
 
 
@@ -118,6 +134,7 @@ def summarize_forget(plan: ForgetPlan) -> dict[str, int]:
         "keep": len(plan.keep),
         "already_archived": len(plan.already_archived),
         "invariant_protected": len(plan.invariant_protected),
+        "unreadable": len(plan.unreadable),
     }
 
 

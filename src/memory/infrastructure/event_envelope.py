@@ -103,6 +103,10 @@ _GENERIC_PASSTHROUGH = (
     "entities_updated",
     "cascades_prevented",
     "final_depth",
+    # Skipped-item counters (roadmap 260716 P0.2): decay_sweep and the apply-cascade
+    # both emit `errors`. Without passthrough the counter reaches the log but not the
+    # §27 query layer — a counter nobody can query is only half-honest.
+    "errors",
     "failure_count",
     "total_failures",
     "applied",

@@ -2,8 +2,8 @@
   "task": "impl-memory-payload-hardening",
   "title": "P0 hardening памяти: payload = недоверенный вход (роадмап 260716)",
   "created_at": "2026-07-16T22:26:58",
-  "updated_at": "2026-07-16T22:31:58",
-  "current_stage": 3,
+  "updated_at": "2026-07-16T23:33:07",
+  "current_stage": 5,
   "stages": [
     {
       "n": 1,
@@ -29,16 +29,16 @@
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-16T23:24:34"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
       "artifact": "04-testing.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-16T23:33:07"
     }
   ]
 }

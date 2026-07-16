@@ -33,6 +33,7 @@ from typing import Any
 # back to a direct file-path load so the import is robust under any path ordering.
 try:
     from shared.pattern_harvest import HarvestItem, ingest_items
+    from shared.pattern_harvest import _normalize_ptype as _normalize_ptype
 except ImportError:  # pragma: no cover - path-ordering dependent
     import importlib.util as _ilu
 
@@ -42,6 +43,7 @@ except ImportError:  # pragma: no cover - path-ordering dependent
     _ph = _ilu.module_from_spec(_spec)
     _spec.loader.exec_module(_ph)
     HarvestItem, ingest_items = _ph.HarvestItem, _ph.ingest_items
+    _normalize_ptype = _ph._normalize_ptype
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 # MEMORY_AI_DB_PATH override — test isolation (roadmap 260612 P0.3)
@@ -53,17 +55,22 @@ DEFAULT_MIN_CLUSTER = 3
 DEFAULT_SIM_THRESHOLD = 0.5
 DEFAULT_CAP = 10
 
-# category (memory-ai) → pattern_type, mirrors normalize_light_patterns.CATEGORY_MAP.
-_CATEGORY_MAP = {
-    "decision": "architectural-principle",
-    "preference": "workflow-pattern",
-    "bugfix": "debugging-heuristic",
-    "implementation": "code-convention",
-    "reference": "project-structure",
-    "feedback": "workflow-pattern",
-    "project": "project-structure",
-    "code-convention": "code-convention",
-}
+# category (memory-ai) → pattern_type. Resolved through the ONE alias table in
+# vector_memory.models (roadmap 260716 P0.1); this used to be a hand-kept copy of
+# normalize_light_patterns.CATEGORY_MAP. Membership stays local — it decides which
+# categories are patterns at all. `_normalize_ptype` is imported by pattern_harvest
+# (above) with its own fail-soft fallback, so no extra import guard is needed here.
+_MAPPED_CATEGORIES = (
+    "decision",
+    "preference",
+    "bugfix",
+    "implementation",
+    "reference",
+    "feedback",
+    "project",
+    "code-convention",
+)
+_CATEGORY_MAP = {c: _normalize_ptype(c)[0] for c in _MAPPED_CATEGORIES}
 
 _TOKEN_RE = re.compile(r"\w{3,}", re.UNICODE)
 

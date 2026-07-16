@@ -78,7 +78,7 @@ def _cascade_confidence(
     — but synchronous and scoped to ``learned_patterns``. Nudges each neighbour's Beta succ/fail
     (success→succ, fail→fail) and re-derives confidence. Fully fail-soft; returns trace stats.
     """
-    stats = {"entities_updated": 0, "cascades_prevented": 0, "final_depth": 0}
+    stats = {"entities_updated": 0, "cascades_prevented": 0, "final_depth": 0, "errors": 0}
     if os.environ.get("MEMORY_APPLY_CASCADE_DISABLE") == "1":
         return stats
     import time as _time
@@ -121,53 +121,68 @@ def _cascade_confidence(
             if stats["entities_updated"] >= _APPLY_CASCADE_MAX:
                 stats["cascades_prevented"] += 1
                 continue
-            nid = link.target_id
-            if nid.startswith("semantic:vector-memory:"):
-                nid = nid.rsplit(":", 1)[-1]
-            elif ":" in nid:
-                # cross-store neighbour — PropagationEngine's territory, not same-store cascade
-                stats["cascades_prevented"] += 1
-                continue
-            if nid == pattern_id or nid in seen:
-                continue
-            seen.add(nid)
-            npts = client.retrieve(collection_name=COLLECTION_NAME, ids=[nid], with_payload=True)
-            if not npts:  # neighbour is not a learned_pattern → can't nudge
-                stats["cascades_prevented"] += 1
-                continue
-            npay = npts[0].payload or {}
+            # Per-item isolation (roadmap 260716 P0.2): before this, ONE bad
+            # neighbour escaped to the function-level `except: pass` — aborting the
+            # cascade for every remaining neighbour AND skipping _bump_epoch(), so
+            # already-written neighbours sat behind a stale surfacing cache. Same
+            # partial-mutation class the decay-sweep fix closed.
             try:
-                ca = link.created_at
-                if isinstance(ca, str):
-                    ca = datetime.fromisoformat(ca)
-                age_days = max(0, (now - ca).days)
-            except Exception:
-                age_days = 0
-            time_decay = max(0.5, 1.0 - age_days / 365.0)
-            delta = _APPLY_CASCADE_BASE * float(link.strength) * 0.5 * time_decay  # 0.5 = dist^1
-            if delta < 0.001:
-                stats["cascades_prevented"] += 1
-                continue
-            succ, fail = npay.get("succ"), npay.get("fail")
-            if succ is None or fail is None:
-                succ, fail = seed_counts_from_legacy(
-                    float(npay.get("confidence", 0.70)), int(npay.get("application_count", 0) or 0)
+                nid = link.target_id
+                if nid.startswith("semantic:vector-memory:"):
+                    nid = nid.rsplit(":", 1)[-1]
+                elif ":" in nid:
+                    # cross-store neighbour — PropagationEngine's territory, not same-store cascade
+                    stats["cascades_prevented"] += 1
+                    continue
+                if nid == pattern_id or nid in seen:
+                    continue
+                seen.add(nid)
+                npts = client.retrieve(
+                    collection_name=COLLECTION_NAME, ids=[nid], with_payload=True
                 )
-            if success:
-                succ = float(succ) + delta
-            else:
-                fail = float(fail) + delta
-            client.set_payload(
-                collection_name=COLLECTION_NAME,
-                payload={
-                    "succ": round(float(succ), 6),
-                    "fail": round(float(fail), 6),
-                    "confidence": round(derive_confidence(succ, fail), 6),
-                    "updated_at": now.isoformat(),
-                },
-                points=[nid],
-            )
-            stats["entities_updated"] += 1
+                if not npts:  # neighbour is not a learned_pattern → can't nudge
+                    stats["cascades_prevented"] += 1
+                    continue
+                npay = npts[0].payload or {}
+                ca = coerce_dt(link.created_at)
+                age_days = 0 if ca is None else max(0, (now - ca).days)
+                time_decay = max(0.5, 1.0 - age_days / 365.0)
+                # 0.5 = dist^1
+                delta = _APPLY_CASCADE_BASE * coerce_float(link.strength, 0.0) * 0.5 * time_decay
+                if delta < 0.001:
+                    stats["cascades_prevented"] += 1
+                    continue
+                raw_succ, raw_fail = npay.get("succ"), npay.get("fail")
+                if raw_succ is None or raw_fail is None:
+                    # coerce_*: a null confidence would raise here and silently abort
+                    # the cascade for the REMAINING neighbours (roadmap 260716).
+                    succ, fail = seed_counts_from_legacy(
+                        coerce_float(npay.get("confidence"), 0.70),
+                        coerce_int(npay.get("application_count"), 0),
+                    )
+                else:
+                    # The present-but-garbage branch needs coercion just as much:
+                    # a string succ raised in the arithmetic below.
+                    succ = coerce_float(raw_succ, 0.0)
+                    fail = coerce_float(raw_fail, 0.0)
+                if success:
+                    succ += delta
+                else:
+                    fail += delta
+                client.set_payload(
+                    collection_name=COLLECTION_NAME,
+                    payload={
+                        "succ": round(succ, 6),
+                        "fail": round(fail, 6),
+                        "confidence": round(derive_confidence(succ, fail), 6),
+                        "updated_at": now.isoformat(),
+                    },
+                    points=[nid],
+                )
+                stats["entities_updated"] += 1
+            except Exception as exc:
+                stats["errors"] = stats.get("errors", 0) + 1
+                logger.warning(f"cascade: skipped neighbour of {pattern_id}: {exc}")
         if stats["entities_updated"]:
             _bump_epoch()  # neighbour confidences changed → invalidate surfacing cache
     except Exception:
@@ -183,6 +198,9 @@ def _cascade_confidence(
             entities_updated=stats["entities_updated"],
             cascades_prevented=stats["cascades_prevented"],
             final_depth=stats["final_depth"],
+            # Skipped neighbours must leave the function, not just the logger —
+            # symmetry with items_skipped/errors/unreadable in the other loops.
+            errors=stats.get("errors", 0),
             latency_ms=round((_time.monotonic() - t0) * 1000, 1),
         )
     except Exception:
@@ -195,6 +213,9 @@ from .models import (
     LearnedPattern,
     PatternSearchResult,
     PatternType,
+    coerce_dt,
+    coerce_float,
+    coerce_int,
 )
 
 logging.basicConfig(
@@ -370,8 +391,18 @@ async def _get_embedding(text: str) -> list[float]:
     return result[0]  # type: ignore[no-any-return]
 
 
-def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPattern:
-    """Convert Qdrant point payload to LearnedPattern."""
+def _pattern_from_payload(point_id: str, payload: dict[str, Any] | None) -> LearnedPattern:
+    """Convert Qdrant point payload to LearnedPattern. Never raises.
+
+    The payload is UNTRUSTED (roadmap 260716 P0.2): 8+ producers write this
+    collection. Until 2026-07-16 this function parsed strictly — a single point
+    with `pattern_type: 'requirements'` (or a null confidence / garbage
+    timestamp) raised out of the caller's loop and took down the entire
+    search_patterns response and the unified_search vector arm with it. Every
+    field now degrades on its own; per-item try/except in the loops is the
+    backstop for anything not anticipated here.
+    """
+    payload = payload or {}
     evidence = [EvidenceSource.from_dict(e) for e in payload.get("evidence_sources", [])]
 
     # Lazy migration: seed succ/fail from legacy confidence + application_count
@@ -380,55 +411,43 @@ def _pattern_from_payload(point_id: str, payload: dict[str, Any]) -> LearnedPatt
     raw_fail = payload.get("fail")
     if raw_succ is None or raw_fail is None:
         succ, fail = seed_counts_from_legacy(
-            payload.get("confidence", 0.7),
-            payload.get("application_count", 0),
+            coerce_float(payload.get("confidence"), 0.7),
+            coerce_int(payload.get("application_count"), 0),
         )
     else:
-        succ = float(raw_succ)
-        fail = float(raw_fail)
+        succ = coerce_float(raw_succ, 0.0)
+        fail = coerce_float(raw_fail, 0.0)
 
-    # last_decay_at: prefer explicit field, fall back through timestamp chain.
-    raw_lda = payload.get("last_decay_at")
-    if raw_lda:
-        last_decay_at: datetime | None = datetime.fromisoformat(raw_lda)
-    elif payload.get("last_applied"):
-        last_decay_at = datetime.fromisoformat(payload["last_applied"])
-    elif payload.get("updated_at"):
-        last_decay_at = datetime.fromisoformat(payload["updated_at"])
-    elif payload.get("created_at"):
-        last_decay_at = datetime.fromisoformat(payload["created_at"])
-    else:
-        last_decay_at = None
+    # last_decay_at: prefer explicit field, fall back through timestamp chain;
+    # an unparsable value falls through to the next key instead of raising.
+    last_decay_at: datetime | None = None
+    for _key in ("last_decay_at", "last_applied", "updated_at", "created_at"):
+        _parsed = coerce_dt(payload.get(_key))
+        if _parsed is not None:
+            last_decay_at = _parsed
+            break
 
     return LearnedPattern(
         pattern_id=payload.get("pattern_id", point_id),
-        pattern_type=PatternType(payload.get("pattern_type", "code-convention")),
+        pattern_type=PatternType.coerce(payload.get("pattern_type")),
         name=payload.get("name", ""),
         description=payload.get("description", ""),
         content=payload.get("content", ""),
-        confidence=payload.get("confidence", 0.5),
+        confidence=coerce_float(payload.get("confidence"), 0.5),
         evidence_sources=evidence,
-        created_at=datetime.fromisoformat(payload["created_at"])
-        if payload.get("created_at")
-        else datetime.now(),
-        updated_at=datetime.fromisoformat(payload["updated_at"])
-        if payload.get("updated_at")
-        else datetime.now(),
-        decay_rate=payload.get("decay_rate", DECAY_RATE),
-        application_count=payload.get("application_count", 0),
-        last_applied=datetime.fromisoformat(payload["last_applied"])
-        if payload.get("last_applied")
-        else None,
+        created_at=coerce_dt(payload.get("created_at")) or datetime.now(),
+        updated_at=coerce_dt(payload.get("updated_at")) or datetime.now(),
+        decay_rate=coerce_float(payload.get("decay_rate"), DECAY_RATE),
+        application_count=coerce_int(payload.get("application_count"), 0),
+        last_applied=coerce_dt(payload.get("last_applied")),
         succ=succ,
         fail=fail,
         last_decay_at=last_decay_at,
         # F5 (roadmap 260611 P3.1): without this mapping the model always
         # carried expired_at=None while the get_pattern response built
         # `archived` from the payload — archived:true with expired_at:null.
-        expired_at=datetime.fromisoformat(payload["expired_at"])
-        if payload.get("expired_at")
-        else None,
-        version=payload.get("version", 1),
+        expired_at=coerce_dt(payload.get("expired_at")),
+        version=coerce_int(payload.get("version"), 1),
         tags=payload.get("tags", []),
         metadata=payload.get("metadata", {}),
     )
@@ -721,25 +740,34 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
     )
 
     search_results = []
+    skipped = 0
     for point in results.points:
-        eff = payload_effective_confidence(point.payload or {})
-        if eff < min_confidence:
-            continue
-        pattern = _pattern_from_payload(str(point.id), point.payload)
-        similarity = point.score if point.score else 0.0
-        combined = similarity * eff
-        # §24.2.4 hard-exclude archived patterns (consistency with hook-side gate).
-        # Use MEMORY_INCLUDE_ARCHIVED=1 to override (e.g. for revive workflows).
-        if (point.payload or {}).get("expired_at") and os.getenv("MEMORY_INCLUDE_ARCHIVED") != "1":
-            continue
-        search_results.append(
-            PatternSearchResult(
-                pattern=pattern,
-                similarity_score=similarity,
-                adjusted_confidence=eff,
-                combined_score=combined,
+        # Per-item isolation (roadmap 260716 P0.2): one unreadable point must cost
+        # exactly that point, not the whole response. Before this, a single drifted
+        # payload raised here and the caller (incl. the unified_search vector arm)
+        # saw a total failure — the 2026-07-16 incident.
+        try:
+            payload = point.payload or {}
+            eff = payload_effective_confidence(payload)
+            if eff < min_confidence:
+                continue
+            # §24.2.4 hard-exclude archived patterns (consistency with hook-side gate).
+            # Use MEMORY_INCLUDE_ARCHIVED=1 to override (e.g. for revive workflows).
+            if payload.get("expired_at") and os.getenv("MEMORY_INCLUDE_ARCHIVED") != "1":
+                continue
+            pattern = _pattern_from_payload(str(point.id), payload)
+            similarity = point.score if point.score else 0.0
+            search_results.append(
+                PatternSearchResult(
+                    pattern=pattern,
+                    similarity_score=similarity,
+                    adjusted_confidence=eff,
+                    combined_score=similarity * eff,
+                )
             )
-        )
+        except Exception as exc:
+            skipped += 1
+            logger.warning(f"search_patterns: skipped unreadable point {point.id}: {exc}")
 
     search_results.sort(key=lambda r: r.combined_score, reverse=True)
     search_results = search_results[:limit]
@@ -750,6 +778,9 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
                 {
                     "query": query,
                     "count": len(search_results),
+                    # Additive, honest: non-zero means the collection holds points
+                    # this build cannot read (see logs for ids).
+                    "items_skipped": skipped,
                     "results": [r.to_dict() for r in search_results],
                 },
                 ensure_ascii=False,
@@ -773,7 +804,11 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
         ]
 
     payload = points[0].payload or {}
-    old_confidence = payload.get("confidence", 0.5)
+    # Coerced, not raw (roadmap 260716 M5): a null/string `confidence` used to raise
+    # in the round()/f-string below — AFTER set_payload had already mutated the
+    # point, so the caller saw an error for a write that actually landed and the
+    # lifecycle record was lost.
+    old_confidence = coerce_float(payload.get("confidence"), 0.5)
 
     updates = apply_to_payload(payload, success, datetime.now())
     client.set_payload(collection_name=COLLECTION_NAME, payload=updates, points=[pattern_id])
@@ -804,6 +839,10 @@ async def handle_apply_pattern(args: dict[str, Any]) -> list[TextContent]:
                     "new_confidence": updates["confidence"],
                     "application_count": updates["application_count"],
                     "cascaded": cascade["entities_updated"],
+                    # Honest partial result, as decay_confidence already reports:
+                    # neighbours the cascade could not read are skipped, and the MCP
+                    # client must see that — not just the server log.
+                    "cascade_errors": cascade.get("errors", 0),
                 }
             ),
         )
@@ -871,35 +910,50 @@ async def handle_list_patterns(args: dict[str, Any]) -> list[TextContent]:
         with_vectors=False,
     )
     rows = []
+    skipped = 0
     for p in points:
-        pl = p.payload or {}
-        content = pl.get("content") or pl.get("description") or ""
-        ptype = pl.get("pattern_type") or pl.get("category") or "?"
-        if type_filter and ptype != type_filter:
-            continue
-        if grep and grep not in content.lower():
-            continue
-        eff = payload_effective_confidence(pl)
-        if min_conf > 0.0 and eff < min_conf:
-            continue
-        rows.append(
-            {
-                "pattern_id": str(p.id),
-                "pattern_type": ptype,
-                "effective_confidence": round(eff, 4),
-                "application_count": pl.get("application_count"),
-                "created_at": pl.get("created_at", ""),
-                "archived": bool(pl.get("expired_at")),
-                "content": content if full else content[:300],
-            }
-        )
+        # Per-item isolation (P0.2). This is the diagnostic browse tool: it must
+        # survive exactly the points an operator opens it to find.
+        try:
+            pl = p.payload or {}
+            content = pl.get("content") or pl.get("description") or ""
+            ptype = pl.get("pattern_type") or pl.get("category") or "?"
+            if type_filter and ptype != type_filter:
+                continue
+            if grep and grep not in content.lower():
+                continue
+            eff = payload_effective_confidence(pl)
+            if min_conf > 0.0 and eff < min_conf:
+                continue
+            rows.append(
+                {
+                    "pattern_id": str(p.id),
+                    # Raw stored value on purpose — this view exists to SHOW drift;
+                    # `canonical` is what every reader resolves it to.
+                    "pattern_type": ptype,
+                    "canonical_type": PatternType.coerce(pl.get("pattern_type")).value,
+                    "effective_confidence": round(eff, 4),
+                    "application_count": pl.get("application_count"),
+                    "created_at": pl.get("created_at", ""),
+                    "archived": bool(pl.get("expired_at")),
+                    "content": content if full else content[:300],
+                }
+            )
+        except Exception as exc:
+            skipped += 1
+            logger.warning(f"list_patterns: skipped unreadable point {p.id}: {exc}")
     rows.sort(key=lambda r: str(r["created_at"]))
     rows = rows[:limit]
     return [
         TextContent(
             type="text",
             text=json.dumps(
-                {"count": len(rows), "collection": COLLECTION_NAME, "patterns": rows},
+                {
+                    "count": len(rows),
+                    "collection": COLLECTION_NAME,
+                    "items_skipped": skipped,
+                    "patterns": rows,
+                },
                 ensure_ascii=False,
                 indent=2,
             ),
@@ -920,6 +974,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
     revived = (
         0  # previously-archived patterns recovered by decay sweeping counts back above thresholds
     )
+    errors = 0  # points the sweep could not read/write — skipped, never fatal (P0.2)
 
     offset = None
     while True:
@@ -932,80 +987,89 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
         points, next_offset = result
 
         for point in points:
-            payload = point.payload
+            # Per-item isolation (roadmap 260716 P0.2). This loop MUTATES: an
+            # exception mid-sweep used to abort the whole pass, leaving the
+            # collection half-decayed (points before the bad one written, the rest
+            # untouched) with no epoch bump. One bad point now costs one point.
+            try:
+                payload = point.payload or {}
 
-            # Resolve last_decay_at — prefer explicit field, fall back to updated_at.
-            raw_lda = payload.get("last_decay_at") or payload.get("updated_at")
-            if not raw_lda:
-                continue
-            last_decay_at: datetime = datetime.fromisoformat(raw_lda)
-
-            now = datetime.now()
-            days_since = (now - last_decay_at).total_seconds() / 86400
-            if days_since < 1:
-                continue
-
-            decay_rate = stability_adjusted_rate(
-                float(payload.get("decay_rate", DECAY_RATE)),
-                int(payload.get("application_count", 0)),
-            )
-
-            # Resolve succ/fail — lazy migration for legacy points without the fields.
-            raw_succ = payload.get("succ")
-            raw_fail = payload.get("fail")
-            if raw_succ is None or raw_fail is None:
-                succ, fail = seed_counts_from_legacy(
-                    payload.get("confidence", 0.5),
-                    payload.get("application_count", 0),
+                # Resolve last_decay_at — prefer explicit field, fall back to updated_at.
+                last_decay_at = coerce_dt(payload.get("last_decay_at")) or coerce_dt(
+                    payload.get("updated_at")
                 )
-            else:
-                succ = float(raw_succ)
-                fail = float(raw_fail)
+                if last_decay_at is None:
+                    continue
 
-            succ, fail = decay_counts(succ, fail, last_decay_at, now, decay_rate)
-            new_conf = derive_confidence(succ, fail)
+                now = datetime.now()
+                days_since = (now - last_decay_at).total_seconds() / 86400
+                if days_since < 1:
+                    continue
 
-            # Build post-decay payload fields.
-            set_fields: dict[str, Any] = {
-                "succ": succ,
-                "fail": fail,
-                "last_decay_at": now.isoformat(),
-                "confidence": new_conf,
-                "updated_at": now.isoformat(),
-            }
-
-            # Determine archival: merge post-decay fields over original payload and
-            # evaluate should_archive (§22 P3 invalidate-not-delete).
-            # The sweep manages archival state in BOTH directions:
-            #   • should_archive=True  → set expired_at (archive)
-            #   • should_archive=False AND was archived → clear expired_at (un-archive)
-            #   • otherwise           → leave expired_at untouched
-            candidate = {**payload, **set_fields}
-            if should_archive(candidate, now):
-                set_fields["expired_at"] = now.isoformat()
-                archived += 1
-                logger.debug(
-                    f"Archived pattern {point.id} "
-                    f"(type={payload.get('pattern_type', '?')}, "
-                    f"conf={new_conf:.3f})"
-                )
-            elif payload.get("expired_at"):
-                # Pattern was archived but counts have decayed back above thresholds
-                # (e.g. fail-counts decayed → effective confidence recovered).
-                set_fields["expired_at"] = None
-                revived += 1
-                logger.debug(
-                    f"Un-archived pattern {point.id} "
-                    f"(type={payload.get('pattern_type', '?')}, "
-                    f"conf={new_conf:.3f})"
+                decay_rate = stability_adjusted_rate(
+                    coerce_float(payload.get("decay_rate"), DECAY_RATE),
+                    coerce_int(payload.get("application_count"), 0),
                 )
 
-            client.set_payload(
-                collection_name=COLLECTION_NAME,
-                payload=set_fields,
-                points=[str(point.id)],
-            )
-            decayed += 1
+                # Resolve succ/fail — lazy migration for legacy points without the fields.
+                raw_succ = payload.get("succ")
+                raw_fail = payload.get("fail")
+                if raw_succ is None or raw_fail is None:
+                    succ, fail = seed_counts_from_legacy(
+                        coerce_float(payload.get("confidence"), 0.5),
+                        coerce_int(payload.get("application_count"), 0),
+                    )
+                else:
+                    succ = coerce_float(raw_succ, 0.0)
+                    fail = coerce_float(raw_fail, 0.0)
+
+                succ, fail = decay_counts(succ, fail, last_decay_at, now, decay_rate)
+                new_conf = derive_confidence(succ, fail)
+
+                # Build post-decay payload fields.
+                set_fields: dict[str, Any] = {
+                    "succ": succ,
+                    "fail": fail,
+                    "last_decay_at": now.isoformat(),
+                    "confidence": new_conf,
+                    "updated_at": now.isoformat(),
+                }
+
+                # Determine archival: merge post-decay fields over original payload and
+                # evaluate should_archive (§22 P3 invalidate-not-delete).
+                # The sweep manages archival state in BOTH directions:
+                #   • should_archive=True  → set expired_at (archive)
+                #   • should_archive=False AND was archived → clear expired_at (un-archive)
+                #   • otherwise           → leave expired_at untouched
+                candidate = {**payload, **set_fields}
+                if should_archive(candidate, now):
+                    set_fields["expired_at"] = now.isoformat()
+                    archived += 1
+                    logger.debug(
+                        f"Archived pattern {point.id} "
+                        f"(type={payload.get('pattern_type', '?')}, "
+                        f"conf={new_conf:.3f})"
+                    )
+                elif payload.get("expired_at"):
+                    # Pattern was archived but counts have decayed back above thresholds
+                    # (e.g. fail-counts decayed → effective confidence recovered).
+                    set_fields["expired_at"] = None
+                    revived += 1
+                    logger.debug(
+                        f"Un-archived pattern {point.id} "
+                        f"(type={payload.get('pattern_type', '?')}, "
+                        f"conf={new_conf:.3f})"
+                    )
+
+                client.set_payload(
+                    collection_name=COLLECTION_NAME,
+                    payload=set_fields,
+                    points=[str(point.id)],
+                )
+                decayed += 1
+            except Exception as exc:
+                errors += 1
+                logger.warning(f"decay_confidence: skipped point {point.id}: {exc}")
 
         if next_offset is None:
             break
@@ -1013,8 +1077,13 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
 
     if decayed or archived or revived:
         _bump_epoch()  # §24: confidence/archive state changed -> invalidate surfacing cache
-        _log_lifecycle("decay_sweep", decayed=decayed, archived=archived, revived=revived)
-    logger.info(f"Decay complete: {decayed} decayed, {archived} archived, {revived} revived")
+        _log_lifecycle(
+            "decay_sweep", decayed=decayed, archived=archived, revived=revived, errors=errors
+        )
+    logger.info(
+        f"Decay complete: {decayed} decayed, {archived} archived, "
+        f"{revived} revived, {errors} skipped"
+    )
     return [
         TextContent(
             type="text",
@@ -1024,6 +1093,8 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
                     "decayed": decayed,
                     "archived": archived,
                     "revived": revived,
+                    # Honest partial result: the sweep completed, these points did not.
+                    "errors": errors,
                     "timestamp": datetime.now().isoformat(),
                 }
             ),

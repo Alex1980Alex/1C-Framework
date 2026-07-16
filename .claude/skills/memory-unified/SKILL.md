@@ -209,6 +209,47 @@ Examples:
 - **Post-review remediation (2026-06-10, та же сессия):** (1) lazy-init движка в оркестраторе получил `PropagationConfig(enable_background_processing=False, enable_event_deduplication=False)` — иначе production-вызов возвращал `entities_updated=[]` / `reason="queued_for_background_processing"` (честный результат прятался за очередью), а dedup молча глотал повторный `propagate_update` по тому же entity; (2) vector-handler бампит §24 epoch после `set_payload` (инвариант: каждый писатель confidence инвалидирует surfacing-кэш); (3) `try_promote_patterns` → detached `Popen` (паттерн post-indexing-analyzer, лог `.claude/cache/session-promote.log`) — Stop-бюджет не платит за Qdrant-scroll; (4) `_emit_langfuse_span` — дешёвый pre-gate `_langfuse_configured()` (env/`.env` probe ДО импорта `src.*`; в этом окружении Langfuse реально включён — `OBSERVABILITY__LANGFUSE_ENABLED=true`, span стоит ~2.3s network-flush, emit последний в `execute()`); (5) timeout хука 5→15s в `settings.json`; (6) `ai_memory/server.py` `DB_PATH` теперь тоже уважает `MEMORY_AI_DB_PATH`. +2 теста-пина: sync+repeatable orchestrator-путь, epoch-bump handler'а.
 
 
+### Payload contract: store = недоверенный вход (roadmap 260716 P0, 2026-07-16)
+
+Инцидент: ОДНА точка `learned_patterns` с `pattern_type: 'requirements'` роняла
+весь `search_patterns` и клала vector-плечо `unified_search` в `sources_failed` —
+строгий `PatternType(payload.get(...))` в цикле без per-item защиты. Коллекцию
+пишут 8+ продюсеров, но enum валидировал только `save_pattern`.
+
+**Инвариант: payload из store — недоверенный вход.** Три слоя, все обязательны:
+
+1. **Коэрсер** — [`vector_memory/models.py`](../../../src/memory/vector_memory/models.py)
+   (stdlib-only контракт): `PatternType.coerce(value)` + `normalize_pattern_type(value)
+   → (canonical, original)` + `coerce_float/coerce_int/coerce_dt`.
+   `_PATTERN_TYPE_ALIASES` — **единственная** alias-карта: `CATEGORY_MAP` в
+   `normalize_light_patterns.py` и `reflection.py` теперь производные от неё.
+   Новый alias добавлять ТОЛЬКО туда. Дефолт (None/пусто/неизвестное) =
+   `workflow-pattern` (не инвариант → мусор архивируем по staleness).
+2. **Писатели нормализуют** на границе записи: `pattern_harvest._build_payload` +
+   `quarantine_items`, `route_and_save._save_to_target` (обе ветки + clamp
+   confidence + гейт пустого контента), `capture_pattern` (enum в схеме + coerce
+   в handler). Провенанс — `metadata.original_pattern_type`.
+   ⚠ `save_pattern` намеренно **строгий** (fail-closed): явный MCP-вызов с enum в
+   схеме → честная ошибка полезнее тихой коэрсии.
+3. **Per-item изоляция** в циклах: `search_patterns`/`list_patterns` →
+   `items_skipped` в ответе, `decay_confidence` → `errors` (sweep больше не
+   обрывается с частичной мутацией), `plan_forget` → `ForgetPlan.unreadable`
+   (нечитаемое НЕ архивируем), vector-плечо оркестратора → warning, плечо живо.
+   Правило: изоляция плеча (TEI/Qdrant down → `sources_failed`, F12) ≠ изоляция
+   точки; смешение этих двух и было инцидентом.
+
+**Ловушки** (стоили ревью-итерации): `.get(key, default)` НЕ покрывает явный
+`null` (ключ есть → None → `int(None)` падает) — нужен `coerce_*`; строгий парс
+ПОСЛЕ мутации (`round(float(...))` в логе после `set_payload`) = запись прошла,
+вызывающий получил ошибку. Память: [[feedback-payload-untrusted-input]].
+
+**Миграция данных**: [`scripts/migrate_pattern_types.py`](../../../scripts/migrate_pattern_types.py)
+(dry-run default, backup + `--restore`, идемпотентен) — ре-штамповка типа в
+Qdrant + силосах. Смежное: `backfill_content_hash.py` (хеши).
+⚠ `dedupe_learned_patterns.py --apply` **НЕ запускать** — слеп к `link_registry`,
+удалит канон, назначенный `cross_store_sync` ([[reference-dedupe-learned-patterns-unsafe]],
+роадмап 260716 P1.7). Регресс: [`tests/unit/test_pattern_type_contract.py`](../../../tests/unit/test_pattern_type_contract.py).
+
 ### Honest-failure & governance wiring (roadmap 260611, 2026-06-11)
 
 Контракт «ошибка доезжает до ответа/лога, а не глотается» — закрывает F5/F8/F9/F10/F12/F13/F14 из chain-testing 260610:

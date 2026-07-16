@@ -98,8 +98,14 @@ def _make_qdrant_stub(points: list[_FakePoint]):
     return _FakeClient
 
 
-# Shared test timestamp: recent enough that time-decay is near-zero
-_T0 = datetime(2026, 1, 1).isoformat()
+# Shared test timestamp: recent enough that time-decay is near-zero.
+# MUST be relative to now. A hardcoded date is a time bomb: every payload here uses
+# _T0 as `last_decay_at`, so as wall-clock drifts away from it the counts decay and
+# the asserted confidences move. It detonated on 2026-07-16 (196 days out):
+# test_low_conf_noise_floor's fail=50 had decayed to ~36, lifting eff 0.117 -> 0.152
+# and crossing MIN_SURFACE_CONF=0.15, so the gate stopped suppressing. Unrelated to
+# the payload-contract work of that day — the test simply expired.
+_T0 = datetime.now().isoformat()
 
 
 # ---------------------------------------------------------------------------

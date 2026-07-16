@@ -6,7 +6,8 @@ The collection mixes two payload shapes:
   - LIGHT (migrated out of memory-ai): original_id, content, category, importance, source.
 
 When a LIGHT record is read via _pattern_from_payload it loses its real category
-(defaults to "code-convention") and importance (defaults to 0.5). This rewrites each
+(falls back to models.DEFAULT_PATTERN_TYPE — "workflow-pattern" since roadmap 260716;
+"code-convention" before that) and importance (defaults to 0.5). This rewrites each
 mappable LIGHT record into the full schema:
   - pattern_type  via CATEGORY_MAP[category]   (decision -> architectural-principle, etc.)
   - confidence    via importance               (denorm field; honors the migrated signal)
@@ -48,16 +49,33 @@ BACKUP_DIR = PROJECT_ROOT / "data" / "memory" / "backups"
 
 # category (memory-ai) -> pattern_type (PatternType enum value). Anything absent here
 # is treated as "not a pattern" and skipped (e.g. session_summary = episodic log).
-CATEGORY_MAP = {
-    "decision": "architectural-principle",
-    "preference": "workflow-pattern",
-    "bugfix": "debugging-heuristic",
-    "implementation": "code-convention",
-    "reference": "project-structure",
-    "feedback": "workflow-pattern",
-    "project": "project-structure",
-    "code-convention": "code-convention",
-}
+#
+# Membership stays local (it decides what IS a pattern), but the category→type
+# mapping itself resolves through the ONE alias table in vector_memory.models
+# (roadmap 260716 P0.1) — this map used to be copy-pasted here and in
+# hooks/shared/reflection.py, so the three could drift apart.
+_MAPPED_CATEGORIES = (
+    "decision",
+    "preference",
+    "bugfix",
+    "implementation",
+    "reference",
+    "feedback",
+    "project",
+    "code-convention",
+)
+
+
+def _category_map() -> dict[str, str]:
+    src = str(PROJECT_ROOT / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from memory.vector_memory.models import PatternType
+
+    return {c: PatternType.coerce(c).value for c in _MAPPED_CATEGORIES}
+
+
+CATEGORY_MAP = _category_map()
 
 
 def is_light(payload: dict[str, Any]) -> bool:

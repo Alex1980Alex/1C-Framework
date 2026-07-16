@@ -1,8 +1,19 @@
 """Data models for the self-learning pattern system.
 
+Also the payload-coercion contract (roadmap 260716 P0.1): store payloads are
+UNTRUSTED input — written by 8+ producers (harvesters, route_and_save,
+capture→confirm, admin scripts) across process boundaries and versions. A strict
+``PatternType(payload[...])`` on read turned one drifted point into a total
+failure of search_patterns / decay / ForgetGate (incident 2026-07-16). Writers
+normalize before storing; readers coerce defensively anyway.
+
+Stdlib-only by design: hooks (``pattern_harvest``) and ``confidence`` import this
+module, so it must stay dependency-free.
+
 Migrated from D:\\1C-Enterprise_Framework\\vector-memory-mcp\\src\\models\\patterns.py
 """
 
+import math
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -18,6 +29,118 @@ class PatternType(Enum):
     ARCHITECTURAL_PRINCIPLE = "architectural-principle"
     PROJECT_STRUCTURE = "project-structure"
     BSL_PATTERN = "bsl-pattern"
+
+    @classmethod
+    def coerce(cls, value: Any) -> "PatternType":
+        """Map any writer-supplied value onto a canonical type. Never raises.
+
+        Order: enum instance → exact/normalized enum value → alias table →
+        DEFAULT_PATTERN_TYPE (None, empty and unknown all land there).
+        """
+        if isinstance(value, cls):
+            return value
+        if value is None:
+            return DEFAULT_PATTERN_TYPE
+        key = str(value).strip().lower().replace("_", "-")
+        if not key:
+            return DEFAULT_PATTERN_TYPE
+        try:
+            return cls(key)
+        except ValueError:
+            pass
+        alias = _PATTERN_TYPE_ALIASES.get(key)
+        return cls(alias) if alias else DEFAULT_PATTERN_TYPE
+
+
+# Unknown/None/empty land here. Deliberately a NON-invariant type: junk must stay
+# archivable by staleness (see confidence.is_invariant).
+DEFAULT_PATTERN_TYPE = PatternType.WORKFLOW_PATTERN
+
+# THE alias table — single source for every producer and consumer. Keys are
+# normalized (lower, `_`→`-`). Two groups:
+#   1. drift observed in `learned_patterns` (audit 260716 §2) — free-form types
+#      written by capture→confirm→harvest before the write-contract existed;
+#   2. memory-ai categories — previously duplicated in
+#      `scripts/normalize_light_patterns.CATEGORY_MAP` and
+#      `.claude/hooks/shared/reflection._CATEGORY_MAP`; both resolve here now.
+# Add new aliases HERE, never in a caller-local map.
+_PATTERN_TYPE_ALIASES: dict[str, str] = {
+    # 1. observed drift
+    "error-fix": "debugging-heuristic",
+    "debugging": "debugging-heuristic",
+    "1c-bsl": "bsl-pattern",
+    "bsl": "bsl-pattern",
+    "1c-query-optimization": "bsl-pattern",
+    "1c-metadata-pattern": "bsl-pattern",
+    "requirements": "workflow-pattern",
+    "workflow": "workflow-pattern",
+    "testing-workflow": "workflow-pattern",
+    "refactor-pattern": "code-convention",
+    "architecture-lesson": "architectural-principle",
+    # 2. memory-ai categories
+    "decision": "architectural-principle",
+    "preference": "workflow-pattern",
+    "bugfix": "debugging-heuristic",
+    "implementation": "code-convention",
+    "reference": "project-structure",
+    "feedback": "workflow-pattern",
+    "project": "project-structure",
+}
+
+
+def normalize_pattern_type(value: Any) -> tuple[str, str | None]:
+    """Return ``(canonical_value, original_or_None)`` for a writer.
+
+    ``original`` is non-None only when coercion actually changed something — the
+    caller stores it in ``metadata.original_pattern_type`` so the provenance of a
+    coerced write is never lost.
+    """
+    canonical = PatternType.coerce(value)
+    if value is None:
+        return canonical.value, None
+    raw = value.value if isinstance(value, PatternType) else str(value).strip()
+    return canonical.value, (raw if raw and raw != canonical.value else None)
+
+
+def coerce_float(value: Any, default: float) -> float:
+    """Payload float or ``default``. None/garbage/NaN/inf → default.
+
+    NaN/inf are rejected too: they survive ``float()`` but poison the comparisons
+    and sorting downstream (ranking, thresholds).
+    """
+    if value is None:
+        return default
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return default
+    return out if math.isfinite(out) else default
+
+
+def coerce_int(value: Any, default: int) -> int:
+    """Payload int or ``default``. None/garbage → default."""
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def coerce_dt(value: Any) -> datetime | None:
+    """Parse an ISO timestamp payload field; None on absent/garbage/wrong type.
+
+    Callers decide the fallback (skip the field, try the next key in a chain, or
+    substitute now()) — this never raises and never invents a time.
+    """
+    if isinstance(value, datetime):
+        return value
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class ConfidenceLevel(Enum):
@@ -67,8 +190,10 @@ class EvidenceSource:
         return cls(
             source_type=data.get("source_type", "unknown"),
             reference=data.get("reference") or data.get("source", ""),
-            weight=data.get("weight", 1.0),
-            timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else None,
+            weight=coerce_float(data.get("weight"), 1.0),
+            # coerce_dt completes what F6 started: the docstring promised tolerance
+            # while fromisoformat still raised on a garbage timestamp.
+            timestamp=coerce_dt(data.get("timestamp")),
             metadata=data.get("metadata", {}),
         )
 
@@ -132,36 +257,30 @@ class LearnedPattern:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "LearnedPattern":
+        # Tolerant by contract (see module docstring): `data` is store-shaped and
+        # therefore untrusted. Mirrors server._pattern_from_payload — a drifted
+        # type, a garbage timestamp or a null confidence must degrade the FIELD,
+        # never raise and take a whole search/list response down with it.
         return cls(
-            pattern_id=data["pattern_id"],
-            pattern_type=PatternType(data["pattern_type"]),
+            pattern_id=str(data.get("pattern_id") or ""),
+            pattern_type=PatternType.coerce(data.get("pattern_type")),
             name=data.get("name", ""),
             description=data.get("description", ""),
-            content=data["content"],
-            confidence=data["confidence"],
+            content=data.get("content", ""),
+            confidence=coerce_float(data.get("confidence"), 0.5),
             evidence_sources=[
                 EvidenceSource.from_dict(e) for e in data.get("evidence_sources", [])
             ],
-            created_at=datetime.fromisoformat(data["created_at"])
-            if data.get("created_at")
-            else datetime.now(),
-            updated_at=datetime.fromisoformat(data["updated_at"])
-            if data.get("updated_at")
-            else datetime.now(),
-            decay_rate=data.get("decay_rate", 0.05),
-            application_count=data.get("application_count", 0),
-            last_applied=datetime.fromisoformat(data["last_applied"])
-            if data.get("last_applied")
-            else None,
-            succ=data.get("succ", 0.0),
-            fail=data.get("fail", 0.0),
-            last_decay_at=datetime.fromisoformat(data["last_decay_at"])
-            if data.get("last_decay_at")
-            else None,
-            expired_at=datetime.fromisoformat(data["expired_at"])
-            if data.get("expired_at")
-            else None,
-            version=data.get("version", 1),
+            created_at=coerce_dt(data.get("created_at")) or datetime.now(),
+            updated_at=coerce_dt(data.get("updated_at")) or datetime.now(),
+            decay_rate=coerce_float(data.get("decay_rate"), 0.05),
+            application_count=coerce_int(data.get("application_count"), 0),
+            last_applied=coerce_dt(data.get("last_applied")),
+            succ=coerce_float(data.get("succ"), 0.0),
+            fail=coerce_float(data.get("fail"), 0.0),
+            last_decay_at=coerce_dt(data.get("last_decay_at")),
+            expired_at=coerce_dt(data.get("expired_at")),
+            version=coerce_int(data.get("version"), 1),
             tags=data.get("tags", []),
             metadata=data.get("metadata", {}),
         )
