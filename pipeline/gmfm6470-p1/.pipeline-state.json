@@ -2,7 +2,7 @@
   "task": "gmfm6470-p1",
   "title": "GMFM-6470 п.1 стабилизация ИндЗаказа",
   "created_at": "2026-07-15T16:16:00",
-  "updated_at": "2026-07-16T07:09:11",
+  "updated_at": "2026-07-16T09:59:19",
   "current_stage": 4,
   "stages": [
     {
@@ -40,5 +40,8 @@
       "status": "pending",
       "completed_at": null
     }
-  ]
+  ],
+  "attempts": {
+    "4": 1
+  }
 }

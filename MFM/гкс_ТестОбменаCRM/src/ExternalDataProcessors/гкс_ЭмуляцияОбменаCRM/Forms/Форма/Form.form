@@ -144,7 +144,7 @@
     </extInfo>
   </items>
   <items xsi:type="form:Button">
-    <name>ПрогнатьСценарии</name>
+    <name>ШагПервый</name>
     <id>12</id>
     <visible>true</visible>
     <enabled>true</enabled>
@@ -152,7 +152,7 @@
       <common>true</common>
     </userVisible>
     <extendedTooltip>
-      <name>ПрогнатьСценарииРасширеннаяПодсказка</name>
+      <name>ШагПервыйРасширеннаяПодсказка</name>
       <id>13</id>
       <type>Label</type>
       <autoMaxWidth>true</autoMaxWidth>
@@ -162,7 +162,33 @@
       </extInfo>
     </extendedTooltip>
     <type>UsualButton</type>
-    <commandName>Form.Command.ПрогнатьСценарии</commandName>
+    <commandName>Form.Command.ШагПервый</commandName>
+    <representation>Auto</representation>
+    <autoMaxWidth>true</autoMaxWidth>
+    <autoMaxHeight>true</autoMaxHeight>
+    <placementArea>UserCmds</placementArea>
+    <representationInContextMenu>Auto</representationInContextMenu>
+  </items>
+  <items xsi:type="form:Button">
+    <name>ШагВторой</name>
+    <id>53</id>
+    <visible>true</visible>
+    <enabled>true</enabled>
+    <userVisible>
+      <common>true</common>
+    </userVisible>
+    <extendedTooltip>
+      <name>ШагВторойРасширеннаяПодсказка</name>
+      <id>54</id>
+      <type>Label</type>
+      <autoMaxWidth>true</autoMaxWidth>
+      <autoMaxHeight>true</autoMaxHeight>
+      <extInfo xsi:type="form:LabelDecorationExtInfo">
+        <horizontalAlign>Left</horizontalAlign>
+      </extInfo>
+    </extendedTooltip>
+    <type>UsualButton</type>
+    <commandName>Form.Command.ШагВторой</commandName>
     <representation>Auto</representation>
     <autoMaxWidth>true</autoMaxWidth>
     <autoMaxHeight>true</autoMaxHeight>
@@ -207,6 +233,38 @@
       <segments>Сценарии</segments>
     </dataPath>
     <titleLocation>None</titleLocation>
+    <items xsi:type="form:FormField">
+      <name>СценарииПометка</name>
+      <id>55</id>
+      <visible>true</visible>
+      <enabled>true</enabled>
+      <userVisible>
+        <common>true</common>
+      </userVisible>
+      <dataPath xsi:type="form:DataPath">
+        <segments>Сценарии.Пометка</segments>
+      </dataPath>
+      <extendedTooltip>
+        <name>СценарииПометкаРасширеннаяПодсказка</name>
+        <id>57</id>
+        <type>Label</type>
+        <autoMaxWidth>true</autoMaxWidth>
+        <autoMaxHeight>true</autoMaxHeight>
+        <extInfo xsi:type="form:LabelDecorationExtInfo">
+          <horizontalAlign>Left</horizontalAlign>
+        </extInfo>
+      </extendedTooltip>
+      <contextMenu>
+        <name>СценарииПометкаКонтекстноеМеню</name>
+        <id>56</id>
+        <autoFill>true</autoFill>
+      </contextMenu>
+      <type>CheckBoxField</type>
+      <showInHeader>true</showInHeader>
+      <headerHorizontalAlign>Left</headerHorizontalAlign>
+      <showInFooter>true</showInFooter>
+      <extInfo xsi:type="form:CheckBoxFieldExtInfo"/>
+    </items>
     <items xsi:type="form:FormField">
       <name>СценарииСценарии</name>
       <id>29</id>
@@ -368,6 +426,46 @@
       </extInfo>
     </items>
     <items xsi:type="form:FormField">
+      <name>СценарииФакт1</name>
+      <id>58</id>
+      <visible>true</visible>
+      <enabled>true</enabled>
+      <userVisible>
+        <common>true</common>
+      </userVisible>
+      <dataPath xsi:type="form:DataPath">
+        <segments>Сценарии.Факт1</segments>
+      </dataPath>
+      <extendedTooltip>
+        <name>СценарииФакт1РасширеннаяПодсказка</name>
+        <id>60</id>
+        <type>Label</type>
+        <autoMaxWidth>true</autoMaxWidth>
+        <autoMaxHeight>true</autoMaxHeight>
+        <extInfo xsi:type="form:LabelDecorationExtInfo">
+          <horizontalAlign>Left</horizontalAlign>
+        </extInfo>
+      </extendedTooltip>
+      <contextMenu>
+        <name>СценарииФакт1КонтекстноеМеню</name>
+        <id>59</id>
+        <autoFill>true</autoFill>
+      </contextMenu>
+      <type>InputField</type>
+      <editMode>EnterOnInput</editMode>
+      <showInHeader>true</showInHeader>
+      <headerHorizontalAlign>Left</headerHorizontalAlign>
+      <showInFooter>true</showInFooter>
+      <extInfo xsi:type="form:InputFieldExtInfo">
+        <autoMaxWidth>true</autoMaxWidth>
+        <autoMaxHeight>true</autoMaxHeight>
+        <wrap>true</wrap>
+        <chooseType>true</chooseType>
+        <typeDomainEnabled>true</typeDomainEnabled>
+        <textEdit>true</textEdit>
+      </extInfo>
+    </items>
+    <items xsi:type="form:FormField">
       <name>СценарииСценарии4</name>
       <id>41</id>
       <visible>true</visible>
@@ -431,6 +529,46 @@
       <contextMenu>
         <name>СценарииСценарии5КонтекстноеМеню</name>
         <id>45</id>
+        <autoFill>true</autoFill>
+      </contextMenu>
+      <type>InputField</type>
+      <editMode>EnterOnInput</editMode>
+      <showInHeader>true</showInHeader>
+      <headerHorizontalAlign>Left</headerHorizontalAlign>
+      <showInFooter>true</showInFooter>
+      <extInfo xsi:type="form:InputFieldExtInfo">
+        <autoMaxWidth>true</autoMaxWidth>
+        <autoMaxHeight>true</autoMaxHeight>
+        <wrap>true</wrap>
+        <chooseType>true</chooseType>
+        <typeDomainEnabled>true</typeDomainEnabled>
+        <textEdit>true</textEdit>
+      </extInfo>
+    </items>
+    <items xsi:type="form:FormField">
+      <name>СценарииСостояние</name>
+      <id>61</id>
+      <visible>true</visible>
+      <enabled>true</enabled>
+      <userVisible>
+        <common>true</common>
+      </userVisible>
+      <dataPath xsi:type="form:DataPath">
+        <segments>Сценарии.Состояние</segments>
+      </dataPath>
+      <extendedTooltip>
+        <name>СценарииСостояниеРасширеннаяПодсказка</name>
+        <id>63</id>
+        <type>Label</type>
+        <autoMaxWidth>true</autoMaxWidth>
+        <autoMaxHeight>true</autoMaxHeight>
+        <extInfo xsi:type="form:LabelDecorationExtInfo">
+          <horizontalAlign>Left</horizontalAlign>
+        </extInfo>
+      </extendedTooltip>
+      <contextMenu>
+        <name>СценарииСостояниеКонтекстноеМеню</name>
+        <id>62</id>
         <autoFill>true</autoFill>
       </contextMenu>
       <type>InputField</type>
@@ -637,6 +775,7 @@
       <autoMaxWidth>true</autoMaxWidth>
       <autoMaxHeight>true</autoMaxHeight>
       <wrap>true</wrap>
+      <multiLine>true</multiLine>
       <chooseType>true</chooseType>
       <typeDomainEnabled>true</typeDomainEnabled>
       <textEdit>true</textEdit>
@@ -648,6 +787,10 @@
     <horizontalAlign>Left</horizontalAlign>
     <autoFill>true</autoFill>
   </autoCommandBar>
+  <handlers>
+    <event>OnCreateAtServer</event>
+    <name>ПриСозданииНаСервере</name>
+  </handlers>
   <autoTitle>true</autoTitle>
   <autoUrl>true</autoUrl>
   <group>Vertical</group>
@@ -674,7 +817,7 @@
     <name>ЗаказОбразец</name>
     <id>2</id>
     <valueType>
-      <types>DocumentRef.гкс_ВнутреннийЗаказ</types>
+      <types>DocumentRef.гкс_ЗаявкаНаОтгрузку</types>
     </valueType>
   </attributes>
   <attributes>
@@ -697,9 +840,7 @@
     <id>5</id>
     <valueType>
       <types>String</types>
-      <stringQualifiers>
-        <length>150</length>
-      </stringQualifiers>
+      <stringQualifiers/>
     </valueType>
   </attributes>
   <attributes>
@@ -708,6 +849,13 @@
     <valueType>
       <types>ValueTable</types>
     </valueType>
+    <columns>
+      <name>Пометка</name>
+      <id>15</id>
+      <valueType>
+        <types>Boolean</types>
+      </valueType>
+    </columns>
     <columns>
       <name>Имя</name>
       <id>7</id>
@@ -749,6 +897,16 @@
       </valueType>
     </columns>
     <columns>
+      <name>Факт1</name>
+      <id>16</id>
+      <valueType>
+        <types>String</types>
+        <stringQualifiers>
+          <length>150</length>
+        </stringQualifiers>
+      </valueType>
+    </columns>
+    <columns>
       <name>Факт</name>
       <id>11</id>
       <valueType>
@@ -769,23 +927,54 @@
       </valueType>
     </columns>
     <columns>
+      <name>Состояние</name>
+      <id>14</id>
+      <valueType>
+        <types>String</types>
+        <stringQualifiers>
+          <length>50</length>
+        </stringQualifiers>
+      </valueType>
+    </columns>
+    <columns>
       <name>Заказ</name>
       <id>13</id>
       <valueType>
-        <types>DocumentRef.гкс_ВнутреннийЗаказ</types>
+        <types>DocumentRef.гкс_ЗаявкаНаОтгрузку</types>
       </valueType>
     </columns>
   </attributes>
   <formCommands>
-    <name>ПрогнатьСценарии</name>
+    <name>ШагПервый</name>
     <title>
       <key>ru</key>
-      <value>Прогнать сценарии встречи</value>
+      <value>Шаг 1: создать заказ</value>
     </title>
     <id>11</id>
+    <toolTip>
+      <key>ru</key>
+      <value>Первый приход из CRM по помеченным сценариям. Заполняет «Факт1» и «Заказ»; результат смотрится глазами — заказ открывается по ссылке в колонке «Заказ».</value>
+    </toolTip>
     <action xsi:type="form:FormCommandHandlerContainer">
       <handler>
-        <name>ПрогнатьСценарии</name>
+        <name>ШагПервый</name>
+      </handler>
+    </action>
+  </formCommands>
+  <formCommands>
+    <name>ШагВторой</name>
+    <title>
+      <key>ru</key>
+      <value>Шаг 2: ре-обмен и проверка</value>
+    </title>
+    <id>13</id>
+    <toolTip>
+      <key>ru</key>
+      <value>Повторный приход на тот же заказ по помеченным сценариям. Заполняет «Факт» и «Итог» (PASS/FAIL против «Ожидание»). Требует выполненного шага 1.</value>
+    </toolTip>
+    <action xsi:type="form:FormCommandHandlerContainer">
+      <handler>
+        <name>ШагВторой</name>
       </handler>
     </action>
   </formCommands>
