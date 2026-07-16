@@ -2,8 +2,8 @@
   "task": "audit-memory-subsystem",
   "title": "Аудит слабых мест подсистемы памяти (research)",
   "created_at": "2026-07-16T22:18:43",
-  "updated_at": "2026-07-16T22:18:43",
-  "current_stage": 2,
+  "updated_at": "2026-07-16T22:24:26",
+  "current_stage": 3,
   "stages": [
     {
       "n": 1,
@@ -18,8 +18,8 @@
       "name": "design",
       "command": "pl-design",
       "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
+      "status": "done",
+      "completed_at": "2026-07-16T22:24:26",
       "approved": false,
       "approved_by": null,
       "approved_at": null
