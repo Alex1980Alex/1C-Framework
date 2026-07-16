@@ -164,12 +164,16 @@ def _garbage_counts_payload() -> dict:
 
 class TestTolerantRead:
     def test_pattern_from_payload_survives_every_defect(self):
+        from src.memory.vector_memory.confidence import LEGACY_SEED_CONFIDENCE
         from src.memory.vector_memory.server import _pattern_from_payload
 
         p = _pattern_from_payload("pid", _poisoned_payload())
         assert p.pattern_type.value == "workflow-pattern"
         assert isinstance(p.created_at, datetime)
-        assert p.confidence == 0.5
+        # A null denorm means "no observations", which IS the prior (roadmap 260716
+        # P1.9). Was 0.5 — a literal that made this reader disagree with the seed
+        # branch directly above it about the very same point.
+        assert p.confidence == LEGACY_SEED_CONFIDENCE
 
     def test_pattern_from_payload_handles_none_payload(self):
         from src.memory.vector_memory.server import _pattern_from_payload
@@ -402,18 +406,15 @@ class TestPerItemIsolation:
                     return []
                 return [_Link("n-garbage"), _Link("n-bad"), _Link("n-good")]
 
-        # _cascade_confidence imports `memory.orchestrator.link_registry` (NOT
-        # `src.memory...`), which only resolves once <repo>/src is on sys.path — the
-        # running server puts it there lazily inside _get_embedding. Reproduce that
-        # state, otherwise the import fails, the function no-ops via its outer
-        # `except: pass`, and this test would pass vacuously against a dead cascade.
-        import sys
-        from pathlib import Path
-
-        src_dir = str(Path(__file__).resolve().parents[2] / "src")
-        if src_dir not in sys.path:
-            sys.path.append(src_dir)
-        import memory.orchestrator.link_registry as lr
+        # P1.8 (roadmap 260716): _cascade_confidence now imports link_registry
+        # RELATIVELY, so patching the package module is enough and deterministic.
+        # This test used to append <repo>/src to sys.path and patch the `memory.*`
+        # alias, reproducing the very path state the server reached lazily inside
+        # _get_embedding — because the absolute import resolved to a DIFFERENT module
+        # object (or to nothing at all before the first embed call, which no-op'd the
+        # cascade through its outer `except: pass`). That scaffolding is the bug's
+        # fingerprint; it is gone with the bug.
+        import src.memory.orchestrator.link_registry as lr
 
         monkeypatch.setattr(lr, "LinkRegistry", lambda *a, **k: _Reg())
         bumped: list = []
@@ -497,10 +498,33 @@ class TestPerItemIsolation:
         assert written[0]["succ"] == round(2.8 + 1.0, 6), written[0]
         assert written[0]["fail"] == round(1.2, 6)
 
-    def test_read_path_seed_default_is_untouched(self):
-        from src.memory.vector_memory.confidence import _resolve_state
+    def test_legacy_seed_is_the_prior_and_does_not_move_confidence(self):
+        """P1.9: ONE seed for every caller, and it is the prior — by construction.
 
-        assert _resolve_state({"application_count": 4})[:2] == (2.0, 2.0)
+        Replaces `test_read_path_seed_default_is_untouched`, which pinned the SPLIT
+        (read path 0.5 vs writers 0.70) that P1.9 retired: the same legacy point
+        resolved to two different confidences depending on who read it.
+
+        Asserted as a PROPERTY, not a number: seeding from confidence c leaves
+        derive_confidence exactly AT c only when c == the prior mean. So any seed
+        other than the prior silently re-ranks every legacy point on read — with the
+        old 0.5 and n=4 the point landed at 0.643, below the 0.70 every writer
+        assumed. Change LEGACY_SEED_CONFIDENCE to anything else and this goes red.
+        """
+        from src.memory.vector_memory.confidence import (
+            LEGACY_SEED_CONFIDENCE,
+            PRIOR_FAILURE,
+            PRIOR_SUCCESS,
+            _resolve_state,
+            derive_confidence,
+        )
+
+        assert LEGACY_SEED_CONFIDENCE == PRIOR_SUCCESS / (PRIOR_SUCCESS + PRIOR_FAILURE)
+        for n in (0, 1, 4, 50):
+            succ, fail, _lda, _rate = _resolve_state({"application_count": n})
+            assert derive_confidence(succ, fail) == pytest.approx(LEGACY_SEED_CONFIDENCE), (
+                f"seeding a legacy point with application_count={n} moved its confidence"
+            )
 
     async def test_skill_learning_arm_survives_bad_record(self, monkeypatch, tmp_path):
         """A garbage `created_at` in the silo used to drop the whole skill-learning

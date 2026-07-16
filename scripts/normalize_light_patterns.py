@@ -121,6 +121,36 @@ def _seed_counts(importance: float, application_count: int, seed_importance: int
         return (importance * n, (1.0 - importance) * n)
 
 
+def _content_hash(content: str) -> str | None:
+    """§26 content_hash for the rewritten payload, always DERIVED from the content.
+
+    roadmap 260716 M10: this script writes with `overwrite_payload`, which REPLACES the
+    payload wholesale, and the dict below never carried `content_hash` — so normalizing
+    a record silently dropped the field.
+
+    ⚠ Scope, corrected after review: this does NOT fix write-time dedup. That dedup keys
+    on the DERIVED POINT ID (`save_pattern`/`pattern_harvest` upsert at
+    `uuid5(NS, hash_content(content))` and skip if it exists), not on this payload field,
+    and a LIGHT record's id is a random uuid inherited from the memory-ai migration — so
+    a later save of the same content lands on its own point either way. The field matters
+    to READ-time consumers (cross-store sync, the curation banner), and that is the whole
+    claim.
+
+    The stored value is deliberately not reused: a payload field is untrusted input (P0),
+    and a stale hash copied into the canonical schema would point readers at the wrong
+    fact. `hash_content` is total and free, so there is nothing to trade.
+    """
+    try:
+        src = str(PROJECT_ROOT / "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        from memory.orchestrator.content_hash import hash_content
+
+        return str(hash_content(content))
+    except Exception:
+        return None  # honest omission beats a hash computed by a different rule
+
+
 def normalize_payload(
     point_id: str,
     payload: dict[str, Any],
@@ -138,7 +168,8 @@ def normalize_payload(
     appc = int(payload.get("application_count", 0) or 0)
     succ, fail = _seed_counts(importance, appc, seed_importance)
     created = payload.get("created_at") or now_iso
-    return {
+    chash = _content_hash(content)
+    out = {
         "pattern_id": point_id,
         "pattern_type": ptype,
         "name": derive_name(content),
@@ -165,6 +196,9 @@ def normalize_payload(
             "normalized_at": now_iso,
         },
     }
+    if chash:
+        out["content_hash"] = chash
+    return out
 
 
 def build_plan(points: list[Any], now_iso: str, seed_importance: int) -> dict[str, Any]:

@@ -246,9 +246,44 @@ Examples:
 **Миграция данных**: [`scripts/migrate_pattern_types.py`](../../../scripts/migrate_pattern_types.py)
 (dry-run default, backup + `--restore`, идемпотентен) — ре-штамповка типа в
 Qdrant + силосах. Смежное: `backfill_content_hash.py` (хеши).
-⚠ `dedupe_learned_patterns.py --apply` **НЕ запускать** — слеп к `link_registry`,
-удалит канон, назначенный `cross_store_sync` ([[reference-dedupe-learned-patterns-unsafe]],
-роадмап 260716 P1.7). Регресс: [`tests/unit/test_pattern_type_contract.py`](../../../tests/unit/test_pattern_type_contract.py).
+Регресс: [`tests/unit/test_pattern_type_contract.py`](../../../tests/unit/test_pattern_type_contract.py).
+
+### P1: пути, которые не падают, а тихо врут (roadmap 260716 P1, 2026-07-17)
+
+P0 закрыл ВХОД (битый payload не убивает читателя). P1 — ВЫХОД. Что важно знать:
+
+- **Одна политика поиска на коллекцию.** `search_pattern_points` экспортирована из
+  [`vector_memory/server.py`](../../../src/memory/vector_memory/server.py) — её зовут
+  И tool `search_patterns`, И vector-плечо `unified_search`. Раньше плечо
+  дублировало запрос и разошлось: prefilter по **stored** confidence (не safe superset
+  под count-decay — effective может быть ВЫШЕ) + не исключало archived → через
+  `unified_search` всплывало то, что прямой поиск прячет. Новый читатель — зовёт эту
+  функцию, не пишет свой цикл.
+- **Один seed для всех.** `LEGACY_SEED_CONFIDENCE` (= Beta-prior 0.70, **выведен** из
+  `PRIOR_SUCCESS/(PRIOR_SUCCESS+PRIOR_FAILURE)`). Параметра `default_confidence` больше
+  нет: сев от prior оставляет `derive_confidence` РОВНО на prior, сев от 0.5 тянул
+  легаси-точку вниз (n=4 → 0.643).
+- **Ошибка доезжает типизированной.** `SourceError.error_type` (`timeout` /
+  `hard_timeout` / `circuit_open` / имя класса) + `sources_failed_detail` в
+  `memory-read.log`. Плечи поиска получили breakers **`search:<source>`** на ОБЩЕМ с
+  propagation реестре → `memory_circuit_status`/`memory_circuit_reset` управляют и
+  поиском. OPEN → плечо не запускается и честно попадает в `sources_failed`.
+- **RRF не дилюирует.** Пустые плечи вон из знаменателя `max_rrf` (упавшие туда и не
+  попадали — была асимметрия; хит из 1 плеча при 3 зарегистрированных получал базу
+  ~0.33 и тонул под `min_score=0.3`).
+- **Каденс не теряет полей.** `PatternRecord.extra` — passthrough незнакомых полей;
+  непарсящиеся строки возвращаются на диск. Джоб перезаписывает силос ЦЕЛИКОМ, поэтому
+  «пропустить при чтении» = «удалить с диска» (архивные воскресали и снова харвестились).
+- **Дедуп уважает граф.** `dedupe_learned_patterns.py` — канон из `mirrors` побеждает
+  эвристику, рёбра лоузеров RE-POINT-ятся, `main()` fail-closed. **Запрет `--apply`
+  снят**, но на живой коллекции он не запускался ([[reference-dedupe-learned-patterns-unsafe]]).
+- ⚠ **M6: диагноз аудита был перевёрнут** — TEXT-importance не выпадает из
+  `get_important_messages`, а захватывает топ ([[reference-sqlite-text-outranks-real]]).
+- ⚠ **hard-timeout потолок `unified_search` почти недостижим** и его комментарий врёт
+  (некэнселируемая корутина побеждает и `wait_for`, и `asyncio.timeout`) — §3.3 роадмапа.
+
+Регресс: [`tests/unit/test_memory_p1_resilience.py`](../../../tests/unit/test_memory_p1_resilience.py)
+(27 тестов, все проверены саботажем — [[feedback-sabotage-check-tests]]).
 
 ### Honest-failure & governance wiring (roadmap 260611, 2026-06-11)
 

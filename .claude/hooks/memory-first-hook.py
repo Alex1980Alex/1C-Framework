@@ -464,6 +464,26 @@ def _extract_category(payload: dict, collection_type: str) -> str:
     return "pattern"
 
 
+# Beta(7,3) prior mean — mirrors memory.vector_memory.confidence.LEGACY_SEED_CONFIDENCE.
+# Duplicated (not imported) on purpose: this constant is used ONLY on the path where
+# importing that module already failed.
+_PRIOR_CONFIDENCE = 0.7
+
+
+def _safe_float(value, default: float) -> float:
+    """Local coerce_float twin — the fallback path cannot import the real one.
+
+    roadmap 260716 M7. This is the except-branch of a FAILED
+    `from memory.vector_memory...` import, so reaching for `coerce_float` there would
+    be reaching through the same broken door.
+    """
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return default
+    return default if out != out or out in (float("inf"), float("-inf")) else out
+
+
 def _pattern_effective_confidence(payload: dict) -> float:
     """§24 P0: lazy-import §22 pure function; graceful degrade on any failure."""
     try:
@@ -478,7 +498,16 @@ def _pattern_effective_confidence(payload: dict) -> float:
 
         return payload_effective_confidence(payload)
     except Exception:
-        return float(payload.get("confidence", 0.5))
+        # `float(payload.get("confidence", 0.5))` raised on an explicit
+        # `confidence: null` — `.get(k, default)` does not cover a present null. In the
+        # lexical arm that quietly truncated the results; in the dense arm it escaped
+        # to the arm-wide handler and got reported as `tei: down` (M7).
+        #
+        # The fallback is the Beta prior, not 0.5 (P1.9): every other reader now seeds a
+        # confidence-less point at 0.70, and the gate multiplies the score by it
+        # (`base_score * max(CONF_FLOOR, eff)`) — 0.5 here silently ranked the same
+        # pattern ~40% lower than the store says it is worth.
+        return _safe_float(payload.get("confidence"), _PRIOR_CONFIDENCE)
 
 
 def _pattern_score_gate(payload: dict, base_score: float) -> "float | None":
@@ -521,30 +550,39 @@ def _search_learned_patterns(query_tokens: set, start: float, limit: int) -> lis
         for point in points:
             if time.monotonic() - start > QDRANT_TIMEOUT:
                 break
-            payload = point.payload or {}
-            content = payload.get("content") or payload.get("description") or ""
-            if not content:
-                continue
-            content_tokens = set(tokenize(content))
-            overlap = query_tokens & content_tokens
-            if not overlap:
-                continue
-            score = len(overlap) / max(len(query_tokens), 1)
-            if score < SCORE_THRESHOLD:
-                continue
-            adj = _pattern_score_gate(payload, score)
-            if adj is None:
-                continue
-            out.append(
-                {
-                    "source": "qdrant",
-                    "id": str(point.id),
-                    "content": content[:200],
-                    "category": payload.get("category", "pattern"),
-                    "score": round(adj, 4),
-                    "_collection": "learned_patterns",
-                }
-            )
+            # Per-point isolation (roadmap 260716 M7). This arm is ALWAYS-ON and is the
+            # SOLE populated arm when TEI is down, yet everything below sat under one
+            # loop-wide `except` that returns whatever was collected so far — so a
+            # single odd payload (e.g. `content` stored as a dict, making tokenize
+            # raise) silently truncated the results mid-scroll, exactly when this arm
+            # was the only thing left.
+            try:
+                payload = point.payload or {}
+                content = payload.get("content") or payload.get("description") or ""
+                if not content:
+                    continue
+                content_tokens = set(tokenize(content))
+                overlap = query_tokens & content_tokens
+                if not overlap:
+                    continue
+                score = len(overlap) / max(len(query_tokens), 1)
+                if score < SCORE_THRESHOLD:
+                    continue
+                adj = _pattern_score_gate(payload, score)
+                if adj is None:
+                    continue
+                out.append(
+                    {
+                        "source": "qdrant",
+                        "id": str(point.id),
+                        "content": content[:200],
+                        "category": payload.get("category", "pattern"),
+                        "score": round(adj, 4),
+                        "_collection": "learned_patterns",
+                    }
+                )
+            except Exception:
+                _trace_gate("unreadable")
 
         out.sort(key=lambda x: -x["score"])
         return out[:limit]
@@ -661,40 +699,48 @@ def search_qdrant(query_tokens: set, limit: int = 10, prompt: str = "") -> list:
                     timeout=max(0.2, remaining),
                 )
                 for hit in hits:
-                    payload = hit.get("payload", {})
-                    content = _extract_content(payload, ctype)
-                    if not content:
-                        continue
-                    base_score = hit.get("score", 0.0)
-                    if ctype == "pattern":
-                        # §24 ADR-D6: gate learned_patterns hits by confidence
-                        adj = _pattern_score_gate(payload, base_score)
-                        if adj is None:
+                    # Per-hit isolation (roadmap 260716 M7). Everything below used to
+                    # sit bare inside the arm-wide `except`, whose handler reports
+                    # `tei: down` — so a payload defect in ONE hit was diagnosed as an
+                    # embedder outage, and the operator chased the wrong box. The arm
+                    # handler must keep meaning what it says: infra is gone.
+                    try:
+                        payload = hit.get("payload", {})
+                        content = _extract_content(payload, ctype)
+                        if not content:
                             continue
-                        entry = {
-                            "source": "qdrant",
-                            "id": hit.get("id", ""),
-                            "content": content[:200],
-                            "category": _extract_category(payload, ctype),
-                            "score": round(adj, 4),
-                            "_collection": "learned_patterns",
-                        }
-                        arms["pattern_dense"].append(entry)
-                    else:
-                        # 260612 P2.2 (S4): cut sub-floor skill hits — the arm
-                        # otherwise fills banner slots with noise for any prompt.
-                        if base_score < SKILL_SURFACE_MIN_SCORE:
-                            _trace_gate("skill_below_floor")
-                            continue
-                        entry = {
-                            "source": "qdrant",
-                            "id": hit.get("id", ""),
-                            "content": content[:200],
-                            "category": _extract_category(payload, ctype),
-                            "score": round(base_score, 4),
-                        }
-                        # Route non-pattern collection hits to the skill arm
-                        arms["skill"].append(entry)
+                        base_score = hit.get("score", 0.0)
+                        if ctype == "pattern":
+                            # §24 ADR-D6: gate learned_patterns hits by confidence
+                            adj = _pattern_score_gate(payload, base_score)
+                            if adj is None:
+                                continue
+                            entry = {
+                                "source": "qdrant",
+                                "id": hit.get("id", ""),
+                                "content": content[:200],
+                                "category": _extract_category(payload, ctype),
+                                "score": round(adj, 4),
+                                "_collection": "learned_patterns",
+                            }
+                            arms["pattern_dense"].append(entry)
+                        else:
+                            # 260612 P2.2 (S4): cut sub-floor skill hits — the arm
+                            # otherwise fills banner slots with noise for any prompt.
+                            if base_score < SKILL_SURFACE_MIN_SCORE:
+                                _trace_gate("skill_below_floor")
+                                continue
+                            entry = {
+                                "source": "qdrant",
+                                "id": hit.get("id", ""),
+                                "content": content[:200],
+                                "category": _extract_category(payload, ctype),
+                                "score": round(base_score, 4),
+                            }
+                            # Route non-pattern collection hits to the skill arm
+                            arms["skill"].append(entry)
+                    except Exception:
+                        _trace_gate("unreadable")
     except Exception as exc:
         _trace_set("tei", "down")
         _trace_set("tei_error", f"{type(exc).__name__}: {exc}"[:160])

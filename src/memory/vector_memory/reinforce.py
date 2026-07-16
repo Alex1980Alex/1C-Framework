@@ -26,6 +26,36 @@ def _log_lifecycle(event: str, **fields: Any) -> None:
         pass
 
 
+# One Qdrant client per PROCESS, not per pattern (roadmap 260716 M11/P1.6).
+# reinforce_session walks up to REINFORCE_CAP=10 surfaced patterns in a single Stop
+# hook, and each call used to build its own QdrantClient — 10 fresh TCP connections
+# per session, none closed. On 2026-07-01 that produced 10 live `reinforce_error`
+# entries with WinError 10048 (ephemeral port exhaustion): the reinforcement bridge
+# was failing for the very reason it existed to run. The hook process is short-lived,
+# so a module-level client is bounded by definition.
+_default_client_instance: Any = None
+
+
+def _default_client() -> Any:
+    """Lazily build (once) the fallback Qdrant client used when none is injected."""
+    global _default_client_instance
+    if _default_client_instance is None:
+        from qdrant_client import QdrantClient  # lazy import — optional dep
+
+        _default_client_instance = QdrantClient(
+            host=os.getenv("QDRANT_HOST", "127.0.0.1"),
+            port=int(os.getenv("QDRANT_PORT", "6333")),
+            timeout=2,
+        )
+    return _default_client_instance
+
+
+def reset_default_client() -> None:
+    """Drop the cached client (tests; and any caller that changes QDRANT_HOST/PORT)."""
+    global _default_client_instance
+    _default_client_instance = None
+
+
 def reinforce_pattern(
     pattern_id: str,
     success: bool,
@@ -44,9 +74,11 @@ def reinforce_pattern(
     Args:
         pattern_id: Qdrant point ID of the pattern to update.
         success: True = positive outcome observed; False = negative outcome.
-        client: Pre-constructed QdrantClient instance.  When *None* a new
-            client is built from ``QDRANT_HOST`` / ``QDRANT_PORT`` env vars
-            (defaults: ``127.0.0.1`` / ``6333``), timeout 2 s.
+        client: Pre-constructed QdrantClient instance.  When *None* the
+            process-wide client is used (built once from ``QDRANT_HOST`` /
+            ``QDRANT_PORT`` env vars — defaults ``127.0.0.1`` / ``6333``,
+            timeout 2 s — and reused by every subsequent call; see
+            :func:`reset_default_client`).
         collection: Qdrant collection name.  Defaults to the
             ``LEARNING_COLLECTION_NAME`` env var or ``"learned_patterns"``.
         now: Datetime reference for decay/timestamp fields.  Defaults to
@@ -66,13 +98,7 @@ def reinforce_pattern(
     now = now or datetime.now()
 
     if client is None:
-        from qdrant_client import QdrantClient  # lazy import — optional dep
-
-        client = QdrantClient(
-            host=os.getenv("QDRANT_HOST", "127.0.0.1"),
-            port=int(os.getenv("QDRANT_PORT", "6333")),
-            timeout=2,
-        )
+        client = _default_client()
 
     try:
         points = client.retrieve(

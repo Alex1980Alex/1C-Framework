@@ -20,6 +20,13 @@ from .unified_id import MemoryType, SourceServer
 
 logger = logging.getLogger(__name__)
 
+# Whole-gather ceiling as a multiple of the per-adapter timeout. >1 by design: every
+# arm should resolve via its own wait_for (at 1.0x) and this is only the backstop.
+# A module constant rather than a literal so the backstop itself can be driven in a
+# test (set it <1 and the ceiling wins the race deterministically) — see
+# resolve_after_hard_timeout on why the real-world trigger cannot be simulated.
+HARD_TIMEOUT_FACTOR = 1.5
+
 
 @dataclass
 class SearchOptions:
@@ -64,9 +71,18 @@ class SourceError:
     source: str
     error: str
     duration_ms: float
+    # Coarse machine-readable cause (roadmap 260716 P1.3): "timeout" / "hard_timeout" /
+    # "circuit_open" / the exception class name. `error` carries the human message and
+    # is unstable across libraries; this is what the trace log groups by.
+    error_type: str = "unknown"
 
     def to_dict(self) -> dict[str, Any]:
-        return {"source": self.source, "error": self.error, "duration_ms": self.duration_ms}
+        return {
+            "source": self.source,
+            "error": self.error,
+            "error_type": self.error_type,
+            "duration_ms": self.duration_ms,
+        }
 
 
 @dataclass
@@ -142,6 +158,93 @@ class BaseSearchAdapter(ABC):
     def source_name(self) -> str: ...
 
 
+def _circuit_is_open(breaker: Any) -> bool:
+    """True only for a genuinely OPEN circuit — HALF_OPEN must be allowed to probe.
+
+    Deliberately NOT a bare ``allow_request()``, which is the API this file would
+    otherwise reach for. Measured on the shared CircuitBreaker: in HALF_OPEN it returns
+    ``success_count < half_open_max_probes`` where ``success_count`` is a LIFETIME
+    counter that nothing resets (``_transition_to`` clears only failure_count /
+    consecutive_successes, and ``_transition_to(HALF_OPEN)`` has no caller at all). So
+    an arm with any successful history is denied every probe forever once tripped, and
+    ``record_success`` — which tests the raw ``_stats.state``, never HALF_OPEN — can
+    never close the circuit back.
+
+    That would make a transient TEI restart a PERMANENT outage of the semantic arm
+    (until /mcp reconnect), which is strictly worse than the slow arm P1.3 set out to
+    fix. Mirroring ``call_async`` (reject only on raw OPEN) bounds the damage to
+    reset_timeout and keeps this consumer identical to propagation's.
+
+    The underlying HALF_OPEN state machine is broken for every consumer — reported in
+    roadmap 260716 §3.3, not fixed here: it is shared infrastructure and predates P1.
+    """
+    from ..infrastructure.circuit_breaker import CircuitState
+
+    if breaker.state is not CircuitState.OPEN:
+        return False
+    breaker.allow_request()  # bookkeeping only: counts the rejection for circuit_status
+    return True
+
+
+def resolve_after_hard_timeout(
+    name: str, task: Any, hard_timeout_s: float
+) -> tuple[list[SearchResultItem] | None, SourceError | None]:
+    """Reap a task the gather phase never got to await. Exactly one half is non-None.
+
+    Split out of the hard-timeout handler so the DECISION can be pinned without
+    simulating the timing that leads to it (roadmap 260716 M2).
+
+    The decision itself: a task that already finished with a REAL error (TEI refused,
+    Qdrant 400, a bad payload) reports THAT error. It used to be relabelled
+    ``hard_timeout`` merely because the gather phase ran out of budget — the true cause
+    was destroyed on the way to the caller, and the operator went looking at latency.
+
+    ⚠ Reachability (measured 2026-07-17): the branch is a backstop for the case its
+    caller's comment names — "per-adapter wait_for misbehaves" — but a coroutine that
+    swallows CancelledError defeats the outer ``asyncio.timeout`` exactly as it defeats
+    ``wait_for`` (probe: 1.03 s elapsed against a 0.15 s ceiling, no TimeoutError). With
+    well-behaved adapters every arm resolves by 1.0x the per-adapter timeout, i.e. before
+    the 1.5x ceiling. So this fires only under loop starvation from OUTSIDE the engine.
+    """
+    if task.done() and not task.cancelled():
+        exc = task.exception()
+        if exc is None:
+            return (task.result(), None)
+        return (
+            None,
+            SourceError(
+                source=name,
+                error=str(exc),
+                duration_ms=hard_timeout_s * 1000,
+                error_type=type(exc).__name__,
+            ),
+        )
+    if not task.done():
+        task.cancel()
+    return (
+        None,
+        SourceError(
+            source=name,
+            error="hard_timeout",
+            duration_ms=hard_timeout_s * 1000,
+            error_type="hard_timeout",
+        ),
+    )
+
+
+def _naive(dt: datetime) -> datetime:
+    """Drop tzinfo (converting to local time first) so a date can be compared to now().
+
+    roadmap 260716 M9: every adapter is free to produce an aware datetime, but this
+    engine's arithmetic is naive-local. Subtracting the two raises
+    ``TypeError: can't subtract offset-naive and offset-aware datetimes`` — and it
+    raises in ScoreNormalizer, i.e. AFTER the arms have been collected, outside the
+    per-adapter isolation. One aware date anywhere would take down the whole federated
+    search. The live data is naive today; this is the mine, defused.
+    """
+    return dt.astimezone().replace(tzinfo=None) if dt.tzinfo is not None else dt
+
+
 class ScoreNormalizer:
     """Normalize raw scores from different sources to 0-1 scale.
 
@@ -157,7 +260,7 @@ class ScoreNormalizer:
         score = min(max(item.raw_score, 0.0), 1.0)
 
         if options.boost_recent and item.created_at:
-            age = datetime.now() - item.created_at
+            age = datetime.now() - _naive(item.created_at)
             if age < timedelta(hours=24):
                 score *= self.BOOST_RECENT_24H
             elif age < timedelta(days=7):
@@ -226,8 +329,20 @@ class RRFMerger:
             return []
 
         # Normalize RRF scores to [0, 1] range
-        # Max possible RRF score = sum of (weight / (k + 1)) for each source at rank 0
-        max_rrf = sum(self._source_weights.get(src, 1.0) / (self._k + 1) for src in source_results)
+        # Max possible RRF score = sum of (weight / (k + 1)) for each CONTRIBUTING
+        # source at rank 0.
+        #
+        # roadmap 260716 M1: sources that returned nothing are excluded, like sources
+        # that failed. Failed arms never reach this dict (they go to sources_failed),
+        # so counting empty ones was an asymmetry with a real cost: with three arms
+        # registered and only one producing a hit, that hit's normalized base was
+        # 1/3 ≈ 0.33 — grazing the default min_score=0.3 — purely because two arms had
+        # nothing to say. An arm that says nothing is not evidence against a result.
+        max_rrf = sum(
+            self._source_weights.get(src, 1.0) / (self._k + 1)
+            for src, results in source_results.items()
+            if results
+        )
         if max_rrf == 0:
             max_rrf = 1.0
 
@@ -348,12 +463,37 @@ class UnifiedSearchEngine:
     Pipeline: Parallel dispatch -> RRF Fusion -> Filter -> Dedup -> Rerank -> Enrich
     """
 
-    def __init__(self, link_registry: LinkRegistry | None = None):
+    def __init__(
+        self,
+        link_registry: LinkRegistry | None = None,
+        breaker_registry: Any = None,
+    ):
         self._adapters: dict[str, BaseSearchAdapter] = {}
         self._normalizer = ScoreNormalizer()
         self._deduplicator = Deduplicator()
         self._reranker = Reranker()
         self._enricher = LinkEnricher(link_registry)
+        # roadmap 260716 P1.3: optional CircuitBreakerRegistry, shared with the
+        # orchestrator so search arms get named breakers "search:<source>" — the
+        # symmetry propagation already had ("propagation:<source>"). Without it a dead
+        # TEI cost every single search the full per-adapter timeout, forever.
+        # None (the default) keeps the engine standalone and breaker-free.
+        self._breaker_registry = breaker_registry
+
+    def _breaker(self, source: str) -> Any:
+        """Named breaker for a search arm, or None when no registry is wired."""
+        if self._breaker_registry is None:
+            return None
+        try:
+            from ..infrastructure.circuit_breaker import CircuitBreakerConfig
+
+            return self._breaker_registry.get_or_create(
+                f"search:{source}",
+                CircuitBreakerConfig(failure_threshold=5, reset_timeout=60.0),
+            )
+        except Exception:  # registry misconfigured → search must not die for it
+            logger.warning("search breaker unavailable for %s", source, exc_info=True)
+            return None
 
     def register_adapter(self, adapter: BaseSearchAdapter):
         self._adapters[adapter.source_name()] = adapter
@@ -380,9 +520,35 @@ class UnifiedSearchEngine:
             source_names = {s.value for s in sources}
             adapters = {k: v for k, v in adapters.items() if k in source_names}
 
-        # Run searches in parallel with timeout
+        # Collect results per source (needed for RRF)
+        source_results: dict[str, list[SearchResultItem]] = {}
+        sources_searched: list[str] = []
+        sources_failed: list[SourceError] = []
+
+        # Run searches in parallel with timeout.
+        # The breaker is consulted BEFORE the coroutine exists: wrapping an
+        # already-created `wait_for(adapter.search(...))` in breaker.call_async would,
+        # on an OPEN circuit, close the outer coroutine and leave the inner
+        # adapter.search() never awaited (RuntimeWarning). allow_request() is the sync
+        # API for exactly this position.
         tasks = {}
+        breakers: dict[str, Any] = {}
         for name, adapter in adapters.items():
+            breaker = self._breaker(name)
+            if breaker is not None and _circuit_is_open(breaker):
+                # Fail fast and HONESTLY: a tripped arm is a reported failure, never a
+                # silent empty arm (that would read as "nothing matched").
+                sources_failed.append(
+                    SourceError(
+                        source=name,
+                        error=f"circuit 'search:{name}' is OPEN",
+                        duration_ms=0.0,
+                        error_type="circuit_open",
+                    )
+                )
+                logger.warning("Search arm %s skipped — circuit OPEN", name)
+                continue
+            breakers[name] = breaker
             tasks[name] = asyncio.create_task(
                 asyncio.wait_for(
                     adapter.search(query, limit=limit),
@@ -390,15 +556,20 @@ class UnifiedSearchEngine:
                 )
             )
 
-        # Collect results per source (needed for RRF)
-        source_results: dict[str, list[SearchResultItem]] = {}
-        sources_searched = []
-        sources_failed = []
-
         # Hard ceiling: even if per-adapter wait_for misbehaves in a long-running
         # MCP session (thread pool exhaustion, event loop starvation), the whole
         # gather phase cannot exceed this bound. See cache/memory-orchestrator-timeout-bug-2026-04-23.md.
-        hard_timeout = options.timeout_ms / 1000 * 1.5
+        hard_timeout = options.timeout_ms / 1000 * HARD_TIMEOUT_FACTOR
+
+        def _record(name: str, ok: bool, err: str = "") -> None:
+            """Feed the arm's outcome back to its breaker (no-op without a registry)."""
+            breaker = breakers.get(name)
+            if breaker is None:
+                return
+            try:
+                breaker.record_success() if ok else breaker.record_failure(err)
+            except Exception:  # bookkeeping must never fail a search
+                logger.debug("breaker bookkeeping failed for %s", name, exc_info=True)
 
         try:
             async with asyncio.timeout(hard_timeout):
@@ -408,31 +579,43 @@ class UnifiedSearchEngine:
                         results = await task
                         source_results[name] = results
                         sources_searched.append(name)
+                        _record(name, True)
                     except TimeoutError:
                         duration_ms = (time.time() - task_start) * 1000
                         sources_failed.append(
-                            SourceError(source=name, error="timeout", duration_ms=duration_ms)
+                            SourceError(
+                                source=name,
+                                error="timeout",
+                                duration_ms=duration_ms,
+                                error_type="timeout",
+                            )
                         )
+                        _record(name, False, "timeout")
                         logger.warning(f"Search timeout for {name} ({duration_ms:.0f}ms)")
                     except Exception as e:
                         duration_ms = (time.time() - task_start) * 1000
                         sources_failed.append(
-                            SourceError(source=name, error=str(e), duration_ms=duration_ms)
+                            SourceError(
+                                source=name,
+                                error=str(e),
+                                duration_ms=duration_ms,
+                                error_type=type(e).__name__,
+                            )
                         )
+                        _record(name, False, str(e))
                         logger.error(f"Search error for {name}: {e}")
         except TimeoutError:
             for name, task in tasks.items():
                 if name in source_results or any(e.source == name for e in sources_failed):
                     continue
-                if task.done() and not task.cancelled() and task.exception() is None:
-                    source_results[name] = task.result()
+                results, err = resolve_after_hard_timeout(name, task, hard_timeout)
+                if err is None:
+                    source_results[name] = results or []
                     sources_searched.append(name)
-                    continue
-                if not task.done():
-                    task.cancel()
-                sources_failed.append(
-                    SourceError(source=name, error="hard_timeout", duration_ms=hard_timeout * 1000)
-                )
+                    _record(name, True)
+                else:
+                    sources_failed.append(err)
+                    _record(name, False, err.error)
             logger.error(
                 f"Search hard timeout after {hard_timeout:.1f}s; cancelled remaining adapters"
             )
@@ -495,6 +678,10 @@ class UnifiedSearchEngine:
                 arm_hits={src: len(res) for src, res in source_results.items()},
                 sources_searched=sources_searched,
                 sources_failed=[e.source for e in sources_failed],
+                # roadmap 260716 M3: names alone made the trace useless for triage —
+                # "vector-memory failed" could be TEI down, a Qdrant 400 or a tripped
+                # breaker, and the log could not tell them apart.
+                sources_failed_detail={e.source: e.error_type for e in sources_failed},
                 final=len(all_results),
                 min_score=min_score,
                 rrf=options.rrf_enabled,

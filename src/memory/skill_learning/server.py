@@ -123,12 +123,20 @@ def _update_stats_on_save(pattern: dict[str, Any]):
 
 # ========== §26 P1.3 write-contract helpers (content_hash + dedup + ingest) ==========
 def _content_hash(content: str) -> str:
-    """Fail-soft canonical content_hash. Empty string on import failure."""
+    """Fail-soft canonical content_hash. Empty string on import failure.
+
+    Relative, not `from memory.orchestrator...` (roadmap 260716 P1.8, same class as the
+    cascade): this server runs as `-m src.memory.skill_learning.server`, so the absolute
+    `memory.*` namespace resolves only if something else already put <root>/src on
+    sys.path — and when it does, it binds a SECOND copy of the module. The swallowed
+    failure costs the write-contract itself: no hash → the record leaves the §26 dedup
+    contract silently.
+    """
     try:
         src = str(_PROJECT_ROOT / "src")
         if src not in sys.path:
             sys.path.insert(0, src)
-        from memory.orchestrator.content_hash import hash_content
+        from ..orchestrator.content_hash import hash_content
 
         return hash_content(content)
     except Exception:
@@ -141,7 +149,7 @@ def _record_ingest(action: str, content_hash: str = "", **kw) -> None:
         src = str(_PROJECT_ROOT / "src")
         if src not in sys.path:
             sys.path.insert(0, src)
-        from memory.orchestrator.ingest_metrics import record_ingest
+        from ..orchestrator.ingest_metrics import record_ingest
 
         record_ingest(
             "skill_learning", action, content_hash=content_hash, harvester="capture_pattern", **kw

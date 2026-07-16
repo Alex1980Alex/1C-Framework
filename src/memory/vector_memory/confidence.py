@@ -17,6 +17,15 @@ from .models import PatternType, coerce_dt, coerce_float, coerce_int
 PRIOR_SUCCESS: float = 7.0
 PRIOR_FAILURE: float = 3.0
 
+# Confidence assumed for a legacy point that carries no usable `confidence` when its
+# succ/fail counts are seeded (roadmap 260716 P1.9). DERIVED from the prior, not a
+# literal: seeding at the prior is the only self-consistent choice, because
+# derive_confidence(c·n, (1−c)·n) == c exactly when c == prior mean — so a legacy point
+# with no evidence lands ON the prior for any n. Seeding at 0.5 (the historical read-path
+# default) dragged it BELOW: n=4 → 0.643, i.e. the read path silently under-ranked
+# every legacy point relative to what every writer assumed.
+LEGACY_SEED_CONFIDENCE: float = PRIOR_SUCCESS / (PRIOR_SUCCESS + PRIOR_FAILURE)
+
 # Default per-collection decay rate (env-overridable at call-site)
 DEFAULT_DECAY_RATE: float = 0.05
 
@@ -171,30 +180,23 @@ def seed_counts_from_legacy(confidence: float, application_count: int) -> tuple[
 def _resolve_state(
     payload: dict[str, Any],
     default_decay_rate: float = DEFAULT_DECAY_RATE,
-    *,
-    default_confidence: float = 0.5,
 ) -> tuple[float, float, datetime | None, float]:
     """Return (succ, fail, last_decay_at, decay_rate) from a Qdrant payload.
 
-    ``default_confidence`` seeds the legacy branch when the payload carries no
-    usable ``confidence``. It is a parameter because callers disagree today:
-    read paths pass 0.5 (historical), while writers that nudge counts pass the
-    Beta prior 0.70 — the self-consistent choice, since seeding at the prior
-    leaves derive_confidence AT the prior instead of dragging a legacy point
-    below it. Unifying the two is roadmap 260716 P1.9; until then the split is
-    explicit here rather than duplicated at each call site.
-
     Lazily migrates legacy points (no succ/fail keys) via
-    :func:`seed_counts_from_legacy`.  Used by both :func:`apply_to_payload`
+    :func:`seed_counts_from_legacy`, seeding a missing ``confidence`` at
+    :data:`LEGACY_SEED_CONFIDENCE`.  Used by both :func:`apply_to_payload`
     (write-path) and :func:`payload_effective_confidence` (read-path) to
     avoid duplicating the resolution logic.
+
+    The seed used to differ per caller — read paths 0.5, writers 0.70 — so the same
+    legacy point resolved to two different confidences depending on who looked
+    (roadmap 260716 P1.9). There is now one seed for everyone; it is derived from the
+    prior, so "seeding does not move confidence" holds by construction.
 
     Args:
         payload: Qdrant point payload dict (read-only; not mutated).
         default_decay_rate: Fallback decay rate when payload lacks ``decay_rate``.
-        default_confidence: Keyword-only. Seeds the legacy branch when the payload
-            has no usable ``confidence``. Read paths keep 0.5 (historical); writers
-            that nudge counts pass 0.70 (the Beta prior) — see the note above.
 
     Returns:
         ``(succ, fail, last_decay_at, decay_rate)`` ready for
@@ -208,7 +210,7 @@ def _resolve_state(
     raw_fail = payload.get("fail")
     if raw_succ is None or raw_fail is None:
         succ, fail = seed_counts_from_legacy(
-            coerce_float(payload.get("confidence"), default_confidence),
+            coerce_float(payload.get("confidence"), LEGACY_SEED_CONFIDENCE),
             coerce_int(payload.get("application_count"), 0),
         )
     else:

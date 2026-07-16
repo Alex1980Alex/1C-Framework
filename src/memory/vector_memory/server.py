@@ -27,6 +27,7 @@ from mcp.types import TextContent, Tool
 from ..orchestrator.content_hash import hash_content as _hash_content
 from ..orchestrator.content_hash import point_id as _content_point_id
 from .confidence import (
+    LEGACY_SEED_CONFIDENCE,
     apply_to_payload,
     decay_counts,
     derive_confidence,
@@ -85,8 +86,14 @@ def _cascade_confidence(
 
     t0 = _time.monotonic()
     try:
-        from memory.orchestrator.link_registry import LinkRegistry, LinkType
-
+        # Relative, NOT `from memory.orchestrator...` (roadmap 260716 P1.8). The server
+        # runs as `-m src.memory.vector_memory.server`, so the absolute `memory.*`
+        # namespace only resolves once `_get_embedding` has lazily put <root>/src on
+        # sys.path — before that first embed call this import raised ModuleNotFoundError
+        # straight into the function-level `except: pass` and the cascade was a silent
+        # no-op; after it, the same import bound a SECOND copy of link_registry. The
+        # cascade's behaviour depended on call order. Relative import closes both.
+        from ..orchestrator.link_registry import LinkRegistry, LinkType
         from .confidence import derive_confidence, seed_counts_from_legacy
 
         # Forward-correlation links only — CONTRADICTS has inverse semantics
@@ -104,7 +111,7 @@ def _cascade_confidence(
             # P3.2 (roadmap 260612 LinkRegistry, L5): пустой каскад больше не
             # невидим — голодание графа видно в observability.
             try:
-                from memory.infrastructure.trace_log import write_trace
+                from ..infrastructure.trace_log import write_trace
 
                 write_trace(
                     "memory-links.log",
@@ -157,7 +164,7 @@ def _cascade_confidence(
                     # coerce_*: a null confidence would raise here and silently abort
                     # the cascade for the REMAINING neighbours (roadmap 260716).
                     succ, fail = seed_counts_from_legacy(
-                        coerce_float(npay.get("confidence"), 0.70),
+                        coerce_float(npay.get("confidence"), LEGACY_SEED_CONFIDENCE),
                         coerce_int(npay.get("application_count"), 0),
                     )
                 else:
@@ -188,7 +195,7 @@ def _cascade_confidence(
     except Exception:
         pass
     try:
-        from memory.infrastructure.trace_log import write_trace
+        from ..infrastructure.trace_log import write_trace
 
         write_trace(
             "memory-propagation.log",
@@ -411,7 +418,7 @@ def _pattern_from_payload(point_id: str, payload: dict[str, Any] | None) -> Lear
     raw_fail = payload.get("fail")
     if raw_succ is None or raw_fail is None:
         succ, fail = seed_counts_from_legacy(
-            coerce_float(payload.get("confidence"), 0.7),
+            coerce_float(payload.get("confidence"), LEGACY_SEED_CONFIDENCE),
             coerce_int(payload.get("application_count"), 0),
         )
     else:
@@ -433,7 +440,10 @@ def _pattern_from_payload(point_id: str, payload: dict[str, Any] | None) -> Lear
         name=payload.get("name", ""),
         description=payload.get("description", ""),
         content=payload.get("content", ""),
-        confidence=coerce_float(payload.get("confidence"), 0.5),
+        # A missing denorm means "no observations recorded", which IS the prior — not
+        # 0.5 (P1.9). The old literal made this reader disagree with the seed one branch
+        # above it about the very same point.
+        confidence=coerce_float(payload.get("confidence"), LEGACY_SEED_CONFIDENCE),
         evidence_sources=evidence,
         created_at=coerce_dt(payload.get("created_at")) or datetime.now(),
         updated_at=coerce_dt(payload.get("updated_at")) or datetime.now(),
@@ -706,25 +716,40 @@ async def handle_save_pattern(args: dict[str, Any]) -> list[TextContent]:
     ]
 
 
-async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
+def search_pattern_points(
+    client: Any,
+    vector: list[float],
+    *,
+    min_confidence: float = 0.3,
+    limit: int = 10,
+    pattern_types: list[str] | None = None,
+) -> tuple[list[PatternSearchResult], int]:
+    """Semantic search over ``learned_patterns`` — THE retrieval policy for this collection.
+
+    Exported, not private, on purpose (roadmap 260716 M4/P1.4): the unified_search
+    vector arm used to re-implement this query and drifted away from it — it prefiltered
+    on the STORED confidence and never excluded archived points, so `unified_search`
+    surfaced patterns that `search_patterns` deliberately hid. Two readers of one
+    collection with two policies is the defect; a shared function is the fix, and a
+    tuned filter here would only have postponed the next divergence.
+
+    Policy, in order:
+      * NO server-side `confidence` Range prefilter. With count-based decay the
+        effective confidence drifts toward the prior 0.70, so it can be HIGHER than the
+        stored value for fail-heavy idle patterns — a stored-confidence prefilter is
+        not a safe superset of the effective threshold and would silently drop valid
+        results. Client-side effective filtering (below) is authoritative.
+      * over-fetch (limit×5, floor 50) to survive that client-side filtering;
+      * §24.2.4 hard-exclude archived (`expired_at`), unless MEMORY_INCLUDE_ARCHIVED=1;
+      * per-item isolation (P0.2): an unreadable point costs that point, not the caller.
+
+    Returns:
+        ``(results sorted by combined_score desc and truncated to *limit*, skipped)``.
+        ``skipped`` > 0 means the collection holds points this build cannot read.
+    """
     from qdrant_client.http import models as qmodels
 
-    client = _get_qdrant()
-    query = args["query"]
-    min_confidence = args.get("min_confidence", 0.3)
-    limit = args.get("limit", 10)
-
-    vector = await _get_embedding(query)
-
-    # NOTE: The server-side `confidence` Range prefilter is intentionally
-    # omitted here.  With count-based decay, effective confidence drifts
-    # toward the prior 0.70, so it can be HIGHER than the stored value for
-    # fail-heavy idle patterns.  A stored-confidence prefilter is therefore
-    # NOT a safe superset for the effective-confidence threshold and would
-    # silently discard valid results.  Client-side filtering on effective
-    # confidence (below) is authoritative.
     conditions: list[Any] = []
-    pattern_types = args.get("pattern_types")
     if pattern_types:
         conditions.append(
             qmodels.FieldCondition(key="pattern_type", match=qmodels.MatchAny(any=pattern_types))
@@ -739,8 +764,9 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
         with_payload=True,
     )
 
-    search_results = []
+    search_results: list[PatternSearchResult] = []
     skipped = 0
+    include_archived = os.getenv("MEMORY_INCLUDE_ARCHIVED") == "1"
     for point in results.points:
         # Per-item isolation (roadmap 260716 P0.2): one unreadable point must cost
         # exactly that point, not the whole response. Before this, a single drifted
@@ -751,9 +777,7 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
             eff = payload_effective_confidence(payload)
             if eff < min_confidence:
                 continue
-            # §24.2.4 hard-exclude archived patterns (consistency with hook-side gate).
-            # Use MEMORY_INCLUDE_ARCHIVED=1 to override (e.g. for revive workflows).
-            if payload.get("expired_at") and os.getenv("MEMORY_INCLUDE_ARCHIVED") != "1":
+            if payload.get("expired_at") and not include_archived:
                 continue
             pattern = _pattern_from_payload(str(point.id), payload)
             similarity = point.score if point.score else 0.0
@@ -770,7 +794,21 @@ async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
             logger.warning(f"search_patterns: skipped unreadable point {point.id}: {exc}")
 
     search_results.sort(key=lambda r: r.combined_score, reverse=True)
-    search_results = search_results[:limit]
+    return (search_results[:limit], skipped)
+
+
+async def handle_search_patterns(args: dict[str, Any]) -> list[TextContent]:
+    client = _get_qdrant()
+    query = args["query"]
+    vector = await _get_embedding(query)
+
+    search_results, skipped = search_pattern_points(
+        client,
+        vector,
+        min_confidence=args.get("min_confidence", 0.3),
+        limit=args.get("limit", 10),
+        pattern_types=args.get("pattern_types"),
+    )
     return [
         TextContent(
             type="text",
@@ -1016,7 +1054,7 @@ async def handle_decay_confidence(args: dict[str, Any]) -> list[TextContent]:
                 raw_fail = payload.get("fail")
                 if raw_succ is None or raw_fail is None:
                     succ, fail = seed_counts_from_legacy(
-                        coerce_float(payload.get("confidence"), 0.5),
+                        coerce_float(payload.get("confidence"), LEGACY_SEED_CONFIDENCE),
                         coerce_int(payload.get("application_count"), 0),
                     )
                 else:

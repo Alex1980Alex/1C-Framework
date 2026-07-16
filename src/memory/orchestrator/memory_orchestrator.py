@@ -209,6 +209,12 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
         def _do_search():
             from ..ai_memory.retention import effective_importance, is_archived
 
+            # M6 (roadmap 260716): order by the numeric-safe expression, not the raw
+            # column. This is CANDIDATE SELECTION — there is no filter here to save us,
+            # so a TEXT importance (which sorts above every REAL in SQLite) would take
+            # the top of the fetch window and push real matches out of the arm entirely.
+            from ..ai_memory.server import _importance_expr
+
             conn = _ai_db_connect(self._db_path)
             try:
                 cursor = conn.cursor()
@@ -216,7 +222,7 @@ class AiMemorySearchAdapter(BaseSearchAdapter):
                 cursor.execute(
                     "SELECT id, content, importance, category, tags, created_at, metadata "
                     "FROM important_messages "
-                    "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                    f"ORDER BY {_importance_expr()} DESC, created_at DESC LIMIT ?",
                     (fetch_limit,),
                 )
                 rows = cursor.fetchall()
@@ -284,59 +290,48 @@ class VectorMemorySearchAdapter(BaseSearchAdapter):
         # (TEI down, Qdrant down) must propagate to UnifiedSearchEngine.search,
         # which records them in sources_failed[] instead of silently degrading
         # this arm to an empty result. The ai-memory arm already behaves so.
-        min_confidence = kwargs.get("min_confidence", 0.3)
-        results = []
-
-        from ..vector_memory.server import _get_embedding, _get_qdrant, _pattern_from_payload
+        #
+        # roadmap 260716 P1.4: the query, the filters and the per-item isolation now
+        # live in ONE place — vector_memory.server.search_pattern_points, the same
+        # function the search_patterns tool uses. This arm used to duplicate them and
+        # had drifted: it prefiltered on the STORED confidence (unsafe under count
+        # decay) and never excluded archived points, so unified_search surfaced
+        # patterns that a direct search_patterns deliberately hid (M4).
+        from ..vector_memory.server import _get_embedding, _get_qdrant, search_pattern_points
 
         client = await asyncio.to_thread(_get_qdrant)
         vector = await _get_embedding(query)
 
-        from qdrant_client.http import models as qmodels
-
-        conditions = [
-            qmodels.FieldCondition(key="confidence", range=qmodels.Range(gte=min_confidence))
-        ]
-        qresults = await asyncio.to_thread(
-            client.query_points,
-            collection_name="learned_patterns",
-            query=vector,
-            query_filter=qmodels.Filter(must=conditions),
+        found, skipped = await asyncio.to_thread(
+            search_pattern_points,
+            client,
+            vector,
+            min_confidence=kwargs.get("min_confidence", 0.3),
             limit=limit,
-            with_payload=True,
         )
+        if skipped:
+            logger.warning("vector-memory arm: skipped %d unreadable point(s)", skipped)
 
-        for point in qresults.points:
-            # Per-item isolation (roadmap 260716 P0.2). The no-blanket-except rule
-            # above is about the ARM (TEI/Qdrant down must reach sources_failed) —
-            # it was never meant to make one unreadable point fail the arm. That
-            # conflation is the 2026-07-16 incident: a single point with
-            # pattern_type='requirements' raised out of this loop and the whole
-            # vector arm landed in sources_failed. Skip the point, keep the arm.
-            try:
-                payload = point.payload or {}
-                pattern = _pattern_from_payload(str(point.id), payload)
-                similarity = point.score or 0.0
-                results.append(
-                    SearchResultItem(
-                        unified_id=f"semantic:vector-memory:{pattern.pattern_id}",
-                        source=SourceServer.VECTOR_MEMORY,
-                        memory_type=MemoryType.SEMANTIC,
-                        content=pattern.content,
-                        title=pattern.name,
-                        raw_score=similarity * pattern.confidence,
-                        created_at=pattern.created_at,
-                        tags=pattern.tags,
-                        metadata={
-                            "pattern_type": pattern.pattern_type.value,
-                            "confidence": pattern.confidence,
-                        },
-                    )
-                )
-            except Exception as exc:
-                logger.warning(f"vector-memory arm: skipped unreadable point {point.id}: {exc}")
-
-        return results
+        return [
+            SearchResultItem(
+                unified_id=f"semantic:vector-memory:{r.pattern.pattern_id}",
+                source=SourceServer.VECTOR_MEMORY,
+                memory_type=MemoryType.SEMANTIC,
+                content=r.pattern.content,
+                title=r.pattern.name,
+                # combined_score = similarity × EFFECTIVE confidence. Was
+                # similarity × stored confidence, which ranked idle fail-heavy
+                # patterns by a number no other reader believed.
+                raw_score=r.combined_score,
+                created_at=r.pattern.created_at,
+                tags=r.pattern.tags,
+                metadata={
+                    "pattern_type": r.pattern.pattern_type.value,
+                    "confidence": r.adjusted_confidence,
+                },
+            )
+            for r in found
+        ]
 
 
 class SkillLearningSearchAdapter(BaseSearchAdapter):
@@ -454,8 +449,16 @@ class MemoryOrchestrator:
         # Router
         self._router = MemoryRouter(self.config.router_config)
 
+        # Circuit breakers — built before the search engine so search arms can share
+        # the registry propagation already uses (roadmap 260716 P1.3). One registry =
+        # `memory_circuit_status` / `memory_circuit_reset` see and control both
+        # `search:<source>` and `propagation:<source>`.
+        self._circuit_registry = CircuitBreakerRegistry()
+
         # Search Engine with adapters
-        self._search_engine = UnifiedSearchEngine(self._link_registry)
+        self._search_engine = UnifiedSearchEngine(
+            self._link_registry, breaker_registry=self._circuit_registry
+        )
         self._search_engine.register_adapter(AiMemorySearchAdapter(_memory_ai_db_path()))
         self._search_engine.register_adapter(VectorMemorySearchAdapter())
         self._search_engine.register_adapter(
@@ -507,7 +510,6 @@ class MemoryOrchestrator:
             storage_path=services_dir / "ttl.jsonl",
         )
         self._forgetgate_service = ForgetGateService()
-        self._circuit_registry = CircuitBreakerRegistry()
         self._metrics = get_metrics_collector()
         self._graph_algorithms = GraphAlgorithms()
 
@@ -869,11 +871,10 @@ class MemoryOrchestrator:
                 # raw payload, and this handler runs behind a circuit breaker, so one
                 # point with succ:"abc" ticked `propagation:vector-memory` toward OPEN
                 # and then failed the WHOLE arm as failed:circuit_open.
-                # default_confidence=0.70 preserves this writer's historical seeding:
-                # seeding at the Beta prior leaves derive_confidence AT the prior,
-                # while _resolve_state's read-path default (0.5) would drag a legacy
-                # point below it (e.g. n=4 → 0.70 vs 0.643).
-                succ, fail, _lda, _rate = _resolve_state(pay, default_confidence=0.70)
+                # The legacy seed (LEGACY_SEED_CONFIDENCE = the Beta prior) lives in
+                # _resolve_state and is now the same for every caller — P1.9 retired the
+                # per-caller default that made this writer and the read path disagree.
+                succ, fail, _lda, _rate = _resolve_state(pay)
                 if delta >= 0:
                     succ += abs(delta)
                 else:

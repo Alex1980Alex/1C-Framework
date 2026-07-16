@@ -41,6 +41,18 @@ DB_PATH = resolve_db_path()
 # SQLite TEXT affinity would store it as-is and break float comparisons on read.
 _IMPORTANCE_LABELS = {"critical": 1.0, "high": 0.9, "medium": 0.6, "normal": 0.5, "low": 0.3}
 
+# What an UNREADABLE importance is worth to a reader. 0.0, not the writer's 0.7 default:
+# a value nobody can interpret must not outrank values that can be — that is the whole
+# point of M6. It also keeps SQL and Python honest with each other, since `CAST('urgent'
+# AS REAL)` is 0.0: with the writer's default the row would sort last and be filtered
+# out, yet be reported to the caller as 0.7.
+READ_UNKNOWN_IMPORTANCE = 0.0
+
+# Candidate window `search_messages` scores by token overlap. A module constant rather
+# than a literal so the crowding-out this window enables can be driven in a test
+# (shrink it and one bad row is enough) — see M6.
+SEARCH_WINDOW = 2000
+
 
 def _safe_json(raw: object, fallback_wrap: bool = False):
     """Parse a stored JSON column fail-soft (chain C2, roadmap 260612).
@@ -64,6 +76,34 @@ def _coerce_importance(value: object, default: float = 0.7) -> float:
         return max(0.0, min(1.0, float(value)))  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return default
+
+
+def _importance_expr() -> str:
+    """SQL expression yielding a numeric importance for a possibly-TEXT column.
+
+    roadmap 260716 M6. `importance` has REAL affinity, but a non-numeric label
+    ("high") is stored with TEXT class, and in SQLite's ordering TEXT > every REAL.
+    Consequences for a plain `WHERE importance >= ?` / `ORDER BY importance DESC`:
+
+      * the row passes ANY min_importance filter, whatever the label means;
+      * it sorts ABOVE every numeric row — 'low' outranks 0.99.
+
+    (The audit recorded the opposite — that such rows silently drop out. Measured
+    directly on sqlite3: they do not drop out, they take over the top. There are 0
+    such rows in the live DB today, so this is a defused mine, not a live fix.)
+
+    The label→number mapping is generated from `_IMPORTANCE_LABELS` — the same table
+    the writer coerces with — so SQL and Python cannot drift apart. An unknown label
+    degrades to CAST (→ 0.0), i.e. it sorts last instead of first: unreadable
+    importance must not be treated as maximal. Readers must report it as
+    :data:`READ_UNKNOWN_IMPORTANCE` (the same 0.0) — coercing it to the writer's 0.7
+    default would filter the row out by one number and report it with another.
+    """
+    whens = " ".join(f"WHEN '{label}' THEN {value}" for label, value in _IMPORTANCE_LABELS.items())
+    return (
+        "(CASE WHEN typeof(importance) IN ('integer','real') THEN importance "
+        f"ELSE (CASE LOWER(TRIM(importance)) {whens} ELSE CAST(importance AS REAL) END) END)"
+    )
 
 
 def ensure_db():
@@ -203,21 +243,23 @@ async def get_important_messages(args: dict) -> list[TextContent]:
     min_importance = args.get("min_importance", 0.5)
     category = args.get("category")
 
+    # M6: filter and sort on the numeric-safe expression, never on the raw column.
+    imp = _importance_expr()
     with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
 
         if category:
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at, metadata "
-                "FROM important_messages WHERE importance >= ? AND category = ? "
-                "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                f"FROM important_messages WHERE {imp} >= ? AND category = ? "
+                f"ORDER BY {imp} DESC, created_at DESC LIMIT ?",
                 (min_importance, category, limit),
             )
         else:
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at, metadata "
-                "FROM important_messages WHERE importance >= ? "
-                "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                f"FROM important_messages WHERE {imp} >= ? "
+                f"ORDER BY {imp} DESC, created_at DESC LIMIT ?",
                 (min_importance, limit),
             )
 
@@ -229,7 +271,10 @@ async def get_important_messages(args: dict) -> list[TextContent]:
             {
                 "id": row[0],
                 "content": row[1],
-                "importance": row[2],
+                # Coerced, not raw: the caller gets a number it can compare, whatever
+                # a legacy writer left in the column — and the SAME number the filter
+                # and the ORDER BY above used (see READ_UNKNOWN_IMPORTANCE).
+                "importance": _coerce_importance(row[2], READ_UNKNOWN_IMPORTANCE),
                 "category": row[3],
                 "tags": _safe_json(row[4], fallback_wrap=True),
                 "created_at": row[5],
@@ -248,12 +293,21 @@ async def get_important_messages(args: dict) -> list[TextContent]:
 
 
 def _content_hash(content: str) -> str:
-    """Fail-soft canonical content_hash (§26 P1.3). Empty string on import failure."""
+    """Fail-soft canonical content_hash (§26 P1.3). Empty string on import failure.
+
+    Relative, not `from memory.orchestrator...` (roadmap 260716 P1.8, same class as the
+    cascade): this server runs as `-m src.memory.ai_memory.server`, so the absolute
+    `memory.*` namespace resolves only if something else already put <root>/src on
+    sys.path — and when it does, it binds a SECOND copy of the module. Here the
+    swallowed failure costs the write-contract itself: no hash → the point leaves the
+    §26 dedup contract silently. The sys.path insert below is kept for the same reason
+    it exists elsewhere (other callers may import this module by either name).
+    """
     try:
         src = str(_PROJECT_ROOT / "src")
         if src not in sys.path:
             sys.path.insert(0, src)
-        from memory.orchestrator.content_hash import hash_content
+        from ..orchestrator.content_hash import hash_content
 
         return hash_content(content)
     except Exception:
@@ -268,7 +322,7 @@ def _record_ingest(
         src = str(_PROJECT_ROOT / "src")
         if src not in sys.path:
             sys.path.insert(0, src)
-        from memory.orchestrator.ingest_metrics import record_ingest
+        from ..orchestrator.ingest_metrics import record_ingest
 
         record_ingest("memory_ai", action, content_hash=content_hash, harvester=harvester, **kw)
     except Exception:
@@ -359,13 +413,18 @@ async def search_messages(args: dict) -> list[TextContent]:
     # rank by stemmed token overlap; fall back to legacy LIKE when the query
     # yields no tokens (emoji/CJK) or text_norm is unavailable.
     tokens = _tokenize(query)
+    # M6 applies to EVERY reader of this column, not just get_important_messages: a
+    # TEXT importance sorts above every REAL, so it would take the top of the 2000-row
+    # candidate window here and crowd real matches out before scoring even runs.
+    imp = _importance_expr()
     with _connect(DB_PATH) as conn:
         cursor = conn.cursor()
         if tokens:
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at "
                 "FROM important_messages "
-                "ORDER BY importance DESC, created_at DESC LIMIT 2000"
+                f"ORDER BY {imp} DESC, created_at DESC LIMIT ?",
+                (SEARCH_WINDOW,),
             )
             scored = []
             for row in cursor.fetchall():
@@ -379,7 +438,7 @@ async def search_messages(args: dict) -> list[TextContent]:
             cursor.execute(
                 "SELECT id, content, importance, category, tags, created_at "
                 "FROM important_messages WHERE content LIKE ? OR tags LIKE ? "
-                "ORDER BY importance DESC, created_at DESC LIMIT ?",
+                f"ORDER BY {imp} DESC, created_at DESC LIMIT ?",
                 (f"%{query}%", f"%{query}%", limit),
             )
             rows = cursor.fetchall()
@@ -390,7 +449,7 @@ async def search_messages(args: dict) -> list[TextContent]:
             {
                 "id": row[0],
                 "content": row[1],
-                "importance": row[2],
+                "importance": _coerce_importance(row[2], READ_UNKNOWN_IMPORTANCE),
                 "category": row[3],
                 "tags": _safe_json(row[4], fallback_wrap=True),
                 "created_at": row[5],

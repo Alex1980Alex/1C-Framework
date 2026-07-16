@@ -32,7 +32,16 @@ class ConflictStrategy(str):
 
 @dataclass
 class PatternRecord:
-    """A single pattern from JSONL storage."""
+    """A single pattern from JSONL storage.
+
+    Fields this schema does not declare are carried in :attr:`extra` and written back
+    verbatim (roadmap 260716 P1.1). Reason: the silo is written by several producers
+    whose schema is WIDER than this one — `archived`, `content_hash`,
+    `evidence_sources`, `original_pattern_type`. The merge job rewrites the whole
+    file, so "field this dataclass doesn't know" used to mean "field deleted from
+    disk on the next cadence run": archived records came back to life (and got
+    re-harvested into Qdrant), and the `content_hash` quarantine dedup went blind.
+    """
 
     pattern_id: str
     pattern_type: str = "workflow-pattern"
@@ -46,6 +55,7 @@ class PatternRecord:
     updated_at: str = ""
     version: int = 1
     metadata: dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
     @property
     def normalized_content(self) -> str:
@@ -53,7 +63,10 @@ class PatternRecord:
         return " ".join(self.content.lower().split())
 
     def to_dict(self) -> dict[str, Any]:
+        # `extra` first so the declared fields always win the merge: a stale copy of a
+        # known key in `extra` must never shadow the parsed (and possibly merged) value.
         return {
+            **self.extra,
             "pattern_id": self.pattern_id,
             "pattern_type": self.pattern_type,
             "name": self.name,
@@ -70,7 +83,12 @@ class PatternRecord:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "PatternRecord":
-        return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
+        fields = cls.__dataclass_fields__
+        # "extra" itself is never consumed positionally: a literal `extra` key in the
+        # silo is just another unknown field and round-trips through the bucket.
+        known = {k: v for k, v in data.items() if k in fields and k != "extra"}
+        unknown = {k: v for k, v in data.items() if k not in fields or k == "extra"}
+        return cls(**known, extra=unknown)
 
 
 @dataclass
@@ -129,7 +147,7 @@ class PatternMerger:
             MergeResult with statistics
         """
         strategy = strategy or self.strategy
-        patterns = await self._load_patterns()
+        patterns, unreadable = await self._load_patterns()
 
         if not patterns:
             return MergeResult(duplicates_found=0, patterns_merged=0, patterns_kept=len(patterns))
@@ -184,7 +202,7 @@ class PatternMerger:
 
         # Write if not dry run
         if not dry_run and patterns_merged > 0:
-            await self._write_patterns(list(final_patterns.values()))
+            await self._write_patterns(list(final_patterns.values()), unreadable)
 
         # Estimate space saved
         original_size = sum(len(json.dumps(p.to_dict())) for p in patterns)
@@ -201,7 +219,7 @@ class PatternMerger:
 
     async def find_duplicates(self) -> list[list[PatternRecord]]:
         """Find groups of duplicate patterns without merging."""
-        patterns = await self._load_patterns()
+        patterns, _unreadable = await self._load_patterns()
         groups: dict[str, list[PatternRecord]] = {}
         for p in patterns:
             key = p.normalized_content
@@ -223,7 +241,27 @@ class PatternMerger:
             return max(group, key=lambda p: p.confidence)
 
     def _merge_records(self, group: list[PatternRecord], winner: PatternRecord) -> PatternRecord:
-        """Merge metadata from all records into the winner."""
+        """Merge metadata from all records into the winner.
+
+        The winner's ``extra`` survives as-is — losers' unknown fields are NOT folded
+        in. Folding is unsound for a bucket whose semantics this class does not know.
+
+        ``archived`` is the one exception, because it is the field that decides whether
+        the fact still exists. Making it durable (P1.1) without teaching the merge about
+        it just inverts the old bug: the winner is chosen by confidence, so an archived
+        record with conf 0.9 beating a live one with conf 0.4 would collapse the group
+        to an ARCHIVED record and delete the live copy from the silo — after which
+        `pattern_harvest` skips the fact entirely. Before P1.1 the same input
+        resurrected the archived record. Both are wrong.
+
+        The rule that is not wrong follows §22 revive-on-recurrence: a duplicate that is
+        live means the fact came back, so the merged record is archived ONLY if every
+        member was. Archival is a claim about the fact, not about one copy of it.
+        """
+        if any(not r.extra.get("archived") for r in group):
+            winner.extra.pop("archived", None)
+            winner.extra.pop("expired_at", None)
+
         merged_tags: set[str] = set(winner.tags)
         total_applications = winner.application_count
         max_version = winner.version
@@ -244,29 +282,49 @@ class PatternMerger:
 
     # ----- IO -----
 
-    async def _load_patterns(self) -> list[PatternRecord]:
-        """Load all patterns from JSONL file."""
+    async def _load_patterns(self) -> tuple[list[PatternRecord], list[str]]:
+        """Load all patterns from the JSONL file.
+
+        Returns ``(records, unreadable)`` where *unreadable* holds the raw text of
+        every line this merger could not parse. They are handed back so
+        :meth:`_write_patterns` can return them to disk untouched: this job rewrites
+        the whole silo, so dropping a line at read time is not "skip", it is DELETE.
+        A hand-edited or half-flushed line is a bug to look at, not data to discard.
+        """
         if not self.patterns_file.exists():
-            return []
+            return ([], [])
 
         patterns: list[PatternRecord] = []
+        unreadable: list[str] = []
 
         def _load():
             with open(self.patterns_file, encoding="utf-8") as f:
                 for line in f:
-                    line = line.strip()
-                    if not line:
+                    raw = line.rstrip("\n")
+                    if not raw.strip():
                         continue
                     try:
-                        patterns.append(PatternRecord.from_dict(json.loads(line)))
-                    except (json.JSONDecodeError, KeyError):
-                        continue
+                        patterns.append(PatternRecord.from_dict(json.loads(raw)))
+                    except Exception:
+                        # Broad on purpose: a non-dict JSON value (`123`, `"x"`, `[]`)
+                        # parses fine and then dies on .items() — an uncaught
+                        # AttributeError here used to abort the whole cadence job.
+                        unreadable.append(raw)
 
         await asyncio.to_thread(_load)
-        return patterns
+        if unreadable:
+            logger.warning(
+                "%d unreadable line(s) in %s — preserved verbatim, not merged",
+                len(unreadable),
+                self.patterns_file,
+            )
+        return (patterns, unreadable)
 
-    async def _write_patterns(self, patterns: list[PatternRecord]) -> None:
-        """Write patterns back to JSONL file."""
+    async def _write_patterns(
+        self, patterns: list[PatternRecord], unreadable: list[str] | None = None
+    ) -> None:
+        """Write patterns back to the JSONL file, re-appending unreadable lines."""
+        unreadable = unreadable or []
 
         def _write():
             # Backup original
@@ -279,9 +337,17 @@ class PatternMerger:
             with open(self.patterns_file, "w", encoding="utf-8") as f:
                 for p in patterns:
                     f.write(json.dumps(p.to_dict(), ensure_ascii=False) + "\n")
+                # Verbatim, at the end: the silo is a set of records, so position
+                # carries no meaning (the merge already regroups), but survival does.
+                for raw in unreadable:
+                    f.write(raw + "\n")
 
         await asyncio.to_thread(_write)
-        logger.info("Wrote %d patterns after merge", len(patterns))
+        logger.info(
+            "Wrote %d patterns after merge (+%d preserved unreadable)",
+            len(patterns),
+            len(unreadable),
+        )
 
 
 __all__ = [
