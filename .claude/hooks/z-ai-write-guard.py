@@ -17,7 +17,7 @@ Flow:
   1. Write/Edit fires → extract file_path and content/new_string from tool_input
   2. Skip paths outside the repo root (scratchpad / temp tooling)
   3. Skip non-code files (.md, .json, .yml, .env, .toml, .txt, .csv, .html)
-  4. Skip exempt paths (.claude/, docs/, data/, tests/, pipeline/)
+  4. Skip exempt paths (.claude/, docs/, data/, tests/ — NOT pipeline/, see NB below)
   5. Count lines in content (Write) or new_string (Edit)
   6. If lines > 15 AND no llm_delegation in session → block with Z.AI instructions
   7. Otherwise → allow

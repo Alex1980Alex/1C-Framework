@@ -32,17 +32,27 @@ _BIG = "\n".join(f"x = {i}" for i in range(30))  # > _LINE_THRESHOLD
 _MD = "\n".join(f"line {i}" for i in range(60))  # > _LARGE_MD_THRESHOLD
 
 
-def _blocked(file_path: str, body: str = _BIG, *, tmp_path: Path) -> bool:
+def _blocked(
+    file_path: str, body: str = _BIG, *, tmp_path: Path, session_state: dict | None = None
+) -> bool:
     """Drive the hook end-to-end; True when it emits the block.
 
     Runs under sys.executable, NOT .venv/Scripts/python.exe: that path only exists on
     Windows, so a skipif on it turned this whole file into a silent no-op on CI's ubuntu
     runner — the guard could regress with master green.
 
-    CLAUDE_CACHE_DIR / session state are redirected at a tmp dir: the hook consults live
-    SessionState.has_llm_delegation() and is_provider_down(), so one real llm_complete
-    during the session would flip every negative assertion here to vacuously true.
+    Session state is redirected via SESSION_STATE_PATH — the variable session_state.py
+    actually reads, and it expects a DIRECTORY. The first version exported
+    CLAUDE_SESSION_STATE_PATH (read by nobody) pointing at a file: fictional isolation —
+    the subprocess consulted the LIVE state, so one real llm_complete in the session
+    flipped every 'blocked' assertion red (pinned by test_session_isolation_*).
+
+    Known residual: is_provider_down() reads live data/llm-rotation-*.jsonl (no env
+    override) — a provider-down window within the last 30 min would flip 'blocked'
+    assertions red. Transient live-env dependency, accepted.
     """
+    if session_state is not None:
+        (tmp_path / "session-skills.json").write_text(json.dumps(session_state), encoding="utf-8")
     payload = {
         "hook_event_name": "PreToolUse",
         "tool_name": "Write",
@@ -50,8 +60,7 @@ def _blocked(file_path: str, body: str = _BIG, *, tmp_path: Path) -> bool:
     }
     env = {
         **dict(__import__("os").environ),
-        "CLAUDE_CACHE_DIR": str(tmp_path),
-        "CLAUDE_SESSION_STATE_PATH": str(tmp_path / "session-skills.json"),
+        "SESSION_STATE_PATH": str(tmp_path),
     }
     r = subprocess.run(
         [sys.executable, str(_HOOK)],
@@ -117,6 +126,19 @@ def test_pipeline_exemption_does_not_leak_to_nested_product_code(tmp_path: Path)
 def test_pipeline_md_exemption_is_anchored_to_the_artefact_tree(tmp_path: Path) -> None:
     """A large .md merely *named* pipeline elsewhere is still delegatable prose."""
     assert _blocked(str(_ROOT / "docs" / "guides" / "zzz_probe.md"), _MD, tmp_path=tmp_path)
+
+
+def test_session_isolation_actually_isolates(tmp_path: Path) -> None:
+    """Пин изоляции: state С делегированием в tmp → гард обязан ПРОПУСТИТЬ.
+
+    Красный на версии с CLAUDE_SESSION_STATE_PATH (мёртвая переменная): сабпроцесс
+    читал живой state без делегирования и блокировал — т.е. env-редирект не работал,
+    а «изоляция» была фикцией (тот же класс: тест защищает ровно ничего)."""
+    assert not _blocked(
+        str(_ROOT / "src" / "pdf_framework" / "zzz_probe.py"),
+        tmp_path=tmp_path,
+        session_state={"activated_skills": [], "llm_delegation_count": 1},
+    )
 
 
 def test_oserror_branch_is_fail_closed_by_source() -> None:
