@@ -2,8 +2,8 @@
   "task": "close-memory-dedupe-acceptance",
   "title": "Закрыть §5.3 роадмапа 260716: dedupe --apply на живой learned_patterns",
   "created_at": "2026-07-17T22:55:13",
-  "updated_at": "2026-07-17T22:56:26",
-  "current_stage": 3,
+  "updated_at": "2026-07-17T23:05:01",
+  "current_stage": 5,
   "stages": [
     {
       "n": 1,
@@ -29,16 +29,16 @@
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-17T23:05:01"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
       "artifact": "04-testing.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-17T23:05:01"
     }
   ]
 }

@@ -161,6 +161,11 @@ LOW-хвост (§3.3) - без отдельного среза, по мере �
 
 ## §5 Acceptance
 
+> **СТАТУС 2026-07-17: все 5 пунктов закрыты.** §5.1/5.2/5.4 запинены тестами;
+> §5.3 закрыт запуском `dedupe_learned_patterns.py --apply` на живой коллекции
+> (154→151, 0 дублей hash), §5.5 подтверждён live (`sources_failed=[]`). Детали — §18
+> (запись 2026-07-17 ночь-2). Роадмап 260716 выполнен полностью.
+
 1. Точка с `pattern_type='requirements'`, `confidence=null`, битым `created_at`
    в коллекции → `search_patterns`/`list_patterns`/`decay_confidence`/
    `plan_forget`/`unified_search` живы, точка в `items_skipped`, остальные
@@ -176,6 +181,36 @@ LOW-хвост (§3.3) - без отдельного среза, по мере �
 ## §18 Progress Log
 
 > Append-only, reverse-chronological. Новые записи - СВЕРХУ.
+
+### 2026-07-17 (ночь-2) - §5.3 закрыт: dedupe --apply на живой коллекции → роадмап выполнен
+
+Единственный открытый acceptance-пункт (§5 критерий 3, «0 дублей hash») закрыт.
+Пайплайн `pipeline/close-memory-dedupe-acceptance/`. Правок кода нет — исполнение уже
+реализованного и запинтованного в срезе P1 инструмента
+[`dedupe_learned_patterns.py`](../../scripts/dedupe_learned_patterns.py) (link-aware, P1.7).
+Пользователь подтвердил живую мутацию («применить с бэкапом»).
+
+**Прогон `--apply`** (2026-07-17 22:56): `learned_patterns` 154 → **151** точки.
+- 3 дубля-**зеркала** удалены; счётчики (succ/fail/application_count) слиты в 2
+  канонических выживших, confidence пересчитан (§22 Beta(7,3)).
+- Рёбра: 47 касающихся → **1 repoint + 5 drop**, **dangling 0**.
+- **Канон из `mirrors` победил эвристику в 2 из 3 групп** — ровно тот дефект, ради
+  которого P1.7 сделал дедуп link-aware (эвристика удалила бы канон).
+- Бэкап ДО мутации: `data/memory/backups/learned_patterns_20260717_225637.json`
+  (154 pts + векторы + 47 рёбер, целостность проверена). Откат: `--restore … --apply`.
+
+**Live-верификация ПОСЛЕ** (in-process, `scratchpad/verify_dedupe_acceptance.py`, ALL PASS):
+- §2/§5.3 — 0 точек вне enum, 0 без `content_hash`, **0 дублей hash** (re-dry-run
+  `dup_groups=0`, идемпотентность подтверждена).
+- §5.5 — `unified_search` → **`sources_failed=[]`**, 10 результатов, 3 плеча.
+- M4 (плечо == тул) — `search_patterns` и vector-плечо зовут единую
+  `search_pattern_points` → **10 точек в одном порядке, contents идентичны**, skipped=0.
+- `link_registry` — **0 висячих рёбер** на концах learned_patterns.
+
+**Регресс:** `test_dedupe_learned_patterns` (7) + `test_pattern_type_contract` (41) +
+`test_memory_p1_resilience` (48) = **96 passed**. `/mcp reconnect` НЕ требовался
+(правок кода MCP нет; серверы читают ту же Qdrant вживую). **Роадмап 260716 закрыт
+полностью (P0/P1/§5/CircuitBreaker).**
 
 ### 2026-07-17 (ночь) - CircuitBreaker HALF_OPEN починен отдельным срезом (§3.3 LOW закрыт)
 
