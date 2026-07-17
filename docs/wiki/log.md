@@ -28,14 +28,6 @@ Chronology of knowledge promotions (L2→L3), wiki page lifecycle events, and si
 
 - F1 `LangSmithBackend` (Firecracker microVM via `langsmith[sandbox]`, GA May 2026)
 - F2 `E2BBackend` (stateful Jupyter Kernel, vendor-neutral)
-## 2026-04-23 — Session Summary
-
-**Event:** Auto-saved session
-
-- Skills: bsl-development, 1c-doc-research, git-commit-message, code-verify
-- Files changed: 2
-- Summary: Session 2026-04-23. Skills: bsl-development, 1c-doc-research, git-commit-message, code-verify. Changed 2 files in mcp-server.log, src/projects. Commit: chore: auto-commit 4 file(s) changed. Commit: chore: update submodule ref (GKSTCPLK-composite-promezh — fix alias-конфликт в ВТ_ЕдиничныеПробы). Commit: chore: auto-commit 1 file(s) changed
-
 
 ## 2026-04-26 — Session Summary
 
@@ -497,3 +489,12 @@ Spec: openspec/changes/hermes-llm-wiki/tasks.md §Фаза 5.
 - Skills: task-protocol, create-hook, architecture-research, evaluation-benchmark, code-verify
 - Files changed: 10
 - Summary: Session 2026-07-17. Skills: task-protocol, create-hook, architecture-research, evaluation-benchmark, code-verify, 1c-mcp-crud, bsl-development, learn:1c-metadata-objects. Changed 10 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: chore: auto-save memory-first-hook.py, SKILL.md, CLAUDE.md +15 more. Commit: fix(memory): payload из store = недоверенный вход (роадмап 260716 P0). Commit: chore: auto-commit гкс_ЭмуляцияОбменаCRM.epf, .pipeline-state.json, Конфигурация +1 more
+
+## 2026-07-17 — Session Summary
+
+**Event:** Auto-saved session
+
+- Skills: evaluation-benchmark
+- Files changed: 6
+- Summary: Session 2026-07-17. Skills: evaluation-benchmark. Changed 6 files in .claude/worktrees, MFM/Конфигурация, TransportManagementDevelop_SVETLY/Конфигурация, claude/worktrees, configuration/260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС. Commit: fix(hooks): устранена потеря активации Skill в session-state (гонка хуков). Commit: chore: auto-commit Конфигурация, Конфигурация, 260304_GKSTCPLK-2182 Доработать создание Направление на разгрузку для заблокированных ТС +2 more. Commit: chore: auto-save session_state.py, 01-architecture.md, 02-design.md
+
