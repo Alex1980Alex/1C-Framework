@@ -133,6 +133,7 @@ class CircuitBreaker:
             "state": self.state.value,
             "failure_count": self._stats.failure_count,
             "success_count": self._stats.success_count,
+            "half_open_probes": self._stats.half_open_probes,
             "total_calls": self._stats.total_calls,
             "total_failures": self._stats.total_failures,
             "total_rejected": self._stats.total_rejected,
@@ -237,8 +238,10 @@ class CircuitBreaker:
         if new_state == CircuitState.CLOSED:
             self._stats.failure_count = 0
             self._stats.consecutive_successes = 0
+            self._stats.half_open_probes = 0
         elif new_state == CircuitState.HALF_OPEN:
             self._stats.consecutive_successes = 0
+            self._stats.half_open_probes = 0
 
         logger.debug("Circuit '%s': %s -> %s", self.name, old.value, new_state.value)
         # §27 P1 D1.4: persist real state transitions (reliability incidents) — fail-soft.

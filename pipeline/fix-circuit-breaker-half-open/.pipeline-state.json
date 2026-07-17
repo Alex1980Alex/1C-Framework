@@ -1,0 +1,44 @@
+{
+  "task": "fix-circuit-breaker-half-open",
+  "title": "Fix: CircuitBreaker HALF_OPEN — мёртвая машина состояний (R1 / 260716 §3.3)",
+  "created_at": "2026-07-17T19:52:19",
+  "updated_at": "2026-07-17T19:52:19",
+  "current_stage": 3,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-17T19:52:19"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-17T19:52:19",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-17T19:52:19"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
