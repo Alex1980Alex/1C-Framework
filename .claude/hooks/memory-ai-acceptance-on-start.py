@@ -27,7 +27,8 @@ def _progress(m: dict, _crit: dict) -> str:
     return (
         f"episodes={m['episodes_non_session']}/5, "
         f"sqlite_fired={m['surfacing_sqlite_fired']}, dup={m['dup_events']}, "
-        f"no_hash={m['rows_without_hash']}, reflect={m['derives_from_in_window']}, "
+        f"no_hash={m['rows_without_hash']}, "
+        f"reflect={m['reflection_clusters_triggered']}trig/{m['derives_from_total']}links, "
         f"archive_runs={m['archive_runs']}"
     )
 

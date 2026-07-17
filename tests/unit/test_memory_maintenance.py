@@ -142,6 +142,118 @@ class TestDashboard:
         assert "Ingestion" in out
 
 
+class TestJobApply:
+    """Per-job apply override (2026-07-17).
+
+    The cadence is dry-run by default and the global MEMORY_MAINTENANCE_APPLY was
+    never set, so `reflect` ran every cadence, reported rc=0 and threw its plan
+    away for 5 weeks. Granting the global flag would also hand write rights to
+    promote (docs/wiki) and reindex_* (production wiki_pages_v1 / skill_library),
+    so a single job can now be opted in on its own.
+    """
+
+    def test_global_apply_wins(self, monkeypatch):
+        import scripts.memory_maintenance as mm
+
+        monkeypatch.delenv("MEMORY_MAINTENANCE_APPLY_REFLECT", raising=False)
+        assert mm._job_apply("reflect", True) is True
+
+    def test_per_job_env_opts_one_job_in(self, monkeypatch):
+        import scripts.memory_maintenance as mm
+
+        monkeypatch.setenv("MEMORY_MAINTENANCE_APPLY_REFLECT", "1")
+        assert mm._job_apply("reflect", False) is True
+        # neighbours stay dry-run — that is the whole point of per-job
+        monkeypatch.delenv("MEMORY_MAINTENANCE_APPLY_PROMOTE", raising=False)
+        assert mm._job_apply("promote", False) is False
+
+    def test_unset_env_preserves_dry_run(self, monkeypatch):
+        import scripts.memory_maintenance as mm
+
+        for name in mm.SUBPROCESS_JOBS:
+            monkeypatch.delenv(f"MEMORY_MAINTENANCE_APPLY_{name.upper()}", raising=False)
+            assert mm._job_apply(name, False) is False
+
+    def test_non_one_value_is_not_truthy(self, monkeypatch):
+        import scripts.memory_maintenance as mm
+
+        monkeypatch.setenv("MEMORY_MAINTENANCE_APPLY_REFLECT", "0")
+        assert mm._job_apply("reflect", False) is False
+
+    def test_inline_job_names_are_not_silently_honoured(self, monkeypatch):
+        """The env is wired only into _run_subprocess, so inline jobs must not appear
+        to accept it — the docstring says so, and this pins that it stays true."""
+        import scripts.memory_maintenance as mm
+
+        monkeypatch.setenv("MEMORY_MAINTENANCE_APPLY_FORGET", "1")
+        assert "forget" not in mm.SUBPROCESS_JOBS
+        assert mm._job_apply("forget", False) is False
+
+    def test_run_subprocess_passes_apply_flag_from_per_job_env(self, monkeypatch, tmp_path):
+        """The wiring line, not just the helper.
+
+        Deleting `apply = _job_apply(name, apply)` from _run_subprocess leaves every
+        helper test green while the cadence silently returns to dry-run — which is the
+        exact 5-week failure this fix addresses.
+        """
+        import scripts.memory_maintenance as mm
+
+        seen: dict[str, list[str]] = {}
+
+        class _R:
+            returncode = 0
+            stdout = "ok"
+            stderr = ""
+
+        def _fake_run(cmd, **kw):
+            seen["cmd"] = list(cmd)
+            return _R()
+
+        monkeypatch.setattr(mm.subprocess, "run", _fake_run)
+        monkeypatch.setattr(mm, "PYTHON_EXE", tmp_path / "python.exe")
+        (tmp_path / "python.exe").write_text("", encoding="utf-8")
+        monkeypatch.setenv("MEMORY_MAINTENANCE_APPLY_REFLECT", "1")
+
+        mm._run_subprocess("reflect", False)  # global apply is False
+
+        assert "--apply" in seen["cmd"], "per-job env must reach the actual argv"
+
+    def test_run_subprocess_stays_dry_without_the_env(self, monkeypatch, tmp_path):
+        import scripts.memory_maintenance as mm
+
+        seen: dict[str, list[str]] = {}
+
+        class _R:
+            returncode = 0
+            stdout = "ok"
+            stderr = ""
+
+        def _fake_run(cmd, **kw):
+            seen["cmd"] = list(cmd)
+            return _R()
+
+        monkeypatch.setattr(mm.subprocess, "run", _fake_run)
+        monkeypatch.setattr(mm, "PYTHON_EXE", tmp_path / "python.exe")
+        (tmp_path / "python.exe").write_text("", encoding="utf-8")
+        monkeypatch.delenv("MEMORY_MAINTENANCE_APPLY_REFLECT", raising=False)
+
+        mm._run_subprocess("reflect", False)
+
+        assert "--apply" not in seen["cmd"]
+
+    def test_applied_jobs_reports_per_job_writers(self, monkeypatch):
+        """Reporting surfaces said "dry-run" while reflect wrote to production."""
+        import scripts.memory_maintenance as mm
+
+        for n in mm.SUBPROCESS_JOBS:
+            monkeypatch.delenv(f"MEMORY_MAINTENANCE_APPLY_{n.upper()}", raising=False)
+        assert mm._applied_jobs(False) == []
+
+        monkeypatch.setenv("MEMORY_MAINTENANCE_APPLY_REFLECT", "1")
+        assert mm._applied_jobs(False) == ["reflect"]
+        assert set(mm._applied_jobs(True)) == set(mm.SUBPROCESS_JOBS)
+
+
 class TestMergeJob:
     """§БП G2 (audit 260705) — background-consolidation job wired into the cadence.
 

@@ -458,6 +458,7 @@ def ingest_items(
     embed: Callable[[str], list[float] | None] | None = None,
     now: datetime | None = None,
     on_created: Callable[[HarvestItem, str], None] | None = None,
+    on_present: Callable[[HarvestItem, str], None] | None = None,
     harvester: str | None = None,
 ) -> dict[str, Any]:
     """Dedup (UUID5 content_hash) + cap + embed + upsert HarvestItems into learned_patterns.
@@ -465,8 +466,11 @@ def ingest_items(
     Shared ingestion core reused by ``harvest`` (P1) and the reflection job (P2 D2.1).
     Returns stats: created / skipped_dup / skipped_cap / errors / items(names).
     Pure fail-soft — never raises. ``on_created(item, point_id)`` fires after each
-    successful upsert (e.g. to record DERIVES_FROM links). ``client``/``embed`` are
-    injectable for tests (no live Qdrant/TEI needed).
+    successful upsert (e.g. to record DERIVES_FROM links); ``on_present(item, point_id)``
+    fires when the point already existed. Provenance holds regardless of which writer
+    reached the content first, so reflection passes the same recorder to both; callers
+    that only care about new points omit ``on_present``. Neither fires on a dry run.
+    ``client``/``embed`` are injectable for tests (no live Qdrant/TEI needed).
     """
     cap = DEFAULT_CAP if cap is None else cap
     now = now or datetime.now()
@@ -520,6 +524,11 @@ def ingest_items(
                 if existing:
                     stats["skipped_dup"] += 1
                     stats["dup_hashes"].append(ch)
+                    if on_present is not None:
+                        try:
+                            on_present(it, pid)
+                        except Exception:
+                            pass
                     continue
         except Exception:
             stats["errors"] += 1

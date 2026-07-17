@@ -11,8 +11,10 @@ into a single ``learned_patterns`` semantic pattern instead of N near-duplicates
     importance ≥ ``importance_theta``.
   - Each triggered cluster → 1 HarvestItem (canonical = highest-importance row),
     ingested via the shared ``ingest_items`` path (content_hash dedup, §22 seed
-    0.70, cap). On creation, ``link_fn`` records DERIVES_FROM links to every source
-    episodic id (§26 P2 D2.3) — trace which episodes a pattern was distilled from.
+    0.70, cap). ``link_fn`` records DERIVES_FROM links to every source episodic id
+    (§26 P2 D2.3) — trace which episodes a pattern was distilled from — on both the
+    created and the already-present path: which writer reached the content first does
+    not change where it was distilled from.
 
 Safety: **dry-run by default** (reviewable plan, no writes); content_hash dedup
 (re-run = 0 new); pure fail-soft. ``client``/``embed``/``link_fn`` injectable for tests.
@@ -34,13 +36,18 @@ from typing import Any
 try:
     from shared.pattern_harvest import HarvestItem, ingest_items
     from shared.pattern_harvest import _normalize_ptype as _normalize_ptype
-except ImportError:  # pragma: no cover - path-ordering dependent
+except ImportError:  # path-ordering dependent (e.g. src/shared shadows hooks/shared)
     import importlib.util as _ilu
+    import sys as _sys
 
     _ph_path = Path(__file__).resolve().parent / "pattern_harvest.py"
     _spec = _ilu.spec_from_file_location("pattern_harvest", str(_ph_path))
     assert _spec and _spec.loader
     _ph = _ilu.module_from_spec(_spec)
+    # Register BEFORE exec_module: @dataclass reads sys.modules[cls.__module__] while
+    # the class body executes, so an unregistered module makes that None and the whole
+    # fallback dies with AttributeError — which is what it did until 2026-07-17.
+    _sys.modules[_spec.name] = _ph
     _spec.loader.exec_module(_ph)
     HarvestItem, ingest_items = _ph.HarvestItem, _ph.ingest_items
     _normalize_ptype = _ph._normalize_ptype
@@ -51,7 +58,11 @@ MEMORY_AI_DB = Path(os.environ.get("MEMORY_AI_DB_PATH") or PROJECT_ROOT / "data"
 
 # session_summary = episodic log, not a repeatable fact → never consolidated.
 EXCLUDE_CATEGORIES = {"session_summary"}
-DEFAULT_MIN_CLUSTER = 3
+# 2, not 3: on the live 52-episode corpus the largest Jaccard-0.5 cluster is 2, so
+# a threshold of 3 can never fire. Folding two near-duplicates is the stated purpose
+# above. Do not compensate by lowering SIM — at 0.25 overlap unrelated facts merge on
+# shared domain vocabulary alone.
+DEFAULT_MIN_CLUSTER = 2
 DEFAULT_SIM_THRESHOLD = 0.5
 DEFAULT_CAP = 10
 
@@ -215,7 +226,7 @@ def reflect(
         items.append(item)
         sources_by_hash[item.content_hash] = src_ids
 
-    def on_created(item: HarvestItem, pid: str) -> None:
+    def _record_links(item: HarvestItem, pid: str) -> None:
         if link_fn is None:
             return
         for sid in sources_by_hash.get(item.content_hash, []):
@@ -224,8 +235,24 @@ def reflect(
             except Exception:
                 pass
 
+    # Passed to BOTH paths: provenance is true whether this run created the point or
+    # another harvester wrote the same content first. Linking only on creation meant a
+    # first run over an already-harvested corpus recorded nothing, and no re-run ever
+    # backfilled it. Idempotent — LinkRegistry.create_link raises on a duplicate edge
+    # and make_link_fn swallows it.
+    # harvester="reflection": without it _emit_ingest_stats falls back to "ingest_items"
+    # and reflect's writes are indistinguishable from any other caller's — which is why
+    # "did reflect actually write?" could not be answered from the log at all. The event
+    # only fires when not dry_run, so its presence proves apply-mode ran.
     stats = ingest_items(
-        items, cap=cap, dry_run=dry_run, client=client, embed=embed, on_created=on_created
+        items,
+        cap=cap,
+        dry_run=dry_run,
+        client=client,
+        embed=embed,
+        on_created=_record_links,
+        on_present=_record_links,
+        harvester="reflection",
     )
     stats["clusters_found"] = len(clusters)
     stats["clusters_triggered"] = len(fired)

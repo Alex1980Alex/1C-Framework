@@ -141,8 +141,14 @@ def test_a3_session_save_hash_dedup_importance(tmp_path, monkeypatch):
     assert md["session_id"] == ctx["session_id"]
     assert md["content_hash"], "W2 must stamp content_hash (write-contract)"
 
-    # Second Stop of the same session → dedup, no second row.
-    assert hook.already_saved(ctx["session_id"]) is True
+    # Second Stop of the same session → dedup, no second row. already_saved returns the
+    # incumbent (2026-07-17, was a bare bool): the dup ingest event must carry the hash
+    # of the STORED row, since ctx is rebuilt from live git state and drifts between Stops.
+    incumbent = hook.already_saved(ctx["session_id"])
+    assert incumbent is not None
+    assert incumbent["content_hash"] == md["content_hash"]
+    assert incumbent["reason"] == "session_already_saved"
+    assert hook.already_saved("never-seen-session") is None
 
 
 # ---------------------------------------------------------------------------

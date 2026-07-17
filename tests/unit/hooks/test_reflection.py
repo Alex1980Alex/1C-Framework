@@ -112,6 +112,48 @@ def test_four_same_topic_episodes_consolidate_to_one_with_links() -> None:
     assert target_ids == {"e1", "e2", "e3", "e4"}
 
 
+def test_default_min_cluster_fires_on_a_two_row_cluster() -> None:
+    """Default trigger must be reachable on the real corpus.
+
+    Measured 2026-07-17 on data/memory_ai.db: 52 fact-like episodes, largest
+    Jaccard-0.5 cluster = 2. The old default of 3 could therefore never fire, and
+    the acceptance criterion `reflection>=1` read a structural 0 for 5 weeks.
+    No min_cluster is passed here on purpose — this pins the module default.
+    """
+    rows = _rows(
+        ("e1", "topic alpha shared tokens here for overlap matching test alpha", 0.5),
+        ("e2", "topic alpha shared tokens here for overlap matching test alpha too", 0.5),
+    )
+    client = FakeClient()
+    links: list[tuple[str, str]] = []
+    stats = rf.reflect(
+        rows=rows,
+        client=client,
+        embed=_embed,
+        dry_run=False,
+        link_fn=lambda pid, sid: links.append((pid, sid)),
+        sim_threshold=0.3,
+    )
+    assert rf.DEFAULT_MIN_CLUSTER == 2
+    assert stats["clusters_triggered"] == 1
+    assert stats["created"] == 1
+    assert {sid for _, sid in links} == {"e1", "e2"}
+
+
+def test_cli_defaults_come_from_the_module() -> None:
+    """The cadence runs reflect_memory.py, so its argparse defaults ARE the
+    operative values. They used to be a hardcoded copy (3 / 0.5 / 10), which meant
+    changing reflection.py alone was a no-op — that drift is what this pins.
+    """
+    import scripts.reflect_memory as rm
+
+    ns = rm._build_parser().parse_args([])
+    assert ns.min_cluster == rf.DEFAULT_MIN_CLUSTER
+    assert ns.sim == rf.DEFAULT_SIM_THRESHOLD
+    assert ns.cap == rf.DEFAULT_CAP
+    assert ns.apply is False  # dry-run stays the default
+
+
 def test_below_min_cluster_not_triggered() -> None:
     rows = _rows(
         ("e1", "topic alpha shared tokens here for overlap matching test alpha", 0.5),
@@ -142,6 +184,47 @@ def test_theta_importance_trigger() -> None:
     )
     assert stats["clusters_triggered"] == 1  # size<5 but sum importance 1.8 >= 1.5
     assert stats["created"] == 1
+
+
+def test_links_recorded_when_the_pattern_already_exists() -> None:
+    """Provenance must not depend on who wrote the point first.
+
+    Live 2026-07-17: reflection triggered 2 clusters, both already harvested by
+    another writer → skipped_dup=2 → created=0 → on_created never fired → zero
+    DERIVES_FROM edges, and no re-run would ever backfill them. The link says
+    "distilled from these episodes", which is true either way.
+    """
+    rows = _rows(
+        ("e1", "epsilon topic overlap tokens epsilon epsilon words sample here", 0.6),
+        ("e2", "epsilon topic overlap tokens epsilon epsilon words example here", 0.6),
+    )
+    client = FakeClient()
+    first: list[tuple[str, str]] = []
+    rf.reflect(
+        rows=rows,
+        client=client,
+        embed=_embed,
+        dry_run=False,
+        link_fn=lambda pid, sid: first.append((pid, sid)),
+        min_cluster=2,
+        sim_threshold=0.3,
+    )
+    assert len(first) == 2  # created path
+
+    # second run: point exists -> dup, but the links must still be offered
+    again: list[tuple[str, str]] = []
+    stats = rf.reflect(
+        rows=rows,
+        client=client,
+        embed=_embed,
+        dry_run=False,
+        link_fn=lambda pid, sid: again.append((pid, sid)),
+        min_cluster=2,
+        sim_threshold=0.3,
+    )
+    assert stats["created"] == 0 and stats["skipped_dup"] == 1
+    assert {sid for _, sid in again} == {"e1", "e2"}
+    assert {pid for pid, _ in again} == {pid for pid, _ in first}  # same point
 
 
 def test_dry_run_no_writes_no_links() -> None:

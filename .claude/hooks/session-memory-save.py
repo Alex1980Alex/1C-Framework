@@ -130,28 +130,45 @@ def is_meaningful(ctx):
 
 
 def already_saved(session_id):
-    """Check if this session was already saved (dedup by session_id or date)."""
+    """The incumbent row that makes this write redundant, or None.
+
+    Returns ``{"content_hash", "reason"}``. The hash is the INCUMBENT's, never a fresh
+    ``format_summary(ctx)``: ctx is rebuilt from live git state and drifts between Stops,
+    so a recomputed hash would name content present in no store and orphan fact-trace.
+    ``reason`` names the key that actually matched — the two branches dedup on different
+    things and the log must not claim otherwise.
+    """
     if not SQLITE_DB.exists():
-        return False
+        return None
     try:
         conn = sqlite3.connect(str(SQLITE_DB), timeout=1)
         # Primary dedup: by session_id (if available)
         if session_id:
+            reason = "session_already_saved"
             row = conn.execute(
-                "SELECT 1 FROM important_messages WHERE category = ? AND metadata LIKE ?",
+                "SELECT metadata FROM important_messages WHERE category = ? AND metadata LIKE ?",
                 (CATEGORY, f'%"session_id": "{session_id}"%'),
             ).fetchone()
         else:
             # Fallback dedup: by today's date (max 1 session summary per day)
+            reason = "date_already_saved"
             today = date.today().isoformat()
             row = conn.execute(
-                "SELECT 1 FROM important_messages WHERE category = ? AND metadata LIKE ?",
+                "SELECT metadata FROM important_messages WHERE category = ? AND metadata LIKE ?",
                 (CATEGORY, f'%"session_date": "{today}"%'),
             ).fetchone()
         conn.close()
-        return row is not None
+        if row is None:
+            return None
+        try:
+            md = json.loads(row[0]) if row[0] else {}
+        except (json.JSONDecodeError, TypeError):
+            md = {}
+        if not isinstance(md, dict):
+            md = {}
+        return {"content_hash": md.get("content_hash") or "", "reason": reason}
     except Exception:
-        return False
+        return None
 
 
 def format_summary(ctx):
@@ -239,7 +256,7 @@ def _content_hash(content):
         return ""
 
 
-def _record_ingest(action, content_hash=""):
+def _record_ingest(action, content_hash="", **kw):
     """Fail-soft §26 ingestion-metrics emit (W2 was invisible to fact-trace)."""
     try:
         src = str(PROJECT_ROOT / "src")
@@ -248,7 +265,11 @@ def _record_ingest(action, content_hash=""):
         from memory.orchestrator.ingest_metrics import record_ingest
 
         record_ingest(
-            "memory_ai", action, content_hash=content_hash, harvester="session-memory-save"
+            "memory_ai",
+            action,
+            content_hash=content_hash,
+            harvester="session-memory-save",
+            **kw,
         )
     except Exception:
         pass
@@ -449,8 +470,13 @@ class SessionMemorySave(BaseHook):
             _emit_langfuse_span(ctx, status="skipped-trivial")
             return None
 
-        if already_saved(ctx["session_id"]):
+        incumbent = already_saved(ctx["session_id"])
+        if incumbent is not None:
             _emit_langfuse_span(ctx, status="skipped-duplicate")
+            # A silenced write is still a write attempt. Without this the §26 contract
+            # only ever saw `saved` from this hook, so the dedup left no trace at all
+            # and every dup-rate reading was structurally 0.
+            _record_ingest("dup", incumbent["content_hash"], reason=incumbent["reason"])
             return None
 
         save_to_sqlite(ctx)

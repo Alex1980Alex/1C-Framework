@@ -21,7 +21,36 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / ".claude" / "hooks"))
 
-from shared.reflection import make_link_fn, reflect
+from shared.reflection import (
+    DEFAULT_CAP,
+    DEFAULT_MIN_CLUSTER,
+    DEFAULT_SIM_THRESHOLD,
+    make_link_fn,
+    reflect,
+)
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser(
+        description="Reflect episodic facts into semantic patterns (§26 P2 D2.1)"
+    )
+    ap.add_argument("--apply", action="store_true", help="execute (default: dry-run)")
+    # Defaults come from the module. The maintenance cadence runs this CLI, so a
+    # hardcoded copy here silently overrides any change made in reflection.py.
+    ap.add_argument(
+        "--min-cluster",
+        type=int,
+        default=DEFAULT_MIN_CLUSTER,
+        help="min cluster size to consolidate",
+    )
+    ap.add_argument(
+        "--sim", type=float, default=DEFAULT_SIM_THRESHOLD, help="Jaccard token-overlap threshold"
+    )
+    ap.add_argument(
+        "--theta", type=float, default=None, help="alt trigger: summed importance >= theta"
+    )
+    ap.add_argument("--cap", type=int, default=DEFAULT_CAP, help="max patterns created per run")
+    return ap
 
 
 def main() -> int:
@@ -32,17 +61,7 @@ def main() -> int:
     except Exception:
         pass
 
-    ap = argparse.ArgumentParser(
-        description="Reflect episodic facts into semantic patterns (§26 P2 D2.1)"
-    )
-    ap.add_argument("--apply", action="store_true", help="execute (default: dry-run)")
-    ap.add_argument("--min-cluster", type=int, default=3, help="min cluster size to consolidate")
-    ap.add_argument("--sim", type=float, default=0.5, help="Jaccard token-overlap threshold")
-    ap.add_argument(
-        "--theta", type=float, default=None, help="alt trigger: summed importance >= theta"
-    )
-    ap.add_argument("--cap", type=int, default=10, help="max patterns created per run")
-    args = ap.parse_args()
+    args = _build_parser().parse_args()
 
     link_fn = make_link_fn() if args.apply else None
     stats = reflect(

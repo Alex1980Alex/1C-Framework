@@ -103,9 +103,42 @@ SUBPROCESS_JOBS: dict[str, tuple[list[str], bool, bool]] = {
 }
 
 
+def _job_apply(name: str, apply: bool) -> bool:
+    """Effective apply for one job: the global --apply, or a per-job env opt-in.
+
+    Per-job exists so one job can be granted write rights without handing them to all
+    of them at once: MEMORY_MAINTENANCE_APPLY=1 also lets promote write into docs/wiki
+    and reindex_* rewrite production wiki_pages_v1 / skill_library.
+
+    ⚠ Scope: SUBPROCESS_JOBS only — this is called from ``_run_subprocess``. The inline
+    jobs (forget / review_pending / merge / archive_episodic / rebuild_link_stats) read
+    the global flag directly, so MEMORY_MAINTENANCE_APPLY_FORGET=1 is a silent no-op.
+    Extend those call sites before advertising the variable for them. Likewise
+    ``skill_review`` has supports_apply=False — nothing to enable.
+    """
+    if apply:
+        return True
+    if name not in SUBPROCESS_JOBS:
+        return False
+    return os.environ.get(f"MEMORY_MAINTENANCE_APPLY_{name.upper()}") == "1"
+
+
+def _applied_jobs(apply: bool) -> list[str]:
+    """Names of jobs that will actually write this run — for the log and the banner.
+
+    Only ``SUBPROCESS_JOBS`` honour the per-job override (see ``_job_apply``); the
+    inline jobs read the global flag directly, so under a global --apply they all write
+    and are listed too.
+    """
+    if apply:
+        return sorted(SUBPROCESS_JOBS)
+    return sorted(n for n in SUBPROCESS_JOBS if _job_apply(n, False))
+
+
 def _run_subprocess(name: str, apply: bool) -> dict[str, Any]:
     """Run a sub-job; return {rc, tail}. Fail-soft (never raises)."""
     argv, supports_apply, apply_only = SUBPROCESS_JOBS[name]
+    apply = _job_apply(name, apply)
     if apply_only and not apply:
         return {"rc": None, "tail": "skipped (apply-only)"}
     if not PYTHON_EXE.exists():
@@ -582,6 +615,11 @@ def main() -> int:
             "run",
             disable_env="MEMORY_MAINTENANCE_LOG_DISABLE",
             applied=bool(args.apply),
+            # Per-job overrides write to production while `applied` stays False. Record
+            # them, or the §27 sink permanently claims dry-run for runs that mutated
+            # learned_patterns — the same "reports success, does otherwise" defect the
+            # per-job flag was introduced to fix.
+            applied_jobs=_applied_jobs(args.apply),
             total_facts=dash.get("total_facts"),
             store_sizes=dash.get("store_sizes"),
             cross_store_dup_rate=(
@@ -594,7 +632,13 @@ def main() -> int:
         pass
 
     # ASCII-safe stdout
-    print("# memory maintenance cadence", "(APPLY)" if args.apply else "(dry-run)")
+    _writers = _applied_jobs(args.apply)
+    print(
+        "# memory maintenance cadence",
+        "(APPLY)"
+        if args.apply
+        else (f"(dry-run; per-job APPLY: {', '.join(_writers)})" if _writers else "(dry-run)"),
+    )
     print(f"store_sizes={dash['store_sizes']} total_facts={dash['total_facts']}")
     print(f"forget={forget}")
     print(f"review_pending={review_pending}")
