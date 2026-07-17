@@ -43,7 +43,7 @@ import json
 import os
 import sqlite3
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +67,10 @@ MAINTENANCE_RUNS = CACHE_DIR / "memory-maintenance-runs.jsonl"
 WINDOW_START = datetime(2026, 6, 12)
 WINDOW_END = datetime(2026, 6, 26)
 EPISODES_TARGET = 5
+# Freshness bound for criterion 6. Counting all history would latch green forever after
+# a single write and stop detecting the regression the criterion exists for. The cadence
+# fires every ~10 sessions, so 30d is several cadences of slack.
+REFLECTION_WRITE_MAX_AGE_DAYS = int(os.environ.get("REFLECTION_WRITE_MAX_AGE_DAYS", "30"))
 
 
 def _db_path() -> Path:
@@ -112,18 +116,31 @@ def _reflection_clusters_triggered() -> int:
         return 0
 
 
-def _reflection_wrote() -> int:
-    """Ingest events attributable to reflection = proof it ran with --apply.
+def _reflection_wrote(now: datetime | None = None) -> int:
+    """Recent ingest events attributable to reflection = proof it still runs with --apply.
 
     ``ingest_items`` emits stats only when ``not dry_run``, so any event carrying
     ``harvester="reflection"`` is a write-path observation. This is the criterion that
     survives the regression the other two miss: the enabling flag lives in gitignored
     settings.local.json, so a clone / another machine / a deleted line silently returns
-    reflect to the 5-week dry-run — leaving corpus-derived and edge-count checks green.
+    reflect to the 5-week dry-run — leaving corpus-derived checks green.
+
+    **Windowed on purpose.** Unlike the DERIVES_FROM edges of criterion 5, these events
+    are NOT one-shot: an apply run over an already-consolidated corpus still resolves
+    each cluster to ``skipped_dup`` and emits a ``dup`` event per hash. So every apply
+    run with ``clusters_triggered>0`` yields >=1 event and the window is satisfiable —
+    the idempotency argument that killed the in-window edge count does NOT carry over
+    here. Counting all history instead would latch green after one write and stop
+    detecting the very regression this criterion exists for.
     """
+    now = now or datetime.now()
+    cutoff = now - timedelta(days=REFLECTION_WRITE_MAX_AGE_DAYS)
     n = 0
     for rec in read_jsonl(INGEST_LOG):
-        if rec.get("harvester") == "reflection" and rec.get("store") == "learned_patterns":
+        if rec.get("harvester") != "reflection" or rec.get("store") != "learned_patterns":
+            continue
+        dt = parse_dt(rec.get("ts") or rec.get("timestamp"))
+        if dt is not None and dt >= cutoff:
             n += 1
     return n
 

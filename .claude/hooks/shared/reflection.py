@@ -22,6 +22,7 @@ Safety: **dry-run by default** (reviewable plan, no writes); content_hash dedup
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sqlite3
@@ -48,7 +49,13 @@ except ImportError:  # path-ordering dependent (e.g. src/shared shadows hooks/sh
     # the class body executes, so an unregistered module makes that None and the whole
     # fallback dies with AttributeError — which is what it did until 2026-07-17.
     _sys.modules[_spec.name] = _ph
-    _spec.loader.exec_module(_ph)
+    try:
+        _spec.loader.exec_module(_ph)
+    except Exception:
+        # Mirror importlib._bootstrap._load: a half-initialised module left in
+        # sys.modules would be picked up by every later import instead of retrying.
+        _sys.modules.pop(_spec.name, None)
+        raise
     HarvestItem, ingest_items = _ph.HarvestItem, _ph.ingest_items
     _normalize_ptype = _ph._normalize_ptype
 
@@ -98,11 +105,28 @@ def _jaccard(a: set[str], b: set[str]) -> float:
     return inter / union if union else 0.0
 
 
+def _is_archived(raw_metadata: Any) -> bool:
+    """True if the forget-gate has written this row off (metadata.archived_at)."""
+    try:
+        md = json.loads(raw_metadata) if raw_metadata else {}
+    except (json.JSONDecodeError, TypeError):
+        return False  # unreadable metadata is not evidence of archival
+    return bool(isinstance(md, dict) and md.get("archived_at"))
+
+
 def read_episodes(
     db_path: Path = MEMORY_AI_DB,
     exclude_categories: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Read fact-like episodic rows (id/content/importance/category/created_at)."""
+    """Read fact-like episodic rows (id/content/importance/category/created_at).
+
+    Archived rows are skipped: ``run_archive_episodic`` stamps ``metadata.archived_at``
+    under the invalidate-not-delete contract, and readers are expected to filter. Until
+    2026-07-17 this one did not — harmless only because the trigger was unreachable
+    (min_cluster=3 vs a largest real cluster of 2). Lowering it to 2 armed the conflict:
+    without this filter, content the forget-gate had just written off would be distilled
+    into a fresh 0.70-confidence pattern with permanent DERIVES_FROM edges to archived ids.
+    """
     exclude = EXCLUDE_CATEGORIES if exclude_categories is None else exclude_categories
     if not db_path.exists():
         return []
@@ -110,12 +134,14 @@ def read_episodes(
     try:
         conn = sqlite3.connect(str(db_path), timeout=2)
         cur = conn.execute(
-            "SELECT id, content, importance, category, created_at FROM important_messages"
+            "SELECT id, content, importance, category, created_at, metadata FROM important_messages"
         )
-        for rid, content, importance, category, created_at in cur.fetchall():
+        for rid, content, importance, category, created_at, raw_md in cur.fetchall():
             if category in exclude:
                 continue
             if not content or not str(content).strip():
+                continue
+            if _is_archived(raw_md):
                 continue
             rows.append(
                 {

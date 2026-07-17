@@ -14,6 +14,12 @@ from unittest.mock import patch
 
 import pytest
 
+# CI collects strictly by marker (`-m "unit and not slow"` / `-m "integration or e2e"`),
+# so an unmarked file runs in neither job. This one silently stopped being a gate: the
+# already_saved contract change (2026-07-17) left 5 tests red and every CI run stayed
+# green. 27 further files under tests/integration/ still carry no marker.
+pytestmark = pytest.mark.integration
+
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / ".claude" / "hooks"
 spec = importlib.util.spec_from_file_location(
     "session_memory_save", str(HOOKS_DIR / "session-memory-save.py")
@@ -151,28 +157,55 @@ class TestExtractTags:
 
 
 class TestAlreadySaved:
+    """Contract since 2026-07-17: the incumbent ``{content_hash, reason}``, or None.
+
+    Was a bare bool. The dup ingest event must carry the STORED row's hash: ctx is
+    rebuilt from live git state and drifts between Stops, so a freshly computed hash
+    would name content that exists in no store and orphan fact-trace.
+    """
+
+    @staticmethod
+    def _stored_hash(db):
+        conn = sqlite3.connect(str(db))
+        try:
+            row = conn.execute("SELECT metadata FROM important_messages LIMIT 1").fetchone()
+        finally:
+            conn.close()
+        return json.loads(row[0])["content_hash"]
+
     def test_not_saved_empty_db(self, tmp_db):
         with patch.object(mod, "SQLITE_DB", tmp_db):
-            assert already_saved("abc12345") is False
+            assert already_saved("abc12345") is None
 
-    def test_saved_after_insert(self, tmp_db):
+    def test_saved_after_insert_returns_incumbent(self, tmp_db):
         with patch.object(mod, "SQLITE_DB", tmp_db):
             save_to_sqlite(_ctx())
-            assert already_saved("abc12345") is True
+            incumbent = already_saved("abc12345")
+            assert incumbent is not None
+            assert incumbent["reason"] == "session_already_saved"
+            assert incumbent["content_hash"] == self._stored_hash(tmp_db)
 
     def test_different_session(self, tmp_db):
         with patch.object(mod, "SQLITE_DB", tmp_db):
             save_to_sqlite(_ctx())
-            assert already_saved("other_id") is False
+            assert already_saved("other_id") is None
 
     def test_empty_session_dedup_by_date(self, tmp_db):
+        """The two branches key on different things — reason must name the real one.
+
+        Empty session_id is not hypothetical: ~19 UPS hooks race on
+        session-skills.json, and a garbled read yields "".
+        """
         with patch.object(mod, "SQLITE_DB", tmp_db):
             save_to_sqlite(_ctx(session_id=""))
-            assert already_saved("") is True
+            incumbent = already_saved("")
+            assert incumbent is not None
+            assert incumbent["reason"] == "date_already_saved"
+            assert incumbent["content_hash"] == self._stored_hash(tmp_db)
 
     def test_db_missing(self, tmp_path):
         with patch.object(mod, "SQLITE_DB", tmp_path / "nope.db"):
-            assert already_saved("abc") is False
+            assert already_saved("abc") is None
 
 
 class TestSaveToSqlite:

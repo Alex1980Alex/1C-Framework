@@ -82,6 +82,25 @@ def _every() -> int:
         return DEFAULT_EVERY
 
 
+def _dry_run_mode() -> str:
+    """Banner label for a run without the global --apply.
+
+    Plain "dry-run" was a lie the moment per-job overrides existed: with
+    MEMORY_MAINTENANCE_APPLY_REFLECT=1 the cadence upserts learned_patterns and writes
+    link_registry.db while the operator reads "dry-run" — the same report-one-thing-do-
+    another defect the per-job flag was added to fix. Names what the operator SET; which
+    of those actually take effect is decided by memory_maintenance._job_apply
+    (SUBPROCESS_JOBS only — see its docstring).
+    """
+    prefix = "MEMORY_MAINTENANCE_APPLY_"
+    writers = sorted(
+        name[len(prefix) :].lower()
+        for name, value in os.environ.items()
+        if name.startswith(prefix) and value == "1"
+    )
+    return f"dry-run; per-job APPLY set: {', '.join(writers)}" if writers else "dry-run"
+
+
 def _launch(apply: bool) -> bool:
     """Detached fire-and-forget cadence run. Returns True on launch success."""
     if not PYTHON_EXE.exists() or not SCRIPT.exists():
@@ -177,7 +196,7 @@ class MemoryMaintenanceCadence(BaseHook):
             # замолчавшие memory-sinks сюрфейсим сразу в баннере каденса.
             regr = _check_regressions()
             if ok:
-                mode = "APPLY" if apply else "dry-run"
+                mode = "APPLY" if apply else _dry_run_mode()
                 msg = (
                     f"[MEMORY-MAINTENANCE] Cadence fired ({mode}; every {every} sessions). "
                     f"Dashboard → data/reports/memory/memory_maintenance_*.md в ~10-60с."

@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from scripts.memory_ai_acceptance import evaluate
+from scripts.memory_ai_acceptance import _reflection_wrote, evaluate
 
 pytestmark = pytest.mark.unit
 
@@ -76,6 +76,65 @@ def test_each_criterion_can_fail(key: str, value: Any, criterion: str) -> None:
 def test_reflection_reachable_catches_the_unreachable_trigger() -> None:
     """min_cluster=3 against a corpus whose largest cluster is 2 -> triggered=0."""
     assert evaluate(_m(reflection_clusters_triggered=0))["reflection_reachable"] is False
+
+
+def test_reflection_write_events_are_windowed(tmp_path, monkeypatch) -> None:
+    """Counting all history would latch green after one write and stop detecting the
+    dry-run regression — the only thing this criterion is for."""
+    import json as _json
+    from datetime import datetime, timedelta
+
+    import scripts.memory_ai_acceptance as mod
+
+    now = datetime(2026, 7, 17, 12, 0, 0)
+    log = tmp_path / "memory-ingestion.log"
+
+    def _write(age_days: int) -> None:
+        rec = {
+            "ts": (now - timedelta(days=age_days)).isoformat(),
+            "store": "learned_patterns",
+            "action": "dup",
+            "harvester": "reflection",
+        }
+        with log.open("a", encoding="utf-8") as fh:
+            fh.write(_json.dumps(rec) + "\n")
+
+    monkeypatch.setattr(mod, "INGEST_LOG", log)
+    monkeypatch.setattr(mod, "REFLECTION_WRITE_MAX_AGE_DAYS", 30)
+
+    _write(100)  # stale: reflect wrote once, long ago, then went quiet
+    assert _reflection_wrote(now=now) == 0, "a stale write must not keep the gate green"
+
+    _write(3)  # fresh: the cadence is still writing
+    assert _reflection_wrote(now=now) == 1
+
+
+def test_reflection_wrote_ignores_other_harvesters(tmp_path, monkeypatch) -> None:
+    """Before harvester= was passed, reflect's writes fell back to "ingest_items" and
+    were indistinguishable from every other caller's."""
+    import json as _json
+    from datetime import datetime
+
+    import scripts.memory_ai_acceptance as mod
+
+    now = datetime(2026, 7, 17, 12, 0, 0)
+    log = tmp_path / "memory-ingestion.log"
+    with log.open("w", encoding="utf-8") as fh:
+        for harvester in ("patterns", "ingest_items", "skills-harvester"):
+            fh.write(
+                _json.dumps(
+                    {
+                        "ts": now.isoformat(),
+                        "store": "learned_patterns",
+                        "action": "dup",
+                        "harvester": harvester,
+                    }
+                )
+                + "\n"
+            )
+    monkeypatch.setattr(mod, "INGEST_LOG", log)
+
+    assert _reflection_wrote(now=now) == 0
 
 
 def test_reflection_wrote_catches_the_return_to_dry_run() -> None:

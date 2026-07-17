@@ -282,6 +282,38 @@ def test_distinct_topics_separate_clusters() -> None:
     assert stats["created"] == 1
 
 
+def test_archived_episodes_excluded(tmp_path: Path) -> None:
+    """The forget-gate writes rows off with metadata.archived_at and expects readers to
+    filter. min_cluster=2 armed this: without the filter, archived content would be
+    distilled into a fresh pattern with permanent DERIVES_FROM edges to archived ids."""
+    import sqlite3
+
+    db = tmp_path / "m.db"
+    conn = sqlite3.connect(str(db))
+    conn.execute(
+        "CREATE TABLE important_messages (id TEXT, content TEXT, importance REAL, "
+        "category TEXT, created_at TEXT, updated_at TEXT, metadata TEXT, tags TEXT)"
+    )
+    rows = [
+        ("live", "a live decision fact", "decision", None),
+        ("arch", "an archived decision fact", "decision", '{"archived_at": "2026-01-01"}'),
+        ("bad", "unreadable metadata is not evidence", "decision", "{not json"),
+    ]
+    for rid, content, cat, md in rows:
+        conn.execute(
+            "INSERT INTO important_messages (id, content, importance, category, metadata) "
+            "VALUES (?,?,?,?,?)",
+            (rid, content, 0.7, cat, md),
+        )
+    conn.commit()
+    conn.close()
+
+    ids = {e["id"] for e in rf.read_episodes(db_path=db)}
+    assert "live" in ids
+    assert "arch" not in ids
+    assert "bad" in ids  # unreadable metadata must not silently drop a real episode
+
+
 def test_session_summary_excluded(tmp_path: Path) -> None:
     import sqlite3
 
