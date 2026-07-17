@@ -78,7 +78,7 @@ def clean_session():
         reset_session()
     except Exception:
         # If session file doesn't exist, that's fine
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         if session_file.exists():
             session_file.unlink()
     yield
@@ -295,65 +295,70 @@ class TestSkillRouterAffinity:
 
 
 class TestSkillRouterSessionDedup:
-    """1.6 Session Deduplication (TIER 3) — tests 26-30."""
+    """1.6 Session Deduplication (TIER 3) — tests 26-30.
+
+    Актуализировано 2026-07-17 (pipeline fix-skill-routing-dedup-tests). Класс был
+    мёртв с рождения (ImportError на module-level reset_session) и сгнил против
+    роутера после Honest Eval 2026-06-13. Сегодняшний контракт (проверен live):
+      - вывод роутера — PLAIN TEXT на stdout («[SKILL-ROUTER] Bundles: ...»),
+        НЕ JSON с systemMessage → ассерты по тексту, parse_hook_output не годится;
+      - dedup — SKILL-level через recommended_skills session-state (TIER 3):
+        повтор И переформулировка того же бандла молчат; reset_session вскрывает;
+      - state живёт в data/session-skills.json; тесты изолируются от живого файла
+        через SESSION_STATE_PATH (иначе dedup давится реальной сессией и первый
+        же вызов пуст);
+      - таймаут-переоткрытие сессии (старый test_30) в роутере НЕ реализовано —
+        кейс заменён на переформулировку того же бандла (реальный контракт).
+    """
 
     HOOK = HOOKS_DIR / "skill-router.py"
+    PROMPT_LC = "langchain agent create_agent tool decorator"
 
-    def test_26_first_call_returns_recommendations(self, clean_session):
-        stdout, _ = run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        out = parse_hook_output(stdout)
-        assert out is not None
-        assert "systemMessage" in out
+    @pytest.fixture
+    def isolated_session(self, monkeypatch, tmp_path):
+        """SESSION_STATE_PATH → tmp: сабпроцесс роутера наследует env, in-process
+        reset идёт через перезагруженный модуль. Живой data/session-skills.json
+        не затрагивается. Teardown возвращает модулю реальный путь (иначе модуль
+        в sys.modules остаётся привязанным к мёртвому tmp — ловушка для соседей)."""
+        import importlib
 
-    def test_27_second_call_deduplicated(self, clean_session):
-        # First call
-        run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        # Second identical call
-        stdout, _ = run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        out = parse_hook_output(stdout)
-        # Should be empty (all skills already recommended)
-        assert out is None
+        monkeypatch.setenv("SESSION_STATE_PATH", str(tmp_path))
+        from shared import session_state as ss
 
-    def test_28_different_domain_shows_new_skills(self, clean_session):
-        # First call — langchain domain
-        run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        # Second call — different domain (1C)
+        importlib.reload(ss)
+        ss.SessionState._state_cache = None
+        yield ss
+        monkeypatch.delenv("SESSION_STATE_PATH", raising=False)
+        importlib.reload(ss)
+        ss.SessionState._state_cache = None
+
+    def test_26_first_call_returns_recommendations(self, isolated_session):
+        stdout, _ = run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
+        assert "[SKILL-ROUTER]" in stdout
+        assert "langchain-core" in stdout
+
+    def test_27_second_call_deduplicated(self, isolated_session):
+        run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
+        stdout, _ = run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
+        assert stdout == ""  # все скиллы бандла уже порекомендованы
+
+    def test_28_different_domain_shows_new_skills(self, isolated_session):
+        run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
         stdout, _ = run_hook(self.HOOK, {"prompt": "1С справочник реквизит табличная часть"})
-        out = parse_hook_output(stdout)
-        # Should show 1C skills (new domain)
-        assert out is not None
-        msg = out.get("systemMessage", "")
-        assert "1c-doc-research" in msg
+        assert "1c-doc-research" in stdout  # новый домен dedup'ом не задет
 
-    def test_29_after_reset_shows_again(self, clean_session):
-        # First call
-        run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        # Reset session
-        from shared.session_state import reset_session
+    def test_29_after_reset_shows_again(self, isolated_session):
+        run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
+        isolated_session.reset_session()
+        stdout, _ = run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
+        assert "[SKILL-ROUTER]" in stdout
 
-        reset_session()
-        # Same call again
-        stdout, _ = run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        out = parse_hook_output(stdout)
-        assert out is not None
-
-    def test_30_session_timeout_shows_again(self, clean_session):
-        """Simulate session timeout by manipulating started_at."""
-        # First call
-        run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        # Manually set started_at to 2 hours ago
-        session_file = CACHE_DIR / "session-skills.json"
-        if session_file.exists():
-            data = json.loads(session_file.read_text("utf-8"))
-            from datetime import datetime, timedelta
-
-            old_time = (datetime.now() - timedelta(hours=2)).isoformat()
-            data["started_at"] = old_time
-            session_file.write_text(json.dumps(data), encoding="utf-8")
-        # Same call — should work because session expired
-        stdout, _ = run_hook(self.HOOK, {"prompt": "langchain agent create_agent tool decorator"})
-        out = parse_hook_output(stdout)
-        assert out is not None
+    def test_30_reworded_same_bundle_still_deduplicated(self, isolated_session):
+        """Dedup — по скиллам, не по тексту промпта: другая формулировка того же
+        бандла (kw 'router pattern langchain' из skill-router-config) молчит."""
+        run_hook(self.HOOK, {"prompt": self.PROMPT_LC})
+        stdout, _ = run_hook(self.HOOK, {"prompt": "router pattern langchain handoff"})
+        assert stdout == ""
 
 
 class TestSkillRouterWorkflow:
@@ -606,7 +611,7 @@ class TestSessionStateTimeout:
 
         record_recommendation(["x"])
         # Manually expire session
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         data = json.loads(session_file.read_text("utf-8"))
         from datetime import datetime, timedelta
 
@@ -619,7 +624,7 @@ class TestSessionStateTimeout:
         from shared.session_state import get_already_recommended, record_recommendation
 
         record_recommendation(["x"])
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         data = json.loads(session_file.read_text("utf-8"))
         from datetime import datetime, timedelta
 
@@ -657,7 +662,7 @@ class TestSessionStateErrorRecovery:
     def test_63_corrupt_json(self, clean_session):
         from shared.session_state import get_already_recommended
 
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         session_file.parent.mkdir(parents=True, exist_ok=True)
         session_file.write_text("INVALID JSON {{{{", encoding="utf-8")
         result = get_already_recommended()
@@ -667,7 +672,7 @@ class TestSessionStateErrorRecovery:
     def test_64_missing_file(self, clean_session):
         from shared.session_state import get_already_recommended
 
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         if session_file.exists():
             session_file.unlink()
         result = get_already_recommended()
@@ -711,7 +716,7 @@ class TestSessionStateIntegrity:
         from shared.session_state import record_recommendation
 
         record_recommendation(["test"])
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         data = json.loads(session_file.read_text("utf-8"))
         ts = data["recommended"]["test"]
         # Should be parseable as ISO datetime
@@ -738,7 +743,7 @@ class TestSessionStateReset:
     def test_70_reset_without_file(self, clean_session):
         from shared.session_state import reset_session
 
-        session_file = CACHE_DIR / "session-skills.json"
+        session_file = PROJECT_ROOT / "data" / "session-skills.json"
         if session_file.exists():
             session_file.unlink()
         # Should not crash
