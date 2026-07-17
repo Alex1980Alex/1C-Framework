@@ -44,8 +44,8 @@ def _blocked(file_path: str) -> bool:
     r = subprocess.run(
         [str(_PY), str(_HOOK)],
         input=json.dumps(payload),  # json.dumps, NOT shell interpolation: raw newlines
-        capture_output=True,        # make the payload invalid and the hook degrades to
-        text=True,                  # allow, which silently passes any assertion
+        capture_output=True,  # make the payload invalid and the hook degrades to
+        text=True,  # allow, which silently passes any assertion
         encoding="utf-8",
     )
     return "WRITE GUARD" in (r.stdout + r.stderr)
