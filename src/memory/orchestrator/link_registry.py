@@ -64,7 +64,7 @@ class LinkType(str, Enum):
         for member in cls:
             if member.value == value_lower:
                 return member
-        raise ValueError(f"Unknown link type: {value}")
+        raise ValueError(f"Unknown link type: {value!r}. Valid: {[m.value for m in cls]}")
 
 
 @dataclass

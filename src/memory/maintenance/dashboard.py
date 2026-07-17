@@ -69,10 +69,14 @@ def compute_docs_freshness(
         if ts:
             try:
                 dt = datetime.fromisoformat(ts)
-                ref = now if dt.tzinfo is None else now.astimezone()
-                if dt.tzinfo is None and ref.tzinfo is not None:
-                    ref = ref.replace(tzinfo=None)
-                age_days = round((ref - dt).total_seconds() / 86400.0, 1)
+                # Normalize BOTH operands to naive-local before subtracting. Naive ISO
+                # timestamps are local wall-clock (framework convention: datetime.now()).
+                # The old code stripped now's tzinfo without converting frames — an
+                # aware-UTC now became UTC-wall-clock naive, off by the tz offset against a
+                # naive-local dt (common both-naive path was fine → latent). Pattern: M9 _naive.
+                d_ref = dt.astimezone().replace(tzinfo=None) if dt.tzinfo else dt
+                n_ref = now.astimezone().replace(tzinfo=None) if now.tzinfo else now
+                age_days = round((n_ref - d_ref).total_seconds() / 86400.0, 1)
                 stale = age_days > max_age_days
             except (ValueError, TypeError):
                 pass

@@ -311,6 +311,14 @@ class RRFMerger:
 
             for rank, item in enumerate(ranked):
                 rrf_score = weight / (self._k + rank + 1)
+                # Keyed by unified_id (type:source:id), which is source-specific — so a
+                # cross-store duplicate (same content in two stores) has two distinct keys
+                # and its ranks are NOT summed. This is INTENTIONAL, not a bug: cross-store
+                # dups here are almost always MIRRORS (one fact synced by cross_store_sync),
+                # i.e. redundant storage, not independent corroboration — boosting them would
+                # over-rank a single fact. Deduplicator collapses them post-fusion into one
+                # result (duplicate_sources). Measured 2026-07-17: 2/93 results affected.
+                # Roadmap 260716 §3.3 (measured defer, not fixed).
                 rrf_scores[item.unified_id] = rrf_scores.get(item.unified_id, 0.0) + rrf_score
 
                 if item.unified_id not in result_map:

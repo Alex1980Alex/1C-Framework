@@ -35,6 +35,19 @@ RESULT: ALL PASS
 `test_dedupe_learned_patterns.py` (7) + `test_pattern_type_contract.py` (41) +
 `test_memory_p1_resilience.py` (48) = **96 passed** (2.27s). Правок кода нет → регрессий нет.
 
+## code-verify верификационного скрипта (sabotage-check доказательства)
+
+Ревьюер (read-only, quality-review) проверил САМ verify-скрипт — является ли «ALL PASS»
+честным доказательством. Вердикт PARTIAL: §5.5 доказан честно (ключ настоящий, arm
+регистрируется безусловно, пустой `sources_failed` ⟹ arm отработал), но 3 вакуумных
+пути (пройдут PASS при неосуществлённой проверке): `arm==тул` `[]==[]`, `link_integrity`
+проглатывал `except: continue` на нечитаемом реестре → «0 dangling» без осмотра рёбер,
+`data_cleanliness` пустой scroll. Все 4 рекомендации применены (non-empty гарды,
+`queried_ok`/`errored` счётчики + гейт, `vector-memory in sources_searched` sufficiency,
+удалён мёртвый fallback). Ре-прогон ПОСЛЕ хардинга — ALL PASS, теперь **само-сертифицирующе**:
+`151 points`, `arm was searched`, `queried_ok=151 errored=0 edges_seen=42`, tool/arm по 10
+непустых. Доказательство больше не опирается на глазомер оператора.
+
 ## Обратимость
 
 Бэкап `learned_patterns_20260717_225637.json` (154 pts + 47 links + векторы) проверен на

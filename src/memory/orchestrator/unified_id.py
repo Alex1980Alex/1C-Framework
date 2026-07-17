@@ -39,7 +39,7 @@ class MemoryType(Enum):
         for member in cls:
             if member.value == value:
                 return member
-        raise ValueError(f"Unknown memory type: {value}")
+        raise ValueError(f"Unknown memory type: {value!r}. Valid: {[m.value for m in cls]}")
 
 
 class SourceServer(Enum):
@@ -59,7 +59,7 @@ class SourceServer(Enum):
         for member in cls:
             if member.value == value:
                 return member
-        raise ValueError(f"Unknown source server: {value}")
+        raise ValueError(f"Unknown source server: {value!r}. Valid: {[m.value for m in cls]}")
 
     @property
     def memory_type(self) -> MemoryType:

@@ -17,6 +17,7 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
+from ..vector_memory.models import normalize_pattern_type
 from .content_hash import hash_content
 from .unified_id import MemoryType, SourceServer
 
@@ -210,7 +211,9 @@ class MemoryCube:
         """Convert to vector-memory Qdrant payload format."""
         return {
             "pattern_id": self.cube_id,
-            "pattern_type": self.metadata.get("pattern_type", "code-convention"),
+            # Untrusted metadata value → coerce to the canonical enum on the write boundary
+            # (roadmap 260716 P0.3 writer contract). None/garbage → canonical default.
+            "pattern_type": normalize_pattern_type(self.metadata.get("pattern_type"))[0],
             "name": self.title or self.content[:50],
             "description": self.what or "",
             "content": self.content,
@@ -231,7 +234,8 @@ class MemoryCube:
         """Convert to skill-learning JSONL record format."""
         return {
             "pattern_id": self.cube_id,
-            "pattern_type": self.metadata.get("pattern_type", "workflow-pattern"),
+            # Untrusted metadata value → coerce on the write boundary (roadmap 260716 P0.3).
+            "pattern_type": normalize_pattern_type(self.metadata.get("pattern_type"))[0],
             "name": self.title or self.content[:50],
             "content": self.content,
             "content_hash": self.content_hash,

@@ -514,13 +514,28 @@ async def delete_message(args: dict) -> list[TextContent]:
 
     links_removed = 0
     if deleted:
-        links_removed = _cleanup_links(msg_id)
+        # The row is already committed-deleted. Post-delete link cleanup and observability
+        # are best-effort: a link-registry hiccup must NOT turn a successful delete into a
+        # reported error (honest-failure, roadmap 260716 §3.3). Each side-effect is isolated
+        # so one failure doesn't skip the other.
+        try:
+            links_removed = _cleanup_links(msg_id)
+        except Exception as exc:
+            logger.warning(f"delete_message: link cleanup failed for {msg_id}: {exc}")
         # W6 observability (roadmap 260612 P4): deletes were invisible to fact-trace.
         try:
-            content_hash = (json.loads(row[0]) or {}).get("content_hash", "") if row else ""
+            parsed = json.loads(row[0]) if row and row[0] else {}
+            # metadata is untrusted: valid JSON can be a non-dict (list/scalar), on which
+            # .get() raises AttributeError — which would leak past the narrow except and
+            # turn a committed delete into a reported error ([[feedback-payload-untrusted-input]]:
+            # (x or {}) does NOT guard a truthy non-dict).
+            content_hash = parsed.get("content_hash", "") if isinstance(parsed, dict) else ""
         except (json.JSONDecodeError, TypeError):
             content_hash = ""
-        _record_ingest("deleted", content_hash, harvester="delete_message")
+        try:
+            _record_ingest("deleted", content_hash, harvester="delete_message")
+        except Exception as exc:
+            logger.warning(f"delete_message: ingest record failed for {msg_id}: {exc}")
 
     return [
         TextContent(
@@ -542,7 +557,14 @@ async def get_categories(args: dict) -> list[TextContent]:
         rows = cursor.fetchall()
 
     categories = [
-        {"category": row[0], "count": row[1], "avg_importance": round(row[2], 2)} for row in rows
+        {
+            "category": row[0],
+            "count": row[1],
+            # AVG(importance) is NULL for a group whose importance values are all NULL →
+            # round(None, 2) crashes. None (JSON null) is the honest "no numeric importance".
+            "avg_importance": round(row[2], 2) if row[2] is not None else None,
+        }
+        for row in rows
     ]
     return [
         TextContent(
