@@ -74,7 +74,15 @@ _EXEMPT_PREFIXES = [
     "docs/",
     "data/",
     "tests/",  # test code is precision work (exact signatures/fixtures), not delegatable generation
+    "pipeline/",  # ADR-018 process artefacts — see _MD_EXEMPT_PREFIXES
 ]
+
+# Prefixes where a large .md is NOT delegatable prose.
+# pipeline/: ADR-018 makes these artefacts MANDATORY (pipeline-protocol-stop hard-blocks
+# completion without them), so blocking the write here pitted two enforcers against each
+# other — one demanding a file the other forbade. docs-change-enforcer already treats
+# pipeline/ as process artefacts, not product (its own SKIP_PATTERNS).
+_MD_EXEMPT_PREFIXES = [".claude/", "pipeline/"]
 
 # Paths within data/ that ARE enforced for large .md files (not exempt)
 _ENFORCED_DATA_PATHS = [
@@ -125,7 +133,7 @@ class ZAIWriteGuard(BaseHook):
         is_large_md = (
             ext == ".md"
             and line_count > _LARGE_MD_THRESHOLD
-            and not any(fp.startswith(p) or f"/{p}" in fp for p in [".claude/"])
+            and not any(fp.startswith(p) or f"/{p}" in fp for p in _MD_EXEMPT_PREFIXES)
         )
         # data/ is generally exempt for .md, EXCEPT enforced paths
         if is_large_md and (fp.startswith("data/") or "/data/" in fp):

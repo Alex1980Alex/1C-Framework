@@ -23,6 +23,7 @@ _ROOT = Path(__file__).resolve().parents[3]
 _HOOK = _ROOT / ".claude" / "hooks" / "z-ai-write-guard.py"
 _PY = _ROOT / ".venv" / "Scripts" / "python.exe"
 _BIG = "\n".join(f"x = {i}" for i in range(30))  # > _LINE_THRESHOLD
+_MD = "\n".join(f"line {i}" for i in range(60))  # > _LARGE_MD_THRESHOLD
 
 
 def _load():
@@ -34,12 +35,12 @@ def _load():
     return mod
 
 
-def _blocked(file_path: str) -> bool:
+def _blocked(file_path: str, body: str = _BIG) -> bool:
     """Drive the hook end-to-end; True when it emits the block."""
     payload = {
         "hook_event_name": "PreToolUse",
         "tool_name": "Write",
-        "tool_input": {"file_path": file_path, "content": _BIG},
+        "tool_input": {"file_path": file_path, "content": body},
     }
     r = subprocess.run(
         [str(_PY), str(_HOOK)],
@@ -71,3 +72,19 @@ def test_scratchpad_outside_repo_is_exempt() -> None:
 @pytest.mark.parametrize("rel", ["tests/unit/probe.py", ".claude/hooks/probe.py"])
 def test_existing_exemptions_survive(rel: str) -> None:
     assert not _blocked(str(_ROOT / rel))
+
+
+@pytest.mark.skipif(not _PY.exists(), reason=".venv python required")
+def test_pipeline_artefacts_are_exempt() -> None:
+    """Two enforcers were pitted against each other: ADR-018 (pipeline-protocol-stop)
+    hard-blocks completion without pipeline/<slug>/*.md, while this guard forbade
+    writing them (>50-line .md outside .claude/). Mandatory process artefacts are not
+    delegatable prose — docs-change-enforcer already skips pipeline/ for the same reason.
+    """
+    assert not _blocked(str(_ROOT / "pipeline" / "slug" / "01-architecture.md"), _MD)
+
+
+@pytest.mark.skipif(not _PY.exists(), reason=".venv python required")
+def test_large_docs_md_still_enforced() -> None:
+    """The exemption must stay narrow: long prose under docs/ is still delegatable."""
+    assert _blocked(str(_ROOT / "docs" / "zzz_guard_probe.md"), _MD)
