@@ -12,6 +12,16 @@ Migrated from:
 
 This version: in-memory state, no external dependencies.
 
+Version: 2.1 (2026-07-17) — HALF_OPEN state machine made real (R1 / roadmap 260716 §3.3,
+pipeline fix-circuit-breaker-half-open). Before: `_transition_to(HALF_OPEN)` had no
+callers (state stayed raw-OPEN forever), `record_success` tested the raw state so the
+CLOSED branch was dead, and `allow_request` gated probes on the LIFETIME success_count —
+a breaker with any successful history rejected probes forever. Now the gates
+(`allow_request`/`call_async`) COMMIT the OPEN→HALF_OPEN transition via `_sync_state()`
+(the `state` property stays a pure view), probes are counted per-episode
+(`half_open_probes`), and success/failure branches are reachable again. Reference
+semantics: src/shared/llm_rotation/circuit_breaker.py (the working sibling).
+
 Version: 2.0 (2026-04-04) — P1 migration
 """
 
@@ -52,8 +62,9 @@ class CircuitStats:
 
     state: CircuitState = CircuitState.CLOSED
     failure_count: int = 0
-    success_count: int = 0
+    success_count: int = 0  # lifetime telemetry — NOT used for gating (v2.1)
     consecutive_successes: int = 0
+    half_open_probes: int = 0  # per-episode probe slots taken (reset on transitions)
     last_failure_time: float = 0.0
     last_failure_error: str = ""
     last_state_change: float = field(default_factory=time.time)
@@ -183,6 +194,11 @@ class CircuitBreaker:
                     self.name,
                     self._stats.consecutive_successes,
                 )
+            else:
+                # Ниже порога закрытия: освободить probe-слот, иначе при
+                # max_probes=1 и success_threshold=2 второй пробе некуда войти
+                # и цепь зависает в HALF_OPEN навсегда.
+                self._stats.half_open_probes = 0
         elif self._stats.state == CircuitState.CLOSED:
             self._stats.failure_count = 0  # reset on success
 
