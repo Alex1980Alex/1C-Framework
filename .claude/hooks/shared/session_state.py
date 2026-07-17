@@ -2,15 +2,24 @@
 Session State Management for Claude Code Hooks
 Provides persistent state storage across hook invocations.
 
+Concurrency contract (v2.1): hook-процессы стартуют ПАРАЛЛЕЛЬНО на одном событии,
+поэтому мутации идут через _mutate(): межпроцессный lock-файл + свежее чтение с
+диска (мимо процессного кэша) + atomic save с ретраем os.replace (Windows отдаёт
+PermissionError, пока другой процесс держит файл открытым на чтение).
+
 Author: Claude Code
-Version: 2.0.0
-Updated: 2026-02-23 (Added pending_learn support for Skill-First Enforcement)
+Version: 2.1.0
+Updated: 2026-07-17 (cross-process _mutate + os.replace retry — потеря активации
+    Skill при параллельных хуках на PreToolUse:Skill; см. pipeline
+    fix-session-state-skill-race)
 """
 
 import json
 import os
 import tempfile
 import threading
+import time
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -34,6 +43,14 @@ class SessionState:
 
     _lock = threading.Lock()
     _state_cache: dict[str, Any] | None = None
+
+    # os.replace retry (Windows: PermissionError, пока читатель держит файл открытым)
+    _REPLACE_RETRIES = 6
+    _REPLACE_RETRY_SLEEP = 0.02
+    # Межпроцессный lock мутаций (бюджет ≪ hook-timeout 3с)
+    _LOCK_WAIT_SEC = 0.6
+    _LOCK_POLL_SEC = 0.02
+    _LOCK_STALE_SEC = 5.0
 
     @classmethod
     def _empty_state(cls) -> dict[str, Any]:
@@ -85,7 +102,19 @@ class SessionState:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(state, f, indent=2, ensure_ascii=False)
-            os.replace(tmp_path, STATE_FILE)
+            for attempt in range(cls._REPLACE_RETRIES):
+                try:
+                    os.replace(tmp_path, STATE_FILE)
+                    break
+                except PermissionError:
+                    # Windows: replace падает, пока ДРУГОЙ hook-процесс держит
+                    # STATE_FILE открытым на чтение (CPython open() — без
+                    # FILE_SHARE_DELETE). Окно микросекундное — ретраим, иначе
+                    # запись тихо теряется у glotающих исключения вызывателей
+                    # (инцидент: активация Skill не попала в state).
+                    if attempt == cls._REPLACE_RETRIES - 1:
+                        raise
+                    time.sleep(cls._REPLACE_RETRY_SLEEP)
         except Exception:
             try:
                 if os.path.exists(tmp_path):
@@ -96,6 +125,83 @@ class SessionState:
 
         cls._state_cache = state
 
+    # ===== CROSS-PROCESS MUTATION CORE (v2.1) =====
+
+    @classmethod
+    @contextmanager
+    def _ipc_lock(cls):
+        """Межпроцессный лок мутаций: атомарное создание lock-файла (O_CREAT|O_EXCL).
+
+        threading.Lock не защищает от параллельных hook-ПРОЦЕССОВ (одно событие
+        Claude Code запускает несколько хуков одновременно). Ожидание ограничено;
+        не взяли лок — работаем без него (fail-open: потеря взаимного исключения
+        лучше дедлока хука с timeout 3с). Stale-лок (упавший процесс) взламывается
+        по возрасту: хуки живут секунды, порог _LOCK_STALE_SEC.
+        """
+        lock_path = str(STATE_FILE) + ".lock"
+        fd = None
+        deadline = time.time() + cls._LOCK_WAIT_SEC
+        while True:
+            try:
+                fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                break
+            except FileExistsError:
+                try:
+                    if time.time() - os.path.getmtime(lock_path) > cls._LOCK_STALE_SEC:
+                        os.unlink(lock_path)
+                        continue
+                except OSError:
+                    pass
+                if time.time() >= deadline:
+                    break  # fail-open
+                time.sleep(cls._LOCK_POLL_SEC)
+            except OSError:
+                break  # каталог недоступен и т.п. — fail-open
+        try:
+            yield fd is not None
+        finally:
+            if fd is not None:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+                try:
+                    os.unlink(lock_path)
+                except OSError:
+                    pass
+
+    @classmethod
+    def _read_disk_fresh(cls) -> dict[str, Any]:
+        """Состояние строго с диска, МИМО процессного кэша (только из-под _mutate).
+
+        Кэш к моменту мутации может быть устаревшим: другой hook-процесс успел
+        записать своё изменение после нашего _load_state — save по кэшу затёр бы
+        его (lost update).
+        """
+        try:
+            with open(STATE_FILE, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError):
+            initial = cls._empty_state()
+            initial["session_id"] = os.urandom(8).hex()
+            initial["created_at"] = datetime.now().isoformat()
+            return initial
+
+    @classmethod
+    def _mutate(cls, mutator) -> None:
+        """Единая точка read-modify-write: lock → свежее чтение → mutator → save.
+
+        mutator(state) правит dict на месте; возврат False = «изменений нет,
+        не сохранять» (кэш всё равно обновляется свежим снапшотом).
+        """
+        with cls._lock, cls._ipc_lock():
+            state = cls._read_disk_fresh()
+            changed = mutator(state)
+            if changed is not False:
+                cls._save_state(state)
+            else:
+                cls._state_cache = state
+
     @classmethod
     def add_activated_skill(cls, skill_name: str) -> None:
         """
@@ -104,11 +210,14 @@ class SessionState:
         Args:
             skill_name: Name of the activated skill
         """
-        state = cls._load_state()
 
-        if skill_name not in state["activated_skills"]:
-            state["activated_skills"].append(skill_name)
-            cls._save_state(state)
+        def _do(state):
+            skills = state.setdefault("activated_skills", [])
+            if skill_name in skills:
+                return False
+            skills.append(skill_name)
+
+        cls._mutate(_do)
 
     @classmethod
     def get_already_activated(cls) -> list[str]:
@@ -137,9 +246,11 @@ class SessionState:
     @classmethod
     def clear_activated_skills(cls) -> None:
         """Clear all activated skills (e.g., for new session)."""
-        state = cls._load_state()
-        state["activated_skills"] = []
-        cls._save_state(state)
+
+        def _do(state):
+            state["activated_skills"] = []
+
+        cls._mutate(_do)
 
     # ===== RECOMMENDATION TRACKING (Session Dedup) =====
 
@@ -151,13 +262,17 @@ class SessionState:
         Args:
             skills: List of skill names that were recommended
         """
-        state = cls._load_state()
-        existing = state.get("recommended_skills", [])
-        for skill in skills:
-            if skill not in existing:
-                existing.append(skill)
-        state["recommended_skills"] = existing
-        cls._save_state(state)
+
+        def _do(state):
+            existing = state.setdefault("recommended_skills", [])
+            changed = False
+            for skill in skills:
+                if skill not in existing:
+                    existing.append(skill)
+                    changed = True
+            return changed
+
+        cls._mutate(_do)
 
     @classmethod
     def get_already_recommended(cls) -> list[str]:
@@ -191,14 +306,14 @@ class SessionState:
             ...     "pattern": "FastAPI|APIRouter"
             ... })
         """
-        state = cls._load_state()
-
         # Add timestamp if not provided
         if "detected_at" not in learn_data:
             learn_data["detected_at"] = datetime.now().isoformat()
 
-        state["pending_learn"] = learn_data
-        cls._save_state(state)
+        def _do(state):
+            state["pending_learn"] = learn_data
+
+        cls._mutate(_do)
 
     @classmethod
     def get_pending_learn(cls) -> dict[str, Any] | None:
@@ -234,9 +349,13 @@ class SessionState:
 
         Call this after creating LEARN tasks to prevent duplicate task creation.
         """
-        state = cls._load_state()
-        state["pending_learn"] = None
-        cls._save_state(state)
+
+        def _do(state):
+            if state.get("pending_learn") is None:
+                return False
+            state["pending_learn"] = None
+
+        cls._mutate(_do)
 
     # ===== TASK PROTOCOL STATE (Mandatory Execution Algorithm) =====
 
@@ -257,13 +376,15 @@ class SessionState:
 
         Sets phase to 'decomposed' and increments subtask_count.
         """
-        state = cls._load_state()
-        protocol = state.get("task_protocol", cls._default_task_protocol())
-        protocol["phase"] = "decomposed"
-        protocol["subtask_count"] = protocol.get("subtask_count", 0) + 1
-        protocol["decomposed_at"] = datetime.now().isoformat()
-        state["task_protocol"] = protocol
-        cls._save_state(state)
+
+        def _do(state):
+            protocol = state.get("task_protocol", cls._default_task_protocol())
+            protocol["phase"] = "decomposed"
+            protocol["subtask_count"] = protocol.get("subtask_count", 0) + 1
+            protocol["decomposed_at"] = datetime.now().isoformat()
+            state["task_protocol"] = protocol
+
+        cls._mutate(_do)
 
     @classmethod
     def set_task_classified(cls, complexity: str) -> None:
@@ -272,14 +393,16 @@ class SessionState:
         Args:
             complexity: 'trivial', 'medium', or 'complex'
         """
-        state = cls._load_state()
-        protocol = state.get("task_protocol", cls._default_task_protocol())
-        # Don't downgrade from 'decomposed'
-        if protocol.get("phase") != "decomposed":
-            protocol["phase"] = "classified"
-        protocol["complexity"] = complexity
-        state["task_protocol"] = protocol
-        cls._save_state(state)
+
+        def _do(state):
+            protocol = state.get("task_protocol", cls._default_task_protocol())
+            # Don't downgrade from 'decomposed'
+            if protocol.get("phase") != "decomposed":
+                protocol["phase"] = "classified"
+            protocol["complexity"] = complexity
+            state["task_protocol"] = protocol
+
+        cls._mutate(_do)
 
     @classmethod
     def get_task_protocol(cls) -> dict[str, Any]:
@@ -295,9 +418,11 @@ class SessionState:
     @classmethod
     def reset_task_protocol(cls) -> None:
         """Reset task protocol on new prompt (UserPromptSubmit)."""
-        state = cls._load_state()
-        state["task_protocol"] = cls._default_task_protocol()
-        cls._save_state(state)
+
+        def _do(state):
+            state["task_protocol"] = cls._default_task_protocol()
+
+        cls._mutate(_do)
 
     @classmethod
     def record_skill_checked(cls) -> None:
@@ -306,23 +431,26 @@ class SessionState:
         Sets phase to 'skill_checked'. This is the only phase that
         allows Write/Edit through the enforcer gate.
         """
-        state = cls._load_state()
-        protocol = state.get("task_protocol", cls._default_task_protocol())
-        protocol["phase"] = "skill_checked"
-        protocol["skill_checked_at"] = datetime.now().isoformat()
-        state["task_protocol"] = protocol
-        cls._save_state(state)
+
+        def _do(state):
+            protocol = state.get("task_protocol", cls._default_task_protocol())
+            protocol["phase"] = "skill_checked"
+            protocol["skill_checked_at"] = datetime.now().isoformat()
+            state["task_protocol"] = protocol
+
+        cls._mutate(_do)
 
     # ===== Z.AI DELEGATION TRACKING =====
 
     @classmethod
     def record_llm_delegation(cls) -> None:
         """Record that mcp__llm-rotation__llm_complete was called in this session."""
-        state = cls._load_state()
-        count = state.get("llm_delegation_count", 0)
-        state["llm_delegation_count"] = count + 1
-        state["llm_delegation_last"] = datetime.now().isoformat()
-        cls._save_state(state)
+
+        def _do(state):
+            state["llm_delegation_count"] = state.get("llm_delegation_count", 0) + 1
+            state["llm_delegation_last"] = datetime.now().isoformat()
+
+        cls._mutate(_do)
 
     @classmethod
     def has_llm_delegation(cls) -> bool:
@@ -335,9 +463,11 @@ class SessionState:
     @classmethod
     def set_router_fired(cls) -> None:
         """Mark that skill-router output recommendations this prompt."""
-        state = cls._load_state()
-        state["router_fired_at"] = datetime.now().isoformat()
-        cls._save_state(state)
+
+        def _do(state):
+            state["router_fired_at"] = datetime.now().isoformat()
+
+        cls._mutate(_do)
 
     @classmethod
     def was_router_fired_recently(cls, seconds: int = 10) -> bool:
@@ -365,9 +495,11 @@ class SessionState:
         Args:
             prompt_id: Short hash identifying the prompt (e.g. "abc12345")
         """
-        state = cls._load_state()
-        state["current_prompt_id"] = prompt_id
-        cls._save_state(state)
+
+        def _do(state):
+            state["current_prompt_id"] = prompt_id
+
+        cls._mutate(_do)
 
     @classmethod
     def get_prompt_id(cls) -> str | None:
@@ -387,9 +519,13 @@ class SessionState:
     @classmethod
     def clear_prompt_id(cls) -> None:
         """Clear prompt_id after activation is recorded."""
-        state = cls._load_state()
-        state.pop("current_prompt_id", None)
-        cls._save_state(state)
+
+        def _do(state):
+            if "current_prompt_id" not in state:
+                return False
+            state.pop("current_prompt_id", None)
+
+        cls._mutate(_do)
 
     # ===== METADATA METHODS =====
 
@@ -422,7 +558,7 @@ class SessionState:
     @classmethod
     def reset_session(cls) -> None:
         """Reset entire session state (fresh start)."""
-        with cls._lock:
+        with cls._lock, cls._ipc_lock():
             initial_state = cls._empty_state()
             initial_state["session_id"] = os.urandom(8).hex()
             initial_state["created_at"] = datetime.now().isoformat()
