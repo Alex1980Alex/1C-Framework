@@ -177,7 +177,34 @@ LOW-хвост (§3.3) - без отдельного среза, по мере �
 
 > Append-only, reverse-chronological. Новые записи - СВЕРХУ.
 
-### 2026-07-17 - P1 реализован (все 9 пунктов), верифицирован на живых данных
+### 2026-07-17 (вечер) - Аудит-верификация реализации (по запросу пользователя)
+
+Независимая сверка заявленного в §18 с кодом и живыми данными:
+
+- **Код: 22/22 ключевых артефактов P0/P1 на месте** (coerce/aliases, items_skipped,
+  3 писателя, LEGACY_SEED_CONFIDENCE, относительные импорты каскада во всех 3
+  серверах, PatternRecord.extra, RRF-знаменатель, SourceError + `search:<source>`
+  breakers + R1 `_circuit_is_open`, экспорт `search_pattern_points` + вызов из плеча,
+  синглтон Qdrant в reinforce, `resolve_after_hard_timeout`/`HARD_TIMEOUT_FACTOR`,
+  `_safe_float` в хуке, `READ_UNKNOWN_IMPORTANCE`, link-aware дедуп). `CATEGORY_MAP`
+  в `normalize_light_patterns.py` производен через `PatternType.coerce` (сноска: свип
+  по имени `normalize_pattern_type` его не находит - производность через coerce).
+- **Тесты:** `test_pattern_type_contract.py` 41 + P1-файлы (`test_memory_p1_resilience`,
+  `test_apply_cascade`, `test_dedupe_learned_patterns`, `test_unified_search_honest`)
+  62 - все зелёные.
+- **Живые данные:** `migrate_pattern_types.py` dry-run → **0** к перештамповке во всех
+  трёх хранилищах (Qdrant / patterns.jsonl 76 / pending 44); §5.1-5.2 запинены тестами;
+  §5.5 подтверждён на работающем сервере - `unified_search` → `sources_failed=[]`, 3 плеча.
+- **Открытое:** dedupe dry-run → `total=154, dup_groups=3` (delete 3 зеркала, 47 рёбер
+  → 1 repoint + 5 drops, canonical-override работает, dangling 0) - **§5.3 «0 дублей
+  hash» остаётся единственным незакрытым acceptance-пунктом**; закрывается запуском
+  `dedupe_learned_patterns.py --apply` с бэкапом (отдельное решение, как и заявлено).
+- **LOW-хвост уточнён:** `LearnedPattern.from_dict`/`EvidenceSource.from_dict` (толерантны,
+  P0.2) и `forget_gate._days_idle` (coerce_dt, F7) - фактически закрыты; живые остатки:
+  `get_categories` `round(row[2],2)` на возможном NULL, `delete_message` узкий except,
+  `dashboard.compute_docs_freshness` tz-смещение, RRF-ранги кросс-store дублей,
+  `memcube.py`, `SourceServer`/`LinkType.from_string`, вопрос потолка hard-timeout,
+  и **CircuitBreaker HALF_OPEN** (общая инфраструктура, вне скоупа 260716).
 
 Пайплайн `pipeline/impl-memory-p1-resilience/`. Нить среза: P0 закрыл **вход**
 (битый payload не должен убивать читателя), P1 — **выход**: пути, которые не падают,
