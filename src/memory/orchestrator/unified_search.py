@@ -159,31 +159,22 @@ class BaseSearchAdapter(ABC):
 
 
 def _circuit_is_open(breaker: Any) -> bool:
-    """True only for a genuinely OPEN circuit — HALF_OPEN must be allowed to probe.
+    """True when the breaker refuses this arm for the current query.
 
-    Deliberately NOT a bare ``allow_request()``, which is the API this file would
-    otherwise reach for. Measured on the shared CircuitBreaker: in HALF_OPEN it returns
-    ``success_count < half_open_max_probes`` where ``success_count`` is a LIFETIME
-    counter that nothing resets (``_transition_to`` clears only failure_count /
-    consecutive_successes, and ``_transition_to(HALF_OPEN)`` has no caller at all). So
-    an arm with any successful history is denied every probe forever once tripped, and
-    ``record_success`` — which tests the raw ``_stats.state``, never HALF_OPEN — can
-    never close the circuit back.
+    Now a bare ``allow_request()`` — the API this helper always wanted. The
+    R1 workaround (reject only on raw OPEN) existed because the shared
+    CircuitBreaker's HALF_OPEN machine was dead: no caller ever committed
+    OPEN→HALF_OPEN, ``record_success`` tested the raw state so the circuit
+    never closed back, and ``allow_request`` gated probes on a LIFETIME
+    success counter — an arm with history was denied forever once tripped.
 
-    That would make a transient TEI restart a PERMANENT outage of the semantic arm
-    (until /mcp reconnect), which is strictly worse than the slow arm P1.3 set out to
-    fix. Mirroring ``call_async`` (reject only on raw OPEN) bounds the damage to
-    reset_timeout and keeps this consumer identical to propagation's.
-
-    The underlying HALF_OPEN state machine is broken for every consumer — reported in
-    roadmap 260716 §3.3, not fixed here: it is shared infrastructure and predates P1.
+    Fixed 2026-07-17 (pipeline fix-circuit-breaker-half-open): the gates
+    commit the transition, probes are budgeted per-episode, and the arm's
+    ``_record`` feedback (record_success/record_failure) actually closes or
+    re-opens the circuit. This consumer now also gets the probe cap
+    (half_open_max_probes) instead of letting every arm through at once.
     """
-    from ..infrastructure.circuit_breaker import CircuitState
-
-    if breaker.state is not CircuitState.OPEN:
-        return False
-    breaker.allow_request()  # bookkeeping only: counts the rejection for circuit_status
-    return True
+    return not breaker.allow_request()
 
 
 def resolve_after_hard_timeout(
@@ -541,7 +532,7 @@ class UnifiedSearchEngine:
                 sources_failed.append(
                     SourceError(
                         source=name,
-                        error=f"circuit 'search:{name}' is OPEN",
+                        error=f"circuit 'search:{name}' refused the arm (open or probe budget exhausted)",
                         duration_ms=0.0,
                         error_type="circuit_open",
                     )

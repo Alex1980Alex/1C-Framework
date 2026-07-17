@@ -81,7 +81,12 @@ class CircuitBreaker:
     """
     In-memory circuit breaker with 3 states.
 
-    Thread-safe via asyncio.Lock. No Redis/file dependencies.
+    Concurrency assumption (v2.1): single event loop. The sync gate
+    (`allow_request`) mutates state without the lock — atomic per
+    event-loop-turn (no await inside); `call_async`'s locked section is
+    likewise synchronous. Calling from threads (to_thread/executor) is NOT
+    supported — asyncio.Lock would not protect against that either.
+    No Redis/file dependencies.
 
     Usage:
         cb = CircuitBreaker("memory-ai", failure_threshold=5)
@@ -118,12 +123,47 @@ class CircuitBreaker:
 
     @property
     def state(self) -> CircuitState:
-        """Current circuit state (with automatic OPEN -> HALF_OPEN transition)."""
-        if self._stats.state == CircuitState.OPEN:
+        """View-only projection of circuit state.
+
+        Does NOT mutate self._stats — OPEN→HALF_OPEN commit happens only
+        in the gates (allow_request / call_async) via _sync_state().
+        """
+        raw = self._stats.state
+        if raw == CircuitState.OPEN:
             elapsed = time.time() - self._stats.last_failure_time
             if elapsed >= self.config.reset_timeout:
                 return CircuitState.HALF_OPEN
-        return self._stats.state
+        return raw
+
+    def _sync_state(self) -> None:
+        """Commit OPEN→HALF_OPEN transition if cooldown elapsed.
+
+        Was the missing caller of _transition_to(HALF_OPEN) — without it the
+        raw state stayed OPEN forever and the recovery branches in
+        record_success/record_failure were unreachable (R1, roadmap 260716).
+        """
+        if self._stats.state == CircuitState.OPEN:
+            elapsed = time.time() - self._stats.last_failure_time
+            if elapsed >= self.config.reset_timeout:
+                self._transition_to(CircuitState.HALF_OPEN)
+                logger.info(
+                    "Circuit '%s' HALF_OPEN after %.0fs cooldown",
+                    self.name,
+                    elapsed,
+                )
+        elif self._stats.state == CircuitState.HALF_OPEN:
+            # Age-based re-arm потерянной пробы (ревью, находка 1): слот взят,
+            # исход НЕ записан — CancelledError в call_async не ловится
+            # `except Exception` (BaseException), потребитель allow_request мог
+            # умереть. Без ре-арма raw клинит в HALF_OPEN навсегда: гейты вечно
+            # reject, record_failure не случится (reject исход не пишет) →
+            # самоисцеление невозможно, а статус врёт «half_open»/healthy.
+            if (
+                self._stats.half_open_probes >= self.config.half_open_max_probes
+                and time.time() - self._stats.last_state_change >= self.config.reset_timeout
+            ):
+                self._stats.half_open_probes = 0
+                logger.info("Circuit '%s' re-armed stale HALF_OPEN probe budget", self.name)
 
     @property
     def stats(self) -> dict[str, Any]:
@@ -131,8 +171,10 @@ class CircuitBreaker:
         return {
             "name": self.name,
             "state": self.state.value,
+            "raw_state": self._stats.state.value,  # view≠raw: оператору видно wedge
             "failure_count": self._stats.failure_count,
             "success_count": self._stats.success_count,
+            "consecutive_successes": self._stats.consecutive_successes,
             "half_open_probes": self._stats.half_open_probes,
             "total_calls": self._stats.total_calls,
             "total_failures": self._stats.total_failures,
@@ -142,13 +184,25 @@ class CircuitBreaker:
         }
 
     def allow_request(self) -> bool:
-        """Check if a request should be allowed (non-async for sync contexts)."""
-        current = self.state
+        """Commit pending state transition, gate by episodic probe slots.
+
+        R1: раньше half-open проверял пожизненный success_count — пробы
+        никогда не заканчивались. Теперь гейт по half_open_probes,
+        который сбрасывается при каждом _transition_to.
+        """
+        self._sync_state()
+        current = self._stats.state  # raw, после возможного коммита
+
         if current == CircuitState.CLOSED:
             return True
+
         if current == CircuitState.HALF_OPEN:
-            # Allow limited probes
-            return self._stats.success_count < self.config.half_open_max_probes
+            if self._stats.half_open_probes < self.config.half_open_max_probes:
+                self._stats.half_open_probes += 1
+                return True
+            self._stats.total_rejected += 1
+            return False
+
         # OPEN
         self._stats.total_rejected += 1
         return False
@@ -160,7 +214,9 @@ class CircuitBreaker:
         Raises CircuitBreakerError if circuit is OPEN.
         """
         async with self._lock:
-            current = self.state
+            self._sync_state()
+            current = self._stats.state  # raw, после возможного коммита
+
             if current == CircuitState.OPEN:
                 self._stats.total_rejected += 1
                 # Close unawaited coroutine to prevent ResourceWarning
@@ -170,6 +226,18 @@ class CircuitBreaker:
                     f"Circuit '{self.name}' is OPEN — rejected after "
                     f"{self._stats.failure_count} failures"
                 )
+
+            if current == CircuitState.HALF_OPEN:
+                if self._stats.half_open_probes >= self.config.half_open_max_probes:
+                    self._stats.total_rejected += 1
+                    if asyncio.iscoroutine(coro):
+                        coro.close()
+                    raise CircuitBreakerError(
+                        f"Circuit '{self.name}' is HALF_OPEN — probe budget "
+                        f"({self.config.half_open_max_probes}) exhausted"
+                    )
+                # эпизодный слот пробы, не пожизненный счётчик
+                self._stats.half_open_probes += 1
 
         # total_calls is tracked in record_success/record_failure only
         # to avoid double-counting
@@ -196,10 +264,12 @@ class CircuitBreaker:
                     self._stats.consecutive_successes,
                 )
             else:
-                # Ниже порога закрытия: освободить probe-слот, иначе при
-                # max_probes=1 и success_threshold=2 второй пробе некуда войти
-                # и цепь зависает в HALF_OPEN навсегда.
-                self._stats.half_open_probes = 0
+                # Ниже порога закрытия: освободить ОДИН probe-слот (декремент,
+                # не обнуление — при max_probes>1 сброс в 0 впускал бы новый
+                # полный бюджет при незавершённых пробах в полёте; ревью,
+                # находка 2). Иначе при max_probes=1 и success_threshold=2
+                # второй пробе некуда войти и цепь зависает в HALF_OPEN.
+                self._stats.half_open_probes = max(0, self._stats.half_open_probes - 1)
         elif self._stats.state == CircuitState.CLOSED:
             self._stats.failure_count = 0  # reset on success
 
@@ -241,6 +311,10 @@ class CircuitBreaker:
             self._stats.half_open_probes = 0
         elif new_state == CircuitState.HALF_OPEN:
             self._stats.consecutive_successes = 0
+            self._stats.half_open_probes = 0
+        elif new_state == CircuitState.OPEN:
+            # residue-гигиена (ревью, находка 3): после провала пробы probes=1
+            # переживал OPEN-окно и делал wedge неотличимым от «готов пробовать»
             self._stats.half_open_probes = 0
 
         logger.debug("Circuit '%s': %s -> %s", self.name, old.value, new_state.value)

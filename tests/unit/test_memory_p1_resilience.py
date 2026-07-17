@@ -419,12 +419,13 @@ class TestHonestFailures:
     async def test_tripped_arm_recovers_after_reset_timeout(self):
         """A transient outage must not kill the arm for the life of the process.
 
-        This is the regression P1.3 nearly shipped. `allow_request()` — the obvious API
-        here — returns `success_count < half_open_max_probes` in HALF_OPEN, where
-        success_count is a LIFETIME counter nothing resets. So an arm with any
-        successful history was rejected forever once tripped, and a TEI restart became a
-        permanent outage requiring /mcp reconnect: strictly worse than the slow arm the
-        breaker was added to avoid.
+        This is the regression P1.3 nearly shipped. HISTORICAL: v2.0 `allow_request()`
+        gated HALF_OPEN on `success_count < half_open_max_probes` — a LIFETIME counter
+        nothing reset — so an arm with any successful history was rejected forever once
+        tripped (TEI restart = permanent outage until /mcp reconnect). Fixed 2026-07-17
+        (pipeline fix-circuit-breaker-half-open): gates commit OPEN→HALF_OPEN for real,
+        probes are budgeted per-episode, and `_circuit_is_open` now IS a bare
+        `allow_request()`. This test pins the recovery behaviour either way.
         """
         from src.memory.infrastructure.circuit_breaker import (
             CircuitBreakerConfig,

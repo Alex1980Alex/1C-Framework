@@ -177,6 +177,22 @@ LOW-хвост (§3.3) - без отдельного среза, по мере �
 
 > Append-only, reverse-chronological. Новые записи - СВЕРХУ.
 
+### 2026-07-17 (ночь) - CircuitBreaker HALF_OPEN починен отдельным срезом (§3.3 LOW закрыт)
+
+Пайплайн `pipeline/fix-circuit-breaker-half-open/`, файл
+[`infrastructure/circuit_breaker.py`](../../src/memory/infrastructure/circuit_breaker.py) v2.1.
+Гейты (`allow_request`/`call_async`) коммитят OPEN→HALF_OPEN через `_sync_state()`
+(property `state` - чистое view), пробы бюджетируются эпизодным `half_open_probes`
+(пожизненный `success_count` низведён до телеметрии), ветки recovery ожили;
+`_circuit_is_open` в `unified_search` переведён с R1-обхода на `allow_request()`.
+Ревью PARTIAL → ремедиация: **age-based re-arm** потерянной пробы (CancelledError
+не ловится `except Exception` - слот утекал, raw клинил в HALF_OPEN навсегда,
+невидимо для health), декремент слота вместо обнуления (over-admission при
+max_probes>1), `raw_state` в stats (wedge отличим), residue-сброс на OPEN,
+single-event-loop допущение в докстринге. 14 unit (сабботаж ×2: ядро + ремедиация)
++ 137 регрессионных. ⚠ Рантайм MCP - после `/mcp reconnect`. Эталон семантики -
+исправный сиблинг `src/shared/llm_rotation/circuit_breaker.py`.
+
 ### 2026-07-17 (вечер) - Аудит-верификация реализации (по запросу пользователя)
 
 Независимая сверка заявленного в §18 с кодом и живыми данными:
