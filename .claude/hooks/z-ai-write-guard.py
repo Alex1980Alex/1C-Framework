@@ -20,10 +20,13 @@ Flow:
 
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from base import BaseHook, HookInput, HookOutput
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # Code file extensions that trigger the guard
 _CODE_EXTENSIONS = {
@@ -95,6 +98,16 @@ class ZAIWriteGuard(BaseHook):
             content = tool_input.get("content", "")
 
         if not file_path or not content:
+            return None
+
+        # Outside the repo (session scratchpad, throwaway tooling) → not our business.
+        # The guard keeps *shipped* generation off the expensive model; a one-shot script
+        # under Temp/claude/**/scratchpad/ is neither shipped nor delegatable — same
+        # rationale as the tests/ exemption below. It fired there because the scratchpad
+        # lives outside the repo and matches no _EXEMPT_PREFIXES.
+        try:
+            Path(file_path).resolve().relative_to(_PROJECT_ROOT)
+        except (ValueError, OSError):
             return None
 
         # Normalize path
