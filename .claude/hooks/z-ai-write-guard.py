@@ -9,13 +9,25 @@ Timeout: 3s
 
 Pattern: Enforcer (blocks until condition met).
 
+Scope: SHIPPED code only. Anything outside the repo root is skipped — the session
+scratchpad holds throwaway one-shot tooling that is neither shipped nor worth a
+delegation round-trip (2026-07-17).
+
 Flow:
   1. Write/Edit fires → extract file_path and content/new_string from tool_input
-  2. Skip non-code files (.md, .json, .yml, .env, .toml, .txt, .csv, .html)
-  3. Skip exempt paths (.claude/, docs/, data/, tests/)
-  4. Count lines in content (Write) or new_string (Edit)
-  5. If lines > 15 AND no llm_delegation in session → block with Z.AI instructions
-  6. Otherwise → allow
+  2. Skip paths outside the repo root (scratchpad / temp tooling)
+  3. Skip non-code files (.md, .json, .yml, .env, .toml, .txt, .csv, .html)
+  4. Skip exempt paths (.claude/, docs/, data/, tests/, pipeline/)
+  5. Count lines in content (Write) or new_string (Edit)
+  6. If lines > 15 AND no llm_delegation in session → block with Z.AI instructions
+  7. Otherwise → allow
+
+Large .md (>50 lines) is enforced even under docs/ — long prose IS delegatable —
+except under .claude/ and pipeline/ (_MD_EXEMPT_PREFIXES): ADR-018 makes pipeline
+artefacts mandatory, so blocking them pitted this guard against pipeline-protocol-stop.
+
+Tests: tests/unit/hooks/test_z_ai_write_guard_scope.py (both exemptions are narrow —
+src/ and large docs/*.md must still block).
 """
 
 import os
@@ -74,8 +86,11 @@ _EXEMPT_PREFIXES = [
     "docs/",
     "data/",
     "tests/",  # test code is precision work (exact signatures/fixtures), not delegatable generation
-    "pipeline/",  # ADR-018 process artefacts — see _MD_EXEMPT_PREFIXES
 ]
+# NB: "pipeline/" deliberately NOT here. These prefixes are matched as substrings
+# (`f"/{p}" in fp`), so it would also exempt infra/pipeline/**/*.py — 127 tracked
+# product files — and it is unreachable for the ADR-018 motive anyway: .md is in
+# _SKIP_EXTENSIONS and returns earlier. _MD_EXEMPT_PREFIXES alone closes that conflict.
 
 # Prefixes where a large .md is NOT delegatable prose.
 # pipeline/: ADR-018 makes these artefacts MANDATORY (pipeline-protocol-stop hard-blocks
@@ -113,10 +128,19 @@ class ZAIWriteGuard(BaseHook):
         # under Temp/claude/**/scratchpad/ is neither shipped nor delegatable — same
         # rationale as the tests/ exemption below. It fired there because the scratchpad
         # lives outside the repo and matches no _EXEMPT_PREFIXES.
+        #
+        # ValueError from relative_to = "provably outside" → exempt.
+        # OSError from resolve = "could not tell" → keep enforcing: for a guard, the
+        # unknown must fail closed, or a flaky UNC path becomes a silent bypass.
+        candidate = Path(file_path)
+        if not candidate.is_absolute():
+            candidate = _PROJECT_ROOT / candidate  # else resolve() would anchor on CWD
         try:
-            Path(file_path).resolve().relative_to(_PROJECT_ROOT)
-        except (ValueError, OSError):
+            candidate.resolve().relative_to(_PROJECT_ROOT)
+        except ValueError:
             return None
+        except OSError:
+            pass
 
         # Normalize path
         fp = file_path.replace("\\", "/").lower()
@@ -127,8 +151,9 @@ class ZAIWriteGuard(BaseHook):
         # Count lines early (needed for .md large file check)
         line_count = content.count("\n") + 1
 
-        # Large .md files outside .claude/ and data/ are NOT exempt (docs can be delegated)
-        # Exception: specific data/ subdirs ARE enforced (see _ENFORCED_DATA_PATHS)
+        # Large .md is NOT exempt (long prose IS delegatable) — except under
+        # _MD_EXEMPT_PREFIXES (.claude/, pipeline/) and data/.
+        # Exception to the exception: specific data/ subdirs ARE enforced (_ENFORCED_DATA_PATHS)
         _LARGE_MD_THRESHOLD = 50
         is_large_md = (
             ext == ".md"
