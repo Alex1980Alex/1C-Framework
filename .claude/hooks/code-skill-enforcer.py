@@ -22,9 +22,10 @@ Levels:
   F: LEARN phase (advisory backup for learning-loop)
 
 Author: Claude Code
-Version: 2.1.0
+Version: 2.2.0
 Created: 2026-02-23
-Updated: 2026-03-03 (Level A.1: BLOCKING research_protocol → Skill('learning-loop'); Level F: advisory backup)
+Updated: 2026-07-17 (transcript-fallback активации + self-heal state — pipeline
+    fix-session-state-skill-race; prev 2026-03-03: Level A.1 research_protocol)
 """
 
 import json
@@ -273,6 +274,63 @@ class CodeSkillEnforcer(BaseHook):
                 break
         return normalized
 
+    def _skill_activated(self, inp, skill) -> bool:
+        """Активирован ли скилл: session-state ИЛИ фактический Skill(<skill>) в транскрипте.
+
+        Transcript-fallback (2026-07-17, pipeline fix-session-state-skill-race):
+        запись активации в session-skills.json может потеряться (гонка хуков /
+        os.replace PermissionError на Windows) — тогда state врёт, а Skill() был
+        реально вызван. Скан хвоста транскрипта на tool_use Skill с нужным именем
+        закрывает класс «ложный SKILL REQUIRED после успешной активации»; найденное
+        дописываем обратно в state (self-heal). Ложных пропусков нет: пропускаем
+        ровно при фактическом вызове Skill('<требуемый>') в этой сессии.
+        """
+        if SessionState and SessionState.is_skill_activated(skill):
+            return True
+        if self._skill_in_transcript(inp, skill):
+            if SessionState:
+                try:
+                    SessionState.add_activated_skill(skill)
+                except Exception:
+                    pass
+            return True
+        return False
+
+    @staticmethod
+    def _skill_in_transcript(inp, skill) -> bool:
+        """Был ли в транскрипте сессии tool_use Skill с данным именем (хвост ≤2МБ)."""
+        path = getattr(inp, "transcript", "") or ""
+        if not skill or not path or not os.path.isfile(path):
+            return False
+        try:
+            with open(path, "rb") as f:
+                f.seek(0, 2)
+                size = f.tell()
+                f.seek(max(0, size - 2_000_000))
+                tail = f.read().decode("utf-8", errors="replace")
+        except OSError:
+            return False
+        for line in tail.splitlines():
+            # дешёвый префильтр перед JSON-парсом
+            if '"Skill"' not in line or skill not in line:
+                continue
+            try:
+                entry = json.loads(line)
+            except (json.JSONDecodeError, ValueError):
+                continue
+            content = (entry.get("message") or {}).get("content") or []
+            if not isinstance(content, list):
+                continue
+            for block in content:
+                if (
+                    isinstance(block, dict)
+                    and block.get("type") == "tool_use"
+                    and block.get("name") == "Skill"
+                    and (block.get("input") or {}).get("skill") == skill
+                ):
+                    return True
+        return False
+
     def _skill_exists(self, skill) -> bool:
         """Phantom-block guard (roadmap 260612 B2): a mapping must point to a
         skill that actually exists in the catalog — otherwise the block message
@@ -305,7 +363,7 @@ class CodeSkillEnforcer(BaseHook):
         skill = match.get("skill")
         label = match.get("label", skill)
 
-        if SessionState and SessionState.is_skill_activated(skill):
+        if self._skill_activated(inp, skill):
             return None
 
         if not self._skill_exists(skill):
@@ -333,7 +391,7 @@ class CodeSkillEnforcer(BaseHook):
                 skill = rule.get("skill")
                 label = rule.get("label", skill)
 
-                if SessionState and SessionState.is_skill_activated(skill):
+                if self._skill_activated(inp, skill):
                     return None
 
                 if not self._skill_exists(skill):
@@ -429,7 +487,7 @@ class CodeSkillEnforcer(BaseHook):
         skill = match.get("skill")
         label = match.get("label", skill)
 
-        if SessionState and SessionState.is_skill_activated(skill):
+        if self._skill_activated(inp, skill):
             return None
 
         if not self._skill_exists(skill):

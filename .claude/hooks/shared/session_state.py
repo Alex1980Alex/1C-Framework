@@ -47,6 +47,8 @@ class SessionState:
     # os.replace retry (Windows: PermissionError, пока читатель держит файл открытым)
     _REPLACE_RETRIES = 6
     _REPLACE_RETRY_SLEEP = 0.02
+    # read retry (симметрично: sharing-violation окно во время чужого os.replace / AV)
+    _READ_RETRIES = 3
     # Межпроцессный lock мутаций (бюджет ≪ hook-timeout 3с)
     _LOCK_WAIT_SEC = 0.6
     _LOCK_POLL_SEC = 0.02
@@ -80,15 +82,24 @@ class SessionState:
                 cls._state_cache = initial_state
                 return initial_state
 
-            try:
-                with open(STATE_FILE, encoding="utf-8") as f:
-                    cls._state_cache = json.load(f)
-                    return cls._state_cache
-            except (OSError, json.JSONDecodeError):
-                # Corrupted file - start fresh
-                cls._state_cache = cls._empty_state()
-                cls._save_state(cls._state_cache)
-                return cls._state_cache
+            for attempt in range(cls._READ_RETRIES):
+                try:
+                    with open(STATE_FILE, encoding="utf-8") as f:
+                        cls._state_cache = json.load(f)
+                        return cls._state_cache
+                except (json.JSONDecodeError, FileNotFoundError):
+                    break  # битый JSON / исчез файл — ретрай не поможет
+                except OSError:
+                    # транзиентное окно чтения (чужой os.replace / AV держит файл)
+                    if attempt < cls._READ_RETRIES - 1:
+                        time.sleep(cls._REPLACE_RETRY_SLEEP)
+            # Битый/нечитаемый файл: НЕ персистим пустоту — reader-side erase
+            # стирал бы чужие activated_skills/task_protocol (review
+            # fix-session-state-skill-race №1, тот же инцидент-класс со стороны
+            # читателя). Деградация только в памяти; файл вылечит первая
+            # мутация (_mutate → _read_disk_fresh → save).
+            cls._state_cache = cls._empty_state()
+            return cls._state_cache
 
     @classmethod
     def _save_state(cls, state: dict[str, Any]) -> None:
@@ -147,6 +158,11 @@ class SessionState:
                 break
             except FileExistsError:
                 try:
+                    # Break-in stale-лока намеренно best-effort: TOCTOU двух
+                    # взломщиков (getmtime по старому, unlink уже свежего) даёт
+                    # деградацию к fail-open — принято. На Windows unlink файла,
+                    # который живой держатель держит открытым, отдаёт
+                    # PermissionError → живой держатель невзламываем.
                     if time.time() - os.path.getmtime(lock_path) > cls._LOCK_STALE_SEC:
                         os.unlink(lock_path)
                         continue
@@ -176,16 +192,22 @@ class SessionState:
 
         Кэш к моменту мутации может быть устаревшим: другой hook-процесс успел
         записать своё изменение после нашего _load_state — save по кэшу затёр бы
-        его (lost update).
+        его (lost update). Транзиентный OSError ретраится: initial-возврат здесь
+        персистится мутатором и стёр бы прежний state.
         """
-        try:
-            with open(STATE_FILE, encoding="utf-8") as f:
-                return json.load(f)
-        except (OSError, json.JSONDecodeError):
-            initial = cls._empty_state()
-            initial["session_id"] = os.urandom(8).hex()
-            initial["created_at"] = datetime.now().isoformat()
-            return initial
+        for attempt in range(cls._READ_RETRIES):
+            try:
+                with open(STATE_FILE, encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, FileNotFoundError):
+                break  # реально нет файла / битый JSON — легитимный fresh-start
+            except OSError:
+                if attempt < cls._READ_RETRIES - 1:
+                    time.sleep(cls._REPLACE_RETRY_SLEEP)
+        initial = cls._empty_state()
+        initial["session_id"] = os.urandom(8).hex()
+        initial["created_at"] = datetime.now().isoformat()
+        return initial
 
     @classmethod
     def _mutate(cls, mutator) -> None:
@@ -632,6 +654,11 @@ def record_skill_checked() -> None:
     SessionState.record_skill_checked()
 
 
+def reset_session() -> None:
+    """Module-level wrapper for SessionState.reset_session()."""
+    SessionState.reset_session()
+
+
 # Export for use in hooks
 __all__ = [
     "SessionState",
@@ -644,4 +671,5 @@ __all__ = [
     "reset_task_protocol",
     "set_task_classified",
     "record_skill_checked",
+    "reset_session",
 ]
