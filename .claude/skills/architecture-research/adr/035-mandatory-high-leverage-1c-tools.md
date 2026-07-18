@@ -71,3 +71,7 @@
 **Фикс (P0.1):** решение и side-effects (LOOPS.md + advisory-event) вынесены в единый `onec-task-completion-stop.evaluate_completion`, который зовут ОБА пути (живой хук И `build_context` оркестратора, `apply_side_effects=True`) → event-log пишется независимо от режима гейта. Parity-тест `tests/unit/test_gate_parity.py` закрепляет инвариант «вердикт политики == вердикт evaluate_completion».
 
 **Новое окно:** 2026-07-03 → 2026-07-17 (14 дней). Первая не-синтетическая запись в event-log ожидается на ближайшей 1С-задаче с правкой кода. Только после набора данных — решение о hard-промоуте Фазы 2.
+
+## §18 Acceptance вердикт: PASS (2026-07-18)
+
+Окно закрыто (`onec_toolgate_validation.py --final`, 06-22→07-06, 331 1С-задача / 330 edit). Presence-rate по T1/T2-инструментам ниже порога частой практики: `bsl_impact_analysis` 6/331 (0.018), `1c-debug` live BP-trace 21/331 (0.063), `bsl_search/similar` 2/331 (0.006). Оба критерия вердикта (данные накоплены; решение вычислено) PASS → **вердикт PASS, рекомендация keep-advisory** (Фаза 2 hard-промоут НЕ активируется — инструменты не достигли частоты, presence≠безопасность hard, caveat survivorship-bias). T1-T2 остаются advisory.
