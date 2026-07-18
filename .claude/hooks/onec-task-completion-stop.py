@@ -353,7 +353,10 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
         def adv(ok):  # ADR-035 Фаза 1 — advisory-маркер (не блок)
             return "✓" if ok else "⚠ advisory"
 
-        eff = PROJECT_ROOT / "data" / "tool-effectiveness.jsonl"
+        # N-P1.4 (260718): tool-effectiveness.jsonl ретирован — метрики эффективности
+        # теперь считает analyze_tool_health.py напрямую из hook-invocations.jsonl (окно
+        # 14д, per-tool/per-server), отчёт в data/reports/tools/_latest.md.
+        tool_health = PROJECT_ROOT / "data" / "reports" / "tools" / "_latest.md"
         usage = d / "TOOL-USAGE-REPORT.md"
         skill_cell = "✓" if sig.get("skill") else "⚠ info (enforced на Write)"
         lines = [
@@ -381,7 +384,7 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
             "",
             f"- opt-out gate: {'ДА (ONEC_TASK_GATE_DISABLE)' if optout else 'нет'}",
             f"- W per-task (`TOOL-USAGE-REPORT.md`): {'есть' if usage.exists() else 'НЕ запущен (H3)'}",
-            f"- tool-effectiveness (cross-task): {'есть' if eff.exists() else 'нет'} — `tool_usage_report.py --rollup` (H1: отчётный)",
+            f"- tool-health (cross-task 14д): {'есть' if tool_health.exists() else 'нет'} — `data/reports/tools/_latest.md` (analyze_tool_health)",
             "",
             "_Авто-сводка onec-task-completion-stop на Stop (H2); фактические tool_use транскрипта._",
         ]

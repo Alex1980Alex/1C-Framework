@@ -26,12 +26,25 @@ from base import BaseHook, HookInput, HookOutput
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SIDECAR = PROJECT_ROOT / "data" / "reports" / "tools" / "_latest.json"
+VERDICTS = PROJECT_ROOT / "data" / "reports" / "tools" / "verdicts.jsonl"
 STATE_FILE = PROJECT_ROOT / ".claude" / "cache" / "tool-health-banner-state.json"
 # Cooldown эскалации = окно анализа (14д): broken держится в 14д-окне до 14 дней после
 # фикса (старые ошибки не выпали) → 72ч плодило повторные задачи по ОДНОМУ инциденту
 # (adversarial-review 260713 #6). Одна задача на инцидент-окно; баннер светит всё время.
 ESCALATE_COOLDOWN_HOURS = 336  # 14 дней
 STALE_REPORT_DAYS = 7
+REPEAT_BROKEN_DAYS = 30  # §6.3: broken того же тула в ≥2 прогонах за 30д → приоритет p1
+
+# N-P1.2: единственный читатель истории verdicts.jsonl (scripts/). Defensive import —
+# при недоступности деградируем к «без повтор-детекта» (баннер всё равно работает).
+_SCRIPTS = str(PROJECT_ROOT / "scripts")
+if _SCRIPTS not in sys.path:
+    sys.path.append(_SCRIPTS)  # append (не insert) — не шэдоуить hooks-local shared.*
+try:
+    from tool_verdict_history import broken_repeat_within, read_verdicts
+except Exception:  # pragma: no cover
+    read_verdicts = None
+    broken_repeat_within = None
 
 
 def _load_json(path: Path, default):
@@ -51,31 +64,43 @@ def _save_state(state: dict) -> None:
         pass
 
 
-def _escalate_broken(tool: str, reason: str, now: datetime, state: dict) -> bool:
-    """Авто-задача диагностики broken-тула с cooldown на тул. Возвращает True если задача заведена."""
+def _escalate_broken(
+    tool: str, reason: str, now: datetime, state: dict, repeat: bool = False
+) -> bool:
+    """Авто-задача диагностики broken-тула с cooldown на тул. Возвращает True если задача заведена.
+
+    §6.3 (N-P1.2): `repeat=True` (тот же тул broken в ≥2 прогонах за 30д) → приоритет p1
+    вместо high + пометка «повтор» (persistent-инцидент важнее нового)."""
     last = state.get(tool)
+    if isinstance(last, dict):
+        last = last.get("ts")
     if last:
         try:
             if now - datetime.fromisoformat(last) < timedelta(hours=ESCALATE_COOLDOWN_HOURS):
                 return False  # уже эскалировали недавно
         except (ValueError, TypeError):
             pass
+    tag = " ПОВТОР за 30д" if repeat else ""
     try:
         from shared.task_master import add_task
 
         add_task(
-            title=f"Диагностировать инструмент {tool} (broken)",
-            priority="high",
+            title=f"Диагностировать инструмент {tool} (broken{tag})",
+            priority="p1" if repeat else "high",
             created_by="tool-health-banner",
             description=(
-                f"Вердикт tool-health: broken — {reason}. Evidence: data/reports/tools/_latest.md "
-                f"+ verdicts.jsonl. Разобрать root-cause и починить (стандартный пайплайн), "
-                f"затем re-verify на свежем окне (analyze_tool_health.py). НЕ авто-фикс."
+                f"Вердикт tool-health: broken — {reason}."
+                + (" Повторный broken за 30д (persistent) → приоритет p1." if repeat else "")
+                + " Evidence: data/reports/tools/_latest.md + verdicts.jsonl. Разобрать "
+                "root-cause и починить (стандартный пайплайн), затем re-verify на свежем "
+                "окне ПОСЛЕ фикса (analyze_tool_health.py — вердикт снимется, когда чистое "
+                "окно вытеснит старые ошибки). НЕ авто-фикс."
             ),
         )
     except Exception:
         return False
-    state[tool] = now.isoformat()
+    # состояние per-тул: {ts, escalated:true} — для healed-детекта (N-P1.2)
+    state[tool] = {"ts": now.isoformat(), "escalated": True}
     return True
 
 
@@ -88,55 +113,86 @@ class ToolHealthBanner(BaseHook):
         sidecar = _load_json(SIDECAR, None)
         if not sidecar:
             return None  # отчёта ещё нет — молчим
-        alerts = sidecar.get("alerts") or []
         now = datetime.now()
-        if not alerts:
-            # healthy → тихо, НО протухший отчёт = мёртвый контур, о нём молчать нельзя
-            # (adversarial-review 260713 #5a: тихая смерть анализатора была невидима)
-            gen = sidecar.get("generated")
-            try:
-                if gen and now - datetime.fromisoformat(gen) > timedelta(days=STALE_REPORT_DAYS):
-                    return HookOutput().system_message(
-                        f"[TOOL-HEALTH] ⚠ Отчёт здоровья инструментов устарел ({gen}) — "
-                        "анализатор не отрабатывает. Проверить: "
-                        "`python scripts/analyze_tool_health.py` + `_analyzer.log`."
-                    )
-            except (ValueError, TypeError):
-                pass
-            return None  # всё healthy и отчёт свежий — тихо (quiet wakeups rare)
+        alerts = sidecar.get("alerts") or []
+        infra = sidecar.get("infra_alerts") or []  # N-P1.1: MCP-down + stale-sink
         broken = [a for a in alerts if a.get("verdict") == "broken"]
         degraded = [a for a in alerts if a.get("verdict") == "degraded"]
+        infra_broken = [a for a in infra if a.get("level") == "broken"]
+        infra_degraded = [a for a in infra if a.get("level") == "degraded"]
 
-        # эскалация broken (авто-задача, cooldown на тул)
         state = _load_json(STATE_FILE, {})
+        rows = read_verdicts(VERDICTS) if read_verdicts else []  # N-P1.2: история вердиктов
+
+        # ── эскалация broken (тулы + инфра). Повтор за 30д → p1 (§6.3) ──
         escalated: list[str] = []
+        current_broken: set[str] = set()
         for a in broken:
-            if _escalate_broken(a["tool"], a.get("reason", ""), now, state):
-                escalated.append(a["tool"])
-        if escalated:
+            tool = a["tool"]
+            current_broken.add(tool)
+            repeat = bool(
+                broken_repeat_within and broken_repeat_within(tool, now, REPEAT_BROKEN_DAYS, rows)
+            )
+            if _escalate_broken(tool, a.get("reason", ""), now, state, repeat=repeat):
+                escalated.append(f"{tool}{' (p1/повтор)' if repeat else ''}")
+        for a in infra_broken:
+            key = f"{a.get('source', 'infra')}:{a.get('key', '')}"
+            current_broken.add(key)
+            if _escalate_broken(key, a.get("reason", ""), now, state):
+                escalated.append(key)
+
+        # ── healed (N-P1.2 §6.3): ранее эскалированный broken больше не broken → петля закрыта ──
+        healed: list[str] = []
+        for k in list(state.keys()):
+            v = state.get(k)
+            if isinstance(v, dict) and v.get("escalated") and k not in current_broken:
+                healed.append(k)
+                del state[k]
+
+        if escalated or healed:
             _save_state(state)
+
+        gen = sidecar.get("generated")
+        stale = False
+        try:
+            stale = bool(
+                gen and now - datetime.fromisoformat(gen) > timedelta(days=STALE_REPORT_DAYS)
+            )
+        except (ValueError, TypeError):
+            pass
+
+        # ── тихо только когда РОВНО ничего: нет alert'ов/инфры/healed, отчёт свежий ──
+        if not (broken or degraded or infra_broken or infra_degraded or healed):
+            if stale:
+                return HookOutput().system_message(
+                    f"[TOOL-HEALTH] ⚠ Отчёт здоровья инструментов устарел ({gen}) — "
+                    "анализатор не отрабатывает. Проверить: "
+                    "`python scripts/analyze_tool_health.py` + `_analyzer.log`."
+                )
+            return None  # всё healthy и свежо — тихо (quiet wakeups rare)
 
         inc = " ⚠ окно неполное" if sidecar.get("window_incomplete") else ""
         lines = [
             "[TOOL-HEALTH] Обнаружены проблемные инструменты (окно "
             f"{sidecar.get('window_days', '?')}д{inc}):"
         ]
+        for a in infra_broken:
+            lines.append(f"  🔴 infra `{a.get('source', '')}` — {a.get('reason', '')}")
         for a in broken:
             lines.append(f"  🔴 broken `{a['tool']}` — {a.get('reason', '')}")
         for a in degraded:
             lines.append(f"  🟠 degraded `{a['tool']}` — {a.get('reason', '')}")
+        for a in infra_degraded:
+            lines.append(f"  🟠 infra `{a.get('source', '')}` — {a.get('reason', '')}")
+        if healed:
+            lines.append(f"  ✅ вылечено (петля закрыта): {', '.join(healed)}")
         if escalated:
             lines.append(
                 f"  → заведена(ы) задача(и) диагностики: {', '.join(escalated)} "
                 "(broken; решение по degraded — за тобой)."
             )
-        # предупредить если отчёт устарел
-        gen = sidecar.get("generated")
-        try:
-            if gen and now - datetime.fromisoformat(gen) > timedelta(days=STALE_REPORT_DAYS):
-                lines.append(f"  ⚠ отчёт устарел ({gen}) — прогнать analyze_tool_health.py.")
-        except (ValueError, TypeError):
-            pass
+        if stale:
+            lines.append(f"  ⚠ отчёт устарел ({gen}) — прогнать analyze_tool_health.py.")
         lines.append("  Детали: `data/reports/tools/_latest.md`.")
         return HookOutput().system_message("\n".join(lines))
 

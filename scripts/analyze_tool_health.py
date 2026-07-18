@@ -50,6 +50,8 @@ ROOT = Path(__file__).resolve().parents[1]
 LOG = ROOT / "data" / "hook-invocations.jsonl"
 ROTATED = ROOT / "data" / "hook-invocations.1.jsonl"  # kept for back-compat/tests
 REPORTS = ROOT / "data" / "reports" / "tools"
+MCP_HEALTH_LOG = ROOT / "data" / "mcp-health.jsonl"  # история probe_mcp_health (N-P1.1)
+OBS_REPORT = ROOT / "scripts" / "memory_observability_report.py"  # sink-freshness (N-P1.1)
 
 
 def _all_logs() -> list[Path]:
@@ -80,6 +82,7 @@ from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 
     percentile,
     rollup_by_server,
 )
+from tool_verdict_history import read_verdicts, verdict_trend  # N-P1.2: тренд из verdicts.jsonl
 
 # Обратно-совместимые алиасы (внутренние helper'ы вынесены в tool_effectiveness).
 _parse_ts = parse_ts
@@ -348,6 +351,151 @@ def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
     }
 
 
+# ── §6.1 join трёх потоков сигналов в вердикты (N-P1.1, roadmap 260718) ────────
+# NB4: probe (P1.2) и sink-детектор (P1.4) жили параллельно и в вердикты НЕ сходились.
+# Здесь они сводятся в единый infra_alerts (+ override затронутых активных тулов).
+
+MCP_DOWN_MIN_DAYS = 2  # §6.1: зависимость down ≥2д подряд → broken её серверов
+
+
+def _server_prefix(server: str) -> str:
+    """Имя MCP-сервера из affects (напр. 'memory-orchestrator(degraded→sqlite)') → префикс тула."""
+    return "mcp__" + server.split("(", 1)[0].strip() + "__"
+
+
+def mcp_down_deps(
+    now: datetime, min_days: int = MCP_DOWN_MIN_DAYS, log: Path | None = None
+) -> list[dict]:
+    """Зависимости, непрерывно down ≥min_days (история probe_mcp_health).
+
+    Down-since = начало трейлинг-серии неуспешных проб (с конца, пока ok=False).
+    Если (now − down_since) ≥ min_days → зависимость down достаточно долго для broken.
+    Все up / нет истории → []. Восстановление (последняя проба ok) снимает сигнал.
+    """
+    log = log or MCP_HEALTH_LOG
+    if not log.exists():
+        return []
+    by_target: dict[str, list[dict]] = defaultdict(list)
+    try:
+        with open(log, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(e, dict) and e.get("target"):
+                    by_target[e["target"]].append(e)
+    except OSError:
+        return []
+
+    down: list[dict] = []
+    for target, entries in by_target.items():
+        entries.sort(key=lambda e: e.get("ts", ""))
+        trailing: list[dict] = []
+        for e in reversed(entries):  # трейлинг-серия down с конца
+            if e.get("ok"):
+                break
+            trailing.append(e)
+        if not trailing:
+            continue  # последняя проба ok — зависимость жива
+        down_since = _parse_ts(trailing[-1].get("ts"))
+        if down_since is None:
+            continue
+        if (now - _to_naive_local(down_since)).total_seconds() < min_days * 86400:
+            continue  # down недостаточно долго
+        last = trailing[0]
+        down.append(
+            {
+                "dep": target,
+                "affects": last.get("affects", []),
+                "since": down_since.isoformat(timespec="seconds"),
+                "error": last.get("error", ""),
+            }
+        )
+    return down
+
+
+def stale_sinks(timeout: float = 15.0) -> list[str]:
+    """Замолчавшие memory-синки из observability-отчёта (маркер [REGRESSION], read-only).
+
+    Мостит P1.4-детектор в вердикты (NB4). Best-effort: нет скрипта / таймаут / ошибка → [].
+    Формат маркера: ``[REGRESSION] N stale sink(s): [a, b, c]``."""
+    if not OBS_REPORT.exists():
+        return []
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            [sys.executable, str(OBS_REPORT), "--print", "--since", "14d"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(ROOT),
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    for line in (out.stdout or "").splitlines():
+        if "[REGRESSION]" in line and "stale" in line:
+            lb, rb = line.find("["), line.rfind("]")
+            if lb != -1 and rb != -1 and rb > lb:
+                inner = line[lb + 1 : rb]
+                # берём последний [...] (список имён), не первый [REGRESSION]
+                l2 = inner.rfind("[")
+                if l2 != -1:
+                    names = inner[l2 + 1 :]
+                    return [s.strip().strip("'\"") for s in names.split(",") if s.strip()]
+    return []
+
+
+def gather_infra_alerts(now: datetime, with_sinks: bool = True) -> list[dict]:
+    """Единый список инфра-сигналов (§6.1): MCP-down → broken, stale-sink → degraded."""
+    alerts: list[dict] = []
+    for d in mcp_down_deps(now):
+        affected = ", ".join(d["affects"]) or d["dep"]
+        alerts.append(
+            {
+                "level": "broken",
+                "source": "mcp-health",
+                "key": d["dep"],
+                "affects": d["affects"],
+                "reason": f"зависимость `{d['dep']}` недоступна с {d['since']} (≥{MCP_DOWN_MIN_DAYS}д) → {affected}",
+            }
+        )
+    if with_sinks:
+        sinks = stale_sinks()
+        if sinks:
+            alerts.append(
+                {
+                    "level": "degraded",
+                    "source": "memory-sinks",
+                    "key": "memory-sinks",
+                    "affects": ["memory-orchestrator"],
+                    "reason": f"замолчавшие memory-синки (>{'7'}д): {', '.join(sinks)}",
+                }
+            )
+    return alerts
+
+
+def apply_infra_to_tools(tools: dict[str, dict], infra_alerts: list[dict]) -> None:
+    """Override активных тулов down-сервера в broken (§6.1). unused не трогаем —
+    их покрывает server-level infra_alert (не плодим per-tool спам по мёртвому серверу)."""
+    for a in infra_alerts:
+        if a["level"] != "broken":
+            continue
+        prefixes = [_server_prefix(s) for s in a["affects"] if "sqlite" not in s]
+        for tool, st in tools.items():
+            if st["verdict"] in ("unused", "broken"):
+                continue
+            if any(tool.startswith(p) for p in prefixes):
+                st["verdict"] = "broken"
+                st["reason"] = a["reason"]
+
+
 # ── ratchet-baseline (паттерн mypy-baseline) ─────────────────────────────────
 
 
@@ -482,12 +630,28 @@ def render_md(health: dict, window_days: int) -> str:
         f"{_VERDICT_MARK[v]} {v}={counts[v]}" for v in _VERDICT_ORDER if counts.get(v)
     )
     lines += [f"**Итог:** {summary or 'нет данных'}", ""]
+    tr = health.get("trend") or {}
+    if tr and (tr.get("healed") or tr.get("regressed") or tr.get("persistent_broken")):
+        healed_note = f" ({', '.join(tr['healed_tools'])})" if tr.get("healed_tools") else ""
+        lines += [
+            f"**Тренд {tr.get('days', 30)}д:** ✅ вылечено {tr.get('healed', 0)}{healed_note} · "
+            f"🔴 регрессий {tr.get('regressed', 0)} · ♻ устойчиво-broken {tr.get('persistent_broken', 0)}",
+            "",
+        ]
     if health.get("window_incomplete"):
         lines += [
             f"> ⚠ **Окно неполное**: лог покрывает только с {health.get('window_covered_from', '?')} "
             "(ротация срезала хвост) — вердикты по усечённым данным.",
             "",
         ]
+
+    # ── инфра-сигналы (N-P1.1): MCP-down / stale-sink сведены в один отчёт (NB4) ──
+    infra = health.get("infra_alerts") or []
+    if infra:
+        lines += ["## ⚠ Инфраструктура (probe + sinks)", ""]
+        for a in infra:
+            lines.append(f"- {_VERDICT_MARK[a['level']]} **{a['source']}** — {a['reason']}")
+        lines += [""]
 
     if alerts:
         lines += ["## ⚠ ALERTS (broken / degraded)", ""]
@@ -550,6 +714,15 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     baseline = _load_json(REPORTS / "baseline.json", {})
     health = compute_health(rows, baseline, now)
 
+    # N-P1.1: свести probe (MCP-down) + sink-регрессию в вердикты (NB4) — единый отчёт
+    infra_alerts = gather_infra_alerts(now)
+    if infra_alerts:
+        apply_infra_to_tools(health["tools"], infra_alerts)
+        health["infra_alerts"] = infra_alerts
+
+    # N-P1.2: тренд из истории verdicts.jsonl (переходы broken↔healthy за 30д)
+    health["trend"] = verdict_trend(now, 30, read_verdicts(REPORTS / "verdicts.jsonl"))
+
     # неполнота окна (#7): самый ранний доступный ts моложе cutoff → часть окна срезана
     # ротацией; вердикты по усечённым данным помечаются, а не выдаются как полные
     cutoff = now - timedelta(days=window_days)
@@ -570,6 +743,8 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
         "window_days": window_days,
         "window_incomplete": window_incomplete,
         "alerts": alerts,
+        "infra_alerts": health.get("infra_alerts", []),  # N-P1.1: MCP-down + stale-sink (баннер)
+        "trend": health.get("trend", {}),  # N-P1.2: переходы broken↔healthy за 30д
         "counts": {
             v: sum(1 for s in health["tools"].values() if s["verdict"] == v) for v in _VERDICT_ORDER
         },
