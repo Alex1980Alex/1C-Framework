@@ -145,6 +145,16 @@ def _is_content_variable(tool: str) -> bool:
     return any(tool.endswith(s) for s in CONTENT_VARIABLE_MCP_SUFFIXES)
 
 
+# W10 (В0 260718): у Agent/Task непарный Pre — НЕ надёжный сигнал провала. Субагент
+# завершается в ДРУГОЙ сессии/фоном → его PostToolUse не спаривается с Pre в этом окне
+# (4/23 живых «провала» Agent были непарными 25-37ч-давности, не in-flight). В отличие
+# от built-in (N-P0.1: платформа не шлёт Post на фейл → unpaired = честный провал), у
+# субагентов unpaired конфлатит «провал» и «background/кросс-сессионный Post» →
+# из error_rate/attempts ИСКЛЮЧАЕМ (поле incomplete остаётся для глаз). p95 у них off
+# (уже в CONTENT_VARIABLE_BUILTINS). Метрика Agent считается по завершённым (paired).
+ASYNC_UNPAIRED_UNRELIABLE = frozenset({"Agent", "Task"})
+
+
 # ── чтение лога за окно ───────────────────────────────────────────────────────
 
 
@@ -238,8 +248,11 @@ def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, 
         post_errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
         comp = completion_stats(pre[tool], posts, now=now)  # непарные Pre = провалы
         incomplete = comp["failed"]
-        attempts = completed + incomplete  # in_flight исключён (ещё не разрешился)
-        errors = post_errors + incomplete
+        # W10: у Agent/Task непарный Pre ненадёжен (background/кросс-сессионный Post) →
+        # не считаем провалом (в error_rate/attempts не входит; остаётся в incomplete-поле).
+        _incomplete_err = 0 if tool in ASYNC_UNPAIRED_UNRELIABLE else incomplete
+        attempts = completed + _incomplete_err  # in_flight исключён (ещё не разрешился)
+        errors = post_errors + _incomplete_err
         success = completed - post_errors
         durations = tool_durations(pre[tool], posts)  # H-P0.1: прямой duration_ms > пэйринг
         eff = effectiveness_from_posts(posts)  # retry/abandonment (single-source)

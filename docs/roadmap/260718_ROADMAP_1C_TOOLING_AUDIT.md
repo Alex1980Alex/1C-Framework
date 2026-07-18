@@ -49,12 +49,12 @@
 | §2 Дизайн | + bsl-platform-context, **Runtime Trace 2.5** (1c-debug-hmr), гейт G4 | **W12**: Trace default-ON (ADR-050), а 1c-debug **0 вызовов/14д** — либо тихий SKIP всегда, либо задачи шли мимо analyze | Этап-В0: аудит SKIP-фиксаций Trace в ANALYSIS-REPORT'ах окна |
 | §3 Кодирование | edt-mcp write+`get_project_errors`, execute_*, bsl_lint, Live BP-verify 5.x, **Write/Edit built-in** | Write err **+9%** к baseline; impact-чек presence **1.8%**; Sonar method-level дыра (W5) | T-P1 (BSL LSP до Sonar) + T-P0 (impact hard) + T-P4 |
 | §4 Тестирование | VA BDD `run-bdd.ps1`, YAxUnit `mcp-onec-test-runner` | битый дефолт `ONEC_TEST_CONN` (W6); LLM-тестоген ниша на GitHub пуста (скан) | T-P5.1; методика VA остаётся своей |
-| §5 Память | `unified_search` (recall) / `capture_pattern` / surfacing memory-first-hook | **W11**: memory-orchestrator **10 вызовов/14д** (+vector-memory 1) — recall-петля тонкая при hard-гейте; capture здоров (skill-learning 58) | Этап-В0: почему recall редок (гейт удовлетворяется 1 вызовом? surfacing замещает?) |
+| §5 Память | `unified_search` (recall) / `capture_pattern` / surfacing memory-first-hook | ~~W11~~ **В0 опроверг**: recall авто на каждый промпт (memory-first-hook), явный вызов — для глубокого; здоров | — (не слабость) |
 | §5 Внешний анализ | `onec_search`/`ecosystem_scan`/`its_fetch`/WebSearch | canonical-gap RU-терминов (W8) | RU-синонимы в скан + onec_search как парный источник |
 | §5 Скиллы | `code-skill-enforcer`, skill-router | здоров (acceptance PASS 9/9); presence скиллов не мерился per-1С-задача | Этап-В4: skill-presence в toolgate-валидатор |
 | §5 LLM-делегирование | `llm_complete` (sonnet-first) + `z-ai-write-guard` | было: гард мёртв (one-shot флаг), обрывы 50% — **починено 2026-07-18** (окно свежести+таймаут) | наблюдать 14д: delegation-rate на 1С-задачах |
-| §5 Субагенты | Agent (code-verify ревьюер, implementer) | **W10**: Agent err **18%** (22 вызова) — провалы делегирования субагентам | Этап-В0: разбор непарных Agent-Pre (таймауты? промпт-класс?) |
-| §6 Завершение | Stop-гейты `pipeline-protocol` + `onec-completion` (+sonar) | **W9**: gate-decisions **1329 allow / 0 deny за 14д** — гейты не кусаются ИЛИ deny-путь не логируется (блоки в сессиях живьём были!) | Этап-В0: аудит deny-логирования в `gate_policy.log_decision` |
+| §5 Субагенты | Agent (code-verify ревьюер, implementer) | ~~W10~~ **В0 исправил**: 18% был артефактом (background/кросс-сессионный Post не спаривается); Agent→healthy | ✅ фикс `ASYNC_UNPAIRED_UNRELIABLE` в analyze_tool_health |
+| §6 Завершение | Stop-гейты `pipeline-protocol` + `onec-completion` (+sonar) | ~~W9~~ **В0 опроверг**: поле `allow`, не `decision` — реально **57 deny/14д**, лог корректен | — (не слабость; мой аудит-запрос был багом) |
 
 ## §2 Найденные ошибки и слабые стороны
 
@@ -100,21 +100,42 @@ per-call лог (второй источник истины при падени�
 
 `ecosystem_scan` canonical-gap: RU-доменные термины (vanessa/yaxunit/oscript) в EN-источниках пусты даже за 3 года — канон добирается вручную/onec_search [live, этот аудит].
 
-### W9 🔴 Наблюдательная слепота гейтов (v2)
+### W9 ❌ ОПРОВЕРГНУТ диагностикой В0 (был баг МОЕГО запроса, не гейта)
 
-`data/gate-decisions.jsonl` за 14д: **1329 allow / 0 deny** у обоих главных Stop-гейтов — при том, что блоки в сессиях происходят живьём (наблюдались сегодня). Либо deny-ветка не доходит до `log_decision` (блок уходит exit-2/JSON-путём раньше записи), либо гейты фактически никогда не срабатывают на 1С-задачах. В обоих случаях **метрика «сколько ловят гейты» слепа** — нельзя оценивать эффективность enforcement-слоя.
+Первичный claim «1329 allow / 0 deny» был артефактом кривого аудит-запроса: поле в
+`gate-decisions.jsonl` называется **`allow`** (bool), а я считал по несуществующему
+`decision` → всё падало в `?`. Правильный подсчёт (В0): за 14д **57 деniev** (35
+pipeline-protocol + 22 onec-task-completion), всего в файле 90. **Гейты логируют
+решения корректно, слепоты нет.** Урок [[feedback-verify-audit-query-on-data]]: тот же
+класс, что stringValue-баг cross-check — проверять аудит-запрос на данных до выводов.
 
-### W10 🟠 Субагентное делегирование (v2)
+### W10 ✅ ИСПРАВЛЕН в В0 (был артефакт измерения, не 18% провалов)
 
-`Agent` err **18%** (22 вызова, по unpaired-Pre) — почти каждый пятый запуск субагента (code-verify ревьюер, implementer) обрывается без результата. Для пайплайна это скрытые повторы этапа верификации.
+`Agent` показывал err 18% (4/23 unpaired-Pre), но 4 непарных — **25-37ч-давности, не
+in-flight**: субагент завершается фоном/в другой сессии → его PostToolUse не спаривается
+с Pre в окне. В отличие от built-in (N-P0.1: платформа не шлёт Post на фейл → unpaired =
+честный провал), у Agent unpaired конфлатит провал и background/кросс-сессионный Post.
+**Фикс:** `ASYNC_UNPAIRED_UNRELIABLE={Agent,Task}` в `analyze_tool_health` — их непарный
+Pre исключён из error_rate (остаётся в info-поле `incomplete`). Live: Agent degraded→
+**healthy**, degraded 6→5 (остались реальные). 2 регресс-теста (Bash-провал сохранён).
 
-### W11 🟡 Recall-петля памяти тонкая (v2)
+### W11 ❌ ОПРОВЕРГНУТ диагностикой В0 (recall идёт АВТОМАТИЧЕСКИ)
 
-`memory-orchestrator` **10 вызовов/14д** (+ vector-memory 1) при hard-требовании recall на каждой 1С-задаче: петля удовлетворяется минимальным одиночным вызовом, глубина recall не растёт. Capture при этом здоров (skill-learning 58). Гипотезы: surfacing (`memory-first-hook`) фактически замещает явный recall; или recall делается «для галочки гейта».
+«10 вызовов memory-orchestrator» — не слабость: recall выполняется **автоматически на
+КАЖДЫЙ промпт** хуком `memory-first-hook` (UPS-surfacing, инъектит `[MEMORY CONTEXT]` —
+виден в каждом сообщении). Явный `unified_search` (5/14д) нужен лишь для ГЛУБОКОГО recall
+сверх авто-surfacing. Capture здоров (skill-learning 58). **Петля recall де-факто работает
+на каждой задаче через хук — тонкость числа явных вызовов ожидаема by design.**
 
-### W12 🟡 Runtime Trace default-ON не виден в данных (v2)
+### W12 🟡 ПОДТВЕРЖДЁН (нюанс): BP-trace простаивает, live-данные идут через запросы
 
-ADR-050 сделал Фазу 2.5 (live BP-trace) default-ON для задач с исполняемым кодом, но 1c-debug/hmr — **0 вызовов за 14д**. Либо все задачи окна легитимно фиксировали SKIP (нет кода/env down), либо мандат тихо не исполняется. Требуется аудит SKIP-фиксаций в ANALYSIS-REPORT'ах окна.
+1c-debug/hmr — **0 вызовов за всю историю лога**. При этом live-данные (ADR-050) реально
+проверяются через `1c-mcp-crud execute_query` (49 вызовов), а ANALYSIS-REPORT'ы несут
+секцию «Runtime Trace» (шаблон методики). Т.е. мандат «на реальных данных» исполняется
+запросами, а специфичный **live BP-trace (Фаза 2.5) в практике не зовётся** — совпадает с
+W3 (отладка простаивает). Реальный сигнал → вход в T-P0/В2 (BP-trace hard для T3-runtime).
+Не измерено, сколько отчётов фиксируют легитимный SKIP vs заполняют секцию статически —
+остаётся для В2-замера.
 
 ## §3 GitHub-кандидаты (сканы 2026-07-18, кеш `1c-tooling-github-2026`)
 
@@ -200,7 +221,7 @@ ADR-050 сделал Фазу 2.5 (live BP-trace) default-ON для задач �
 
 | Этап | Содержание | Выход/замер |
 |---|---|---|
-| **В0 · Диагностика слепых зон** *(первый — дёшево, разблокирует остальное)* | W9 аудит deny-логирования `gate_policy.log_decision` (почему 0 deny при живых блоках); W12 аудит SKIP-фиксаций Runtime Trace в ANALYSIS-REPORT'ах окна; W10 разбор 22 Agent-вызовов (кластеры unpaired-Pre); W11 трасса recall (surfacing vs явный вызов) | отчёт-страница в этом роадмапе §18; исправление логирования deny если подтвердится |
+| **В0 · Диагностика слепых зон** ✅ **ВЫПОЛНЕН 2026-07-18** | W9❌опроверг (баг запроса: `allow`≠`decision`, реально 57deny/14д) · W11❌опроверг (recall авто хуком) · W10✅исправлен (Agent-артефакт → healthy) · W12🟡подтверждён (BP-trace простаивает, live через query) | §18 итог; фикс `ASYNC_UNPAIRED_UNRELIABLE` + 2 теста |
 | **В1 · Quick wins** | T-P5.1 битый `ONEC_TEST_CONN`; T-P3.2 правило «поиск по коду = индексы, не edt-search»; T-P3.3 per-call лог edt-mcp/codepilot1c; RU-синонимы в ecosystem_scan (W8) | конфиг+скилл-правки; edt search p95 в отчёте ↓ |
 | **В2 · Переворот использования (T-P0)** | hard-промоут impact (экспортный diff) + BP-trace (T3-runtime) c fail-open; методики: обязательный эталон-поиск в analyze Ф2, impact-чек в implement Э3; валидатор applicable-знаменателя + outcome-метрика | окно 14д: presence ≥50% applicable, false-block ≈0, outcome не хуже |
 | **В3 · Новые инструменты (T-P1/T-P2)** | ADOPT `claude-code-bsl-lsp` (диагностика при правке); EVAL `1c-formsserver` на тестовой ИБ; порт приёма test-post-в-транзакции в implement Э5.x | живой пример пойманной LSP-ошибки до Sonar; вердикт EVAL (adopt/skip) |
@@ -219,6 +240,32 @@ ADR-050 сделал Фазу 2.5 (live BP-trace) default-ON для задач �
 6. Method-level Sonar-замечания видимы advisory-блоком на пересечении с правкой.
 
 ## §18 Progress Log
+
+### 2026-07-18 — В0 диагностика слепых зон ВЫПОЛНЕНА (2 из 4 — мои же баги измерения)
+
+Честный результат: половина «слепых зон v2» оказалась артефактами МОИХ аудит-запросов —
+урок verify-on-data (тот же класс, что stringValue-баг cross-check сегодня утром).
+
+- **W9 ОПРОВЕРГНУТ**: поле `gate-decisions.jsonl` = `allow` (bool), считал по `decision` →
+  0 везде. Правильно: **57 deny/14д** (35 pipeline + 22 onec-completion), 90 всего. Гейты
+  логируют корректно, слепоты нет. Кода не менял.
+- **W10 ИСПРАВЛЕН**: Agent «18% err» = 4/23 непарных Pre 25-37ч-давности (не in-flight).
+  Субагент завершается фоном/кросс-сессия → Post не спаривается. Фикс
+  `ASYNC_UNPAIRED_UNRELIABLE={Agent,Task}` в `analyze_tool_health` (непарный Pre вне
+  error_rate, остаётся в info-`incomplete`); N-P0.1 built-in-провал сохранён.
+  Live: Agent degraded→**healthy**, degraded-список 6→5 (остались реальные: Write/PowerShell/
+  2×edt-mcp latency/llm_complete[уже пофикшен сегодня]). 2 регресс-теста.
+- **W11 ОПРОВЕРГНУТ**: recall идёт АВТО на каждый промпт (`memory-first-hook` surfacing,
+  `[MEMORY CONTEXT]` виден каждое сообщение); явный `unified_search` (5/14д) — для глубокого.
+  Петля работает by design.
+- **W12 ПОДТВЕРЖДЁН (нюанс)**: 1c-debug BP-trace 0 вызовов all-time; live-данные идут через
+  `execute_query` (49); отчёты несут секцию Trace (шаблон). BP-trace реально простаивает
+  (= W3) → вход в T-P0/В2. Не измерено SKIP-fix vs static-fill — на В2.
+- Пайплайн `pipeline/1c-tooling-v0-diagnostics/`. Инструмент честного вывода (tool-health)
+  сам стал честнее (Agent-FP убран). code-verify PASS (ревьюер). Микро-долг (не блокер,
+  вне scope W10): `agent_rollup` (разрез per-agent_id) не применяет ASYNC-исключение —
+  Agent-tool unpaired всё ещё в «неуд.» строки `(main)`; выровнять отдельной правкой при В4.
+- Следующий этап — В1 quick wins (битый `ONEC_TEST_CONN`, edt-search правило, RU-синонимы).
 
 ### 2026-07-18 — v2: расширение по логике использования (мандат «не только 1С-именованное»)
 

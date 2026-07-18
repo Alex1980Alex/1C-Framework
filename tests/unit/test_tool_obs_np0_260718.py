@@ -229,3 +229,29 @@ def test_all_logs_discovers_archives(tmp_path, monkeypatch):
     assert len(logs) == 4  # LOG + .1 + .2 + .3
     assert logs[0].name == "hook-invocations.jsonl"
     assert logs[-1].name == "hook-invocations.3.jsonl"
+
+
+# ── W10 (В0 260718): Agent/Task непарный Pre — не провал (background/кросс-сессия) ──
+
+
+def test_w10_agent_unpaired_pre_not_error():
+    """САБОТАЖ-ИНВАРИАНТ: непарный Pre у Agent НЕ идёт в error_rate (субагент мог
+    завершиться фоном/в другой сессии → Post не спарился). incomplete-поле цело."""
+    old = NOW - timedelta(hours=30)  # непарные старше grace — были бы «провалом» у built-in
+    p2 = old + timedelta(seconds=2)
+    rows = [_pre("Agent", f"a{i}", old) for i in range(5)]
+    rows += [_post("Agent", f"a{i}", p2) for i in range(3)]  # 2 непарных
+    agg = ath.aggregate_tools(rows, now=NOW)["Agent"]
+    assert agg["errors"] == 0 and agg["error_rate"] == 0.0  # непарные НЕ провал
+    assert agg["incomplete"] == 2  # но видны в info-поле
+    assert agg["calls"] == 3  # attempts = только завершённые
+
+
+def test_w10_builtin_unpaired_still_error():
+    """N-P0.1 НЕ сломан: у built-in (Bash) непарный Pre ОСТАЁТСЯ честным провалом."""
+    old = NOW - timedelta(hours=30)
+    p2 = old + timedelta(seconds=2)
+    rows = [_pre("Bash", f"b{i}", old) for i in range(5)]
+    rows += [_post("Bash", f"b{i}", p2) for i in range(3)]  # 2 непарных
+    agg = ath.aggregate_tools(rows, now=NOW)["Bash"]
+    assert agg["errors"] == 2 and agg["incomplete"] == 2  # непарный = провал (честно)
