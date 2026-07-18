@@ -1,0 +1,44 @@
+{
+  "task": "impl-tool-obs-next",
+  "title": "Tool Observability NEXT — реализация 260718 (N-P0..N-P2)",
+  "created_at": "2026-07-18T05:52:32",
+  "updated_at": "2026-07-18T05:52:32",
+  "current_stage": 1,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}

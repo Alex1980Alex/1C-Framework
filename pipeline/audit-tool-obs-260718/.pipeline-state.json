@@ -1,0 +1,44 @@
+{
+  "task": "audit-tool-obs-260718",
+  "title": "Аудит реализации 260713 + роадмап Tool Observability NEXT",
+  "created_at": "2026-07-18T05:47:12",
+  "updated_at": "2026-07-18T05:47:12",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "docs/roadmap/260718_ROADMAP_TOOL_OBSERVABILITY_NEXT.md",
+      "status": "done",
+      "completed_at": "2026-07-18T05:47:12"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-18T05:47:12",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "docs/roadmap/260718_ROADMAP_TOOL_OBSERVABILITY_NEXT.md",
+      "status": "done",
+      "completed_at": "2026-07-18T05:47:12"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-07-18T05:47:12"
+    }
+  ]
+}
