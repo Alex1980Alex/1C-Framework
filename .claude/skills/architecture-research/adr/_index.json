@@ -834,6 +834,20 @@
       "status": "accepted",
       "date": "2026-07-18",
       "research": "roadmap 260718 N-P3 + cache/tool-call-observability-effectiveness-2026.md"
+    },
+    {
+      "id": "ADR-052",
+      "file": "052-otel-langfuse-topology-retention-security.md",
+      "title": "OTel→Langfuse топология/ретеншн/безопасность",
+      "status": "accepted",
+      "date": "2026-07-18"
+    },
+    {
+      "id": "ADR-053",
+      "file": "053-1c-tooling-v3-new-tools.md",
+      "title": "В3 новые 1С-инструменты (bsl-lsp/formsserver/test-post)",
+      "status": "accepted",
+      "date": "2026-07-18"
     }
   ]
 }

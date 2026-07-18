@@ -224,7 +224,7 @@ W3 (отладка простаивает). Реальный сигнал → в
 | **В0 · Диагностика слепых зон** ✅ **ВЫПОЛНЕН 2026-07-18** | W9❌опроверг (баг запроса: `allow`≠`decision`, реально 57deny/14д) · W11❌опроверг (recall авто хуком) · W10✅исправлен (Agent-артефакт → healthy) · W12🟡подтверждён (BP-trace простаивает, live через query) | §18 итог; фикс `ASYNC_UNPAIRED_UNRELIABLE` + 2 теста |
 | **В1 · Quick wins** ✅ **ВЫПОЛНЕН 2026-07-18** | ✅ RU-синонимы `expand_queries` (W8); ✅ правило «поиск по коду = индексы» в edt-mcp skill (W2); ❌ `ONEC_TEST_CONN` уже ок в `.env` (File-база); ⊘ per-call лог edt-mcp НЕВОЗМОЖЕН (remote HTTP :8765, не наш процесс — mcp-invocation-logger уже покрывает) | `engagement_rank.py`+3 теста; edt-mcp skill; §18 |
 | **В2 · Переворот использования (T-P0)** 🔵 **В2-1+В2-2 landed 2026-07-18** | ✅ В2-1 детект `edits_exported_method` + `impact_applicable` в event + валидатор `impact_rate_on_applicable` (честный знаменатель); ✅ В2-2 методики-мандаты (эталон-поиск analyze Ф3, impact-чек экспортного implement Э3); ⏳ hard-флип + outcome-метрика — **после окна** (знаменатель наполняется с новых задач) | окно 14д: presence ≥50% applicable, false-block ≈0 |
-| **В3 · Новые инструменты (T-P1/T-P2)** | ADOPT `claude-code-bsl-lsp` (диагностика при правке); EVAL `1c-formsserver` на тестовой ИБ; порт приёма test-post-в-транзакции в implement Э5.x | живой пример пойманной LSP-ошибки до Sonar; вердикт EVAL (adopt/skip) |
+| **В3 · Новые инструменты (T-P1/T-P2)** ✅ **landed 2026-07-18** ([ADR-053](../../.claude/skills/architecture-research/adr/053-1c-tooling-v3-new-tools.md)) | ✅ порт test-post-в-транзакции (implement Э6 references — безопасная live-проверка проведения); ✅ решения: bsl-lsp ADOPT (user-gated `/plugin`), formsserver ADOPT-lazy-mcp (standalone, on-demand при форм-задаче) | test-post готов; тулы — install-рецепт + user/on-demand gate |
 | **В4 · Контроль эффекта** | повторный toolgate-замер; Sonar-дельта/возвраты задач с impact vs без (T-P0.6); skill-presence per-1С-задача; T-P4 method-level мостик | сравнительный отчёт «до/после» в §18 |
 | **В5 · Ретирмент (T-P5.2)** | unused-инстансы crud → lazy-mcp; один канонический debug-путь; закрыть feenlace-EVAL вердиктом | каталог тулов ↓ без потери презенса |
 
@@ -240,6 +240,29 @@ W3 (отладка простаивает). Реальный сигнал → в
 6. Method-level Sonar-замечания видимы advisory-блоком на пересечении с правкой.
 
 ## §18 Progress Log
+
+### 2026-07-18 — В3: новые инструменты (research → решения; test-post портирован)
+
+Research (WebFetch README) → решения [ADR-053](../../.claude/skills/architecture-research/adr/053-1c-tooling-v3-new-tools.md).
+Урок verify-on-data и здесь: research уточнил механизмы и снял неверные предпосылки.
+
+- ✅ **test-post-в-транзакции портирован** (concrete, самое ценное): implement-1c-task Этап 6
+  (references/stage-details.md) — провести реальный документ в транзакции → собрать ошибки →
+  `ОтменитьТранзакцию()` (всегда). Live-проверка ПРОВЕДЕНИЯ на реальных данных БЕЗ порчи базы и
+  без шага очистки (усиление ADR-050). ⚠ побочки вне БД-транзакции (HTTP/журнал) откатом не
+  отменяются — нота в рецепте. Пойнтер в SKILL.md.
+- ✅ **claude-code-bsl-lsp → ADOPT (user-gated)**: Claude Code плагин (не MCP), авто-бинарь BSL LS
+  на старте, LSP-диагностика `.bsl` ДО Sonar (W2). Ставит ПОЛЬЗОВАТЕЛЬ (`/plugin marketplace add`
+  — агент slash не запускает). Узкий LSP ≠ общий SKIP маркетплейса ADR-013 (N6 был про хуки).
+- ✅ **1c-formsserver → ADOPT-lazy-mcp (on-demand)**: research снял ключевую неопределённость —
+  **standalone на XML, живая ИБ НЕ нужна**; 18 тулов вкл. `convert_form` logform↔EDT (закрывает
+  W2 форм/.mxlx). Install-рецепт в ADR/кеше; фактический клон+pip (supply-chain) — при первой
+  форм-задаче с EVAL-приёмкой (round-trip конверсии).
+- SKIP: feenlace/mcp-1c (дубль crud), ERP-твины/OData/платные. Кеш `1c-tooling-github-2026`
+  дополнен install-фактами; ADR-052/053 внесены в `adr/_index.json` (052 был пропущен).
+  Пайплайн `pipeline/1c-tooling-v3-newtools/`.
+- ⚠ Тулы (bsl-lsp/formsserver) НЕ установлены агентом — user-gated / supply-chain-gated; это
+  честный предел «внедрения» без прав на среду пользователя и клон стороннего кода вслепую.
 
 ### 2026-07-18 — В2-2: усиление методик (эталон-поиск + impact-чек как мандаты-шаги)
 
