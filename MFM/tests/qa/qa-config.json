@@ -1,12 +1,16 @@
 {
-  "platform": {},
+  "platform": {
+    "bin_path": "C:\\Program Files\\1cv8\\8.3.27.2214\\bin\\1cv8c.exe"
+  },
   "vanessa": {
     "epf_path": "C:\\1С-Framework\\tools\\vanessa\\vanessa-automation-single.epf",
     "screenshots_on_failure": true,
     "close_test_client_after_run": true,
     "junit_report_enabled": true
   },
-  "test_manager": {},
+  "test_manager": {
+    "ib_connection": "Srvr=\"DESKTOP-TNU600C\";Ref=\"260507_DEV_ATERLETSKIY_53196\";Usr=\"Администратор\";"
+  },
   "test_runner": {
     "use_test_manager": true,
     "timeout_seconds": 300,
@@ -18,7 +22,8 @@
       "alias": "Test Client",
       "type": "thin",
       "host": "localhost",
-      "port": 48111
+      "port": 48111,
+      "ib_connection": "Srvr=\"DESKTOP-TNU600C\";Ref=\"260507_DEV_ATERLETSKIY_53196\";Usr=\"Администратор\";"
     }
   ],
   "paths": {
@@ -27,7 +32,7 @@
     "results_dir": "tests/qa/results"
   },
   "edt": {
-    "use_runtime": true,
+    "use_runtime": false,
     "project_name": "Конфигурация"
   },
   "infobase": {}
