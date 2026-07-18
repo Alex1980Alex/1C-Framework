@@ -319,6 +319,48 @@ GitHub-поиск источника codepilot1c + doказательный ра
 - Провенанс/процедура — кеш `1c-tooling-github-2026.md` §codepilot1c-edt + память
   [[reference-codepilot1c-plugin-source]].
 
+### 2026-07-18 — W13 ЗАКРЫТ: BDD-смоук MFM ЗЕЛЁНЫЙ (junit 1/0/0, 13.82с) — автономная починка всей цепочки
+
+Плагин обновлён headless (p2 director по рецепту EDT-MCP: атомарный `-uninstallIU/-installIU
+com.codepilot1c.feature.feature.group`, release-ассет `com.codepilot1c.update-0.1.7-SNAPSHOT.zip`
+= готовый p2-site, exit 0, 6.4с; бэкапы `bundles.info.bak-20260718`). Дальше — каскад из 6
+блокеров, добитых по одному (каждый диагностирован на данных):
+
+1. ~~«апстрим убрал сломанный вызов»~~ — **ОПРОВЕРГНУТО javap НОВОГО jar** (мой «фикс в HEAD» был
+   артефактом `head -20` на grep): у плагина `if/else` по `versionMask` (mask→`getThickClientInfo(String)`,
+   null→`getThickClientInfo(InfobaseReference)`), а в EDT 2025.2.6.4 у `IRuntimeComponentManager`
+   **НЕТ НИ ОДНОГО** `getThickClientInfo` (только `getComponent`/`hasComponent`/`resolveExecutor`) →
+   **EDT-runtime путь qa_run мёртв на этой EDT в принципе — апстрим-баг** (NSME→catch→null→NPE
+   `info.component()`).
+2. Launch-config MFM был `USE_AUTO=true` → mask=null. Вписан нативный `ATTR_RUNTIME_INSTALLATION`
+   (формат выведен из байткода EDT: `com…resolvableInstallations.fixed:com…EnterprisePlatform=8.3.27.2214=x86_64`,
+   разделители `:` и `=`, arch=EMF-literal `x86_64`) + `USE_AUTO=false` — qa_inspect видит
+   «(8.3.27.2214)», для EDT-UI валиден; для qa_run полезен, но недостаточен (см. п.1).
+3. **Рабочий путь = binary (не-EDT)**: `edt.use_runtime=false` (⚠ параметр `use_edt_runtime`
+   может только ВКЛЮЧИТЬ — `||` с конфигом), `platform.bin_path=…\bin\1cv8c.exe` (**exe, не каталог**
+   — плагин исполняет путь напрямую), `test_manager.ib_connection`+`test_clients[].ib_connection`
+   = `Srvr="DESKTOP-TNU600C";Ref="260507_DEV_ATERLETSKIY_53196";Usr="Администратор";` (пароль пуст —
+   dev-база; AuthenticationError в ЖР был от анонимного входа).
+4. `tools/vanessa/vanessa-automation-single.epf` оказался **LFS-pointer 133 байта** («Неверный формат
+   хранилища данных» в диалоге) → `git lfs pull` → 23.7МБ валидный контейнер `FFFFFF7F`.
+5. **Лимит dev-лицензии**: стартер 1cv8c детачится → плагин видит exit-0/4с и врёт `infra_error`,
+   а реальные клиенты висли сессиями в кластере → съели клиентские слоты → «Превышено ограничение
+   лицензии для разработчиков… Тонкий клиент запрещён». Лечение: `ras` на :1545 + `rac session
+   list/terminate` зависших 1CV8C (+ kill сирот). После освобождения слотов — лицензия пропустила.
+6. **Итог**: junit.xml `tests=1 failures=0 errors=0 time=13.82` + VA UI «Выполнение сценариев
+   закончено. Ошибок не было» (×2). Warning «Не найден профиль клиента тестирования <TestClient>» —
+   косметика (ad-hoc клиент, не из профиля VA). TM-клиент и сессии прибраны (rac terminate).
+
+**Дефекты плагина для апстрима (issue-кандидаты):** (a) EDT-runtime путь зовёт несуществующий в
+2025.2.6 API; (b) в binary-пути `va.log` не прокидывается в va-params → `status=infra_error` даже
+при успехе (истина — junit); (c) `use_edt_runtime=false` параметром не выключается; (d) стартер
+детачится → duration/exit плагина не отражают реальный прогон.
+
+**Развилка W13 (политика тест-контура) обновлена данными:** BDD-через-MCP теперь РАБОТАЕТ
+(codepilot qa_* по binary-пути). Ограничение среды: лимит клиентов dev-лицензии — Designer(EDT) +
+TM + TestClient на грани; параллельные клиенты/зависшие сессии всё ломают → перед прогоном чистить
+сессии (`rac session list`). Рецепт — память [[reference-codepilot1c-qa-run-binary-path]].
+
 ### 2026-07-18 — W13 (аудит тест-контура): заявлено 5 стеков — применяется ~0 (мандат пользователя)
 
 Гипотеза пользователя «есть тест-инструменты, которые не используются» подтверждена данными
