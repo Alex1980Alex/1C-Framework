@@ -393,12 +393,25 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
         pass
 
 
+def _impact_applicable() -> bool:
+    """В2 260718 (W1): применимо ли `bsl_impact_analysis` к этой задаче — правка/добавление
+    экспортного метода. Даёт валидатору честный applicable-знаменатель (presence на ВСЕХ
+    задачах = survivorship-caveat ADR-035). best-effort: любая ошибка → False (не роняем)."""
+    try:
+        from shared.onec_change_scope import edits_exported_method
+
+        return bool(edits_exported_method(PROJECT_ROOT))
+    except Exception:
+        return False
+
+
 def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
     """ADR-035 Фаза 1 — лог advisory-состояния T1-T2 на КАЖДОЙ 1С-задаче (allow и block).
 
     Данные для замера follow_rate / FP перед промоутом T1-T2 в hard (Фаза 2): какой % 1С-задач
     уже использует impact/BP-trace/reference-search. Модель — tdd-guard events.jsonl (ADR-015).
     best-effort: ошибка лога никогда не влияет на gate. JSONL в `.claude/cache/` (gitignored runtime).
+    В2 260718: + `impact_applicable` — узкое условие применимости impact (честный знаменатель).
     """
     try:
         ADVISORY_EVENTS_LOG.parent.mkdir(parents=True, exist_ok=True)
@@ -407,6 +420,7 @@ def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
             "adr": "ADR-035-phase1",
             "slug": slug,
             "impact": bool(sig.get("impact")),
+            "impact_applicable": _impact_applicable(),  # В2: правка экспортного метода?
             "debug_trace": bool(sig.get("debug_trace")),
             "ref_search": bool(sig.get("ref_search")),
             "callers": bool(sig.get("callers")),
