@@ -102,8 +102,20 @@ class HookOutput:
         return self
 
     def block(self, reason: str) -> "HookOutput":
-        """Block the tool call with a reason."""
-        self._data["continue"] = False
+        """Block the tool call with a reason — БЕЗ обрыва хода Claude.
+
+        ⚠ НЕ ставить ``continue: false`` (фикс 2026-07-18, мандат пользователя):
+        по контракту Claude Code это поле «Claude stops processing after the
+        hooks run» и ИМЕЕТ ПРИОРИТЕТ над decision — reason уходит пользователю,
+        а НЕ модели, и ход обрывается («PreToolUse hook stopped continuation»).
+        Живой симптом: каждый SKILL REQUIRED-блок замораживал сессию до ручного
+        «продолжай» от пользователя. Чистый ``decision: block`` + ``reason``
+        (легаси-формат PreToolUse, поддерживается) отклоняет ВЫЗОВ инструмента,
+        отдаёт reason МОДЕЛИ, и Claude в том же ходе исправляется (активирует
+        скилл → ретраит). Для Stop-хуков decision:block = «не останавливайся,
+        продолжи с reason» — enforcer-семантика, тоже без continue:false.
+        Регресс: tests/unit/hooks/test_hook_block_no_continue_stop.py.
+        """
         self._data["decision"] = "block"
         self._data["reason"] = reason
         return self

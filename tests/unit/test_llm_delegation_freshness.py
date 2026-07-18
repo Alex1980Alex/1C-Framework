@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -98,3 +98,11 @@ def test_record_then_has_roundtrip(ss):
     """record_llm_delegation → has_llm_delegation True (живой цикл гарда)."""
     ss.record_llm_delegation()
     assert ss.has_llm_delegation() is True
+
+
+def test_aware_timestamp_fail_closed(ss):
+    """tz-guard (code-verify rec #1): aware-отметка от будущего писателя → naive−aware
+    вычитание бросает TypeError → fail-closed False (гард требует делегирование),
+    а не крэш, утекающий в allow. Саботаж: убрать except TypeError → тест краснеет TypeError'ом."""
+    _write_state(ss, 1, datetime.now(UTC).isoformat())
+    assert ss.has_llm_delegation() is False
