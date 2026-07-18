@@ -149,7 +149,11 @@ def log_invocation(
         hook: Hook class name or script name (e.g. "SkillRouter")
         event: Hook event type (UserPromptSubmit, PreToolUse, PostToolUse, Stop)
         tool: Tool name (for PreToolUse/PostToolUse events)
-        elapsed_ms: Execution time in milliseconds
+        elapsed_ms: Время работы САМОГО ХУКА (~20мс), НЕ инструмента. Реальная латентность
+            тула = Pre→Post-пара по tool_call_id (tool_effectiveness.pair_durations).
+            ⚠ N-P2.3 (260718): платформа кладёт настоящую длительность тула в
+            PostToolUse-payload полем `duration_ms` — прямой источник латентности без
+            пэйринга (кандидат на захват, follow-up; сейчас берём из пары).
         outcome: Result — one of: allow, block, message, error
         session_id: Claude Code session ID (from stdin JSON)
         error: Error message if outcome is "error"

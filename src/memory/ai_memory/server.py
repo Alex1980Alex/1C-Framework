@@ -219,23 +219,43 @@ async def list_tools() -> list[Tool]:
     ]
 
 
+# Per-call MCP log (roadmap 260713 P2.3 / N-P2.2): второй источник истины при падении
+# stdio до Post-хука. Defensive import — отсутствие helper'а не ломает сервер.
+try:
+    from scripts.mcp_call_log import track_call as _track_call
+except Exception:  # pragma: no cover - fail-soft: log helper is optional
+    from contextlib import contextmanager
+
+    @contextmanager
+    def _track_call(server: str, tool: str, **extra):  # type: ignore[misc]
+        yield {"ok": True, "error_type": None}
+
+
+_MCP_SERVER_SLUG = "memory-ai"
+
+
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    try:
-        handlers = {
-            "get_important_messages": get_important_messages,
-            "save_important_message": save_important_message,
-            "search_messages": search_messages,
-            "delete_message": delete_message,
-            "get_categories": get_categories,
-        }
-        handler = handlers.get(name)
-        if not handler:
-            return [TextContent(type="text", text=f"Unknown tool: {name}")]
-        return await handler(arguments)
-    except Exception as e:
-        logger.error(f"Error in {name}: {e}")
-        return [TextContent(type="text", text=f"Error: {str(e)}")]
+    with _track_call(_MCP_SERVER_SLUG, name) as _st:
+        try:
+            handlers = {
+                "get_important_messages": get_important_messages,
+                "save_important_message": save_important_message,
+                "search_messages": search_messages,
+                "delete_message": delete_message,
+                "get_categories": get_categories,
+            }
+            handler = handlers.get(name)
+            if not handler:
+                _st["ok"] = False
+                _st["error_type"] = "unknown_tool"
+                return [TextContent(type="text", text=f"Unknown tool: {name}")]
+            return await handler(arguments)
+        except Exception as e:
+            _st["ok"] = False
+            _st["error_type"] = type(e).__name__
+            logger.error(f"Error in {name}: {e}")
+            return [TextContent(type="text", text=f"Error: {str(e)}")]
 
 
 async def get_important_messages(args: dict) -> list[TextContent]:

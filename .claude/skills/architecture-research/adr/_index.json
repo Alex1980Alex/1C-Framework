@@ -826,6 +826,14 @@
       "status": "accepted",
       "date": "2026-07-08",
       "research": "cache/autonomous-1c-debugging-2026.md + roadmap 260708 B1"
+    },
+    {
+      "id": "ADR-051",
+      "file": "051-tool-observability-heavy-path-gating.md",
+      "title": "Тяжёлый путь tool-observability (OTel→Langfuse + LLM-judge) — отложить за триггеры; duration_ms-захват как дешёвый предшественник",
+      "status": "accepted",
+      "date": "2026-07-18",
+      "research": "roadmap 260718 N-P3 + cache/tool-call-observability-effectiveness-2026.md"
     }
   ]
 }

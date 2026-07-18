@@ -18,6 +18,7 @@ import os
 import sqlite3
 import sys
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -73,6 +74,53 @@ def _sqlite_ok(path: Path, timeout: float) -> tuple[bool, int, str]:
     except Exception as exc:
         latency_ms = int((time.monotonic() - start) * 1000)
         return False, latency_ms, f"{type(exc).__name__}: {exc}"[:200]
+
+
+def _http_reachable(url: str, timeout: float) -> tuple[bool, int, str]:
+    """Reachability: ЛЮБОЙ HTTP-ответ (вкл. 401/403/404) = сервер жив (для 1С-веб-
+    публикаций — они отвечают 401/OData-доком, не 200). Down только connection
+    refused / timeout (URLError без code). N-P2.1."""
+    start = time.monotonic()
+    try:
+        req = urllib.request.Request(url, method="GET")
+        urllib.request.urlopen(req, timeout=timeout)
+        return True, int((time.monotonic() - start) * 1000), ""
+    except urllib.error.HTTPError as exc:  # получили ответ (4xx/5xx) → достижим
+        return True, int((time.monotonic() - start) * 1000), f"HTTP {exc.code}"
+    except Exception as exc:  # URLError/timeout/refused → недостижим
+        return False, int((time.monotonic() - start) * 1000), f"{type(exc).__name__}: {exc}"[:200]
+
+
+def _load_1c_instances() -> list[tuple[str, str]]:
+    """(server-name, MCP_ONEC_URL) для всех 1c-mcp-crud* из .mcp.json (N-P2.1).
+    Пусто при отсутствии/ошибке — проба 1С опциональна."""
+    try:
+        cfg = json.loads((ROOT / ".mcp.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    servers = cfg.get("mcpServers") or {}
+    out: list[tuple[str, str]] = []
+    for name, sc in servers.items():
+        if not name.startswith("1c-mcp-crud"):
+            continue
+        url = (sc.get("env") or {}).get("MCP_ONEC_URL", "").strip()
+        if url:
+            out.append((name, url))
+    return out
+
+
+def _dir_writable(path: Path) -> tuple[bool, int, str]:
+    """RW-проба каталога (skill-learning silo): создать+удалить пробный файл."""
+    start = time.monotonic()
+    if not path.exists():
+        return False, 0, "dir missing"
+    try:
+        probe = path / ".health-probe.tmp"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink()
+        return True, int((time.monotonic() - start) * 1000), ""
+    except OSError as exc:
+        return False, int((time.monotonic() - start) * 1000), f"{type(exc).__name__}: {exc}"[:200]
 
 
 def probe_all(timeout: float = 1.5) -> list[dict]:
@@ -147,6 +195,45 @@ def probe_all(timeout: float = 1.5) -> list[dict]:
         }
     )
 
+    # core-зависимости выше = severity broken (down → сервер не работает).
+    for p in probes:
+        p.setdefault("severity", "broken")
+
+    # 5. skill-learning — RW-доступность JSONL-силоса (severity broken)
+    sl_dir = ROOT / "data" / "skill_learning"
+    ok, latency_ms, error = _dir_writable(sl_dir)
+    probes.append(
+        {
+            "target": "skill-learning",
+            "kind": "fs",
+            "endpoint": str(sl_dir),
+            "ok": ok,
+            "latency_ms": latency_ms,
+            "error": error,
+            "affects": ["skill-learning"],
+            "severity": "broken",
+        }
+    )
+
+    # 6. 1C-инстансы (N-P2.1) — reachability 1С-веб-публикаций из .mcp.json.
+    # severity=degraded: dev-инфобазы легитимно то вверх/вниз → advisory (без авто-задачи),
+    # но ≥2д непрерывного down всё равно всплывёт в баннере. Opt-out: MCP_PROBE_1C_DISABLE=1.
+    if os.environ.get("MCP_PROBE_1C_DISABLE") != "1":
+        for name, url in _load_1c_instances():
+            ok, latency_ms, error = _http_reachable(url, timeout)
+            probes.append(
+                {
+                    "target": name,
+                    "kind": "http",
+                    "endpoint": url,
+                    "ok": ok,
+                    "latency_ms": latency_ms,
+                    "error": error,
+                    "affects": [name],
+                    "severity": "degraded",
+                }
+            )
+
     return probes
 
 
@@ -207,6 +294,7 @@ def run(timeout: float = 1.5, now: datetime | None = None) -> dict:
             "endpoint": p["endpoint"],
             "error": p["error"],
             "affects": p["affects"],
+            "severity": p.get("severity", "broken"),
         }
         for p in probes
         if not p["ok"]

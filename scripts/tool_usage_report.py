@@ -34,15 +34,17 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 P2.2)
+    CANONICAL_CATEGORIES as _CANONICAL_CATEGORIES,  # N-P2.3: единый источник констант
+)
+from tool_effectiveness import (
     effectiveness_from_posts,
     pair_durations,
 )
 
-# Канонические категории строк «один row = один вызов инструмента» (Pre+Post):
-# mcp_call (mcp-invocation-logger) + tool_call (tool-invocation-logger, roadmap
-# 260713 P0.3 — built-in тулы). Обе несут tool_call_id/args_hash и реальную
-# Pre/Post-латентность. category="hook" (автолог энфорсеров) — НЕ вызов тула.
-_CANONICAL_CATEGORIES = ("mcp_call", "tool_call")
+# _CANONICAL_CATEGORIES = ("mcp_call", "tool_call") — теперь из tool_effectiveness
+# (N-P2.3 single-source). Категории строк «один row = один вызов инструмента» (Pre+Post):
+# mcp_call (mcp-invocation-logger) + tool_call (tool-invocation-logger, roadmap 260713
+# P0.3 — built-in). category="hook" (автолог энфорсеров) — НЕ вызов тула.
 
 
 def _iter_events(log: Path = LOG):

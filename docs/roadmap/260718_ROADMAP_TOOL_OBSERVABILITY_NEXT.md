@@ -169,6 +169,44 @@ rollups — error_rate 0.0.
 
 > Append-only, reverse-chronological.
 
+### 2026-07-18 — N-P0..N-P2 РЕАЛИЗОВАНЫ (+ N-P3 ADR-051); verify-before-fix уточнил 2 диагноза
+
+Полная реализация ядра NEXT за одну сессию (макс-эффорт, автономно). 3 коммита + ADR.
+
+- **N-P0.1 (корень глубже, чем NB1 заявлял):** дамп формы `tool_response` показал — платформа
+  **вообще не шлёт PostToolUse на неуспешный built-in вызов** (Bash non-zero exit / Edit
+  «строка не найдена» / Read miss эмпирически: Pre есть, Post нет). Значит `_classify_outcome`
+  для провалов — мёртвый код (Post не приходит классифицировать), а error-rate из Post ≡ 0
+  структурно. Честный сигнал = **непарный Pre** (`completion_stats`). Блоки гардов НЕ путаются
+  (enforcer `exit 2` преемптит canonical-логгер — Write unpaired=0 при живом блоке, проверено).
+  Живой эффект: Bash error_rate 0.00→0.03, **Agent 20%** (провалы делегирования были невидимы),
+  Write 11%. Gated shape-dump оставлен off-by-default (защита от рецидива). 14 unit + саботаж
+  (0.33→0.00 при нейтрализации).
+- **N-P0.2 (NB3 частично неверен):** `iter_window_rows` УЖЕ читал 1 архив `[LOG, .1]` —
+  «архив не читается» было ошибкой аудита. Реальная причина окна-в-1-день: держался ТОЛЬКО 1
+  архив (ротация перезатирала `.1`). Фикс: каскад `.1→.2→…→.N` (`HOOK_LOG_ARCHIVES=12`) +
+  `_all_logs` читает все. Покрытие 14д растёт органически по мере накопления архивов.
+- **N-P0.3:** content-variable классификация (Bash/Grep/execute_code — латентность от контента)
+  + пол p95 500мс. **6 живых degraded были p95-FP на variable-тулах → стали 0 FP**; итоговые
+  6 degraded теперь РЕАЛЬНЫ (llm_complete 50%, Agent 20%, Write 11%, PowerShell +8%, 2 edt-mcp
+  latency) — сигнал, который N-P0.1 сделал видимым. Это лучше «0 degraded» (= слепота).
+- **N-P1.1:** `mcp_down_deps` (трейлинг down-серия ≥2д, severity) + `stale_sinks` (мост P1.4
+  через `[REGRESSION]`) → единый `infra_alerts`; propagation-синк всплыл в общем отчёте.
+- **N-P1.2:** `scripts/tool_verdict_history.py` — единственный читатель verdicts.jsonl (был
+  write-only); повтор broken 30д→p1, healed-детект (петля закрыта), тренд в _latest.md.
+- **N-P1.4:** мёртвая ссылка tool-effectiveness.jsonl в onec-task-completion-stop → live отчёт.
+- **N-P2.1:** probe +6× 1c-mcp-crud (reachability, severity=degraded — dev-инфобазы флапают)
+  +skill-learning; 11 targets, все up. **N-P2.2:** per-call лог vector-memory/skill-learning/
+  memory-ai (интеграц-тест: unknown_tool → лог). **N-P2.3:** §1.3 260713 к факту, CANONICAL_
+  CATEGORIES single-source, elapsed_ms аннотирован (+ найден `duration_ms` в payload). **N-P2.4:**
+  разрез делегирования per-agent (agent_id течёт; (main) 1652 + субагенты видны).
+- **N-P3:** [ADR-051](../../.claude/skills/architecture-research/adr/051-tool-observability-heavy-path-gating.md)
+  — тяжёлый путь (OTel→Langfuse + LLM-judge) отложен за явные триггеры (инфру не поднимаем в
+  код-сессии); дешёвый предшественник — захват `duration_ms` из payload.
+- **Итог:** 32 новых unit (14 N-P0 + 15 N-P1 + 11 N-P2 − пересечения) + 126 tool-obs зелёные +
+  330 gate-parity (гейт цел). Коммиты: c225fc257 (N-P0), 86686dedf (N-P1). ⚠ MCP-серверные
+  правки (vector/skill/ai-memory) — рантайм после `/mcp reconnect`.
+
 ### 2026-07-18 — Аудит реализации 260713 + роадмап NEXT создан
 
 - 3 верификационных агента: P0 CONFIRMED полностью, P1/P2 код CONFIRMED, §6.1/§6.3 — реализованы

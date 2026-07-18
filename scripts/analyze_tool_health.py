@@ -75,6 +75,7 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 P2.2)
+    CANONICAL_CATEGORIES,
     completion_stats,
     effectiveness_from_posts,
     pair_durations,
@@ -88,8 +89,6 @@ from tool_verdict_history import read_verdicts, verdict_trend  # N-P1.2: тре�
 _parse_ts = parse_ts
 _pct = percentile
 _pair_duration_list = pair_durations
-
-CANONICAL_CATEGORIES = ("mcp_call", "tool_call")
 
 # ── пороги вердиктов (§6.1) — вынесены для тюнинга/тестов ─────────────────────
 MIN_CALLS_FOR_BROKEN = 5  # мин. вызовов чтобы success-rate был статзначим
@@ -261,6 +260,33 @@ def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, 
     return out
 
 
+def agent_rollup(rows: list[dict], now: datetime | None = None) -> dict[str, dict]:
+    """Разрез вызовов по agent_id (N-P2.4): делегирование в субагенты vs основная
+    сессия. Поле agent_id теперь заполняется платформой (B2 ожил) — считаем per-agent
+    attempts/errors/success (та же incomplete-aware логика). '(main)' = основная сессия."""
+    now = now or datetime.now()
+    pre: dict[str, list] = defaultdict(list)
+    post: dict[str, list] = defaultdict(list)
+    for e in rows:
+        aid = e.get("agent_id") or "(main)"
+        (post if e.get("event") == "PostToolUse" else pre)[aid].append(e)
+    out: dict[str, dict] = {}
+    for aid in set(pre) | set(post):
+        posts = post[aid]
+        completed = len(posts)
+        post_errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
+        comp = completion_stats(pre[aid], posts, now=now)
+        attempts = completed + comp["failed"]
+        errors = post_errors + comp["failed"]
+        out[aid] = {
+            "calls": attempts,
+            "errors": errors,
+            "success_rate": round((completed - post_errors) / attempts, 4) if attempts else 1.0,
+            "incomplete": comp["failed"],
+        }
+    return out
+
+
 # ── вердикт (§6.1) ────────────────────────────────────────────────────────────
 
 
@@ -347,6 +373,7 @@ def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
     return {
         "tools": tools,
         "servers": servers,
+        "agents": agent_rollup(rows, now=now),  # N-P2.4: разрез по субагентам
         "generated": now.isoformat(timespec="seconds"),
     }
 
@@ -413,6 +440,8 @@ def mcp_down_deps(
                 "affects": last.get("affects", []),
                 "since": down_since.isoformat(timespec="seconds"),
                 "error": last.get("error", ""),
+                # severity из пробы (N-P2.1): core-deps → broken, 1С-инстансы → degraded
+                "severity": last.get("severity", "broken"),
             }
         )
     return down
@@ -457,9 +486,10 @@ def gather_infra_alerts(now: datetime, with_sinks: bool = True) -> list[dict]:
     alerts: list[dict] = []
     for d in mcp_down_deps(now):
         affected = ", ".join(d["affects"]) or d["dep"]
+        level = d.get("severity", "broken")  # N-P2.1: 1С-инстансы → degraded (advisory)
         alerts.append(
             {
-                "level": "broken",
+                "level": level,
                 "source": "mcp-health",
                 "key": d["dep"],
                 "affects": d["affects"],
@@ -684,6 +714,33 @@ def render_md(health: dict, window_days: int) -> str:
             "",
         ]
 
+    # ── N-P2.4: разрез делегирования (только если были субагенты) ──
+    agents = health.get("agents") or {}
+    sub = {a: v for a, v in agents.items() if a != "(main)" and v.get("calls", 0) > 0}
+    if sub:
+        lines += [
+            "## Делегирование (per-agent)",
+            "",
+            "| Агент | Вызовов | success-rate | неуд. |",
+            "|---|---|---|---|",
+        ]
+        main = agents.get("(main)", {})
+        if main.get("calls"):
+            lines.append(
+                f"| `(main)` | {main['calls']} | {main['success_rate']:.0%} | {main.get('incomplete', 0)} |"
+            )
+        for aid, v in sorted(sub.items(), key=lambda kv: -kv[1]["calls"]):
+            short = aid[:16]
+            lines.append(
+                f"| `{short}` | {v['calls']} | {v['success_rate']:.0%} | {v.get('incomplete', 0)} |"
+            )
+        lines += [
+            "",
+            "> agent_id заполняется платформой (B2). Субагент с высоким «неуд.» = провалы "
+            "делегирования (раньше невидимы, сливались с основной сессией).",
+            "",
+        ]
+
     lines += [
         "## Все инструменты",
         "",
@@ -749,6 +806,7 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
             v: sum(1 for s in health["tools"].values() if s["verdict"] == v) for v in _VERDICT_ORDER
         },
         "servers": health.get("servers", {}),  # rule-слой P2.2 (per-server эффективность)
+        "agents": health.get("agents", {}),  # N-P2.4: разрез делегирования
         "tools": health["tools"],
     }
     _atomic_write(REPORTS / "_latest.json", json.dumps(sidecar, ensure_ascii=False, indent=2))

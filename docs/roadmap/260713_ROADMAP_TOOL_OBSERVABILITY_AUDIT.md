@@ -52,15 +52,17 @@
 
 ### 1.3 Карта покрытия инструментов
 
+> ⚠ **Обновлено 2026-07-18 (260718 N-P0.3/N-P2):** таблица ниже — ТЕКУЩЕЕ состояние
+> после P0 (канонический `tool-invocation-logger` для built-in) + N-P2. Исходный
+> pre-P0 снимок (Read/Grep/Glob «только Pre», TodoWrite «невидимы») — в git-истории.
+
 | Категория | Покрытие | Деталь |
 |---|---|---|
 | **MCP tools (все серверы, вкл. будущие)** | ✅ полное | Универсальный `mcp__.*` Pre+Post, каноническая строка с `tool_call_id`/`args_hash` |
-| Bash, Write/Edit, Skill, WebSearch/WebFetch | ✅ косвенное | Побочный эффект enforcer-хуков (несколько строк на вызов, без canonical row) |
-| Read/Grep/Glob | ⚠ только Pre | Один Pre-хук (`bsl-tool-router`), **PostToolUse нет** → нет длительности/ошибок |
-| PowerShell | ⚠ только Pre | `process-guard`; PostToolUse нет |
-| TodoWrite, NotebookEdit, TaskGet/List/Output, ExitPlanMode | ❌ невидимы | Ни одного матчера → 0 записей |
-| Субагенты (Task/Agent) | ❌ де-факто | Поле `agent_id` в контракте есть, но не передаётся (см. B2) |
-| Внутри самих MCP-серверов | ❌ у всех 8 | Только stderr-логгеры + доменные data-jsonl; per-call аудита вызовов tools нет ни у одного (memory-orchestrator - in-memory `_track()` + снапшоты; ai_memory/skill_learning/bsl-semantic-search/1c-mcp-crud/auto-documenter/bsl-debugger - ничего) |
+| Read/Grep/Glob, Bash/PowerShell, Write/Edit, Skill, Web*, Task*, TodoWrite/NotebookEdit/ExitPlanMode, Agent | ✅ полное (P0.3) | `tool-invocation-logger` (matcher из 24 built-in) — canonical `tool_call` Pre+Post с `tool_call_id`/`args_hash`. ⚠ **NB1 (260718):** платформа НЕ шлёт Post на неуспешный built-in → провал виден как непарный Pre (`completion_stats`), не через outcome |
+| Субагенты (Task/Agent) | ✅ течёт | `agent_id` заполняется платформой (B2 ожил); разрез делегирования per-agent в `analyze_tool_health` (N-P2.4) |
+| Внутри самих MCP-серверов | 🟡 5/10 | Per-call лог (`mcp_call_log`): memory-orchestrator + 1c-mcp-crud (P2.3) + vector-memory/skill-learning/memory-ai (N-P2.2). Остальные (bsl-semantic-search/edt-mcp/auto-documenter/bsl-debugger/…) — по мере касания |
+| Health зависимостей MCP | ✅ probe | `probe_mcp_health`: 4 core-deps (broken) + skill-learning + 6× 1c-mcp-crud reachability (degraded, N-P2.1) → `_mcp_health.json` → вердикты (N-P1.1) |
 
 ## §2 Насколько реализована идея «лог → анализ → метрики → действие»
 

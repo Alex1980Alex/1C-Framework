@@ -24,6 +24,11 @@ from datetime import datetime
 
 BUILTIN_BUCKET = "(built-in)"
 
+# Канонические категории строк-вызовов (одна пара Pre/Post на вызов). Единый источник
+# для всех потребителей (analyze_tool_health / tool_usage_report / audit_query) —
+# N-P2.3: раньше дублировалось как локальный литерал/константа в каждом.
+CANONICAL_CATEGORIES = ("mcp_call", "tool_call")
+
 
 def parse_ts(s: str | None) -> datetime | None:
     if not s:
