@@ -241,6 +241,33 @@ W3 (отладка простаивает). Реальный сигнал → в
 
 ## §18 Progress Log
 
+### 2026-07-18 — W13 follow-up: попытка досоединить BDD-через-MCP (MFM) — .epf починен, но 2-й блокер
+
+Мандат пользователя: досоединить BDD-через-MCP + прогнать smoke вживую. Живая диагностика
+цепочки `qa_*` показала, что «оживить этап 4» требует НЕ одной настройки, а цепочки инфры.
+
+- ✅ **Блокер 1 починен**: `qa_inspect(status)` MFM был `error` — `vanessa.epf_path` не задан.
+  Прописал в `MFM/tests/qa/qa-config.json` → `.epf` (`tools/vanessa/vanessa-automation-single.epf`)
+  → **status: ok, errors: 0** (verified live, `epf_source: project_config`).
+- ✅ **qa_plan_scenario работает**: цель + `section_name="Логистика"` (реальная подсистема MFM) →
+  полный структурный план (5 шагов, `unresolvedBindings: []`).
+- ⚠ **qa_generate(compile_feature) не принимает план** через этот MCP-интерфейс: `plan is required`
+  и при nested-object, и при flatten — untyped-параметр `plan` сериализуется строкой. Находка о
+  контракте тула (обход: писать `.feature` руками, но см. ниже).
+- ⚠ **qa_validate_feature требует registry от qa_generate**: рукописная фича даёт `registry_unknown_step`
+  на ВСЕХ строках (вкл. `Функционал:`/`Как`) — валидатор проверяет структурный QA-registry, который
+  наполняет qa_generate, а не Vanessa-каталог. Preflight работает только для generate-фич.
+- ⚠ **Блокер 2 (глубже, не чинится настройкой)**: `qa_run(dry_run)` → `ThickClientInfo.component()
+  because info is null` (и при `use_edt_runtime=false`) — **EDT не имеет зарегистрированного
+  1С-платформенного thick-client runtime**, который qa_run резолвит внутри. Это среда EDT
+  (Preferences → 1C runtime / привязка версии платформы), не строка конфига → нужен доступ к
+  среде пользователя. Артефакт `MFM/tests/features/00_smoke_mfm.feature` оставлен (валидный smoke
+  для прогона, когда runtime зарегистрируют).
+- **Вывод**: W13 «BDD-контур мёртв» подтверждён на уровне инфры — цепочка блокеров (.epf ✓ починен;
+  EDT-runtime ✗; тесная связка generate↔validate). Один MCP-путь VA (`mcp-onec-test-runner` через
+  раннер `run-bdd.ps1`) вероятно живее codepilot `qa_*`. Развилка политики (W13) не изменилась;
+  «оживление» этапа 4 = инфра-проект, не quick-fix. Пайплайн `pipeline/wire-bdd-mcp-mfm/`.
+
 ### 2026-07-18 — W13 (аудит тест-контура): заявлено 5 стеков — применяется ~0 (мандат пользователя)
 
 Гипотеза пользователя «есть тест-инструменты, которые не используются» подтверждена данными
