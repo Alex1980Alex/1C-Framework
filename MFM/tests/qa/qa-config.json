@@ -1,0 +1,33 @@
+{
+  "platform": {},
+  "vanessa": {
+    "screenshots_on_failure": true,
+    "close_test_client_after_run": true,
+    "junit_report_enabled": true
+  },
+  "test_manager": {},
+  "test_runner": {
+    "use_test_manager": true,
+    "timeout_seconds": 300,
+    "unknown_steps_mode": "warn"
+  },
+  "test_clients": [
+    {
+      "name": "TestClient",
+      "alias": "Test Client",
+      "type": "thin",
+      "host": "localhost",
+      "port": 48111
+    }
+  ],
+  "paths": {
+    "features_dir": "tests/features",
+    "steps_dir": "tests/steps",
+    "results_dir": "tests/qa/results"
+  },
+  "edt": {
+    "use_runtime": true,
+    "project_name": "Конфигурация"
+  },
+  "infobase": {}
+}
