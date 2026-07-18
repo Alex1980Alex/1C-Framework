@@ -294,6 +294,27 @@ W3 (отладка простаивает). Реальный сигнал → в
   [[project-secret-leak-remediation-260614]]); в EDT-логе фоновый шум `ApachePublishDelegate
   MalformedInputException` (кодировка httpd.conf — не наш контур).
 
+### 2026-07-18 — W13 разрешение: источник плагина найден, апстрим-фикс ПОДТВЕРЖДЁН
+
+GitHub-поиск источника codepilot1c + doказательный разбор (clone + javap + p2-site).
+
+- **Источник:** `com.codepilot1c.*` = плагин из репо **`ondysss/codepilot1c-edt`** (OSS, 139★),
+  update-site p2 (GitHub Pages) **`https://ondysss.github.io/codepilot1c-edt/`**. Установлено
+  `0.1.7.20260617-1708` (17.06); **latest = `v0.1.7.20260714-1024` (14.07)** — 4 сборки новее.
+- **Фикс ПОДТВЕРЖДЁН на данных** (не «вероятно»): javap установленного jar показал
+  `invokeinterface getThickClientInfo(InfobaseReference)` (сломанный overload); исходник HEAD
+  (=14.07) `resolveThickClientInfo` зовёт **только** `getThickClientInfo(String versionMask)` —
+  сломанного вызова НЕТ. → обновление плагина убирает `NoSuchMethodError`.
+- **Корневая причина «почему апдейт не приходил»:** в prefs зарегистрирован **root**
+  `https://ondysss.github.io` (отдаёт **404** на p2-метаданные), а не `/codepilot1c-edt/`
+  (content.jar=200) → `Check for Updates` ничего не видел.
+- **Действие пользователя (среда EDT, ~1 мин, реверсивно):** в EDT добавить/исправить site на
+  `https://ondysss.github.io/codepilot1c-edt/` → `Help → Check for Updates` → обновить до 14.07 →
+  перезапуск EDT → `/mcp reconnect codepilot1c` → повторить `qa_inspect`/`qa_run`. Остаточный риск
+  (softer): `getThickClientInfo(String)` может вернуть `component()==null` — проверяется тем же прогоном.
+- Провенанс/процедура — кеш `1c-tooling-github-2026.md` §codepilot1c-edt + память
+  [[reference-codepilot1c-plugin-source]].
+
 ### 2026-07-18 — W13 (аудит тест-контура): заявлено 5 стеков — применяется ~0 (мандат пользователя)
 
 Гипотеза пользователя «есть тест-инструменты, которые не используются» подтверждена данными
