@@ -87,12 +87,9 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     impact_rate_edit = round(impact_on_edit / edit_tasks, 3) if edit_tasks else None
 
     # В2 260718 W1: честный знаменатель вместо survivorship-presence — поле impact_applicable
-    # с 2026-07-18, старые записи без него не учитываем (не искажаем прошлым).
-    applicable_recs = [r for r in recs if "impact_applicable" in r]
-    applicable_tasks = sum(1 for r in applicable_recs if r.get("impact_applicable"))
-    impact_on_applicable = sum(
-        1 for r in applicable_recs if r.get("impact_applicable") and r.get("impact")
-    )
+    # с 2026-07-18. Старые записи без поля дают .get()→None (falsy) → в знаменатель не входят.
+    applicable_tasks = sum(1 for r in recs if r.get("impact_applicable"))
+    impact_on_applicable = sum(1 for r in recs if r.get("impact_applicable") and r.get("impact"))
     impact_rate_applicable = (
         round(impact_on_applicable / applicable_tasks, 3) if applicable_tasks else None
     )

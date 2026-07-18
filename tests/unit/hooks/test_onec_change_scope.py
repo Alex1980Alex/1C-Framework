@@ -59,6 +59,41 @@ def test_spans_empty_text():
     assert cs.exported_method_spans("") == []
 
 
+def test_spans_export_in_body_comment_not_exported():
+    """code-verify #1в: `Экспорт` в //-комментарии ТЕЛА не делает метод экспортным."""
+    txt = "Процедура Локальная()\n    // тут был Экспорт раньше\n    А = 1;\nКонецПроцедуры\n"
+    assert cs.exported_method_spans(txt) == []
+
+
+def test_spans_export_in_body_string_not_exported():
+    """`Экспорт` в строковом литерале тела не делает метод экспортным (сигнатура закрыта)."""
+    txt = 'Процедура Локальная()\n    Т = "Экспорт";\n    А = 1;\nКонецПроцедуры\n'
+    assert cs.exported_method_spans(txt) == []
+
+
+def test_spans_async_exported():
+    """FN-фикс: `Асинхронная Функция ... Экспорт` распознаётся как экспортная."""
+    txt = "Асинхронная Функция Публичная() Экспорт\n    Возврат 1;\nКонецФункции\n"
+    assert cs.exported_method_spans(txt) == [(1, 3)]
+
+
+def test_spans_no_end_of_method_no_crash():
+    """Обрыв файла без КонецПроцедуры не роняет; спан до конца текста."""
+    txt = "Функция Оборванная() Экспорт\n    Возврат 1;"
+    spans = cs.exported_method_spans(txt)
+    assert spans == [(1, 2)]
+
+
+def test_spans_multiple_methods_mixed():
+    """Несколько методов: только экспортные попадают, спаны корректны."""
+    txt = (
+        "Функция Э1() Экспорт\n Возврат 1;\nКонецФункции\n"  # 1..3
+        "Процедура Л1()\n А=1;\nКонецПроцедуры\n"  # 4..6
+        "Процедура Э2(П) Экспорт\n Б=П;\nКонецПроцедуры\n"  # 7..9
+    )
+    assert cs.exported_method_spans(txt) == [(1, 3), (7, 9)]
+
+
 def _fake(changed, ranges_map, text):
     """Инъекции для edits_exported_method без git."""
     return dict(
