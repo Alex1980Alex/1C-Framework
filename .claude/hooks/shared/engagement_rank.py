@@ -60,20 +60,49 @@ _STOP = frozenset(
 
 _TOKEN_RE = re.compile(r"[a-zA-Zа-яА-ЯёЁ0-9_\-]+")
 
+# W8 (В1 260718): RU-доменные термины 1С-экосистемы в EN-источниках скана (HN/SO/GitHub/
+# Lobsters/Dev.to) дают пусто — проекты нишевые, ищутся по каноническим EN-именам. При
+# наличии триггер-токена добавляем EN-контекст ОТДЕЛЬНЫМ вариантом запроса (расширяет
+# recall; behavior-preserving — без триггера карта не срабатывает). Ключи — lowercase-токены.
+_RU_DOMAIN_EXPANSIONS = {
+    "1с": "1C Enterprise BSL",
+    "1c": "1C Enterprise BSL",
+    "бсл": "BSL 1C language",
+    "вэнесса": "vanessa automation 1C BDD",
+    "ванесса": "vanessa automation 1C BDD",
+    "vanessa": "vanessa automation 1C",
+    "яксюнит": "yaxunit 1C unit test",
+    "yaxunit": "yaxunit 1C unit test",
+    "оскрипт": "OneScript oscript",
+    "oscript": "OneScript",
+    "onescript": "OneScript 1C",
+    "бсп": "1C standard subsystems library",
+    "конфигуратор": "1C Configurator",
+    "едт": "1C EDT",
+    "edt": "1C EDT Enterprise Development Tools",
+}
+
 
 def expand_queries(query: str, extra_terms: Iterable[str] = (), max_variants: int = 4) -> list[str]:
     """Детерминированное multi-query expansion (без LLM/сети) для расширения recall.
 
-    Варианты: оригинал → lower → значимые токены (без стоп-слов) → `query + extra_term`.
-    Дедуп с сохранением порядка, ограничено `max_variants`. Пустой query → [].
+    Варианты: оригинал → lower → значимые токены (без стоп-слов) → RU→EN-доменные
+    расширения (при триггере) → `query + extra_term`. Дедуп с сохранением порядка,
+    ограничено `max_variants`. Пустой query → [].
     """
     q = (query or "").strip()
     if not q:
         return []
     variants = [q, q.lower()]
-    toks = [t for t in _TOKEN_RE.findall(q.lower()) if len(t) >= 3 and t not in _STOP]
+    _found = _TOKEN_RE.findall(q.lower())
+    q_toks = set(_found)  # для триггеров RU-расширений
+    toks = [t for t in _found if len(t) >= 3 and t not in _STOP]  # порядок сохранён
     if toks:
         variants.append(" ".join(toks))
+    # RU-доменные расширения (W8): канонический EN-запрос как доп. вариант при триггере
+    for trig, expansion in _RU_DOMAIN_EXPANSIONS.items():
+        if trig in q_toks:
+            variants.append(expansion)
     for term in extra_terms:
         term = (term or "").strip()
         if term:
