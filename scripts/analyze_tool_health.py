@@ -8,7 +8,13 @@ Roadmap 260713 P1.1 + §6 (decision layer). Замыкает цикл «лог �
 паре Pre/Post на вызов; category="hook" энфомер-строки НЕ вызовы и игнорируются)
 за скользящее окно, агрегирует per-tool (calls / errors / success-rate / реальная
 Pre→Post латентность p50/p95 / repeats / abandonment) и присваивает ВЕРДИКТ по
-детерминированным правилам §6.1:
+детерминированным правилам §6.1.
+
+NB1 (roadmap 260718): платформа НЕ шлёт PostToolUse на неуспешный built-in вызов
+(Bash non-zero exit / Edit «строка не найдена» / Read miss) → Post = только успехи,
+error-rate из Post ≡ 0. Честный провал built-in = НЕПАРНЫЙ Pre (Pre без Post);
+attempts = завершённые + непарные-Pre, errors = ошибки-Post + непарные-Pre
+(completion_stats). Правила вердиктов:
 
   broken      success-rate < 0.5 при calls≥5, ИЛИ 0 success при attempts≥3
   degraded    error-rate > 0.10, ИЛИ p95 > 2× baseline, ИЛИ error-rate +5пп к baseline
@@ -42,14 +48,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG = ROOT / "data" / "hook-invocations.jsonl"
-ROTATED = ROOT / "data" / "hook-invocations.1.jsonl"
+ROTATED = ROOT / "data" / "hook-invocations.1.jsonl"  # kept for back-compat/tests
 REPORTS = ROOT / "data" / "reports" / "tools"
+
+
+def _all_logs() -> list[Path]:
+    """LOG + все ротированные архивы (roadmap 260718 N-P0.2), новейшие первыми:
+    [LOG, .1, .2, …, .N] — по возрастанию номера = по убыванию свежести. Раньше
+    аналитика читала только [LOG, .1] → окно 14д не покрывалось (window_incomplete).
+    """
+    logs = [LOG]
+    n = 1
+    while True:
+        p = LOG.with_name(f"hook-invocations.{n}.jsonl")
+        if not p.exists():
+            break
+        logs.append(p)
+        n += 1
+    return logs
+
 
 # scripts/ на path — модуль грузится и как скрипт, и через importlib в тестах.
 _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 P2.2)
+    completion_stats,
     effectiveness_from_posts,
     pair_durations,
     parse_ts,
@@ -71,10 +95,51 @@ BROKEN_SUCCESS_RATE = 0.50
 DEGRADED_MIN_CALLS = 3  # симметрично broken: единичная транзиентная ошибка не = degraded
 DEGRADED_ERROR_RATE = 0.10
 P95_REGRESSION_FACTOR = 2.0  # p95 > 2× baseline = degraded
+P95_FLOOR_MS = 500  # p95 ниже пола НЕ деградация независимо от baseline-ratio (NB2)
 ERROR_RATE_RATCHET = 0.05  # +5пп к baseline error-rate = degraded
 INEFFECTIVE_MIN_CALLS_ABANDON = 3  # abandonment учитывается при calls ≥ этого
 BASELINE_UNUSED_TTL_DAYS = 30  # неактивный тул выбывает из baseline (unused не вечен, #2)
 VERDICTS_CAP_BYTES = 5_000_000  # ротация verdicts.jsonl (append-история не безгранична, #3)
+
+# NB2 (roadmap 260718): у инструментов с КОНТЕНТ-ЗАВИСИМОЙ латентностью (Bash с
+# pytest-прогоном ≠ echo; Grep по репо ≠ по файлу; execute_code произвольного BSL)
+# p95 определяется СОДЕРЖИМЫМ вызова, а не здоровьем инструмента → p95 > 2×baseline
+# = FP-фабрика (все 6 живых degraded были такими). Для них p95-ветка degraded
+# ОТКЛЮЧЕНА (латентность — информационно в отчёте); error-rate degraded остаётся.
+CONTENT_VARIABLE_BUILTINS = frozenset(
+    {
+        "Bash",
+        "PowerShell",
+        "Read",
+        "Grep",
+        "Glob",
+        "Skill",
+        "Agent",
+        "Task",
+        "TaskCreate",
+        "TaskUpdate",
+        "TaskGet",
+        "TaskList",
+        "TaskOutput",
+        "WebFetch",
+        "WebSearch",
+    }
+)
+# MCP-операции с рантайм-исполнением произвольного кода/запроса/тестов
+CONTENT_VARIABLE_MCP_SUFFIXES = (
+    "execute_code",
+    "execute_query",
+    "run_all_tests",
+    "run_module_tests",
+    "build_project",
+    "run_yaxunit_tests",
+)
+
+
+def _is_content_variable(tool: str) -> bool:
+    if tool in CONTENT_VARIABLE_BUILTINS:
+        return True
+    return any(tool.endswith(s) for s in CONTENT_VARIABLE_MCP_SUFFIXES)
 
 
 # ── чтение лога за окно ───────────────────────────────────────────────────────
@@ -95,7 +160,7 @@ def iter_window_rows(now: datetime, window_days: int, logs: list[Path] | None = 
     """Канонические строки вызовов за окно [now-window_days, now]. Битые/чужие пропускаются.
     tz-guard: aware-ts нормализуется к локальному naive (adversarial-review 260713 #9)."""
     cutoff = now - timedelta(days=window_days)
-    for log in logs if logs is not None else [LOG, ROTATED]:
+    for log in logs if logs is not None else _all_logs():
         if not log.exists():
             continue
         with open(log, encoding="utf-8", errors="replace") as f:
@@ -122,7 +187,8 @@ def iter_window_rows(now: datetime, window_days: int, logs: list[Path] | None = 
 def earliest_log_ts(logs: list[Path] | None = None) -> datetime | None:
     """Самый ранний валидный ts доступных лог-файлов (первая парсибельная строка самого
     старого). Детект неполноты окна: двойная ротация могла молча срезать хвост (#7)."""
-    for log in logs if logs is not None else [ROTATED, LOG]:  # ротированный старше текущего
+    # старейший архив (макс. N) — первым: он определяет реальную границу покрытия
+    for log in logs if logs is not None else list(reversed(_all_logs())):
         if not log.exists():
             continue
         try:
@@ -146,9 +212,17 @@ def earliest_log_ts(logs: list[Path] | None = None) -> datetime | None:
 # ── агрегация per-tool ────────────────────────────────────────────────────────
 
 
-def aggregate_tools(rows: list[dict]) -> dict[str, dict]:
-    """Per-tool статистика вызовов. calls = завершённые (Post). Эффективность
-    (repeats/abandonment) — по завершённым Post с args_hash/outcome (общий модуль)."""
+def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, dict]:
+    """Per-tool статистика вызовов.
+
+    **NB1 (roadmap 260718):** платформа НЕ шлёт PostToolUse на неуспешный built-in
+    вызов → error-rate из Post-строк структурно ≡ 0 (Post = только успехи). Честный
+    провал built-in = **непарный Pre** (``completion_stats``). Поэтому:
+      attempts (calls) = завершённые (Post) + провалившиеся-непарные-Pre;
+      errors = ошибки-в-Post (MCP isError и пр.) + непарные-Pre;
+      in-flight (непарный Pre моложе grace) в attempts НЕ входит — Post ещё может прийти.
+    ``paired``-длительности и repeats/abandonment — по завершённым Post (без изменений)."""
+    now = now or datetime.now()
     pre: dict[str, list] = defaultdict(list)
     post: dict[str, list] = defaultdict(list)
     for e in rows:
@@ -157,17 +231,24 @@ def aggregate_tools(rows: list[dict]) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for tool in set(pre) | set(post):
         posts = sorted(post[tool], key=lambda e: e.get("ts", ""))
-        calls = len(posts)
-        errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
+        completed = len(posts)
+        post_errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
+        comp = completion_stats(pre[tool], posts, now=now)  # непарные Pre = провалы
+        incomplete = comp["failed"]
+        attempts = completed + incomplete  # in_flight исключён (ещё не разрешился)
+        errors = post_errors + incomplete
+        success = completed - post_errors
         durations = pair_durations(pre[tool], posts)
         eff = effectiveness_from_posts(posts)  # retry/abandonment (single-source)
-        success = calls - errors
         out[tool] = {
-            "calls": calls,
+            "calls": attempts,
             "errors": errors,
             "success": success,
-            "success_rate": round(success / calls, 4) if calls else 1.0,
-            "error_rate": round(errors / calls, 4) if calls else 0.0,
+            "success_rate": round(success / attempts, 4) if attempts else 1.0,
+            "error_rate": round(errors / attempts, 4) if attempts else 0.0,
+            "completed": completed,
+            "incomplete": incomplete,  # непарные Pre (fail/interrupt) — сигнал NB1
+            "in_flight": comp["in_flight"],
             "p50_ms": round(percentile(durations, 0.50), 1),
             "p95_ms": round(percentile(durations, 0.95), 1),
             "paired": len(durations),
@@ -180,8 +261,9 @@ def aggregate_tools(rows: list[dict]) -> dict[str, dict]:
 # ── вердикт (§6.1) ────────────────────────────────────────────────────────────
 
 
-def assign_verdict(stats: dict, baseline: dict | None) -> tuple[str, str]:
-    """Вердикт + одно-строчное обоснование. baseline = {p95_ms, error_rate} лучшего окна (или None)."""
+def assign_verdict(stats: dict, baseline: dict | None, tool: str = "") -> tuple[str, str]:
+    """Вердикт + одно-строчное обоснование. baseline = {p95_ms, error_rate} лучшего окна (или None).
+    tool — имя инструмента (для NB2: p95-ветка отключена у content-variable тулов)."""
     calls = stats["calls"]
     sr = stats["success_rate"]
     er = stats["error_rate"]
@@ -200,8 +282,16 @@ def assign_verdict(stats: dict, baseline: dict | None) -> tuple[str, str]:
         if er > DEGRADED_ERROR_RATE:
             return "degraded", f"error-rate {er:.0%} > 10% ({calls} вызовов)"
         if baseline:
+            # NB2: p95-regression ТОЛЬКО у инструментов со стабильной латентностью
+            # (не content-variable) И выше абсолютного пола — иначе Bash/Grep/execute_code
+            # с тяжёлым содержимым вечно degraded (все 6 живых FP были такими).
             base_p95 = baseline.get("p95_ms") or 0
-            if base_p95 > 0 and stats["p95_ms"] > P95_REGRESSION_FACTOR * base_p95:
+            if (
+                not _is_content_variable(tool)
+                and stats["p95_ms"] > P95_FLOOR_MS
+                and base_p95 > 0
+                and stats["p95_ms"] > P95_REGRESSION_FACTOR * base_p95
+            ):
                 return "degraded", f"p95 {stats['p95_ms']:.0f}ms > 2× baseline ({base_p95:.0f}ms)"
             base_er = baseline.get("error_rate")
             if base_er is not None and er - base_er > ERROR_RATE_RATCHET:
@@ -222,10 +312,10 @@ def assign_verdict(stats: dict, baseline: dict | None) -> tuple[str, str]:
 
 def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
     """Собрать per-tool статистику + вердикты + детект unused (был в baseline, 0 вызовов сейчас)."""
-    stats = aggregate_tools(rows)
+    stats = aggregate_tools(rows, now=now)
     tools: dict[str, dict] = {}
     for tool, st in stats.items():
-        verdict, reason = assign_verdict(st, baseline.get(tool))
+        verdict, reason = assign_verdict(st, baseline.get(tool), tool=tool)
         tools[tool] = {**st, "verdict": verdict, "reason": reason}
 
     # unused: инструмент присутствовал в baseline, но 0 вызовов в текущем окне
@@ -238,6 +328,9 @@ def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
                 "success": 0,
                 "success_rate": 1.0,
                 "error_rate": 0.0,
+                "completed": 0,
+                "incomplete": 0,
+                "in_flight": 0,
                 "p50_ms": 0.0,
                 "p95_ms": 0.0,
                 "paired": 0,
@@ -430,19 +523,22 @@ def render_md(health: dict, window_days: int) -> str:
     lines += [
         "## Все инструменты",
         "",
-        "| Инструмент | Вердикт | Вызовов | success | p95 | repeats | Обоснование |",
-        "|---|---|---|---|---|---|---|",
+        "| Инструмент | Вердикт | Вызовов | success | неуд.* | p95 | repeats | Обоснование |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for tool, s in ranked:
         lines.append(
             f"| `{tool}` | {_VERDICT_MARK[s['verdict']]} {s['verdict']} | {s['calls']} | "
-            f"{s['success_rate']:.0%} | {s['p95_ms']:.0f}ms | {s['repeats']} | {s['reason']} |"
+            f"{s['success_rate']:.0%} | {s.get('incomplete', 0)} | {s['p95_ms']:.0f}ms | "
+            f"{s['repeats']} | {s['reason']} |"
         )
     lines += [
         "",
-        "> Латентность p95 = реальная (Pre→Post-пара), не overhead хука. success-rate у built-in "
-        "консервативен (Bash non-zero exit не всегда помечается ошибкой). Решение по alert'ам — за человеком; "
-        "broken эскалируется авто-задачей (SessionStart-баннер).",
+        "> Латентность p95 = реальная (Pre→Post-пара), не overhead хука. *«неуд.» = непарный "
+        "Pre (Pre без Post): платформа НЕ шлёт PostToolUse на неуспешный built-in вызов "
+        "(Bash non-zero exit / Edit «строка не найдена» / Read miss) — это ЕДИНСТВЕННЫЙ честный "
+        "сигнал провала built-in (NB1, roadmap 260718); блоки гардов сюда не попадают. Решение по "
+        "alert'ам — за человеком; broken эскалируется авто-задачей (SessionStart-баннер).",
     ]
     return "\n".join(lines) + "\n"
 

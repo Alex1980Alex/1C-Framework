@@ -42,6 +42,14 @@ from pathlib import Path
 
 _LOG_FILE: Path | None = None
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
+# Сколько ротированных архивов держать. roadmap 260718 N-P0.2: одного архива
+# (.1) хватало лишь на ~2 дня при ~8МБ/день, а вердикты считаются за окно 14д →
+# window_incomplete всегда True. Каскад .1→.2→…→.N покрывает окно. ~10МБ/файл ×
+# 12 ≈ 120МБ (gitignored, локально) ≈ 14 дней. Тюнится env HOOK_LOG_ARCHIVES.
+try:
+    HOOK_LOG_ARCHIVES = max(1, int(os.environ.get("HOOK_LOG_ARCHIVES", "12")))
+except ValueError:
+    HOOK_LOG_ARCHIVES = 12
 
 
 def _get_log_file() -> Path:
@@ -65,16 +73,30 @@ def _get_log_file() -> Path:
 def _rotate_if_needed(filepath: Path) -> None:
     """Rotate log file if it exceeds MAX_LOG_SIZE.
 
+    Каскадная ротация (roadmap 260718 N-P0.2): перед переносом LOG→.1 сдвигаем
+    существующие .N→.N+1 вплоть до HOOK_LOG_ARCHIVES, старейший (.N над лимитом)
+    затирается. Раньше держался лишь .1 (os.replace перезатирал предыдущий) →
+    LOG+.1 покрывали ~2 дня, а аналитика окна 14д всегда была window_incomplete.
+
     os.replace (атомарный overwrite) вместо unlink+rename: раздельные шаги давали
-    межпроцессную гонку — процесс B удалял свежесозданный процессом A архив `.1`,
+    межпроцессную гонку — процесс B удалял свежесозданный процессом A архив,
     а его собственный rename падал (adversarial-review 260713 P0#3). При проигрыше
     гонки os.replace у второго процесса источник уже переименован → FileNotFoundError
     → поглощён except OSError, архив цел.
     """
     try:
-        if filepath.exists() and filepath.stat().st_size > MAX_LOG_SIZE:
-            rotated = filepath.with_name("hook-invocations.1.jsonl")
-            os.replace(filepath, rotated)
+        if not (filepath.exists() and filepath.stat().st_size > MAX_LOG_SIZE):
+            return
+        # сдвиг .N→.N+1 сверху вниз (старейший затирается по достижении лимита)
+        for n in range(HOOK_LOG_ARCHIVES - 1, 0, -1):
+            src = filepath.with_name(f"hook-invocations.{n}.jsonl")
+            if src.exists():
+                dst = filepath.with_name(f"hook-invocations.{n + 1}.jsonl")
+                try:
+                    os.replace(src, dst)
+                except OSError:
+                    pass
+        os.replace(filepath, filepath.with_name("hook-invocations.1.jsonl"))
     except OSError:
         pass
 

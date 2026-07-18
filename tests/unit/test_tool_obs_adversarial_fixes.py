@@ -81,11 +81,12 @@ def test_single_transient_error_not_degraded_via_baseline():
 
 
 def test_baseline_branches_still_fire_at_min_calls():
-    """При calls≥DEGRADED_MIN_CALLS baseline-сравнения работают как раньше."""
+    """При calls≥DEGRADED_MIN_CALLS baseline-сравнения работают как раньше.
+    p95 выше пола 500 (N-P0.3) на не content-variable тула (tool="" по умолчанию)."""
     v, _ = ath.assign_verdict(
-        _stats(calls=5, errors=0, p95_ms=500.0), {"p95_ms": 100.0, "error_rate": 0.0}
+        _stats(calls=5, errors=0, p95_ms=700.0), {"p95_ms": 100.0, "error_rate": 0.0}
     )
-    assert v == "degraded"  # p95 500 > 2×100
+    assert v == "degraded"  # p95 700 > 2×100 и > пол 500
 
 
 # ── P1.1 #1c: paired=0 не ратчетит p95=0.0; легаси-0.0 лечится ───────────────

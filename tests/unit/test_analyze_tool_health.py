@@ -75,10 +75,11 @@ def test_single_transient_error_not_degraded():
 
 
 def test_degraded_p95_regression():
+    # tool="" (не content-variable) + p95 выше пола 500 (N-P0.3) + > 2×baseline
     v, _ = ath.assign_verdict(
-        _stats(calls=10, errors=0, p95_ms=500.0), {"p95_ms": 200.0, "error_rate": 0.0}
+        _stats(calls=10, errors=0, p95_ms=600.0), {"p95_ms": 200.0, "error_rate": 0.0}
     )
-    assert v == "degraded"  # 500 > 2×200
+    assert v == "degraded"  # 600 > 2×200 и > пол 500
 
 
 def test_degraded_error_ratchet():

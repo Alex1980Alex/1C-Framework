@@ -89,6 +89,80 @@ def pair_durations(pres: list[dict], posts: list[dict]) -> list[int]:
     return out
 
 
+def _naive(ts: datetime) -> datetime:
+    """Aware → локальный naive (класс бага Sonar parse_dt: naive-vs-aware вычитание
+    бросает TypeError). Единая нормализация для сравнений с naive ``now``."""
+    if ts.tzinfo is not None:
+        try:
+            return ts.astimezone().replace(tzinfo=None)
+        except (ValueError, OSError, OverflowError):
+            return ts.replace(tzinfo=None)
+    return ts
+
+
+def completion_stats(
+    pres: list[dict],
+    posts: list[dict],
+    now: datetime | None = None,
+    grace_sec: int = 120,
+) -> dict:
+    """Честный сигнал незавершения built-in вызова из НЕПАРНЫХ Pre (roadmap 260718 N-P0.1).
+
+    **Корень NB1:** платформа НЕ шлёт ``PostToolUse`` на неуспешный built-in вызов
+    (Bash non-zero exit, Edit «строка не найдена», Read miss — эмпирически
+    подтверждено дампом формы 2026-07-18). Post есть ТОЛЬКО у успешных вызовов →
+    ``outcome`` Post-строки почти всегда ``allow`` → error-rate из Post ≡ 0.
+    Единственный честный сигнал провала built-in = **Pre без парного Post**.
+
+    Блоки хуков сюда НЕ попадают: enforcer ``exit 2`` в Pre-цепочке преемптит
+    canonical-логгер (эмпирически Write unpaired=0 при реальном блоке), поэтому
+    непарный canonical Pre ≈ провал/прерывание, а не «запрещено гардом».
+
+    Пары считаются по ``tool_call_id`` (в проде заполнен всегда), непарные посты
+    добираются FIFO по ts. Непарные Pre моложе ``grace_sec`` от ``now`` =
+    ``in_flight`` (Post ещё может прийти) и в провал НЕ идут.
+
+    Возвращает ``{completed, failed, in_flight}`` (Pre-сторона; ``completed`` = число
+    Pre, получивших Post — для сверки, аналитика берёт ``len(posts)``).
+    """
+    now = _naive(now) if now is not None else datetime.now()
+    pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
+
+    # 1) парность по id
+    paired_idx: set[int] = set()
+    pre_by_id: dict[str, list[int]] = defaultdict(list)
+    for i, p in enumerate(pres_sorted):
+        cid = p.get("tool_call_id")
+        if cid:
+            pre_by_id[cid].append(i)
+    posts_no_id = 0
+    for po in posts:
+        cid = po.get("tool_call_id")
+        if cid and pre_by_id.get(cid):
+            paired_idx.add(pre_by_id[cid].pop(0))
+        else:
+            posts_no_id += 1
+    # 2) посты без id-совпадения добираем FIFO (самый ранний непарный Pre)
+    if posts_no_id:
+        for i in range(len(pres_sorted)):
+            if posts_no_id <= 0:
+                break
+            if i not in paired_idx:
+                paired_idx.add(i)
+                posts_no_id -= 1
+
+    failed = in_flight = 0
+    for i, p in enumerate(pres_sorted):
+        if i in paired_idx:
+            continue
+        pts = parse_ts(p.get("ts"))
+        if pts is not None and (now - _naive(pts)).total_seconds() < grace_sec:
+            in_flight += 1  # Post ещё может прийти — не считаем провалом
+        else:
+            failed += 1
+    return {"completed": len(paired_idx), "failed": failed, "in_flight": in_flight}
+
+
 def _is_error_post(e: dict) -> bool:
     return e.get("outcome") == "error" or bool(e.get("error"))
 
@@ -175,6 +249,7 @@ __all__ = [
     "parse_ts",
     "percentile",
     "pair_durations",
+    "completion_stats",
     "effectiveness_from_posts",
     "step_efficiency",
     "server_of",

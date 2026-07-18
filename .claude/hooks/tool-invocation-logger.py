@@ -41,6 +41,50 @@ sys.path.insert(0, _HOOK_DIR)
 
 from base import BaseHook, HookInput, HookOutput
 
+# ── Debug shape-dump (roadmap 260718 N-P0.1) ──────────────────────────────────
+# NB1: юнит-фикстура формы tool_response ЛЖЁТ — форма приходит от платформы и
+# _classify_outcome строился на гипотезе (exit_code в dict), которой живой payload
+# не несёт → все built-in Post = success. Этот gated-дамп захватывает РЕАЛЬНУЮ
+# форму, чтобы чинить по факту, а не вслепую. Off by default: включается env
+# TOOL_LOGGER_DEBUG_DUMP=1 ИЛИ наличием sentinel-файла .claude/cache/tool-response-dump.on
+# (env недоступен для правки из сессии → sentinel-путь). Cap 50 записей.
+_CACHE_DIR = os.path.join(os.path.dirname(_HOOK_DIR), "cache")
+_DUMP_SENTINEL = os.path.join(_CACHE_DIR, "tool-response-dump.on")
+_DUMP_FILE = os.path.join(_CACHE_DIR, "tool-response-shapes.jsonl")
+_DUMP_CAP = 50
+
+
+def _dump_enabled() -> bool:
+    return os.environ.get("TOOL_LOGGER_DEBUG_DUMP") == "1" or os.path.exists(_DUMP_SENTINEL)
+
+
+def _debug_dump_shape(inp: "HookInput", event: str) -> None:
+    """Захватить форму tool_response реального Post-вызова (диагностика NB1)."""
+    if not _dump_enabled():
+        return
+    try:
+        if (
+            os.path.exists(_DUMP_FILE)
+            and sum(1 for _ in open(_DUMP_FILE, encoding="utf-8")) >= _DUMP_CAP
+        ):
+            return
+        resp = inp.raw.get("tool_response", inp.tool_result)
+        rec = {
+            "tool": inp.tool_name,
+            "event": event,
+            "hook_event_name": inp.raw.get("hook_event_name"),
+            "raw_keys": sorted(inp.raw.keys()),
+            "resp_type": type(resp).__name__,
+            "resp_keys": sorted(resp.keys()) if isinstance(resp, dict) else None,
+            "resp_repr": repr(resp)[:2000],
+        }
+        os.makedirs(_CACHE_DIR, exist_ok=True)
+        with open(_DUMP_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
 # Canonical built-in tool set. Mirrors the settings.json matcher. Kept as an
 # internal allowlist (defense-in-depth): if the matcher ever broadens, we still
 # no-op on anything not listed here — and mcp__ tools are excluded by design
@@ -96,6 +140,7 @@ class ToolInvocationLogger(BaseHook):
             return None
 
         event = inp.detected_event  # P0.1: classifies Post via tool_response
+        _debug_dump_shape(inp, event)  # N-P0.1: gated shape-capture (диагностика NB1)
         outcome, error = self._classify_outcome(inp, event)
         tool_call_id = inp.raw.get("tool_use_id") or inp.raw.get("toolUseID") or ""
         args_hash = _args_fingerprint(inp.tool_input)
