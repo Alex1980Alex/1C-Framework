@@ -172,3 +172,7 @@ playwright/.auth/
 # Локальные 1С-конфиги VA/vrunner с реальным паролём тест-клиента (НЕ в git; шаблоны — *.example)
 /vrunner.json
 /tools/vanessa/vanessa.json
+
+# 260718 тяжёлый путь OTel→Langfuse: сырец нативной телеметрии + креды бэкенда (localhost, opt-in)
+data/otel/
+.env.otel
