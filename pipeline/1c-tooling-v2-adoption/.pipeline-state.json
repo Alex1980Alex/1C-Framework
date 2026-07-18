@@ -2,7 +2,7 @@
   "task": "1c-tooling-v2-adoption",
   "title": "1С-tooling В2: переворот использования (safe-promote инфра)",
   "created_at": "2026-07-18T15:00:05",
-  "updated_at": "2026-07-18T15:10:37",
+  "updated_at": "2026-07-18T15:24:20",
   "current_stage": 5,
   "stages": [
     {
@@ -30,7 +30,7 @@
       "command": "pl-code",
       "artifact": "03-implementation.md",
       "status": "done",
-      "completed_at": "2026-07-18T15:10:37"
+      "completed_at": "2026-07-18T15:24:20"
     },
     {
       "n": 4,
@@ -38,7 +38,7 @@
       "command": "pl-test",
       "artifact": "04-testing.md",
       "status": "done",
-      "completed_at": "2026-07-18T15:10:37"
+      "completed_at": "2026-07-18T15:24:20"
     }
   ]
 }
