@@ -232,7 +232,8 @@ def _post_langfuse_scores(records: list[dict], endpoint: str, pk: str, sk: str) 
                 },
             )
             try:
-                urllib.request.urlopen(req, timeout=5)
+                with urllib.request.urlopen(req, timeout=5):
+                    pass  # ответ не нужен; with закрывает fd (без утечки в цикле)
                 sent += 1
             except Exception:
                 pass  # advisory — не роняем

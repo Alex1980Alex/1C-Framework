@@ -436,3 +436,73 @@ def test_run_graceful_no_source():
     """Нет источника judge-items → no-op available=False (content off by default)."""
     res = lj.run(source_jsonl=None)
     assert res["available"] is False and "content" in res["reason"]
+
+
+# ── code-verify fix'ы (2026-07-18): регресс на найденные дефекты ──────────────
+
+_ATH2_PATH = _SCRIPTS / "analyze_tool_health.py"
+_ath2_spec = importlib.util.spec_from_file_location("_ath_hp3render", _ATH2_PATH)
+ath2 = importlib.util.module_from_spec(_ath2_spec)
+_ath2_spec.loader.exec_module(ath2)
+
+
+def test_render_md_info_severity_no_crash():
+    """code-verify #1: infra-alert severity=info (Langfuse down) НЕ роняет render_md
+    KeyError'ом (_VERDICT_MARK не знал 'info'). Триггерится когда проба ДОЛЖНА сработать."""
+    health = {
+        "generated": "2026-07-18T12:00:00",
+        "tools": {},
+        "infra_alerts": [
+            {"level": "info", "source": "langfuse", "reason": "down ≥2д", "affects": ["x"]}
+        ],
+    }
+    md = ath2.render_md(health, window_days=14)  # не должно бросить
+    assert "langfuse" in md and "ℹ" in md
+
+
+def test_render_md_unknown_severity_graceful():
+    """Будущий неизвестный severity → маркер '•', не KeyError (defensive .get)."""
+    health = {
+        "generated": "t",
+        "tools": {},
+        "infra_alerts": [{"level": "future-sev", "source": "s", "reason": "r", "affects": []}],
+    }
+    md = ath2.render_md(health, window_days=14)
+    assert "**s**" in md
+
+
+def test_parse_native_missing_success_not_failure(tmp_path):
+    """code-verify #2: событие БЕЗ атрибута success → НЕ провал (иначе манфактурим FN).
+    Строим tool_result без ключа success."""
+    import json as _j
+
+    obj = {
+        "resourceLogs": [
+            {
+                "resource": {"attributes": []},
+                "scopeLogs": [
+                    {
+                        "scope": {"name": "com.anthropic.claude_code.events"},
+                        "logRecords": [
+                            {
+                                "body": {"stringValue": "claude_code.tool_result"},
+                                "attributes": [
+                                    {
+                                        "key": "event.name",
+                                        "value": {"stringValue": "claude_code.tool_result"},
+                                    },
+                                    {"key": "tool_name", "value": {"stringValue": "Bash"}},
+                                    {"key": "tool_use_id", "value": {"stringValue": "toolu_ns"}},
+                                    # НЕТ success
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+    f = tmp_path / "logs.jsonl"
+    f.write_text(_j.dumps(obj) + "\n", encoding="utf-8")
+    ev = cc.parse_native_tool_results(f)
+    assert ev[0]["success"] is True  # missing → успех, не провал

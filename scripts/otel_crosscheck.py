@@ -146,13 +146,16 @@ def parse_native_tool_results(path: Path = NATIVE_LOGS) -> list[dict]:
                             ts = datetime.fromtimestamp(int(tun) / 1e9).isoformat()
                         except (ValueError, TypeError, OSError, OverflowError):
                             ts = ""
+                    # коэрсинг обязателен: платформа кодирует success/duration_ms как
+                    # stringValue (эмпирика 2026-07-18). Отсутствие success НЕ трактуем
+                    # как провал (иначе манфактурим FN на битом событии — code-verify #2):
+                    # tool_result всегда несёт success; нет поля → консервативно «успех».
+                    _succ_raw = attrs.get("success")
                     out.append(
                         {
                             "tool_use_id": tid,
                             "tool": attrs.get("tool_name") or "",
-                            # коэрсинг обязателен: платформа кодирует и success, и
-                            # duration_ms как stringValue (эмпирика 2026-07-18)
-                            "success": _coerce_bool(attrs.get("success")),
+                            "success": _coerce_bool(_succ_raw) if _succ_raw is not None else True,
                             "duration_ms": _coerce_int(attrs.get("duration_ms")),
                             "error_type": attrs.get("error_type") or "",
                             "ts": ts,

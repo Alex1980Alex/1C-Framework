@@ -639,6 +639,7 @@ _VERDICT_MARK = {
     "ineffective": "🟡",
     "unused": "⚪",
     "healthy": "🟢",
+    "info": "ℹ️",  # 260718 H-P2: несюрфейсящийся infra-alert (Langfuse down opt-in)
 }
 
 
@@ -681,7 +682,10 @@ def render_md(health: dict, window_days: int) -> str:
     if infra:
         lines += ["## ⚠ Инфраструктура (probe + sinks)", ""]
         for a in infra:
-            lines.append(f"- {_VERDICT_MARK[a['level']]} **{a['source']}** — {a['reason']}")
+            # .get с дефолтом: не падаем на будущем неизвестном severity (graceful)
+            lines.append(
+                f"- {_VERDICT_MARK.get(a['level'], '•')} **{a['source']}** — {a['reason']}"
+            )
         lines += [""]
 
     if alerts:

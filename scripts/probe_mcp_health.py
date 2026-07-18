@@ -83,7 +83,8 @@ def _http_reachable(url: str, timeout: float) -> tuple[bool, int, str]:
     start = time.monotonic()
     try:
         req = urllib.request.Request(url, method="GET")
-        urllib.request.urlopen(req, timeout=timeout)
+        with urllib.request.urlopen(req, timeout=timeout):
+            pass  # with закрывает fd (без утечки при частых пробах)
         return True, int((time.monotonic() - start) * 1000), ""
     except urllib.error.HTTPError as exc:  # получили ответ (4xx/5xx) → достижим
         return True, int((time.monotonic() - start) * 1000), f"HTTP {exc.code}"

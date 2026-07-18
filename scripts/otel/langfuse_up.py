@@ -144,7 +144,7 @@ def cmd_up(recreate_collector: bool = True) -> int:
     if not wait_health():
         _log("⚠ langfuse-web не поднялся за таймаут — проверь `docker logs langfuse-web`.")
         return 1
-    _log(f"    Langfuse UI: http://localhost:3000  (login из .env.otel)")
+    _log("    Langfuse UI: http://localhost:3000  (login из .env.otel)")
     if recreate_collector:
         _log("[4/4] Пересоздаю коллектор с fan-out на Langfuse (file-путь H-P3 сохраняется)…")
         rc = _compose(
