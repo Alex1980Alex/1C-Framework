@@ -146,6 +146,45 @@ Langfuse self-host (Docker Compose: web + worker + Postgres + ClickHouse + Redis
 
 > Append-only, reverse-chronological.
 
+### 2026-07-18 — H-P0..H-P4 РЕАЛИЗОВАНЫ (макс-эффорт, автономно); живые данные поймали 2 бага
+
+Полная реализация тяжёлого пути за сессию. Ключевая находка на входе: инфраструктура
+ADR-022 P2 **уже развёрнута** (коллектор запущен, `enable_claude_otel.py`, эмиссия
+верифицирована 2026-06-17) → расширяю существующее, а не строю параллельное.
+
+- **H-P0.1 duration_ms-захват** (commit 3c62c7106): платформа кладёт настоящую длительность
+  тула top-level полем `duration_ms` в PostToolUse (эмпирика — дамп). `extract_duration_ms`
+  (Post-only, отбраковка bool/neg) + параметр `log_invocation` + оба логгера + `tool_durations`
+  (предпочитает прямое паре, behavior-preserving). **Live-contract:** реальный лог несёт
+  duration_ms (Bash 2057мс vs elapsed_ms хука ~20мс). 13 unit.
+- **H-P1 file-exporter** (commit 495d28fa4): расширил СУЩЕСТВУЮЩИЙ коллектор (порт 4318
+  занят живым → параллельный compose дал бы конфликт) — `file/logs`+`file/traces` → `data/otel/`
+  (gitignored); debug-ветка ADR-022 цела. **Live:** POST синтетики → 200 → запись; нативная
+  эмиссия уже течёт (OTel включён), реальные `claude_code.tool_result`.
+- **H-P3 cross-check** (главная ценность): `otel_crosscheck.py` — native `tool_result` ↔
+  hook unpaired-Pre по `tool_use_id` (эмпирически 100% overlap) → FN/FP/TP + latency. Секция
+  в `_latest.md` (graceful). **⚠ Живые данные поймали КРИТИЧЕСКИЙ баг, что unit пропустил:**
+  реальный Claude Code кодирует `success`+`duration_ms` как `stringValue` ("false"/"3879"),
+  не boolValue/intValue → наивный `bool("false")`==True читал бы ВСЕ провалы как успех
+  (NB1-класс на OTel-парсинге). Фикс `_coerce_bool`/`_coerce_int` (саботаж-тест на реальной
+  кодировке). **Результат:** детектор unpaired-Pre идеально согласован с native (0 FN, 0 FP,
+  1 TP); latency native↔hook-direct дельта **0мс** на 25 совпадений (H-P0.1 захват точен
+  бит-в-бит), native↔пэйринг p50 227мс / **max 9888мс** (ошибка FIFO-пары, которую H-P0.1
+  убирает). 13 unit.
+- **H-P4 LLM-judge** (commit 563d02833): `tool_llm_judge.py` — stratified sample (все провалы
+  + детерминированный хеш-сэмпл успехов) → рубрики Argument Correctness/Task Completion →
+  robust JSON-разбор → jsonl + опц. Langfuse Scores; default-судья = LLMRotationService
+  (z.ai). Advisory-only, content off by default → активация осознанна. 11 unit (fake-судья).
+- **H-P0.2 ADR-052** (топология fan-out / ретеншн / безопасность): коллектор = единственный
+  fan-out (у Claude ОДИН OTLP-endpoint); Langfuse opt-in (не default — RAM ~3ГБ, H-P3 не
+  требует); контент OFF; localhost-bind; секреты в gitignored `.env.otel`.
+- **H-P2 Langfuse self-host**: `docker-compose.langfuse.yml` (эталонный, порты на 127.0.0.1),
+  `.env.otel.example`, `otel-collector-langfuse.yaml` (fan-out overlay, сохраняет file-путь
+  H-P3), `langfuse_up.py` (генерит секреты, up, ждёт health, пересоздаёт коллектор). Probe-таргет
+  (severity=info, gated на `.env.otel`). Compose config валиден, статус bring-up — см. ниже.
+- **Итог кода:** 37 unit (H-P0.1+H-P3+H-P4) + 92 tool-obs зелёные. Коммиты 3c62c7106 (H-P0.1),
+  495d28fa4 (H-P1), + H-P3/H-P4/H-P2 (auto-save absorb). ⚠ MCP-серверных правок нет.
+
 ### 2026-07-18 — Роадмап создан (триггер ADR-051 сработал)
 
 - Мандат пользователя = триггер (б)+(в) ADR-051; тяжёлый путь переходит из deferred в план.
