@@ -182,8 +182,17 @@ ADR-022 P2 **уже развёрнута** (коллектор запущен, `
   `.env.otel.example`, `otel-collector-langfuse.yaml` (fan-out overlay, сохраняет file-путь
   H-P3), `langfuse_up.py` (генерит секреты, up, ждёт health, пересоздаёт коллектор). Probe-таргет
   (severity=info, gated на `.env.otel`). Compose config валиден, статус bring-up — см. ниже.
-- **Итог кода:** 37 unit (H-P0.1+H-P3+H-P4) + 92 tool-obs зелёные. Коммиты 3c62c7106 (H-P0.1),
-  495d28fa4 (H-P1), + H-P3/H-P4/H-P2 (auto-save absorb). ⚠ MCP-серверных правок нет.
+- **H-P2 END-TO-END ВЕРИФИЦИРОВАН на живом стеке:** 6 контейнеров up (ClickHouse healthy),
+  langfuse-web health 200, коллектор форвардит нативную эмиссию Claude Code → Langfuse
+  (2 трейса в `/api/public/traces`), file-путь H-P3 сохранён (fan-out). Bring-up вскрыл 3
+  правки (email-валидация / ClickHouse-порт 9000 занят SonarQube → 9010 / `otlphttp`→`otlp_http`).
+- **code-verify (read-only ревьюер) → PARTIAL → все закрыты:** must-fix краш `render_md`
+  `KeyError('info')` (Langfuse-severity протекал в `_VERDICT_MARK`) + 3 minor (missing-success
+  манфактурил FN / 2× fd-утечка urlopen / F541). 3 регресс-теста.
+- **Итог кода:** 40 unit (H-P0.1+H-P3+H-P4+фиксы) + 157 tool-obs зелёные, ruff clean. Коммиты
+  3c62c7106 (H-P0.1), 495d28fa4 (H-P1), 61862dc55 (H-P2), 904b18708 (bring-up фиксы), 881fccd85
+  (code-verify) + auto-save absorb. Langfuse оставлен запущенным (opt-in, `langfuse_up.py down`
+  останавливает). ⚠ MCP-серверных правок нет.
 
 ### 2026-07-18 — Роадмап создан (триггер ADR-051 сработал)
 
