@@ -268,6 +268,32 @@ W3 (отладка простаивает). Реальный сигнал → в
   раннер `run-bdd.ps1`) вероятно живее codepilot `qa_*`. Развилка политики (W13) не изменилась;
   «оживление» этапа 4 = инфра-проект, не quick-fix. Пайплайн `pipeline/wire-bdd-mcp-mfm/`.
 
+### 2026-07-18 — W13 финальный диагноз (verify-on-data ОТМЕНИЛ прежнюю рекомендацию)
+
+Попытка «сделать сам» + чтение EDT `.log` дала ТОЧНЫЙ диагноз; прежняя рекомендация
+«зарегистрируй runtime в Preferences» — **НЕВЕРНА и отменена** (runtime уже есть).
+
+- **Блокер 2 = БАГ ПЛАГИНА, не среда**: `.log` MFM — `java.lang.NoSuchMethodError:
+  IRuntimeComponentManager.getThickClientInfo(InfobaseReference)` в
+  `com.codepilot1c.core.edt.runtime.EdtRuntimeService.resolveThickClientInfo:399` («possible EDT
+  API incompatibility»). **Плагин codepilot1c бинарно несовместим с EDT 2025.2.6.4** — метод
+  из старого EDT API отсутствует. Настройками не чинится; только обновление плагина (или EDT
+  той версии, под которую он собран). Проверено: runtimes ЗАРЕГИСТРИРОВАНЫ в обоих workspace
+  (8.3.27.1936 x86 + **8.3.27.2214 x86_64**, prefs `PREF_RUNTIME_INSTALLATIONS_XML`), бинарники
+  полные (1cv8/1cv8c в обеих установках).
+- **Путь Б (run-bdd.ps1) тоже мёртв — тройной устаревший хардкод**: exe
+  `C:\Program Files\1Cv8\8.3.27.1859\bin\1cv8c.exe` (**не существует**; на диске 2214/1936),
+  пути `D:\1С-Framework` (проект переехал на C:), ИБ `KOMPUTER/TestDB` в `vanessa.json`
+  (недоступна, W6). + опасный `Stop-Process` ВСЕХ 1cv8 в начале скрипта. Раннер прибит к
+  среде «до переезда» — вот почему VA не гонялся: он физически не мог запуститься.
+- **Строка подключения MFM найдена** (ibases.v8i): `Srvr="DESKTOP-TNU600C";
+  Ref="260507_DEV_ATERLETSKIY_53196"` (ID совпал с applicationId EDT; ярлык≠Ref — [[reference-edt-application-name-is-label-not-ref]]).
+- **Границы «сам»**: обновление EDT-плагина = среда пользователя; адаптация run-bdd.ps1 под C:/2214/MFM
+  = переписывание боевого раннера (+kill-риск) — отдельная задача, не wire-up. План — ниже.
+- ⚠ Замечено попутно: `vanessa.json` несёт креды в `ДопПараметры` (gitignored, но в ротацию —
+  [[project-secret-leak-remediation-260614]]); в EDT-логе фоновый шум `ApachePublishDelegate
+  MalformedInputException` (кодировка httpd.conf — не наш контур).
+
 ### 2026-07-18 — W13 (аудит тест-контура): заявлено 5 стеков — применяется ~0 (мандат пользователя)
 
 Гипотеза пользователя «есть тест-инструменты, которые не используются» подтверждена данными
