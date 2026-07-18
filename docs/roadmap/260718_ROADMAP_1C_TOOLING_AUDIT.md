@@ -305,9 +305,13 @@ GitHub-поиск источника codepilot1c + doказательный ра
   `invokeinterface getThickClientInfo(InfobaseReference)` (сломанный overload); исходник HEAD
   (=14.07) `resolveThickClientInfo` зовёт **только** `getThickClientInfo(String versionMask)` —
   сломанного вызова НЕТ. → обновление плагина убирает `NoSuchMethodError`.
-- **Корневая причина «почему апдейт не приходил»:** в prefs зарегистрирован **root**
-  `https://ondysss.github.io` (отдаёт **404** на p2-метаданные), а не `/codepilot1c-edt/`
-  (content.jar=200) → `Check for Updates` ничего не видел.
+- ~~**Корневая причина «почему апдейт не приходил»:** в prefs зарегистрирован root~~ —
+  **ОПРОВЕРГНУТО разведкой 2026-07-18 (verify-on-data, 3-й раз за сессию):** полные строки prefs
+  показали узел `repositories/https\:__ondysss.github.io_codepilot1c-edt/` = URI
+  `https://ondysss.github.io/codepilot1c-edt` (p2 кодирует `/`→`_` в имени узла; мой grep-регексп
+  обрезал матч на `.io`). Site зарегистрирован **корректно** (`nickname=CodePilot1C`,
+  `suffix=artifacts.xml.xz`). Почему GUI-апдейт не подтянулся — неизвестно (вероятно, Check for
+  Updates просто не запускали после 14.07); root-404 — факт, но НЕ причина.
 - **Действие пользователя (среда EDT, ~1 мин, реверсивно):** в EDT добавить/исправить site на
   `https://ondysss.github.io/codepilot1c-edt/` → `Help → Check for Updates` → обновить до 14.07 →
   перезапуск EDT → `/mcp reconnect codepilot1c` → повторить `qa_inspect`/`qa_run`. Остаточный риск
