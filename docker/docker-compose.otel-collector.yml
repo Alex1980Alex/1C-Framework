@@ -1,10 +1,13 @@
 # ADR-022 P2 — лёгкий OTLP-приёмник (otel-collector) для нативного OTel Claude Code.
+# 260718 H-P1: + bind-mount data/otel/ → file-exporter пишет туда сырец логов/трейсов
+#   (кормит cross-check H-P3). Recreate после правки: up -d --force-recreate.
 # Запуск:   docker compose -f docker/docker-compose.otel-collector.yml up -d
 # Логи:     docker logs -f claude-otel-collector
+# Сырец:    data/otel/claude-otel-logs.jsonl (события) + claude-otel-traces.jsonl (спаны)
 # Стоп:     docker compose -f docker/docker-compose.otel-collector.yml down
 # Затем:    .venv/Scripts/python.exe scripts/otel/enable_claude_otel.py --otlp http://localhost:4318
-#           → перезапустить claude → спаны claude_code.tool.execution польются в логи коллектора.
-# Дашборды (Langfuse/SigNoz) — заменить endpoint в enable_claude_otel.py --otlp (см. how-to 42.8).
+#           → перезапустить claude → спаны claude_code.tool.execution польются в логи+файлы коллектора.
+# Дашборды (Langfuse/SigNoz) — H-P2 overlay / enable_claude_otel.py --otlp (см. how-to 42.8).
 services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest  # для prod — пинить версию
@@ -12,6 +15,7 @@ services:
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
     volumes:
       - ./otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - ../data/otel:/var/otel   # H-P1: сырец нативной телеметрии (gitignored)
     ports:
       - "4317:4317"   # OTLP gRPC
       - "4318:4318"   # OTLP HTTP (endpoint для enable_claude_otel.py --otlp)

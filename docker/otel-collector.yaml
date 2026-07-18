@@ -1,8 +1,9 @@
-# ADR-022 P2 — лёгкий OTLP-приёмник для нативной телеметрии Claude Code.
-# Принимает OTLP (grpc :4317 / http :4318) и ЛОГИРУЕТ спаны/метрики/логи (debug-exporter) —
-# верифицируемый sink: после `enable_claude_otel.py --otlp http://localhost:4318` + рестарта claude
-# спаны claude_code.tool.execution видны в `docker logs claude-otel-collector`.
-# Дашборды/LLM-judge — апгрейд на Langfuse (официальный compose, см. 42.8).
+# Лёгкий OTLP-приёмник нативной телеметрии Claude Code.
+# ADR-022 P2 — базовый sink (debug-exporter, верификация эмиссии в `docker logs`).
+# 260718 H-P1 — РАСШИРЕНО: file-exporter'ы пишут сырец в data/otel/ (bind-mount) для
+#   cross-check (H-P3): native `claude_code.tool_result` (success/duration_ms/error_type)
+#   vs hook unpaired-Pre. Добавление аддитивно — debug-ветка ADR-022 цела.
+# H-P2 (Langfuse) добавит exporter otlphttp → /api/public/otel отдельным overlay-конфигом.
 receivers:
   otlp:
     protocols:
@@ -15,15 +16,30 @@ processors:
   batch: {}
 
 exporters:
+  # ADR-022 P2: человекочитаемый sink — проверить, что эмиссия летит (docker logs).
   debug:
     verbosity: detailed
+  # 260718 H-P1: машиночитаемый сырец логов (события claude_code.tool_result —
+  # плоские tool_name/tool_use_id/success/duration_ms/error_type = чистейший сигнал
+  # для cross-check). Отдельный файл на сигнал → парсер H-P3 не разбирает смесь.
+  file/logs:
+    path: /var/otel/claude-otel-logs.jsonl
+    rotation:
+      max_megabytes: 20
+      max_backups: 5
+  # Спаны claude_code.tool.execution (success/duration_ms) + дерево делегирования.
+  file/traces:
+    path: /var/otel/claude-otel-traces.jsonl
+    rotation:
+      max_megabytes: 20
+      max_backups: 5
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [debug, file/traces]
     metrics:
       receivers: [otlp]
       processors: [batch]
@@ -31,4 +47,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [debug, file/logs]
