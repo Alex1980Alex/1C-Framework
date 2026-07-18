@@ -92,6 +92,14 @@ H7 (Stop-харвест pass-through): силос и коллекция дрей
 
 ### 3.3 LOW (по мере касания)
 
+> **СТАТУС 2026-07-18: LOW-хвост закрыт срезом `pipeline/impl-260716-low-tail/`.**
+> Исправлены: `get_categories round(None)`, `delete_message` (post-commit side-effects +
+> non-dict metadata), `dashboard.compute_docs_freshness` tz, `memcube` coerce, 3×
+> `from_string` message. **RRF кросс-store дублей — measured DEFER** (2/93 результата,
+> дубли = MIRRORS ≠ корроборация; см. §18 2026-07-18). Уже были закрыты ранее:
+> `LearnedPattern.from_dict` (P0.2), `forget_gate._days_idle` (F7). **Остаётся открытым
+> только вопрос потолка hard-timeout** (design-вопрос, L-new ниже) — не код-фикс.
+
 **L-new (найдено при P1.3, 2026-07-17):** hard-timeout salvage-ветка
 [`unified_search.py`](../../src/memory/orchestrator/unified_search.py) почти
 недостижима, а её комментарий обещает защиту, которой нет: потолок 1.5× написан на
@@ -181,6 +189,47 @@ LOW-хвост (§3.3) - без отдельного среза, по мере �
 ## §18 Progress Log
 
 > Append-only, reverse-chronological. Новые записи - СВЕРХУ.
+
+### 2026-07-18 - §3.3 LOW-хвост закрыт (5 фиксов + measured-defer RRF)
+
+Пайплайн `pipeline/impl-260716-low-tail/`. Каждый пункт СВЕРЕН с кодом до правки
+(роадмап сам документировал перевёрнутые диагнозы — M6/P1.9/P1.3 — verify-before-fix
+обязателен).
+
+**Исправлено (5, все sabotage-verified):**
+- **Item 1** [`ai_memory/server.py`](../../src/memory/ai_memory/server.py) `get_categories` —
+  `round(AVG(importance))` падал `TypeError` на группе со всеми-NULL (`AVG→NULL`); теперь
+  `None` (JSON null).
+- **Item 2** `delete_message` — post-`commit()` side-effects (`_cleanup_links`/`_record_ingest`)
+  роняли уже совершённый delete в ошибку клиенту; теперь каждый в своём `try` + warning.
+  **+ находка ревьюера** (тот же класс рядом): metadata = валидный НЕ-dict JSON (`[...]`) →
+  `(x or {}).get` `AttributeError` мимо узкого except → тоже закрыто (`isinstance(parsed, dict)`,
+  [[feedback-payload-untrusted-input]]).
+- **Item 3** [`dashboard.py`](../../src/memory/maintenance/dashboard.py) `compute_docs_freshness` —
+  naive-dt + aware-now стрипал tzinfo без конверсии фрейма (сдвиг на tz-offset); теперь оба
+  операнда → naive-local (паттерн M9). Все 4 комбо aware/naive верны.
+- **Item 5** [`memcube.py`](../../src/memory/orchestrator/memcube.py) — недоверенный
+  `metadata.pattern_type` коэрсится (`normalize_pattern_type`, P0.3 writer-контракт); дефолты
+  выровнены на канонический. Конвертеры orphaned → live-эффект 0, цикла импорта нет.
+- **Item 6** [`unified_id.py`](../../src/memory/orchestrator/unified_id.py) ×2 +
+  [`link_registry.py`](../../src/memory/orchestrator/link_registry.py) `from_string` — `ValueError`
+  теперь перечисляет valid-значения (остаётся ValueError → вызывающие не сломаны).
+
+**Item 4 (RRF кросс-store дубли) — measured DEFER, НЕ фикс.** Замер `unified_search`
+(scratchpad, 10 запросов): **2/93 результата** (2.2%) имели кросс-store дубль. Root-cause:
+дубли здесь — почти всегда **MIRRORS** (один факт, синхронизированный `cross_store_sync`),
+а не независимое подтверждение → суммирование RRF-рангов бустило бы избыточность, не
+корроборацию; валидатора релевантности `unified_search` нет. Логика НЕ тронута, добавлен
+поясняющий комментарий у `rrf_scores[item.unified_id]`, чтобы будущий «фикс» не сломал
+намеренное поведение.
+
+**hard-timeout потолок (L-new)** — design-вопрос «нужен ли потолок», не код-фикс; оставлен открытым.
+
+**Тесты:** [`test_memory_low_tail_260716.py`](../../tests/unit/test_memory_low_tail_260716.py)
+11, все sabotage-verified (откат 5 фиксов → 8/10 краснеют; 2 green — намеренные
+invariant-guards; non-dict guard reddens отдельно). Memory-touching регресс **208 passed**.
+**code-verify PASS** (read-only reviewer, bug-fix + quality; нашёл non-dict gap → закрыт).
+`/mcp reconnect` для рантайма MCP (правки vector_memory/orchestrator/ai_memory-серверов).
 
 ### 2026-07-17 (ночь-2) - §5.3 закрыт: dedupe --apply на живой коллекции → роадмап выполнен
 
