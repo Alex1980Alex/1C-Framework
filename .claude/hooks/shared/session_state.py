@@ -476,9 +476,43 @@ class SessionState:
 
     @classmethod
     def has_llm_delegation(cls) -> bool:
-        """Check if Z.AI delegation was used in this session."""
+        """Проверить, использовалось ли LLM-делегирование НЕДАВНО (окно свежести).
+
+        Раньше флаг был one-shot без TTL: state переживает сессии (файл на диске),
+        поэтому единственный вызов делегирования один раз выключал z-ai-write-guard
+        навсегда — на всех последующих сессиях guard считал делегирование уже
+        выполненным (живой пример: 141 срабатывание/0 блоков за день при коде,
+        писавшемся напрямую). Чтобы гард требовал делегирование заново, флаг годен
+        только в пределах окна свежести (LLM_DELEGATION_FRESH_MINUTES, default 30
+        мин); при отсутствии/непарсимой отметке времени — fail-closed (False).
+
+        Патч сгенерирован claude-cli-sonnet через llm_complete (целевой цикл
+        Opus план → sonnet exec → Opus review), доработка ревью: tz-guard на
+        вычитании (aware last бросал бы TypeError — класс бага Sonar parse_dt).
+        """
         state = cls._load_state()
-        return state.get("llm_delegation_count", 0) > 0
+        if state.get("llm_delegation_count", 0) <= 0:
+            return False
+
+        last_str = state.get("llm_delegation_last")
+        if not last_str:
+            return False
+
+        try:
+            last = datetime.fromisoformat(last_str)
+        except (TypeError, ValueError):
+            return False
+
+        try:
+            fresh_minutes = int(os.environ.get("LLM_DELEGATION_FRESH_MINUTES", "30"))
+        except (TypeError, ValueError):
+            fresh_minutes = 30
+
+        try:
+            age_seconds = (datetime.now() - last).total_seconds()
+        except TypeError:  # aware-timestamp от будущего писателя → fail-closed
+            return False
+        return age_seconds < fresh_minutes * 60
 
     # ===== ROUTER FIRED MARKER (Phase 11: enforcer coordination) =====
 

@@ -134,10 +134,18 @@ def test_session_isolation_actually_isolates(tmp_path: Path) -> None:
     Красный на версии с CLAUDE_SESSION_STATE_PATH (мёртвая переменная): сабпроцесс
     читал живой state без делегирования и блокировал — т.е. env-редирект не работал,
     а «изоляция» была фикцией (тот же класс: тест защищает ровно ничего)."""
+    # llm_delegation_last обязателен с 2026-07-18 (окно свежести has_llm_delegation):
+    # count без отметки времени → fail-closed блок, изоляцию тест проверяет отметкой «сейчас».
+    from datetime import datetime as _dt
+
     assert not _blocked(
         str(_ROOT / "src" / "pdf_framework" / "zzz_probe.py"),
         tmp_path=tmp_path,
-        session_state={"activated_skills": [], "llm_delegation_count": 1},
+        session_state={
+            "activated_skills": [],
+            "llm_delegation_count": 1,
+            "llm_delegation_last": _dt.now().isoformat(),
+        },
     )
 
 
