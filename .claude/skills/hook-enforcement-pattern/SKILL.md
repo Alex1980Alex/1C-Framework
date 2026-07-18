@@ -25,6 +25,14 @@ Claude Code передаёт JSON на stdin (может быть пустым �
 {"decision": "block", "reason": "Текст причины блокировки"}
 ```
 
+> ⚠ **НИКОГДА не добавляй `"continue": false` в block-вывод** (любое событие — PreToolUse/Stop).
+> По контракту Claude Code `continue` приоритетнее `decision` и останавливает ВЕСЬ ход модели
+> («hook stopped continuation»): reason уходит пользователю, а не Claude — сессия замирает до
+> ручного «продолжай». Чистый `decision:"block"`+`reason` отклоняет только вызов/остановку и
+> отдаёт причину МОДЕЛИ → она исправляется в том же ходе. Инцидент 2026-07-18: `HookOutput.block()`
+> ставил continue:false → каждый SKILL REQUIRED замораживал сессию; фикс в
+> [`base/protocol.py`](../../hooks/base/protocol.py), пин — `tests/unit/hooks/test_hook_block_no_continue_stop.py`.
+
 ### Exit codes
 | Код | Значение |
 |-----|----------|
