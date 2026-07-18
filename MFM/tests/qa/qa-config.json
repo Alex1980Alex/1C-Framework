@@ -1,6 +1,7 @@
 {
   "platform": {},
   "vanessa": {
+    "epf_path": "C:\\1С-Framework\\tools\\vanessa\\vanessa-automation-single.epf",
     "screenshots_on_failure": true,
     "close_test_client_after_run": true,
     "junit_report_enabled": true
