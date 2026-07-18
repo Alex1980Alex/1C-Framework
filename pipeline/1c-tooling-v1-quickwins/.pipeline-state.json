@@ -2,24 +2,24 @@
   "task": "1c-tooling-v1-quickwins",
   "title": "1С-tooling В1: quick wins",
   "created_at": "2026-07-18T14:43:11",
-  "updated_at": "2026-07-18T14:43:11",
-  "current_stage": 1,
+  "updated_at": "2026-07-18T14:56:25",
+  "current_stage": 5,
   "stages": [
     {
       "n": 1,
       "name": "architecture",
       "command": "pl-plan",
       "artifact": "01-architecture.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-18T14:56:25"
     },
     {
       "n": 2,
       "name": "design",
       "command": "pl-design",
       "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
+      "status": "done",
+      "completed_at": "2026-07-18T14:56:25",
       "approved": false,
       "approved_by": null,
       "approved_at": null
@@ -29,16 +29,16 @@
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-18T14:56:25"
     },
     {
       "n": 4,
       "name": "testing",
       "command": "pl-test",
       "artifact": "04-testing.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-18T14:56:25"
     }
   ]
 }

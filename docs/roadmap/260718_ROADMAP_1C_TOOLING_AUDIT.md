@@ -222,7 +222,7 @@ W3 (отладка простаивает). Реальный сигнал → в
 | Этап | Содержание | Выход/замер |
 |---|---|---|
 | **В0 · Диагностика слепых зон** ✅ **ВЫПОЛНЕН 2026-07-18** | W9❌опроверг (баг запроса: `allow`≠`decision`, реально 57deny/14д) · W11❌опроверг (recall авто хуком) · W10✅исправлен (Agent-артефакт → healthy) · W12🟡подтверждён (BP-trace простаивает, live через query) | §18 итог; фикс `ASYNC_UNPAIRED_UNRELIABLE` + 2 теста |
-| **В1 · Quick wins** | T-P5.1 битый `ONEC_TEST_CONN`; T-P3.2 правило «поиск по коду = индексы, не edt-search»; T-P3.3 per-call лог edt-mcp/codepilot1c; RU-синонимы в ecosystem_scan (W8) | конфиг+скилл-правки; edt search p95 в отчёте ↓ |
+| **В1 · Quick wins** ✅ **ВЫПОЛНЕН 2026-07-18** | ✅ RU-синонимы `expand_queries` (W8); ✅ правило «поиск по коду = индексы» в edt-mcp skill (W2); ❌ `ONEC_TEST_CONN` уже ок в `.env` (File-база); ⊘ per-call лог edt-mcp НЕВОЗМОЖЕН (remote HTTP :8765, не наш процесс — mcp-invocation-logger уже покрывает) | `engagement_rank.py`+3 теста; edt-mcp skill; §18 |
 | **В2 · Переворот использования (T-P0)** | hard-промоут impact (экспортный diff) + BP-trace (T3-runtime) c fail-open; методики: обязательный эталон-поиск в analyze Ф2, impact-чек в implement Э3; валидатор applicable-знаменателя + outcome-метрика | окно 14д: presence ≥50% applicable, false-block ≈0, outcome не хуже |
 | **В3 · Новые инструменты (T-P1/T-P2)** | ADOPT `claude-code-bsl-lsp` (диагностика при правке); EVAL `1c-formsserver` на тестовой ИБ; порт приёма test-post-в-транзакции в implement Э5.x | живой пример пойманной LSP-ошибки до Sonar; вердикт EVAL (adopt/skip) |
 | **В4 · Контроль эффекта** | повторный toolgate-замер; Sonar-дельта/возвраты задач с impact vs без (T-P0.6); skill-presence per-1С-задача; T-P4 method-level мостик | сравнительный отчёт «до/после» в §18 |
@@ -240,6 +240,26 @@ W3 (отладка простаивает). Реальный сигнал → в
 6. Method-level Sonar-замечания видимы advisory-блоком на пересечении с правкой.
 
 ## §18 Progress Log
+
+### 2026-07-18 — В1 quick wins ВЫПОЛНЕН (2 реальных из 4 — снова проверка отсеяла half)
+
+Урок В0 продолжил окупаться: 2 из 4 «quick wins» испарились при проверке на данных.
+
+- ✅ **RU-синонимы (W8)**: `_RU_DOMAIN_EXPANSIONS` в `shared/engagement_rank.py` — RU-доменные
+  токены (1с/vanessa/yaxunit/oscript/бсп/едт…) добавляют канонический EN-вариант запроса при
+  триггере (behavior-preserving: EN-запрос без триггера не тронут). Закрывает canonical-gap
+  (vanessa/yaxunit в EN-источниках были пусты). 3 теста (+саботаж-инвариант «EN не протекает»).
+- ✅ **edt-search правило (W2)**: нота в edt-mcp skill — «поиск по кодовой базе = индексы
+  (`bsl_search`/`bsl-code-search`), НЕ `search_in_code`» (p95 12с degraded); edt-search только
+  точечно при refactor'е. Устраняет корень latency-degraded (не сам тул, а его мисюз для обзора).
+- ❌ **ONEC_TEST_CONN уже ок**: `.env` несёт рабочую `File='C:\onec-test-bases\TM_UnitTest';`
+  (не битый KOMPUTER); методика (`run-1c-unit-tests.md`) и так обрабатывает недоступность.
+- ⊘ **per-call лог edt-mcp НЕВОЗМОЖЕН как задумано**: edt-mcp = удалённый HTTP-сервер
+  (`npx mcp-remote http://localhost:8765`), не наш Python-процесс → `mcp_call_log`-обёртка
+  неприменима; хук `mcp-invocation-logger` уже логирует его вызовы (`category=mcp_call`).
+- Пред-существующее (вне scope, не введено мной): 3 упавших `test_hyde.py` (RAG HyDE-слой,
+  не импортит engagement_rank — проверено stash-прогоном). Pipeline `pipeline/1c-tooling-v1-quickwins/`.
+- Следующий — В2 (переворот использования: hard-промоут impact/BP-trace + валидатор + окно 14д).
 
 ### 2026-07-18 — В0 диагностика слепых зон ВЫПОЛНЕНА (2 из 4 — мои же баги измерения)
 
