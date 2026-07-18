@@ -209,3 +209,45 @@ def test_escalate_cooldown_blocks_repeat(monkeypatch):
     recent = (NOW - timedelta(hours=1)).isoformat()
     state = {"Bash": {"ts": recent, "escalated": True}}
     assert mod._escalate_broken("Bash", "r", NOW, state) is False  # cooldown 336ч
+
+
+def _run_banner_execute(mod, tmp_path, monkeypatch, sidecar, state):
+    """Прогнать execute() баннера на подложенных sidecar/state (tmp), вернуть итоговый state."""
+    import types
+
+    sc = tmp_path / "_latest.json"
+    stf = tmp_path / "state.json"
+    vd = tmp_path / "verdicts.jsonl"
+    sc.write_text(json.dumps(sidecar), encoding="utf-8")
+    stf.write_text(json.dumps(state), encoding="utf-8")
+    vd.write_text("", encoding="utf-8")
+    monkeypatch.setattr(mod, "SIDECAR", sc)
+    monkeypatch.setattr(mod, "STATE_FILE", stf)
+    monkeypatch.setattr(mod, "VERDICTS", vd)
+    import shared.task_master as tm
+
+    monkeypatch.setattr(tm, "add_task", lambda **kw: None)
+    mod.ToolHealthBanner().execute(types.SimpleNamespace())
+    return json.loads(stf.read_text(encoding="utf-8"))
+
+
+def test_broken_to_degraded_not_healed(tmp_path, monkeypatch):
+    """code-verify #1: тул был escalated (broken), теперь degraded — НЕ healed,
+    cooldown-запись сохраняется (иначе флап degraded→broken обойдёт 336ч)."""
+    mod = _load_banner(monkeypatch)
+    sidecar = {
+        "alerts": [{"tool": "Bash", "verdict": "degraded", "reason": "er 12%"}],
+        "infra_alerts": [],
+    }
+    state = {"Bash": {"ts": (NOW - timedelta(hours=1)).isoformat(), "escalated": True}}
+    out = _run_banner_execute(mod, tmp_path, monkeypatch, sidecar, state)
+    assert "Bash" in out  # НЕ вылечен — degraded ≠ полное восстановление
+
+
+def test_fully_recovered_is_healed(tmp_path, monkeypatch):
+    """Полное восстановление (тул не в alerts вовсе) → healed, state очищается."""
+    mod = _load_banner(monkeypatch)
+    sidecar = {"alerts": [], "infra_alerts": []}
+    state = {"Bash": {"ts": (NOW - timedelta(hours=1)).isoformat(), "escalated": True}}
+    out = _run_banner_execute(mod, tmp_path, monkeypatch, sidecar, state)
+    assert "Bash" not in out  # петля закрыта

@@ -141,11 +141,19 @@ class ToolHealthBanner(BaseHook):
             if _escalate_broken(key, a.get("reason", ""), now, state):
                 escalated.append(key)
 
-        # ── healed (N-P1.2 §6.3): ранее эскалированный broken больше не broken → петля закрыта ──
+        # ── healed (N-P1.2 §6.3): ранее эскалированный тул ПОЛНОСТЬЮ восстановился →
+        # петля закрыта. Считаем «активным» и broken, И degraded (code-verify #1): переход
+        # broken→degraded — НЕ вылечен; снятие cooldown-записи на degraded позволило бы
+        # обойти 336ч-cooldown при обратном флапе degraded→broken. ──
+        current_active = set(current_broken)
+        for a in degraded:
+            current_active.add(a["tool"])
+        for a in infra_degraded:
+            current_active.add(f"{a.get('source', 'infra')}:{a.get('key', '')}")
         healed: list[str] = []
         for k in list(state.keys()):
             v = state.get(k)
-            if isinstance(v, dict) and v.get("escalated") and k not in current_broken:
+            if isinstance(v, dict) and v.get("escalated") and k not in current_active:
                 healed.append(k)
                 del state[k]
 
