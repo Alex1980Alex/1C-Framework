@@ -1700,6 +1700,22 @@
       ],
       "last_verified": "2026-07-05",
       "github_repos_count": 4
+    },
+    {
+      "file": "1c-tooling-github-2026.md",
+      "keywords": [
+        "1c",
+        "bsl",
+        "mcp",
+        "lsp",
+        "bsl-language-server",
+        "1c-formsserver",
+        "mcp-1c",
+        "testing",
+        "ai-tools",
+        "github"
+      ],
+      "last_verified": "2026-07-18"
     }
   ]
 }
