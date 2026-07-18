@@ -82,6 +82,7 @@ from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 
     parse_ts,
     percentile,
     rollup_by_server,
+    tool_durations,  # 260718 H-P0.1: прямой duration_ms с fallback на пэйринг
 )
 from tool_verdict_history import read_verdicts, verdict_trend  # N-P1.2: тренд из verdicts.jsonl
 
@@ -240,7 +241,7 @@ def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, 
         attempts = completed + incomplete  # in_flight исключён (ещё не разрешился)
         errors = post_errors + incomplete
         success = completed - post_errors
-        durations = pair_durations(pre[tool], posts)
+        durations = tool_durations(pre[tool], posts)  # H-P0.1: прямой duration_ms > пэйринг
         eff = effectiveness_from_posts(posts)  # retry/abandonment (single-source)
         out[tool] = {
             "calls": attempts,

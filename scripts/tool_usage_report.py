@@ -38,7 +38,7 @@ from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 
 )
 from tool_effectiveness import (
     effectiveness_from_posts,
-    pair_durations,
+    tool_durations,
 )
 
 # _CANONICAL_CATEGORIES = ("mcp_call", "tool_call") — теперь из tool_effectiveness
@@ -62,9 +62,10 @@ def _iter_events(log: Path = LOG):
 
 
 def _pair_durations(pres: list[dict], posts: list[dict]) -> tuple[int, int]:
-    """Совокупная длительность реальных пар Pre→Post + их число (ADR-022 P0.2 — латентность
-    тула, не overhead хука). Делегирует общему `tool_effectiveness.pair_durations`."""
-    d = pair_durations(pres, posts)
+    """Совокупная длительность вызовов + их число (ADR-022 P0.2 — латентность тула,
+    не overhead хука). Делегирует `tool_effectiveness.tool_durations` — прямой
+    `duration_ms` из payload (260718 H-P0.1) с fallback на пэйринг Pre→Post."""
+    d = tool_durations(pres, posts)
     return sum(d), len(d)
 
 

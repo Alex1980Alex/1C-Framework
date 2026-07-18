@@ -29,6 +29,11 @@ def _load_logger(monkeypatch):
     shared_pkg.__path__ = []
     inv = ModuleType("shared.invocation_logger")
     inv.log_invocation = lambda **k: calls.append(k)
+    # 260718 H-P0.1: мок обязан нести весь контракт модуля — логгер импортит
+    # extract_duration_ms из него же. Faithful-стаб: прямой duration_ms только у Post.
+    inv.extract_duration_ms = lambda raw, event: (
+        raw.get("duration_ms") if event == "PostToolUse" else None
+    )
     rc = ModuleType("shared.run_context")
     rc.get_run_id = lambda _s: ""
     monkeypatch.setitem(sys.modules, "shared", shared_pkg)
@@ -50,6 +55,7 @@ def test_p03_builtin_emits_tool_call_row(monkeypatch):
             "tool_input": {"file_path": "x.py"},
             "tool_response": {"content": [{"text": "ok"}]},
             "tool_use_id": "tu_1",
+            "duration_ms": 321,  # H-P0.1: платформа кладёт длительность в Post-payload
             "session_id": "s1",
         }
     )
@@ -61,6 +67,7 @@ def test_p03_builtin_emits_tool_call_row(monkeypatch):
     assert row["tool"] == "Read"
     assert row["tool_call_id"] == "tu_1"
     assert row["args_hash"]  # непустой фингерпринт
+    assert row["duration_ms"] == 321  # H-P0.1: прямая длительность проброшена в лог
 
 
 def test_p03_mcp_tool_is_noop(monkeypatch):

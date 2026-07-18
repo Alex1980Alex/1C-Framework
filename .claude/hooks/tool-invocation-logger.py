@@ -146,8 +146,11 @@ class ToolInvocationLogger(BaseHook):
         args_hash = _args_fingerprint(inp.tool_input)
 
         try:
-            from shared.invocation_logger import log_invocation
+            from shared.invocation_logger import extract_duration_ms, log_invocation
             from shared.run_context import get_run_id
+
+            # H-P0.1: прямая длительность тула из payload (точнее пэйринга).
+            duration_ms = extract_duration_ms(inp.raw, event)
 
             log_invocation(
                 hook=self.HOOK_NAME,
@@ -163,6 +166,7 @@ class ToolInvocationLogger(BaseHook):
                 tool_call_id=tool_call_id,
                 error_type=("tool_error" if outcome == "error" else ""),
                 args_hash=args_hash,
+                duration_ms=duration_ms,
             )
         except Exception:
             pass  # Logging must never block

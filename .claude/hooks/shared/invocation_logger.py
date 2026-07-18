@@ -104,6 +104,30 @@ def _rotate_if_needed(filepath: Path) -> None:
 # --- Public API ---
 
 
+def extract_duration_ms(raw: dict, event: str) -> int | None:
+    """260718 H-P0.1: настоящая длительность тула из PostToolUse-payload.
+
+    Платформа кладёт top-level ``duration_ms`` в PostToolUse (эмпирически
+    подтверждено дампом tool-response-shapes.jsonl — Read Post-payload несёт
+    ключ ``duration_ms``). Прямой источник латентности БЕЗ пэйринга: не завышен
+    overhead'ом хука и не зависит от FIFO-эвристики пары.
+
+    Возвращает int мс или None (нет поля / не PostToolUse / нечисло) →
+    потребитель падает на pair_durations. Общий для обоих логгеров
+    (built-in + MCP), чтобы контракт извлечения не разошёлся.
+    """
+    if event != "PostToolUse":
+        return None
+    val = raw.get("duration_ms")
+    if val is None:
+        val = raw.get("durationMs")  # camelCase-страховка на случай дрейфа payload
+    if isinstance(val, bool):  # bool — подкласс int, но не длительность
+        return None
+    if isinstance(val, (int, float)) and val >= 0:
+        return int(val)
+    return None
+
+
 def _make_traceparent(run_id: str = "", session_id: str = "") -> str:
     """Build W3C traceparent header value.
 
@@ -142,6 +166,8 @@ def log_invocation(
     tool_call_id: str = "",  # ADR-022 P0.4: tool_use_id — join-ключ Pre/Post (= gen_ai.tool.call.id)
     error_type: str = "",  # ADR-022 P0.4: низкокардинальная категория ошибки (= OTel error.type)
     args_hash: str = "",  # ADR-022 P1: хеш аргументов вызова → детект retry (повтор идентичного)
+    duration_ms: int
+    | None = None,  # 260718 H-P0.1: реальная длительность тула из PostToolUse-payload
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -150,10 +176,13 @@ def log_invocation(
         event: Hook event type (UserPromptSubmit, PreToolUse, PostToolUse, Stop)
         tool: Tool name (for PreToolUse/PostToolUse events)
         elapsed_ms: Время работы САМОГО ХУКА (~20мс), НЕ инструмента. Реальная латентность
-            тула = Pre→Post-пара по tool_call_id (tool_effectiveness.pair_durations).
-            ⚠ N-P2.3 (260718): платформа кладёт настоящую длительность тула в
-            PostToolUse-payload полем `duration_ms` — прямой источник латентности без
-            пэйринга (кандидат на захват, follow-up; сейчас берём из пары).
+            тула = Pre→Post-пара по tool_call_id (tool_effectiveness.pair_durations) ЛИБО
+            прямое поле `duration_ms` (см. ниже, точнее пэйринга).
+        duration_ms: 260718 H-P0.1 — НАСТОЯЩАЯ длительность тула из PostToolUse-payload
+            (платформа кладёт top-level `duration_ms`, эмпирически подтверждено дампом
+            tool-response-shapes.jsonl). Прямой источник латентности БЕЗ пэйринга: не
+            завышается overhead'ом хука и не зависит от FIFO-эвристики пары. None вне
+            PostToolUse или если поле отсутствует → потребитель падает на pair_durations.
         outcome: Result — one of: allow, block, message, error
         session_id: Claude Code session ID (from stdin JSON)
         error: Error message if outcome is "error"
@@ -219,6 +248,10 @@ def log_invocation(
             "success": success,
             "error_type": err_type,
             "args_hash": args_hash,  # ADR-022 P1: фингерпринт аргументов (детект retry)
+            # 260718 H-P0.1: прямая длительность тула из payload (точнее пэйринга).
+            # Пишется только когда платформа прислала (PostToolUse) — иначе ключа нет
+            # (не null-шум), потребитель отличает «не было» от «0мс».
+            **({"duration_ms": int(duration_ms)} if duration_ms is not None else {}),
             # --- OTel GenAI semconv алиасы (roadmap 260713 P2.1) ---
             # Аддитивно и дублируют плоские поля дословно: будущий OTel-экспорт
             # становится переименованием, существующие jq/DuckDB-запросы не ломаются.

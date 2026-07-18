@@ -94,6 +94,45 @@ def pair_durations(pres: list[dict], posts: list[dict]) -> list[int]:
     return out
 
 
+def _direct_duration(e: dict) -> int | None:
+    """Прямой ``duration_ms`` из Post-строки (260718 H-P0.1), если валиден.
+    None → строка старого формата (до захвата) / не число / отрицательное."""
+    v = e.get("duration_ms")
+    if isinstance(v, bool):  # bool ⊂ int, но не длительность
+        return None
+    if isinstance(v, (int, float)) and v >= 0:
+        return int(v)
+    return None
+
+
+def tool_durations(pres: list[dict], posts: list[dict]) -> list[int]:
+    """Длительности вызовов (мс), ПРЕДПОЧИТАЯ прямой ``duration_ms`` из payload
+    (260718 H-P0.1) паре Pre→Post.
+
+    Прямое поле точнее: платформенная длительность самого тула, без overhead'а
+    хука и без FIFO-эвристики пэйринга. Смешанный режим: Post со свежим полем
+    берётся напрямую, Post старого формата (поля нет) добирается ``pair_durations``
+    от непотраченных Pre. Полностью behavior-preserving на исторических данных
+    (ни одной строки с ``duration_ms`` → результат == ``pair_durations``).
+    """
+    if not posts:
+        return []
+    direct: list[int] = []
+    no_field: list[dict] = []
+    for po in posts:
+        d = _direct_duration(po)
+        if d is not None:
+            direct.append(d)
+        else:
+            no_field.append(po)
+    if not no_field:
+        return direct  # все посты несут прямую длительность — пэйринг не нужен
+    # Хвост без поля добираем пэйрингом. Pre, «съеденные» прямыми постами, для FIFO
+    # не исключаем (их tool_call_id всё равно матчнётся к своему Post, а лишние ранние
+    # Pre безвредны — pair_durations берёт самый ранний ≤ Post и валидирует дельту).
+    return direct + pair_durations(pres, no_field)
+
+
 def _naive(ts: datetime) -> datetime:
     """Aware → локальный naive (класс бага Sonar parse_dt: naive-vs-aware вычитание
     бросает TypeError). Единая нормализация для сравнений с naive ``now``."""
@@ -254,6 +293,7 @@ __all__ = [
     "parse_ts",
     "percentile",
     "pair_durations",
+    "tool_durations",
     "completion_stats",
     "effectiveness_from_posts",
     "step_efficiency",
