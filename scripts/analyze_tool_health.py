@@ -692,6 +692,18 @@ def render_md(health: dict, window_days: int) -> str:
             )
         lines += [""]
 
+    # ── H-P3.2: cross-check native OTel ↔ hook (FP/FN unpaired-Pre детектора) ──
+    cc = health.get("otel_crosscheck") or {}
+    if cc.get("available"):
+        try:
+            from otel_crosscheck import format_section
+
+            section = format_section(cc)
+            if section:
+                lines += [section]
+        except Exception:
+            pass
+
     # ── rule-слой P2.2: эффективность per-server (Tool Success Rate + step efficiency) ──
     servers = health.get("servers") or {}
     active_servers = {s: v for s, v in servers.items() if v.get("calls", 0) > 0}
@@ -781,6 +793,15 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     # N-P1.2: тренд из истории verdicts.jsonl (переходы broken↔healthy за 30д)
     health["trend"] = verdict_trend(now, 30, read_verdicts(REPORTS / "verdicts.jsonl"))
 
+    # H-P3.2 (260718): cross-check нативного OTel ↔ hook-unpaired-Pre (FP/FN детектора).
+    # Graceful: нет data/otel-сырца / модуля → секции нет, поведение как раньше.
+    try:
+        from otel_crosscheck import run_crosscheck
+
+        health["otel_crosscheck"] = run_crosscheck(since_days=window_days, now=now)
+    except Exception:
+        health["otel_crosscheck"] = {"available": False}
+
     # неполнота окна (#7): самый ранний доступный ts моложе cutoff → часть окна срезана
     # ротацией; вердикты по усечённым данным помечаются, а не выдаются как полные
     cutoff = now - timedelta(days=window_days)
@@ -808,6 +829,9 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
         },
         "servers": health.get("servers", {}),  # rule-слой P2.2 (per-server эффективность)
         "agents": health.get("agents", {}),  # N-P2.4: разрез делегирования
+        "otel_crosscheck": {  # H-P3: сверка native↔hook (счётчики; примеры не в sidecar)
+            k: v for k, v in (health.get("otel_crosscheck") or {}).items() if k not in ("fn", "fp")
+        },
         "tools": health["tools"],
     }
     _atomic_write(REPORTS / "_latest.json", json.dumps(sidecar, ensure_ascii=False, indent=2))

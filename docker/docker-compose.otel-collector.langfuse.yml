@@ -1,0 +1,22 @@
+# Overlay для коллектора (H-P2): подключает Langfuse-fan-out конфиг + креды из .env.otel.
+# Применяется ПОВЕРХ базового compose:
+#   docker compose --env-file .env.otel \
+#     -f docker/docker-compose.otel-collector.yml \
+#     -f docker/docker-compose.otel-collector.langfuse.yml up -d --force-recreate
+# Реверс на базовый (без Langfuse): пересоздать БЕЗ этого overlay-файла.
+services:
+  otel-collector:
+    volumes:
+      # swap конфига: langfuse-вариант (base file+debug + otlphttp/langfuse)
+      - ./otel-collector-langfuse.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - ../data/otel:/var/otel
+    environment:
+      LANGFUSE_OTLP_ENDPOINT: ${LANGFUSE_OTLP_ENDPOINT:-http://langfuse-web:3000/api/public/otel}
+      LANGFUSE_OTLP_AUTH: ${LANGFUSE_OTLP_AUTH:-}
+    networks:
+      - default
+      - langfuse_default   # чтобы достучаться до langfuse-web по имени сервиса
+
+networks:
+  langfuse_default:
+    external: true

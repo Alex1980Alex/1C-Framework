@@ -1,0 +1,52 @@
+# Overlay-конфиг коллектора для H-P2: базовый (file+debug) + fan-out на Langfuse.
+# Используется ТОЛЬКО когда Langfuse поднят (langfuse_up.py пересоздаёт коллектор с ним).
+# Базовый otel-collector.yaml (без Langfuse-ветки) остаётся дефолтом — коллектор не
+# спамит connection-refused, когда Langfuse не нужен (ADR-052, топология fan-out).
+#
+# Langfuse-ветка читает креды из env контейнера (docker-compose.otel-collector.langfuse.yml
+# прокидывает LANGFUSE_OTLP_ENDPOINT/LANGFUSE_OTLP_AUTH из .env.otel). Пустой AUTH →
+# экспортер всё равно стартует, но 401 — langfuse_up.py заполняет AUTH до пересоздания.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  debug:
+    verbosity: detailed
+  file/logs:
+    path: /var/otel/claude-otel-logs.jsonl
+    rotation:
+      max_megabytes: 20
+      max_backups: 5
+  file/traces:
+    path: /var/otel/claude-otel-traces.jsonl
+    rotation:
+      max_megabytes: 20
+      max_backups: 5
+  # H-P2: fan-out на Langfuse OTLP-ingest (маппит gen_ai.* → свою модель, v3.22+).
+  otlphttp/langfuse:
+    endpoint: ${env:LANGFUSE_OTLP_ENDPOINT}
+    headers:
+      Authorization: Basic ${env:LANGFUSE_OTLP_AUTH}
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, file/traces, otlphttp/langfuse]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, file/logs, otlphttp/langfuse]

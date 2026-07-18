@@ -234,6 +234,25 @@ def probe_all(timeout: float = 1.5) -> list[dict]:
                 }
             )
 
+    # 7. Langfuse (260718 H-P2, opt-in дашборд). Пробим ТОЛЬКО если .env.otel есть
+    # (юзер настроил стек) — иначе «down» каждую сессию = шум. severity=info: Langfuse
+    # не критичен (cross-check H-P3 работает без него; ADR-052). Opt-out MCP_PROBE_LANGFUSE_DISABLE=1.
+    if (ROOT / ".env.otel").exists() and os.environ.get("MCP_PROBE_LANGFUSE_DISABLE") != "1":
+        url = "http://localhost:3000/api/public/health"
+        ok, latency_ms, error = _http_reachable(url, timeout)
+        probes.append(
+            {
+                "target": "langfuse",
+                "kind": "http",
+                "endpoint": url,
+                "ok": ok,
+                "latency_ms": latency_ms,
+                "error": error,
+                "affects": ["langfuse-dashboards", "llm-judge-scores"],
+                "severity": "info",
+            }
+        )
+
     return probes
 
 
