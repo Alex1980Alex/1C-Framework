@@ -86,6 +86,17 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
     impact_on_edit = sum(1 for r in recs if r.get("config_edit") and r.get("impact"))
     impact_rate_edit = round(impact_on_edit / edit_tasks, 3) if edit_tasks else None
 
+    # В2 260718 W1: честный знаменатель вместо survivorship-presence — поле impact_applicable
+    # с 2026-07-18, старые записи без него не учитываем (не искажаем прошлым).
+    applicable_recs = [r for r in recs if "impact_applicable" in r]
+    applicable_tasks = sum(1 for r in applicable_recs if r.get("impact_applicable"))
+    impact_on_applicable = sum(
+        1 for r in applicable_recs if r.get("impact_applicable") and r.get("impact")
+    )
+    impact_rate_applicable = (
+        round(impact_on_applicable / applicable_tasks, 3) if applicable_tasks else None
+    )
+
     if total < MIN_SAMPLES:
         recommendation = "insufficient-data"
     else:
@@ -103,6 +114,8 @@ def collect_metrics(now: datetime | None = None) -> dict[str, Any]:
         "edit_tasks": edit_tasks,
         "per_tool": per,
         "impact_rate_on_edits": impact_rate_edit,
+        "applicable_tasks": applicable_tasks,  # В2: задач с правкой экспортного метода
+        "impact_rate_on_applicable": impact_rate_applicable,  # honest denominator
         "recommendation": recommendation,
     }
 
@@ -143,6 +156,10 @@ def render(m: dict[str, Any], crit: dict[str, bool], final: bool) -> str:
             f"(rate {p['rate']}) -> {p['verdict']}"
         )
     detail.append(f"- impact на edit-подмножестве: rate {m['impact_rate_on_edits']}")
+    detail.append(
+        f"- impact на ПРИМЕНИМОМ (правка экспортного метода, честный знаменатель, В2): "
+        f"{m.get('impact_rate_on_applicable')} на {m.get('applicable_tasks', 0)} задач"
+    )
     detail.append(f"- **{rec_human}**")
     return render_acceptance(
         f"# onec-toolgate validation (ADR-035 Фаза 1) — день {m['day']}/{WINDOW_DAYS} ({m['window']})",
