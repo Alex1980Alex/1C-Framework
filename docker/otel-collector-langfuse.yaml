@@ -31,7 +31,8 @@ exporters:
       max_megabytes: 20
       max_backups: 5
   # H-P2: fan-out на Langfuse OTLP-ingest (маппит gen_ai.* → свою модель, v3.22+).
-  otlphttp/langfuse:
+  # otlp_http (не устаревший алиас otlphttp — collector 0.154+ варнит).
+  otlp_http/langfuse:
     endpoint: ${env:LANGFUSE_OTLP_ENDPOINT}
     headers:
       Authorization: Basic ${env:LANGFUSE_OTLP_AUTH}
@@ -41,7 +42,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, file/traces, otlphttp/langfuse]
+      exporters: [debug, file/traces, otlp_http/langfuse]
     metrics:
       receivers: [otlp]
       processors: [batch]
@@ -49,4 +50,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, file/logs, otlphttp/langfuse]
+      exporters: [debug, file/logs, otlp_http/langfuse]

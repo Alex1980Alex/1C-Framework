@@ -96,7 +96,7 @@ def ensure_env(path: Path = ENV_FILE) -> dict[str, str]:
     base.setdefault("MINIO_ROOT_USER", "minio")
     base.setdefault("LANGFUSE_INIT_ORG_ID", "framework")
     base.setdefault("LANGFUSE_INIT_PROJECT_ID", "tool-observability")
-    base.setdefault("LANGFUSE_INIT_USER_EMAIL", "admin@localhost")
+    base.setdefault("LANGFUSE_INIT_USER_EMAIL", "admin@example.com")
     base.setdefault("LANGFUSE_OTLP_ENDPOINT", "http://langfuse-web:3000/api/public/otel")
     # Basic-auth для otlphttp-экспортера коллектора = base64(pk:sk)
     base["LANGFUSE_OTLP_AUTH"] = base64.b64encode(
