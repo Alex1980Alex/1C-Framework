@@ -223,7 +223,7 @@ W3 (отладка простаивает). Реальный сигнал → в
 |---|---|---|
 | **В0 · Диагностика слепых зон** ✅ **ВЫПОЛНЕН 2026-07-18** | W9❌опроверг (баг запроса: `allow`≠`decision`, реально 57deny/14д) · W11❌опроверг (recall авто хуком) · W10✅исправлен (Agent-артефакт → healthy) · W12🟡подтверждён (BP-trace простаивает, live через query) | §18 итог; фикс `ASYNC_UNPAIRED_UNRELIABLE` + 2 теста |
 | **В1 · Quick wins** ✅ **ВЫПОЛНЕН 2026-07-18** | ✅ RU-синонимы `expand_queries` (W8); ✅ правило «поиск по коду = индексы» в edt-mcp skill (W2); ❌ `ONEC_TEST_CONN` уже ок в `.env` (File-база); ⊘ per-call лог edt-mcp НЕВОЗМОЖЕН (remote HTTP :8765, не наш процесс — mcp-invocation-logger уже покрывает) | `engagement_rank.py`+3 теста; edt-mcp skill; §18 |
-| **В2 · Переворот использования (T-P0)** | hard-промоут impact (экспортный diff) + BP-trace (T3-runtime) c fail-open; методики: обязательный эталон-поиск в analyze Ф2, impact-чек в implement Э3; валидатор applicable-знаменателя + outcome-метрика | окно 14д: presence ≥50% applicable, false-block ≈0, outcome не хуже |
+| **В2 · Переворот использования (T-P0)** 🔵 **В2-1 landed 2026-07-18** | ✅ детект узкого условия `edits_exported_method` (`shared/onec_change_scope.py`) + запись `impact_applicable` в event + валидатор `impact_rate_on_applicable` (честный знаменатель вместо survivorship); ⏳ методики (эталон-поиск/impact-чек), outcome-метрика, hard-флип — **после окна** (знаменатель наполняется с новых задач) | окно 14д: presence ≥50% applicable, false-block ≈0 |
 | **В3 · Новые инструменты (T-P1/T-P2)** | ADOPT `claude-code-bsl-lsp` (диагностика при правке); EVAL `1c-formsserver` на тестовой ИБ; порт приёма test-post-в-транзакции в implement Э5.x | живой пример пойманной LSP-ошибки до Sonar; вердикт EVAL (adopt/skip) |
 | **В4 · Контроль эффекта** | повторный toolgate-замер; Sonar-дельта/возвраты задач с impact vs без (T-P0.6); skill-presence per-1С-задача; T-P4 method-level мостик | сравнительный отчёт «до/после» в §18 |
 | **В5 · Ретирмент (T-P5.2)** | unused-инстансы crud → lazy-mcp; один канонический debug-путь; закрыть feenlace-EVAL вердиктом | каталог тулов ↓ без потери презенса |
@@ -240,6 +240,32 @@ W3 (отладка простаивает). Реальный сигнал → в
 6. Method-level Sonar-замечания видимы advisory-блоком на пересечении с правкой.
 
 ## §18 Progress Log
+
+### 2026-07-18 — В2-1: фундамент applicability (безопасная база для hard-промоута)
+
+Ключ «переворота использования»: чтобы hard-промоут impact был БЕЗОПАСЕН (не по survivorship-
+presence на всех задачах, ADR-035-caveat), нужен честный applicable-знаменатель. Флип в hard
+ЗДЕСЬ не делается — это измерительный фундамент; флип — после наполнения окна.
+
+- ✅ **Детектор узкого условия**: `shared/onec_change_scope.py` `edits_exported_method(root)` —
+  правка/добавление экспортного метода (`Процедура/Функция ... Экспорт`) через пересечение
+  changed-lines (reuse `sonar_rescan_state`) с export-method-спанами. Pure-ядро
+  `exported_method_spans` (многострочная сигнатура, окно 6 строк) тестируемо без git; I/O
+  инъектируем. 9 unit.
+- ✅ **Проводка в event-log**: `onec-task-completion-stop._log_advisory_event` пишет
+  `impact_applicable` на каждой 1С-задаче (best-effort, git-детект только на завершении).
+- ✅ **Честный знаменатель в валидаторе**: `onec_toolgate_validation.impact_rate_on_applicable`
+  — presence impact ТОЛЬКО на задачах с правкой экспортного метода (старые записи без поля
+  исключены → не искажают). Живьём: «None на 0 задач» (331 историческая без поля; наполнится
+  с новых). 2 unit.
+- Часть кода делегирована sonnet через llm_complete (метрика-блок, целевой цикл Opus→sonnet→
+  Opus review). 17 новых unit + 350 gate-parity зелёные (hook аддитивен, gate цел).
+- ⏳ **Осталось в В2** (после окна ≥8 applicable-задач): методики (обязательный эталон-поиск
+  analyze Ф2, impact-чек implement Э3), outcome-метрика (Sonar-дельта/возвраты), hard-флип
+  impact при `edits_exported_method` + fail-open. Пайплайн `pipeline/1c-tooling-v2-adoption/`.
+- ⚠ Наблюдение (follow-up): task-protocol-enforcer рекуррентно теряет активацию Skill (гонка
+  session-state) — нет transcript-fallback как у code-skill-enforcer; ход не рвётся (фикс
+  continue:false), но раздражает. Кандидат на порт fallback'а.
 
 ### 2026-07-18 — В1 quick wins ВЫПОЛНЕН (2 реальных из 4 — снова проверка отсеяла half)
 

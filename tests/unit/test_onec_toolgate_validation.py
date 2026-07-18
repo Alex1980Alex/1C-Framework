@@ -105,3 +105,32 @@ def test_evaluate_contract(tmp_path, monkeypatch):
     crit = mod.evaluate(m)
     assert isinstance(crit, dict) and all(isinstance(v, bool) for v in crit.values())
     assert "day" in m  # требуется acceptance_banner
+
+
+def test_impact_rate_on_applicable_honest_denominator(tmp_path, monkeypatch):
+    """В2 260718 W1: impact_rate_on_applicable считается ТОЛЬКО на записях с полем
+    impact_applicable (старые без поля не искажают знаменатель)."""
+    log = tmp_path / "e.jsonl"
+    _write_events(
+        log,
+        [
+            {"impact_applicable": True, "impact": True, "config_edit": True},  # applicable + used
+            {"impact_applicable": True, "impact": False, "config_edit": True},  # applicable + missed
+            {"impact_applicable": False, "impact": False, "config_edit": True},  # not applicable
+            {"config_edit": True, "impact": False},  # старая запись без поля → не в знаменателе
+        ],
+    )
+    monkeypatch.setattr(mod, "EVENTS_LOG", log)
+    m = mod.collect_metrics(now=_NOW)
+    assert m["applicable_tasks"] == 2  # только 2 с impact_applicable=True
+    assert m["impact_rate_on_applicable"] == 0.5  # 1 used / 2 applicable
+
+
+def test_impact_rate_on_applicable_none_when_no_field(tmp_path, monkeypatch):
+    """Старые записи без impact_applicable → applicable_tasks=0 → rate None (не 0, не крэш)."""
+    log = tmp_path / "e.jsonl"
+    _write_events(log, [_event(impact=True, config_edit=True) for _ in range(10)])
+    monkeypatch.setattr(mod, "EVENTS_LOG", log)
+    m = mod.collect_metrics(now=_NOW)
+    assert m["applicable_tasks"] == 0
+    assert m["impact_rate_on_applicable"] is None
