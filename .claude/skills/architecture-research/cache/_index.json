@@ -1713,7 +1713,17 @@
         "mcp-1c",
         "testing",
         "ai-tools",
-        "github"
+        "github",
+        "codepilot1c",
+        "codepilot1c-edt",
+        "ondysss",
+        "edt-plugin-update",
+        "p2-update-site",
+        "getthickclientinfo",
+        "nosuchmethoderror",
+        "edt-2025.2",
+        "qa_run",
+        "thick-client"
       ],
       "last_verified": "2026-07-18"
     }
