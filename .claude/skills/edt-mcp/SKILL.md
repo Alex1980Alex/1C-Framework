@@ -54,6 +54,13 @@ EDT-MCP (`com.ditrix.edt.mcp.server`, репозиторий `DitriXNew/EDT-MCP`
 - **Модельные** (находят идентификатор в любом написании): `find_references`, `go_to_definition`, `get_method_call_hierarchy`, `validate_query`.
 - Для идентификаторов/ссылок — модельные; `search_in_code` — для произвольного текста/комментариев.
 
+> ⚠ **Поиск по кодовой базе = ИНДЕКСЫ, а не `search_in_code`** (В1 260718, W2). `search_in_code`
+> сканирует workspace вживую → p95 **12с** (2× baseline, degraded). Для «где встречается X / кто
+> вызывает / найти эталон» бери **`mcp__bsl-semantic-search__bsl_search`/`bsl_hybrid_search`**
+> (семантика по 37k-чанковому индексу) или **`mcp__bsl-code-search__search_symbols`/`find_callers`**
+> (символы/вызовы по SQLite call-graph). `search_in_code` (edt-mcp) — только для **точечного**
+> текстового контекста в уже открытом модуле при refactor'е, не для обзорного поиска по конфигурации.
+
 ### 5. Confirm-preview гейт (деструктивные)
 Двухфазно: без `confirm` → превью (ничего не меняется), `confirm=true` → выполнить.
 **Гейтированы:** `update_database`, `delete_metadata`, `rename_metadata_object`, `delete_project`, `delete_launch_config`, `delete_infobase`. Остальные write-тулы (`create_metadata`, `modify_metadata`, `write_module_source`) НЕ гейтированы (обратимы обратным вызовом / `delete_metadata`).

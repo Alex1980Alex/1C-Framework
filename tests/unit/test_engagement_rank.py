@@ -43,6 +43,23 @@ def test_expand_queries_empty_and_extra():
     assert any("RAG 2026" == v for v in out)
 
 
+def test_expand_queries_ru_domain_expansion():
+    """W8 (В1 260718): RU-доменные термины 1С получают канонический EN-вариант →
+    ниша GitHub находится (vanessa/yaxunit/oscript иначе пусты в EN-источниках)."""
+    out = expand_queries("vanessa yaxunit тестирование", max_variants=8)
+    assert any("vanessa automation" in v for v in out)
+    assert any("yaxunit 1C" in v for v in out)
+    out2 = expand_queries("движение регистра 1с", max_variants=8)
+    assert any("1C Enterprise BSL" in v for v in out2)
+
+
+def test_expand_queries_ru_expansion_behavior_preserving():
+    """САБОТАЖ-ИНВАРИАНТ: EN-запрос БЕЗ RU-триггера не получает 1С-расширений
+    (карта не протекает; убрать триггер-guard → 1C в EN-выводе → красный)."""
+    out = expand_queries("python async retry backoff", max_variants=4)
+    assert not any("1C" in v or "1С" in v for v in out)
+
+
 def test_blended_relevance_only_equals_weight():
     # engagement=0 → blended = w_relevance * relevance
     assert blended_score(1.0, 0, w_relevance=0.7, w_engagement=0.3) == 0.7
