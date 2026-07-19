@@ -50,6 +50,7 @@ def _sig(recall, capture, research, sonar_ok=True):
         "form_screenshot": False,
         "platform_ctx": False,
         "analyze_method": False,
+        "yaxunit_smoke": False,
     }
 
 

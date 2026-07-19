@@ -51,6 +51,7 @@ _SIG_KEYS = (
     "form_screenshot",
     "platform_ctx",
     "analyze_method",
+    "yaxunit_smoke",
 )
 
 

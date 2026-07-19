@@ -138,6 +138,15 @@ _FORM_TOOLS = {"mcp__edt-mcp__get_form_screenshot"}  # визуальный veri
 _PLATFORM_CTX_PREFIXES = ("mcp__bsl-platform-context__", "mcp__pdf-vector-graph__")
 # bsl_analyze_method (codepilot1c) — точное имя сервера варьируется → детект по подстроке имени тула
 _ANALYZE_METHOD_MARKER = "bsl_analyze_method"
+# Рек.3 (2026-07-19) — YAxUnit-смоук серверной бизнес-логики как ADVISORY (opt-in default, НИКОГДА
+# не блок). ЕДИНСТВЕННЫЙ маршрут — mcp-onec-test-runner (НЕ edt/codepilot `run_yaxunit_tests`-дубли,
+# НЕ BDD). Применимо ТОЛЬКО когда правлена ЭКСПОРТНАЯ серверная поверхность (edits_exported_method:
+# YAxUnit-тест зовёт лишь экспортные методы → это и есть тестируемый инвариант). build_project/
+# check_syntax_* — подготовка, не смоук, поэтому в набор НЕ входят.
+_YAXUNIT_SMOKE_TOOLS = {
+    "mcp__mcp-onec-test-runner__run_all_tests",
+    "mcp__mcp-onec-test-runner__run_module_tests",
+}
 ADVISORY_EVENTS_LOG = PROJECT_ROOT / ".claude" / "cache" / "onec-toolgate-events.jsonl"
 ADVISORY_LOG_CAP = 5000  # FIFO-ротация лога advisory-событий (рост не безграничен)
 
@@ -280,6 +289,8 @@ def _collect_signals(transcript_path: str) -> dict:
         "form_screenshot": False,
         "platform_ctx": False,
         "analyze_method": False,
+        # Тир-3 (рек.3, 2026-07-19) — YAxUnit-смоук серверной логики (advisory, mcp-onec-test-runner)
+        "yaxunit_smoke": False,
     }
     if not transcript_path or not Path(transcript_path).exists():
         return sig
@@ -316,6 +327,10 @@ def _collect_signals(transcript_path: str) -> dict:
                 sig["platform_ctx"] = True
             elif _ANALYZE_METHOD_MARKER in name:  # Тир-2 (advisory)
                 sig["analyze_method"] = True
+            elif (
+                name in _YAXUNIT_SMOKE_TOOLS
+            ):  # Тир-3 рек.3 (advisory) — YAxUnit-смоук серверной логики
+                sig["yaxunit_smoke"] = True
             elif name == "Skill":
                 s = str(inp.get("skill") or inp.get("command") or "")
                 if any(k in s for k in _1C_SKILLS):
@@ -377,6 +392,7 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
             f"| Тир-2 get_form_screenshot (advisory) | {adv(sig.get('form_screenshot'))} |",
             f"| Тир-2 bsl-platform-context/pdf-vector-graph (advisory) | {adv(sig.get('platform_ctx'))} |",
             f"| Тир-2 bsl_analyze_method (advisory) | {adv(sig.get('analyze_method'))} |",
+            f"| Тир-3 YAxUnit-смоук серверной логики (advisory, mcp-onec-test-runner) | {adv(sig.get('yaxunit_smoke'))} |",
             "",
             "_T1-T2 — рекомендательно по умолчанию; при ONEC_TOOLGATE_HARD=1 impact (и при "
             "ONEC_TOOLGATE_DEBUG_HARD=1 — BP-trace) становятся HARD на правке 1С-кода (ADR-036). "
@@ -415,18 +431,25 @@ def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
     """
     try:
         ADVISORY_EVENTS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        # edits_exported_method — общий applicable-знаменатель для impact (T1, pre-change «кто сломается»)
+        # И yaxunit-смоука (рек.3, post-change «инвариант держится»): оба применимы к экспортной
+        # серверной поверхности. Считаем ОДИН раз (git-diff дорог) → в оба ключа.
+        _exported_edit = _impact_applicable()
         rec = {
             "ts": datetime.now().isoformat(),
             "adr": "ADR-035-phase1",
             "slug": slug,
             "impact": bool(sig.get("impact")),
-            "impact_applicable": _impact_applicable(),  # В2: правка экспортного метода?
+            "impact_applicable": _exported_edit,  # В2: правка экспортного метода?
             "debug_trace": bool(sig.get("debug_trace")),
             "ref_search": bool(sig.get("ref_search")),
             "callers": bool(sig.get("callers")),
             "form_screenshot": bool(sig.get("form_screenshot")),
             "platform_ctx": bool(sig.get("platform_ctx")),
             "analyze_method": bool(sig.get("analyze_method")),
+            # Тир-3 рек.3: YAxUnit-смоук + тот же applicable-знаменатель (экспортная поверхность)
+            "yaxunit_smoke": bool(sig.get("yaxunit_smoke")),
+            "yaxunit_applicable": _exported_edit,
             "config_edit": bool(sig.get("config_edit")),
             "hard_blocked": bool(hard_blocked),
         }
@@ -546,6 +569,7 @@ def _build_reason(
         f"  {'✓' if sig['form_screenshot'] else '•'} Тир-2 `get_form_screenshot` — визуальный verify формы без клиента\n"
         f"  {'✓' if sig['platform_ctx'] else '•'} Тир-2 `bsl-platform-context`/`pdf-vector-graph` — API/доки 8.3.27 (вместо догадки)\n"
         f"  {'✓' if sig['analyze_method'] else '•'} Тир-2 `bsl_analyze_method` — сложность/unused метода до коммита\n"
+        f"  {'✓' if sig['yaxunit_smoke'] else '•'} Тир-3 YAxUnit-смоук серверной логики — `run_all_tests`/`run_module_tests` (mcp-onec-test-runner) при правке ЭКСПОРТНОГО метода\n"
         + _fix_recipe(sig, sonar_ok, sonar_hard, sonar_detail, impact_hard, debug_hard)
         + "\n"
         + f"Блок — по ✗ ({block_by}); • = advisory (не блок).\n"

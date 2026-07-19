@@ -64,7 +64,20 @@ def test_collect_all_signals(tmp_path):
         "form_screenshot": False,
         "platform_ctx": False,
         "analyze_method": False,
+        "yaxunit_smoke": False,
     }
+
+
+def test_collect_yaxunit_smoke(tmp_path):
+    """Рек.3: run_all_tests/run_module_tests (mcp-onec-test-runner) → sig[yaxunit_smoke]=True.
+    Только этот маршрут; edt/codepilot run_yaxunit_tests НЕ засчитывается (единственный маршрут)."""
+    t = tmp_path / "t.json"
+    _transcript(t, [("mcp__mcp-onec-test-runner__run_module_tests", {"module": "ЮТ_Смоук"})])
+    assert mod._collect_signals(str(t))["yaxunit_smoke"] is True
+    # дубль-маршрут edt НЕ засчитывается за YAxUnit-смоук (рек.3 — единственный маршрут)
+    t2 = tmp_path / "t2.json"
+    _transcript(t2, [("mcp__edt-mcp__run_yaxunit_tests", {})])
+    assert mod._collect_signals(str(t2))["yaxunit_smoke"] is False
 
 
 def test_collect_none(tmp_path):
@@ -83,6 +96,7 @@ def test_collect_none(tmp_path):
         "form_screenshot": False,
         "platform_ctx": False,
         "analyze_method": False,
+        "yaxunit_smoke": False,
     }
 
 

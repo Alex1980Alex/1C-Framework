@@ -115,7 +115,11 @@ def test_impact_rate_on_applicable_honest_denominator(tmp_path, monkeypatch):
         log,
         [
             {"impact_applicable": True, "impact": True, "config_edit": True},  # applicable + used
-            {"impact_applicable": True, "impact": False, "config_edit": True},  # applicable + missed
+            {
+                "impact_applicable": True,
+                "impact": False,
+                "config_edit": True,
+            },  # applicable + missed
             {"impact_applicable": False, "impact": False, "config_edit": True},  # not applicable
             {"config_edit": True, "impact": False},  # старая запись без поля → не в знаменателе
         ],
@@ -134,3 +138,36 @@ def test_impact_rate_on_applicable_none_when_no_field(tmp_path, monkeypatch):
     m = mod.collect_metrics(now=_NOW)
     assert m["applicable_tasks"] == 0
     assert m["impact_rate_on_applicable"] is None
+
+
+def test_yaxunit_rate_on_applicable_honest_denominator(tmp_path, monkeypatch):
+    """Рек.3 2026-07-19: yaxunit_rate_on_applicable — ТОЛЬКО на записях с yaxunit_applicable
+    (старые без поля не искажают знаменатель); presence — по yaxunit_smoke."""
+    log = tmp_path / "e.jsonl"
+    _write_events(
+        log,
+        [
+            {"yaxunit_applicable": True, "yaxunit_smoke": True, "config_edit": True},  # appl + used
+            {
+                "yaxunit_applicable": True,
+                "yaxunit_smoke": False,
+                "config_edit": True,
+            },  # appl + missed
+            {"yaxunit_applicable": False, "yaxunit_smoke": False, "config_edit": True},  # not appl
+            {"config_edit": True},  # старая запись без поля → не в знаменателе
+        ],
+    )
+    monkeypatch.setattr(mod, "EVENTS_LOG", log)
+    m = mod.collect_metrics(now=_NOW)
+    assert m["yaxunit_applicable_tasks"] == 2  # только 2 с yaxunit_applicable=True
+    assert m["yaxunit_rate_on_applicable"] == 0.5  # 1 used / 2 applicable
+
+
+def test_yaxunit_rate_none_when_no_field(tmp_path, monkeypatch):
+    """Старые записи без yaxunit_applicable → yaxunit_applicable_tasks=0 → rate None (не крэш)."""
+    log = tmp_path / "e.jsonl"
+    _write_events(log, [{"config_edit": True} for _ in range(5)])
+    monkeypatch.setattr(mod, "EVENTS_LOG", log)
+    m = mod.collect_metrics(now=_NOW)
+    assert m["yaxunit_applicable_tasks"] == 0
+    assert m["yaxunit_rate_on_applicable"] is None
