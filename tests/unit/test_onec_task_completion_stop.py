@@ -65,6 +65,7 @@ def test_collect_all_signals(tmp_path):
         "platform_ctx": False,
         "analyze_method": False,
         "yaxunit_smoke": False,
+        "bsl_paths": set(),
     }
 
 
@@ -97,6 +98,7 @@ def test_collect_none(tmp_path):
         "platform_ctx": False,
         "analyze_method": False,
         "yaxunit_smoke": False,
+        "bsl_paths": set(),
     }
 
 
