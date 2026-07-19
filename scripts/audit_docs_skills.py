@@ -103,18 +103,32 @@ def extract_api_endpoints() -> list[Feature]:
 
 
 def _extract_router_prefix(text: str, stem: str) -> str:
-    """Try to guess router prefix from file content or name."""
-    # Look for prefix in app.py include_router calls
+    """Resolve a router prefix.
+
+    Priority: APIRouter(prefix=...) declared inside the module (authoritative for
+    FastAPI) > include_router(..., prefix=...) in app.py > root-mount if the module
+    declares an APIRouter without a prefix > /stem heuristic as last resort.
+    """
+    # 1. Router declares its own prefix on the APIRouter(...) constructor.
+    #    e.g. `router = APIRouter(prefix="/v1", tags=[...])`
+    m = re.search(r'APIRouter\([^)]*prefix\s*=\s*["\']([^"\']+)["\']', text)
+    if m:
+        return m.group(1).rstrip("/")
+    # 2. Look for prefix in app.py include_router calls: include_router(xxx_router, prefix="/xxx")
     app_file = PROJECT_ROOT / "src" / "api" / "app.py"
     if app_file.exists():
         app_text = app_file.read_text(encoding="utf-8", errors="replace")
-        # Match: include_router(xxx_router, prefix="/xxx")
         pat = re.compile(
             rf'include_router\([^)]*{stem}[^)]*prefix\s*=\s*["\']([^"\']+)["\']',
         )
         m = pat.search(app_text)
         if m:
             return m.group(1).rstrip("/")
+    # 3. Module defines an APIRouter but no prefix anywhere -> mounted at root.
+    #    The route paths already carry their full path (e.g. websocket `/ws/search`).
+    if "APIRouter(" in text:
+        return ""
+    # 4. Last resort: assume the mount prefix equals the module name.
     return f"/{stem}"
 
 
@@ -198,10 +212,16 @@ def extract_search_strategies() -> list[Feature]:
 
 
 def _class_to_strategy_name(cls_name: str) -> str:
-    """Convert ClassName to strategy_name: HybridSearchStrategy → hybrid."""
+    """Convert ClassName to strategy_name: HybridSearchStrategy → hybrid.
+
+    Acronym-aware: keeps runs of capitals intact so GraphRAGAuto → graph_rag_auto
+    (not graph_r_a_g_auto) and LightRAG → light_rag.
+    """
     name = cls_name.replace("Strategy", "").replace("Search", "")
-    # CamelCase to snake_case
-    s = re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+    # CamelCase to snake_case, acronym-aware
+    s = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name)
+    s = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", s)
+    s = s.lower()
     return s.strip("_")
 
 
@@ -419,6 +439,23 @@ CATEGORY_MAPPING: dict[str, dict[str, Any]] = {
 }
 
 
+def _package_exports(init_path: Path) -> set[str] | None:
+    """Parse a package __init__.py for its __all__ list.
+
+    Returns the set of exported names (the public API surface), or None if no
+    __all__ is defined. Used to keep only public classes when auditing a
+    subsystem, so internal dataclasses/helpers are not treated as user features.
+    """
+    if not init_path.exists():
+        return None
+    text = init_path.read_text(encoding="utf-8", errors="replace")
+    m = re.search(r"^__all__\s*=\s*\[(.*?)\]", text, re.MULTILINE | re.DOTALL)
+    if not m:
+        return None
+    names = re.findall(r"""['"](\w+)['"]""", m.group(1))
+    return set(names)
+
+
 def extract_memory_subsystems() -> list[Feature]:
     """Extract memory subsystem components from src/memory/*/."""
     features = []
@@ -430,6 +467,7 @@ def extract_memory_subsystems() -> list[Feature]:
         sub_path = memory_dir / sub
         if not sub_path.exists():
             continue
+        exports = _package_exports(sub_path / "__init__.py")
         for py_file in sorted(sub_path.glob("*.py")):
             if py_file.name == "__init__.py":
                 continue
@@ -437,6 +475,8 @@ def extract_memory_subsystems() -> list[Feature]:
             for m in re.finditer(r"^class\s+(\w+)", text, re.MULTILINE):
                 cls = m.group(1)
                 if cls.startswith("_") or cls.endswith("Config") or cls.endswith("Error"):
+                    continue
+                if exports is not None and cls not in exports:
                     continue
                 features.append(
                     Feature(
@@ -458,6 +498,7 @@ def extract_bsl_tools() -> list[Feature]:
     for sub_path in sorted(bsl_dir.iterdir()):
         if not sub_path.is_dir() or sub_path.name.startswith("_"):
             continue
+        exports = _package_exports(sub_path / "__init__.py")
         for py_file in sorted(sub_path.glob("*.py")):
             if py_file.name == "__init__.py":
                 continue
@@ -465,6 +506,8 @@ def extract_bsl_tools() -> list[Feature]:
             for m in re.finditer(r"^class\s+(\w+)", text, re.MULTILINE):
                 cls = m.group(1)
                 if cls.startswith("_") or cls.endswith("Error"):
+                    continue
+                if exports is not None and cls not in exports:
                     continue
                 features.append(
                     Feature(
@@ -532,12 +575,62 @@ def _load_doc_text(relative_path: str) -> str:
     return ""
 
 
+_ALL_DOCS_CACHE: str | None = None
+
+
+def _all_docs_text() -> str:
+    """Concatenate lowercased text of every markdown file under DOCS_DIR (cached).
+
+    Used as a whole-tree fallback: a feature documented in *any* chapter is not a
+    gap, even if it lives outside the category's preferred target files.
+
+    Tradeoff: matching is substring-based, so very short feature names (e.g. a
+    "web" strategy or "rag" agent) can match incidentally and be counted covered.
+    This favors precision (kill false alarms) over recall for the advisory banner.
+    """
+    global _ALL_DOCS_CACHE
+    if _ALL_DOCS_CACHE is not None:
+        return _ALL_DOCS_CACHE
+    chunks = []
+    if DOCS_DIR.exists():
+        for md_path in DOCS_DIR.rglob("*.md"):
+            try:
+                chunks.append(md_path.read_text(encoding="utf-8", errors="replace").lower())
+            except OSError:
+                continue
+    _ALL_DOCS_CACHE = "\n".join(chunks)
+    return _ALL_DOCS_CACHE
+
+
 def _load_skill_text(skill_name: str) -> str:
     """Load SKILL.md text for a given skill."""
     skill_file = SKILLS_DIR / skill_name / "SKILL.md"
     if skill_file.exists():
         return skill_file.read_text(encoding="utf-8", errors="replace").lower()
     return ""
+
+
+_ALL_SKILLS_CACHE: str | None = None
+
+
+def _all_skills_text() -> str:
+    """Concatenate lowercased text of every markdown file under SKILLS_DIR (cached).
+
+    Whole-tree fallback for skill coverage, symmetric to `_all_docs_text`: a
+    feature named in any skill artifact (SKILL.md, ADR, cache) is not a gap.
+    """
+    global _ALL_SKILLS_CACHE
+    if _ALL_SKILLS_CACHE is not None:
+        return _ALL_SKILLS_CACHE
+    chunks = []
+    if SKILLS_DIR.exists():
+        for md_path in SKILLS_DIR.rglob("*.md"):
+            try:
+                chunks.append(md_path.read_text(encoding="utf-8", errors="replace").lower())
+            except OSError:
+                continue
+    _ALL_SKILLS_CACHE = "\n".join(chunks)
+    return _ALL_SKILLS_CACHE
 
 
 def _feature_documented(feature: Feature, text: str) -> bool:
@@ -561,11 +654,14 @@ def _feature_documented(feature: Feature, text: str) -> bool:
         return name_lower in text or f"__{field_name}" in text
 
     elif feature.category == "strategy":
-        # For strategies: check name and common aliases
+        # For strategies: check name, common aliases, and per-token presence
+        # (docs describe "graphrag"/"lightrag"/"auto" as separate tokens).
+        tokens = [tok for tok in name_lower.split("_") if tok]
         return (
             name_lower in text
             or name_lower.replace("_", "") in text
             or name_lower.replace("_", "-") in text
+            or (bool(tokens) and all(tok in text for tok in tokens))
         )
 
     elif feature.category == "mcp_tool":
@@ -628,6 +724,10 @@ def run_audit() -> AuditReport:
                 doc_found = True
                 break
 
+        # Whole-tree fallback: documented in any chapter, not only the target files.
+        if not doc_found and _feature_documented(feature, _all_docs_text()):
+            doc_found = True
+
         if not doc_found:
             report.doc_gaps.append(
                 Gap(
@@ -647,6 +747,10 @@ def run_audit() -> AuditReport:
             if skill_text and _feature_documented(feature, skill_text):
                 skill_found = True
                 break
+
+        # Whole-tree fallback: named in any skill artifact, not only the mapped skills.
+        if not skill_found and _feature_documented(feature, _all_skills_text()):
+            skill_found = True
 
         if not skill_found:
             report.skill_gaps.append(
