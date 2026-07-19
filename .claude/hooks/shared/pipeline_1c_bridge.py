@@ -546,11 +546,14 @@ _LIVE_DATA_HEADING = re.compile(
     re.I | re.U,
 )
 _LIVE_DATA_PASS = re.compile(
-    r"\bPASS\b|ПРОВЕД[ЕЁ]Н|\bpassed\b|✓|успешн|вердикт\W{0,3}pass", re.I | re.U
+    r"\bPASS\b|ПРОВЕД[ЕЁ]Н|\bpassed\b|успешн|вердикт\W{0,3}pass", re.I | re.U
 )
 # Негатив в секции → НЕ засчитываем (FAIL/провал/SKIP/STATIC-ASSUMPTION = тест не прошёл/не делался).
+# ⚠ `не\s*успеш|безуспеш` ПЕРВЫМ — иначе `успешн` в PASS ловит «неуспешно» = ложный close (code-verify рек.1).
+# ✓ убран из PASS: чекмарк ставят и на подготовительных подпунктах («✓ база готова») — это не вердикт.
 _LIVE_DATA_NEGATIVE = re.compile(
-    r"\bFAIL\b|ОШИБК|не\s+пройд|провал|не\s+прош[её]л|STATIC-ASSUMPTION|\bSKIP\b|пропущен",
+    r"\bFAIL\b|ОШИБК|не\s+пройд|провал|не\s+прош[её]л|не\s*успеш|безуспеш"
+    r"|STATIC-ASSUMPTION|\bSKIP\b|пропущен",
     re.I | re.U,
 )
 

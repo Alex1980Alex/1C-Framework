@@ -574,6 +574,22 @@ def test_live_data_skip_static_rejected():
     assert bridge._live_data_test_passed(txt) is False
 
 
+def test_live_data_neuspeshno_rejected():
+    # code-verify рек.1: «неуспешно»/«не успешно» НЕ должны ловиться как PASS (успешн⊃неуспешно)
+    for neg in ("тест завершён неуспешно", "проверка прошла не успешно", "безуспешно"):
+        txt = f"## Тестирование на реальных данных\n- Провёл документ → {neg}.\n"
+        assert bridge._live_data_test_passed(txt) is False, neg
+    # контроль: легитимное «успешно» (без «не») по-прежнему PASS
+    ok = "## Тестирование на реальных данных\n- Документ проведён успешно на данных MFM.\n"
+    assert bridge._live_data_test_passed(ok) is True
+
+
+def test_live_data_checkmark_only_not_verdict():
+    # code-verify рек.1: одиночный ✓ на подготовительном подпункте ≠ вердикт → НЕ закрываем
+    txt = "## Тестирование на реальных данных\n- ✓ база подготовлена\n- ✓ данные загружены\n"
+    assert bridge._live_data_test_passed(txt) is False
+
+
 def test_live_data_no_heading_rejected():
     # PASS есть, но НЕ в секции live-данных (нет заголовка) → False
     txt = "## Кодирование\nSonar-дельта чистая, PASS. EDT без ошибок.\n"
