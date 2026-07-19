@@ -154,11 +154,6 @@ AGENT__SCORE_PREFILTER_THRESHOLD=0.1
 - `framework-troubleshooting` — ошибки и performance
 
 
-## Незадокументированные Search Strategies
-
-- `graph_r_a_g_auto` (src\pdf_framework\search\strategies\graphrag_auto.py)
-- `graph_r_a_g_local` (src\pdf_framework\search\strategies\graphrag_local.py)
-
 ## Файлы
 - Менеджер: [manager.py](src/pdf_framework/search/manager.py)
 - Стратегии: [strategies/](src/pdf_framework/search/strategies/)

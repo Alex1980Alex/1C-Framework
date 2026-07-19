@@ -303,47 +303,6 @@ curl -X POST http://localhost:8000/search/ \
 - `deployment` — Docker, health checks, production запуск
 
 
-## Незадокументированные REST API Endpoints
-
-| Method | Endpoint | Source |
-|--------|----------|--------|
-| `GET` | `/analytics/audit/stats` | `src\api\routes\analytics.py` |
-| `GET` | `/analytics/audit/user/{user_id}` | `src\api\routes\analytics.py` |
-| `GET` | `/chat/stats/{thread_id}` | `src\api\routes\chat.py` |
-| `GET` | `/collections/{collection_id}` | `src\api\routes\collections.py` |
-| `PATCH` | `/collections/{collection_id}` | `src\api\routes\collections.py` |
-| `DELETE` | `/collections/{collection_id}` | `src\api\routes\collections.py` |
-| `POST` | `/collections/{collection_id}/documents` | `src\api\routes\collections.py` |
-| `DELETE` | `/collections/{collection_id}/documents/{document_id}` | `src\api\routes\collections.py` |
-| `GET` | `/collections/{collection_id}/documents` | `src\api\routes\collections.py` |
-| `PATCH` | `/documents/registry/{document_id}` | `src\api\routes\documents.py` |
-| `GET` | `/feedback/examples/positive` | `src\api\routes\feedback.py` |
-| `POST` | `/feedback/tune` | `src\api\routes\feedback.py` |
-| `POST` | `/feedback/clear` | `src\api\routes\feedback.py` |
-| `GET` | `/graph/entity-embeddings/stats` | `src\api\routes\graph.py` |
-| `GET` | `/graph/neighbors/{entity_id}` | `src\api\routes\graph.py` |
-| `POST` | `/graph/incremental-update` | `src\api\routes\graph.py` |
-| `GET` | `/graph/incremental/detect-changes` | `src\api\routes\graph.py` |
-| `GET` | `/jobs/{job_id}` | `src\api\routes\jobs.py` |
-| `DELETE` | `/jobs/{job_id}` | `src\api\routes\jobs.py` |
-| `GET` | `/jobs/{job_id}/stream` | `src\api\routes\jobs.py` |
-| `GET` | `/metrics/html` | `src\api\routes\metrics.py` |
-| `POST` | `/metrics/reset` | `src\api\routes\metrics.py` |
-| `GET` | `/metrics/prometheus` | `src\api\routes\metrics.py` |
-| `POST` | `/openai_compat/chat/completions` | `src\api\routes\openai_compat.py` |
-| `POST` | `/openai_compat/embeddings` | `src\api\routes\openai_compat.py` |
-| `GET` | `/openai_compat/models` | `src\api\routes\openai_compat.py` |
-| `GET` | `/optimization/last-result` | `src\api\routes\optimization.py` |
-| `GET` | `/tenants/{tenant_id}` | `src\api\routes\tenants.py` |
-| `GET` | `/tenants/{tenant_id}/stats` | `src\api\routes\tenants.py` |
-| `GET` | `/tenants/{tenant_id}/usage` | `src\api\routes\tenants.py` |
-| `PUT` | `/tenants/{tenant_id}` | `src\api\routes\tenants.py` |
-| `DELETE` | `/tenants/{tenant_id}` | `src\api\routes\tenants.py` |
-| `GET` | `/toc/{document_id}` | `src\api\routes\toc.py` |
-| `GET` | `/toc/{document_id}/section/{section_number:path}` | `src\api\routes\toc.py` |
-| `POST` | `/toc/{document_id}/generate-summaries` | `src\api\routes\toc.py` |
-| `WEBSOCKET` | `/websocket/ws/search` | `src\api\routes\websocket.py` |
-
 ## Файлы
 
 - App: `src/api/app.py`

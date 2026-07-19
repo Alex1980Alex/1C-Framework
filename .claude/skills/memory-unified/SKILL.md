@@ -208,7 +208,6 @@ Examples:
 - **Тесты:** `tests/unit/test_propagation_honest.py` (5) + 2 BFS-теста в `test_p1_infrastructure.py` (dummy success-handler). 5 unit + 9 engine + 18 orchestrator integration PASS.
 - **Post-review remediation (2026-06-10, та же сессия):** (1) lazy-init движка в оркестраторе получил `PropagationConfig(enable_background_processing=False, enable_event_deduplication=False)` — иначе production-вызов возвращал `entities_updated=[]` / `reason="queued_for_background_processing"` (честный результат прятался за очередью), а dedup молча глотал повторный `propagate_update` по тому же entity; (2) vector-handler бампит §24 epoch после `set_payload` (инвариант: каждый писатель confidence инвалидирует surfacing-кэш); (3) `try_promote_patterns` → detached `Popen` (паттерн post-indexing-analyzer, лог `.claude/cache/session-promote.log`) — Stop-бюджет не платит за Qdrant-scroll; (4) `_emit_langfuse_span` — дешёвый pre-gate `_langfuse_configured()` (env/`.env` probe ДО импорта `src.*`; в этом окружении Langfuse реально включён — `OBSERVABILITY__LANGFUSE_ENABLED=true`, span стоит ~2.3s network-flush, emit последний в `execute()`); (5) timeout хука 5→15s в `settings.json`; (6) `ai_memory/server.py` `DB_PATH` теперь тоже уважает `MEMORY_AI_DB_PATH`. +2 теста-пина: sync+repeatable orchestrator-путь, epoch-bump handler'а.
 
-
 ### Payload contract: store = недоверенный вход (roadmap 260716 P0, 2026-07-16)
 
 Инцидент: ОДНА точка `learned_patterns` с `pattern_type: 'requirements'` роняла
@@ -300,60 +299,5 @@ P0 закрыл ВХОД (битый payload не убивает читател�
   - **F16**: `_apply_version_to_store` (MEMORY_AI) разворачивает `metadata.importance` из CREATE-снапшотов `route_and_save` — rollback к v1 восстанавливает importance, не только content (top-level приоритетен, UPDATE-снапшоты propagation не задеты). Открытый N2-гэп: vector-ветка rollback-to-CREATE восстанавливает только `content` (не `metadata.confidence/name/description`) — ответ честный (`fields`), чинить при появлении live-пути.
   - **Cold-start warmup**: `vector_memory/server.py` — daemon-поток `_warmup_qdrant` при старте сервера пре-оплачивает импорт `qdrant_client` (под contention одновременного старта MCP-серверов первый tool-вызов сгорал на 60s client-timeout); fail-soft, opt-out `MEMORY_VECTOR_NO_WARMUP=1`; `_get_qdrant` под double-checked lock, глобал публикуется только после успешного `_ensure_collection(client)` (упавший init ретраится следующим вызовом).
 - ⚠ Всё MCP-side (кроме F14-моста и F13-скрипта) → `/mcp reconnect` после правок. Тесты: `test_propagation_honest.py` (10), `test_governance_wiring.py` (9), `test_unified_search_honest.py` (2), `test_quick_fixes_260611.py` (5).
-
-## Незадокументированные memory_subsystem
-
-- `LinkType` (src\memory\orchestrator\link_registry.py)
-- `EntityLink` (src\memory\orchestrator\link_registry.py)
-- `RelatedEntity` (src\memory\orchestrator\link_registry.py)
-- `ContentType` (src\memory\orchestrator\memcube.py)
-- `AiMemorySearchAdapter` (src\memory\orchestrator\memory_orchestrator.py)
-- `VectorMemorySearchAdapter` (src\memory\orchestrator\memory_orchestrator.py)
-- `SkillLearningSearchAdapter` (src\memory\orchestrator\memory_orchestrator.py)
-- `MemoryOrchestrator` (src\memory\orchestrator\memory_orchestrator.py)
-- `RoutingDecision` (src\memory\orchestrator\memory_router.py)
-- `RoutingStats` (src\memory\orchestrator\memory_router.py)
-- `ClassificationResult` (src\memory\orchestrator\memory_router.py)
-- `ContentClassifier` (src\memory\orchestrator\memory_router.py)
-- `MemoryRouter` (src\memory\orchestrator\memory_router.py)
-- `PropagationEvent` (src\memory\orchestrator\propagation_engine.py)
-- `PropagationResult` (src\memory\orchestrator\propagation_engine.py)
-- `PropagationEngine` (src\memory\orchestrator\propagation_engine.py)
-- `MemoryType` (src\memory\orchestrator\unified_id.py)
-- `SourceServer` (src\memory\orchestrator\unified_id.py)
-- `IDRegistry` (src\memory\orchestrator\unified_id.py)
-- `SearchOptions` (src\memory\orchestrator\unified_search.py)
-- `LinkedEntity` (src\memory\orchestrator\unified_search.py)
-- `SearchResultItem` (src\memory\orchestrator\unified_search.py)
-- `UnifiedSearchResult` (src\memory\orchestrator\unified_search.py)
-- `BaseSearchAdapter` (src\memory\orchestrator\unified_search.py)
-- `ScoreNormalizer` (src\memory\orchestrator\unified_search.py)
-- `RRFMerger` (src\memory\orchestrator\unified_search.py)
-- `Deduplicator` (src\memory\orchestrator\unified_search.py)
-- `Reranker` (src\memory\orchestrator\unified_search.py)
-- `LinkEnricher` (src\memory\orchestrator\unified_search.py)
-- `UnifiedSearchEngine` (src\memory\orchestrator\unified_search.py)
-- `PatternType` (src\memory\vector_memory\models.py)
-- `ConfidenceLevel` (src\memory\vector_memory\models.py)
-- `EvidenceSource` (src\memory\vector_memory\models.py)
-- `LearnedPattern` (src\memory\vector_memory\models.py)
-- `PatternSearchResult` (src\memory\vector_memory\models.py)
-- `LearningStats` (src\memory\vector_memory\models.py)
-- `CacheEntry` (src\memory\infrastructure\cache.py)
-- `LRUCache` (src\memory\infrastructure\cache.py)
-- `CircuitState` (src\memory\infrastructure\circuit_breaker.py)
-- `CircuitStats` (src\memory\infrastructure\circuit_breaker.py)
-- `CircuitBreaker` (src\memory\infrastructure\circuit_breaker.py)
-- `CircuitBreakerRegistry` (src\memory\infrastructure\circuit_breaker.py)
-- `ConflictStrategy` (src\memory\infrastructure\conflict_resolver.py)
-- `ConflictRecord` (src\memory\infrastructure\conflict_resolver.py)
-- `ConflictResult` (src\memory\infrastructure\conflict_resolver.py)
-- `ConflictResolver` (src\memory\infrastructure\conflict_resolver.py)
-- `EventBusStats` (src\memory\infrastructure\event_bus.py)
-- `EventStore` (src\memory\infrastructure\event_store.py)
-- `MetricsCollector` (src\memory\infrastructure\metrics.py)
-- `MetricsTimer` (src\memory\infrastructure\metrics.py)
-- `ManagedSubscription` (src\memory\infrastructure\subscription_manager.py)
-- `SubscriptionManager` (src\memory\infrastructure\subscription_manager.py)
 
 > 2026-06-14: docs verified current vs `orchestrator/link_registry.py` (ADR-L1 link types + TTL-cleanup bugfix noted above).

@@ -274,10 +274,6 @@ python -m src.cli.main suggest --query "конфигуратор" --method llm -
 - `indexing-pipeline` — детали pipeline индексации
 
 
-## Незадокументированные CLI Commands
-
-- `feedback` (src/cli/main.py)
-
 ## Файлы
 
 - CLI: [main.py](src/cli/main.py)
