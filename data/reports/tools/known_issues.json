@@ -1,0 +1,13 @@
+{
+  "_doc": "ADR-055 «xfail для инструментов». Тул с ИЗВЕСТНЫМ (часто внешним) корнем поломки → вердикт known-issue вместо broken: виден в отчёте/баннере, но НЕ плодит mandatory-задачу. Обязателен review_by (нет даты → подавление НЕ действует, fail-closed). Восстановление (xpass) и истечение review_by авто-всплывают в баннере. Снять запись после реального фикса.",
+  "mcp__codepilot1c__qa_run": {
+    "reason": "EDT-runtime getThickClientInfo отсутствует в EDT 2025.2.6 (апстрим-баг) + infra_error при exit0-успехе (истина в junit); binary-путь доказан рабочим (W13, MFM смоук junit 1/0/0)",
+    "ref": "W13 docs/roadmap/260718_ROADMAP_1C_TOOLING_AUDIT.md / ADR-055 / memory reference-codepilot1c-qa-run-binary-path",
+    "review_by": "2026-08-31"
+  },
+  "mcp__codepilot1c__qa_generate": {
+    "reason": "Тот же класс дефектов плагина codepilot1c (EDT-runtime путь / отчётность статуса, W13); фикс внешний/операционный",
+    "ref": "W13 docs/roadmap/260718_ROADMAP_1C_TOOLING_AUDIT.md / ADR-055",
+    "review_by": "2026-08-31"
+  }
+}

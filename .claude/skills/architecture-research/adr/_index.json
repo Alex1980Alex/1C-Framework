@@ -9,6 +9,25 @@
   ],
   "records": [
     {
+      "id": "ADR-055",
+      "file": "055-tool-health-known-issues-suppression.md",
+      "title": "Known-issues слой в tool-health («xfail для инструментов»): вердикт known-issue (🔕) вместо broken для тулов со сломом по ИЗВЕСТНОЙ внешней причине (config data/reports/tools/known_issues.json {tool,reason,ref,review_by}) — виден в отчёте/баннере, но НЕ эскалирует mandatory-задачу (убирает whack-a-mole). 4 свойства из best-practice (Alertmanager silences + pytest xfail strict): reason+audit-trail, review_by обязателен (missing→fail-closed, нет вечного mute), xpass-детект восстановления, overlay после infra. Кейс codepilot1c qa_run/qa_generate (W13). Fail-soft (нет config→прежнее поведение)",
+      "status": "accepted",
+      "date": "2026-07-19",
+      "research": "WebSearch Alertmanager silences/inhibition + pytest xfail(strict); триггер — 2 tool-health mandatory-задачи по qa_* (W13 диагноз, апстрим-корень)",
+      "tags": [
+        "tool-health",
+        "known-issue",
+        "alert-suppression",
+        "xfail",
+        "whack-a-mole",
+        "codepilot1c",
+        "w13",
+        "analyze_tool_health",
+        "fail-closed"
+      ]
+    },
+    {
       "id": "ADR-054",
       "file": "054-doc-skill-coverage-diataxis-scoping.md",
       "title": "Скоуп skill-gap-метрики аудита покрытия по Diátaxis: skill-gap считается только для task/концептуальных категорий (agent/strategy/mcp_tool/cli_command/wiki_component); справочные (config_var/endpoint/hook/memory_subsystem/bsl_tool) трекаются только по оси docs (coverage_skills=None). Обоснование: Diátaxis — скиллы=how-to guides, exhaustive-списки config/endpoint/классов = reference-материал в доках; массовый дамп в SKILL.md = антипаттерн «pollute the how-to guide» (что делал баговый --update). Баннер AUDIT-COVERAGE 89+52 → 22+0; чинит корень pollution",

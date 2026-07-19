@@ -87,8 +87,11 @@ def verdict_trend(now: datetime, days: int, rows: list[dict]) -> dict:
             continue
         was_broken = any(v == "broken" for _, v in seq)
         last_broken = seq[-1][1] == "broken"
+        # ADR-055: broken→known-issue = ПОДАВЛЕНО, не «вылечено» (симметрично баннерному
+        # current_active) — иначе тренд отчёта врёт «✅ вылечено» на suppressed-туле.
+        last_known_issue = seq[-1][1] == "known-issue"
         first_broken = seq[0][1] == "broken"
-        if was_broken and not last_broken:
+        if was_broken and not last_broken and not last_known_issue:
             healed += 1
             healed_tools.append(tool)
         if not first_broken and last_broken:

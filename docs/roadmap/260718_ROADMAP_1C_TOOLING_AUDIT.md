@@ -380,6 +380,14 @@ com.codepilot1c.feature.feature.group`, release-ассет `com.codepilot1c.upda
 при успехе (истина — junit); (c) `use_edt_runtime=false` параметром не выключается; (d) стартер
 детачится → duration/exit плагина не отражают реальный прогон.
 
+> **Трекинг отложенного фикса (ADR-055, 2026-07-19):** дефекты (a)+(b) — «настоящий», но
+> **внешний** фикс. До него `qa_run`/`qa_generate` зарегистрированы как **known-issue**
+> (`data/reports/tools/known_issues.json`, review_by 2026-08-31) → tool-health метит их
+> `known-issue` (не `broken`), не плодит mandatory-задачи, но держит видимыми с датой ревью;
+> восстановление (xpass) и истечение даты авто-всплывают в SessionStart-баннере. Реальный фикс
+> (binary-путь по умолчанию / `infra_error`→junit в обёртке `mcp_1c_stdio_launcher.py` + upstream
+> issue на (a)/(b)) — **отдельная задача**, снять known-issue после её закрытия.
+
 **Развилка W13 (политика тест-контура) обновлена данными:** BDD-через-MCP теперь РАБОТАЕТ
 (codepilot qa_* по binary-пути). Ограничение среды: лимит клиентов dev-лицензии — Designer(EDT) +
 TM + TestClient на грани; параллельные клиенты/зависшие сессии всё ломают → перед прогоном чистить

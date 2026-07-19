@@ -645,15 +645,80 @@ def _rotate_jsonl(path: Path, cap_bytes: int) -> None:
         pass  # ротация не блокирует прогон
 
 
-_VERDICT_ORDER = {"broken": 0, "degraded": 1, "ineffective": 2, "unused": 3, "healthy": 4}
+_VERDICT_ORDER = {
+    "broken": 0,
+    "degraded": 1,
+    "known-issue": 2,
+    "ineffective": 3,
+    "unused": 4,
+    "healthy": 5,
+}
 _VERDICT_MARK = {
     "broken": "🔴",
     "degraded": "🟠",
+    "known-issue": "🔕",
     "ineffective": "🟡",
     "unused": "⚪",
     "healthy": "🟢",
     "info": "ℹ️",  # 260718 H-P2: несюрфейсящийся infra-alert (Langfuse down opt-in)
 }
+
+
+def _load_known_issues() -> dict:
+    """Load data/reports/tools/known_issues.json → {tool: {reason, ref, review_by}}. Fail-soft → {}."""
+    return _load_json(REPORTS / "known_issues.json", {})
+
+
+def _review_expired(review_by, now: datetime) -> bool:
+    """True if review_by date (ISO 'YYYY-MM-DD') is in the past.
+
+    MISSING/unparseable → True (fail-closed to visibility: no permanent silent suppression).
+    """
+    if not review_by:
+        return True
+    try:
+        return datetime.fromisoformat(review_by).date() < now.date()
+    except (TypeError, ValueError):
+        return True
+
+
+def _apply_known_issues(tools: dict, now: datetime, known: dict | None = None) -> None:
+    """Overlay known-issues onto per-tool verdicts (mutates `tools`). ADR-055 «xfail для тулов».
+
+    Для каждого тула, присутствующего и в `known`, и в `tools`:
+      - tools[tool]['known_issue'] = {reason, ref, review_by, expired}
+      - expired → оставить реальный вердикт (ре-эскалация), только пометка выше
+      - verdict=='healthy' → recovered_known_issue=True (xpass; вердикт остаётся healthy)
+      - verdict in (broken/degraded/ineffective) → stash underlying_verdict, verdict='known-issue',
+            reason = f"{reason} [{ref}; review by {review_by}]".
+    """
+    if known is None:
+        known = _load_known_issues()
+    if not known:
+        return
+    for tool, entry in known.items():
+        s = tools.get(tool)
+        if not s:
+            continue
+        reason = entry.get("reason", "")
+        ref = entry.get("ref", "")
+        review_by = entry.get("review_by", "")
+        expired = _review_expired(review_by, now)
+        s["known_issue"] = {
+            "reason": reason,
+            "ref": ref,
+            "review_by": review_by,
+            "expired": expired,
+        }
+        if expired:
+            continue
+        verdict = s.get("verdict")
+        if verdict == "healthy":
+            s["recovered_known_issue"] = True
+        elif verdict in ("broken", "degraded", "ineffective"):
+            s["underlying_verdict"] = verdict
+            s["verdict"] = "known-issue"
+            s["reason"] = f"{reason} [{ref}; review by {review_by}]".strip()
 
 
 def render_md(health: dict, window_days: int) -> str:
@@ -807,6 +872,9 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
         apply_infra_to_tools(health["tools"], infra_alerts)
         health["infra_alerts"] = infra_alerts
 
+    # ADR-055: known-issues overlay после infra — зарегистрированные тулы подавляются последними
+    _apply_known_issues(health["tools"], now)
+
     # N-P1.2: тренд из истории verdicts.jsonl (переходы broken↔healthy за 30д)
     health["trend"] = verdict_trend(now, 30, read_verdicts(REPORTS / "verdicts.jsonl"))
 
@@ -839,6 +907,26 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
         "window_days": window_days,
         "window_incomplete": window_incomplete,
         "alerts": alerts,
+        "known_issues": [  # ADR-055: подавленные (видны в баннере, НЕ эскалируются)
+            {
+                "tool": tool,
+                "reason": s["known_issue"]["reason"],
+                "ref": s["known_issue"]["ref"],
+                "review_by": s["known_issue"]["review_by"],
+                "underlying": s.get("underlying_verdict", ""),
+            }
+            for tool, s in health["tools"].items()
+            if s.get("verdict") == "known-issue"
+        ],
+        "recovered_known_issues": [  # ADR-055: xpass — known-issue снова успешен
+            {
+                "tool": tool,
+                "reason": s["known_issue"]["reason"],
+                "ref": s["known_issue"]["ref"],
+            }
+            for tool, s in health["tools"].items()
+            if s.get("recovered_known_issue")
+        ],
         "infra_alerts": health.get("infra_alerts", []),  # N-P1.1: MCP-down + stale-sink (баннер)
         "trend": health.get("trend", {}),  # N-P1.2: переходы broken↔healthy за 30д
         "counts": {

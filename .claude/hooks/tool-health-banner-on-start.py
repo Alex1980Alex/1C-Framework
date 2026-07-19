@@ -120,6 +120,10 @@ class ToolHealthBanner(BaseHook):
         degraded = [a for a in alerts if a.get("verdict") == "degraded"]
         infra_broken = [a for a in infra if a.get("level") == "broken"]
         infra_degraded = [a for a in infra if a.get("level") == "degraded"]
+        known_issues = sidecar.get("known_issues") or []  # ADR-055: подавлено, не эскалируем
+        recovered = (
+            sidecar.get("recovered_known_issues") or []
+        )  # ADR-055: xpass — снять suppression
 
         state = _load_json(STATE_FILE, {})
         rows = read_verdicts(VERDICTS) if read_verdicts else []  # N-P1.2: история вердиктов
@@ -150,6 +154,10 @@ class ToolHealthBanner(BaseHook):
             current_active.add(a["tool"])
         for a in infra_degraded:
             current_active.add(f"{a.get('source', 'infra')}:{a.get('key', '')}")
+        # ADR-055: known-issue — подавлено, НЕ «вылечено» (broken→known-issue не закрывает петлю);
+        # держим в active как degraded → нет ложного healed + cooldown-запись сохранена.
+        for k in known_issues:
+            current_active.add(k["tool"])
         healed: list[str] = []
         for k in list(state.keys()):
             v = state.get(k)
@@ -170,7 +178,7 @@ class ToolHealthBanner(BaseHook):
             pass
 
         # ── тихо только когда РОВНО ничего: нет alert'ов/инфры/healed, отчёт свежий ──
-        if not (broken or degraded or infra_broken or infra_degraded or healed):
+        if not (broken or degraded or infra_broken or infra_degraded or healed or recovered):
             if stale:
                 return HookOutput().system_message(
                     f"[TOOL-HEALTH] ⚠ Отчёт здоровья инструментов устарел ({gen}) — "
@@ -194,6 +202,14 @@ class ToolHealthBanner(BaseHook):
             lines.append(f"  🟠 infra `{a.get('source', '')}` — {a.get('reason', '')}")
         if healed:
             lines.append(f"  ✅ вылечено (петля закрыта): {', '.join(healed)}")
+        for r in recovered:
+            lines.append(
+                f"  ✅ known-issue `{r['tool']}` снова успешен — возможно починен, сними suppression "
+                f"(known_issues.json{'; ' + r['ref'] if r.get('ref') else ''})"
+            )
+        if known_issues:
+            kn = ", ".join(f"`{k['tool']}`" for k in known_issues)
+            lines.append(f"  🔕 подавлено known-issue ({len(known_issues)}): {kn} — см. _latest.md")
         if escalated:
             lines.append(
                 f"  → заведена(ы) задача(и) диагностики: {', '.join(escalated)} "
