@@ -3,6 +3,26 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "tool-alert-suppression-known-issues-2026.md",
+      "title": "Подавление алертов по «известным проблемам» (Alertmanager silences/inhibition, pytest xfail strict, CI-quarantine). Наивный вечный allowlist = антипаттерн; правильная форма «xfail для инструментов»: reason+audit-trail (видим в отчёте, не эскалируем в задачу) + time-bounded/review-by + unexpected-recovery(xpass)-детект + inhibition по корню. Основание ADR-055 (known-issues слой в tool-health для codepilot1c qa_* W13)",
+      "keywords": [
+        "alert-suppression",
+        "silence",
+        "inhibition",
+        "alertmanager",
+        "flaky-test",
+        "xfail",
+        "expected-failure",
+        "quarantine",
+        "known-issue",
+        "tool-health",
+        "alert-fatigue",
+        "mute",
+        "adr-055"
+      ],
+      "last_verified": "2026-07-19"
+    },
+    {
       "file": "diataxis-reference-vs-howto-2026.md",
       "title": "Diátaxis (diataxis.fr): reference vs how-to — что где документировать. How-to guides (=скиллы, task-oriented, ~500 строк) НЕ перечисляют исчерпывающе («don't pollute your how-to guide with every possible thing»); exhaustive-списки API endpoint'ов, config-переменных, классов = reference-материал в доках («structure mirrors the product»). Основание ADR-054 (скоуп skill-gap-метрики аудита покрытия)",
       "keywords": [
