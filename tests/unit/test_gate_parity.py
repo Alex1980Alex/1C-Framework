@@ -94,6 +94,20 @@ def test_compute_hard_ok_toolgate_hard():
     assert oc._compute_hard_ok(sig, True, False, impact_hard=True, debug_hard=True) is True
 
 
+@pytest.mark.parametrize("impact_hard,debug_hard", list(product([True, False], repeat=2)))
+def test_yaxunit_smoke_never_affects_hard(impact_hard, debug_hard):
+    """Рек.3 инвариант (advisory НИКОГДА не блок): yaxunit_smoke не влияет на _compute_hard_ok
+    ни при какой конфигурации hard-флагов (прямое доказательство, code-verify рек.1)."""
+    base = _sig(True, True, True)
+    base["impact"] = True  # закрыть impact/debug, чтобы hard_ok определялся только петлями
+    base["debug_trace"] = True
+    on = {**base, "yaxunit_smoke": True}
+    off = {**base, "yaxunit_smoke": False}
+    assert oc._compute_hard_ok(on, True, False, impact_hard, debug_hard) is oc._compute_hard_ok(
+        off, True, False, impact_hard, debug_hard
+    )
+
+
 # --- Уровень 2: политика оркестратора зеркалит вердикт evaluate_completion -----------------
 
 
