@@ -48,7 +48,7 @@
 | §1 Планирование | 1c-mcp-crud (метаданные), edt-mcp (код), bsl-semantic-search, pdf-vector-graph RAG | edt-mcp retry **29%**, `search_in_code` p95 **12с**; эталон-поиск presence **0.6%** | T-P3 (edt-операционка) + Этап-В2 (adoption эталонов) |
 | §2 Дизайн | + bsl-platform-context, **Runtime Trace 2.5** (1c-debug-hmr), гейт G4 | **W12**: Trace default-ON (ADR-050), а 1c-debug **0 вызовов/14д** — либо тихий SKIP всегда, либо задачи шли мимо analyze | Этап-В0: аудит SKIP-фиксаций Trace в ANALYSIS-REPORT'ах окна |
 | §3 Кодирование | edt-mcp write+`get_project_errors`, execute_*, bsl_lint, Live BP-verify 5.x, **Write/Edit built-in** | Write err **+9%** к baseline; impact-чек presence **1.8%**; Sonar method-level дыра (W5) | T-P1 (BSL LSP до Sonar) + T-P0 (impact hard) + T-P4 |
-| §4 Тестирование | VA BDD `run-bdd.ps1`, YAxUnit `mcp-onec-test-runner` | битый дефолт `ONEC_TEST_CONN` (W6); LLM-тестоген ниша на GitHub пуста (скан) | T-P5.1; методика VA остаётся своей |
+| §4 Тестирование | VA BDD `run-bdd.ps1` / **codepilot `qa_*` (BDD-через-MCP)**, YAxUnit `mcp-onec-test-runner` | битый дефолт `ONEC_TEST_CONN` (W6); ~~«весь тест-стек мёртв»~~ **W13 закрыт**: BDD-через-MCP proven working (MFM смоук junit 1/0/0) | T-P5.1; методика VA остаётся своей; qa_* binary-путь задокументирован (17.1/43.9.8) |
 | §5 Память | `unified_search` (recall) / `capture_pattern` / surfacing memory-first-hook | ~~W11~~ **В0 опроверг**: recall авто на каждый промпт (memory-first-hook), явный вызов — для глубокого; здоров | — (не слабость) |
 | §5 Внешний анализ | `onec_search`/`ecosystem_scan`/`its_fetch`/WebSearch | canonical-gap RU-терминов (W8) | RU-синонимы в скан + onec_search как парный источник |
 | §5 Скиллы | `code-skill-enforcer`, skill-router | здоров (acceptance PASS 9/9); presence скиллов не мерился per-1С-задача | Этап-В4: skill-presence в toolgate-валидатор |
@@ -363,8 +363,14 @@ TM + TestClient на грани; параллельные клиенты/зав�
 
 ### 2026-07-18 — W13 (аудит тест-контура): заявлено 5 стеков — применяется ~0 (мандат пользователя)
 
+> ⚠ **ОБНОВЛЕНО 2026-07-18 (см. секцию «W13 ЗАКРЫТ» ВЫШЕ):** вывод «мёртвый вес» был про
+> НЕ-использование, не про неработоспособность. BDD-через-MCP (codepilot `qa_*`) теперь
+> **доказан рабочим** (MFM смоук junit 1/0/0 через binary-путь); тест-контур не мёртв, а не
+> применялся. Выводы ниже переформулированы соответственно.
+
 Гипотеза пользователя «есть тест-инструменты, которые не используются» подтверждена данными
-и оказалась ШИРЕ: **практически весь формальный тест-стек этапа 4 не применяется**.
+и оказалась ШИРЕ: **практически весь формальный тест-стек этапа 4 не применялся** (но исправно
+работает — проверено).
 
 **Заявлено** (гл. 17.5/17.6, этап 4, скиллы): VA BDD (`run-bdd.ps1`+`.run-state.json`), YAxUnit
 ×3 маршрута (`mcp-onec-test-runner`, `edt run/debug_yaxunit_tests`, `codepilot run/debug/author_yaxunit`),
@@ -377,14 +383,17 @@ codepilot `qa_*` (6 тулов BDD-через-MCP), `auto-documenter autotestpla
 
 **Де-факто тестирование живёт в другом месте:** Этап 6 live-данные (`execute_query` 49 вызовов,
 теперь + test-post) + Sonar-гейт (hard) + Этап 5.x BP-verify (заявлен, но тоже 0 — W12). Т.е.
-качество держится на live-запросах и статике, а BDD/unit-контур — мёртвый вес методик.
+качество держится на live-запросах и статике, а BDD/unit-контур **не применялся** (но рабочий —
+W13 ЗАКРЫТ доказал прогоном).
 
-**Выводы (кандидаты В-Т follow-up, НЕ реализовано):** (1) честно признать в гл. 17/43: основной
-тест-путь = live-данные+Sonar, BDD/unit = opt-in для крупных фич — либо (2) сделать этап 4
-исполняемым по-умолчанию хотя бы YAxUnit-smoke (маршрут один — `mcp-onec-test-runner`, дубли
-edt/codepilot qa_* — кандидаты на «не заявлять в методиках» вместо 3 маршрутов); (3) разобраться
-с 9 «done» без артефактов (advance_test_done контракт). Решение — за пользователем (это политика
-качества, не баг).
+**Выводы (обновлено после W13 ЗАКРЫТ):** (1) ✅ **ДОКУМЕНТИРОВАНО**: BDD-через-MCP (codepilot
+`qa_*`) — рабочий приёмочный трек рядом с live-данными+Sonar (гл. 17.1 + 43.9.8 + скиллы + память
+[[reference-codepilot1c-qa-run-binary-path]]); основной тест-путь = live-данные+Sonar, BDD = для
+сценарных/приёмочных фич. (2) ⏳ этап 4 default-исполняемым (YAxUnit-smoke либо qa_* смоук) — по-
+прежнему политика пользователя (теперь есть рабочий раннер под неё). (3) ⏳ 9 «done» без
+`.run-state` артефактов (advance_test_done контракт). ⚠ **Среда:** dev-лицензия ограничивает число
+клиентов (Designer+TM+TestClient на грани) → перед прогонами чистить зависшие сессии (`rac session
+list/terminate`); надёжно — ПРОФ-лицензия. Развилка (1) закрыта, (2)/(3) — за пользователем.
 
 ### 2026-07-18 — В5: ретирмент → аудит вскрыл «нечего ретирить» (verify-on-data финал)
 

@@ -48,7 +48,7 @@ codepilot1c — MCP-сервер поверх 1С:EDT (в `.mcp.json`, tools **d
 **forms** (4): `create_form` · `apply_form_recipe` · `mutate_form_model` (add_field/add_group/add_table/set_item/remove_item/move_item; виджеты INPUT_FIELD/CHECK_BOX_FIELD/LABEL_FIELD/…) · `inspect_form_layout`.
 **dcs** (1): `dcs_manage` — читает/создаёт основную СКД, обновляет наборы данных, параметры, вычисляемые поля.
 **metadata** (22): `create_metadata`/`update_metadata`/`add_metadata_child`/`delete_metadata` · `edt_field_type_candidates` · `inspect_role_rights`/`mutate_role_rights` · `inspect_template`/`render_template` · `edt_metadata_details`/`scan_metadata_index`/`edt_list_modules`/`edt_get_module_structure` · `edt_go_to_definition`/`edt_get_symbol_info`/`edt_get_method_call_hierarchy` · `inspect_platform_reference` · `edt_get_configuration_properties`/`edt_get_tags`/`edt_get_objects_by_tags` · `ensure_module_artifact` · `edt_validate_request`.
-**qa** (7): `qa_plan_scenario` → `qa_generate` → `qa_validate_feature` → `qa_run` (Vanessa BDD) · `qa_inspect` · `qa_prepare_form_context` · `author_yaxunit_tests` (YAxUnit + регистрация ИсполняемыеСценарии).
+**qa** (7): `qa_plan_scenario` → `qa_generate` → `qa_validate_feature` → `qa_run` (Vanessa BDD) · `qa_inspect` · `qa_prepare_form_context` · `author_yaxunit_tests` (YAxUnit + регистрация ИсполняемыеСценарии). ⚠ `qa_run` **проверен рабочим** (MFM смоук junit 1/0/0), но **только binary-путь** (`edt.use_runtime=false` + `bin_path=…\1cv8c.exe` + `ib_connection` c `Usr=`; `.epf` из git LFS; `status:infra_error` при exit 0 — ложный, истина в junit) — EDT-runtime путь сломан на EDT 2025.2.6 (`getThickClientInfo` в API отсутствует). Рецепт: `reference_codepilot1c_qa_run_binary_path`.
 **bsl** / **extensions** / **diagnostics** / **workspace**: `bsl_list_methods`/`bsl_get_method_body`/`bsl_analyze_method`/`bsl_module_context`; `extension_manage`/`external_manage`; `get_diagnostics`/`tail_edt_logs`/`get_profiling_results`; `connect_infobase`/`import_project_from_infobase`/`edit_file`/`read_file`/`glob`/`grep`.
 
 ## Шаблон: элемент формы (частый кейс)
@@ -72,6 +72,9 @@ get_project_errors(project, objects=["CommonForm.<Форма>"])       # 0 ош�
 | мутация отклонена «token» | payload изменился после `edt_validate_request` | перезапросить `validation_token` под точный payload |
 | результат > лимита токенов | `inspect_form_layout` большой формы | grep по сохранённому файлу результата (по имени элемента) |
 | .mxlx/.dcs не читаются напрямую | ограничение | см. память `reference_codepilot1c_form_template_dcs_tools` |
+| `qa_run` → `ThickClientInfo … null` / `getThickClientInfo(InfobaseReference)` NoSuchMethodError | EDT-runtime путь сломан на EDT 2025.2.6 (метода нет в API — апстрим-баг) | binary-путь: `edt.use_runtime=false` + `platform.bin_path=…\1cv8c.exe` (exe!) + `ib_connection` c `Usr=`; `reference_codepilot1c_qa_run_binary_path` |
+| `qa_run` `status:infra_error` при exit 0 | ложный (стартер 1cv8c детачится, va.log не прокинут) | истина в `<run_dir>/junit/junit.xml`; ждать ~30-60 с |
+| `qa_run` «Превышено ограничение лицензии… Тонкий клиент запрещён» | зависшие клиенты съели слоты dev-лицензии | `rac session list`/`terminate` зависших 1CV8C + kill сирот; надёжно — ПРОФ |
 
 ## Антипаттерны
 

@@ -349,6 +349,12 @@ powershell -File tools\vanessa\run-bdd.ps1
 powershell -File tools\vanessa\run-bdd.ps1 -Feature "..." -TimeoutSec 300
 ```
 
+**MCP-native alternative — codepilot1c `qa_*`** (`qa_inspect`→`qa_run`): прогон Vanessa из сессии без
+PowerShell, через хост EDT-плагина. Proven 2026-07-18 (MFM смоук junit 1/0/0), но рабочий **только
+binary-путь** (EDT-runtime сломан на 2025.2.6). Рецепт+ловушки (`bin_path`=exe, `ib_connection` c `Usr=`,
+LFS-`.epf`, ложный `infra_error`, слоты dev-лицензии) — skill [`codepilot1c`](../codepilot1c/SKILL.md) +
+память `reference_codepilot1c_qa_run_binary_path`. ⚠ `run-bdd.ps1` несёт stale-пути (D:\va-test) → для нового окружения qa_* надёжнее.
+
 **Execution order matters.** Feature files are numbered intentionally:
 ```
 00_smoke.feature           # Basic form accessibility
