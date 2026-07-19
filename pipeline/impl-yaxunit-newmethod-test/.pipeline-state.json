@@ -1,0 +1,44 @@
+{
+  "task": "impl-yaxunit-newmethod-test",
+  "title": "impl-yaxunit-newmethod-test",
+  "created_at": "2026-07-19T10:28:52",
+  "updated_at": "2026-07-19T10:29:53",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-19T10:29:52"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-19T10:29:53",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-19T10:29:53"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-07-19T10:29:53"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-07-19T10:29:53"
+    }
+  ]
+}
