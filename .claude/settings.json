@@ -707,6 +707,12 @@
           },
           {
             "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/known-issue-saturday-nudge-on-start.py",
+            "timeout": 3,
+            "statusMessage": "known-issue-saturday-nudge"
+          },
+          {
+            "type": "command",
             "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/mcp-health-probe-on-start.py",
             "timeout": 10,
             "statusMessage": "mcp-health-probe"

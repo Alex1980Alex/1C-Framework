@@ -35,4 +35,4 @@ Known-issues слой по best-practice форме «xfail для инстру�
 
 ## Связанные файлы
 
-`scripts/analyze_tool_health.py` (verdict + overlay + sidecar), `.claude/hooks/tool-health-banner-on-start.py` (surfacing), `data/reports/tools/known_issues.json`, `tests/unit/test_tool_health_known_issues.py`. Память [[reference-codepilot1c-qa-run-binary-path]], W13 (roadmap 260718).
+`scripts/analyze_tool_health.py` (verdict + overlay + sidecar), `.claude/hooks/tool-health-banner-on-start.py` (surfacing), `data/reports/tools/known_issues.json`, `tests/unit/test_tool_health_known_issues.py`. **Слой 2 (напоминание о реальном фиксе):** roadmap 260718 секция NEXT (F1/F2/F3, actionable) + `review_by`-авто-resurface + локальный SessionStart-хук `.claude/hooks/known-issue-saturday-nudge-on-start.py` (по субботам сюрфейсит не-истёкшие known-issue, once/day, opt-out `KNOWN_ISSUE_NUDGE_DISABLE=1`; `tests/unit/hooks/test_known_issue_saturday_nudge.py`). Память [[reference-codepilot1c-qa-run-binary-path]], [[reference-tool-health-known-issues-layer]], W13 (roadmap 260718).

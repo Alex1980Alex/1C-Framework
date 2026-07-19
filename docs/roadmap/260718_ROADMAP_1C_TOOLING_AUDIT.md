@@ -398,6 +398,8 @@ com.codepilot1c.feature.feature.group`, release-ассет `com.codepilot1c.upda
 
 После F1+F2 → снять записи из `data/reports/tools/known_issues.json`; tool-health сам вернёт вердикт в healthy на чистом окне (xpass-баннер подтвердит).
 
+> **Напоминалка (2026-07-19):** локальный SessionStart-хук [`known-issue-saturday-nudge-on-start.py`](../../.claude/hooks/known-issue-saturday-nudge-on-start.py) по **субботам** сюрфейсит не-истёкшие known-issue (once/day) со ссылкой на этот список F1/F2/F3 — чтобы отложенный фикс не забылся до `review_by`. Opt-out `KNOWN_ISSUE_NUDGE_DISABLE=1`. Гарантированный (облачный/email) вариант не выбран — по запросу.
+
 **Развилка W13 (политика тест-контура) обновлена данными:** BDD-через-MCP теперь РАБОТАЕТ
 (codepilot qa_* по binary-пути). Ограничение среды: лимит клиентов dev-лицензии — Designer(EDT) +
 TM + TestClient на грани; параллельные клиенты/зависшие сессии всё ломают → перед прогоном чистить
