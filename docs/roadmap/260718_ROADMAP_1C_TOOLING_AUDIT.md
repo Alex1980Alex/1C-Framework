@@ -388,6 +388,16 @@ com.codepilot1c.feature.feature.group`, release-ассет `com.codepilot1c.upda
 > (binary-путь по умолчанию / `infra_error`→junit в обёртке `mcp_1c_stdio_launcher.py` + upstream
 > issue на (a)/(b)) — **отдельная задача**, снять known-issue после её закрытия.
 
+#### NEXT — отложенные фиксы qa_* (real fix «слоя 2», ADR-055)
+
+Пока подавлено known-issue (review_by 2026-08-31 → авто-resurface, если не сделано раньше). Сам фикс — actionable здесь (durable-трекинг; НЕ в `task_master` — тот бы нагил каждую сессию, ровно whack-a-mole, что убрали):
+
+- [ ] **F1. `qa_run` на binary-путь по умолчанию** — `use_runtime=false` + `platform.bin_path=…\1cv8c.exe` (exe!) + `test_manager`/`test_clients[].ib_connection` c `Usr=`; `.epf` из git LFS. Убирает зависимость от EDT-runtime пути (`getThickClientInfo`). Проверено рабочим (MFM смоук junit 1/0/0, [[reference-codepilot1c-qa-run-binary-path]]). Где: дефолты codepilot1c qa_run.
+- [ ] **F2. `infra_error`→junit** в обёртке [`mcp_1c_stdio_launcher.py`](../../scripts/mcp_1c_stdio_launcher.py) — статус из junit (`tests/failures/errors`), не из отсутствия `va.log`; `status=infra_error` при exit0 + чистом junit = ложный негатив (корень красной метрики).
+- [ ] **F3. Upstream issue (внешний)** — `IRuntimeComponentManager.getThickClientInfo` отсутствует в EDT 2025.2.6.4 API (доказано javap+`.log`). Репо плагина `ondysss/codepilot1c-edt` ([[reference-codepilot1c-plugin-source]]).
+
+После F1+F2 → снять записи из `data/reports/tools/known_issues.json`; tool-health сам вернёт вердикт в healthy на чистом окне (xpass-баннер подтвердит).
+
 **Развилка W13 (политика тест-контура) обновлена данными:** BDD-через-MCP теперь РАБОТАЕТ
 (codepilot qa_* по binary-пути). Ограничение среды: лимит клиентов dev-лицензии — Designer(EDT) +
 TM + TestClient на грани; параллельные клиенты/зависшие сессии всё ломают → перед прогоном чистить
