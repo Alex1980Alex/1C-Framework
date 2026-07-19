@@ -127,6 +127,63 @@ def test_edits_exported_no_bsl_changed():
     assert cs.edits_exported_method("/root", **dep) is False
 
 
+def test_spans_async_keyword_asinh():
+    """Грамматика bsl-parser: async-ключевое слово — `Асинх`, не «Асинхронная».
+    Саботаж-фикс 2026-07-19: прежний regex такие методы не матчил вовсе (FN)."""
+    txt = "Асинх Функция Публичная() Экспорт\n    Возврат 1;\nКонецФункции\n"
+    assert cs.exported_method_spans(txt) == [(1, 3)]
+
+
+def test_spans_english_keywords():
+    """BSLLexer.g4: ключевые слова двуязычны — Procedure/Function/Export/EndProcedure."""
+    txt = "Procedure PublicP() Export\n    A = 1;\nEndProcedure\nFunction LocalF()\n    Return 1;\nEndFunction\n"
+    assert cs.exported_method_spans(txt) == [(1, 3)]
+
+
+def test_spans_export_in_signature_string_literal_not_exported():
+    """Дефолт параметра `П = "Экспорт"` в сигнатуре — НЕ экспорт (строки вырезаются)."""
+    txt = 'Процедура Локальная(П = "Экспорт")\n    А = 1;\nКонецПроцедуры\n'
+    assert cs.exported_method_spans(txt) == []
+
+
+def test_edits_exported_session_paths_narrow():
+    """session_paths сужают скан: грязный WIP-файл с экспортом игнорируется,
+    сессионный файл без экспортных правок → False."""
+    texts = {
+        "wip/Module.bsl": _EXPORTED,
+        "mine/Module.bsl": "Процедура Л()\n А=1;\nКонецПроцедуры\n",
+    }
+    dep = dict(
+        changed_paths=lambda _r: set(texts),
+        owning_tree=lambda _r, rel: (Path("/x"), rel),
+        line_ranges=lambda _r, rel: None,
+        read_text=lambda p: texts[Path(p).relative_to("/x").as_posix()],
+    )
+    assert (
+        cs.edits_exported_method("/root", session_paths={r"C:\repo\mine\Module.bsl"}, **dep)
+        is False
+    )
+    assert (
+        cs.edits_exported_method("/root", session_paths={r"C:\repo\wip\Module.bsl"}, **dep) is True
+    )
+    # пустое пересечение (сессионные пути не из changed) → fallback на полный скан → True
+    assert cs.edits_exported_method("/root", session_paths={r"C:\repo\other\X.bsl"}, **dep) is True
+
+
+def test_edits_exported_files_scan_cap():
+    """Перф-кап: сканируется не более _MAX_FILES_SCAN файлов (Stop-хук под таймаутом)."""
+    reads = []
+    many = {f"m/{i:03d}/Module.bsl" for i in range(200)}
+    dep = dict(
+        changed_paths=lambda _r: many,
+        owning_tree=lambda _r, rel: (Path("/x"), rel),
+        line_ranges=lambda _r, rel: None,
+        read_text=lambda p: (reads.append(p), "Процедура Л()\n А=1;\nКонецПроцедуры\n")[1],
+    )
+    assert cs.edits_exported_method("/root", **dep) is False
+    assert len(reads) == cs._MAX_FILES_SCAN
+
+
 def test_edits_exported_file_without_export_not_applicable():
     """Изменён .bsl без экспортных методов → False даже при untracked."""
     dep = _fake(["src/Loc.bsl"], {"src/Loc.bsl": None}, "Процедура Л()\n А=1;\nКонецПроцедуры\n")

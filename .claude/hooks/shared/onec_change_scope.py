@@ -21,20 +21,38 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-# Заголовок метода / конец / признак экспорта. BSL-ключевые слова канонические (кириллица);
-# re.IGNORECASE на случай нестандартного регистра. Методы в BSL НЕ вложены.
-# `Асинхронная` — опциональный префикс (async-методы 8.3.18+), иначе async-экспорт невидим (FN).
-_METHOD_HEADER = re.compile(r"^\s*(?:Асинхронная\s+)?(Процедура|Функция)\b", re.IGNORECASE)
-_METHOD_END = re.compile(r"^\s*(КонецПроцедуры|КонецФункции)\b", re.IGNORECASE)
-_EXPORT = re.compile(r"\bЭкспорт\b", re.IGNORECASE)
+# Заголовок метода / конец / признак экспорта. Ключевые слова BSL двуязычны (официальная
+# грамматика 1c-syntax/bsl-parser BSLLexer.g4: PROCEDURE_KEYWORD = 'ПРОЦЕДУРА'|'PROCEDURE',
+# EXPORT_KEYWORD = 'ЭКСПОРТ'|'EXPORT', ASYNC_KEYWORD = 'АСИНХ'|'ASYNC') — кириллица-only
+# давала FN на англоязычных модулях. Async-префикс — именно `Асинх`/`Async` (8.3.18+),
+# прежний `Асинхронная` был неверным словом (async-методы вообще не матчились заголовком);
+# `Асинх(?:ронная)?` оставлен толерантным к обоим. re.IGNORECASE — нестандартный регистр.
+# Методы в BSL НЕ вложены.
+_METHOD_HEADER = re.compile(
+    r"^\s*(?:(?:Асинх(?:ронная)?|Async)\s+)?(Процедура|Функция|Procedure|Function)\b",
+    re.IGNORECASE,
+)
+_METHOD_END = re.compile(
+    r"^\s*(КонецПроцедуры|КонецФункции|EndProcedure|EndFunction)\b", re.IGNORECASE
+)
+_EXPORT = re.compile(r"\b(Экспорт|Export)\b", re.IGNORECASE)
+_STRING_LIT = re.compile(r'"[^"]*(?:""[^"]*)*"?')
 
 # Страховочный потолок строк сигнатуры (реальные ≤ этого; больше — почти наверняка обрыв/тело).
 _SIGNATURE_MAX_LINES = 12
 
+# Перф-кап: Stop-хук зовёт детект best-effort под таймаутом; на грязном work-tree
+# (чужой WIP в сабмодулях) changed-файлов бывают сотни, а каждый = чтение + 2 git-вызова
+# (`ls-files` + `diff`) в line_ranges. Без потолка worst-case (нет экспортных правок →
+# нет short-circuit) уходит в минуты и таймаут убивает ВЕСЬ хук. Скан детерминирован (sorted).
+_MAX_FILES_SCAN = 50
+
 
 def _strip_comment(line: str) -> str:
-    """Отрезать строчный `//`-комментарий (грубо: строковые литералы со `//` в сигнатуре
-    редки). Нужен, чтобы `// … Экспорт` в теле не давал ложный экспорт (code-verify #1в)."""
+    """Отрезать строчный `//`-комментарий и `"…"`-строковые литералы. Комментарий — чтобы
+    `// … Экспорт` не давал ложный экспорт (code-verify #1в); литералы — чтобы дефолт
+    параметра `П = "Экспорт"` в сигнатуре не срабатывал как ключевое слово."""
+    line = _STRING_LIT.sub('""', line)
     idx = line.find("//")
     return line[:idx] if idx >= 0 else line
 
@@ -95,6 +113,13 @@ def _intersects(ranges: list[tuple[int, int]], spans: list[tuple[int, int]]) -> 
     return False
 
 
+def _session_tail(p: str) -> str:
+    """Нормализованный хвост пути (последние 2 сегмента, lower, forward-slash) — ключ
+    сопоставления session-путей (абсолютных, из транскрипта) с repo-относительными changed."""
+    parts = p.replace("\\", "/").lower().rstrip("/").split("/")
+    return "/".join(parts[-2:])
+
+
 def edits_exported_method(
     root,
     *,
@@ -102,6 +127,7 @@ def edits_exported_method(
     owning_tree: Callable[[Path, str], tuple[Path, str]] | None = None,
     line_ranges: Callable[[object, str], list[tuple[int, int]] | None] | None = None,
     read_text: Callable[[Path], str] | None = None,
+    session_paths: set[str] | None = None,
 ) -> bool:
     """True, если изменённые .bsl касаются экспортного метода (условие применимости impact).
 
@@ -109,7 +135,13 @@ def edits_exported_method(
     инъекция зависимостей — для юнит-тестов без git. Fail-safe: ошибка ЧТЕНИЯ файла → пропуск
     файла; ошибка `changed_paths` → False (не роняем гейт). `line_ranges is None` (untracked/
     дифф не получен) + есть экспорт → **applicable=True** (fail-closed «применимо»: impact-analysis
-    на новом/непрослеживаемом .bsl с экспортом точно уместен)."""
+    на новом/непрослеживаемом .bsl с экспортом точно уместен).
+
+    `session_paths` — .bsl-пути, тронутые ЭТОЙ сессией (из транскрипта): work-tree бывает
+    хронически грязным чужим WIP (живой замер 2026-07-19: 159 changed-.bsl в сабмодулях) →
+    без сужения applicable вырождается в «всегда True» и честный знаменатель валидатора
+    (В2/рек.3) ломается. Непустой набор → скан только пересечения (по хвосту пути);
+    пустой/None → прежний полный скан (правки через внешние инструменты не теряем)."""
     if changed_paths is None or owning_tree is None or line_ranges is None:
         try:
             from shared import sonar_rescan_state as _srs
@@ -125,7 +157,13 @@ def edits_exported_method(
         changed = changed_paths(root)
     except Exception:
         return False
-    for rel in changed:
+    if session_paths:
+        tails = {_session_tail(p) for p in session_paths}
+        narrowed = {rel for rel in changed if _session_tail(rel) in tails}
+        # пустое пересечение (правки уже закоммичены / пути не совпали) → полный скан
+        if narrowed:
+            changed = narrowed
+    for rel in sorted(changed)[:_MAX_FILES_SCAN]:
         try:
             tree, rel_in = owning_tree(root_p, rel)
             text = _read(tree / rel_in)
@@ -145,4 +183,4 @@ def edits_exported_method(
     return False
 
 
-__all__ = ["exported_method_spans", "edits_exported_method"]
+__all__ = ["exported_method_spans", "edits_exported_method", "_session_tail"]

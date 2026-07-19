@@ -291,6 +291,9 @@ def _collect_signals(transcript_path: str) -> dict:
         "analyze_method": False,
         # Тир-3 (рек.3, 2026-07-19) — YAxUnit-смоук серверной логики (advisory, mcp-onec-test-runner)
         "yaxunit_smoke": False,
+        # .bsl-пути, тронутые сессией (Write/Edit + MCP-инструменты правки модулей) —
+        # сужают applicable-детект до правок ЭТОЙ сессии (work-tree бывает грязным чужим WIP)
+        "bsl_paths": set(),
     }
     if not transcript_path or not Path(transcript_path).exists():
         return sig
@@ -305,6 +308,12 @@ def _collect_signals(transcript_path: str) -> dict:
         for tu in _iter_tool_uses(entry):
             name = tu.get("name", "")
             inp = tu.get("input") or {}
+            # session-scoped .bsl: любой строковый аргумент-путь на .bsl (Write/Edit file_path,
+            # edt-mcp write_module_source, codepilot1c edit_file и т.п.)
+            if isinstance(inp, dict):
+                for v in inp.values():
+                    if isinstance(v, str) and v.replace("\\", "/").lower().endswith(".bsl"):
+                        sig["bsl_paths"].add(v)
             if name in _RECALL_TOOLS:
                 sig["recall"] = True
             elif name in _CAPTURE_TOOLS:
@@ -409,14 +418,16 @@ def _write_loops_report(slug: str, sig: dict, optout: bool = False) -> None:
         pass
 
 
-def _impact_applicable() -> bool:
+def _impact_applicable(session_paths: set[str] | None = None) -> bool:
     """В2 260718 (W1): применимо ли `bsl_impact_analysis` к этой задаче — правка/добавление
     экспортного метода. Даёт валидатору честный applicable-знаменатель (presence на ВСЕХ
-    задачах = survivorship-caveat ADR-035). best-effort: любая ошибка → False (не роняем)."""
+    задачах = survivorship-caveat ADR-035). `session_paths` (из транскрипта) сужают детект
+    до правок этой сессии — иначе хронически грязный work-tree (чужой WIP в сабмодулях)
+    вырождает знаменатель в «всегда True». best-effort: любая ошибка → False (не роняем)."""
     try:
         from shared.onec_change_scope import edits_exported_method
 
-        return bool(edits_exported_method(PROJECT_ROOT))
+        return bool(edits_exported_method(PROJECT_ROOT, session_paths=session_paths))
     except Exception:
         return False
 
@@ -434,7 +445,7 @@ def _log_advisory_event(slug: str, sig: dict, hard_blocked: bool) -> None:
         # edits_exported_method — общий applicable-знаменатель для impact (T1, pre-change «кто сломается»)
         # И yaxunit-смоука (рек.3, post-change «инвариант держится»): оба применимы к экспортной
         # серверной поверхности. Считаем ОДИН раз (git-diff дорог) → в оба ключа.
-        _exported_edit = _impact_applicable()
+        _exported_edit = _impact_applicable(sig.get("bsl_paths") or None)
         rec = {
             "ts": datetime.now().isoformat(),
             "adr": "ADR-035-phase1",
