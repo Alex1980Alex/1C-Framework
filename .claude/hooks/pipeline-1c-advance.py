@@ -64,9 +64,12 @@ class Pipeline1CAdvance(BaseHook):
 
         from shared.pipeline_1c_bridge import advance_for_artifact, advance_test_done
 
-        adv = advance_for_artifact(path) or advance_test_done(
-            path
-        )  # F-1.5 + F-1.6 (этап 4 по .run-state)
+        # F-1.5 + F-1.6: звать ОБА (не `or`) — IMPLEMENTATION-PROGRESS с секцией live-данных PASS
+        # двигает этап 3 (advance_for_artifact) И этап 4 (advance_test_done, ADR-050) ОДНОЙ записью;
+        # `or` закорачивал бы этап-4-путь. Оба идемпотентны; сливаем реально продвинутые этапы.
+        adv_artifact = advance_for_artifact(path)
+        adv_test = advance_test_done(path)
+        adv = tuple(sorted({*(adv_artifact or ()), *(adv_test or ())})) or None
         note = _completeness_note(path)  # D: advisory-валидатор секций (не блок)
         if adv or note:
             msg = (

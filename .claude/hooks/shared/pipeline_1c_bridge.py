@@ -535,26 +535,89 @@ def check_lineage(prompt: str, root: str | None = None) -> dict:
         return out
 
 
+# ADR-050 (2026-07-19): этап 4 доказуем БЕЗ обязательного BDD — секция live-данных в
+# IMPLEMENTATION-PROGRESS с чистым PASS закрывает Тестирование наравне с `.run-state.json`.
+# Только IMPLEMENTATION-PROGRESS: §10 «Проверка на реальных данных» в ANALYSIS-REPORT = design-time
+# Runtime Trace (Фаза 2.5), НЕ финальное тестирование → её сюда НЕ пускаем.
+_LIVE_DATA_TEST_ARTIFACT = re.compile(r"IMPLEMENTATION-PROGRESS", re.I)
+_LIVE_DATA_HEADING = re.compile(
+    r"Тестировани\w*\s+на\s+реальных\s+данных|Проверк\w*\s+на\s+реальных\s+данных"
+    r"|\bLive[-\s]?тест|\bЖив\w+\s+тест",
+    re.I | re.U,
+)
+_LIVE_DATA_PASS = re.compile(
+    r"\bPASS\b|ПРОВЕД[ЕЁ]Н|\bpassed\b|✓|успешн|вердикт\W{0,3}pass", re.I | re.U
+)
+# Негатив в секции → НЕ засчитываем (FAIL/провал/SKIP/STATIC-ASSUMPTION = тест не прошёл/не делался).
+_LIVE_DATA_NEGATIVE = re.compile(
+    r"\bFAIL\b|ОШИБК|не\s+пройд|провал|не\s+прош[её]л|STATIC-ASSUMPTION|\bSKIP\b|пропущен",
+    re.I | re.U,
+)
+
+
+def _live_data_test_passed(text: str) -> bool:
+    """ADR-050: в тексте есть секция «Тестирование на реальных данных» с ЧИСТЫМ вердиктом PASS.
+
+    Консервативно: секция найдена И PASS-токен присутствует И НЕТ негатива (FAIL/SKIP/STATIC-ASSUMPTION)
+    в ЭТОЙ секции. Скоуп секции = от строки заголовка до следующего markdown-заголовка (`#…`), чтобы
+    «Sonar PASS»/«EDT PASS» из СОСЕДНЕЙ секции не засчитывались за live-тест. Любая неоднозначность →
+    False: auto-advance безопасен (не закрыл → закроют вручную; ложный close = дыра группы C, которую
+    и чиним). Чистая функция (без I/O) — детерминированно тестируема.
+    """
+    if not text:
+        return False
+    m = _LIVE_DATA_HEADING.search(text)
+    if not m:
+        return False
+    start = text.rfind("\n", 0, m.start()) + 1  # начало строки заголовка секции
+    rest = text[m.end() :]
+    nxt = re.search(r"\n#{1,6}\s", rest)  # следующий markdown-заголовок → конец секции
+    section = text[start : m.end() + (nxt.start() if nxt else len(rest))]
+    if _LIVE_DATA_NEGATIVE.search(section):
+        return False
+    return bool(_LIVE_DATA_PASS.search(section))
+
+
 def advance_test_done(file_path: str) -> tuple[int, ...] | None:
-    """F-1.6: запись `features/<task>/.run-state.json` со ВСЕМИ секциями passed → этап 4 (Тестирование) done.
+    """F-1.6: этап 4 (Тестирование) done по ДОКАЗАТЕЛЬСТВУ теста — ЛИБО:
+
+    - `features/<task>/.run-state.json` со ВСЕМИ секциями passed (прогон BDD/YAxUnit), ЛИБО
+    - IMPLEMENTATION-PROGRESS с секцией live-данных (ADR-050) и чистым PASS — делает этап 4
+      доказуемым БЕЗ обязательного BDD (закрывает дыру «done без тест-артефакта», группа C).
 
     best-effort → None. Guard: только 1С-пайплайн (title-метка F-1). Идемпотентно (не done → done).
     """
     try:
         name = (file_path or "").replace("\\", "/").rsplit("/", 1)[-1]
-        if name != ".run-state.json":
-            return None
-        with open(file_path, encoding="utf-8") as f:
-            rs = json.load(f)
-        chain = rs.get("chain") or []
-        if not chain or not all(s.get("status") == "passed" for s in chain):
-            return None  # ещё не все секции passed → этап 4 не закрываем
+        is_runstate = name == ".run-state.json"
+        is_impl = bool(_LIVE_DATA_TEST_ARTIFACT.search(name))
+        if not (is_runstate or is_impl):
+            return None  # ранний выход до импорта — path не тест-артефакт
         hooks = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if hooks not in sys.path:
             sys.path.insert(0, hooks)
         from shared import pipeline_state
 
-        slug = pipeline_state.resolve_current()
+        if is_runstate:
+            with open(file_path, encoding="utf-8") as f:
+                rs = json.load(f)
+            chain = rs.get("chain") or []
+            if not chain or not all(s.get("status") == "passed" for s in chain):
+                return None  # ещё не все секции passed → этап 4 не закрываем
+            slug = pipeline_state.resolve_current()  # run-state в features/ → CURRENT (как было)
+        else:  # is_impl: IMPLEMENTATION-PROGRESS с live-данными
+            if not _artifact_has_content(file_path):
+                return None  # пустой/stub-артефакт не продвигает (H7-guard)
+            try:
+                with open(file_path, encoding="utf-8", errors="replace") as f:
+                    body = f.read()
+            except OSError:
+                return None
+            if not _live_data_test_passed(body):
+                return None  # нет секции live-данных с чистым PASS → этап 4 не закрываем
+            # owner по пути артефакта (как advance_for_artifact), иначе CURRENT
+            slug = _owning_1c_slug(file_path, pipeline_state) or pipeline_state.resolve_current()
+
         data = pipeline_state.load(slug) if slug else None
         if not data or not is_1c_task_title(data.get("title")):
             return None

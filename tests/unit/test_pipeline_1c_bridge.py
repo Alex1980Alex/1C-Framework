@@ -546,6 +546,76 @@ def test_advance_test_done_best_effort():
     assert bridge.advance_test_done("/no/such/.run-state.json") is None
 
 
+# --- ADR-050: _live_data_test_passed (чистая функция → collision-immune, без I/O) ---
+
+
+def test_live_data_pass_clean():
+    txt = (
+        "## Реализация\nкод...\n\n"
+        "## Тестирование на реальных данных\n"
+        "- База: ИБ MFM; документ Реализация №123.\n"
+        "- Провёл документ на реальных данных → **PASS** (движения сформированы).\n"
+    )
+    assert bridge._live_data_test_passed(txt) is True
+
+
+def test_live_data_fail_in_section_rejected():
+    txt = (
+        "## Тестирование на реальных данных\n- Провёл документ → FAIL: движения не сформированы.\n"
+    )
+    assert bridge._live_data_test_passed(txt) is False
+
+
+def test_live_data_skip_static_rejected():
+    txt = (
+        "## Тестирование на реальных данных\n"
+        "SKIP: debug env недоступен [STATIC-ASSUMPTION] — проверено статикой.\n"
+    )
+    assert bridge._live_data_test_passed(txt) is False
+
+
+def test_live_data_no_heading_rejected():
+    # PASS есть, но НЕ в секции live-данных (нет заголовка) → False
+    txt = "## Кодирование\nSonar-дельта чистая, PASS. EDT без ошибок.\n"
+    assert bridge._live_data_test_passed(txt) is False
+
+
+def test_live_data_scope_pass_in_other_section():
+    # секция live-данных БЕЗ вердикта; PASS — в СОСЕДНЕЙ секции после заголовка → не засчитываем
+    txt = (
+        "## Тестирование на реальных данных\n"
+        "- Данные подготовлены на базе MFM.\n"
+        "## Статанализ\n"
+        "- Sonar-дельта чистая, PASS.\n"
+    )
+    assert bridge._live_data_test_passed(txt) is False
+
+
+def test_live_data_zhivoy_variant():
+    txt = "### Живой тест\nПротокол №1 (Янв 2099) — ПРОВЕДЁН. Тестовые данные удалены.\n"
+    assert bridge._live_data_test_passed(txt) is True
+
+
+def test_live_data_empty():
+    assert bridge._live_data_test_passed("") is False
+    assert bridge._live_data_test_passed(None) is False  # type: ignore[arg-type]
+
+
+def test_advance_test_done_impl_no_livedata_returns_none(tmp_path):
+    # IMPLEMENTATION-PROGRESS с контентом, но БЕЗ секции live-данных → этап 4 НЕ закрываем.
+    # (возврат None до использования pipeline_state — путь распознан, но нет доказательства теста)
+    f = tmp_path / "IMPLEMENTATION-PROGRESS.md"
+    f.write_text("## Кодирование\n" + ("текст реализации " * 30), encoding="utf-8")
+    assert bridge.advance_test_done(str(f)) is None
+
+
+def test_advance_test_done_impl_empty_stub_returns_none(tmp_path):
+    # пустой IMPLEMENTATION-PROGRESS (< порога content) → H7-guard → None (даже с заголовком)
+    f = tmp_path / "IMPLEMENTATION-PROGRESS.md"
+    f.write_text("## Тестирование на реальных данных\nPASS\n", encoding="utf-8")
+    assert bridge.advance_test_done(str(f)) is None
+
+
 # --- input-ingestion: classify_1c_task (чистая функция → fully collision-immune) ---
 
 
