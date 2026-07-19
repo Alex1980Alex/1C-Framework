@@ -1,22 +1,22 @@
 # Audit: Code ↔ Documentation ↔ Skills
 
-**Generated:** 2026-07-19 19:56
+**Generated:** 2026-07-19 20:34
 
 ## Summary
 
 | Category | In Code | Doc Gaps | Skill Gaps | Doc Coverage | Skill Coverage |
 |----------|---------|----------|------------|-------------|----------------|
 | Agent Types | 5 | **0** | **0** | 100.0% | 100.0% |
-| bsl_tool | 23 | **13** | **0** | 43.5% | 100.0% |
+| bsl_tool | 23 | **13** | — | 43.5% | n/a (доки) |
 | CLI Commands | 17 | **0** | **0** | 100.0% | 100.0% |
-| Config Variables (.env) | 298 | **0** | **0** | 100.0% | 100.0% |
-| REST API Endpoints | 88 | **0** | **0** | 100.0% | 100.0% |
-| hook | 101 | **0** | **24** | 100.0% | 76.2% |
+| Config Variables (.env) | 298 | **0** | — | 100.0% | n/a (доки) |
+| REST API Endpoints | 88 | **0** | — | 100.0% | n/a (доки) |
+| hook | 101 | **0** | — | 100.0% | n/a (доки) |
 | MCP Tools | 15 | **0** | **0** | 100.0% | 100.0% |
-| memory_subsystem | 51 | **9** | **0** | 82.4% | 100.0% |
+| memory_subsystem | 51 | **9** | — | 82.4% | n/a (доки) |
 | Search Strategies | 14 | **0** | **0** | 100.0% | 100.0% |
 | wiki_component | 5 | **0** | **0** | 100.0% | 100.0% |
-| **TOTAL** | **617** | **22** | **24** | | |
+| **TOTAL** | **617** | **22** | **0** | | |
 
 ## Documentation Gaps (in code, NOT in docs)
 
@@ -51,37 +51,6 @@
 | `ConflictRecord` | `src\memory\infrastructure\conflict_resolver.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `ConflictResult` | `src\memory\infrastructure\conflict_resolver.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
 | `EventBusStats` | `src\memory\infrastructure\event_bus.py` | `5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.1_Обзор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.2_Оркестратор.md, 5_ПАМЯТЬ/5.1_UNIFIED_MEMORY/27.5_Поиск_и_сервисы.md, 5_ПАМЯТЬ/5.2_WIKI_KNOWLEDGE_LAYER/32.6_L2_L5_Promotion.md` |
-
-## Skill Gaps (in code, NOT in skills)
-
-### hook (24 gaps)
-
-| Feature | Source | Should be in |
-|---------|--------|-------------|
-| `ci-catchup-on-stop` | `.claude\hooks\ci-catchup-on-stop.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `lifecycle-cache` | `.claude\hooks\lifecycle-cache.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `mcp-health-probe-on-start` | `.claude\hooks\mcp-health-probe-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `memory-ai-acceptance-on-start` | `.claude\hooks\memory-ai-acceptance-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `memory-effectiveness-analyzer` | `.claude\hooks\memory-effectiveness-analyzer.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `patterns-harvester` | `.claude\hooks\patterns-harvester.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `post-merge-revert-stop` | `.claude\hooks\post-merge-revert-stop.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `posttooluse-delegation-tracker` | `.claude\hooks\posttooluse-delegation-tracker.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `posttooluse-docs-tracker` | `.claude\hooks\posttooluse-docs-tracker.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `posttooluse-stackoverflow-on-error` | `.claude\hooks\posttooluse-stackoverflow-on-error.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `posttooluse-web-cache` | `.claude\hooks\posttooluse-web-cache.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `pre-merge-review-check` | `.claude\hooks\pre-merge-review-check.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `prework-architecture` | `.claude\hooks\prework-architecture.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `prework-similar-code` | `.claude\hooks\prework-similar-code.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `roadmap-progress-enforcer` | `.claude\hooks\roadmap-progress-enforcer.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `skill-learning-acceptance-on-start` | `.claude\hooks\skill-learning-acceptance-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `skill-learning-pending-on-start` | `.claude\hooks\skill-learning-pending-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `skill-system-acceptance-on-start` | `.claude\hooks\skill-system-acceptance-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `skills-harvester` | `.claude\hooks\skills-harvester.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `stop-feedback-draft-aggregator` | `.claude\hooks\stop-feedback-draft-aggregator.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `tei-warmup-on-start` | `.claude\hooks\tei-warmup-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `tool-health-analyzer-stop` | `.claude\hooks\tool-health-analyzer-stop.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `tool-health-banner-on-start` | `.claude\hooks\tool-health-banner-on-start.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
-| `userpromptsubmit-feedback-detector` | `.claude\hooks\userpromptsubmit-feedback-detector.py` | `.claude/skills/hooks-skills-mcp-triad/SKILL.md, .claude/skills/create-hook/SKILL.md` |
 
 ## Action Items
 
@@ -177,52 +146,6 @@
   - [ ] Add `RulesManager` (from `src\bsl\sonar\rules_manager.py`)
 
 ### Skill updates needed:
-
-**`.claude/skills/create-hook/SKILL.md`** — 24 missing features:
-  - [ ] Add `ci-catchup-on-stop` (from `.claude\hooks\ci-catchup-on-stop.py`)
-  - [ ] Add `lifecycle-cache` (from `.claude\hooks\lifecycle-cache.py`)
-  - [ ] Add `mcp-health-probe-on-start` (from `.claude\hooks\mcp-health-probe-on-start.py`)
-  - [ ] Add `memory-ai-acceptance-on-start` (from `.claude\hooks\memory-ai-acceptance-on-start.py`)
-  - [ ] Add `memory-effectiveness-analyzer` (from `.claude\hooks\memory-effectiveness-analyzer.py`)
-  - [ ] Add `patterns-harvester` (from `.claude\hooks\patterns-harvester.py`)
-  - [ ] Add `post-merge-revert-stop` (from `.claude\hooks\post-merge-revert-stop.py`)
-  - [ ] Add `posttooluse-delegation-tracker` (from `.claude\hooks\posttooluse-delegation-tracker.py`)
-  - [ ] Add `posttooluse-docs-tracker` (from `.claude\hooks\posttooluse-docs-tracker.py`)
-  - [ ] Add `posttooluse-stackoverflow-on-error` (from `.claude\hooks\posttooluse-stackoverflow-on-error.py`)
-  - [ ] Add `posttooluse-web-cache` (from `.claude\hooks\posttooluse-web-cache.py`)
-  - [ ] Add `pre-merge-review-check` (from `.claude\hooks\pre-merge-review-check.py`)
-  - [ ] Add `prework-architecture` (from `.claude\hooks\prework-architecture.py`)
-  - [ ] Add `prework-similar-code` (from `.claude\hooks\prework-similar-code.py`)
-  - [ ] Add `roadmap-progress-enforcer` (from `.claude\hooks\roadmap-progress-enforcer.py`)
-  - [ ] Add `skill-learning-acceptance-on-start` (from `.claude\hooks\skill-learning-acceptance-on-start.py`)
-  - [ ] Add `skill-learning-pending-on-start` (from `.claude\hooks\skill-learning-pending-on-start.py`)
-  - [ ] Add `skill-system-acceptance-on-start` (from `.claude\hooks\skill-system-acceptance-on-start.py`)
-  - [ ] Add `skills-harvester` (from `.claude\hooks\skills-harvester.py`)
-  - [ ] Add `stop-feedback-draft-aggregator` (from `.claude\hooks\stop-feedback-draft-aggregator.py`)
-  - ... and 4 more
-
-**`.claude/skills/hooks-skills-mcp-triad/SKILL.md`** — 24 missing features:
-  - [ ] Add `ci-catchup-on-stop` (from `.claude\hooks\ci-catchup-on-stop.py`)
-  - [ ] Add `lifecycle-cache` (from `.claude\hooks\lifecycle-cache.py`)
-  - [ ] Add `mcp-health-probe-on-start` (from `.claude\hooks\mcp-health-probe-on-start.py`)
-  - [ ] Add `memory-ai-acceptance-on-start` (from `.claude\hooks\memory-ai-acceptance-on-start.py`)
-  - [ ] Add `memory-effectiveness-analyzer` (from `.claude\hooks\memory-effectiveness-analyzer.py`)
-  - [ ] Add `patterns-harvester` (from `.claude\hooks\patterns-harvester.py`)
-  - [ ] Add `post-merge-revert-stop` (from `.claude\hooks\post-merge-revert-stop.py`)
-  - [ ] Add `posttooluse-delegation-tracker` (from `.claude\hooks\posttooluse-delegation-tracker.py`)
-  - [ ] Add `posttooluse-docs-tracker` (from `.claude\hooks\posttooluse-docs-tracker.py`)
-  - [ ] Add `posttooluse-stackoverflow-on-error` (from `.claude\hooks\posttooluse-stackoverflow-on-error.py`)
-  - [ ] Add `posttooluse-web-cache` (from `.claude\hooks\posttooluse-web-cache.py`)
-  - [ ] Add `pre-merge-review-check` (from `.claude\hooks\pre-merge-review-check.py`)
-  - [ ] Add `prework-architecture` (from `.claude\hooks\prework-architecture.py`)
-  - [ ] Add `prework-similar-code` (from `.claude\hooks\prework-similar-code.py`)
-  - [ ] Add `roadmap-progress-enforcer` (from `.claude\hooks\roadmap-progress-enforcer.py`)
-  - [ ] Add `skill-learning-acceptance-on-start` (from `.claude\hooks\skill-learning-acceptance-on-start.py`)
-  - [ ] Add `skill-learning-pending-on-start` (from `.claude\hooks\skill-learning-pending-on-start.py`)
-  - [ ] Add `skill-system-acceptance-on-start` (from `.claude\hooks\skill-system-acceptance-on-start.py`)
-  - [ ] Add `skills-harvester` (from `.claude\hooks\skills-harvester.py`)
-  - [ ] Add `stop-feedback-draft-aggregator` (from `.claude\hooks\stop-feedback-draft-aggregator.py`)
-  - ... and 4 more
 
 ## All Extracted Features (reference)
 

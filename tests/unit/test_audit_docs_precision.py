@@ -140,3 +140,37 @@ def test_audit_no_false_positive_categories():
     fp_categories = {"endpoint", "strategy", "hook"}
     offenders = [g.feature_name for g in report.doc_gaps if g.category in fp_categories]
     assert offenders == [], f"unexpected doc gaps in fixed categories: {offenders}"
+
+
+# ── Skill-gap scoping (Diátaxis): reference categories are doc-tracked only ──
+_REFERENCE_CATEGORIES = {"config_var", "endpoint", "hook", "memory_subsystem", "bsl_tool"}
+
+
+def test_reference_categories_never_skill_gapped():
+    """Config vars/endpoints/hooks/internal classes are reference material →
+    tracked on docs, never counted as skill gaps (else --update re-pollutes skills)."""
+    ads._ALL_DOCS_CACHE = None
+    ads._ALL_SKILLS_CACHE = None
+    report = ads.run_audit()
+    leaked = [g.feature_name for g in report.skill_gaps if g.category in _REFERENCE_CATEGORIES]
+    assert leaked == [], f"reference categories must not be skill-gapped: {leaked}"
+
+
+def test_reference_categories_have_null_skill_coverage():
+    report = ads.run_audit()
+    for cat, stats in report.summary["by_category"].items():
+        if cat in ads.SKILL_COVERAGE_CATEGORIES:
+            assert stats["coverage_skills"] is not None, f"{cat} should report skill coverage"
+        else:
+            assert stats["coverage_skills"] is None, f"{cat} skill coverage should be n/a"
+
+
+def test_skill_coverage_categories_are_conceptual():
+    # guardrail: the tracked set stays task/conceptual, not bulk-reference
+    assert ads.SKILL_COVERAGE_CATEGORIES == {
+        "agent",
+        "strategy",
+        "mcp_tool",
+        "cli_command",
+        "wiki_component",
+    }

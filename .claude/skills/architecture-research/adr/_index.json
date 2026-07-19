@@ -9,6 +9,23 @@
   ],
   "records": [
     {
+      "id": "ADR-054",
+      "file": "054-doc-skill-coverage-diataxis-scoping.md",
+      "title": "Скоуп skill-gap-метрики аудита покрытия по Diátaxis: skill-gap считается только для task/концептуальных категорий (agent/strategy/mcp_tool/cli_command/wiki_component); справочные (config_var/endpoint/hook/memory_subsystem/bsl_tool) трекаются только по оси docs (coverage_skills=None). Обоснование: Diátaxis — скиллы=how-to guides, exhaustive-списки config/endpoint/классов = reference-материал в доках; массовый дамп в SKILL.md = антипаттерн «pollute the how-to guide» (что делал баговый --update). Баннер AUDIT-COVERAGE 89+52 → 22+0; чинит корень pollution",
+      "status": "accepted",
+      "date": "2026-07-19",
+      "research": "WebFetch diataxis.fr (reference vs how-to); триггер — чистка 9 протёкших --update-таблиц в скиллах, skill-gaps 24→298",
+      "tags": [
+        "audit-docs",
+        "diataxis",
+        "skill-coverage",
+        "documentation-taxonomy",
+        "audit_docs_skills",
+        "banner",
+        "anti-pollution"
+      ]
+    },
+    {
       "id": "ADR-050",
       "file": "050-mandatory-live-data-verification-1c-pipeline.md",
       "title": "Обязательная live-верификация на реальных данных в Пайплайне 1С (мандат пользователя 2026-07-13): Фаза 2.5 Runtime Trace default-ON (--no-trace opt-out, BP-trace 1c-debug-hmr на реальных данных ДО плана), Этапы 5.x/6 на реальных данных, обязательные главы отчётов (ANALYSIS-REPORT §10 «Проверка на реальных данных» + IMPLEMENTATION-PROGRESS «Тестирование на реальных данных»: база, идентификаторы, результаты); enforcement advisory через lint_1c_artifacts (+2 core-секции); закрывает feedback-live-bp-trace-mandatory (2026-05-11)",

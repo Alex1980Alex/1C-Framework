@@ -438,6 +438,14 @@ CATEGORY_MAPPING: dict[str, dict[str, Any]] = {
     },
 }
 
+# Skill coverage is meaningful only for task/conceptual categories. Per Diátaxis,
+# skills are how-to guides; exhaustive listings of config vars, endpoints, hooks,
+# and internal classes are *reference* material that belongs in reference DOCS.
+# So those categories are tracked on the doc axis only — never skill-gapped (that
+# would demand a how-to guide enumerate the whole product, the very anti-pattern
+# a previous `--update` produced). See ADR-054 / architecture-research cache.
+SKILL_COVERAGE_CATEGORIES = {"agent", "strategy", "mcp_tool", "cli_command", "wiki_component"}
+
 
 def _package_exports(init_path: Path) -> set[str] | None:
     """Parse a package __init__.py for its __all__ list.
@@ -752,7 +760,8 @@ def run_audit() -> AuditReport:
         if not skill_found and _feature_documented(feature, _all_skills_text()):
             skill_found = True
 
-        if not skill_found:
+        # Reference categories are doc-tracked only (Diátaxis); skip skill-gapping them.
+        if not skill_found and feature.category in SKILL_COVERAGE_CATEGORIES:
             report.skill_gaps.append(
                 Gap(
                     feature_name=feature.name,
@@ -782,8 +791,10 @@ def run_audit() -> AuditReport:
             "doc_gaps": len(cat_doc_gaps),
             "skill_gaps": len(cat_skill_gaps),
             "coverage_docs": round((1 - len(cat_doc_gaps) / max(len(cat_features), 1)) * 100, 1),
-            "coverage_skills": round(
-                (1 - len(cat_skill_gaps) / max(len(cat_features), 1)) * 100, 1
+            "coverage_skills": (
+                round((1 - len(cat_skill_gaps) / max(len(cat_features), 1)) * 100, 1)
+                if cat in SKILL_COVERAGE_CATEGORIES
+                else None
             ),
         }
 
@@ -822,10 +833,14 @@ def format_markdown(report: AuditReport, include_fix: bool = False) -> str:
 
     for cat, stats in report.summary.get("by_category", {}).items():
         label = CATEGORY_LABELS.get(cat, cat)
+        cov_skills = (
+            "n/a (доки)" if stats["coverage_skills"] is None else f"{stats['coverage_skills']}%"
+        )
+        skill_gaps_cell = "—" if stats["coverage_skills"] is None else f"**{stats['skill_gaps']}**"
         a(
             f"| {label} | {stats['total']} | "
-            f"**{stats['doc_gaps']}** | **{stats['skill_gaps']}** | "
-            f"{stats['coverage_docs']}% | {stats['coverage_skills']}% |"
+            f"**{stats['doc_gaps']}** | {skill_gaps_cell} | "
+            f"{stats['coverage_docs']}% | {cov_skills} |"
         )
 
     total = report.summary
@@ -1628,10 +1643,11 @@ def main():
 
     for cat, stats in s.get("by_category", {}).items():
         label = CATEGORY_LABELS.get(cat, cat)
+        cov_skills = "n/a" if stats["coverage_skills"] is None else f"{stats['coverage_skills']}%"
         print(
             f"  {label}: {stats['total']} total, "
             f"docs={stats['coverage_docs']}%, "
-            f"skills={stats['coverage_skills']}%",
+            f"skills={cov_skills}",
             file=sys.stderr,
         )
 

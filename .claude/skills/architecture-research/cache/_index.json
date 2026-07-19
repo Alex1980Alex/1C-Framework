@@ -3,6 +3,23 @@
   "description": "Кеш архитектурных исследований для PDF Framework",
   "topics": [
     {
+      "file": "diataxis-reference-vs-howto-2026.md",
+      "title": "Diátaxis (diataxis.fr): reference vs how-to — что где документировать. How-to guides (=скиллы, task-oriented, ~500 строк) НЕ перечисляют исчерпывающе («don't pollute your how-to guide with every possible thing»); exhaustive-списки API endpoint'ов, config-переменных, классов = reference-материал в доках («structure mirrors the product»). Основание ADR-054 (скоуп skill-gap-метрики аудита покрытия)",
+      "keywords": [
+        "diataxis",
+        "documentation-taxonomy",
+        "reference-vs-howto",
+        "how-to-guide",
+        "reference-docs",
+        "skill-coverage",
+        "audit-docs",
+        "adr-054",
+        "progressive-disclosure",
+        "doc-structure"
+      ],
+      "last_verified": "2026-07-19"
+    },
+    {
       "file": "skills-system-best-practices-2026.md",
       "title": "Skills-системы у лидеров (июль 2026): официальный контракт SKILL.md (frontmatter 15 полей, 1536-cap описания, 500-строк body, 25k re-attach budget), progressive disclosure (1 уровень ссылок, domain-split), evals-конвейер (evals.json, baseline-delta, blind A/B, description tuning), Caliper pass@k + cheat-детект, SkillSpec skill.spec.yml + Doctor, skill-framework 17 lint-правил + one-tree deploy, master-router (gamedev), Superpowers v6.1.1 drill evals, skills CLI .curated/.experimental",
       "keywords": [
