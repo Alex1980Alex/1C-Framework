@@ -2,11 +2,13 @@
 <ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.20">
 	<ConfigVersions>
 		<Metadata name="CommonModule.ЮТТПримерТест" id="f7cd03d5-6cf7-4e93-9a79-9eaa5cb39ad0" configVersion="f655591153e3d18d5cd6757d6b856f00745d3fb4"/>
-		<Metadata name="CommonModule.ЮТТПримерТест.Module" id="f7cd03d5-6cf7-4e93-9a79-9eaa5cb39ad0.0" configVersion="0a60be07d0a03a09bed1b91d0b6619ada32b2235"/>
+		<Metadata name="CommonModule.ЮТТПримерТест.Module" id="f7cd03d5-6cf7-4e93-9a79-9eaa5cb39ad0.0" configVersion="e41046a48e004f0e7829a3ecc5b496e69e62adb8"/>
+		<Metadata name="CommonModule.гкс_ОбщегоНазначенияТест" id="cf22763d-e581-454a-8437-2c5c0ea26103" configVersion="1d9fa6e5ef8997ce0dcbc87473ea4056c1fed53b"/>
+		<Metadata name="CommonModule.гкс_ОбщегоНазначенияТест.Module" id="cf22763d-e581-454a-8437-2c5c0ea26103.0" configVersion="b7229aef3d25c585a859df678bccc52aa4ed27d7"/>
 		<Metadata name="CommonModule.гкс_РассылкиИОповещенияТест" id="4767b740-0077-40be-a0a8-22929612044b" configVersion="028d0efa792af9c1a1e5e114e8d742945865c95e"/>
-		<Metadata name="CommonModule.гкс_РассылкиИОповещенияТест.Module" id="4767b740-0077-40be-a0a8-22929612044b.0" configVersion="54ac7253526f015f67a013fea8ccfd75e7f3fc34"/>
-		<Metadata name="Configuration.UnitTests" id="f451ca9a-2f1e-4a1d-a242-4f018a5643f5" configVersion="925a86835ed3c77b3fe7c8f6f7983e36edfb1ac7"/>
+		<Metadata name="CommonModule.гкс_РассылкиИОповещенияТест.Module" id="4767b740-0077-40be-a0a8-22929612044b.0" configVersion="e1d8c22ef23e32ca3a08d4722f016ae905a613b6"/>
+		<Metadata name="Configuration.UnitTests" id="f451ca9a-2f1e-4a1d-a242-4f018a5643f5" configVersion="0345a51d6bfdd93873deb1cb194a415e61969be3"/>
 		<Metadata name="Subsystem.ЮТТ_ЮТПодключаемыеМодули" id="e89c8a7a-1764-4e62-9ab3-79420771a960" configVersion="feb5a5fab8a230b12738126844374cd558cd8c27"/>
-		<Metadata name="Subsystem.ЮТТ_ЮТПодключаемыеМодули.Subsystem.Модульные" id="ceca530a-379c-4731-81ac-2a452d54b840" configVersion="af563313e90d560d6ea0e3484f54cc2407c3fc30"/>
+		<Metadata name="Subsystem.ЮТТ_ЮТПодключаемыеМодули.Subsystem.Модульные" id="ceca530a-379c-4731-81ac-2a452d54b840" configVersion="dc5c1355cd15b9699819e000153ebd8377e466fb"/>
 	</ConfigVersions>
 </ConfigDumpInfo>
