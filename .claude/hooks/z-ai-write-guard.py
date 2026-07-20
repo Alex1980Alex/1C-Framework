@@ -27,7 +27,8 @@ except under .claude/ and pipeline/ (_MD_EXEMPT_PREFIXES): ADR-018 makes pipelin
 artefacts mandatory, so blocking them pitted this guard against pipeline-protocol-stop.
 
 Tests: tests/unit/hooks/test_z_ai_write_guard_scope.py (both exemptions are narrow —
-src/ and large docs/*.md must still block).
+src/ and large docs/*.md must still block) and tests/unit/test_z_ai_guard_bsl_exempt.py
+(BSL/OneScript are never delegated — see the _CODE_EXTENSIONS note below).
 """
 
 import os
@@ -40,15 +41,25 @@ from base import BaseHook, HookInput, HookOutput
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-# Code file extensions that trigger the guard
+# Code file extensions that trigger the guard.
+#
+# NB: ".bsl"/".os" (BSL / OneScript, 1C:Enterprise) are deliberately NOT here.
+# The standing user rule is the exact opposite of this guard's premise: Z.AI is the
+# coder for every language EXCEPT 1C — it does not know the platform and hallucinates
+# the 1C API, so BSL is written by Opus itself (memory: feedback "Opus = Planner,
+# Z.AI = Coder", exception clause). Keeping .bsl here pitted two rules against each
+# other, and the only ways through were all bad: delegate BSL anyway (hallucinated API
+# lands in a live configuration), split writes into sub-15-line chunks (which also
+# races the bsl_lint --format PostToolUse hook — .bsl edits must go in ONE batch), or
+# ride the 30-minute has_llm_delegation window (making the outcome depend on how long
+# ago an unrelated delegation happened). Removed 2026-07-20 by user decision.
+# Regression: tests/unit/test_z_ai_guard_bsl_exempt.py
 _CODE_EXTENSIONS = {
     ".py",
     ".ts",
     ".js",
     ".tsx",
     ".jsx",
-    ".bsl",
-    ".os",
     ".java",
     ".go",
     ".rs",

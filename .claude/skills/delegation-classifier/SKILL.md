@@ -59,7 +59,8 @@ tags: [delegation, classification, learning, token-economy, feedback-loop]
 ```
                     │ < 30 lines │ 30-100 lines │ 100-300 lines │ 300+ lines  │
 ────────────────────┼────────────┼──────────────┼───────────────┼─────────────┤
-code (.py/.ts/.bsl) │ Never      │ Hard         │ Hard          │ Orchestrator│
+code (.py/.ts)      │ Never      │ Hard         │ Hard          │ Orchestrator│
+code 1С (.bsl/.os)  │ Never      │ Never        │ Never         │ Never       │
 docs (.md)          │ Never      │ Medium       │ Medium        │ Orchestrator│
 template/config     │ Never      │ Soft         │ Medium        │ Orchestrator│
 mixed (code+docs)   │ Never      │ Hard         │ Hard          │ Orchestrator│
@@ -69,6 +70,7 @@ mixed (code+docs)   │ Never      │ Hard         │ Hard          │ Orches
 
 | Условие | Override | Причина |
 |---------|----------|---------|
+| **1С/BSL (.bsl/.os)** | **→ Never** | **Z.AI не знает платформу 1С и галлюцинирует её API — этот код пишет Opus сам** |
 | Architecture decision | → Never | Требует полный контекст проекта |
 | Security-sensitive | → Never | Z.AI может пропустить уязвимости |
 | Debugging/investigation | → Never | Интерактивный процесс |

@@ -44,7 +44,7 @@ Minimize Opus token usage by delegating content generation to Z.AI via LLM Rotat
 - **Soft** (no review): bulk ops (10+ items), translations, formatting
 - **Medium** (Opus review mandatory): docs, decomposition, tests, boilerplate, checklists, templates
 - **Hard** (Opus thorough review mandatory): code writing, refactoring, analysis
-- **Never delegate**: architecture decisions, security, debugging, tasks < 30 lines output
+- **Never delegate**: architecture decisions, security, debugging, tasks < 30 lines output, **1C/BSL code (`.bsl`/`.os`) — Z.AI hallucinates the 1C platform API; Opus writes it directly at any size**
 
 ### Orchestrator Mode (MUST use for 3+ output files OR single file >100 lines)
 1. **DECOMPOSE** — Opus разбивает задачу на подзадачи, классифицирует каждую (Soft/Medium/Hard/Never)
