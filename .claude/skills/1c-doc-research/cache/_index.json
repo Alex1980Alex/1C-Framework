@@ -1721,6 +1721,26 @@
         "its.1c.ru/db/content/updlib/src/bsp/3.0/updatessl_3.0.htm (verbatim: авто-пропагация прав уже включённой роли во все поставляемые профили)",
         "PAYWALLED (не session-expiry, exit 0): bsp245doc/content/72, bsp301doc/content/1906, metod81/content/8334, zupcorpdoc, v837doc bookmark TI000001513, pubdevguide83/content/208+462; 410 Not Found: pubdocflow200quest/content/223"
       ]
+    },
+    "расширение-конфигурации-xml-загрузка": {
+      "title": "Расширение конфигурации 1С из XML-исходников: LoadConfigFromFiles НЕ создаёт расширение (exit 1 + пустой лог); заимствованному объекту нужен ExtendedConfigurationObject с UUID базового объекта; обязательные Configuration.xml — ObjectBelonging/Purpose/NamePrefix/CompatibilityMode; &Вместо только в .bsl",
+      "file": "extension-xml-sources-loadconfigfromfiles.md",
+      "created": "2026-07-20",
+      "last_verified": "2026-07-20",
+      "keywords": [
+        "расширение конфигурации 1С",
+        "LoadConfigFromFiles",
+        "DumpConfigToFiles",
+        "-Extension",
+        "заимствованный объект",
+        "Adopted",
+        "ExtendedConfigurationObject",
+        "ConfigurationExtensionPurpose",
+        "NamePrefix",
+        "&Вместо",
+        "cfe",
+        "сборка расширения из XML"
+      ]
     }
   }
 }
