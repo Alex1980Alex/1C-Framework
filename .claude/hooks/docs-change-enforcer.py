@@ -120,6 +120,11 @@ SKIP_PATTERNS = [
     # Documentation itself (editing docs doesn't require more docs)
     "docs/",
     "claude.md",
+    # AGENTS.md is CLAUDE.md's twin: root-level agent instructions, self-documenting.
+    # Absent here it surfaced as UNMAPPED and hard-blocked the session (2026-07-20)
+    # — the enforcer demanded documentation *for the documentation*. Same class as
+    # claude.md above, so same treatment.
+    "agents.md",
     "memory.md",
     "skill.md",
     "readme.md",
