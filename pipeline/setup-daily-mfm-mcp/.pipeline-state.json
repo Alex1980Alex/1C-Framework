@@ -1,0 +1,44 @@
+{
+  "task": "setup-daily-mfm-mcp",
+  "title": "setup-daily-mfm-mcp",
+  "created_at": "2026-07-20T06:29:37",
+  "updated_at": "2026-07-20T06:29:37",
+  "current_stage": 1,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "pending",
+      "completed_at": null
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}

@@ -1,0 +1,382 @@
+{
+  "mcpServers": {
+    "bsl-code-search": {
+      "command": "node",
+      "args": [
+        "C:\\1С-Framework\\tools\\bsl-code-search\\index.js"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "BSL_SOURCE_DIR": "C:\\1С-Framework\\ИБTransportManagementDevelop\\Конфигурация\\src"
+      },
+      "timeout": 30000
+    },
+    "pdf-vector-graph": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.mcp_server.server"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "MCP_OAUTH_ENABLED": "false",
+        "MCP_OAUTH_PUBLIC_URL": "http://localhost:8000",
+        "MCP_OAUTH_ACCESS_TTL": "3600",
+        "MCP_OAUTH_REFRESH_TTL": "86400",
+        "MCP_OAUTH_CODE_TTL": "600"
+      },
+      "timeout": 600000
+    },
+    "auto-documenter": {
+      "command": "node",
+      "args": [
+        "C:\\1С-Framework\\tools\\auto-documenter\\mcp-start.js"
+      ],
+      "cwd": "C:\\1С-Framework\\tools\\auto-documenter",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "DEEP_REASONING_API_KEY": "${DEEP_REASONING_API_KEY}",
+        "DEEP_REASONING_BASE_URL": "https://api.z.ai/api/anthropic",
+        "DEEP_REASONING_MODEL": "glm-5"
+      },
+      "timeout": 180000
+    },
+    "bsl-semantic-search": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.bsl.semantic_search.mcp"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "bsl-debugger": {
+      "command": "node",
+      "args": [
+        "C:\\1С-Framework\\tools\\bsl-debugger\\dist\\index.js"
+      ],
+      "cwd": "C:\\1С-Framework\\tools\\bsl-debugger",
+      "env": {
+        "NODE_ENV": "production",
+        "OSCRIPT_HOME": "C:\\Tools\\OneScript"
+      },
+      "timeout": 120000
+    },
+    "bsl-platform-context": {
+      "command": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64\\bin\\java.exe",
+      "args": [
+        "-Dfile.encoding=UTF-8",
+        "-jar",
+        "C:\\1С-Framework\\tools\\mcp-jars\\mcp-bsl-context-0.3.1.jar",
+        "--platform-path",
+        "C:\\Program Files\\1cv8\\8.3.27.2214",
+        "--verbose"
+      ],
+      "timeout": 30000
+    },
+    "memory-ai": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.memory.ai_memory.server"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "vector-memory": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.memory.vector_memory.server"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "QDRANT_URL": "http://localhost:6333"
+      },
+      "timeout": 60000
+    },
+    "skill-learning": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.memory.skill_learning.server"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "memory-orchestrator": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.memory.orchestrator.memory_orchestrator"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "QDRANT_URL": "http://localhost:6333"
+      },
+      "timeout": 120000
+    },
+    "llm-rotation": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.shared.llm_rotation.mcp"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "ZAI_API_KEY": "96aa2715269e493492269f0722ef8094.IgeitgoaFMpg5If9",
+        "LLM_ROTATION_TIMEOUT": "60"
+      },
+      "timeout": 60000
+    },
+    "edt-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://localhost:8765/mcp"
+      ],
+      "timeout": 60000
+    },
+    "codepilot1c": {
+      "type": "http",
+      "url": "http://127.0.0.1:8766/mcp",
+      "headers": {
+        "Authorization": "Bearer cpedt-local-8766-tkn"
+      }
+    },
+    "mcp-onec-test-runner": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\onec_test_runner_launch.py"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "JAVA_HOME": "C:\\Program Files\\1C\\1CE\\components\\axiom-jdk-full-17.0.16+12-x86_64"
+      },
+      "timeout": 120000
+    },
+    "1c-mcp-crud": {
+      "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"
+      ],
+      "cwd": "C:\\1С-Framework\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/transport",
+        "MCP_ONEC_SERVICE_ROOT": "mcp",
+        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
+        "MCP_ONEC_PASSWORD": "Alex80Alex"
+      },
+      "timeout": 60000
+    },
+    "1c-mcp-crud-erp": {
+      "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"
+      ],
+      "cwd": "C:\\1С-Framework\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/erp",
+        "MCP_ONEC_SERVICE_ROOT": "mcp",
+        "MCP_ONEC_USERNAME": "Admin",
+        "MCP_ONEC_PASSWORD": ""
+      },
+      "timeout": 60000
+    },
+    "1c-mcp-crud-trade": {
+      "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"
+      ],
+      "cwd": "C:\\1С-Framework\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/trade",
+        "MCP_ONEC_SERVICE_ROOT": "mcp",
+        "MCP_ONEC_USERNAME": "Admin",
+        "MCP_ONEC_PASSWORD": ""
+      },
+      "timeout": 60000
+    },
+    "1c-mcp-crud-svetly": {
+      "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"
+      ],
+      "cwd": "C:\\1С-Framework\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/svetly",
+        "MCP_ONEC_SERVICE_ROOT": "mcp",
+        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
+        "MCP_ONEC_PASSWORD": "Alex80Alex"
+      },
+      "timeout": 60000
+    },
+    "1c-mcp-crud-mfm": {
+      "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"
+      ],
+      "cwd": "C:\\1С-Framework\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/mfm",
+        "MCP_ONEC_SERVICE_ROOT": "mcp",
+        "MCP_ONEC_USERNAME": "Администратор",
+        "MCP_ONEC_PASSWORD": ""
+      },
+      "timeout": 60000
+    },
+    "1c-debug": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\mcp_debug_server.py"
+      ],
+      "cwd": "C:\\1С-Framework\\tools\\bsl-debug-server",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "1c-debug-hmr": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\mcp_hmr_proc.py",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\mcp_debug_server.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\bsl_locals.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\uuid_index.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\autonomy.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\logpoints.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\exception_bps.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\bp_conditions.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\system_stops.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\coverage.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\snapshot.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\held_job.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\watchpoints.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\diff_runs.py",
+        "--watch",
+        "C:\\1С-Framework\\tools\\bsl-debug-server\\artifacts.py"
+      ],
+      "cwd": "C:\\1С-Framework\\tools\\bsl-debug-server",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "openspec-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "openspec-mcp@0.4.2",
+        "."
+      ],
+      "cwd": "C:\\1С-Framework",
+      "timeout": 60000
+    },
+    "lazy-mcp": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-u",
+        "C:\\1С-Framework\\infra\\lazy-mcp\\src\\server.py"
+      ],
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUNBUFFERED": "1",
+        "LAZY_MCP_CONFIG": "C:\\1С-Framework\\infra\\lazy-mcp\\config\\registry.yaml"
+      },
+      "timeout": 60000
+    },
+    "obsidian-mcp": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\uvx.exe",
+      "args": [
+        "mcp-obsidian"
+      ],
+      "env": {
+        "OBSIDIAN_API_KEY": "ce43f3ec7b3abd209c3f532b701d9c66901b01f7e43c85933dc37a469a645f28",
+        "OBSIDIAN_HOST": "127.0.0.1",
+        "OBSIDIAN_PORT": "27124"
+      },
+      "timeout": 30000
+    },
+    "framework-search": {
+      "command": "C:\\1С-Framework\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\tools\\framework-search-mcp\\server.py"
+      ],
+      "cwd": "C:\\1С-Framework",
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 60000
+    },
+    "scene-detect": {
+      "command": "C:\\1С-Framework\\tools\\scene-detect-mcp\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\tools\\scene-detect-mcp\\scene_detect_mcp.py"
+      ],
+      "timeout": 120000
+    },
+    "whisper": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "whisper-windows-mcp"
+      ],
+      "env": {
+        "WHISPER_CLI_PATH": "C:\\whisper\\Release\\whisper-cli.exe",
+        "WHISPER_MODEL": "C:\\whisper\\models\\ggml-large-v3-turbo.bin"
+      },
+      "timeout": 120000
+    },
+    "1c-mcp-crud-bat33566": {
+      "command": "C:\\1С-Framework\\external\\1c_mcp\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\1С-Framework\\scripts\\mcp_1c_stdio_launcher.py"
+      ],
+      "cwd": "C:\\1С-Framework\\external\\1c_mcp",
+      "env": {
+        "PYTHONPATH": "C:\\1С-Framework\\external\\1c_mcp",
+        "PYTHONIOENCODING": "utf-8",
+        "MCP_ONEC_URL": "http://localhost/bat33566",
+        "MCP_ONEC_SERVICE_ROOT": "mcp",
+        "MCP_ONEC_USERNAME": "a.terletskiy@sodru.com",
+        "MCP_ONEC_PASSWORD": "Alex80Alex"
+      },
+      "timeout": 60000
+    }
+  }
+}
