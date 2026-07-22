@@ -239,6 +239,9 @@ SKIP_PATTERNS = [
     # MFM (УправлениеМатериальнымиПотоками) EDT workspace — submodule Конфигурация
     # registered 2026-06-30; same category (gitlink pointer, not framework product code).
     "MFM/",
+    # KAT EDT workspace (appeared 2026-07-23 alongside infobase TransportManagementDevelop_KAT)
+    # — same category: an EDT workspace/project tree, never framework product code needing docs.
+    "TransportManagementDevelop_KAT/",
     # BSL infrastructure (separate from PDF framework, documented in bsl-development skill)
     "src/bsl/",
     # Shared utilities (generic modules like mcp_oauth — not PDF framework core)
