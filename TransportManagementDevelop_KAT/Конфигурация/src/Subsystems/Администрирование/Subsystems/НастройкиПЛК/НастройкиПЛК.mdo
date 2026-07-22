@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="10f0a6b4-9698-44c3-bb62-d0dcc0ddba64">
+  <name>НастройкиПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройки ПЛК</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Catalog.гкс_ОборудованиеПЛК</content>
+  <content>Catalog.гкс_СтруктураПЛК</content>
+  <content>Constant.гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюСКверион</content>
+  <content>Constant.гкс_ИспользоватьЭлектронноеТабло</content>
+  <content>Constant.гкс_ИспользоватьЭлектроннуюОчередь</content>
+  <content>InformationRegister.гкс_НастройкиНазначенияРазгрузки</content>
+  <content>InformationRegister.гкс_ДополнительныеНастройкиНазначенияРазгрузки</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

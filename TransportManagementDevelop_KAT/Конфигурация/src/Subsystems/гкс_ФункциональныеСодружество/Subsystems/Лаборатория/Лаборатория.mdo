@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0233fafd-98c8-4abc-947d-47472337b590">
+  <name>Лаборатория</name>
+  <synonym>
+    <key>ru</key>
+    <value>Лаборатория</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_НормативнаяСертификацияНоменклатуры</content>
+  <content>Role.гкс_РегистрСведений_ЗаданияНаПроверкуКачества_Просмотр</content>
+  <content>InformationRegister.гкс_РезультатыНормативнойСертификацииНоменклатуры</content>
+  <content>CommonModule.гкс_ЛабораторияИКачество</content>
+  <content>Role.гкс_Документ_ФормированиеНомераПробы_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаданияНаПроверкуКачества_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаданияНаПроверкуКачества_ДобавлениеИзменение</content>
+  <content>Document.гкс_ЗаданияНаПроверкуКачества</content>
+  <content>Role.гкс_Документ_ЛабораторныйАнализ_ДобавлениеИзменение</content>
+  <content>InformationRegister.гкс_ПриоритетыПоказателейКачества</content>
+  <content>Role.гкс_Документ_НормативнаяСертификацияНоменклатуры_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЛабораторныйАнализ_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_КодыПоказателейКачестваЛИМС_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_КомпозитныеПробы_ДобавлениеИзменение</content>
+  <content>Role.гкс_Справочник_ПоказателиАнализовНоменклатуры_ДобавлениеИзменение</content>
+  <content>Role.гкс_Обработка_АРМКомпозитныеПробы_Использование</content>
+  <content>Role.гкс_Документ_НормативнаяСертификацияНоменклатуры_Просмотр</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюССАРА</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюССАРА</content>
+  <content>Role.гкс_ПросмотрОтчетовЛаборатория</content>
+  <content>Role.гкс_РегистрСведений_РезультатыНормативнойСертификацииНоменклатуры_Изменение</content>
+  <content>Role.гкс_РегистрСведений_РезультатыНормативнойСертификацииНоменклатуры_Просмотр</content>
+  <content>Constant.гкс_ИспользоватьСредневзвешенныеПоказатели</content>
+  <content>Role.гкс_РегистрСведений_КомпозитныеПробы_Просмотр</content>
+  <content>InformationRegister.гкс_КомпозитныеПробы</content>
+  <content>FunctionalOption.гкс_ИспользоватьСредневзвешенныеПоказатели</content>
+  <content>Catalog.гкс_ПоказателиАнализовНоменклатуры</content>
+  <content>InformationRegister.гкс_СопоставлениеПоказателейАнализовНоменклатуры</content>
+  <content>InformationRegister.гкс_ФактическиеПоказателиКачества</content>
+  <content>Role.гкс_Документ_ЗаявкаНаПеревозку_Просмотр</content>
+  <content>Constant.гкс_НеОжидатьОкончанияАнализаДляВыполнения</content>
+  <content>FunctionalOption.гкс_НеОжидатьОкончанияАнализаДляВыполнения</content>
+  <content>Catalog.гкс_ПараметрыСозданияНастроекУсиленногоКонтроля</content>
+  <content>AccumulationRegister.гкс_ЗаданияНаКомпозитныеПробы</content>
+  <subsystems>ВнешниеПробы</subsystems>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="646bb1e6-f19b-42c4-9c50-63737a9c4b54">
+  <name>НапоминанияПользователя</name>
+  <synonym>
+    <key>ru</key>
+    <value>Напоминания пользователя</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Role.гкс_РегистрСведений_НастройкиНапоминанияПользователя_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_НастройкиНапоминанияПользователя_Просмотр</content>
+  <content>InformationRegister.НапоминанияПользователя</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

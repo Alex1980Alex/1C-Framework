@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="891b0126-874f-4622-9bb7-a36378c00f8f">
+  <producedTypes>
+    <managerType typeId="94dd7fbb-2b77-4153-8d72-f298fedb4204" valueTypeId="2006420f-dff0-4bfb-9eb2-b9459fb02dd3"/>
+    <valueManagerType typeId="70d197a8-903f-4e2e-8543-154385caaead" valueTypeId="b612c083-478f-41b1-a8ff-c5c0ebc0885a"/>
+    <valueKeyType typeId="00e20869-bf88-4e8b-aa08-9d1be50a91a9" valueTypeId="564071f4-4639-4239-981e-3752b266c4dc"/>
+  </producedTypes>
+  <name>гкс_РазрешитьВходнойКонтрольДоВзвешиванияАвто</name>
+  <synonym>
+    <key>ru</key>
+    <value>Разрешить входной контроль до взвешивания (авто транспорт)</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

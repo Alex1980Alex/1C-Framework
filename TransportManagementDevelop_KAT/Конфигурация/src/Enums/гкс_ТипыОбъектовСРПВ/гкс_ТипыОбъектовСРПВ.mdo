@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4636b6db-dc81-4bd5-9424-6f999b648fd5">
+  <producedTypes>
+    <refType typeId="4dfaddad-1c2b-40cd-8cde-01b8be7b51ad" valueTypeId="4869cbc4-b307-4b7f-8a81-7fe7e76dff36"/>
+    <listType typeId="288a853d-28df-49de-b3fc-c0d61170e6cf" valueTypeId="7a8f61a5-8a64-4c52-9e50-9313f6001f83"/>
+    <managerType typeId="24aefe24-dc00-46d4-af30-469d3ca3f8a9" valueTypeId="8e7130d5-7958-4a74-9ecb-11d56b598bcb"/>
+  </producedTypes>
+  <name>гкс_ТипыОбъектовСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы объектов СРПВ</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="adba7e8f-c88e-47ee-b158-43daa63b54b9">
+    <name>ПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>ПЛК</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="d0417369-2afe-4274-95db-7df2296b3b71">
+    <name>Весы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Весы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="62576009-aaa7-4d62-bc0e-812cf85dc8d2">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="cea13ffd-f3f6-4292-8c51-ddadd1bec9ea">
+    <name>СтруктураПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>Структура ПЛК</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

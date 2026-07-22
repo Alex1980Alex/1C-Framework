@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8635c990-2e53-47ca-a48b-a32169e75de4">
+  <producedTypes>
+    <refType typeId="45db3b83-d8a7-4dec-a6f0-c0d9ab7531cb" valueTypeId="e704139d-6b79-4542-8225-122b77534c4c"/>
+    <listType typeId="269d6437-c02b-4469-8beb-2497b36dacbb" valueTypeId="ea095a21-69ff-4081-b76b-f48805687e03"/>
+    <managerType typeId="16db12b1-df2c-478f-8055-2d73f5dcde72" valueTypeId="59177ba3-f0c0-4d40-8182-a5a6475a2727"/>
+  </producedTypes>
+  <name>гкс_ВидыЭлектронныхТабло</name>
+  <synonym>
+    <key>ru</key>
+    <value>Виды электронных табло (гкс)</value>
+  </synonym>
+  <comment>ERP-1130</comment>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="446651ef-403a-4248-8f8c-bf59fac50d7a">
+    <name>НазначениеНаВесы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение на весы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="694b1d8e-6ce6-4770-81ad-eebd89868bdd">
+    <name>НазначениеНаВыгрузку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение на выгрузку</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="f6fa3a0d-fec4-4dd2-a08e-c2e81ef9eb74">
+    <name>ВозвратАвто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Возврат авто, не подходящего по качеству</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="1ab77957-f24b-4be7-9d8e-67ce621b1fe5">
+    <name>ОжиданияПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ожидания проб</value>
+    </synonym>
+    <comment>ERP-1425</comment>
+  </enumValues>
+  <enumValues uuid="2f98f896-d472-4ed1-b5d7-0ca1fce85319">
+    <name>НеПрошедшиеРегистрацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Не прошедшие регистрацию</value>
+    </synonym>
+    <comment>ERP-2056</comment>
+  </enumValues>
+</mdclass:Enum>

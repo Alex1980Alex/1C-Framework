@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c8959ea2-01cb-4f41-8069-103bea508333">
+  <producedTypes>
+    <selectionType typeId="0ba2ad14-3986-4150-9c8a-35ef5988bb09" valueTypeId="8012262a-837f-4d6e-8867-bf60dfbf2508"/>
+    <listType typeId="c9ee10f3-35f2-4e98-a299-f9fafd281581" valueTypeId="accdc24e-71d4-446e-b118-cb0b8864a205"/>
+    <managerType typeId="7fe6edc6-6f15-4f23-8646-f609cbbc835f" valueTypeId="574d064e-b24c-4625-aceb-4d5658b0c709"/>
+    <recordSetType typeId="23393e86-201e-462a-805d-2b887696126d" valueTypeId="b7ab3be4-f160-4c88-a251-28af451034e9"/>
+    <recordKeyType typeId="621e1ff9-9239-474f-a36b-adb54dbe6469" valueTypeId="cbbd50ea-53c5-4451-93b4-25c8401e8266"/>
+    <recordType typeId="f9e93ecc-1923-453c-87c5-6b705f7a684c" valueTypeId="11e2f8b1-3cf8-487b-96a5-5d0c59717910"/>
+    <recordManagerType typeId="9046bf1f-296a-4aef-8902-c8b53b839fbe" valueTypeId="b51feb95-368a-4f05-bb1d-658f11d487e3"/>
+  </producedTypes>
+  <name>гкс_ВремяНахожденияТСНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Время нахождения ТС на ПЛК</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="63619360-358a-4e11-ac07-170421abdde0">
+    <name>ВремяВзвешенБрутто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Время взвешен брутто</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="7b71b12c-16f0-4054-852c-6f3a18c87221">
+    <name>ВремяВзвешенТара</name>
+    <synonym>
+      <key>ru</key>
+      <value>Время взвешен тара</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="8ae90a7e-0715-4d8c-b2f4-71884aeea989">
+    <name>ЕстьОтклонение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Есть отклонение</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="4eb6d8a8-52e9-4ae8-b238-db141280be81">
+    <name>Отклонение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отклонение (мин)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="b78db5ec-f4a6-469a-8c94-1d263b550d7a">
+    <name>ВремяНаПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>Время на ПЛК (мин)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="d784748b-fc74-4924-8ac4-84bc6115b900">
+    <name>Комментарий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Комментарий</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </attributes>
+  <dimensions uuid="435f1918-e2a2-40d7-9f8e-7bacf84d56c2">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

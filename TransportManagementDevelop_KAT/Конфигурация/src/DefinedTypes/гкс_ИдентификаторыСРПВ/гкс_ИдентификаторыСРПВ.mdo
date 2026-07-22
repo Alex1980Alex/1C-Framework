@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="77ec06c6-3ef4-4e93-bbe6-f6b242865cb9">
+  <producedTypes>
+    <containerType typeId="7cab10f1-2a3a-49be-9d4b-4fcb533e09bf" valueTypeId="1e69ce95-3d4d-479f-af87-5ed140221b68"/>
+  </producedTypes>
+  <name>гкс_ИдентификаторыСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Идентификаторы СРПВ</value>
+  </synonym>
+  <type>
+    <types>String</types>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>20</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+    <stringQualifiers>
+      <length>35</length>
+    </stringQualifiers>
+  </type>
+</mdclass:DefinedType>

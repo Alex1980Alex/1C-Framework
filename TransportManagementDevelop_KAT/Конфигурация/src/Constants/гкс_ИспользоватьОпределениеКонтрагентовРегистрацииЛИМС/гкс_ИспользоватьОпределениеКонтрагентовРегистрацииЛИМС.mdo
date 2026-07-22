@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c1f7071e-90e8-4f87-b8fb-73fd31a935b0">
+  <producedTypes>
+    <managerType typeId="5c203132-d95d-4b8f-9e49-b6d322bfd13e" valueTypeId="6bfa6f11-5559-4ba6-856f-1f1174405cff"/>
+    <valueManagerType typeId="3f020712-11fd-4bb4-866a-ef158469ecba" valueTypeId="98e087a1-9aaa-4381-b0e8-82e8baa2e403"/>
+    <valueKeyType typeId="e1c55b40-461c-4408-9cdf-f9dd3905a689" valueTypeId="9f4e06a3-e8bf-482f-b4cc-a48036954790"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьОпределениеКонтрагентовРегистрацииЛИМС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать определение контрагентов регистрации ЛИМС</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

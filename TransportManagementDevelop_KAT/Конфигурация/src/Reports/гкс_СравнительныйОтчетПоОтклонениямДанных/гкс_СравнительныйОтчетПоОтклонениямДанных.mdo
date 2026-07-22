@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a95d7f02-79d9-4e85-b818-40b91f7ce9d2">
+  <producedTypes>
+    <objectType typeId="a3e0a690-c573-49a5-ad5d-6b49e1f9cad8" valueTypeId="fe355624-c005-4576-9af9-a1451ce7a7d6"/>
+    <managerType typeId="a346ebc6-1f6d-4368-a7c2-7e22c79d16b0" valueTypeId="bb855d34-6fd6-42f6-962c-31898b2c833a"/>
+  </producedTypes>
+  <name>гкс_СравнительныйОтчетПоОтклонениямДанных</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сравнительный отчет по отклонениям данных УТ и СРПВ</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <mainDataCompositionSchema>Report.гкс_СравнительныйОтчетПоОтклонениямДанных.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <templates uuid="417f663b-0a75-4741-84f0-eb8b1e336339">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

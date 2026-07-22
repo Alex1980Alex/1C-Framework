@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="bf133349-e053-4a1e-a5b0-4f595b8478ea">
+  <producedTypes>
+    <refType typeId="87d3a7fd-98d8-411e-96c4-c5b8182de6a3" valueTypeId="bf5a75fd-daf2-48a3-974b-7dbf693cc375"/>
+    <listType typeId="52d53fd9-8f0a-429a-8a0f-4eff65310d87" valueTypeId="e4bcacff-c6c9-448f-8261-ad7d7ad72814"/>
+    <managerType typeId="614dab8c-242d-4e5b-877d-a32311d817bf" valueTypeId="9e9890a4-87dd-4577-8d43-ba87a2215001"/>
+  </producedTypes>
+  <name>гкс_НомераЗаполняемыхАвтоматическиГрафПечатныхФорм</name>
+  <synonym>
+    <key>ru</key>
+    <value>Тексты граф печатных форм</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="dd2c329e-0cd1-48e8-b207-4a3079206065">
+    <name>НазваниеСтандарта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Название стандарта</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

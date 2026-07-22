@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0b48e7ed-1ef1-456b-9034-c090e0dabd31">
+  <producedTypes>
+    <selectionType typeId="420ae7cd-1791-4a7c-bcba-1d92842bfcc7" valueTypeId="4999302a-1e78-4c00-9fee-ca482fb4400a"/>
+    <listType typeId="e5ecbd92-d93e-42fa-a936-7746b1838280" valueTypeId="60b346f7-8164-43d5-b76a-85c619db687d"/>
+    <managerType typeId="fac7b076-b4f7-4341-bade-6404fab7de03" valueTypeId="100426b0-2dfe-44b7-b9ea-2cf5d1207ba8"/>
+    <recordSetType typeId="20a73e32-868b-4a73-aea5-1faac10047b8" valueTypeId="db10b6ee-f31f-4eb1-8ab8-ff15045d2768"/>
+    <recordKeyType typeId="96137cac-f5e1-4401-bec1-47bcd612c013" valueTypeId="fc7577a2-0814-41e2-8dcb-54a9e2de56db"/>
+    <recordType typeId="e311344d-4a4b-4db1-875b-fcd4c9de6148" valueTypeId="e8e6c220-8ab3-4d04-b3ed-aa0929a0f6fc"/>
+    <recordManagerType typeId="b7fe378e-d48a-4e50-aefa-e84accc7c7d4" valueTypeId="f3363eb5-e0a1-4d60-9a97-77f3c5bc070e"/>
+  </producedTypes>
+  <name>гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка печати особых отметок ЗПП-47 (АЛЦ)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <dimensions uuid="b38d8c76-6762-4dfa-a668-9d9e99b7db65">
+    <name>Организация</name>
+    <synonym>
+      <key>ru</key>
+      <value>Организация</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Организации</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="ffd83cae-3142-4683-9970-3d8081075e0e">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="d5be78a9-d4ad-4fc1-b4c4-a0eb97c5ff8f">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="2ab7fd64-74e8-4ef9-9633-18e79686679d">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </dimensions>
+  <dimensions uuid="826a6824-ca15-4b4e-a5a5-bcb62d1c6289">
+    <name>ЕдиницаИзмерения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Единица измерения</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <commands uuid="f29ae34c-debb-4f5e-b53e-46b20b0491c2">
+    <name>гкс_ОткрытьРегистрНастройкаПечатиОсобыхОтметокЗПП47АЛЦ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройка печати особых отметок ЗПП-47 (АЛЦ)</value>
+    </synonym>
+    <group>ActionsPanelTools</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:InformationRegister>

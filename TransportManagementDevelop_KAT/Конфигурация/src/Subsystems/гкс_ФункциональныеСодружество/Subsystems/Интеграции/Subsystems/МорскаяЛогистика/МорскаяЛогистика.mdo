@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b0ba8e12-bedb-4ae0-9371-91f6ef10dbdd">
+  <name>МорскаяЛогистика</name>
+  <synonym>
+    <key>ru</key>
+    <value>Морская логистика</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Role.гкс_Документ_Фрахт_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_ПланыРазгрузкиСудов_ДобавлениеИзменение</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюСМорскойЛогистикой</content>
+  <content>Role.гкс_Документ_ПрибытиеСуднаНаПЛК_ДобавлениеИзменение</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюСМорскойЛогистикой</content>
+  <content>Role.гкс_Документ_УстановкаНастроекГруппировкиПоЛотам_Просмотр</content>
+  <content>Enum.гкс_ВидыОперацийФрахта</content>
+  <content>CommonModule.гкс_МорскаяЛогистика</content>
+  <content>Document.гкс_УстановкаНастроекГруппировкиПоЛотам</content>
+  <content>CommonModule.гкс_МорскаяЛогистикаКлиент</content>
+  <content>CommonModule.гкс_МорскаяЛогистикаВызовСервера</content>
+  <content>Role.гкс_Документ_Фрахт_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_РабочаяСмена_Просмотр</content>
+  <content>Role.гкс_Документ_РабочаяСмена_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ПрибытиеСуднаНаПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_УстановкаНастроекГруппировкиПоЛотам_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_НастройкиГруппировкиПоЛотам_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_НастройкиГруппировкиПоЛотам_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_ПланыРазгрузкиСудов_Просмотр</content>
+  <content>InformationRegister.гкс_СостоянияФрахта</content>
+  <content>InformationRegister.гкс_СостоянияОбработкиСудов</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

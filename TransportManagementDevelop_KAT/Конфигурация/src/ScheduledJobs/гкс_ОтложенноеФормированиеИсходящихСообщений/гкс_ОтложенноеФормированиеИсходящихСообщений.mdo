@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a9250cb0-5dfd-49a6-b895-353ed50d97c5">
+  <name>гкс_ОтложенноеФормированиеИсходящихСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отложенное формирование исходящих сообщений (ИАС)</value>
+  </synonym>
+  <comment>ADAPTER-205</comment>
+  <methodName>CommonModule.гкс_ОчередьСообщенийRMQСлужебный.ОтложенноеФормированиеИсходящихСообщений</methodName>
+  <description>Отложенное формирование исходящих сообщений (Интеграционый адаптер &quot;Содружество&quot;)</description>
+  <key>Отложенное формирование исходящих сообщений</key>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e35fec12-73a3-4d4d-a37d-3ad5e3b50d87">
+  <producedTypes>
+    <objectType typeId="caaead06-9e00-4e45-a818-2a1f584c9cf1" valueTypeId="c3947452-5aea-466e-bbab-ca7c70c72ac6"/>
+    <refType typeId="5ae839d5-9635-48cf-ba19-50c23a373be2" valueTypeId="2fdc9cae-ded0-491d-bd78-3730996879f7"/>
+    <selectionType typeId="7dacec4d-97a4-4652-855c-fbc81b30dd25" valueTypeId="20ce8f91-ce55-44a2-953d-f0f0aa48ddfd"/>
+    <listType typeId="84c91a16-f21f-49b3-83fe-225b7ea1f34d" valueTypeId="db2aed19-89b0-4c84-8a4c-5d1f0541a7a1"/>
+    <managerType typeId="556829de-4aaa-4ba2-b1c9-ecaf9426f1c0" valueTypeId="ff790df2-9be7-4aaf-b237-b0e1c05343a0"/>
+  </producedTypes>
+  <name>гкс_ТипыВнешнихПробWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse: Типы внешних проб</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ТипыВнешнихПробWarehouse.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>30</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="b10d6c47-b5c5-4b8d-ab25-bd8aafc7621f">
+      <name>ПробаПервогоДня</name>
+      <description>1-й день</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="047512e3-e139-421f-ae53-c912314cd5ac">
+      <name>Лаборант</name>
+      <description>Лаборант</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="a61dfacd-d247-4e14-85a9-b22be382ab7d">
+      <name>ЛотНаТысячуТон</name>
+      <description>Лот на 1000т </description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="a2977a54-01d2-4ea4-8335-7b29dfb25e04">
+      <name>Элеватор</name>
+      <description>Элеватор</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultListForm>Catalog.гкс_ТипыВнешнихПробWarehouse.Form.ФормаСписка</defaultListForm>
+  <defaultChoiceForm>Catalog.гкс_ТипыВнешнихПробWarehouse.Form.ФормаВыбора</defaultChoiceForm>
+  <attributes uuid="e4bfbe30-a7cf-43e3-ae7b-4cbb0c603694">
+    <name>ИдентификаторWarehouse</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор warehouse</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>36</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue">
+      <value>                                    </value>
+    </fillValue>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="1529a53d-1437-446e-b530-59c518cf3edb">
+    <name>НаименованиеEN</name>
+    <synonym>
+      <key>ru</key>
+      <value>Наименование EN</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="8219745d-b4d7-4c4b-9417-ad3759d581b0">
+    <name>Описание</name>
+    <synonym>
+      <key>ru</key>
+      <value>Описание</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="f04018ee-ce30-40f1-8f12-484de0b0fad2">
+    <name>ЭтоКомпозит</name>
+    <synonym>
+      <key>ru</key>
+      <value>Это композит</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="7752e677-0baf-4a68-98f6-5dd54291679b">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="e53010aa-af8c-4b0b-825d-e7d46f45051a">
+    <name>ФормаВыбора</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма выбора</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

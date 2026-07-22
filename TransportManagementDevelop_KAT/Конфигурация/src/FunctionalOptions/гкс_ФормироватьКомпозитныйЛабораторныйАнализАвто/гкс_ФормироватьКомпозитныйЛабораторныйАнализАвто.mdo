@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="79ca390e-cd81-4102-b585-e5ea92b85df6">
+  <name>гкс_ФормироватьКомпозитныйЛабораторныйАнализАвто</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формировать композитную пробу авто</value>
+  </synonym>
+  <location>Constant.гкс_ФормироватьКомпозитныйЛабораторныйАнализАвто</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

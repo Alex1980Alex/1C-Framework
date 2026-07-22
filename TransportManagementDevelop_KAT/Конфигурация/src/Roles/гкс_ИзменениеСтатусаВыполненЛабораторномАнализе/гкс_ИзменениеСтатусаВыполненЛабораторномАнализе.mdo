@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="21449b32-cc67-46b0-898e-68bd38854bca">
+  <name>гкс_ИзменениеСтатусаВыполненЛабораторномАнализе</name>
+  <synonym>
+    <key>ru</key>
+    <value>Изменение статуса &quot;Выполнен&quot;в Лабораторном анализе</value>
+  </synonym>
+</mdclass:Role>

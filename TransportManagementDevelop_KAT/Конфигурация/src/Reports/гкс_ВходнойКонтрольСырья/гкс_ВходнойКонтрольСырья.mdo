@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="378c2f03-3627-4bb8-9558-c1feb83e22bd">
+  <producedTypes>
+    <objectType typeId="173493d8-6c38-4c01-bc79-63fe366df896" valueTypeId="5c3927c6-1952-4a8f-9f97-4ce26f638a15"/>
+    <managerType typeId="7d1cd8bd-6b72-4986-a20c-ccf8986eaffe" valueTypeId="90459a7a-50ed-4ee6-ac0c-acea4b51dd38"/>
+  </producedTypes>
+  <name>гкс_ВходнойКонтрольСырья</name>
+  <synonym>
+    <key>ru</key>
+    <value>Входной контроль сырья</value>
+  </synonym>
+  <mainDataCompositionSchema>Report.гкс_ВходнойКонтрольСырья.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <templates uuid="19ec8144-6acb-491e-b5f9-cf61a10c4434">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

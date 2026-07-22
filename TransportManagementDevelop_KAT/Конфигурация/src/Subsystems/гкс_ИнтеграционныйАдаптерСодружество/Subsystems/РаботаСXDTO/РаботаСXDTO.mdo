@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f2e129d9-66a2-4136-bacd-964fc5b8a06c">
+  <name>РаботаСXDTO</name>
+  <synonym>
+    <key>ru</key>
+    <value>Работа СXDTO</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>DataProcessor.гкс_ФормировательМоделиXDTO</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

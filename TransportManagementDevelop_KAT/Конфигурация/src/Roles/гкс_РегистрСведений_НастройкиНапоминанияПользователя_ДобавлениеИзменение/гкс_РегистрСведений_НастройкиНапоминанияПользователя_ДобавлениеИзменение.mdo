@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="18eceda6-650e-42ad-b2ca-439767727c9f">
+  <name>гкс_РегистрСведений_НастройкиНапоминанияПользователя_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Настройки напоминания пользователя&quot;</value>
+  </synonym>
+  <comment>GKSTCPLK-317</comment>
+</mdclass:Role>

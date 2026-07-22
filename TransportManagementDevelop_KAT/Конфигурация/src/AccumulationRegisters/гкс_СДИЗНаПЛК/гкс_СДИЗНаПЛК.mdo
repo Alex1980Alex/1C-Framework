@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:AccumulationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="48e195ab-3495-44cd-b9b4-9c27f4dccbdb">
+  <producedTypes>
+    <selectionType typeId="717fe24f-466b-4335-a2d8-fbd56efda6d0" valueTypeId="121a0867-51c0-4170-9606-3bff1952d4ac"/>
+    <listType typeId="b3c0766e-30a7-4d04-98b7-d24fd73ca9a6" valueTypeId="805164a7-c660-44ac-b853-7c8ad8603e24"/>
+    <managerType typeId="1ed9e567-9cb9-40ce-a239-27a26e006b68" valueTypeId="f0ca2f85-1a08-41bb-8e8d-b6b1a00b91cc"/>
+    <recordSetType typeId="cb5c677f-a48f-4d60-b021-c8f6fa2917bd" valueTypeId="bb711972-490c-466a-b539-3b930c5d2d2a"/>
+    <recordKeyType typeId="71340bc9-8c67-437a-82d2-5bcc96f58be6" valueTypeId="d0cc5039-d7b6-45c3-b81e-e168c249256f"/>
+    <recordType typeId="104d70aa-21f0-4009-8524-32657773794d" valueTypeId="eae81332-309f-411d-ac2b-5d24b6fd6485"/>
+  </producedTypes>
+  <name>гкс_СДИЗНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>СДИЗ поступившие на ПЛК</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <registerType>Turnovers</registerType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <enableTotalsSplitting>true</enableTotalsSplitting>
+  <resources uuid="d56561f1-f0ac-430a-814f-e43fae915590">
+    <name>Количество</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>3</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </resources>
+  <dimensions uuid="5e5d925d-dc02-4a89-ab38-bc4b82825262">
+    <name>СДИЗ</name>
+    <synonym>
+      <key>ru</key>
+      <value>СДИЗ</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_СДИЗЗЕРНО</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+</mdclass:AccumulationRegister>

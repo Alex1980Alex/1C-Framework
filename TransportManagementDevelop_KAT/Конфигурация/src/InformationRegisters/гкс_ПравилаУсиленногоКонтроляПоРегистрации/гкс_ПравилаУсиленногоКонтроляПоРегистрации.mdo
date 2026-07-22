@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c25a4e71-6ab7-4ee3-b55d-fb50b81e7e51">
+  <producedTypes>
+    <selectionType typeId="3d51df40-ec62-43f8-a231-223f8b229a4c" valueTypeId="c4f4ecd5-fcac-43cc-ac46-88db60b52e2f"/>
+    <listType typeId="9c638c86-39d2-4d04-94f9-72bd6d0a1754" valueTypeId="cf419314-d968-4b7d-b5c4-3b9d624f6801"/>
+    <managerType typeId="c8661f92-b686-483b-adf9-02f9efa2fe37" valueTypeId="87e871ca-712a-4512-89dd-a9472facb161"/>
+    <recordSetType typeId="c5434416-d106-4878-91ae-e2aba05015b5" valueTypeId="51391cb9-48e7-4b7e-b6f2-15a2d281a3ef"/>
+    <recordKeyType typeId="1eebba4d-0516-4012-afc5-dac7c8ee5f84" valueTypeId="e25f8eaa-f5c4-477a-960e-b8ae972c4331"/>
+    <recordType typeId="56ac0c9f-77e1-408f-897a-8eb37f4be0ee" valueTypeId="0297a337-23ee-4bc3-89ab-650456566528"/>
+    <recordManagerType typeId="a2d7338a-543b-4459-abd2-80006a676835" valueTypeId="ba5cb664-6c54-452c-aa59-48ac31738fab"/>
+  </producedTypes>
+  <name>гкс_ПравилаУсиленногоКонтроляПоРегистрации</name>
+  <synonym>
+    <key>ru</key>
+    <value>Правила усиленного контроля для транспортного средства</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <defaultListForm>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Form.ФормаСписка</defaultListForm>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="cd04137b-3e5b-4780-8674-1dc737e416b1">
+    <name>ТранспортноеСредство</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортное средство</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="61639641-130f-483c-bbba-b99091da4ea4">
+    <name>ТипВходногоКонтроля</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип входного контроля</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыУсиленногоКонтроляКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="ca559581-3be8-440a-8ffc-334630b1be64">
+    <name>КоличествоТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество ТС</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>3</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="0d1f9b1a-0876-41e4-83af-fa8caf6f2d7f">
+    <name>МестнаяДата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Местная дата</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="b68f1fbc-3a97-41ba-97ea-50ee050a73cb">
+    <name>ПроизводственныеСутки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="9ba52b9e-3162-4813-b59f-d40e556a8957">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="6c21ba44-00f0-4f65-8bb9-fe48ed4e2a7d">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="16e2ac03-a61e-452e-8026-5784aad6f73a">
+    <name>ИдентификаторПравила</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор правила</value>
+    </synonym>
+    <type>
+      <types>UUID</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="7abd7dde-7f36-4823-b307-2cf9f5742ca4">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

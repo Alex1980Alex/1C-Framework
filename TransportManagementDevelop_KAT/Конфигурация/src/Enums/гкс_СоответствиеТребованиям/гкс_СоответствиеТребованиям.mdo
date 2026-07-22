@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8d6625bf-190c-41a1-80e9-422b7ce71878">
+  <producedTypes>
+    <refType typeId="c86d7e1d-8de9-431f-85a0-ca080c7ac37c" valueTypeId="223d0de7-9962-495e-b2fa-07fd76955273"/>
+    <listType typeId="09d6afa5-151a-490b-9a7b-f698b477ff29" valueTypeId="6f0fdde5-260e-467e-b588-c7efc9bb3df3"/>
+    <managerType typeId="f9766574-2c47-4334-ae95-4386f15dba13" valueTypeId="05c646f2-466b-4977-b686-092b9a746b8c"/>
+  </producedTypes>
+  <name>гкс_СоответствиеТребованиям</name>
+  <synonym>
+    <key>ru</key>
+    <value>Соответствие требованиям</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="ebfaadb0-9024-45b5-98cc-0f610487ac0d">
+    <name>Соответствует</name>
+    <synonym>
+      <key>ru</key>
+      <value>Соответствует</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ad148e7c-6287-46c0-92fa-ebe1bd6f4433">
+    <name>НеСоответствует</name>
+    <synonym>
+      <key>ru</key>
+      <value>Не соответствует</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

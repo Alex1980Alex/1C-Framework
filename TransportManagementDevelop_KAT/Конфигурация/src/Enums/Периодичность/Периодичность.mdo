@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fbdf4e8a-01c5-40a6-9819-033550414baf">
+  <producedTypes>
+    <refType typeId="1146d9de-5024-45c3-b44b-164873922ee9" valueTypeId="62c5a9ea-6730-44f0-bece-d322123abd4a"/>
+    <listType typeId="6023943d-616e-4c27-ae5b-2bd6d3bd337d" valueTypeId="f69e48ac-f81c-401d-b809-a03702a7276e"/>
+    <managerType typeId="459191ec-6556-4a5d-9a7d-662db1c12171" valueTypeId="74339af9-f4a5-4fa8-bbcb-0caf079218ac"/>
+  </producedTypes>
+  <name>Периодичность</name>
+  <synonym>
+    <key>ru</key>
+    <value>Периодичность</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="7f5c4155-4966-47ba-9331-e10cb9d5f1aa">
+    <name>День</name>
+    <synonym>
+      <key>ru</key>
+      <value>День</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="3fe4b003-0000-4d39-8e6f-c21ec4bf368f">
+    <name>Неделя</name>
+    <synonym>
+      <key>ru</key>
+      <value>Неделя</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ae3e6418-e638-400c-9696-2d4099bd13a1">
+  <name>НастройкаРазделов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка НСИ и разделов</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>DataProcessor.гкс_ПанельАдминистрированиеПЛК</content>
+  <content>DataProcessor.гкс_ГрупповоеИзменениеДатыВРегистрацииСвязанныхОбъектов</content>
+  <content>InformationRegister.гкс_НастройкиНапоминанияПользователя</content>
+  <content>Catalog.Организации</content>
+  <content>ChartOfCharacteristicTypes.гкс_ПроизвольныеПредопределенныеОбъекты</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

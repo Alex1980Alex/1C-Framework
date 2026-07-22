@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e50f2779-633d-4b5d-a1de-7b6d5bd24f1c">
+  <producedTypes>
+    <objectType typeId="59627d16-978e-48f5-8bd0-267bb9f0bb2f" valueTypeId="c641fbcb-e8b5-452d-9940-df32e7972516"/>
+    <refType typeId="aa70e2bd-fcfb-45eb-9af6-2c65910a868f" valueTypeId="e7dcc410-d58f-4ac1-ae53-cf056f40c664"/>
+    <selectionType typeId="03fddbe7-8e19-424b-b4f5-8a44a5fbe983" valueTypeId="3edf3b2c-860f-4614-87ee-76e39f25b2af"/>
+    <listType typeId="7e26aa68-142f-41fd-96fe-f5dc050b719a" valueTypeId="62307b18-d150-43c3-a90b-214fe790128e"/>
+    <managerType typeId="752f868f-5afd-47e6-a4fe-bf697f3789a8" valueTypeId="3c058dc6-e4cf-455e-a4f3-9c869f3076d5"/>
+  </producedTypes>
+  <name>гкс_СтруктураПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Структура ПЛК</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_СтруктураПЛК.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_СтруктураПЛК.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <hierarchical>true</hierarchical>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>50</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="c7c3d277-7c8e-42ba-aaaf-fd8f55a37f5f">
+      <name>ВъездНаПЛК</name>
+      <description>Въезд на ПЛК</description>
+      <code xsi:type="core:StringValue">
+        <value>100000001</value>
+      </code>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.гкс_СтруктураПЛК.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultListForm>Catalog.гкс_СтруктураПЛК.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="38d6ccd8-1291-4662-85c3-669bec5daf87">
+    <name>НомерПроезда</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер проезда</value>
+    </synonym>
+    <comment>Номер проезда (Кверион)</comment>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>4</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="a9dc77af-ecfc-445d-8ddc-0186880f4ace">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <comment>для совместимости со страым механизмом назначения ям</comment>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="bc6c7b55-7b8b-4638-9f61-86b1dde55ee1">
+    <name>ТипТранспортныхСредств</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип транспортных средств</value>
+    </synonym>
+    <comment>Обслуживаемый тип транспортных средств</comment>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="853c016f-f6b7-4d2a-b9a5-af1887b0c24f">
+    <name>ТипПроцесса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип процесса</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипРегистрации</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="c8bb6013-8e30-4dda-b7df-6d8a1f2a3616">
+    <name>УсловиеПроезда</name>
+    <synonym>
+      <key>ru</key>
+      <value>Условие проезда</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_УсловияПроезда</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="2a1b7547-c7bb-4768-a666-2e47347d02c9">
+    <name>ВидОперации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид операции</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ВидыОперацийПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="628f65b1-7937-4542-a6bd-db42e0388a01">
+    <name>НомерОбратногоПроезда</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер обратного проезда</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>4</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="45686f16-2660-4b4f-b634-614c02cbb08d">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="8a791ec0-4216-40c4-b2f1-d034b2049ef1">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

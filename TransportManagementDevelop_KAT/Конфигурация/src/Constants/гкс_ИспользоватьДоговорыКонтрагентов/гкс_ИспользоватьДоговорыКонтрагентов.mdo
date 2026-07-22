@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d7b98bad-e4f5-4191-95c2-e49862c1cbce">
+  <producedTypes>
+    <managerType typeId="a1ac3a9b-f12a-48bd-b87d-adfd2574b3db" valueTypeId="84b5690c-f9e9-4b2c-bd4d-969b3c50af5b"/>
+    <valueManagerType typeId="ba37fd10-85b1-48f9-ae8e-baeca27177b0" valueTypeId="c956120f-0374-4e82-a6e9-5574cb7f30d5"/>
+    <valueKeyType typeId="deb259b5-8b4d-4f8a-9829-1586afbe15be" valueTypeId="2af13cad-853b-4a4e-83cc-37deeda3b9df"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьДоговорыКонтрагентов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать договоры контрагентов</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

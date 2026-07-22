@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e2ff7b61-c595-4f04-b720-d9a6acac1903">
+  <producedTypes>
+    <refType typeId="01798b31-5bb5-44b0-923e-4634ca117eae" valueTypeId="08b1d58d-8a37-45da-ab5f-e8780c641a2c"/>
+    <listType typeId="867b2e45-5d25-4f41-8f5c-3467da9f188c" valueTypeId="b2b9dc2b-475d-492a-93a6-75433f637465"/>
+    <managerType typeId="b2a64a3c-f1b0-485c-b1b3-e5537608af81" valueTypeId="b95c585c-045c-47b5-8678-f3b717ad2926"/>
+  </producedTypes>
+  <name>гкс_СостоянияТранспортныхСредств</name>
+  <synonym>
+    <key>ru</key>
+    <value>Состояния транспортных средств</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="99a62f48-feb6-4944-8e86-48ada85a975f">
+    <name>ВПути</name>
+    <synonym>
+      <key>ru</key>
+      <value>В пути</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="e9843c3d-a290-4bae-bdbe-27502e33d0f0">
+    <name>Прибыл</name>
+    <synonym>
+      <key>ru</key>
+      <value>Прибыл</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="0d02188f-c468-4469-bcd3-211fc2b2213d">
+    <name>ВыгрузкаРазрешена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выгрузка разрешена</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4c3f473b-d13f-4d3c-8511-f92447776a87">
+    <name>Выгружен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выгружен</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7dfd20bf-724a-4c51-af28-34a2b40c2903">
+    <name>Убыл</name>
+    <synonym>
+      <key>ru</key>
+      <value>Убыл</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

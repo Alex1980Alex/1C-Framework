@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7e6df3de-134d-49f2-a842-adeddcd0c8c0">
+  <producedTypes>
+    <refType typeId="af41d34c-a0f6-4215-83c4-a81db34c44d9" valueTypeId="dec9530e-3d5c-4c79-934e-3b5bf00abf46"/>
+    <listType typeId="0232aadc-df14-48b4-b837-463c0e0419c2" valueTypeId="5b9b8f2c-0456-4b60-b2b0-f2717409c0d9"/>
+    <managerType typeId="02eb38ba-3d64-47fc-b9c2-187d79508e62" valueTypeId="2c3739b7-1f7c-4eff-aa70-1d6feb759d42"/>
+  </producedTypes>
+  <name>гкс_СостоянияИсходящихСообщенийRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Состояния исходящих сообщений RMQ</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="81b207c7-1b62-4cd3-9084-b57f97699342">
+    <name>Подготовлено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Подготовлено</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="3e2e4124-1b19-4c8c-956a-ec7277513d1d">
+    <name>Отправлено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отправлено</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ef4e2e19-f60d-4b30-b181-659f8d26a9e2">
+    <name>Доставлено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Доставлено</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4954e1fb-a095-4a2b-a5cc-16a06e55a99a">
+    <name>ДоставленоИОбработано</name>
+    <synonym>
+      <key>ru</key>
+      <value>Доставлено и обработано</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="c9d1595a-39c6-41e9-82b5-26573eff8918">
+    <name>ОшибкаОбработкиПолучателем</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ошибка обработки получателем</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="00cd4124-3d56-4c8f-8598-fb1768347317">
+    <name>Пропущено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пропущено</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="6f41b70c-5d7c-4d73-b59f-29910a6130b1">
+    <name>ОшибкаФормированияСостояния</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ошибка формирования состояния</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="0f1fa51f-a411-4977-bd39-3f164974919d">
+    <name>ОшибкаОбработкиЗакрыто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ошибка обработки закрыто</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

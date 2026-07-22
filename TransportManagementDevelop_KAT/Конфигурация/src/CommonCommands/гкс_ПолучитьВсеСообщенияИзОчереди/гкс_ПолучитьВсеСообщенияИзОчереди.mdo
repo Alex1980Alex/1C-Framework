@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonCommand xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6c78a6d3-b13a-4c0b-9fc3-a2b32fb75647">
+  <name>гкс_ПолучитьВсеСообщенияИзОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Получить все сообщения из очереди</value>
+  </synonym>
+  <group>FormCommandBarImportant</group>
+  <representation>Auto</representation>
+</mdclass:CommonCommand>

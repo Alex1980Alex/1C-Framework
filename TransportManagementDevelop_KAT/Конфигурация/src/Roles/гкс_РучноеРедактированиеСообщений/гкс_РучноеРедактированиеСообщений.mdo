@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8f300f0e-997a-41fb-9fda-5895a64240ad">
+  <name>гкс_РучноеРедактированиеСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Ручное редактирование сообщений (Интеграционый адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+</mdclass:Role>

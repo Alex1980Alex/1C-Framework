@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="004ee830-dd8a-4719-b9d5-1104c23ef68f">
+  <name>гкс_РегистрСведений_СопоставлениеПоказателейАнализовНоменклатуры_Редактирование</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений  &quot;Сопоставление показателей анализов номенклатуры&quot;</value>
+  </synonym>
+</mdclass:Role>

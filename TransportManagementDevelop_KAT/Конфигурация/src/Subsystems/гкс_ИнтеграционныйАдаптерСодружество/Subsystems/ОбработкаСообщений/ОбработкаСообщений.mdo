@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7e592009-a2f7-491f-ae59-5631b3449fb4">
+  <name>ОбработкаСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработка сообщений (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>InformationRegister.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>InformationRegister.гкс_ОчередьОбработкиВходящихСообщенийRMQ</content>
+  <content>InformationRegister.гкс_ПроблемыОбменаДанными</content>
+  <content>DataProcessor.гкс_ЗагрузчикСообщенийRMQ</content>
+  <content>DataProcessor.гкс_ОбработчикСообщенийRMQ</content>
+  <content>Enum.гкс_ДействияОтложеннойОбработки</content>
+  <content>Enum.гкс_СостоянияВходящихСообщенийRMQ</content>
+  <content>Catalog.гкс_ВходящиеСообщенияRMQ</content>
+  <content>ScheduledJob.гкс_ОбработкаОчередиВходящихСообщений</content>
+  <content>ScheduledJob.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>Enum.гкс_СостоянияОбработкиСообщенийRMQ</content>
+  <content>CommonCommand.гкс_ВернутьВОчередь</content>
+  <content>CommonCommand.гкс_ОбработатьБезОчереди</content>
+  <content>CommonCommand.гкс_ПовторноеПроигрываниеСообщений</content>
+  <content>CommonCommand.гкс_ПропуститьОбработку</content>
+  <content>CommandGroup.гкс_ПовторноеПроигрывание</content>
+  <content>DataProcessor.гкс_ЗагрузчикСообщенийRMQСтандартнаяСериализация</content>
+  <content>ScheduledJob.гкс_ОтправкаСтатистикиСообщенийRMQ</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

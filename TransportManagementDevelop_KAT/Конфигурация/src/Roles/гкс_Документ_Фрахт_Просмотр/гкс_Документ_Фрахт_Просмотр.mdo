@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8bda7518-c627-4f1f-96dd-38cd0f196853">
+  <name>гкс_Документ_Фрахт_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр документов &quot;Фрахт&quot;</value>
+  </synonym>
+</mdclass:Role>

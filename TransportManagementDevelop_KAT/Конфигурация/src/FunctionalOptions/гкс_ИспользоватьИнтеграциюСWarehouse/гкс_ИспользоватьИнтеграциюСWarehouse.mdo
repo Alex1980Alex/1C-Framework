@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="330577e7-639a-4480-ae61-256a153dcf03">
+  <name>гкс_ИспользоватьИнтеграциюСWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с Warehouse</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьИнтеграциюСWarehouse</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Subsystem.Администрирование.Subsystem.ИнтеграцияWarehouse</content>
+  <content>Catalog.гкс_ПоказателиКачестваWarehouse</content>
+  <content>InformationRegister.гкс_ВнешниеПробы</content>
+  <content>Catalog.гкс_ПродукцияWarehouse</content>
+  <content>Document.гкс_ВнешняяПроба</content>
+  <content>InformationRegister.гкс_СоответствиеОбъектовWarehouse</content>
+  <content>Catalog.гкс_ЕдиницыИзмеренияWarehouse</content>
+  <content>Catalog.гкс_ТипыВнешнихПробWarehouse</content>
+  <content>InformationRegister.гкс_ВнешниеПробыРегистрации</content>
+  <content>Catalog.гкс_СтанцииWarehouse</content>
+  <content>Catalog.гкс_КонтрагентыWarehouse</content>
+  <content>Enum.гкс_ТипыОбъектовWarehouse</content>
+  <content>InformationRegister.гкс_КонтрольЗаполненияВнешнихПроб</content>
+  <content>InformationRegister.гкс_КонтрольЗаполненияВнешнихПроб.Command.СопостовлениеОбъектовWarehouse</content>
+  <content>Constant.гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</content>
+</mdclass:FunctionalOption>

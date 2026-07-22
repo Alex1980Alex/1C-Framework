@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fbb36bbf-419b-4e27-99c5-de299e567abf">
+  <name>Документы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Документы</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Document.гкс_Взвешивание</content>
+  <content>Document.гкс_НаправлениеНаРазгрузку</content>
+  <content>Document.гкс_РегистрацияНаПЛК</content>
+  <content>Document.гкс_РеестрНакладныхЗПП3</content>
+  <content>Document.гкс_ЗаданияНаПроверкуКачества</content>
+  <content>Document.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</content>
+  <content>Document.гкс_ЗаявкаНаОтгрузкуПродукции</content>
+  <content>InformationRegister.гкс_ОформленныеПартии</content>
+  <content>DataProcessor.гкс_ПечатьТТН_Беларусь</content>
+  <content>Role.гкс_Документ_ЗаявкаНаОтгрузкуПродукции_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаявкаНаОтгрузкуПродукции_Просмотр</content>
+  <content>Role.гкс_Документ_НаправлениеНаРазгрузку_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_НаправлениеНаРазгрузку_Просмотр</content>
+  <content>Role.гкс_Документ_НормативнаяСертификацияНоменклатуры_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_НормативнаяСертификацияНоменклатуры_Просмотр</content>
+  <content>Role.гкс_Документ_ОснованиеДляДвиженияЗапасов_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ПриказНаОтпускПродукцииЭлеватораЗПП16_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ПриказНаОтпускПродукцииЭлеватораЗПП16_Просмотр</content>
+  <content>Role.гкс_Документ_РегистрацияНаПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_РегистрацияНаПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_РеестрНакладныхЗПП3_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_РеестрНакладныхЗПП3_Просмотр</content>
+  <content>Role.гкс_Документ_ТранспортныйДокумент_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ТранспортныйДокумент_Просмотр</content>
+  <content>Role.гкс_Документ_ФормированиеНомераПробы_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ФормированиеНомераПробы_Просмотр</content>
+  <content>Role.гкс_Обработка_ГрупповоеИзменениеДатыВРегистрацииСвязанныхОбъектов_Использование</content>
+  <content>Document.гкс_ЗаявкаНаПеревозку</content>
+  <parentSubsystem>Subsystem.гкс_ПриемкаТранспорта</parentSubsystem>
+</mdclass:Subsystem>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d785eac7-a36d-4864-bc69-edd7b7f620f0">
+  <producedTypes>
+    <managerType typeId="3921eb4c-3f62-48ca-a20c-b775a2736356" valueTypeId="8d37ddc0-3b01-4919-8dc6-a16b169bf67c"/>
+    <valueManagerType typeId="ae31a58e-17fd-4252-affe-ff2a4e318b93" valueTypeId="02288ea4-ee33-40ec-81de-7eb206589f74"/>
+    <valueKeyType typeId="5b681c2a-f6d0-4861-bf06-ec8a72438257" valueTypeId="3912608e-8820-487d-93b7-0024cf30ea5e"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать метод &quot;Измененные внешние пробы за период&quot;</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

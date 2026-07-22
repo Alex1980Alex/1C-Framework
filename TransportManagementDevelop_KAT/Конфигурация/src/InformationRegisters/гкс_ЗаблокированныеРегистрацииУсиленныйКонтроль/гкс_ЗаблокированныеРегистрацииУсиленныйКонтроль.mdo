@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8d785b24-2618-424f-bdfc-53bdff89a59f">
+  <producedTypes>
+    <selectionType typeId="b443ad99-eaa7-48e9-be82-0e2baae915fc" valueTypeId="ad30d05d-e8ef-46d2-90e4-546710f62a30"/>
+    <listType typeId="19f06169-4e5d-49d5-be51-4abefae4dce1" valueTypeId="f060344d-bae7-4b9b-9f66-5ee3c34a205d"/>
+    <managerType typeId="2a293a35-971c-44c2-b31d-de130904878f" valueTypeId="507ef215-24bc-4b5c-b6ec-b51d0eb2cd7d"/>
+    <recordSetType typeId="0713e201-73d7-40e3-94b0-7b87daf4027e" valueTypeId="9f9ac81a-a68e-4bd5-90bd-1508f4880859"/>
+    <recordKeyType typeId="385a6128-29e1-4645-99a4-a3bcbd7dbd0f" valueTypeId="8f73d5c0-911b-4b16-b79d-660ac0a4e13d"/>
+    <recordType typeId="677996de-a606-476b-bcc7-17fbc1b4a267" valueTypeId="d30543c1-68dc-4663-b60c-9e1bbe14f347"/>
+    <recordManagerType typeId="7a697f49-41cf-43de-9fd8-471c5cfee28c" valueTypeId="4f993f21-d900-41e5-909b-eb8d22344927"/>
+  </producedTypes>
+  <name>гкс_ЗаблокированныеРегистрацииУсиленныйКонтроль</name>
+  <synonym>
+    <key>ru</key>
+    <value>Заблокированные регистрации для разгрузки по усиленному контролю</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="0c377f4d-6a52-4b00-91d7-8a16ef8aaf18">
+    <name>БлокирующееСостояниеКачества</name>
+    <synonym>
+      <key>ru</key>
+      <value>Блокирующее состояние качества</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СостоянияКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="9f7e16fe-4301-457b-a0e2-201126896ed1">
+    <name>Разблокировано</name>
+    <synonym>
+      <key>ru</key>
+      <value>Разблокировано</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="a946212b-c0f8-43f3-9b54-7703edabe0ab">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="abd3e6ae-49ec-4309-b80b-36e5a3f11ce5">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="8a31d57c-a379-4568-91fa-77a9f8623eab">
+    <name>БлокирующаяРегистрация</name>
+    <synonym>
+      <key>ru</key>
+      <value>Блокирующая регистрация</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="9df9a12e-b70c-41bd-ba34-18b3ff366db2">
+    <name>БлокирующаяГруппаТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Блокирующая группа ТС</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ГруппыТС</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

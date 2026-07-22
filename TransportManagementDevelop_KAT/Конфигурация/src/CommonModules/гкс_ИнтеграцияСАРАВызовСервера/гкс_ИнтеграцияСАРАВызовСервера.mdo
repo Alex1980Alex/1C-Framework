@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e073c101-f6ca-4139-99b6-3a3ab06e825e">
+  <name>гкс_ИнтеграцияСАРАВызовСервера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс интеграция САРАВызов сервера</value>
+  </synonym>
+  <server>true</server>
+  <serverCall>true</serverCall>
+</mdclass:CommonModule>

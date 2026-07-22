@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f74db9f6-550b-440c-afb9-80c1f1dfea10">
+  <name>гкс_РегистрСведений_СтатусыЗаписейВОчередиПриемкиПЛК_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра сведений &quot;Статусы записей в очереди приемки&quot;</value>
+  </synonym>
+</mdclass:Role>

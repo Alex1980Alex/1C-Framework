@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmi:CommandInterface xmlns:cmi="http://g5.1c.ru/v8/dt/cmi">
+  <commandsVisibility>
+    <visibilityFragments>
+      <command>Document.гкс_ЛабораторныйАнализ.StandardCommand.OpenList</command>
+      <visible>
+        <common>true</common>
+      </visible>
+    </visibilityFragments>
+  </commandsVisibility>
+  <commandsPlacement>
+    <placementFragments>
+      <group>NavigationPanelImportant</group>
+      <commands>Document.гкс_ЛабораторныйАнализ.StandardCommand.OpenList</commands>
+    </placementFragments>
+  </commandsPlacement>
+  <commandsOrder>
+    <orderFragments>
+      <group>NavigationPanelImportant</group>
+      <commands>Document.гкс_ЛабораторныйАнализ.StandardCommand.OpenList</commands>
+    </orderFragments>
+    <orderFragments>
+      <group>NavigationPanelOrdinary</group>
+      <commands>Document.гкс_ФормированиеНомераПробы.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_НомерПробы.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_АлгоритмыРасчетаПоказателейКачестваНоменклатуры.StandardCommand.OpenList</commands>
+      <commands>InformationRegister.гкс_МинимальныеПоказателиКачестваПриемки.StandardCommand.OpenList</commands>
+      <commands>Document.гкс_НормативнаяСертификацияНоменклатуры.StandardCommand.OpenList</commands>
+      <commands>Document.гкс_УстановкаМинимальныхПоказателейПриемки.StandardCommand.OpenList</commands>
+    </orderFragments>
+  </commandsOrder>
+</cmi:CommandInterface>

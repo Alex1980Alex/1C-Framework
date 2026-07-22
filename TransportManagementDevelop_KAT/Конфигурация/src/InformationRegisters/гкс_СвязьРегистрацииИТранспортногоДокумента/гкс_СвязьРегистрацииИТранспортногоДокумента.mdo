@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2d275cd6-3716-4e6d-8f03-b2d1fb92f7c6">
+  <producedTypes>
+    <selectionType typeId="be6b44eb-62c6-4465-9722-dfd97688b271" valueTypeId="b307db92-f228-46bb-aede-d7372b13c84a"/>
+    <listType typeId="5e6f68fb-d2be-46cd-9290-092d82b9269c" valueTypeId="201ab5e3-cd98-46bd-84f1-0336e7d94509"/>
+    <managerType typeId="d0c988d7-4f0e-4a82-996e-2b4490f4d941" valueTypeId="8d60efbe-7634-4fbf-87fb-fe410501cfe0"/>
+    <recordSetType typeId="737f1d9c-2056-4781-85f3-5b791bf3aaf5" valueTypeId="8ffe7f04-3351-4374-ace8-35f028295526"/>
+    <recordKeyType typeId="c9a69575-7fb9-43c8-824a-2e83d9a23f66" valueTypeId="1b6ac1f1-0d59-4a14-9a0c-49e80977e734"/>
+    <recordType typeId="a0d4b360-20fe-4636-b56d-25013a4a03ea" valueTypeId="fb66d470-7735-4938-b869-c076f83691d2"/>
+    <recordManagerType typeId="cf4923db-61a8-4d55-b65f-7bf7c044d0a1" valueTypeId="4453adc7-382d-4954-a4dd-770076f07ba1"/>
+  </producedTypes>
+  <name>гкс_СвязьРегистрацииИТранспортногоДокумента</name>
+  <synonym>
+    <key>ru</key>
+    <value>Транспортные документы</value>
+  </synonym>
+  <comment>Транспортные документы регистрации</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="c4285257-ecd1-45d7-a30f-ce0528ffd622">
+    <name>ТранспортныйДокумент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортный документ</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="d3fc1f1f-8f5d-42ee-b81b-42efa10e991a">
+    <name>ТранспортноеСредство</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортное средство</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="3c84f692-068e-44bd-977a-ab153ba73587">
+    <name>ЗаявкаНаПеревозку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Заявка на перевозку</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ЗаявкаНаПеревозку</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="b9551a2d-ee0c-4b05-bc31-b711aeb5f63e">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

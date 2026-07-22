@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f4c11eed-19e3-49e8-9f45-116963457bc6">
+  <producedTypes>
+    <objectType typeId="174bc0a8-e2f0-4a0b-ac3a-b174f83853e6" valueTypeId="88ac467d-b7f8-47dd-84e3-12628935f652"/>
+    <managerType typeId="14a7e970-c873-4865-84a9-2243540ad391" valueTypeId="afa0e876-1eed-4aba-96c9-2c48f408ce4c"/>
+  </producedTypes>
+  <name>гкс_ПечатьТТН_Беларусь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Печать ТТН (Беларусь)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ПечатьТТН_Беларусь.Form.Форма</defaultForm>
+  <forms uuid="dc502708-7c6d-4bf6-a3b4-a9a5af262aa2">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="26deba8f-1eef-4a98-997f-f1f25a4bb56d">
+    <name>ПФ_MXL_ТТНГоризонтальнаяЛокализация_by</name>
+    <synonym>
+      <key>ru</key>
+      <value>ф. ТТН-1 (горизонтальная)</value>
+    </synonym>
+  </templates>
+  <templates uuid="7b3e0277-1cca-42e8-9fa1-e25e0deec37c">
+    <name>ПФ_MXL_ТТНВертикальнаяЛокализация_by</name>
+    <synonym>
+      <key>ru</key>
+      <value>ф. ТТН-1 (вертикально)</value>
+    </synonym>
+  </templates>
+</mdclass:DataProcessor>

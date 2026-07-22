@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="abe26068-b968-4075-ac19-a9ad1ef3af1e">
+  <name>ДиспетчеризацияТранспорта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Диспетчеризация транспорта</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <parentSubsystem>Subsystem.ЭлектроннаяОчередь</parentSubsystem>
+</mdclass:Subsystem>

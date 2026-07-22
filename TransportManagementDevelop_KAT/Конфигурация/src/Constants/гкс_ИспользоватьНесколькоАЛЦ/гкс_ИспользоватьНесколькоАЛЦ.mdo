@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6239bf29-d708-4be7-a322-10d270774350">
+  <producedTypes>
+    <managerType typeId="6daf99fc-e257-45f1-bd4d-f1b410eae1ad" valueTypeId="57e8c414-5555-4d8a-b1a8-4f81b320d464"/>
+    <valueManagerType typeId="5e7bf178-3e1e-4e45-adff-d32e1394f9f0" valueTypeId="b9620b3c-6cdb-4993-b8ec-307e87df9b5b"/>
+    <valueKeyType typeId="bcffc9da-cd21-4603-975c-c724f2fd538f" valueTypeId="0c7b3e95-9c5e-4e77-ad26-ed140f86b401"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьНесколькоАЛЦ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать несколько АЛЦ</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

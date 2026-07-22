@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="288447ff-bc12-4c54-89a8-d84255b438d2">
+  <name>гкс_РегистрНакопления_ОбработкаСудов_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра накопления &quot;Обработка судов&quot;</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="05c48adb-3fc0-432c-b0c7-ce976b44d4a1">
+  <name>гкс_ИспользоватьОтключениеВходногоКонтроляКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать отключение входного контроля качества</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьОтключениеВходногоКонтроляКачества</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>InformationRegister.гкс_НастройкиОтключенияВходногоКонтроляКачества</content>
+  <content>InformationRegister.гкс_ПриемкаТранспортаБезВходногоКонтроля</content>
+</mdclass:FunctionalOption>

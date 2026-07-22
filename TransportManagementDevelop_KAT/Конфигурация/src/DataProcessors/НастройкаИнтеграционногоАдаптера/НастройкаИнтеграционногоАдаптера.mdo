@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4550764c-f19f-4649-b38f-26ef70fd81ed">
+  <producedTypes>
+    <objectType typeId="ca4cce4a-37be-46c8-8f10-9bb4cea38edf" valueTypeId="ad6a4c5c-49b9-47c4-a5f2-205bc50af465"/>
+    <managerType typeId="f6e8cf2a-6eef-464e-ba17-323999a8af5d" valueTypeId="7f747ea7-a13d-4678-970b-f882fc29d68e"/>
+  </producedTypes>
+  <name>НастройкаИнтеграционногоАдаптера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка интеграционного адаптера (ИАС)</value>
+  </synonym>
+  <defaultForm>DataProcessor.НастройкаИнтеграционногоАдаптера.Form.Форма</defaultForm>
+  <help>
+    <pages>
+      <lang>ru</lang>
+    </pages>
+  </help>
+  <extendedPresentation>
+    <key>ru</key>
+    <value>Настройка интеграционного адаптера</value>
+  </extendedPresentation>
+  <forms uuid="a70d31d1-c007-4a9d-a1a0-415dd90725b1">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <help>
+      <pages>
+        <lang>ru</lang>
+      </pages>
+    </help>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:DataProcessor>

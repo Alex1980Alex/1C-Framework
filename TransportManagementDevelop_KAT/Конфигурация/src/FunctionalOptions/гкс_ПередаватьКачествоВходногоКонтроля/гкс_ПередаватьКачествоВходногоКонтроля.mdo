@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="27a23e65-5e08-449a-8378-171d9610052c">
+  <name>гкс_ПередаватьКачествоВходногоКонтроля</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс передавать качество входного контроля</value>
+  </synonym>
+  <location>Constant.гкс_ПередаватьКачествоВходногоКонтроля</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="222936c0-4a23-4531-807c-abcf18be91d0">
+  <producedTypes>
+    <containerType typeId="65fbe66e-cb78-40cf-b55c-eda39351a13d" valueTypeId="ed5c1fff-32fe-4511-b045-1c235deb41e1"/>
+  </producedTypes>
+  <name>ИнтеграцияС1СДокументооборотДокументыОбъектыПереопределяемый</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция с 1С:Документооборотом, интегрируемые документы объект</value>
+  </synonym>
+  <type>
+    <types>DocumentObject.гкс_РегистрацияНаПЛК</types>
+    <types>DocumentObject.гкс_РеестрНакладныхЗПП3</types>
+  </type>
+</mdclass:DefinedType>

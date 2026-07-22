@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5752df51-4e3e-431d-907d-724e86e411ef">
+  <name>БазоваяФункциональность</name>
+  <synonym>
+    <key>ru</key>
+    <value>Базовая функциональность (ИАС)</value>
+  </synonym>
+  <content>CommonModule.гкс_ОбщегоНазначения</content>
+  <content>CommonModule.гкс_ОбщегоНазначенияКлиентСервер</content>
+  <content>CommonModule.гкс_СтроковыеФункцииКлиентСервер</content>
+  <content>CommonModule.гкс_ОбщегоНазначенияПереопределяемый</content>
+  <content>CommonModule.гкс_ОчередьСообщенийRMQ</content>
+  <content>CommonModule.гкс_ОчередьСообщенийRMQВызовСервера</content>
+  <content>CommonModule.гкс_ОчередьСообщенийRMQПереопределяемый</content>
+  <content>CommonModule.гкс_ОчередьСообщенийRMQПовтИсп</content>
+  <content>CommonModule.гкс_ОчередьСообщенийRMQСлужебный</content>
+  <content>CommonModule.гкс_ФормыОбъектовИАС</content>
+  <content>CommonForm.гкс_ВыборМетаданных</content>
+  <content>Catalog.гкс_ТипыПроблемОбменаДанными</content>
+  <content>Catalog.гкс_УчастникиОбменаRMQ</content>
+  <content>InformationRegister.гкс_НастройкиИнтеграционногоАдаптера</content>
+  <content>InformationRegister.гкс_СостоянияВходящихСообщений</content>
+  <content>CommonModule.гкс_КонтекстСервер</content>
+  <content>Role.гкс_БазовыеПраваИнтеграционыйАдаптер</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="50555863-174d-455f-a647-0dc13b49703c">
+  <name>гкс_ЛабораторияБазовый</name>
+  <synonym>
+    <key>ru</key>
+    <value>Лаборатория (базовый)</value>
+  </synonym>
+</mdclass:Role>

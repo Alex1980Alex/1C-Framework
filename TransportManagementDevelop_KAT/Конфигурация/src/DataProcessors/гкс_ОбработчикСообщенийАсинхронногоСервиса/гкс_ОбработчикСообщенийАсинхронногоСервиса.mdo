@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9d0610b5-7fa6-4296-810d-85228a4fae6d">
+  <producedTypes>
+    <objectType typeId="cc443e2f-d0a4-4bf7-84fa-9c457ae7bfa6" valueTypeId="923c4676-4343-4af9-98f5-f0a730754722"/>
+    <managerType typeId="22e1164f-d785-4ee8-a710-3834d6049d32" valueTypeId="c12e8995-289e-4cdf-8a0a-3fcd2c3b61aa"/>
+  </producedTypes>
+  <name>гкс_ОбработчикСообщенийАсинхронногоСервиса</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработчик сообщений асинхронного сервиса (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <extendedPresentation>
+    <key>ru</key>
+    <value>Обработчик сообщений асинхронного сервиса</value>
+  </extendedPresentation>
+</mdclass:DataProcessor>

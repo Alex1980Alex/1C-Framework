@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c2984079-35d2-4c80-8a55-42cae5031a39">
+  <producedTypes>
+    <objectType typeId="772973e9-d7a4-4661-aca0-a741f550bfdc" valueTypeId="ba1a6bfb-486a-416b-88ab-1976888e6c89"/>
+    <refType typeId="f2b86a2e-f81b-432e-9771-e6947647f6d2" valueTypeId="882d35fb-4787-494b-a654-e6c3312ccabc"/>
+    <selectionType typeId="e970abdb-f7ca-4ffa-855d-54074109811b" valueTypeId="6fdebefe-0afc-4414-8d64-3c1641a1cdb6"/>
+    <listType typeId="25bbce0b-c2ba-4677-b7c7-f1049d13d850" valueTypeId="d12df939-cebd-4c70-91fc-7fce8d08e1ab"/>
+    <managerType typeId="c7f01022-f3f3-43a1-b9ab-240041666400" valueTypeId="408e2fac-25ee-40ff-8337-dd809486b057"/>
+  </producedTypes>
+  <name>гкс_РесурсыВебСервисов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Описание ресурсы веб-сервисов</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_РесурсыВебСервисов.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>PredefinedDataName</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Predefined</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>DeletionMark</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>IsFolder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Owner</name>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Parent</name>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Description</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Code</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <hierarchical>true</hierarchical>
+  <hierarchyType>HierarchyOfItems</hierarchyType>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>100</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="3ccf0ab3-29bb-458a-8aaa-6ffa23bb7f5b">
+      <name>Warehouse_API</name>
+      <description>Warehouse API</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+      <content id="05afbfab-f87f-4341-ab25-1615dcd6b1fd">
+        <name>ExternalSampleType</name>
+        <description>Виды внешних проб</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="7c571354-6aa1-426a-954b-f0e5cd2f2220">
+          <name>ExternalSampleType_GetById</name>
+          <description>Вид пробы по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="48a19234-ccba-4613-b452-049cb52d5244">
+        <name>GoodTypes</name>
+        <description>Виды продукции</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="36cfb934-1112-443f-915c-ba385da3f824">
+          <name>GoodTypes_GetById</name>
+          <description>Вид продукции по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="dfb5a35b-7adc-4ba3-8689-6060b84ea00f">
+        <name>ExternalSamples</name>
+        <description>Внешние пробы</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="c531e494-7c58-4354-a927-9641580100d1">
+          <name>ExternalSamples_GetBetweenDatesFilteredByStation</name>
+          <description>Внешние пробы по датам с учетом станции</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="1b0cf072-3c77-41a4-b433-ada1bf11a1e3">
+          <name>ExternalSamples_GetBetweenUpdDatesFilteredByClientIdOrStation</name>
+          <description>Внешние пробы по дате изменения, клиенту или станции назначения</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="43948995-29ae-4ce0-94e4-6360b288f711">
+          <name>ExternalSamples_GetByGroupId</name>
+          <description>Внешние пробы по идентификатору группы</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="a0c989cf-e56c-4210-955f-e741018cadf9">
+          <name>ExternalSamples_GetByReceiptId</name>
+          <description>Внешние пробы по идентификатору поступления</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="1451d15a-07cf-4568-9f29-ce17e702eaf1">
+          <name>ExternalSamples_GetBetweenDatesFilteredByGoodType</name>
+          <description>Внешние пробы с фильтром по виду продукта</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="9ecf7c1c-faa1-4a53-9903-36f8faa24442">
+          <name>ExternalSamples_GetById</name>
+          <description>Внешняя проба по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="9ee18684-06a5-4ec9-a4d0-f379705be125">
+        <name>ExternalSamples_GetBetweenUpdatedOnDates</name>
+        <description>Внешние пробы измененные за период</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+      </content>
+      <content id="22e41e2c-3cc8-4e00-b69b-84911d7ed4d9">
+        <name>ExternalSamples_GetBetweenDates</name>
+        <description>Внешние пробы по периоду</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+      </content>
+      <content id="f1b88d19-02f7-47ee-9d4c-2345ca95a505">
+        <name>Units</name>
+        <description>Единицы измерения</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="92bf64fb-1ad1-449d-83a0-5dd7634b8901">
+          <name>Units_GetById</name>
+          <description>Единица измерения по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="447fe6bb-637c-4e6c-95a1-3b1ddd5009e9">
+        <name>QualityIndicators</name>
+        <description>Качественные показатели</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="876698f5-907c-45bf-ae4c-7a869db22413">
+          <name>QualityIndicators_GetUsed</name>
+          <description>Качественные показатели используемые диспетчером</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="b57b8bca-4529-42b6-8440-fa0954c29f50">
+          <name>QualityIndicators_GetUsedByQs</name>
+          <description>Качественные показатели используемые специалистом по качеству</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+        <content id="7c6a2a44-c712-45ec-897c-281f3063ebcd">
+          <name>QualityIndicators_GetById</name>
+          <description>Качественный показатель по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="2cd02bba-d4c2-44d7-a4a7-7a8b8e6a49e9">
+        <name>QualityIndicatorCodes</name>
+        <description>Маппинг показателей качества (с внешними)</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="de775a68-1858-4b8d-8276-03256635a5dd">
+          <name>QualityIndicatorCodes_GetById</name>
+          <description>Маппинг показателея по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="5f14f241-4e4e-4662-88bf-194a4d328705">
+        <name>Goods</name>
+        <description>Продукция</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="abb45489-b46e-4b94-8b1f-ac917afa1347">
+          <name>Goods_GetById</name>
+          <description>Продукт по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+      <content id="9625c5e6-dbba-490c-86a5-0d0d2535899a">
+        <name>Stations</name>
+        <description>Станции</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+        <content id="8e550d5d-2929-4eef-a27d-b90078d3c2e9">
+          <name>Stations_GetById</name>
+          <description>Станция по идентификатору</description>
+          <code xsi:type="core:StringValue">
+            <value></value>
+          </code>
+        </content>
+      </content>
+    </items>
+    <items id="15cd96d8-c914-4f91-be0b-388bf5e84299">
+      <name>ДанныеMFM</name>
+      <description>Данные MFM</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+      <content id="c6d79aac-8cac-4e2b-8926-bfb4030eea3b">
+        <name>ping</name>
+        <description>Ping</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+      </content>
+      <content id="83327798-9311-4df4-a106-475cade80409">
+        <name>BalanceWarehouses</name>
+        <description>Остатки на складах</description>
+        <code xsi:type="core:StringValue">
+          <value></value>
+        </code>
+      </content>
+    </items>
+  </predefined>
+  <predefinedDataUpdate>AutoUpdate</predefinedDataUpdate>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.гкс_РесурсыВебСервисов.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultFolderForm>Catalog.гкс_РесурсыВебСервисов.Form.ФормаГруппы</defaultFolderForm>
+  <attributes uuid="8902ebc4-6753-4e62-95c8-6064ac8e5744">
+    <name>Подключение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Подключение</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПодключениеКВебСервисам</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="bce360d5-643e-4ea9-99ab-7217f2e7b230">
+    <name>URL</name>
+    <synonym>
+      <key>ru</key>
+      <value>URL</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>200</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="30af3dfe-c84b-4a3d-b466-a3cd3afd5b1a">
+    <name>СсылкаНаДокументацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка на документацию</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="8565ef2d-d647-4ceb-8289-8352fc24045c">
+    <name>Метод</name>
+    <synonym>
+      <key>ru</key>
+      <value>Метод</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>10</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="ba2bbf91-095c-4dbc-8fbd-e87316912fb1">
+    <name>Логировать</name>
+    <synonym>
+      <key>ru</key>
+      <value>Логировать</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <tabularSections uuid="d517b214-e550-47ed-b1cf-c38a863f48f5">
+    <producedTypes>
+      <objectType typeId="af4eade8-276a-4189-94c9-e133b53c1cbe" valueTypeId="3ed76f83-2b6a-43e1-9b1f-81c4f91b82c0"/>
+      <rowType typeId="040cd5b2-aa98-436b-9f4d-5a3f1cbfa5d0" valueTypeId="80938360-b51b-490a-aafb-ba504b8fd676"/>
+    </producedTypes>
+    <name>Заголовки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Заголовки</value>
+    </synonym>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="076808de-8c4e-4761-93a9-7f32239ea3cc">
+      <name>Заголовок</name>
+      <synonym>
+        <key>ru</key>
+        <value>Заголовок</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>50</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="0e1de40c-64bc-4679-9fc2-f9f3295d5cab">
+      <name>Значение</name>
+      <synonym>
+        <key>ru</key>
+        <value>Значение</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>200</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <tabularSections uuid="aeeadf80-7b26-470d-a8d8-0f08845f6c9f">
+    <producedTypes>
+      <objectType typeId="2429f4e1-312c-4278-ba03-3032885d80f4" valueTypeId="4008ea0c-81dc-4d0f-934f-e2a677443a3d"/>
+      <rowType typeId="059ed61d-484e-4859-9b5d-2d2d5ab3bd54" valueTypeId="76bf9348-d5e8-40e0-b10b-6d8ce656d23a"/>
+    </producedTypes>
+    <name>Параметры</name>
+    <synonym>
+      <key>ru</key>
+      <value>Параметры</value>
+    </synonym>
+    <attributes uuid="d8378f0f-745d-41f8-a245-063f648ba0dc">
+      <name>ИмяПараметра</name>
+      <synonym>
+        <key>ru</key>
+        <value>Имя параметра</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>50</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="e0abadd7-f83f-4f39-a554-206168ada94e">
+      <name>Описание</name>
+      <synonym>
+        <key>ru</key>
+        <value>Описание</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>100</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="0492d9c4-d844-40e4-96c1-2528ee4f891f">
+      <name>ТипПараметра</name>
+      <synonym>
+        <key>ru</key>
+        <value>Тип параметра</value>
+      </synonym>
+      <type>
+        <types>EnumRef.гкс_ТипПараметраЗапроса</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <forms uuid="19488779-e665-4ac1-a6de-9dc8fa50e64c">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="f4f7095f-baef-41ff-8d47-51b94821ae76">
+    <name>ФормаГруппы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма группы</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

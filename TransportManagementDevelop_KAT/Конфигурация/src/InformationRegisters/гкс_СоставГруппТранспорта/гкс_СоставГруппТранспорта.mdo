@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="cd2e12fc-d770-4f01-a2a5-6e5f4a9ae709">
+  <producedTypes>
+    <selectionType typeId="505fa62f-b84a-412a-be15-e07c423ceeac" valueTypeId="7c07771e-e34a-4a25-917e-b287b3f18180"/>
+    <listType typeId="f1845481-cdd4-4c56-adaa-dbf8520ec9df" valueTypeId="82aa0180-077b-42ed-a7bc-33d00786b7ec"/>
+    <managerType typeId="8f1913b2-7409-463c-82a7-ae02989b6d25" valueTypeId="a16c23d1-7629-42f0-bbf7-3fa6890387aa"/>
+    <recordSetType typeId="780261bf-57f4-444d-b573-9e55b816c718" valueTypeId="3b49cdc7-bbd7-460d-94de-ad7889cefa61"/>
+    <recordKeyType typeId="75c06499-7d15-4a81-8452-1218da71533f" valueTypeId="123b949b-5592-4f41-9a6a-c1c95f2d9b03"/>
+    <recordType typeId="17b3f07e-4f39-4f80-83a2-5fb1104ae782" valueTypeId="33e1b7e2-e3fd-4bb0-8f39-adf1969a9c29"/>
+    <recordManagerType typeId="27f723db-d418-4269-82e0-707b0ff51318" valueTypeId="7eab013d-e54b-4b0b-8e73-4f7c9c759f84"/>
+  </producedTypes>
+  <name>гкс_СоставГруппТранспорта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Состав групп транспорта</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_СоставГруппТранспорта.Form.ФормаЗаписи</defaultRecordForm>
+  <defaultListForm>InformationRegister.гкс_СоставГруппТранспорта.Form.ФормаСписка</defaultListForm>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <attributes uuid="1b42633d-603a-4c29-8578-f8c806c485f7">
+    <name>ТранспортноеСредство</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортное средство</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <choiceParameterLinks>
+      <name>РегистрацияТранспорта</name>
+      <field>InformationRegister.гкс_СоставГруппТранспорта.Dimension.РегистрацияТранспорта</field>
+    </choiceParameterLinks>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="edb97f82-f4b3-4259-b706-8438cf9c75e3">
+    <name>МестнаяДата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Местная дата</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="cde05bd7-063f-4845-ba1f-8c0e7eaf0eef">
+    <name>ГруппаТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Группа ТС</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ГруппыТС</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="538aa4b5-60b4-4bbe-9fd4-8c3fbfe4bc27">
+    <name>РегистрацияТранспорта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация транспорта</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <choiceParameterLinks>
+      <name>ГруппаТС</name>
+      <field>InformationRegister.гкс_СоставГруппТранспорта.Dimension.ГруппаТС</field>
+    </choiceParameterLinks>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="c981c81c-e84e-42c7-8d8f-968bd42bb9c0">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="b8fcdd37-9a0c-4a3c-b4f4-89042b007090">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

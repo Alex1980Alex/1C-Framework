@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="af543a37-cf63-4dfe-ab53-c5e20c4a784b">
+  <producedTypes>
+    <objectType typeId="c3523a0a-74ea-420a-aee4-c941554c69c6" valueTypeId="97fae2b8-3278-440b-88f1-a25f45ecdba4"/>
+    <managerType typeId="90462711-5730-4a8a-9870-07341ce60fca" valueTypeId="fbbc9320-b85d-4469-b150-787e1cf3e7b0"/>
+  </producedTypes>
+  <name>гкс_ПанельАдминистрированиеПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Приемка транспорта</value>
+  </synonym>
+  <defaultForm>DataProcessor.гкс_ПанельАдминистрированиеПЛК.Form.Форма</defaultForm>
+  <forms uuid="67a054d0-8313-4433-8367-6abbe400efdc">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="45755772-f48a-483d-97ef-7ec309443198">
+    <name>ФормаНастройкиПодсистемы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма настройки подсистемы</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <commands uuid="31dc2aa8-8c5d-4a94-a620-f56588bd6200">
+    <name>АдминистрированиеПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приемка транспорта</value>
+    </synonym>
+    <group>NavigationPanelSeeAlso</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:DataProcessor>

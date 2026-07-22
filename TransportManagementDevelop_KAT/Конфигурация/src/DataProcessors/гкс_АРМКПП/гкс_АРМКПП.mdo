@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3db0e650-7ff9-4e14-aa65-253d4cb95f98">
+  <producedTypes>
+    <objectType typeId="ed3b62e6-cfa7-4874-9eac-82c9dae72df4" valueTypeId="4716c73d-08cb-49e6-ba47-51ae0221368e"/>
+    <managerType typeId="be3d4432-3b07-41f8-b94c-7761ae2b46aa" valueTypeId="9eb35436-22b9-47c8-9985-6e1165265bb7"/>
+  </producedTypes>
+  <name>гкс_АРМКПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>АРМ КПП-1</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_АРМКПП.Form.Форма</defaultForm>
+  <forms uuid="432ea400-4e4b-4516-abe1-fd6bdfc8c0d4">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="cc14ca17-7278-44a9-b9bf-6e573749aa09">
+    <name>ФормаПодбораОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма подбора очереди</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:DataProcessor>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6e1952f9-7f95-4fe5-ac58-8d2e75858092">
+  <producedTypes>
+    <managerType typeId="66fbd8b3-106f-40d2-a16e-76024db3a248" valueTypeId="0ce0c219-767b-4475-b7cb-d1f640d4af47"/>
+    <valueManagerType typeId="86e8e8e0-1049-4a6d-8b4f-2ae60d864598" valueTypeId="da12a6f6-1e64-4067-8cba-3f6ba8f6f880"/>
+    <valueKeyType typeId="b55d3d28-3e97-4561-9ec0-41d8e2d25849" valueTypeId="e1a57404-64a8-4624-acb0-dde1dd58ee95"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль по предельным уровням качества поставщиков (гкс)</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

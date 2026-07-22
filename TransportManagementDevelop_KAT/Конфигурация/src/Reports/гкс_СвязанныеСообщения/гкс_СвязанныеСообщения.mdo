@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="155eba36-cfae-44b0-be69-f4a3a398e5c4">
+  <producedTypes>
+    <objectType typeId="676ed4cd-a805-4c7f-acfe-340612ef5db7" valueTypeId="2a7f34f1-491f-4c74-9a1c-a8eb7532d41d"/>
+    <managerType typeId="44990476-935f-4774-96f7-87d1f822591e" valueTypeId="18493a91-58af-4ff2-aa16-c896adc15cfc"/>
+  </producedTypes>
+  <name>гкс_СвязанныеСообщения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Связанные сообщения (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>Report.гкс_СвязанныеСообщения.Form.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_СвязанныеСообщения.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <forms uuid="0d8dea18-d70a-4de6-ad9b-995add1c3838">
+    <name>ФормаОтчета</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма отчета</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="05a31758-6271-4747-800c-f0de1f9ab376">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <commands uuid="e8312545-5e4d-4d43-889d-29b0dd8afb7f">
+    <name>СвязанныеСообщения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Связанные сообщения</value>
+    </synonym>
+    <group>FormNavigationPanelGoTo</group>
+    <commandParameterType>
+      <types>CatalogRef.ИсходящиеСообщения</types>
+      <types>CatalogRef.гкс_ВходящиеСообщенияRMQ</types>
+    </commandParameterType>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:Report>

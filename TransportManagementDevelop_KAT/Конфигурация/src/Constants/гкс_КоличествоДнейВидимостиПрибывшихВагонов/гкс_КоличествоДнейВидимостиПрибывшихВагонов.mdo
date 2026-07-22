@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="abd12e17-2672-431f-bdeb-7efeab00b7ce">
+  <producedTypes>
+    <managerType typeId="62e0ca73-0a0d-4f7a-9372-6908234380c0" valueTypeId="e1d64aea-cb6c-40e5-a857-7172fe5467c6"/>
+    <valueManagerType typeId="f990af71-2352-4a6e-a7f4-0e75a9935f9b" valueTypeId="15465786-62db-47af-a187-69c498bbd812"/>
+    <valueKeyType typeId="19d36f23-52ed-4ae1-888f-e9b4de8c1682" valueTypeId="dbf11cd0-7437-4f6a-9294-7a0534c69f38"/>
+  </producedTypes>
+  <name>гкс_КоличествоДнейВидимостиПрибывшихВагонов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Количество дней видимости прибывших вагонов (СРПВ)</value>
+  </synonym>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>2</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

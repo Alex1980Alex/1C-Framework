@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4b398d50-785a-4203-b839-f23eff0f6031">
+  <producedTypes>
+    <containerType typeId="3aa4c623-3ebd-47dd-a93e-a8279b92d536" valueTypeId="53f2c1af-9903-439b-9ba4-885a53b7321b"/>
+  </producedTypes>
+  <name>гкс_WarehouseСправочники</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse справочники</value>
+  </synonym>
+  <type>
+    <types>CatalogRef.гкс_КонтрагентыWarehouse</types>
+    <types>CatalogRef.гкс_ПоказателиКачестваWarehouse</types>
+    <types>CatalogRef.гкс_ПродукцияWarehouse</types>
+    <types>CatalogRef.гкс_ТипыВнешнихПробWarehouse</types>
+    <types>CatalogRef.гкс_ЕдиницыИзмеренияWarehouse</types>
+    <types>CatalogRef.гкс_СтанцииWarehouse</types>
+  </type>
+</mdclass:DefinedType>

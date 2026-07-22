@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0484f783-0c4c-4d82-9074-9a0636f0f78a">
+  <producedTypes>
+    <objectType typeId="49e5d4e4-cd57-486e-83b5-6885b3c72541" valueTypeId="37dc1692-64cc-4270-ba1f-ed10c83d9648"/>
+    <managerType typeId="2a1a4ec3-6a2b-41e1-bb98-e74c3a29c35a" valueTypeId="bfa312ea-ff6b-4ec7-889c-49fe89c22bbe"/>
+  </producedTypes>
+  <name>гкс_ВыгрузкаСтатистикиСообщенийRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс выгрузка статистики сообщений RMQ</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+</mdclass:DataProcessor>

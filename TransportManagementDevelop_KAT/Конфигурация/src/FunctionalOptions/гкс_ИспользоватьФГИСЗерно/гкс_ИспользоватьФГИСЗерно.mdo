@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="aff71df0-8d74-4b8f-ad3c-9ee4987059dd">
+  <name>гкс_ИспользоватьФГИСЗерно</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с ФГИС СЗерно</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьФГИСЗерно</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Catalog.гкс_СДИЗЗЕРНО</content>
+  <content>Document.гкс_РегистрацияНаПЛК.Attribute.СДИЗ</content>
+  <content>AccumulationRegister.гкс_СДИЗНаПЛК</content>
+</mdclass:FunctionalOption>

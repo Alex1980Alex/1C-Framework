@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8fde3d23-1ebb-42cb-88bb-f87f5dfc6084">
+  <producedTypes>
+    <selectionType typeId="a4fb76aa-a1b6-4e96-baf4-cabb7aef26a4" valueTypeId="1610bae8-56c2-42c1-8447-0c321d1b9756"/>
+    <listType typeId="9535bc25-73c3-4da8-b38d-1f95525eb080" valueTypeId="d9a6f4aa-b51e-4641-a3bd-9999deb97a42"/>
+    <managerType typeId="ec7e36c3-b97d-4ac1-8063-a2e4675bc0fb" valueTypeId="bed7e5ac-c4f9-4878-ba16-6cd6d92241e1"/>
+    <recordSetType typeId="c20d5972-f024-4f0b-841d-a90507880b58" valueTypeId="3fa0f4c6-a6c1-4722-a5fb-6519350bc888"/>
+    <recordKeyType typeId="66c76045-d044-4fb8-9b05-7a5e8def7eef" valueTypeId="b36ae8da-e197-4a96-96ac-960c3e61549c"/>
+    <recordType typeId="7988956e-ad40-4238-b64c-b0b233cb4c02" valueTypeId="c8287b11-e5d8-4ae6-9d8f-cb20df7786f0"/>
+    <recordManagerType typeId="3aea42d8-7fce-4428-ba4f-c6a583d1cc1e" valueTypeId="337e7394-7a18-421c-a6cd-e1ebdf7e3b3a"/>
+  </producedTypes>
+  <name>гкс_СоответствиеОбъектовWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse: Соответствие объектов</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_СоответствиеОбъектовWarehouse.Form.ФормаЗаписи</defaultRecordForm>
+  <defaultListForm>InformationRegister.гкс_СоответствиеОбъектовWarehouse.Form.ФормаСписка</defaultListForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="f3a288ff-d3d0-47ac-a705-074648fee4fe">
+    <name>СсылкаИБ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка ИБ</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_WarehouseСинхронизируемыеСсылки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="ad987804-7001-4716-8f46-da16171b2c4d">
+    <name>СсылкаWarehouse</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка warehouse</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_WarehouseСправочники</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="4e91d300-9566-4a7e-997b-5507d2df30e3">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="9d880f8c-4e43-400d-b0e8-fdafb89aa948">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="acc86526-1de0-4cb0-a275-ab40ac507956">
+  <name>гкс_ПолучениеОстатковНаСкладахMFM</name>
+  <synonym>
+    <key>ru</key>
+    <value>Получение остатков по складам по данным MFM</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ИнтеграцияMFM.ОстаткиНаСкладахПоДаннымМФМ</methodName>
+  <key>ПолучениеОстатковНаСкладахMFM</key>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

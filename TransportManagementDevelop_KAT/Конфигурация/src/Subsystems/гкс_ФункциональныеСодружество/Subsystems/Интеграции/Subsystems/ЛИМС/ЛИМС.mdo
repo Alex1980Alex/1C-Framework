@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="505ff427-7956-47c3-9525-ddaae1126562">
+  <name>ЛИМС</name>
+  <synonym>
+    <key>ru</key>
+    <value>ЛИМС</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_ИнтеграцияЛИМССервер</content>
+  <content>HTTPService.gks_LIMSIntegrationService</content>
+  <content>InformationRegister.гкс_КодыПоказателейКачестваЛИМС</content>
+  <content>InformationRegister.гкс_ЖурналСобытийHTTPСервисов</content>
+  <content>Role.гкс_ВзаимодействиеССервисомLIMs</content>
+  <content>Role.гкс_РегистрСведений_КодыПоказателейКачестваЛИМС_ДобавлениеИзменение</content>
+  <content>InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

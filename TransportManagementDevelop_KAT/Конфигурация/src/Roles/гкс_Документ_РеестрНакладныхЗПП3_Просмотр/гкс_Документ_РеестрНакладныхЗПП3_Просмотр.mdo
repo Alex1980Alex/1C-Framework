@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9f8cbc2e-fd60-479d-bb6f-f3a0d5c07cf0">
+  <name>гкс_Документ_РеестрНакладныхЗПП3_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр документов &quot;Реестр накладных ЗПП-3&quot;</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f24aa7d4-f51b-4123-aa8c-a0943d22f67e">
+  <producedTypes>
+    <refType typeId="fc9856c1-71c8-4b47-a313-e986ebb2fdbb" valueTypeId="e75e216b-8930-43d1-bbcf-a498bc4c1d2b"/>
+    <listType typeId="e900e290-5f03-41e0-9e2c-2d4b04faa9db" valueTypeId="6cb09d4e-a44d-474d-8ea9-71b0c41110d8"/>
+    <managerType typeId="0cf5e6c6-740d-4742-bca8-a364628877ba" valueTypeId="7e9417bc-4f55-42c2-b61d-b2d84526975f"/>
+  </producedTypes>
+  <name>гкс_ДействияОтложеннойОбработки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Действия отложенной обработки</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="68ebacb3-25c5-49a4-8736-709db35e257c">
+    <name>Проведение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Проведение</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7456e76f-24e3-46c6-99a1-042ec07c14b7">
+    <name>ЗаписьОбъекта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Запись объекта</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="5b61f1e1-c125-4b6a-83ea-2c4e0eebff64">
+    <name>ОтменаПроведения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отмена проведения</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4aaff8d2-7c2f-4a6f-9b44-48e67d7d3192">
+    <name>УстановкаПометкиНаУдаление</name>
+    <synonym>
+      <key>ru</key>
+      <value>Установка пометки на удаление</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

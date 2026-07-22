@@ -1,0 +1,956 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9c496dda-a7d1-463a-945d-1916088f7b61">
+  <producedTypes>
+    <objectType typeId="f3a0596b-61e7-4368-b8e2-069b207214a2" valueTypeId="3b635b40-3ff4-4d94-8f90-99877fe6e8b6"/>
+    <refType typeId="56a031eb-b92f-451a-8287-53e1028df8da" valueTypeId="2038d201-a930-4e67-89ae-3eaa6acb7f2c"/>
+    <selectionType typeId="ceb1c2a7-6c8b-4f67-b462-3b5bb83fb260" valueTypeId="a6677ddf-cb19-4b3c-a753-26e38ef3cb9c"/>
+    <listType typeId="b8276699-8fad-4b92-abac-0981ef52fd8c" valueTypeId="13fcddd1-bb6b-4254-9d74-bc7894238182"/>
+    <managerType typeId="b34028e0-e6f4-496c-bbbe-a353bf85388a" valueTypeId="94017a82-225c-415d-b2af-361a939a93bb"/>
+  </producedTypes>
+  <name>гкс_ЛабораторныйАнализ</name>
+  <synonym>
+    <key>en</key>
+    <value>Laboratory analysis</value>
+  </synonym>
+  <synonym>
+    <key>uk</key>
+    <value>Лабораторний аналіз</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Лабораторный анализ</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Document.гкс_ЛабораторныйАнализ.StandardAttribute.Number</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Posted</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>DeletionMark</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Date</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Number</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <createOnInput>Use</createOnInput>
+  <dataLockFields>Document.гкс_ЛабораторныйАнализ.Attribute.гкс_ДокументРегистрации</dataLockFields>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Лабораторный анализ</value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Лабораторные анализы</value>
+  </listPresentation>
+  <extendedListPresentation>
+    <key>ru</key>
+    <value>Лабораторные анализы</value>
+  </extendedListPresentation>
+  <dataHistory>Use</dataHistory>
+  <numberType>String</numberType>
+  <numberLength>11</numberLength>
+  <numberAllowedLength>Variable</numberAllowedLength>
+  <numberPeriodicity>Year</numberPeriodicity>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultObjectForm>Document.гкс_ЛабораторныйАнализ.Form.ФормаДокумента</defaultObjectForm>
+  <defaultListForm>Document.гкс_ЛабораторныйАнализ.Form.ФормаСписка</defaultListForm>
+  <registerRecords>AccumulationRegister.гкс_ЗаданияНаКомпозитныеПробы</registerRecords>
+  <registerRecords>InformationRegister.гкс_ФактическиеПоказателиКачества</registerRecords>
+  <registerRecords>InformationRegister.гкс_ВнешниеПробыРегистрации</registerRecords>
+  <postInPrivilegedMode>true</postInPrivilegedMode>
+  <unpostInPrivilegedMode>true</unpostInPrivilegedMode>
+  <attributes uuid="447ca761-b4d2-4878-8a65-117d48cca5d4">
+    <name>ВидЛабораторногоАнализа</name>
+    <synonym>
+      <key>en</key>
+      <value>Laboratory analysis type</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Вид лабораторного аналізу</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Вид лабораторного анализа</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ВидыЛабораторногоАнализа</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="cba4964b-2f8a-4131-ad94-2693b713f54a">
+    <name>КоличествоОбразцов</name>
+    <synonym>
+      <key>en</key>
+      <value>Quantity of samples</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Кількість зразків</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Количество образцов</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <scale>4</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="a5b4db85-8e2f-4eb6-9096-58f7daf6f5f0">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>en</key>
+      <value>Item</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="82cca36c-7c05-4deb-ab0b-1925324903a0">
+    <name>НомерВнешний</name>
+    <synonym>
+      <key>en</key>
+      <value>External number</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Номер зовнішній</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Номер внешний</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>10</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="70b79f27-20bf-49fe-9af8-c88c734c1a43">
+    <name>НомерПробы</name>
+    <synonym>
+      <key>en</key>
+      <value>Number of samples</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Номер проби</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Номер пробы</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>12</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="d02e34ac-3709-4ca8-8958-62827557e763">
+    <name>Организация</name>
+    <synonym>
+      <key>en</key>
+      <value>Entity</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Організація</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Организация</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Организации</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="9ba14477-6435-413a-8672-72f0616c0d2e">
+    <name>Ответственный</name>
+    <synonym>
+      <key>en</key>
+      <value>Responsible</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Відповідальний</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Ответственный</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Пользователи</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="295bb84d-d031-49b7-a35a-54bc0104790c">
+    <name>Примечание</name>
+    <synonym>
+      <key>en</key>
+      <value>Comment</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Примітка</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Примечание</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <multiLine>true</multiLine>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="fe44b32d-6cd9-4ef1-9cec-bae1cf1a19d6">
+    <name>Статус</name>
+    <synonym>
+      <key>en</key>
+      <value>Status</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Статус</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Статус</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СтатусыЛабораторногоАнализа</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="08bed55a-1196-4583-bfc9-a738ea51e422">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>en</key>
+      <value>Route point</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="b5873b4a-695e-4a1a-96d0-907d2959aeeb">
+    <name>гкс_ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации (гкс)</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+      <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="10e2f525-aca9-4583-88f5-50a612bb98a3">
+    <name>гкс_МестнаяДата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Местная дата</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="7623bc12-eaa3-4011-ad87-f314d3e7b3ce">
+    <name>гкс_НазначениеИспользованияКачества</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение использования качества</value>
+    </synonym>
+    <comment>ERP-2184</comment>
+    <type>
+      <types>EnumRef.гкс_НазначенияИспользованияКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="6b991102-e71a-4373-8b35-71074b9e704f">
+    <name>гкс_ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <comment>ERP-2184</comment>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="9ff4fdee-e046-40e5-966e-a87ef2632e29">
+    <name>гкс_ДатаПолученияАнализа</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата получения анализа</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="162d5eb6-10c5-445b-b539-170addcfe50b">
+    <name>гкс_ДатаНачалаАнализа</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата начала анализа</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="dce94a11-cc0c-40e4-864f-a0d4bd4a7416">
+    <name>гкс_ДатаОкончанияАнализа</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата окончания анализа</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="daa5e94d-f810-41e6-bf22-9e8f74206734">
+    <name>гкс_СостояниеТранспортногоСредства</name>
+    <synonym>
+      <key>ru</key>
+      <value>Состояние транспортного средства</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СоответствиеТребованиям</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="19bb54ba-172d-48e5-b0f8-8ffec8503b09">
+    <name>ГодУрожая</name>
+    <synonym>
+      <key>ru</key>
+      <value>Год урожая</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>4</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <format>
+      <key>ru</key>
+      <value>ЧГ=0</value>
+    </format>
+    <editFormat>
+      <key>ru</key>
+      <value>ЧГ=0</value>
+    </editFormat>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="ca529906-0c74-497f-9ba2-be8ac3837858">
+    <name>НормативнаяСертификация</name>
+    <synonym>
+      <key>ru</key>
+      <value>Нормативная сертификация</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_НормативнаяСертификацияНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="99c85f8e-494b-41c5-b4e4-73dc3043c6a4">
+    <name>ЗаявкаНаПеревозку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Заявка на перевозку</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ЗаявкаНаПеревозку</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="cb031550-4a61-4ea9-9b3e-f691c9082071">
+    <name>ФормаДокумента</name>
+    <synonym>
+      <key>en</key>
+      <value>The form of the document</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Форма документа</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Форма документа</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="4dd1a1f4-4ef9-4649-87fe-e307f3131f1d">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <tabularSections uuid="891a90ed-5b48-4c6b-a37e-582f3f1a25a1">
+    <producedTypes>
+      <objectType typeId="42dce4a0-571c-4a80-8d77-c81b226b731a" valueTypeId="c2168e42-e653-4199-9dc0-051426d28339"/>
+      <rowType typeId="b0441215-90cc-4ff3-b3e5-e3fb07759954" valueTypeId="1f7f8a39-eea4-4cf2-9f37-4e822a23ae5b"/>
+    </producedTypes>
+    <name>КачественныеПоказатели</name>
+    <synonym>
+      <key>en</key>
+      <value> Quality parameters</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Якісні показники</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Качественные показатели</value>
+    </synonym>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="029f4144-84c9-4cfc-a948-ee6e25ee26ac">
+      <name>Показатель</name>
+      <synonym>
+        <key>en</key>
+        <value>Indicator</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Показник</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Показатель</value>
+      </synonym>
+      <type>
+        <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="cf310122-1d0e-4007-abfa-9e83c15a48f7">
+      <name>Значение</name>
+      <synonym>
+        <key>en</key>
+        <value>Value</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Значення</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Значение</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>15</precision>
+          <scale>5</scale>
+        </numberQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="e31a9883-3b00-4b89-a2e9-a48bae72ce98">
+      <name>ЕдиницаИзмерения</name>
+      <synonym>
+        <key>en</key>
+        <value>Unit</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Одиниця виміру</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Ед. изм.</value>
+      </synonym>
+      <type>
+        <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+      </type>
+      <toolTip>
+        <key>ru</key>
+        <value>Единица измерения </value>
+      </toolTip>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="79b652de-3bcc-4204-85c1-7c867e32178c">
+      <name>СоответствуетНормативу</name>
+      <synonym>
+        <key>en</key>
+        <value>Match</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Відповідає нормативу</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Соответствует нормативу</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="ef794326-6421-4ec3-86fc-8ab258347865">
+      <name>ОтклонениеОтБазиса</name>
+      <synonym>
+        <key>en</key>
+        <value>Deviation from base</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Відхилення від базису</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Отклонение от базиса</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>10</precision>
+          <scale>3</scale>
+        </numberQualifiers>
+      </type>
+      <markNegatives>true</markNegatives>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="ff68c48f-e2cc-4e96-a2f7-791a87f7e25a">
+      <name>НомерПробы</name>
+      <synonym>
+        <key>en</key>
+        <value>Number of samples</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Номер проби</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Номер пробы</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>10</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="7d23e882-ea18-4570-bf56-3062b4561c9b">
+      <name>гкс_Примечание</name>
+      <synonym>
+        <key>ru</key>
+        <value>Примечание</value>
+      </synonym>
+      <comment>ERP-1475</comment>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>300</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="a2540987-0299-4811-8564-284e2068844b">
+      <name>КомментарийСоотвествия</name>
+      <synonym>
+        <key>ru</key>
+        <value>Комментарий соотвествия</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>300</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="cc72351d-2fe9-471c-a2c1-c1bf95d0d36d">
+      <name>УсиленныйКонтроль</name>
+      <synonym>
+        <key>ru</key>
+        <value>Усиленный контроль</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+      </type>
+      <toolTip>
+        <key>ru</key>
+        <value>Обязательный контроль показателя для анализа</value>
+      </toolTip>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="ce07bc51-817d-426d-b4fd-8f245e7ddfc2">
+      <name>ОтклонятьКачество</name>
+      <synonym>
+        <key>ru</key>
+        <value>Отклонять качество</value>
+      </synonym>
+      <comment>При отклонении от нормы - отклонять качество</comment>
+      <type>
+        <types>Boolean</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="c4b21f28-3533-41eb-8692-8785fa9e07da">
+      <name>ЭтоЗначениеВнешнейПробы</name>
+      <synonym>
+        <key>ru</key>
+        <value>Это значение внешней пробы</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="92e89347-c8bb-46c6-9595-be82dc5c12f7">
+      <name>ИскатьВнешниеПробы</name>
+      <synonym>
+        <key>ru</key>
+        <value>Искать внешние пробы</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="7370e489-42ca-4468-9c36-8c37e798df4b">
+      <name>ВнешняяПроба</name>
+      <synonym>
+        <key>ru</key>
+        <value>Внешняя проба</value>
+      </synonym>
+      <type>
+        <types>DocumentRef.гкс_ВнешняяПроба</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <choiceParameterLinks>
+        <name>Отбор.ВидПеревозки</name>
+        <field>Document.гкс_ЛабораторныйАнализ.Attribute.гкс_ВидПеревозки</field>
+      </choiceParameterLinks>
+      <choiceParameterLinks>
+        <name>Отбор.Номенклатура</name>
+        <field>Document.гкс_ЛабораторныйАнализ.Attribute.Номенклатура</field>
+      </choiceParameterLinks>
+      <choiceForm>Document.гкс_ВнешняяПроба.Form.ФормаВыбора</choiceForm>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="cd72fa25-0790-4983-b869-3ccb16c95731">
+      <name>КонтрольнаяСуммаВнешнейПробы</name>
+      <synonym>
+        <key>ru</key>
+        <value>Контрольная сумма внешней пробы</value>
+      </synonym>
+      <comment>Контрольная сумма MD5</comment>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>32</length>
+          <fixed>true</fixed>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <tabularSections uuid="a71178aa-778b-411d-9339-f055734ef153">
+    <producedTypes>
+      <objectType typeId="b431aaa6-d766-4931-ad93-e5a6737636a8" valueTypeId="45f41365-e3e0-441a-bb69-1f6f77d63299"/>
+      <rowType typeId="8de6d938-4883-4f98-a91d-3ad386460cb0" valueTypeId="ef6e14ed-1356-4c0a-8be4-ca7bc584a5af"/>
+    </producedTypes>
+    <name>ПоказателиДляПерепроверки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатели для перепроверки</value>
+    </synonym>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="6934b5f2-a03f-4ead-8c4f-9c889d77a492">
+      <name>Показатель</name>
+      <synonym>
+        <key>en</key>
+        <value>Indicator</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Показник</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Показатель</value>
+      </synonym>
+      <type>
+        <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="e18558c3-611c-46db-a4b0-a5f08890b21f">
+      <name>НазначениеИспользованияКачества</name>
+      <synonym>
+        <key>ru</key>
+        <value>Назначение использования качества</value>
+      </synonym>
+      <type>
+        <types>EnumRef.гкс_НазначенияИспользованияКачества</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <commands uuid="5d3f4cbe-8f0f-4b51-80c9-3119279ba91e">
+    <name>УстановитьСтатусОтборПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Установить статус &quot;Отбор проб&quot;</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <commandParameterType>
+      <types>DocumentRef.гкс_ЛабораторныйАнализ</types>
+    </commandParameterType>
+    <parameterUseMode>Multiple</parameterUseMode>
+    <modifiesData>true</modifiesData>
+    <representation>Auto</representation>
+    <toolTip>
+      <key>ru</key>
+      <value>Установливает статус &quot;Отбор проб&quot;</value>
+    </toolTip>
+  </commands>
+</mdclass:Document>

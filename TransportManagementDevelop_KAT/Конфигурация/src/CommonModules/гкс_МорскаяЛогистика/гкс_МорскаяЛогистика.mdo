@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="bd7b7405-c5f6-471a-ba78-2f31401514eb">
+  <name>гкс_МорскаяЛогистика</name>
+  <synonym>
+    <key>ru</key>
+    <value>Морская логистика</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

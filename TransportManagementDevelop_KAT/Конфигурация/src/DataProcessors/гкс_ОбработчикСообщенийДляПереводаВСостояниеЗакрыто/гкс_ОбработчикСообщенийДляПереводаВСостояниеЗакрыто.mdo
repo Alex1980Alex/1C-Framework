@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="75f7055c-425d-4aa1-8479-f0d831606035">
+  <producedTypes>
+    <objectType typeId="a1e2dbf0-7426-4896-ac20-b0e39691dc67" valueTypeId="54aa1b67-96e1-4650-af93-975e5cdfd166"/>
+    <managerType typeId="ff94bfe2-3f29-4fd5-9bd3-aa1f34d5b4e3" valueTypeId="87afdf2f-13ec-4e6f-8d84-97a516f409c5"/>
+  </producedTypes>
+  <name>гкс_ОбработчикСообщенийДляПереводаВСостояниеЗакрыто</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработчик сообщений для перевода в состояние закрыто (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+</mdclass:DataProcessor>

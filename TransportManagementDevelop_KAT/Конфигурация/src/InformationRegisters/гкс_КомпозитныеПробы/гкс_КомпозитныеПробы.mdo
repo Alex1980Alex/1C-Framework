@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6cfacf9b-a720-4dd4-be93-1af13742b929">
+  <producedTypes>
+    <selectionType typeId="43537963-2902-4435-b12f-c9a7b9cd5d21" valueTypeId="5d28552c-9a66-48c8-8162-3b397de4132b"/>
+    <listType typeId="a7497074-4039-4469-a506-649b18347ac7" valueTypeId="4d0a1939-7f94-45e6-b526-e9fb74e69ca7"/>
+    <managerType typeId="b3c5d4fd-6021-4cc8-9bcf-3884af3661cd" valueTypeId="d046ca7e-5f66-425f-975f-80a1bd7f2d1d"/>
+    <recordSetType typeId="7f06155a-abb9-4eb2-8b38-a8b39a1cc828" valueTypeId="9d92baf3-612c-4ac4-adcc-c285d06772a2"/>
+    <recordKeyType typeId="03af63d6-4990-44ba-80cb-a22cc182c3aa" valueTypeId="01855018-641a-4ca1-8ea7-abcfa0fbb11a"/>
+    <recordType typeId="8b9d2137-145c-474d-8b80-86172584c750" valueTypeId="ffb11241-a423-4192-8059-6330d7306698"/>
+    <recordManagerType typeId="afc6f945-df4a-473c-9f85-0a39d158913c" valueTypeId="2c3c8c51-45d7-4c7b-a92f-535daf4dfccb"/>
+  </producedTypes>
+  <name>гкс_КомпозитныеПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Композитные пробы</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Данные композитной пробы</value>
+  </recordPresentation>
+  <dimensions uuid="6f422688-a37e-49c8-9780-a8fb31638511">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>ПЛК</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="83a77895-6793-41f2-9dd3-c0054f7882b8">
+    <name>ПроизводственныеСуткиРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки регистрации</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="0c8f6554-71a1-42f6-8148-9e9f54b9e0d0">
+    <name>КомпозитнаяПроба</name>
+    <synonym>
+      <key>ru</key>
+      <value>Композитная проба</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="b3a5a0ab-7677-423e-bca3-fd276565a386">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+      <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="9d1d8729-05d1-4a4b-9f31-fb6c62767909">
+    <name>ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

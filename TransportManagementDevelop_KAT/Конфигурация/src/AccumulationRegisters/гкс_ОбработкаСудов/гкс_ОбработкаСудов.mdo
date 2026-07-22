@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:AccumulationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f449c147-03e0-42b1-a5b3-a55891b5bcf7">
+  <producedTypes>
+    <selectionType typeId="1de652b0-ef2f-458a-af65-853ad3872e9f" valueTypeId="c688e677-db1b-40cd-9509-2fd907fd6615"/>
+    <listType typeId="694fa129-8ddb-4c24-a035-bf51f5019e85" valueTypeId="fb2ac7df-0dd2-4e1c-ae82-a56723ad76b1"/>
+    <managerType typeId="2e5c96fd-882f-4b31-ab1f-aa1035dfde25" valueTypeId="a889ac18-752c-4f5f-80ad-8545bf62d1a2"/>
+    <recordSetType typeId="c7254b7e-52e4-4a22-a190-d0e0893209c6" valueTypeId="4f4fb206-10db-42b4-94de-11b10640f476"/>
+    <recordKeyType typeId="d9c241b9-503a-44c8-af67-a47da0ea7c19" valueTypeId="44846a23-da47-49d1-a2b8-c327a6d88b12"/>
+    <recordType typeId="c90a5dbf-d25d-475c-beee-aa121f529ddc" valueTypeId="089764dd-2601-4a7d-a3e4-6be073b4b04c"/>
+  </producedTypes>
+  <name>гкс_ОбработкаСудов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработка судов</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <enableTotalsSplitting>true</enableTotalsSplitting>
+  <listPresentation>
+    <key>ru</key>
+    <value>Обработка судов</value>
+  </listPresentation>
+  <resources uuid="835953f5-982b-4da0-9876-ca45851f31f1">
+    <name>Количество</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>3</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </resources>
+  <attributes uuid="5bc1a67c-c2a8-4cc6-a909-0c3ef74030bb">
+    <name>ЕдиницаИзмеренияВеса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Единица измерения веса</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </attributes>
+  <dimensions uuid="c5478c62-e0a6-46b2-962f-a6f4aa2645cb">
+    <name>Фрахт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Фрахт</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="7a758dae-9942-41f4-ba08-cfe8915f3c6a">
+    <name>Коносамент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Коносамент</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="ba602f3d-0ad0-4401-a85c-1f68bc7f530f">
+    <name>Трюм</name>
+    <synonym>
+      <key>ru</key>
+      <value>Трюм</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="7a88f4d2-e3bc-4cd3-bc1e-c36f4587a8a8">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+</mdclass:AccumulationRegister>

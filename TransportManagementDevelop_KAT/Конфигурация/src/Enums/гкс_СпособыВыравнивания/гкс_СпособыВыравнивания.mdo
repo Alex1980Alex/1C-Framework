@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="922a2c9a-db4e-4bd4-b9b2-51ffd4810c40">
+  <producedTypes>
+    <refType typeId="87b27383-d779-48ae-9aab-8a1d628e82c0" valueTypeId="69ec9199-1b39-4798-b314-559def9f405a"/>
+    <listType typeId="752ff6ad-1aca-4a42-b36b-8f8c1802d909" valueTypeId="1c363d4c-f585-4808-9d73-451041810535"/>
+    <managerType typeId="ee30e75d-1634-4c68-8fc0-731106123c3f" valueTypeId="ef47e361-319c-496a-981e-f9a9d100073c"/>
+  </producedTypes>
+  <name>гкс_СпособыВыравнивания</name>
+  <synonym>
+    <key>ru</key>
+    <value>Способы выравнивания (гкс)</value>
+  </synonym>
+  <comment>ERP-1425</comment>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="4adba91d-8ede-4160-8148-21062dfe7f44">
+    <name>left</name>
+    <synonym>
+      <key>ru</key>
+      <value>left</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="e64f76a2-331c-4b14-85d6-c7c3dc9e6ecb">
+    <name>right</name>
+    <synonym>
+      <key>ru</key>
+      <value>Right</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="71702c89-8fce-4c99-bdff-0e96668c2255">
+    <name>center</name>
+    <synonym>
+      <key>ru</key>
+      <value>Center</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

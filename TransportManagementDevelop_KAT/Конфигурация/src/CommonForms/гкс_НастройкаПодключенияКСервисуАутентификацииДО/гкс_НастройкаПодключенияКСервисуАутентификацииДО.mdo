@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonForm xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3871508d-46cc-45c4-9f17-223075434748">
+  <name>гкс_НастройкаПодключенияКСервисуАутентификацииДО</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка подключения к сервису аутентификации 1С:ДО</value>
+  </synonym>
+  <usePurposes>PersonalComputer</usePurposes>
+  <usePurposes>MobileDevice</usePurposes>
+</mdclass:CommonForm>

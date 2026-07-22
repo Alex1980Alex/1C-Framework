@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="841b317e-cf27-42f6-9e51-2e763525281d">
+  <name>Аналитика</name>
+  <synonym>
+    <key>ru</key>
+    <value>Аналитика</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonCommand.гкс_ПанельОтчетов_ПриемкаТранспорта</content>
+  <parentSubsystem>Subsystem.гкс_ПриемкаТранспорта</parentSubsystem>
+</mdclass:Subsystem>

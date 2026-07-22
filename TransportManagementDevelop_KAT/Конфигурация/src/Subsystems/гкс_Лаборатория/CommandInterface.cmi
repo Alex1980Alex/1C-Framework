@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmi:CommandInterface xmlns:cmi="http://g5.1c.ru/v8/dt/cmi">
+  <commandsVisibility>
+    <visibilityFragments>
+      <command>InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС.StandardCommand.OpenList</command>
+      <visible/>
+    </visibilityFragments>
+    <visibilityFragments>
+      <command>InformationRegister.гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ.StandardCommand.OpenList</command>
+      <visible/>
+    </visibilityFragments>
+    <visibilityFragments>
+      <command>InformationRegister.гкс_НастройкиПечатиФормированияПроб.StandardCommand.OpenList</command>
+      <visible/>
+    </visibilityFragments>
+  </commandsVisibility>
+  <commandsOrder>
+    <orderFragments>
+      <group>NavigationPanelOrdinary</group>
+      <commands>InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС.StandardCommand.OpenList</commands>
+      <commands>InformationRegister.гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ.StandardCommand.OpenList</commands>
+    </orderFragments>
+    <orderFragments>
+      <group>ActionsPanelTools</group>
+      <commands>InformationRegister.гкс_КонтрагентыНоменклатурыЛИМС.Command.ОткрытьРегистрКонтрагентыНоменклатурыЛИМС</commands>
+      <commands>InformationRegister.гкс_НастройкаПечатиОсобыхОтметокЗПП47АЛЦ.Command.гкс_ОткрытьРегистрНастройкаПечатиОсобыхОтметокЗПП47АЛЦ</commands>
+      <commands>InformationRegister.гкс_НастройкиПечатиФормированияПроб.Command.гкс_ОткрытьРегистрНастройкаПечатиФормированияПроб</commands>
+      <commands>InformationRegister.гкс_НастройкаПорядкаПоказателейВходнойКонтрольСырья.Command.гкс_ОткрытьРегистрНастроекОтчетаВходнойКонтрольСырья</commands>
+    </orderFragments>
+  </commandsOrder>
+  <subsystemsOrder>
+    <subsystems>Subsystem.гкс_Лаборатория.Subsystem.ВнутренниеПробы</subsystems>
+    <subsystems>Subsystem.гкс_Лаборатория.Subsystem.ВнешниеПробы</subsystems>
+    <subsystems>Subsystem.гкс_Лаборатория.Subsystem.Аналитика</subsystems>
+  </subsystemsOrder>
+</cmi:CommandInterface>

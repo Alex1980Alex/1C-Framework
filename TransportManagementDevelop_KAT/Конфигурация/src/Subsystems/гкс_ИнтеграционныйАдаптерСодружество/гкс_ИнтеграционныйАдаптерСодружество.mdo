@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5ed299cb-8451-43f6-af13-c9e1b250cf93">
+  <name>гкс_ИнтеграционныйАдаптерСодружество</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграционный адаптер</value>
+  </synonym>
+  <content>Role.гкс_РучноеРедактированиеСообщений</content>
+  <content>CommonPicture.гкс_RabbitMQ</content>
+  <content>CommonPicture.гкс_ПиктограммыТиповМетаданных</content>
+  <content>CommonPicture.гкс_Информация</content>
+  <content>CommonPicture.гкс_ВыполнитьРегламентноеЗаданиеВручную</content>
+  <content>Role.гкс_БазовыеПраваИнтеграционыйАдаптер</content>
+  <subsystems>АсинхронныеСервисы</subsystems>
+  <subsystems>БазоваяФункциональность</subsystems>
+  <subsystems>ОбменДанными</subsystems>
+  <subsystems>ОбработкаСообщений</subsystems>
+  <subsystems>ОбработкаОчередейСообщений</subsystems>
+  <subsystems>ОтложеннаяОбработкаОбъектов</subsystems>
+  <subsystems>РаботаСXDTO</subsystems>
+  <subsystems>СервисныеМеханизмы</subsystems>
+  <subsystems>ФормированиеСообщений</subsystems>
+</mdclass:Subsystem>

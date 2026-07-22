@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="16058836-a6eb-4f86-83e8-c0202712e4f9">
+  <producedTypes>
+    <managerType typeId="769e1f13-606b-455b-9a7e-f726b361601d" valueTypeId="fb43e5e7-0773-4810-83bc-8b20fd63e2d4"/>
+    <valueManagerType typeId="7c2400d0-3249-4955-ae06-63196b2ee0e8" valueTypeId="420b2581-4c47-4200-a8a8-eb245ecb51e2"/>
+    <valueKeyType typeId="42cc364d-204c-4362-a8b9-197204613317" valueTypeId="3dfcd924-6c34-46fc-bb9b-1b08ae5d52dc"/>
+  </producedTypes>
+  <name>гкс_ТочкаМаршрутаБазы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Точка маршрута базы</value>
+  </synonym>
+  <comment>Место установки базы</comment>
+  <dataHistory>Use</dataHistory>
+  <type>
+    <types>CatalogRef.гкс_ТочкиМаршрута</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

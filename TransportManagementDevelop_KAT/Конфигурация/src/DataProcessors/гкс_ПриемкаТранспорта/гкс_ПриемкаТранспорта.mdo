@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d4cf9415-914a-4ff0-bc65-2924f3f7e96f">
+  <producedTypes>
+    <objectType typeId="05b928c3-382f-465a-b67c-353a8b088c3a" valueTypeId="866f0af5-1859-4f35-b2ad-87d60ee81823"/>
+    <managerType typeId="b3c89ac8-c7b5-46ff-9e4d-0d2600be6450" valueTypeId="783d6233-cfbd-4e77-88a0-5d196b541b00"/>
+  </producedTypes>
+  <name>гкс_ПриемкаТранспорта</name>
+  <synonym>
+    <key>en</key>
+    <value>Operator form</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>АРМ &quot;Приемки и отгрузки на ПЛК&quot;</value>
+  </synonym>
+  <synonym>
+    <key>es</key>
+    <value>Puesto de trabajo del operador</value>
+  </synonym>
+  <defaultForm>DataProcessor.гкс_ПриемкаТранспорта.Form.ОсновнаяФорма</defaultForm>
+  <attributes uuid="dd710844-aeee-4e90-954b-acd951c8b72f">
+    <name>Период</name>
+    <synonym>
+      <key>ru</key>
+      <value>Период</value>
+    </synonym>
+    <type>
+      <types>StandardPeriod</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="b8a35c27-fc5e-4d17-aee3-876674ab04d8">
+    <name>ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="bf2ba66f-9c2a-456b-9550-1b0740f181b0">
+    <name>ТипРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип регистрации</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипРегистрации</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <forms uuid="b0d8ab44-0491-41a7-9173-0d3b4b3b1e7e">
+    <name>ОсновнаяФорма</name>
+    <synonym>
+      <key>en</key>
+      <value>Form of reception &amp; shipping by trucks</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Основная форма</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Forma de aceptación y envío por carretera</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="1e73e366-91d9-4277-baa3-e4e4cf1bff16">
+    <name>ФормаЗаметки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма заметки</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="d4b8a064-2c4c-4a2a-9b40-70b5d2145491">
+    <name>ФормаПринятыеТС</name>
+    <synonym>
+      <key>en</key>
+      <value>Form of reception &amp; shipping by trucks</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Форма принятые ТС</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Forma de aceptación y envío por carretera</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="10132888-cb44-4973-a7d2-080f767168aa">
+    <name>ФормаПринятыеТС_by</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма принятые ТС</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="eb8205c5-a570-4664-a17d-a0ee74622c72">
+    <name>ГрупповоеИзменениеРегистраций</name>
+    <synonym>
+      <key>ru</key>
+      <value>Групповое изменение регистраций</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="0ec7a6b6-9145-40ad-a8d7-950de69a8b7e">
+    <name>ГрупповоеНаправлениеНаРазгрузку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Групповое направление на разгрузку</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="4c52f355-2bde-4e82-8f0f-0793f2a11972">
+    <name>ИзменениеДопускаТранспорта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Изменение допуска транспорта</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="fda0ce3c-1219-4d96-b8fe-dd94a76d8d3b">
+    <name>ФормаВыбораОснованияРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма выбора основания регистрации</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="5845edeb-2159-436c-bb01-a1b7bb88a864">
+    <name>ФормаОтклонениеНормПогрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма отклонение норм погрузки</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="5c33a1e8-df98-4fa0-a0e9-28971ccb3454">
+    <name>ФормаВыборРежима</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма выбор режима</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="204f7f47-6660-4d87-9696-e0f28c53be4d">
+    <name>ФормаАвтоПеревозки</name>
+    <synonym>
+      <key>en</key>
+      <value>Form of reception &amp; shipping by trucks</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Форма авто перевозки</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Forma de aceptación y envío por carretera</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="36067200-e60a-4d2c-95ed-baefabdfd33a">
+    <name>ФормаЖДПеревозки</name>
+    <synonym>
+      <key>en</key>
+      <value>Form of reception &amp; shipping by trucks</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Форма ЖДПеревозки</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Forma de aceptación y envío por carretera</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="b19503c0-f80c-4205-93da-029aba1eeea7">
+    <name>ФормаПричиныОтклоненияНормПогрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма причины отклонения норм погрузки</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="f2c65116-5738-4169-9f25-e6be6373096a">
+    <name>ФормаМорскиеПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Морские перевозки</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="1551f53d-c919-4352-9498-0e231979370b">
+    <name>ПФ_MXL_СкладскаяРасписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>П ф MXL складская расписка</value>
+    </synonym>
+  </templates>
+  <templates uuid="e95d5342-808e-4b28-98fa-342405444b82">
+    <name>ВагоныНаПутях</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вагоны на путях</value>
+    </synonym>
+  </templates>
+  <templates uuid="6f28b917-a172-4457-a65f-2b2037cf2375">
+    <name>ДеталиФрахтов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Детали фрахтов</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <templates uuid="7f87517d-f2d7-44b8-b7c8-cacc4ff0eaa7">
+    <name>ДеталиКоносаментов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Детали коносаментов</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <commands uuid="5aeb6f6c-00dc-42a4-84ed-cf18f8e89b22">
+    <name>АвтоПриемка</name>
+    <synonym>
+      <key>en</key>
+      <value>Reception of product by trucks</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Приемка и отгрузка на ПЛК</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Entrada de producto en camiones</value>
+    </synonym>
+    <group>NavigationPanelImportant</group>
+    <representation>PictureAndText</representation>
+  </commands>
+  <commands uuid="c0235ec4-1103-46a8-b7ed-eaba7be30c30">
+    <name>ДобавитьРегистрацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Добавить регистрацию</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="f40d3d00-8419-4b0b-934d-bda13fc37139">
+    <name>НастройкаНазначенияРазгрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройка назначения разгрузки</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="0c84ed06-ab6d-462f-bd86-5b7f48037b73">
+    <name>ОтклонитьРегистрацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отклонить регистрацию</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="7658b36a-def0-4081-8180-82d137bcb434">
+    <name>ОткрытьФормуПринятыеТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Открыть форму принятые ТС</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="68b4a73a-5baf-4684-b74b-e893247a5341">
+    <name>ОтменитьРазрешение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отменить разрешение</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="6d102e4c-599f-4b57-905e-1887b7910b32">
+    <name>ПечатьАктЗабраковкиПартии</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт забраковки</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="109f5b72-3633-42d0-b4d3-8fae9e8c3815">
+    <name>ПечатьАктЗабраковкиТовара</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт забраковки товара</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="3155028a-20c9-4d61-8b8b-264715ae1f62">
+    <name>ПечатьАктОтбораПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Печать акт отбора проб</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="3232a0c4-4d2f-47e7-9ea1-faef4b7ef9d7">
+    <name>ПечатьАктОтбораПробЭкспресс</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт отбора проб</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="f9694cca-b752-4113-891c-02a56329d67a">
+    <name>ПечатьАктРасхожденияВВесе</name>
+    <synonym>
+      <key>ru</key>
+      <value>Печать акт расхождения в весе</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="cbd2f13d-b147-426d-bb72-a888bbf9407b">
+    <name>ПечатьЭтикетки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Печать этикетки</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="9dbb3717-59c0-4287-8c10-d22c06b8c55c">
+    <name>ПечатьЯрлыкПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ярлык пробы</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="97936d6d-8a90-4de1-808e-5ad76c38cb1c">
+    <name>ПодтвердитьПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Принять пробы</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="554a9cd7-5c44-4691-9f9e-eb2c89c8fdba">
+    <name>ПодтвердитьРазгрузку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Разгрузка</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="d7b69ca0-0fcd-4b68-9aa5-1efcbfac2aad">
+    <name>ПринятыеТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Принятые ТС</value>
+    </synonym>
+    <group>NavigationPanelOrdinary</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="a9c2c8d5-1627-4f53-9d82-8864991148b9">
+    <name>ПропуститьКонтрольКачества</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пропустить контроль качества</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="7f605777-0c99-4e54-9d74-166a91539625">
+    <name>РедактироватьАнализ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Анализ</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="d6dc5b0a-9061-4f75-b3c8-5033efcef643">
+    <name>РедактироватьВесНаВъезде</name>
+    <synonym>
+      <key>ru</key>
+      <value>Въезд</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="4c6b262f-cb22-443d-906a-c1f7360ff811">
+    <name>РедактироватьВесНаВыезде</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выезд</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="3749f3dd-c1e4-44b6-a1be-8cf5be2e77cc">
+    <name>РедактироватьНаправлениеНаРазгрузку</name>
+    <synonym>
+      <key>ru</key>
+      <value>На разгрузку</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="d0585fb0-bdec-49b8-a92d-eb04e91a64d0">
+    <name>РедактироватьНомерПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер пробы</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="46b05854-7586-4d4b-8274-ec1de34bc90f">
+    <name>РедактироватьПриемку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приемка</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="874c3e84-75e0-419c-956e-c4dc3381b456">
+    <name>РедактироватьРегистрацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Редактировать регистрацию</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="1fc8ded6-9409-468e-8aa3-50d034930d24">
+    <name>РедактироватьРегистрациюГрупповая</name>
+    <synonym>
+      <key>ru</key>
+      <value>Редактировать регистрацию групповая</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="0ca56926-a178-424d-aab6-13b4132a65d1">
+    <name>СкопироватьРегистрацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Скопировать регистрацию</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+  <commands uuid="52eb1ffb-a6b6-4ff3-beff-696141e19a7d">
+    <name>СкрытьПанельДеталей</name>
+    <synonym>
+      <key>ru</key>
+      <value>Скрыть панель деталей</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:DataProcessor>

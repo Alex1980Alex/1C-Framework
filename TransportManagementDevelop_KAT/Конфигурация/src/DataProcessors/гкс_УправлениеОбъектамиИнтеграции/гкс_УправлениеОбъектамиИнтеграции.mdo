@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5a5e6ad7-9b32-4cc8-a4fd-d59216580bdb">
+  <producedTypes>
+    <objectType typeId="2a351f5e-0bf3-4d9d-80ca-d58641a25abb" valueTypeId="1dd32745-3e82-48cb-9333-4bdc010ae037"/>
+    <managerType typeId="2d2e1b55-60f4-47c4-a8fb-f7ef16c6956e" valueTypeId="137e249e-4a79-4ce7-8f4b-33b8658410b3"/>
+  </producedTypes>
+  <name>гкс_УправлениеОбъектамиИнтеграции</name>
+  <synonym>
+    <key>ru</key>
+    <value>Управление объектами интеграции (ИАС)</value>
+  </synonym>
+  <defaultForm>DataProcessor.гкс_УправлениеОбъектамиИнтеграции.Form.ПовторноеПроигрываниеСообшений</defaultForm>
+  <extendedPresentation>
+    <key>ru</key>
+    <value>Управление объектами интеграции</value>
+  </extendedPresentation>
+  <forms uuid="988acdb0-d02b-4702-8554-cd6d74f45ff2">
+    <name>ПовторноеПроигрываниеСообшений</name>
+    <synonym>
+      <key>ru</key>
+      <value>Повторное проигрывание сообшений</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="2342d848-4b91-441c-8e98-f5ce3d5436d5">
+    <name>ПакетнаяВыгрузка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пакетная выгрузка</value>
+    </synonym>
+    <comment>ERPUPP12-1377</comment>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="75c08d6d-93d5-4306-812d-43bfdc46751b">
+    <name>РаспространениеФормата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Распространение формата</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="125c6e9a-d028-46b3-a2a1-0d944e2233ab">
+    <name>ПовторноеФормированиеСообщенийОбъектов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Повторное формирование сообщений объектов</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:DataProcessor>

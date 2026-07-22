@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="808dd507-d180-41cd-9e4f-e108121f3510">
+  <producedTypes>
+    <managerType typeId="fa3bc0d1-8666-4e21-ac30-ecba53d5f04d" valueTypeId="5f919673-f826-4628-8277-3a2b0ee11963"/>
+    <valueManagerType typeId="29ff1d18-9df9-48f7-bd43-09fb7f9bac14" valueTypeId="7e6b8040-1236-42e2-8cae-feb00a12bf9f"/>
+    <valueKeyType typeId="ec4dd8f7-b4b1-48ef-ad4f-47d4ae472f18" valueTypeId="f4ce8f8c-2d19-44dd-a827-88407998b2c7"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьЗаблокированныеТС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать заблокированные ТС</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

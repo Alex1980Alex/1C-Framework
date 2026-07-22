@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4b8fb856-b06d-4d9d-a2e0-88e91be7537a">
+  <producedTypes>
+    <managerType typeId="f91704c5-f4aa-4d39-9490-432374dc879f" valueTypeId="7a802835-8855-4312-8fe5-e0f0fcb73a2b"/>
+    <valueManagerType typeId="6515948d-c6e8-4118-aaf5-f6b606bf2ead" valueTypeId="3552de7c-6bdb-4a55-9de5-779b3086562f"/>
+    <valueKeyType typeId="0f297003-d45c-4420-b8ce-35242effd4f5" valueTypeId="6ff5a5c0-1047-4ddd-9ad9-371f7341104c"/>
+  </producedTypes>
+  <name>гкс_НеОжидатьОкончанияАнализаДляВыполнения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Не ожидать окончания анализа для выполнения</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <explanation>
+    <key>ru</key>
+    <value>Если установлено, то Лабораторный анализ после обработки будет переведен в статус &quot;Выполнен&quot; не взирая на дату окончания анализа.</value>
+  </explanation>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

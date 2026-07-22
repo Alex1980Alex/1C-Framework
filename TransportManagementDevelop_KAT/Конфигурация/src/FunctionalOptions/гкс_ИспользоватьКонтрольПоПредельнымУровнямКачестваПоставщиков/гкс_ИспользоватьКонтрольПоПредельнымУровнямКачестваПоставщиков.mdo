@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b461a232-656f-47ca-8e01-14cf1a39d2f6">
+  <name>гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль по предельным уровням качества поставщиков</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Document.гкс_УстановкаМинимальныхПоказателейПриемки</content>
+  <content>InformationRegister.гкс_МинимальныеПоказателиКачестваПриемки</content>
+</mdclass:FunctionalOption>

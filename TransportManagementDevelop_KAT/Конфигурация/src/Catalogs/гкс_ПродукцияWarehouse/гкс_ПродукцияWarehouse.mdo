@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5f826236-58a7-4481-bb1f-34b93778ee83">
+  <producedTypes>
+    <objectType typeId="f8fcbde7-4e04-4d23-acc3-8041aadb8e38" valueTypeId="b0905992-a081-4931-ad6f-6931206eb365"/>
+    <refType typeId="3a25e19a-6860-46ab-9d68-2c7e6b79baaa" valueTypeId="98a5be05-87ea-425a-ba51-5b280177ece4"/>
+    <selectionType typeId="01f9b5fd-4e6b-4c7c-92bc-35d4c415a78e" valueTypeId="f19e3972-2d26-4e43-b433-06a2e9467d79"/>
+    <listType typeId="58627213-b09c-4872-bece-1cacb7e00285" valueTypeId="00a71d7f-4a89-4368-9b9f-e2dbf2d9342a"/>
+    <managerType typeId="cff4ac82-5c85-4acc-ae64-1c896f6018c5" valueTypeId="826ced5a-ca72-4762-ab81-a3b3a8952734"/>
+  </producedTypes>
+  <name>гкс_ПродукцияWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse: Продукция</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ПродукцияWarehouse.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>150</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultListForm>Catalog.гкс_ПродукцияWarehouse.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="525d060e-d57a-4584-a950-dd945d886370">
+    <name>НаименованиеEN</name>
+    <synonym>
+      <key>ru</key>
+      <value>Наименование EN</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="9487a6dd-8ede-4d5a-8d28-f2b78c45e708">
+    <name>НаименованиеКороткое</name>
+    <synonym>
+      <key>ru</key>
+      <value>Наименование короткое</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="7f6dd00b-7079-4779-9e58-8e77221dab75">
+    <name>НаименованиеКороткоеEN</name>
+    <synonym>
+      <key>ru</key>
+      <value>Наименование короткое EN</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="57282b43-cd90-4e25-b6a0-e1aff28be202">
+    <name>НормативныйДокумент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Нормативный документ</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="a8340a25-3780-45af-82eb-5fac97465629">
+    <name>ИдентификаторWarehouse</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор warehouse</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>36</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="4185b220-1be7-4c3f-b0b3-2d01d6af861a">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

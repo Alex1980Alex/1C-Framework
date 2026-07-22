@@ -1,0 +1,62 @@
+<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="http://sodrugestvo.com/srpv-messages/1.00">
+	<valueType name="TypeQuantity" base="xs:decimal" variety="Atomic" totalDigits="15" fractionDigits="3"/>
+	<valueType name="TypeMethod" base="xs:string">
+		<enumeration>Create</enumeration>
+		<enumeration>Update</enumeration>
+		<enumeration>Delete</enumeration>
+	</valueType>
+	<valueType name="TypeCargoOperation" base="xs:int" fractionDigits="0">
+		<enumeration>0</enumeration>
+		<enumeration>1</enumeration>
+	</valueType>
+	<valueType name="TypeWaggonWeightingOperation" base="xs:int" fractionDigits="0">
+		<enumeration>0</enumeration>
+		<enumeration>1</enumeration>
+	</valueType>
+	<objectType name="BasicMessage" abstract="true" ordered="false">
+		<property name="ID_PLK" type="xs:int"/>
+		<property name="WagonDispatchId" type="xs:integer"/>
+		<property name="WagonNumber" type="xs:string"/>
+		<property name="Method" type="xs:string"/>
+	</objectType>
+	<objectType name="Railways" open="true" ordered="false" sequenced="true">
+		<property name="railwayId" type="xs:long"/>
+		<property name="railwayName" type="xs:string" lowerBound="0" nillable="true"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodrugestvo.com/srpv-messages/1.00" name="srpv.WaggonReceive" base="d2p1:BasicMessage" ordered="false" sequenced="true">
+		<property name="GoodId" type="xs:long" lowerBound="0" nillable="true"/>
+		<property name="IsLoaded" type="xs:boolean"/>
+		<property name="RailTrackPDate" type="xs:dateTime"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodrugestvo.com/srpv-messages/1.00" name="srpv.CargoOperations" base="d2p1:BasicMessage" ordered="false" sequenced="true">
+		<property name="OperType" type="xs:int"/>
+		<property name="StartDate" type="xs:dateTime"/>
+		<property name="StopDate" type="xs:dateTime" lowerBound="0" nillable="true"/>
+		<property name="RailWayTrackIdPark" type="xs:integer" lowerBound="0"/>
+		<property name="RailWayTrackName" type="xs:string" lowerBound="0"/>
+	</objectType>
+	<objectType xmlns:d2p1="http://sodrugestvo.com/srpv-messages/1.00" name="srpv.WaggonWeighting" base="d2p1:BasicMessage" ordered="false" sequenced="true">
+		<property name="OperType" type="d2p1:TypeWaggonWeightingOperation"/>
+		<property name="WeightTaraDate" type="xs:dateTime" nillable="true"/>
+		<property name="WeightTara" type="d2p1:TypeQuantity" nillable="true"/>
+		<property name="WeightGrossDate" type="xs:dateTime" nillable="true"/>
+		<property name="WeightGross" type="d2p1:TypeQuantity" nillable="true"/>
+		<property name="ScaleId" type="xs:string"/>
+		<property name="IsLoaded" type="xs:boolean"/>
+		<property name="GoodName" type="xs:string" lowerBound="0" nillable="true"/>
+		<property name="GoodId" type="xs:long" lowerBound="0" nillable="true"/>
+	</objectType>
+	<objectType name="srpv.PermittedRoutes">
+		<property name="ID_PLK" type="xs:int"/>
+		<property name="messageId" type="xs:string"/>
+		<property name="waggonDispatchId" type="xs:long"/>
+		<property name="creationDateTime" type="xs:dateTime"/>
+		<property name="revoked" type="xs:boolean" lowerBound="0"/>
+		<property xmlns:d3p1="http://sodrugestvo.com/srpv-messages/1.00" name="railways" type="d3p1:Railways" lowerBound="0" upperBound="-1"/>
+	</objectType>
+	<objectType name="srpv.PermissionProcessedNotification" ordered="false">
+		<property name="messageId" type="xs:string"/>
+		<property name="Success" type="xs:boolean"/>
+		<property name="Error" type="xs:string" lowerBound="0" nillable="true"/>
+	</objectType>
+</package>

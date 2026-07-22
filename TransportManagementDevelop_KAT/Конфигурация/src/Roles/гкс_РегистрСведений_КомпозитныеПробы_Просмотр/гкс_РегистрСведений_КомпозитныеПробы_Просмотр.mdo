@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3232a097-fdf3-4e02-a090-4ae39a0c1311">
+  <name>гкс_РегистрСведений_КомпозитныеПробы_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра сведений &quot;Композитные пробы&quot; </value>
+  </synonym>
+</mdclass:Role>

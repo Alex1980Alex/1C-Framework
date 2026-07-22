@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9789eb94-9509-47d3-adb1-850cf5ad0c52">
+  <producedTypes>
+    <managerType typeId="8bcb9282-5086-4d41-acbf-09da1fc6540c" valueTypeId="7d9ee4f5-b5ec-4050-9031-fc258e22ecf1"/>
+    <valueManagerType typeId="b93f3f63-964b-4d1f-bc55-25a604e7e8c9" valueTypeId="796decd5-3d59-4392-99c2-fddeeadf40ed"/>
+    <valueKeyType typeId="0319429b-30af-4b2f-a94f-b6f96cffbc58" valueTypeId="3b0effaa-b180-410c-8d20-7a3fc04310b1"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьИнтеграциюССАРА</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с САРА</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

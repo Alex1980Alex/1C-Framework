@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ddcfc69a-d0ab-43b3-b94d-3f5e8c7edee8">
+  <name>гкс_РазделПриемкаНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Раздел приемка на ПЛК</value>
+  </synonym>
+</mdclass:CommonPicture>

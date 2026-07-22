@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3468fa8a-d161-485d-93b0-1090eb347b4e">
+  <producedTypes>
+    <selectionType typeId="4ba798cd-461d-4425-a0d6-6b6332e98a37" valueTypeId="a8ae6435-fd6d-43c1-be7b-85ccd40f63bb"/>
+    <listType typeId="38bbaabc-b27f-4667-a78b-e1ef943b9f67" valueTypeId="8b5ff713-3de0-442f-b9c1-ebb7a523e28f"/>
+    <managerType typeId="d4e78003-a5b7-4260-83b4-94f509cbe514" valueTypeId="f8250930-3f57-4d48-8284-f9c5a89e0845"/>
+    <recordSetType typeId="1047c84b-39e9-43cd-b1b7-ee0c93366638" valueTypeId="fffbf8e8-d5fb-42ac-992a-070bbb7e95cd"/>
+    <recordKeyType typeId="7a4b0130-7c92-43c8-93c5-b04080896b49" valueTypeId="85887fd8-e19f-445b-82c0-e8b14cdbedf8"/>
+    <recordType typeId="d59f5b84-5c55-47b3-ba5f-5e70a9f51055" valueTypeId="2532fd64-9bb1-43fc-aa7b-1ee05c59890a"/>
+    <recordManagerType typeId="d55da33b-b3e5-4119-ad0d-43e8e88dc553" valueTypeId="072092ac-1582-470e-9a38-2775261def88"/>
+  </producedTypes>
+  <name>гкс_НастройкиИнтеграционногоАдаптера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройки интеграционного адаптера (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_НастройкиИнтеграционногоАдаптера.Form.ФормаНастроек</defaultRecordForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <listPresentation>
+    <key>ru</key>
+    <value>Настройки интеграционного адаптера</value>
+  </listPresentation>
+  <resources uuid="01e85c90-0fd9-4f4a-b92a-9eb320ff55f9">
+    <name>МаксимальноеКоличествоПотоковОбработки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Максимальное количество потоков обработки</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="96fca196-b30f-4c75-afbc-23cb991fe87a">
+    <name>РазмерПорцииОбработки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Размер порции обработки</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="a79eaf2a-77d6-4c07-9199-6386d043c3f5">
+    <name>СрокХраненияВходящихСообщений</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок хранения входящих сообщений</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="8e0439ce-f96d-4e6a-9320-c8074a26d2ba">
+    <name>СрокХраненияИсходящихСообщений</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок хранения исходящих сообщений</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="9b91e203-3395-428c-85af-2b12969a9948">
+    <name>СрокХраненияЛогаЗапросовАсинхронногоСервиса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок хранения лога запросов асинхронного сервиса</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="9f3938a5-914e-46a2-ae8b-a39d53542c12">
+    <name>СрокХраненияСообщенийСОшибкамиОбработки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок хранения сообщений с ошибками обработки</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>3</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="4f275b80-478b-4b94-9bdb-407a8eb68d01">
+    <name>СтрокаСоединенияУчастникаОбмена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Строка соединения участника обмена с RMQ</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>200</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <resources uuid="ee5418c6-2da6-4aed-991c-ee396e4de2d7">
+    <name>ТаймаутОбработкиПорцииСообщений</name>
+    <synonym>
+      <key>ru</key>
+      <value>Таймаут (в секундах) обработки порции сообщений</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="e1de826a-c9ce-4bc1-ae37-1f0d7b08bc5a">
+    <name>МаксимальноеКоличествоНеудачныхОбработок</name>
+    <synonym>
+      <key>ru</key>
+      <value>Максимальное количество неудачных обработок</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>2</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="91aeee14-5362-4fa0-aa63-b5eae980a90b">
+    <name>РазмерПорцииОбработкиОчередиОтложенногоФормирования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Размер порции обработки очереди отложенного формирования</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="c4a9d411-a3b9-4158-b18a-6822db4094f2">
+    <name>МаксимальноеКоличествоПотоковОбработкиОчередиОтложенногоФормирования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Максимальное количество потоков обработки очереди отложенного формирования</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="6677a2a1-53c7-4f8e-89eb-536996ee4911">
+    <name>ТаймаутОбработкиПорцииОчередиОтложенногоФормирования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Таймаут обработки порции очереди отложенного формирования</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="84804d7e-3136-4039-8dec-c85934113156">
+    <name>СрокХраненияОчередиОтложенногоФормирования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок хранения очереди отложенного формирования</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="83db71fa-8375-4a86-bcb2-a768ca78293a">
+    <name>ИспользоватьОтдельнуюСхемуДляСлужебныхСообщений</name>
+    <synonym>
+      <key>ru</key>
+      <value>Использовать отдельную схему для служебных сообщений</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="d42d30f6-cab2-49b5-875e-17d71f905331">
+    <name>ТипПодключенияИзолированно</name>
+    <synonym>
+      <key>ru</key>
+      <value>Изолированный способ подключения компоненты</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="bdc3cdbb-118a-40c8-b400-c3e076f1d774">
+    <name>ИспользованиеОбработкиСообщенийПоТочкам</name>
+    <synonym>
+      <key>ru</key>
+      <value>Использование обработки сообщений по точкам</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <forms uuid="f16bc325-51e1-49eb-bfec-cf135d106065">
+    <name>ФормаНастроек</name>
+    <synonym>
+      <key>ru</key>
+      <value>0</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

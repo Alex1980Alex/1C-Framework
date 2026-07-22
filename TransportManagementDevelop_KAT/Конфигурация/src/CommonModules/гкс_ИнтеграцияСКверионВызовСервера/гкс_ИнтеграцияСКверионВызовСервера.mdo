@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d88411d3-5d4a-49b2-a9a9-f2a7cdc13f15">
+  <name>гкс_ИнтеграцияСКверионВызовСервера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс интеграция с кверион вызов сервера</value>
+  </synonym>
+  <server>true</server>
+  <serverCall>true</serverCall>
+</mdclass:CommonModule>

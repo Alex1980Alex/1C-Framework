@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="bc1b433f-e1d6-45e1-b1c2-c5fd8297c69f">
+  <producedTypes>
+    <managerType typeId="b6d32edd-7827-499c-8f9b-7c4f284d638a" valueTypeId="2b3c2330-bd1d-4346-b00b-69d9b6b31df8"/>
+    <valueManagerType typeId="011cad1f-0537-4161-ac4f-5d3ef9135ae2" valueTypeId="873f7413-8610-436e-a005-f35f6886305d"/>
+    <valueKeyType typeId="791457ed-793c-4f0d-9151-5cebe2185eae" valueTypeId="eb9a7089-a996-40ec-a71d-14a09e4bc2b6"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьИнтеграциюСWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с Warehouse</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

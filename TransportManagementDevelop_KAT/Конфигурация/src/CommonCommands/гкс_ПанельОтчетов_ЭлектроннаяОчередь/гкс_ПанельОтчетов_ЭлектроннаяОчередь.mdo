@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonCommand xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="14f64b28-093f-4f03-8400-d102ccedfe48">
+  <name>гкс_ПанельОтчетов_ЭлектроннаяОчередь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отчеты по электронной очереди</value>
+  </synonym>
+  <group>NavigationPanelImportant</group>
+  <representation>Auto</representation>
+</mdclass:CommonCommand>

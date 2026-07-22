@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8757edad-32c4-4e7a-a55a-c80ffe5510c3">
+  <producedTypes>
+    <selectionType typeId="5ddaef7f-a6dc-4d97-a631-063d4e6bf432" valueTypeId="641f7060-7d3c-4ffb-a9bd-ac6e9571520e"/>
+    <listType typeId="2cd19d11-063d-49f2-af4b-aed5b28123a8" valueTypeId="2ad704d2-09b0-4fd8-885b-e4f6a4e98417"/>
+    <managerType typeId="fa65c88d-f17f-44af-a6ee-32c98e55669f" valueTypeId="0c4e1d8d-af83-4220-9320-327408422120"/>
+    <recordSetType typeId="93f10da3-62c5-454a-9477-3ddda054b2e3" valueTypeId="f5604d69-2e8e-428e-ac40-71c938ac180c"/>
+    <recordKeyType typeId="ebfc6080-af31-4359-bb02-5eb1d29ad1c1" valueTypeId="5bcf59f0-5477-4eb5-8f49-2827bbb183a8"/>
+    <recordType typeId="45a51f27-0c71-40c7-969f-1d1313d0c88c" valueTypeId="d8aaa280-2c4f-439c-aed6-3814c290a2cc"/>
+    <recordManagerType typeId="1dde1657-4b4b-4e12-b512-5bfa0000c12e" valueTypeId="9ec3790e-8d94-4794-b83b-8203cea47841"/>
+  </producedTypes>
+  <name>гкс_ДанныеОбъектовДляРегистрацииВОбменах</name>
+  <synonym>
+    <key>ru</key>
+    <value>Данные объектов для регистрации в обменах (ИАС)</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <listPresentation>
+    <key>ru</key>
+    <value>Данные объектов для регистрации в обменах</value>
+  </listPresentation>
+  <resources uuid="e596b804-d78d-4854-9c2d-4c13d6def927">
+    <name>ДатаРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата регистрации</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="2b2e8c76-fcaa-4f7d-8b7d-dd06e690eed1">
+    <name>Ссылка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка</value>
+    </synonym>
+    <type>
+      <types>DocumentRef</types>
+      <types>ChartOfCharacteristicTypesRef</types>
+      <types>CatalogRef</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="4107f3cf-5c12-4e86-9d6b-e41f2ce8cfd9">
+    <name>Получатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Получатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПолучателиДанныхRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

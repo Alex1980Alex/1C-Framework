@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b6861192-9272-48ac-ab8f-45eb984f8afc">
+  <name>ВходнойКонтрольКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Входной контроль качества</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>Constant.гкс_ИспользоватьУсиленныйКонтрольКачества</content>
+  <content>FunctionalOption.гкс_ИспользоватьУсиленныйКонтрольКачества</content>
+  <content>Role.гкс_НастройкаУсиленногоКонтроля</content>
+  <content>InformationRegister.гкс_НастройкиУсиленногоКонтроляКачества</content>
+  <content>InformationRegister.гкс_ПоказателиУсиленногоКонтроляПоРегистрации</content>
+  <content>InformationRegister.гкс_ТранспортныеСредстваПоставщикаУсиленногоКонтроля</content>
+  <content>CommonModule.гкс_ВходнойКонтрольКачества</content>
+  <content>DataProcessor.гкс_АРМПриемкаПоКачеству</content>
+  <content>Enum.гкс_ТипыУсиленногоКонтроляКачества</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации</content>
+  <content>InformationRegister.гкс_НастройкиОтключенияВходногоКонтроляКачества</content>
+  <content>Enum.гкс_СостоянияКачества</content>
+  <content>InformationRegister.гкс_ЗаблокированныеРегистрацииУсиленныйКонтроль</content>
+  <content>Enum.гкс_ТипыКонтроляКачества</content>
+  <content>Constant.гкс_ИспользоватьОтключениеВходногоКонтроляКачества</content>
+  <content>FunctionalOption.гкс_ИспользоватьОтключениеВходногоКонтроляКачества</content>
+  <content>DataProcessor.гкс_АРМПромежуточныйКомпозит</content>
+  <content>InformationRegister.гкс_ПриемкаТранспортаБезВходногоКонтроля</content>
+  <content>Constant.гкс_СрокУстановкиПравилКаждоеТС</content>
+  <content>FunctionalOption.гкс_ИспользоватьРезультатыВнешнихПроб</content>
+  <content>Constant.гкс_ИспользоватьРезультатыВнешнихПроб</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

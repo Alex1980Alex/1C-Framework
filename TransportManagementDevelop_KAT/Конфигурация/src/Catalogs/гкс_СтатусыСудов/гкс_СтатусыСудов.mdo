@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="adda1e1a-e955-402b-8180-78ec3acaf94d">
+  <producedTypes>
+    <objectType typeId="0bcb20af-a31c-4802-9716-eba1301a7ab2" valueTypeId="ab8ea427-8ea9-4caf-940d-a2ff499b091d"/>
+    <refType typeId="f4aaf441-fbdb-43dc-9017-7e6f5fc28c68" valueTypeId="308aaa69-ebb0-432a-8fe2-49177524694b"/>
+    <selectionType typeId="03a62fc0-33c0-4808-a3f0-51d83ec2ee75" valueTypeId="224f80fd-edd5-4fb4-8179-757d563c52c5"/>
+    <listType typeId="eccee0a9-5434-4fb2-9e91-0d3d63ce4de5" valueTypeId="19ede228-9473-42ff-81d6-8c3a564c456a"/>
+    <managerType typeId="c6ff1067-22f7-4d5c-8e16-b7f925cded85" valueTypeId="ceae6a2a-498e-4d9a-876c-24f6ca47367c"/>
+  </producedTypes>
+  <name>гкс_СтатусыСудов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Статусы судов</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_СтатусыСудов.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_СтатусыСудов.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>25</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+</mdclass:Catalog>

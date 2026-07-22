@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f6e5bf1e-bdd8-40b0-b1f2-c435480d0216">
+  <producedTypes>
+    <refType typeId="cdb00eb9-050e-4a2b-ace6-37059021d798" valueTypeId="9d737bc8-4fc6-4d40-b0de-2d7b54b8cfc4"/>
+    <listType typeId="4facc5a0-f357-4b6e-b343-2f96fb13d8cb" valueTypeId="c1db8517-d910-4be3-b769-e37e0e2853f6"/>
+    <managerType typeId="a0f5dd89-6f26-4043-964d-d0a9c93afc4b" valueTypeId="07571a44-a318-4f15-9530-c85e5c4e4856"/>
+  </producedTypes>
+  <name>гкс_СтатусыСпецификацийКДоговорамКонтрагентов</name>
+  <synonym>
+    <key>en</key>
+    <value>Statuses of Specification document</value>
+  </synonym>
+  <synonym>
+    <key>uk</key>
+    <value>Статуси специфікацій до договорів контрагентів</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Статусы спецификаций к договорам контрагентов</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="7ab56eb6-3b53-4677-bb5b-d4e2cc9ac436">
+    <name>НеСогласована</name>
+    <synonym>
+      <key>en</key>
+      <value>Not consistent</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Не погоджена</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Не согласована</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="48a3fc31-c212-4c60-beb0-964b984cea65">
+    <name>Отклонена</name>
+    <synonym>
+      <key>en</key>
+      <value>Rejected</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Відхилено</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Отклонена</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ad3c3b46-c72e-425e-8787-fe8ed598c335">
+    <name>Действует</name>
+    <synonym>
+      <key>en</key>
+      <value>Open</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Діє</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Действует</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="91241f0c-1eb1-4d81-82bf-c2ed24c8303b">
+    <name>Закрыта</name>
+    <synonym>
+      <key>en</key>
+      <value>Closed</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Закрита</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Закрыта</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="62902087-051c-4a52-9951-278b6883aa30">
+    <name>Новая</name>
+    <synonym>
+      <key>ru</key>
+      <value>Новая</value>
+    </synonym>
+    <comment>ЖС-0165</comment>
+  </enumValues>
+  <enumValues uuid="b62c68c4-3f7f-4731-8434-61e609ef487a">
+    <name>Изменена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Изменена</value>
+    </synonym>
+    <comment>ЖС-0165</comment>
+  </enumValues>
+  <enumValues uuid="682db1a5-a2d4-4fbc-aa25-352657a650de">
+    <name>Дефолт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дефолт</value>
+    </synonym>
+    <comment>ЖС-0165</comment>
+  </enumValues>
+</mdclass:Enum>

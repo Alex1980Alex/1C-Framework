@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2ec85ca6-0da2-4580-a012-5ac071525894">
+  <name>гкс_Документ_ЛабораторныйАнализ_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Лабораторный анализ&quot;</value>
+  </synonym>
+</mdclass:Role>

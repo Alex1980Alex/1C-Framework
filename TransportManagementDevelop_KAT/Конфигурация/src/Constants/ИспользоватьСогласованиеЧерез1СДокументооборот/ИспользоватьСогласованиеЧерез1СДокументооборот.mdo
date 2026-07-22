@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="74f3a080-5129-4787-b7de-b42265e2c360">
+  <producedTypes>
+    <managerType typeId="cee5bd1e-4fa4-44a0-b5a1-01c2e4fec79c" valueTypeId="c309e1f7-9f02-4f13-b9b2-5a84c34d3a36"/>
+    <valueManagerType typeId="91bfb04f-6b33-48d9-986a-e2b5a5122b0b" valueTypeId="6b95f9a6-aa4c-4613-b3e6-ffe22e36b1df"/>
+    <valueKeyType typeId="18628194-36fc-4b98-9b87-77b3c2b30520" valueTypeId="cb8dbb39-6530-4b06-97fa-d8aa360671c5"/>
+  </producedTypes>
+  <name>ИспользоватьСогласованиеЧерез1СДокументооборот</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать согласование через 1С:Документооборот</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <choiceHistoryOnInput>DontUse</choiceHistoryOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

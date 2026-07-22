@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6e87114f-17e3-470c-a7af-d39a40d2c1c4">
+  <name>ЭлектроннаяОчередь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Электронная очередь</value>
+  </synonym>
+  <help>
+    <pages>
+      <lang>ru</lang>
+    </pages>
+  </help>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <picture xsi:type="core:PictureRef">
+    <picture>CommonPicture.КалендарьМонохромный</picture>
+  </picture>
+  <content>Report.гкс_КонтрольЗаездаПоЭлектроннойОчереди</content>
+  <content>InformationRegister.гкс_РегистрацииПоЭлектроннойОчереди</content>
+  <content>Report.гкс_АнализПредварительнойЗаписи</content>
+  <content>DataProcessor.гкс_КалендарьОчереди</content>
+  <content>CommonModule.гкс_ЭлектроннаяОчередь</content>
+  <content>CommonModule.гкс_ЭлектроннаяОчередьКлиент</content>
+  <content>CommonModule.гкс_ЭлектроннаяОчередьСервер</content>
+  <content>CommonModule.гкс_ЭлектроннаяОчередьОтгрузки</content>
+  <content>CommonModule.гкс_ЭлектроннаяОчередьПриемки</content>
+  <content>Role.гкс_Обработка_КалендарьОчереди_Использование</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикПриемкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикОтгрузкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьОтгрузкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьПриемкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикОтгрузкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикПриемкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьОтгрузкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьПриемкиПЛК_ДобавлениеИзменение</content>
+  <content>Enum.гкс_РежимРаботыКалендаряОчереди</content>
+  <content>Report.гкс_ЗаписиВЭлектроннойОчереди</content>
+  <content>Report.гкс_КонтрольПрохожденияОчередиПриемкиПЛК</content>
+  <content>Report.гкс_Анализ_FCA_DAP</content>
+  <content>FunctionalOption.гкс_ИспользоватьЭлектроннуюОчередь</content>
+  <content>Constant.гкс_ИспользоватьЭлектроннуюОчередь</content>
+  <content>Role.гкс_РазделЭлектроннаяОчередь</content>
+  <content>Report.гкс_АнализИсполненияЗаписейПоЭлектроннойОчереди</content>
+  <subsystems>ЭлектроннаяОчередьПриемки</subsystems>
+  <subsystems>ЭлектроннаяОчередьОтгрузки</subsystems>
+  <subsystems>ДиспетчеризацияТранспорта</subsystems>
+  <subsystems>Аналитика</subsystems>
+</mdclass:Subsystem>

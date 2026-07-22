@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="87242490-f8d6-48d7-be42-f1b9f36419b8">
+  <name>гкс_РегистрСведений_ГрафикПриемкиНаПЛК_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра сведений &quot;График приемки на ПЛК&quot;</value>
+  </synonym>
+</mdclass:Role>

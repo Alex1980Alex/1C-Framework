@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d3b09532-01d7-405e-965f-83e244bca9aa">
+  <name>гкс_ИспользоватьДоговорыКонтрагентов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс использовать договоры контрагентов</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьДоговорыКонтрагентов</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Catalog.ДоговорыКонтрагентов</content>
+</mdclass:FunctionalOption>

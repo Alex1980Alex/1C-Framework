@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="84095d73-5961-4b4b-ade3-84c8d4c2a674">
+  <producedTypes>
+    <selectionType typeId="04c74140-3a56-4a4d-9fdb-48221623bdd0" valueTypeId="0c6c7d43-2dd4-4531-bae3-6b2864d80d09"/>
+    <listType typeId="a5247626-f025-41a7-b081-c9b4bf2d41d6" valueTypeId="eeff9121-b19b-40d7-a11a-b44b36a4501f"/>
+    <managerType typeId="f4656825-8d87-46a5-84db-8f2fea0122fd" valueTypeId="77f90dab-1cf5-4577-8520-8f37355b2b79"/>
+    <recordSetType typeId="f634cbf3-738a-421f-bd2e-236d4a09e0db" valueTypeId="f532b0ea-8a8e-4d89-891e-3c141157e4de"/>
+    <recordKeyType typeId="1e2ebcc1-6f78-4b30-a06d-c74b70bead41" valueTypeId="8eae1ae2-40a1-430a-bd02-61f8c0ae9869"/>
+    <recordType typeId="73a95955-4a61-4ac8-ad04-bc2ab0d3be4b" valueTypeId="02ed54e9-a3f7-4690-acf0-941135406caa"/>
+    <recordManagerType typeId="b72a1473-1431-4ebb-a108-3d98667ea9b8" valueTypeId="8c8bdbd3-321f-49d9-bdf9-4d88b5c86f6c"/>
+  </producedTypes>
+  <name>гкс_НахождениеВагоновНаПутяхСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Нахождение вагонов на путях (СРПВ)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="d4eaa4df-be90-44a3-aaa8-8e484290222a">
+    <name>WaggonDispatchId</name>
+    <synonym>
+      <key>ru</key>
+      <value>Waggon dispatch id</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_WagonDispatchID</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="18761583-0bfe-428b-9b45-1d4753879bb6">
+    <name>WaggonIndexPark</name>
+    <synonym>
+      <key>ru</key>
+      <value>Waggon index park</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>4</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="33c4c949-0c80-47e1-9ca5-9ac2c1d34588">
+    <name>ДатаСостояния</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата состояния</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="c43556f2-b4ed-4c08-8c57-830cddca7af3">
+    <name>Вагон</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вагон</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <choiceParameters>
+      <name>Отбор.ВидПеревозки</name>
+      <value xsi:type="core:ReferenceValue">
+        <value>Enum.гкс_ТипыТранспортныхСредствДоставки.EnumValue.ЖДТранспорт</value>
+      </value>
+    </choiceParameters>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </dimensions>
+  <dimensions uuid="0eaf09fd-abe1-4d54-b73f-79773a994155">
+    <name>Путь</name>
+    <synonym>
+      <key>ru</key>
+      <value>Путь</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_СтруктураПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+  </dimensions>
+</mdclass:InformationRegister>

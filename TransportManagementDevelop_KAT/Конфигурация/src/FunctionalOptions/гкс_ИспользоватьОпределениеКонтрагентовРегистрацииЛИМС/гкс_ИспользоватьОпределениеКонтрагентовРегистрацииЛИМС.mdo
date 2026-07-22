@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="68945b81-ebb9-42e1-8a25-8ba03217b597">
+  <name>гкс_ИспользоватьОпределениеКонтрагентовРегистрацииЛИМС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать определение контрагентов регистрации ЛИМС</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьОпределениеКонтрагентовРегистрацииЛИМС</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

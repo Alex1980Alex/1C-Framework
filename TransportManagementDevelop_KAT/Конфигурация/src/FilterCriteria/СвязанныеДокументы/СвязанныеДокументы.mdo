@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FilterCriterion xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="18bf6916-83cc-41e5-a35b-1489450ae632">
+  <producedTypes>
+    <listType typeId="9e16ad15-d167-4333-93b1-dd05dfe4196d" valueTypeId="13494fee-f044-4f98-94ee-527ae8a7d2bb"/>
+    <managerType typeId="f3419e42-7083-4e23-8233-2155ef776262" valueTypeId="f672e9f7-cdcc-4293-b1f2-e4c26f912c00"/>
+  </producedTypes>
+  <name>СвязанныеДокументы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Связанные документы</value>
+  </synonym>
+  <type>
+    <types>DocumentRef.гкс_СРПВПеревеска</types>
+    <types>DocumentRef.гкс_РеестрНакладныхЗПП3</types>
+    <types>DocumentRef.гкс_РабочаяСмена</types>
+    <types>DocumentRef.гкс_СРПВРегистрацияОперацииСВагоном</types>
+    <types>DocumentRef.гкс_Взвешивание</types>
+    <types>DocumentRef.гкс_Фрахт</types>
+    <types>DocumentRef.гкс_ЛабораторныйАнализ</types>
+    <types>DocumentRef.гкс_ПрибытиеСуднаНаПЛК</types>
+    <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    <types>DocumentRef.гкс_ОснованиеДляДвиженияЗапасов</types>
+    <types>DocumentRef.гкс_ЗаписьВОчередьПриемкиПЛК</types>
+    <types>CatalogRef.гкс_КлючиАналитикиСРПВ</types>
+    <types>DocumentRef.гкс_ВъездНаКПП</types>
+    <types>DocumentRef.гкс_ЗаявкаНаОтгрузкуПродукции</types>
+    <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    <types>DocumentRef.гкс_СРПВПрибытиеНаПуть</types>
+    <types>DocumentRef.гкс_НаправлениеНаРазгрузку</types>
+    <types>DocumentRef.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</types>
+  </type>
+  <content>Catalog.гкс_НомерПробы.TabularSection.СписокРегистраций.Attribute.ДокументРегистрации</content>
+  <content>Document.гкс_Взвешивание.Attribute.ДокументРегистрации</content>
+  <content>Document.гкс_ВъездНаКПП.Attribute.ДокументОснование</content>
+  <content>Document.гкс_ВыездНаКПП.Attribute.ДокументОснование</content>
+  <content>Document.гкс_ЗаявкаНаОтгрузкуПродукции.TabularSection.Товары.Attribute.ПриказЗПП16</content>
+  <content>Document.гкс_ЛабораторныйАнализ.Attribute.гкс_ДокументРегистрации</content>
+  <content>Document.гкс_НаправлениеНаРазгрузку.Attribute.ДокументРегистрации</content>
+  <content>Document.гкс_ОснованиеДляДвиженияЗапасов.Attribute.Регистрация</content>
+  <content>Document.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16.TabularSection.Накладные.Attribute.ДокументРегистрации</content>
+  <content>Document.гкс_РегистрацияНаПЛК.Attribute.ДокументОснование</content>
+  <content>Document.гкс_РегистрацияНаПЛК.Attribute.ЗаявкаНаОтгрузкуПродукции</content>
+  <content>Document.гкс_РеестрНакладныхЗПП3.Attribute.Анализ</content>
+  <content>Document.гкс_РеестрНакладныхЗПП3.TabularSection.Накладные.Attribute.ДокументРегистрации</content>
+  <content>Document.гкс_СпецификацияКДоговоруКонтрагента.TabularSection.КачественныеПоказатели.Attribute.ЛабораторныйАнализ</content>
+  <content>Document.гкс_ФормированиеНомераПробы.TabularSection.СписокРегистраций.Attribute.ДокументРегистрации</content>
+  <content>Document.гкс_СРПВПеревеска.Attribute.ИдентификаторОтправки</content>
+  <content>Document.гкс_СРПВПрибытиеНаПуть.Attribute.ИдентификаторОтправки</content>
+  <content>Document.гкс_СРПВРегистрацияОперацииСВагоном.Attribute.ИдентификаторОтправки</content>
+  <content>Document.гкс_ПрибытиеСуднаНаПЛК.Attribute.Фрахт</content>
+  <content>Document.гкс_ПрибытиеСуднаНаПЛК.TabularSection.ТранспортныеДокументы.Attribute.ТранспортныйДокумент</content>
+  <content>Document.гкс_РабочаяСмена.Attribute.Фрахт</content>
+</mdclass:FilterCriterion>

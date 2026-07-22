@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f09db23f-77e9-475b-b9f4-b10ffed2694b">
+  <producedTypes>
+    <selectionType typeId="b22691b4-4a17-4f61-a692-0161d2e7f116" valueTypeId="883c0323-4e59-40a0-8b91-59100f9fa4f6"/>
+    <listType typeId="f6477f39-fc06-46dd-b9c7-4730062727e9" valueTypeId="2d6590fb-12d5-4170-b570-7ed957564749"/>
+    <managerType typeId="4fa35b43-b76c-4812-b33e-65c389e001a6" valueTypeId="cae6ab58-83b0-4936-b9db-90de128e231c"/>
+    <recordSetType typeId="27accf17-5270-499d-b383-8a57d15d8edb" valueTypeId="422a2c05-ef64-45d3-b067-253e8f49f3c6"/>
+    <recordKeyType typeId="27ce5b34-58d0-4d9a-8b1e-aac7765e9f35" valueTypeId="ab4a081c-d234-4176-a50f-52b56b561c4d"/>
+    <recordType typeId="605e1498-1265-4bdf-b7fb-4cf25a748362" valueTypeId="37e4c769-82c1-4177-aa74-f5579af2b6cc"/>
+    <recordManagerType typeId="189dc009-c22b-4901-a76f-8744c1bd861a" valueTypeId="a44516dd-8d4a-4aed-a497-3dbeb04bda54"/>
+  </producedTypes>
+  <name>гкс_НастройкиПриемкаПЛКПоТочкамМаршрута</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройки приемки ПЛК по точкам маршрута </value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_НастройкиПриемкаПЛКПоТочкамМаршрута.Form.ФормаЗаписи</defaultRecordForm>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="40abd76f-49f4-49d1-a771-08a6b9a9ad51">
+    <name>ВремяОжидания</name>
+    <synonym>
+      <key>ru</key>
+      <value>Время ожидания ТС (Минута)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>3</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="53e18c10-1ac9-4e50-9c3f-afafbdb89df0">
+    <name>СтарыйСтатус</name>
+    <synonym>
+      <key>ru</key>
+      <value>Старый статус</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СтатусыЭлектроннойОчереди</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="15b91994-85bb-46d9-ae13-2edbb2c3719b">
+    <name>НовыйСтатус</name>
+    <synonym>
+      <key>ru</key>
+      <value>Новый статус</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СтатусыЭлектроннойОчереди</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="4cc37a7a-3faa-4afd-baad-28885df5f744">
+    <name>ПутьКДокументамСАРА</name>
+    <synonym>
+      <key>ru</key>
+      <value>Путь к документам САРА</value>
+    </synonym>
+    <comment>ERP-1605</comment>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <resources uuid="c1750a86-dabe-4b33-b116-4475a78aa2f1">
+    <name>ИспользуютсяЭлектронныеТабло</name>
+    <synonym>
+      <key>ru</key>
+      <value>Используются электронные табло</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="ddc93936-23a6-4f32-981d-78f5db9229f0">
+    <name>ЗначениеДопустимогоОтклоненияБрутто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Значение допустимого отклонения брутто</value>
+    </synonym>
+    <comment>ERP-2051</comment>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="0c5a5ea3-a5ba-471a-8be8-4d00230743f1">
+    <name>АвтоматическоеФормированиеДокументов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Автоматическое формирование документов</value>
+    </synonym>
+    <comment>ERP-2240</comment>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="87da5407-9ad5-4dbf-8587-3e7902045d09">
+    <name>ВариантИспользованияТаблоЭлектроннойОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вариант использования табло для электронной очереди</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ВариантыИспользованияТаблоЭлектроннойОчереди</types>
+    </type>
+    <toolTip>
+      <key>ru</key>
+      <value>Отбор по Номенклатуре -  для каждой принимаемой номенклатуры используется свое табло.
+Отбор по списку номенклатуры - для заданного списка номенклатуры используется свое табло. Таких табло м.б. несколько.
+Без отбора - используется единое табло.</value>
+    </toolTip>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="504a1fc1-d020-44fe-9fc7-479864211ff0">
+    <name>НормативПогрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Установленный норматив погрузки (в минутах)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>3</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="51a80440-84af-4287-bad4-ca7b73066147">
+    <name>УказыватьПричинуПревышенияНормативаПогрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Указывать причину превышения норматива погрузки</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="d82f81c4-8171-49c3-84cf-f2b57a0eba91">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="891c1dcf-f36b-4f8b-932a-138a440029be">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

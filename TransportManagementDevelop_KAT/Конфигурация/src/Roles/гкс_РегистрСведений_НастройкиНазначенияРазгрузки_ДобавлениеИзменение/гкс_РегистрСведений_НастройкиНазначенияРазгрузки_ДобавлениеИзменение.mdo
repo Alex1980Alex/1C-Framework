@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="009592f0-b646-483b-b1b2-9942e2dd42f6">
+  <name>гкс_РегистрСведений_НастройкиНазначенияРазгрузки_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Настройки назначения разгрузки&quot;</value>
+  </synonym>
+</mdclass:Role>

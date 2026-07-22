@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e250c321-1a68-405b-9e25-7d1adb86744f">
+  <producedTypes>
+    <managerType typeId="fa97479d-7b8b-4695-8a71-3be4be033f3d" valueTypeId="79ba844e-61e9-4e98-b391-482017d2ba8d"/>
+    <valueManagerType typeId="7b48adf2-9b33-4974-92b3-c7ae2a754d66" valueTypeId="0778f11d-d647-4332-b5b9-b7536947565e"/>
+    <valueKeyType typeId="ab777cc1-819f-4f60-a43f-af4b429438da" valueTypeId="15106c29-0d5c-4ad2-87f3-11ba0cc3a3b8"/>
+  </producedTypes>
+  <name>гкс_СмещениеПроизводственныхСуток</name>
+  <synonym>
+    <key>ru</key>
+    <value>Смещение производственных суток</value>
+  </synonym>
+  <comment>Количество часов от начала даты</comment>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>2</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ca6eca6a-b549-4fad-8c01-d3cbb41f57e8">
+  <name>СервисныеМеханизмы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сервисные механизмы (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>DataProcessor.гкс_ИсследовательGUID</content>
+  <content>CommonModule.гкс_ОценкаПроизводительностиRMQ</content>
+  <content>ScheduledJob.гкс_ОчисткаУстаревшихДанных</content>
+  <content>Catalog.гкс_ПроизвольныеНастройкиИнтеграций</content>
+  <content>Report.гкс_СвязанныеСообщения</content>
+  <content>DataProcessor.гкс_УправлениеОбъектамиИнтеграции</content>
+  <content>CommonCommand.гкс_ПолучитьВсеСообщенияИзОчереди</content>
+  <content>CommonForm.гкс_ПолучениеСообщенийИзОчереди</content>
+  <content>ScheduledJob.гкс_ПереводВСостояниеЗакрытоСообщенийСОшибкамиОбработки</content>
+  <content>DataProcessor.гкс_ОбработчикСообщенийДляПереводаВСостояниеЗакрыто</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

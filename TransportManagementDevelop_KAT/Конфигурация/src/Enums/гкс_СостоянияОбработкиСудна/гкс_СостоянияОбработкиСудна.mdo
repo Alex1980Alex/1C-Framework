@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a6b04613-0f61-4856-9d01-85b9b06bf834">
+  <producedTypes>
+    <refType typeId="283d2366-7f12-4543-94fe-00b35a6e5f0f" valueTypeId="2927dc01-edc8-4399-a00b-3b165af20c80"/>
+    <listType typeId="6ef15d1e-330b-443a-8248-a903cb0987da" valueTypeId="0f6e025a-481d-401b-9b3a-c1bf4dafde60"/>
+    <managerType typeId="1dd05520-1524-4640-82b7-d21918130cb9" valueTypeId="ce3a0655-a9f7-438f-bcb9-833ae7fd6510"/>
+  </producedTypes>
+  <name>гкс_СостоянияОбработкиСудна</name>
+  <synonym>
+    <key>ru</key>
+    <value>Состояния обработки судна</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="c4738e96-c4e8-40b9-9ef0-f33b7b6d4a4d">
+    <name>Выгружается</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выгружается</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ce9d8d1f-f43e-4b89-90e4-d327afe01286">
+    <name>Выгружен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выгружен</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="05a62438-95ec-4108-af6d-994d29fe1795">
+    <name>ВыгрузкаОстановлена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выгрузка остановлена</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

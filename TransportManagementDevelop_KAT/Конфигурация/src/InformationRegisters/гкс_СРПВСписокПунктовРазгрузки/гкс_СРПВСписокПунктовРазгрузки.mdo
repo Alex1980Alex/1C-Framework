@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d32f086e-5363-4f72-affa-ba49532253f8">
+  <producedTypes>
+    <selectionType typeId="7130c22f-f186-4f52-8735-3dc39fe334dd" valueTypeId="1e061654-9d7b-4e77-92dc-819049a7edb7"/>
+    <listType typeId="5dfba548-353a-4af1-892a-74f71ce43242" valueTypeId="32967b44-1e8a-4331-9f92-14452937afa1"/>
+    <managerType typeId="707ec523-b54d-4d1a-8cff-003c88cde04f" valueTypeId="44b8785b-f453-4c60-bc5c-1733beb41b33"/>
+    <recordSetType typeId="7ceba6fc-fe31-401e-8788-a9d447fc6155" valueTypeId="458fef99-cfca-4d1a-a27d-e07170fd82c7"/>
+    <recordKeyType typeId="87d38421-5a1a-4491-b06d-5804c52b52f0" valueTypeId="f024e84c-a608-4b46-8e15-a2c04ec7353c"/>
+    <recordType typeId="e3ceae3c-93e4-4239-9d3f-1d8fee6160c4" valueTypeId="51b8387d-678b-49b6-9a51-749f11ae4c03"/>
+    <recordManagerType typeId="d461bbd8-a100-4d7f-95e6-8b990cbeeb00" valueTypeId="e18f282d-5b84-4bde-84f8-c0ee7d374187"/>
+  </producedTypes>
+  <name>гкс_СРПВСписокПунктовРазгрузки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Список пунктов разгрузки (СРПВ)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <dimensions uuid="97c8c160-fb05-4491-9efb-dbb035509c50">
+    <name>ПунктРазгрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пункт разгрузки</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

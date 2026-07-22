@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="12d6c416-ab83-47ef-918a-cff424bd24b8">
+  <producedTypes>
+    <containerType typeId="81de6059-81b6-41ef-ad56-78f0319b37f6" valueTypeId="67479b59-774f-44cc-9319-1240ffa99552"/>
+  </producedTypes>
+  <name>гкс_ИнтеграцияСРПВСправочники</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция СРПВ Справочники</value>
+  </synonym>
+  <type>
+    <types>CatalogRef.Номенклатура</types>
+    <types>CatalogRef.гкс_ОборудованиеПЛК</types>
+    <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    <types>CatalogRef.гкс_СтруктураПЛК</types>
+  </type>
+</mdclass:DefinedType>

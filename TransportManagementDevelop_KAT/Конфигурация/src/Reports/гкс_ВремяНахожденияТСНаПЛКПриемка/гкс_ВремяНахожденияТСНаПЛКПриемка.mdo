@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e09f85a9-c5fe-44f1-9e41-8066981b24ea">
+  <producedTypes>
+    <objectType typeId="c5269d78-e7a7-4e68-8260-b495936f6ef8" valueTypeId="3b1dd1eb-e420-4f31-b9d4-af2cf278d173"/>
+    <managerType typeId="d3e33f04-d2d4-4c8c-83d3-7d6f08cf0176" valueTypeId="628015c4-749f-4e95-a2ba-a2efd5f59da8"/>
+  </producedTypes>
+  <name>гкс_ВремяНахожденияТСНаПЛКПриемка</name>
+  <synonym>
+    <key>ru</key>
+    <value>Время нахождения ТС на ПЛК (приемка)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_ВремяНахожденияТСНаПЛКПриемка.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <templates uuid="19d44d50-08a8-403d-a726-90ef24ffc57c">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

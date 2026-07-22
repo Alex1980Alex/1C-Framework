@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="de2f0723-98f0-48dc-bcc1-864a47d63a13">
+  <name>гкс_Документ_ФормированиеНомераПробы_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Формирование номера пробы&quot;</value>
+  </synonym>
+</mdclass:Role>

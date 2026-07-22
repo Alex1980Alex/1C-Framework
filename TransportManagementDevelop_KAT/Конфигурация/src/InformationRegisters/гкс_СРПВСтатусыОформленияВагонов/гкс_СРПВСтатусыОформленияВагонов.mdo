@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2144ce51-0996-40c1-9d73-73280af98741">
+  <producedTypes>
+    <selectionType typeId="2f0ad09f-cf1c-4cce-9984-2cde28d34bbe" valueTypeId="16150036-6e20-4593-b671-672f26b566c1"/>
+    <listType typeId="612b1b40-53e9-41fd-9681-24558baed31c" valueTypeId="d285b78c-27e6-44cf-bf41-f0b49813fd73"/>
+    <managerType typeId="fbb24ad8-939a-4a66-b48e-e042a5860a12" valueTypeId="33c7daa7-ca1f-4e0a-86c5-7c2e9b44df3c"/>
+    <recordSetType typeId="09bc1eb4-d3ca-48fe-8186-9413b62456ba" valueTypeId="3df10c39-bdc2-43d7-b43f-51f763a658e7"/>
+    <recordKeyType typeId="6b4affb4-4d23-49fa-b41b-b0ec134ac1c6" valueTypeId="458b4134-309d-4ba4-9ce7-cb2c7067f3bc"/>
+    <recordType typeId="afb7db67-1a45-4e4b-b008-761ed5d237dc" valueTypeId="058a759b-774d-4c5b-8493-cff3edcab786"/>
+    <recordManagerType typeId="ef3eacd8-ff73-4c00-8061-95d60803ec72" valueTypeId="a0037fec-5cc1-436a-b274-35866ee1fcb3"/>
+  </producedTypes>
+  <name>гкс_СРПВСтатусыОформленияВагонов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Статусы оформления вагонов (СРПВ)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="15deda80-7ad6-4474-b3dc-2b1481e56469">
+    <name>Документ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Взвешивание</types>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+      <types>String</types>
+      <stringQualifiers>
+        <length>10</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <attributes uuid="9bdf777f-e44b-4d7c-993e-098610b2de42">
+    <name>НомерВагона</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер вагона</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_НомерВагона</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="3c70625e-8b21-496c-bbd5-dffe2205e71e">
+    <name>Оформлен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Оформлен</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="57ab531b-c724-4679-8652-b06017f1fbcc">
+    <name>МестнаяДата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Местная дата</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="b79beb91-ee83-4e68-a169-fc978ce2ad44">
+    <name>ДатаОперации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата операции</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="1a312066-ce12-40b8-934c-5b4c88e890d1">
+    <name>КлючАналитикиСРПВ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ аналитики СРПВ</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_КлючиАналитикиСРПВ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="95a68e89-9b7c-4d55-b289-b23ea2a9292a">
+    <name>Основание</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основание</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_ДокументыСРПВ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="b482e677-3336-4476-a366-76a91d3b5805">
+    <name>Статус</name>
+    <synonym>
+      <key>ru</key>
+      <value>Статус</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СРПВСтатусыВагонов</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <commands uuid="2c0e9dfc-08de-477c-a496-61b080a1c288">
+    <name>СтатусыОформленияВагонов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Статусы оформления вагонов</value>
+    </synonym>
+    <group>FormNavigationPanelGoTo</group>
+    <commandParameterType>
+      <types>DocumentRef.гкс_СРПВПеревеска</types>
+      <types>DocumentRef.гкс_СРПВРегистрацияОперацииСВагоном</types>
+      <types>DocumentRef.гкс_СРПВПрибытиеНаПуть</types>
+    </commandParameterType>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:InformationRegister>

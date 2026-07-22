@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ea3a8db0-3a2b-47e2-8d47-a60e77be6065">
+  <producedTypes>
+    <objectType typeId="f2d7a745-792e-4bb5-bf5c-2877caca019d" valueTypeId="51a4b29a-c3d3-4fde-ac1e-51acd2f13fca"/>
+    <managerType typeId="d4af18f7-aef1-4acf-b00e-8ce99d8654c6" valueTypeId="7d781c06-8b92-40dc-9850-8c4adefa8c1e"/>
+  </producedTypes>
+  <name>гкс_РеестрПриемки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Реестр приемки</value>
+  </synonym>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_РеестрПриемки.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="be429539-67d7-4778-bb33-69538cd6e94b">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9dc64cb8-d8ff-4b09-a9df-af5a02b22251">
+  <name>РассылкиОповещения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Рассылки и оповещения</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>DefinedType.гкс_ПодписчикиНаРассылкиИОповещения</content>
+  <content>Catalog.гкс_ПодпискиНаРассылкиИОповещения</content>
+  <content>InformationRegister.гкс_ОчередьСобытийДляОповещений</content>
+  <content>EventSubscription.гкс_ОповещенияПередЗаписьюДокументы</content>
+  <content>EventSubscription.гкс_ОповещенияПриЗаписиДокументы</content>
+  <content>Constant.гкс_ПредельноеОтклонениеВесаГруза</content>
+  <content>ScheduledJob.ФормированиеСообщенийПоОповещениям</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.ИнтеграцияСБСП</parentSubsystem>
+</mdclass:Subsystem>

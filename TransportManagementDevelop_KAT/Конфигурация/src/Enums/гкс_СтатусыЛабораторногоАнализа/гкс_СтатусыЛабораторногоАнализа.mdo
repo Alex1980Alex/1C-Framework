@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f5818b05-6c46-4436-923e-6907f066172b">
+  <producedTypes>
+    <refType typeId="b68fd4ea-4cbe-4814-bda1-a4cd7800ed32" valueTypeId="4052545a-7bbb-4c8c-8e10-14cb2ce575b9"/>
+    <listType typeId="a99f38b0-240d-4581-929b-abeea08f0627" valueTypeId="29c5db5b-222a-42e5-9603-8ca2ca6b07c9"/>
+    <managerType typeId="a63bc4d6-2138-4be0-96ca-71de6c082b83" valueTypeId="0f85f802-a6ca-4c01-bc92-6eff48df6eb5"/>
+  </producedTypes>
+  <name>гкс_СтатусыЛабораторногоАнализа</name>
+  <synonym>
+    <key>en</key>
+    <value>Statuses of Laboratory analysis document </value>
+  </synonym>
+  <synonym>
+    <key>uk</key>
+    <value>Статуси лабораторного аналізу</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Статусы лабораторного анализа</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="7c4d82eb-ee33-4a36-8ea8-dfd07b6cf3f8">
+    <name>ОтборПробы</name>
+    <synonym>
+      <key>en</key>
+      <value>Sampling</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Відбір проби</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Отбор пробы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="9c0b85e2-20b3-4ee9-9247-6545e961f316">
+    <name>Выполняется</name>
+    <synonym>
+      <key>en</key>
+      <value>In progress</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Виконується</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Выполняется</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="c414b616-b835-457d-beec-814940134950">
+    <name>Выполнен</name>
+    <synonym>
+      <key>en</key>
+      <value>Done</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Виконаний</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Выполнен</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ce57739a-912e-414b-a081-ce54433e8244">
+    <name>ПовторныйАнализ</name>
+    <synonym>
+      <key>en</key>
+      <value>Re-analysis</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Повторний аналіз</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Повторный анализ</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7e072ed5-fd98-4513-8ff5-ad4b1b5436d0">
+    <name>ВозвратОтмена</name>
+    <synonym>
+      <key>en</key>
+      <value>Return (Cancel)</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Повернення (Скасування)</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Возврат (Отмена)</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

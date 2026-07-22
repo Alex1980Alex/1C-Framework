@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="362ddb98-39f0-45ce-bef4-1dbd56c88ded">
+  <name>гкс_НастройкаУсиленногоКонтроля</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка усиленного контроля</value>
+  </synonym>
+</mdclass:Role>

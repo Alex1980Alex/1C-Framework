@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="19989d12-3143-4f74-ad54-7a6f9785c4d5">
+  <name>гкс_ТолькоПросмотрБезРЛС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Полный просмотр без учета ограничений РЛС</value>
+  </synonym>
+</mdclass:Role>

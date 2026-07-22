@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d2147cd9-eaee-4570-b255-a2bdcccc3c67">
+  <name>гкс_ЛабораторияИКачество</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс лаборатория и качество</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3c7dd094-1710-43cd-b67f-605b09a38d30">
+  <name>ИнтеграцияMFM</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция MFM</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>FunctionalOption.гкс_ИспользоватьКонтрольВместимостиСкладов</content>
+  <content>Constant.гкс_ИспользоватьКонтрольВместимостиСкладов</content>
+  <content>CommonModule.гкс_ИнтеграцияMFM</content>
+  <content>ScheduledJob.гкс_ПолучениеОстатковНаСкладахMFM</content>
+  <content>InformationRegister.гкс_ОстаткиТочекМаршрутаMFM</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

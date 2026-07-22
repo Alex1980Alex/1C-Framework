@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:XDTOPackage xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fd1a0832-0824-4841-9363-7d52e2918d42">
+  <name>гкс_TransportManagement</name>
+  <synonym>
+    <key>ru</key>
+    <value>Transport management (гкс)</value>
+  </synonym>
+  <namespace>https://sodrugestvo.com/TransportManagement/WeighingShipment/1.13</namespace>
+</mdclass:XDTOPackage>

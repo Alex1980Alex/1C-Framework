@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="767cc567-8159-4ae4-99de-85a334d31e3b">
+  <producedTypes>
+    <objectType typeId="4ddcf7a9-4122-46e1-b199-7ad655bb60a3" valueTypeId="e91bc816-bceb-470e-bb65-8c0e96a4bf89"/>
+    <refType typeId="4b39c3cb-43d6-4eb0-9eb7-e5dcdf5ccf8a" valueTypeId="54e6a808-6d57-43c4-ba1d-f113fbae17b7"/>
+    <selectionType typeId="7fc1a207-6117-4266-b507-14008ff32768" valueTypeId="782f2a6b-8e1a-4d96-962d-9ac93590bdc4"/>
+    <listType typeId="aaf74b3f-eea8-459f-80b9-230f04d8fab9" valueTypeId="8d7564da-c4a8-43d5-8bbe-b853f537e02c"/>
+    <managerType typeId="88d00671-bad3-4979-a0d0-b38425075cb9" valueTypeId="738de16f-8e09-4eec-80c9-f60319af0c12"/>
+  </producedTypes>
+  <name>ОбработчикиСобытийRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработчики событий RMQ (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.ОбработчикиСобытийRMQ.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <help>
+    <pages>
+      <lang>ru</lang>
+    </pages>
+  </help>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Обработчик события RMQ</value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Обработчики событий RMQ</value>
+  </listPresentation>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>70</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefinedDataUpdate>AutoUpdate</predefinedDataUpdate>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultListForm>Catalog.ОбработчикиСобытийRMQ.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="5eb22dc1-fad1-45ac-a8b5-68dc9145dad0">
+    <name>МетодОбработчик</name>
+    <synonym>
+      <key>ru</key>
+      <value>Метод обработчик</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="0f618c3f-bfb0-4a41-ad70-4a638c63a471">
+    <name>ВерсияПротокола</name>
+    <synonym>
+      <key>ru</key>
+      <value>Версия протокола</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>1</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="56014e3e-10bd-4ad7-bf4f-276be212e294">
+    <name>ИмяСервиса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Имя сервиса</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>30</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="39e3e7ad-c589-481d-9900-123f98f1e9b1">
+    <name>ИмяМетода</name>
+    <synonym>
+      <key>ru</key>
+      <value>Метод сервиса</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="50199dbe-76e5-4ab2-9ab5-a038fc88c12c">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

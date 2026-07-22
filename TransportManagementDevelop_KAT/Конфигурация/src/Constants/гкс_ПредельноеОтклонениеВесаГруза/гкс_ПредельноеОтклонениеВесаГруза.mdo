@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="67e7a4cf-5a76-43a2-95cc-2a3c12dbc976">
+  <producedTypes>
+    <managerType typeId="b17962e3-b963-415f-b419-d7007b327c50" valueTypeId="40786565-4f59-4196-91fa-d6c59fbec820"/>
+    <valueManagerType typeId="199a4ab4-598e-4fdb-8f02-e1db33d79b3b" valueTypeId="29ada162-2e6c-469d-8fad-3db64be56b14"/>
+    <valueKeyType typeId="2a24aac6-4565-49ec-9bb3-9f7eb3d52180" valueTypeId="a3f10869-45db-401a-a049-6c95cf22344d"/>
+  </producedTypes>
+  <name>гкс_ПредельноеОтклонениеВесаГруза</name>
+  <synonym>
+    <key>ru</key>
+    <value>Предельное отклонение веса груза</value>
+  </synonym>
+  <dataHistory>Use</dataHistory>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>10</precision>
+      <scale>4</scale>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <explanation>
+    <key>ru</key>
+    <value>Коэффициент отклонения веса фактического  от веса по документам</value>
+  </explanation>
+  <toolTip>
+    <key>ru</key>
+    <value>Коэффициент отклонения веса фактического  от веса по документам</value>
+  </toolTip>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

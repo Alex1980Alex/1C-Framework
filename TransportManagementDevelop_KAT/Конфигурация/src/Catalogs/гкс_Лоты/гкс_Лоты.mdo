@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="dea2036d-ef3a-4275-a88e-8521a21c4511">
+  <producedTypes>
+    <objectType typeId="93df66a5-0c0e-4483-b8e1-4171ed348337" valueTypeId="26eb5846-d933-4a20-a1e4-d31ac468576d"/>
+    <refType typeId="7960e50c-5eea-4d19-a99e-a01e373c899f" valueTypeId="597fbea7-4827-4cb7-bfc9-7ca10d19f535"/>
+    <selectionType typeId="09d7e03b-3204-43f9-9a4c-26cfb94d601e" valueTypeId="f28b2df8-0f38-4a59-87c9-7d808225f5c2"/>
+    <listType typeId="0df8a1b9-8fc1-4428-a5fd-a963c7c6fbfe" valueTypeId="e7a79dca-7a1f-40c4-95b2-b20c30ced767"/>
+    <managerType typeId="f946dde6-4949-4757-9c81-82835204e11d" valueTypeId="4c8fc338-ff24-41a4-8730-b5628291bb71"/>
+  </producedTypes>
+  <name>гкс_Лоты</name>
+  <synonym>
+    <key>ru</key>
+    <value>Лоты</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_Лоты.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_Лоты.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>50</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <attributes uuid="d9c9ffa5-203c-4a9a-8e5e-836b1c716627">
+    <name>Объем</name>
+    <synonym>
+      <key>ru</key>
+      <value>Объем</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>3</scale>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="e70a7f6b-e63e-4c0e-89e7-e90f984a2774">
+    <name>Фрахт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Фрахт</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="c970159a-33cc-4b26-91c4-36777a1475d8">
+    <name>НомерЛота</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер лота</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>3</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="a3029694-c14b-4dc2-bca0-5b7e0182a124">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <commands uuid="872002c0-94fd-459e-891f-c8faf3c4722b">
+    <name>ЛотыФрахта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лоты фрахта</value>
+    </synonym>
+    <group>FormNavigationPanelGoTo</group>
+    <commandParameterType>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </commandParameterType>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:Catalog>

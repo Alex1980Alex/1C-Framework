@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3ac84355-47f2-45f5-af07-3a2118fd17cb">
+  <producedTypes>
+    <refType typeId="9ec3f1ea-c3c8-4d7e-9157-f758ff843881" valueTypeId="e7802584-3164-4dcf-b807-d3727b694b2c"/>
+    <listType typeId="dcd673a6-6a70-4bda-a190-4e7155de6a4c" valueTypeId="68bc729e-ab6b-4a8a-86fe-79095f447797"/>
+    <managerType typeId="ad233ab7-135d-4069-be6b-6e34c7957f1f" valueTypeId="0eb7584b-056a-4c3f-b5a3-5942c8fd4a43"/>
+  </producedTypes>
+  <name>гкс_СРПВТипыОперацийСВагоном</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы операций</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="c38cf3e4-4c28-4ebe-b8f9-44123c13d6f7">
+    <name>Отправление</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отправление</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="6ea87b05-2c88-4eaa-a244-94d8a34dcbac">
+    <name>Прибытие</name>
+    <synonym>
+      <key>ru</key>
+      <value>Прибытие</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="9958a966-d5db-4618-8a02-ee3d78fdc2fb">
+    <name>Погрузка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Погрузка</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7a425169-cb68-4c9e-adcb-e7eb5299b187">
+    <name>Разгрузка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Разгрузка</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3cefd68d-c915-4ba1-8430-56f1fe08bb71">
+  <producedTypes>
+    <refType typeId="0ec19eab-8fe6-45eb-9037-286de14672b2" valueTypeId="1e8efc30-de1e-4041-bb0e-f931118dc1f8"/>
+    <listType typeId="254843c2-30c6-4189-94ba-008570ad33d1" valueTypeId="2cf62968-f483-4d0a-bb24-88cac2ba69dc"/>
+    <managerType typeId="97f10f2b-0302-42c4-97d7-db003bb6f459" valueTypeId="b170878a-350d-4e08-8f19-046b83d54b9f"/>
+  </producedTypes>
+  <name>гкс_НазначенияИспользованияКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Назначения использования качества</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="aa592b6a-096b-422d-9202-37484c5813ae">
+    <name>Отгрузка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отгрузка</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="3a6dbbd3-0bf4-4c86-9314-028fd0c1ea96">
+    <name>Приемка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приемка</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="824e3160-e6b6-4873-8f1b-686cc086a095">
+    <name>ПриемкаКомпозит</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приемка композит</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4932c8dd-2504-48ed-8990-0b911c4daad0">
+    <name>ЭлеваторВнешниеПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Элеватор внешние пробы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="b731aedb-d488-4a7d-8c69-90aabb6b00be">
+    <name>ЛаборантВнешниеПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лаборант внешние пробы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="e1271fcd-cdc3-43a3-a1a1-d302c6c4595e">
+    <name>КомпозитВнешниеПробыНаТысячуТон</name>
+    <synonym>
+      <key>ru</key>
+      <value>Композит внешние пробы (1000т)</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="514f7486-45f6-4724-b7d7-781b18189242">
+    <name>ПромежуточныйКомпозит</name>
+    <synonym>
+      <key>ru</key>
+      <value>Промежуточный композит</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="b8853b5d-1886-443c-af3a-ce3f4251f590">
+    <name>ДополнительныйАнализ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дополнительный анализ</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="9dfd720c-ae07-4e45-99b5-9e0820a9bcd3">
+    <name>ПерепроверкаВнешнихПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Перепроверка внешних проб</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

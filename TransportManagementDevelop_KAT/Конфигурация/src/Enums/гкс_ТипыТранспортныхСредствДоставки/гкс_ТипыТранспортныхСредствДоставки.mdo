@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e62b0827-b798-4db9-9f28-5a7c2a5f348a">
+  <producedTypes>
+    <refType typeId="a4b78e6f-f1c2-4d09-b230-358bdc78dc56" valueTypeId="49db9e85-d14a-487c-86e9-64b00846ad76"/>
+    <listType typeId="9e69e00d-4fe6-4477-8971-cb6f82d4f623" valueTypeId="d9a75046-69ed-4e21-97c4-082a1e397fad"/>
+    <managerType typeId="aefc032d-23ec-4b99-993b-971e0d812704" valueTypeId="b8415941-cf3a-44a2-9fbc-5ec6159db31d"/>
+  </producedTypes>
+  <name>гкс_ТипыТранспортныхСредствДоставки</name>
+  <synonym>
+    <key>en</key>
+    <value>Transportation type</value>
+  </synonym>
+  <synonym>
+    <key>uk</key>
+    <value>Типи транспортних засобів доставки</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Типы транспортных средств доставки</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <explanation>
+    <key>en</key>
+    <value>The set of values that defines the type of delivery transport. Takes one of the values: Truck, Ship, Railway, Air, Pipeline, Container, Without delivery</value>
+  </explanation>
+  <explanation>
+    <key>uk</key>
+    <value>Набір значень, що визначає тип транспорту доставки. Приймає одне із значень: Автомобіль, Судно, ЗАЛІЗНИЧНИЙ транспорт, Літаків, Без доставки, Трубопровід, Контейнер</value>
+  </explanation>
+  <explanation>
+    <key>ru</key>
+    <value>Набор значений, определяющий тип транспорта доставки. Принимает одно из значений: Автомобиль, Судно, ЖД транспорт, Самолет, Без доставки, Трубопровод, Контейнер</value>
+  </explanation>
+  <enumValues uuid="de946fdc-6d3d-4145-a028-71d54ce8c7b7">
+    <name>Автомобиль</name>
+    <synonym>
+      <key>en</key>
+      <value>Truck</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Автомобіль</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Автомобиль</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="2edb7fe1-e0af-47d0-b74b-dd453e736f22">
+    <name>Судно</name>
+    <synonym>
+      <key>en</key>
+      <value>Vessel</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Судно</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Судно</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="58e7585d-ed59-445f-bb86-bc23d96e368c">
+    <name>ЖДТранспорт</name>
+    <synonym>
+      <key>en</key>
+      <value>RW</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>ЗАЛІЗНИЧНИЙ транспорт</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>ЖД транспорт</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="cd03e679-6974-4204-b96b-28447d17e2ea">
+    <name>Самолёт</name>
+    <synonym>
+      <key>en</key>
+      <value>Air</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Літак</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Самолёт</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="d520b0fc-6723-456e-87b1-b7c1e99fb848">
+    <name>БезДоставки</name>
+    <synonym>
+      <key>en</key>
+      <value>Without delivery</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Без доставки</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Без доставки</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="788c1547-630a-4bbc-9828-4a72c01cecd1">
+    <name>Трубопровод</name>
+    <synonym>
+      <key>en</key>
+      <value>Pipeline</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Трубопровід</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Трубопровод</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="af636a73-c0ff-44ec-97f7-c2cfa7d478ae">
+    <name>Контейнер</name>
+    <synonym>
+      <key>en</key>
+      <value>Container</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Контейнер</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Контейнер</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

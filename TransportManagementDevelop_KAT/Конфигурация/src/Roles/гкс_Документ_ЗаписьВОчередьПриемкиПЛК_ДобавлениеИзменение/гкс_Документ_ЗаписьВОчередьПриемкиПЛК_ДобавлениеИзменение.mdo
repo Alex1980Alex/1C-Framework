@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="06d49215-ff1f-4e0f-be3e-b1d13814b1f3">
+  <name>гкс_Документ_ЗаписьВОчередьПриемкиПЛК_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Запись в очередь приемки ПЛК&quot;</value>
+  </synonym>
+</mdclass:Role>

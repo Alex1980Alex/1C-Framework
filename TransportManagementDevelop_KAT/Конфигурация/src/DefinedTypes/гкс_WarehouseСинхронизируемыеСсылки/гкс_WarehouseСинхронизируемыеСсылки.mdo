@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="87a5f767-d4b8-4a88-a2ea-ae1b8d59dfcd">
+  <producedTypes>
+    <containerType typeId="06ff4454-bcb6-4296-8be9-a60dba054b86" valueTypeId="23a559b9-5c73-4e0f-a64e-f1f579afb980"/>
+  </producedTypes>
+  <name>гкс_WarehouseСинхронизируемыеСсылки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse синхронизируемые ссылки</value>
+  </synonym>
+  <type>
+    <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    <types>CatalogRef.Номенклатура</types>
+    <types>CatalogRef.гкс_КлассификаторСтанцийЖД</types>
+    <types>CatalogRef.Организации</types>
+    <types>CatalogRef.Контрагенты</types>
+    <types>CatalogRef.гкс_ТочкиМаршрута</types>
+  </type>
+</mdclass:DefinedType>

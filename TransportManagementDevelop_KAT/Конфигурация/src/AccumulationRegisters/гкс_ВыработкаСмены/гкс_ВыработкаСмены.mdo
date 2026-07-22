@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:AccumulationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e38058bb-1f58-410f-8aa9-2c191c54147a">
+  <producedTypes>
+    <selectionType typeId="b78f0544-bb9d-4a9e-a4a1-c66966aff1f3" valueTypeId="725d18a7-558f-4802-bd31-c41a88a7fb88"/>
+    <listType typeId="a2576107-0dea-4173-9c9a-5b55ed244815" valueTypeId="16cde0b8-cfcf-4dc1-aa80-40570dc586a4"/>
+    <managerType typeId="4e58cf60-062c-45b0-8acd-2ec549c05d78" valueTypeId="434281dc-7289-4724-b7a5-19ecf831c6b2"/>
+    <recordSetType typeId="bceafd4a-7057-4700-be9a-cdcb256726c2" valueTypeId="e6fceaee-8097-4285-b031-f0811846507c"/>
+    <recordKeyType typeId="f5e7b135-8ce1-476c-8e6e-980186f06170" valueTypeId="9ab313e6-a3c4-447c-9836-156123b4b3aa"/>
+    <recordType typeId="fccb5d3b-9fb2-4a39-aa6f-3428460da3ac" valueTypeId="f1bb1e31-9bf0-4f79-b6b6-b04cde93cbfc"/>
+  </producedTypes>
+  <name>гкс_ВыработкаСмены</name>
+  <synonym>
+    <key>ru</key>
+    <value>Выработка за смену</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <registerType>Turnovers</registerType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <enableTotalsSplitting>true</enableTotalsSplitting>
+  <listPresentation>
+    <key>ru</key>
+    <value>Обработка судов</value>
+  </listPresentation>
+  <resources uuid="aa42c779-0066-4b79-868d-41cd35cd2f0c">
+    <name>Количество</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>3</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </resources>
+  <attributes uuid="2fbc176b-ef25-4dbe-af0c-ca820f5d6ed7">
+    <name>ЕдиницаИзмеренияВеса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Единица измерения веса</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </attributes>
+  <dimensions uuid="aa3f8b79-6e4e-4152-8e3c-bc02af316745">
+    <name>Фрахт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Фрахт</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="cd90e9e2-2bfd-4e46-8c6d-972003fd0f5a">
+    <name>Трюм</name>
+    <synonym>
+      <key>ru</key>
+      <value>Трюм</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="a3f1ff57-e351-4088-af33-1cf5b2e894c0">
+    <name>Силос</name>
+    <synonym>
+      <key>ru</key>
+      <value>Силос</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="a48bba99-c02a-449d-a6f5-fcb38851b30d">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="dafadbfe-e254-41b7-a619-454c29dbe834">
+    <name>ПроизводственныеСутки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+</mdclass:AccumulationRegister>

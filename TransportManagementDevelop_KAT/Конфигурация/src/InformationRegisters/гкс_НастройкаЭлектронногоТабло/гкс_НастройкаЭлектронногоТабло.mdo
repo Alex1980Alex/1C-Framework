@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7a6666e0-a524-4d61-9a28-7b926d5dc674">
+  <producedTypes>
+    <selectionType typeId="9066e280-b0eb-4232-8464-2a74503ee056" valueTypeId="dddb506f-2f50-4975-8cbb-890e1b8d88bc"/>
+    <listType typeId="2cf64b25-a7ba-4abd-b4d3-c959cd9a0dc4" valueTypeId="5469e4a4-b015-467a-b2d5-7962cc9a482b"/>
+    <managerType typeId="9c0948b2-bc42-481e-8754-efa66a8ab102" valueTypeId="0fbf27f4-2fd0-4ce1-b2eb-cb949b52a487"/>
+    <recordSetType typeId="6e99d0b2-ede5-49a8-b124-bf532c00dbe9" valueTypeId="e4392080-82c3-44dd-aa2a-6675d368266d"/>
+    <recordKeyType typeId="5aedde55-f5a5-42d7-a46d-3bdffb1f179d" valueTypeId="93ae861f-dd44-4a53-97f4-cf339858911a"/>
+    <recordType typeId="fb84f780-63c1-49ec-92c5-3d2cc2345c33" valueTypeId="e1847d50-eaa0-493c-ab2c-effa64ced45f"/>
+    <recordManagerType typeId="c8e2f549-4306-4bcd-ba3a-aeaba906c831" valueTypeId="7d7f9c3c-b472-4765-a259-105af1275011"/>
+  </producedTypes>
+  <name>гкс_НастройкаЭлектронногоТабло</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка электронного табло</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_НастройкаЭлектронногоТабло.Form.ФормаЗаписи</defaultRecordForm>
+  <defaultListForm>InformationRegister.гкс_НастройкаЭлектронногоТабло.Form.ФормаСписка</defaultListForm>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <dimensions uuid="83197493-d035-46b4-ace6-c5e8a5afbe66">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пункт приема</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="dafd2fdc-0173-4fac-ada0-bcfe632f49e3">
+    <name>ВидТабло</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид табло</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ВидыЭлектронныхТабло</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="91614d03-ad8e-45c6-9149-cd0ed8d54221">
+    <name>Табло</name>
+    <synonym>
+      <key>ru</key>
+      <value>Табло</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ЭлектронныеТабло</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="89aac49c-91ca-4ac7-a512-bf21e1a7748a">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="3ab38e1b-edfc-45a7-bd30-7e0e86e52aa7">
+    <name>Весы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Весы</value>
+    </synonym>
+    <comment>ERP-1425</comment>
+    <type>
+      <types>CatalogRef.гкс_ОборудованиеПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="5f86adb3-9a75-455f-afb8-f41f0f84fb79">
+    <name>ЯмаРазгрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Яма разгрузки</value>
+    </synonym>
+    <comment>ERP-1425</comment>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="b7b1328e-2951-4ddb-850e-425591e0a94e">
+    <name>ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="ae2bb893-e2e4-4f07-9cc8-a846201dbaa5">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="925a87c5-20a5-4356-9c13-cc53823d9e22">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

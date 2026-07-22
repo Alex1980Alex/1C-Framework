@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:AccumulationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="005cd846-5183-4855-8b74-2fd1b9ad6a55">
+  <producedTypes>
+    <selectionType typeId="b583e0f7-6ad0-4b60-ac65-c450e066614d" valueTypeId="86bb5c1e-4e98-4ae1-b4fb-87cc4f784c41"/>
+    <listType typeId="060ad7d9-3174-488e-b8d6-5c39345f04fb" valueTypeId="84cc1bb2-071c-4e5b-9f1f-d3ff158053b2"/>
+    <managerType typeId="2cfa9451-3844-4868-86b0-779acda67cd4" valueTypeId="c9193b69-dd06-43e6-ad6f-e8a8460d35b7"/>
+    <recordSetType typeId="df4d34b3-093f-4acb-9bc2-b5668553b3b6" valueTypeId="06d8e151-e965-4b36-916e-fe686638723d"/>
+    <recordKeyType typeId="29128138-4835-46fd-a742-5d220ccb28d3" valueTypeId="beb37276-d3d4-400e-bb30-cbd5b1013491"/>
+    <recordType typeId="3de9245d-4aa7-4212-ad1f-6f574dc9a6fc" valueTypeId="ada0754e-3e0d-482b-a1d5-544dba1318ba"/>
+  </producedTypes>
+  <name>гкс_ЗаданияНаКомпозитныеПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Задания на композитные пробы</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <registerType>Turnovers</registerType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <enableTotalsSplitting>true</enableTotalsSplitting>
+  <resources uuid="c9b10057-37f8-4cf4-ae74-c1035a1056d7">
+    <name>Количество</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>1</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </resources>
+  <attributes uuid="3759c087-13fa-4690-9d81-be55321e567c">
+    <name>КомпозитнаяПроба</name>
+    <synonym>
+      <key>ru</key>
+      <value>Композитная проба</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </attributes>
+  <dimensions uuid="201a88d9-22d6-4536-b9a3-50518d5f59d8">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>en</key>
+      <value>Product</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Producto</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="be5a0bd9-1553-4c29-8d63-e7c74649773c">
+    <name>Контрагент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Контрагент</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Контрагенты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="9ac2ac1f-0205-4e3c-a981-6b727aeeb7d2">
+    <name>СтанцияОтправления</name>
+    <synonym>
+      <key>ru</key>
+      <value>Станция отправления</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_КлассификаторСтанцийЖД</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="f4b15319-befe-4644-be44-7c4db1975adb">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="87607264-77db-4de3-8916-d279a203f2ad">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="46857065-ea1a-4b5d-b6e9-fd209251e359">
+    <name>ТранспортноеСредство</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортное средство</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="39995592-9e3d-434b-a63a-b60e8b46bbc5">
+    <name>ТранспортныйДокумент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортный документ</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+  <dimensions uuid="9c7ee023-1860-467b-bbf0-b667da03616d">
+    <name>НазначениеИспользованияКачества</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение использования качества</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_НазначенияИспользованияКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <useInTotals>true</useInTotals>
+  </dimensions>
+</mdclass:AccumulationRegister>

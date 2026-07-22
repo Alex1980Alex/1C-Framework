@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="560c430a-54ea-4f5a-baa9-61c11f9be399">
+  <producedTypes>
+    <selectionType typeId="81aacce8-2aee-4c7e-a46d-8d833f46f526" valueTypeId="9ff57df4-c9ca-4639-b93c-9641094677c2"/>
+    <listType typeId="248e19b9-98e2-4887-b5ae-f47b64ccdf4b" valueTypeId="a194f920-7849-450b-a4c4-6271cea2209f"/>
+    <managerType typeId="043ac66c-6f1e-416d-b204-8da18bf6e560" valueTypeId="81436142-f581-4372-8e82-2011ec07d93f"/>
+    <recordSetType typeId="f64bc41a-9b0d-416a-bdd9-2568ffa9e98f" valueTypeId="3fdc593f-697b-47c0-9d37-34552d6135c2"/>
+    <recordKeyType typeId="606a8bad-a32b-43b2-bade-e65bff99ff40" valueTypeId="279bc8bb-ca41-47a2-a06f-a50046cf93ab"/>
+    <recordType typeId="6efba8d4-5ce2-466a-ab3b-cf472efa03d7" valueTypeId="02c9512f-5c7f-44e7-bc61-c7c99c2a5566"/>
+    <recordManagerType typeId="e30e9e63-fa2a-4371-8fa8-c483828471e1" valueTypeId="0338c5ac-1962-4cfc-8330-5367c15509e3"/>
+  </producedTypes>
+  <name>гкс_НастройкиГруппировкиПоЛотам</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройки группировки по лотам</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <informationRegisterPeriodicity>RecorderPosition</informationRegisterPeriodicity>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="e8092b3b-a3b0-4c6a-a9ac-51bfff1cc069">
+    <name>ОбъемЛота</name>
+    <synonym>
+      <key>ru</key>
+      <value>Объем лота</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="9ba60ba5-dfe0-42f3-98e1-5d5cfffc8ac8">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>ПЛК</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="f8a5a658-9341-4fce-b633-3fc75cf4bab0">
+    <name>ОбъемГрузаОт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Объем груза от</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="729ed4e5-2ae3-472b-971f-a1a192e498bb">
+    <name>ОбъемГрузаДо</name>
+    <synonym>
+      <key>ru</key>
+      <value>Объем груза до</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c78dfb62-ee3b-4b81-b7c2-43e7a06664d7">
+  <producedTypes>
+    <containerType typeId="b9a7f536-f9a4-481a-af9f-88ceebe1dbc9" valueTypeId="33aa7692-7581-4771-8d15-e22b67124fd8"/>
+  </producedTypes>
+  <name>гкс_ДокументыЗаписьВОчередь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Документы запись в очередь</value>
+  </synonym>
+  <type>
+    <types>DocumentRef.гкс_ЗаписьВОчередьОтгрузкиПЛК</types>
+    <types>DocumentRef.гкс_ЗаписьВОчередьПриемкиПЛК</types>
+  </type>
+</mdclass:DefinedType>

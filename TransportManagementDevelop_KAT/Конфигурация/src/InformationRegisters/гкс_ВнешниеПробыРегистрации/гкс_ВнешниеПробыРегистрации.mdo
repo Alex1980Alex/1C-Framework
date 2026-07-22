@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a872c5df-c6f4-41da-bfca-0753825cc60e">
+  <producedTypes>
+    <selectionType typeId="3f58469b-6b47-4812-862a-6f6679283c9f" valueTypeId="d16c5de8-cbad-4618-8367-ece2f0b2d5ef"/>
+    <listType typeId="0b769b9a-f599-48d1-9ca7-0a76ad8911fa" valueTypeId="0192b5c1-e639-4ae1-8797-25966732f045"/>
+    <managerType typeId="a35041a0-d015-44a2-ab54-17b734aecfa4" valueTypeId="e9d22464-55ba-4e08-af22-3cdeacf0c003"/>
+    <recordSetType typeId="4c959193-8ad7-4191-8e68-a1c46cd7207f" valueTypeId="03263cad-383d-4780-9662-7a27ce58a58c"/>
+    <recordKeyType typeId="cca24612-07c8-4b0f-b6a8-ced8985e76fb" valueTypeId="9b4851e8-3608-4498-aa0a-56130a3945a6"/>
+    <recordType typeId="84f283db-d539-4cf4-aa54-67acc0a35fde" valueTypeId="24d637cd-464f-4e5a-88ce-a5d62f6acaec"/>
+    <recordManagerType typeId="fff71a4a-5edc-489e-b72a-37e4e19ade19" valueTypeId="2dee9fa3-b3dd-46f1-a900-9f93321eff9c"/>
+  </producedTypes>
+  <name>гкс_ВнешниеПробыРегистрации</name>
+  <synonym>
+    <key>ru</key>
+    <value>Внешние пробы регистрации</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="e10b7a9e-e110-4804-a639-38789a650eeb">
+    <name>ЛабораторныйАнализ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лабораторный анализ</value>
+    </synonym>
+    <comment>Лабораторный анализ входного контроля</comment>
+    <type>
+      <types>DocumentRef.гкс_ЛабораторныйАнализ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="e7fe4595-ed13-4d2e-9dea-f18d8b7af23f">
+    <name>ЗначениеПоказателя</name>
+    <synonym>
+      <key>en</key>
+      <value>Value</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Значення</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Значение показателя</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>5</scale>
+      </numberQualifiers>
+    </type>
+    <markNegatives>true</markNegatives>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="82e06333-2e89-4bef-a615-db2300be3954">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="d5cf7bcd-cb84-4872-81a1-2192ba43e552">
+    <name>ВнешняяПроба</name>
+    <synonym>
+      <key>ru</key>
+      <value>Внешняя проба</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ВнешняяПроба</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="2bd43547-dfba-458f-ba0f-3fa2c3f78eb1">
+    <name>ЗаявкаНаПеревозку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Заявка на перевозку</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ЗаявкаНаПеревозку</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="e6eb193a-4f6d-4925-a47a-dd7b78b15604">
+    <name>Показатель</name>
+    <synonym>
+      <key>en</key>
+      <value>Indicator</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Показник</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </dimensions>
+</mdclass:InformationRegister>

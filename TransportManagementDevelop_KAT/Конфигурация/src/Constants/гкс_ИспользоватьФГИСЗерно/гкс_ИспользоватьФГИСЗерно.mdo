@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3cb04e81-e655-443b-8fae-6907c1a70f49">
+  <producedTypes>
+    <managerType typeId="b687977a-0886-490b-bc47-dd461f87fcf1" valueTypeId="f0462aa7-f9c3-4334-a9ef-3a3c540db9b6"/>
+    <valueManagerType typeId="28a078e6-de4c-4cf1-81e9-4265869b6d6f" valueTypeId="a2bbe005-2ca6-4d5b-9015-ba67f6954299"/>
+    <valueKeyType typeId="14e19173-ee4d-4ba8-87e9-20df0cc4db26" valueTypeId="2295f6ca-810f-4117-8dbd-aa59290568c0"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьФГИСЗерно</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с ФГИС Зерно</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

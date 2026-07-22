@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9276493d-2ab1-4b7d-9b0c-ae4b581cfa05">
+  <producedTypes>
+    <managerType typeId="08a83055-9bd0-405e-9f88-009c33d9fa17" valueTypeId="265e1c0f-2e47-4dcc-b712-fc4b29e427c9"/>
+    <valueManagerType typeId="8e0452a3-2c02-4698-ba09-daa898db48c8" valueTypeId="746ef19b-fed5-4607-90b2-45c782dbec68"/>
+    <valueKeyType typeId="52992a81-c619-4892-9a9c-85bbc08b8042" valueTypeId="a18f1fd7-3cea-43d9-bf08-4bb769344e60"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьРезультатыВнешнихПроб</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать результаты внешних проб</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmi:CommandInterface xmlns:cmi="http://g5.1c.ru/v8/dt/cmi">
+  <commandsOrder>
+    <orderFragments>
+      <group>NavigationPanelOrdinary</group>
+      <commands>Catalog.Контрагенты.StandardCommand.OpenList</commands>
+      <commands>Catalog.Номенклатура.StandardCommand.OpenList</commands>
+      <commands>Catalog.ТранспортныеСредства.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_ОперацииПоВагонам.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_ПродуктоваяГруппа.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_ТочкиМаршрута.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_ЭлектронныеТабло.StandardCommand.OpenList</commands>
+      <commands>Document.гкс_СпецификацияКДоговоруКонтрагента.StandardCommand.OpenList</commands>
+      <commands>Document.гкс_ТранспортныйДокумент.StandardCommand.OpenList</commands>
+      <commands>InformationRegister.гкс_КодыПоказателейКачестваЛИМС.StandardCommand.OpenList</commands>
+      <commands>Catalog.гкс_СтруктураПЛК.StandardCommand.OpenList</commands>
+    </orderFragments>
+  </commandsOrder>
+</cmi:CommandInterface>

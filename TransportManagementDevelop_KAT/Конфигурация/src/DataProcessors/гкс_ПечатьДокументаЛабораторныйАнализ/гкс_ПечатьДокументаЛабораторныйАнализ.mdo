@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="01b684a0-f938-46f0-856b-3578d8af21f9">
+  <producedTypes>
+    <objectType typeId="805a4d28-bb2d-42ae-b111-4a68e493d55d" valueTypeId="84d6e476-041e-49e7-a292-73448a568523"/>
+    <managerType typeId="cb21053f-1964-45ce-8d44-c0911d00c484" valueTypeId="d3be5248-91b5-4a5e-8f4c-04979a2aac33"/>
+  </producedTypes>
+  <name>гкс_ПечатьДокументаЛабораторныйАнализ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Процедуры печати документа Лабораторный анализ</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ПечатьДокументаЛабораторныйАнализ.Form.НастройкиПечатиАктОтбораПроб</defaultForm>
+  <forms uuid="fe6b56f4-6f90-40a7-b602-7d1ddca52001">
+    <name>НастройкиПечатиЗПП47</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки печати ЗПП47</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="adec8711-1998-4013-b2d4-52454141fd38">
+    <name>НастройкиПечатиАктОтбораПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки печати акт отбора проб</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="fce3a7a0-c062-4470-822b-20bebf9837c9">
+    <name>НастройкиПечатиАктОтбораПроб_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки печати акт отбора проб ru</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="2ba1d03d-69ac-4900-9800-0ed20b8deafd">
+    <name>НастройкиПечатиЯрлыкПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки печати ярлыка пробы</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="f889736e-6622-4f43-9e45-942a326219b1">
+    <name>ПФ_MXL_АктЗабраковкиПартии_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт забраковки партии</value>
+    </synonym>
+  </templates>
+  <templates uuid="0feac419-2c81-4b95-998c-77320bae7017">
+    <name>ПФ_MXL_АктОтбораПроб_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт отбора проб</value>
+    </synonym>
+  </templates>
+  <templates uuid="2e1395d2-8a49-4ec9-aad2-a27694ae35c7">
+    <name>ПФ_MXL_ЗПП47_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>ЗПП-47</value>
+    </synonym>
+  </templates>
+  <templates uuid="405988b6-1a88-4e41-b0fa-b81bce54406b">
+    <name>ПФ_MXL_ЗПП42_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>ЗПП-42</value>
+    </synonym>
+  </templates>
+  <templates uuid="bb405157-3e4b-49c2-af2a-47a1de7e1dea">
+    <name>ПФ_MXL_АктОтбораПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>ПФ MXL акт отбора проб</value>
+    </synonym>
+  </templates>
+  <templates uuid="3c5d0669-c932-4477-a659-e2f585f200fa">
+    <name>ПФ_MXL_ЗПП47_АЛЦ_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>ЗПП-47 (АЛЦ)</value>
+    </synonym>
+  </templates>
+  <templates uuid="13d44a85-d407-40c0-bd29-ddba4fac3a4e">
+    <name>ПФ_MXL_АктЗабраковкиТовара_ru</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт забраковки товара</value>
+    </synonym>
+  </templates>
+  <templates uuid="f10484d5-2ec2-4ce1-8e62-01fbdc3c82c9">
+    <name>ПФ_MXL_ЯрлыкПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ярлык пробы</value>
+    </synonym>
+  </templates>
+</mdclass:DataProcessor>

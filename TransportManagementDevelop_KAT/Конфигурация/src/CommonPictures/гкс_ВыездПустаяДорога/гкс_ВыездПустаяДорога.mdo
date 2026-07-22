@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="efc82fae-597d-49e8-b6e2-b82f00295a8e">
+  <name>гкс_ВыездПустаяДорога</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс выезд пустая дорога</value>
+  </synonym>
+  <comment>&lt;a href=&quot;https://www.flaticon.com/ru/free-icons/&quot; title=&quot;Автокафе иконки&quot;>Автокафе иконки от Freepik - Flaticon&lt;/a></comment>
+</mdclass:CommonPicture>

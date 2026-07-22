@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e4dad7ce-cffb-436a-a269-31cd4ede5eed">
+  <name>гкс_ИспользоватьАвтоустановкуЗапретаВскрытия</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать автоустановку запрета вскрытия</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьАвтоустановкуЗапретаВскрытия</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

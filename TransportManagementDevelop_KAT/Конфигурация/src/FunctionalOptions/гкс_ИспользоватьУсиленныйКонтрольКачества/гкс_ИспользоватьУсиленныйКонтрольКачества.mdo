@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6eb0e5fe-225b-4c92-91e0-2c2ac5ec7201">
+  <name>гкс_ИспользоватьУсиленныйКонтрольКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать усиленный контроль качества</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьУсиленныйКонтрольКачества</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Subsystem.гкс_ФункциональныеСодружество.Subsystem.ВходнойКонтрольКачества</content>
+  <content>DataProcessor.гкс_АРМПриемкаПоКачеству</content>
+  <content>Subsystem.гкс_Лаборатория.Subsystem.КонтрольКачества</content>
+  <content>InformationRegister.гкс_ПоказателиУсиленногоКонтроляПоРегистрации</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Dimension.ДокументРегистрации</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Dimension.Показатель</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Dimension.ИдентификаторПравила</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Resource.ТранспортноеСредство</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Resource.КоличествоТС</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Resource.ТипВходногоКонтроля</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Attribute.МестнаяДата</content>
+  <content>InformationRegister.гкс_ПравилаУсиленногоКонтроляПоРегистрации.Attribute.ПроизводственныеСутки</content>
+  <content>InformationRegister.гкс_ПоказателиУсиленногоКонтроляПоРегистрации.Dimension.ДокументРегистрации</content>
+  <content>InformationRegister.гкс_ПоказателиУсиленногоКонтроляПоРегистрации.Dimension.Показатель</content>
+  <content>InformationRegister.гкс_ПоказателиУсиленногоКонтроляПоРегистрации.Dimension.ЛабораторныйАнализ</content>
+  <content>InformationRegister.гкс_ПоказателиУсиленногоКонтроляПоРегистрации.Dimension.НазначениеИспользования</content>
+  <content>Document.гкс_ЛабораторныйАнализ.TabularSection.КачественныеПоказатели.Attribute.УсиленныйКонтроль</content>
+  <content>InformationRegister.гкс_ЗаблокированныеРегистрацииУсиленныйКонтроль</content>
+  <content>InformationRegister.гкс_НастройкиУсиленногоКонтроляКачества</content>
+  <content>Catalog.гкс_ПараметрыСозданияНастроекУсиленногоКонтроля</content>
+</mdclass:FunctionalOption>

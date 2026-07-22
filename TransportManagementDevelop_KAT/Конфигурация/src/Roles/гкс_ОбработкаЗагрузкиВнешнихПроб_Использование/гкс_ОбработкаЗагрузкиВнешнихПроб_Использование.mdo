@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ac9e511e-be35-4634-a33a-3d686e7742de">
+  <name>гкс_ОбработкаЗагрузкиВнешнихПроб_Использование</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использование обработки Загрузки внешних проб</value>
+  </synonym>
+</mdclass:Role>

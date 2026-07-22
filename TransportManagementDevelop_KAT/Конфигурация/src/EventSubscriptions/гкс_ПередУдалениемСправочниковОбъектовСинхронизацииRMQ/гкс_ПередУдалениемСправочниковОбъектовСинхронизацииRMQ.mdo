@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:EventSubscription xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="790c0cab-98b5-47bc-9360-6ba9d50e1e85">
+  <name>гкс_ПередУдалениемСправочниковОбъектовСинхронизацииRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Синхронизация справочников (Интеграционый адаптер &quot;Содружество&quot;, перед удалением)</value>
+  </synonym>
+  <source>
+    <types>DefinedType.гкс_СправочникиОбъектыСинхронизацииRMQ</types>
+  </source>
+  <event>BeforeDelete</event>
+  <handler>CommonModule.гкс_ОчередьСообщенийRMQ.ПередУдалениемСправочниковОбъектовСинхронизацииRMQ</handler>
+</mdclass:EventSubscription>

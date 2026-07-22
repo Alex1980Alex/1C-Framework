@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="24b6995e-7dc5-414e-94d8-cc8915854b57">
+  <producedTypes>
+    <objectType typeId="e8d14c00-490f-4b9f-8031-70be4057b25c" valueTypeId="32839eaa-6b6f-475c-85ae-c7c4bf20ce29"/>
+    <managerType typeId="0f4f39a2-fdec-48fe-b58e-1716978d0bec" valueTypeId="630166cf-8487-4a81-bb5a-3f9b8ff4ea73"/>
+  </producedTypes>
+  <name>гкс_АнализПредварительнойЗаписи</name>
+  <synonym>
+    <key>ru</key>
+    <value>Анализ предварительной записи</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_АнализПредварительнойЗаписи.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="ac33ba1a-dc77-4be9-a66a-7888a5d126eb">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

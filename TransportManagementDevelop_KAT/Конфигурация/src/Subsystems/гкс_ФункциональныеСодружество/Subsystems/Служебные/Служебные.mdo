@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="14b7b0a6-c8bd-487c-ad31-64b149c22978">
+  <name>Служебные</name>
+  <synonym>
+    <key>ru</key>
+    <value>Служебные</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_ФормированиеПечатныхФорм</content>
+  <content>CommonModule.гкс_ПроведениеДокументов</content>
+  <content>CommonModule.гкс_ОбщегоНазначенияПЛК</content>
+  <content>CommonModule.гкс_ЗаполнениеДокументов</content>
+  <content>CommonModule.гкс_ОбщегоНазначенияПЛККлиент</content>
+  <content>CommonModule.гкс_УправлениеПечатьюКлиент</content>
+  <content>CommonModule.МенеджерОборудованияВызовСервера</content>
+  <content>CommonModule.МенеджерОборудованияСерверПовтИсп</content>
+  <content>CommonModule.гкс_ОбщегоНазначенияПЛККлиентСервер</content>
+  <content>CommonModule.гкс_ВерсионированиеОбъектов</content>
+  <content>ScheduledJob.гкс_ОбновитьИсториюДанных</content>
+  <content>ScheduledJob.гкс_ОчисткаУстаревшихВерсийОбъектов</content>
+  <content>Constant.гкс_СрокХраненияВерсийОбъектов</content>
+  <content>InformationRegister.гкс_ХранилищеНастроек</content>
+  <content>Role.гкс_ТолькоПросмотрБезРЛС</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

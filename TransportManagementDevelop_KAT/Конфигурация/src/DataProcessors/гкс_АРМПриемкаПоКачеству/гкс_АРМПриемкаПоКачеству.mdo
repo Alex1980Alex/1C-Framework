@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9ab9c4b1-fa70-4c2d-9169-569c7925b973">
+  <producedTypes>
+    <objectType typeId="10c5cedb-6d40-4f97-86fe-908555ead986" valueTypeId="35965486-2760-4b05-8b75-c7e6c7afdb13"/>
+    <managerType typeId="b8a3f307-c943-4096-846a-f78c9fa09d60" valueTypeId="7eca1ccf-26d4-440f-8ad5-277e8acbb928"/>
+  </producedTypes>
+  <name>гкс_АРМПриемкаПоКачеству</name>
+  <synonym>
+    <key>ru</key>
+    <value>АРМ &quot;Приемка по качеству&quot;</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_АРМПриемкаПоКачеству.Form.Форма</defaultForm>
+  <attributes uuid="a0b69e2b-db22-4ab8-a162-a036ac3c6451">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <forms uuid="64f0a23a-b22b-417e-b283-3df2cc29b38b">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <commands uuid="a6e04c1e-c200-4f6a-907f-85ac45143779">
+    <name>НастройкаПриемкиПоКачеству</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройка приемки по качеству</value>
+    </synonym>
+    <group>NavigationPanelImportant</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:DataProcessor>

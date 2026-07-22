@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fa54c17b-c7b9-4f8a-820f-1241f0fa785c">
+  <name>гкс_СтандартнаяСериализацияОбмен</name>
+  <synonym>
+    <key>ru</key>
+    <value>Стандартная сериализация обмен</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7e393138-c690-4fc9-972f-21b6d35a5f9e">
+  <name>гкс_РегистрСведений_ДанныеВходногоКонтроляПоЛотам_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра сведений &quot;Данные входного контроля по Лотам&quot;</value>
+  </synonym>
+</mdclass:Role>

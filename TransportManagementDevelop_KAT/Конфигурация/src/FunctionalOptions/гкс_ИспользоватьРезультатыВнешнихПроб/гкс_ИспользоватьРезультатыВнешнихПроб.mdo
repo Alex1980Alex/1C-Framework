@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="807bc967-1012-4263-aefd-855243d9fa6c">
+  <name>гкс_ИспользоватьРезультатыВнешнихПроб</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс использовать результаты внешних проб</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьРезультатыВнешнихПроб</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Document.гкс_ЛабораторныйАнализ.TabularSection.КачественныеПоказатели.Attribute.ЭтоЗначениеВнешнейПробы</content>
+  <content>Document.гкс_ЛабораторныйАнализ.TabularSection.КачественныеПоказатели.Attribute.ИскатьВнешниеПробы</content>
+  <content>Document.гкс_НормативнаяСертификацияНоменклатуры.TabularSection.Анализы.Attribute.ИскатьВнешниеПробы</content>
+  <content>AccumulationRegister.гкс_ЗаданияНаКомпозитныеПробы</content>
+  <content>Document.гкс_ЛабораторныйАнализ.TabularSection.ПоказателиДляПерепроверки</content>
+  <content>Constant.гкс_КонтролируемыйПоказательВнешнихПроб</content>
+  <content>InformationRegister.гкс_ВнешниеПробыПоЗаявкамНаПеревозку</content>
+</mdclass:FunctionalOption>

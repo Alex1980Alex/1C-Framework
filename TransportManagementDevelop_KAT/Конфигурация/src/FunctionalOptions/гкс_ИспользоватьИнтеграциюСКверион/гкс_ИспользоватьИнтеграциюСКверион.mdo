@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="138b184e-977f-4dab-8ccc-51ebb002212e">
+  <name>гкс_ИспользоватьИнтеграциюСКверион</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с Кверион</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьИнтеграциюСКверион</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Document.гкс_РегистрацияНаПЛК.Attribute.RFIDEPC</content>
+  <content>Document.гкс_РегистрацияНаПЛК.Attribute.RFIDTID</content>
+  <content>Catalog.гкс_СчитывателиUHFRFID</content>
+</mdclass:FunctionalOption>

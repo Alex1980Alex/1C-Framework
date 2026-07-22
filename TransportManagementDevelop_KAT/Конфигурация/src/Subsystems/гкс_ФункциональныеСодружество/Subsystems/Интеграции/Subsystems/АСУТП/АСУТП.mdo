@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d957d6ec-2bbf-4461-b175-7b6b4fd1e760">
+  <name>АСУТП</name>
+  <synonym>
+    <key>ru</key>
+    <value>АСУТП</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_ОбменДаннымиАСУТП</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

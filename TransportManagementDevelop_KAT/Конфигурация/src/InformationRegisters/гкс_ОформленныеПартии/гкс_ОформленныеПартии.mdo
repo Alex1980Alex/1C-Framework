@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="01e3b7f4-3fe5-48a6-9438-77f9ec279393">
+  <producedTypes>
+    <selectionType typeId="913c4242-f308-440c-b286-0f8325547210" valueTypeId="fde88515-71d2-48a3-a8f8-c880ef2b84ec"/>
+    <listType typeId="d6447597-8590-4115-b96a-f976fedb600a" valueTypeId="d447a21b-5684-4544-b4c9-f289fed0dc65"/>
+    <managerType typeId="ce8375ef-a590-449f-b5cd-f750ea206172" valueTypeId="5a5529ec-ca4b-4bd4-bf09-2bfd53534c40"/>
+    <recordSetType typeId="8c641a60-67ec-4fbc-9b1b-52573103d0db" valueTypeId="ee848462-0750-4226-b6a4-98bfdefedd92"/>
+    <recordKeyType typeId="cd864f39-865c-475e-a679-39c33f8f6d27" valueTypeId="bb689863-1b63-4887-9fba-4ff5c32620de"/>
+    <recordType typeId="dc3d2cb7-d845-4d51-b2cf-e10c9a2e7fae" valueTypeId="7279a20b-dfbd-4b1d-a9d4-5da15f4ee45c"/>
+    <recordManagerType typeId="20dfee73-1711-47b2-98d8-60d2cd8d3e19" valueTypeId="b82e64dc-36b6-43f7-bce6-32c8809e19d5"/>
+  </producedTypes>
+  <name>гкс_ОформленныеПартии</name>
+  <synonym>
+    <key>ru</key>
+    <value>Оформленные партии</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <explanation>
+    <key>ru</key>
+    <value>Отражает регистрации по которым был оформлен рееестр ЗПП-3</value>
+  </explanation>
+  <resources uuid="5a5a5bc2-1c27-492e-a99c-536d8a52d390">
+    <name>ОснованиеДвиженияЗапасов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основание движения запасов</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ОснованиеДляДвиженияЗапасов</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="3beaf53b-116c-4702-9645-7e67c8a32a4a">
+    <name>ДатаРеестра</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата реестра</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="9cf18c0e-152e-43ab-9e54-f0e1f632d6e7">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="354e90f3-c22f-45c4-b68a-be679837db56">
+    <name>РеестрНакладных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Реестр накладных</value>
+    </synonym>
+    <comment>Реестр накладных ЗПП-3</comment>
+    <type>
+      <types>DocumentRef.гкс_РеестрНакладныхЗПП3</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7880ae71-6844-4da2-beb4-a556f19ca34b">
+  <name>Regonline</name>
+  <synonym>
+    <key>ru</key>
+    <value>Regonline</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>Role.гкс_РегистрСведений_СтатусыЗаписейВОчередиПриемкиПЛК_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_РегистрацииПоЭлектроннойОчереди_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_РегистрацииПоЭлектроннойОчереди_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_ГрафикПриемкиНаПЛК_Просмотр</content>
+  <content>Role.гкс_Обработка_КалендарьОчереди_Использование</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикОтгрузкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикОтгрузкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикПриемкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикПриемкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьОтгрузкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьОтгрузкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьПриемкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьПриемкиПЛК_Просмотр</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

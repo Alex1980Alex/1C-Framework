@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ddd2c8b4-a015-422f-af60-2f97110e2e84">
+  <producedTypes>
+    <objectType typeId="751b1ed3-92ad-478a-96ac-841aa0d7ed98" valueTypeId="c52e0a3a-55f5-4830-9134-147bf512df68"/>
+    <managerType typeId="13f92b1b-c948-4dd5-93c7-47bb5dda1017" valueTypeId="a9be0d5e-69cc-430c-8c57-1c7e61358132"/>
+  </producedTypes>
+  <name>гкс_ОбработчикОчередиОтложенныхСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработчик очереди отложенных сообщений (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+</mdclass:DataProcessor>

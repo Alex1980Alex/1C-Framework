@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="cd557fd2-0366-4a82-8571-bff2b8d904aa">
+  <name>АсинхронныеСервисы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Асинхронные сервисы</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>ScheduledJob.ОбработкаВызововАсинхронныхСервисов</content>
+  <content>DataProcessor.АсинхронныйСервис</content>
+  <content>DataProcessor.КлиентАсинхронногоСервиса</content>
+  <content>CommonModule.АсинхронныеСервисыПереопределяемый</content>
+  <content>CommonModule.АсинхронныеСервисыСлужебный</content>
+  <content>InformationRegister.гкс_ЛогЗапросовАсинхронныхСервисов</content>
+  <parentSubsystem>Subsystem.ОчередиСообщенийRMQ</parentSubsystem>
+</mdclass:Subsystem>

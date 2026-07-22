@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a0b6e89a-13d7-4da0-9005-94f05700bb3e">
+  <producedTypes>
+    <managerType typeId="98694690-edd5-4e2e-a79a-b9f899ba8cd6" valueTypeId="64163d69-7416-410f-9808-21c448cdd9f9"/>
+    <valueManagerType typeId="731ca6e1-3198-48ae-8e4b-6580b039c667" valueTypeId="523b05eb-4064-428a-9e97-49ecda221612"/>
+    <valueKeyType typeId="1a2017a5-2f01-4f5f-99d0-e0a3e31afbc8" valueTypeId="cffb3516-85f8-4957-81df-914e857d70b9"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать предварительную регистрацию на КПП</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

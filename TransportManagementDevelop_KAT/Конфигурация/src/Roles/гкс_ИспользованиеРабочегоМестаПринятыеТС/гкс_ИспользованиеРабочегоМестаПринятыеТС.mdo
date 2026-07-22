@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="30dae635-8f93-47c0-bd07-81ba4fea30b9">
+  <name>гкс_ИспользованиеРабочегоМестаПринятыеТС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использование рабочего места Принятые ТС</value>
+  </synonym>
+</mdclass:Role>

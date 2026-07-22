@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="243d9bbe-1372-4800-98b9-c79401b437b3">
+  <producedTypes>
+    <refType typeId="92655a1e-1179-4743-9633-d319bbc2e71d" valueTypeId="d505870c-2c72-4ee0-81a1-bf8a7bae0510"/>
+    <listType typeId="60eccff5-83db-4988-bd45-fd1e1291fbcd" valueTypeId="b60b54f0-bc3b-404d-8b9c-b3578c8ccec5"/>
+    <managerType typeId="f06f666a-0106-4b7a-9c75-e6352fc482ab" valueTypeId="d26ccf98-961e-4dc5-8450-6a3d5290e43f"/>
+  </producedTypes>
+  <name>гкс_ВидыОперацийФрахта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Виды операций фрахта</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="827cfeda-1031-4b44-b6d4-1457fa7d3765">
+    <name>ОтгрузкаПродукции</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отгрузка продукции</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="b9acd5ef-032a-4f3a-a151-ed0b1ecfa5e7">
+    <name>ПоставкаСырья</name>
+    <synonym>
+      <key>ru</key>
+      <value>Поставка сырья</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

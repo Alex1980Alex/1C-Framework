@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d790dd9f-99ce-4bec-9640-11c1584abcd8">
+  <producedTypes>
+    <refType typeId="992571a2-fb90-40c0-87a0-5794e8ca7c21" valueTypeId="7fa79336-1634-4950-8576-165a4506df81"/>
+    <listType typeId="7a688236-b211-4a97-9499-08b05c0e08c7" valueTypeId="35f93018-ff2b-4631-95eb-cd7a34e89dcd"/>
+    <managerType typeId="8e5b98c7-97b6-4199-bae9-af0755ce6f4b" valueTypeId="5fa64799-657e-4418-8ae4-a07a385bd695"/>
+  </producedTypes>
+  <name>гкс_ТипыТочекОбменаRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы точек обмена RMQ</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="21fae08f-b667-43c4-92ad-ec503fdea65c">
+    <name>Direct</name>
+    <synonym>
+      <key>ru</key>
+      <value>Direct</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="339f27eb-23ac-4095-a54a-ea7f1dc19b15">
+    <name>Topic</name>
+    <synonym>
+      <key>ru</key>
+      <value>Topic</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="3e284cad-9c58-421d-b1ee-37af1dee5b88">
+    <name>Fanout</name>
+    <synonym>
+      <key>ru</key>
+      <value>Fanout</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

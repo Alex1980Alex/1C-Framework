@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="891c091b-5387-4cda-a0ae-0ef247812a17">
+  <name>гкс_АсинхронныеСервисыПереопределяемый</name>
+  <synonym>
+    <key>ru</key>
+    <value>Асинхронные сервисы </value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

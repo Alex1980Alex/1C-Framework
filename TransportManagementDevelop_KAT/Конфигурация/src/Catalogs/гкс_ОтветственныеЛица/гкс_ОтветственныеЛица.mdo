@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="cc69bd12-9f9c-43bf-80e0-5ff82e174703">
+  <producedTypes>
+    <objectType typeId="5e9e8b07-c799-43f7-badd-9384e8719bad" valueTypeId="2276a85c-32fc-48bb-9b7a-b5dbee8889f9"/>
+    <refType typeId="30496e7d-d8e8-46d3-b03b-b754d6a46bb5" valueTypeId="d32768c8-0bd1-4516-9011-07f88c1f6495"/>
+    <selectionType typeId="81c0d7de-c53d-4f3f-af8c-ec76aa382a85" valueTypeId="e61e648f-dcbb-405f-9b29-d199856c4320"/>
+    <listType typeId="9890cded-21ab-4b37-aff1-6b9798b8f780" valueTypeId="3758032e-175f-445a-b762-93cac00d5613"/>
+    <managerType typeId="dcc58c61-73e1-4a63-9fdc-e8691198c706" valueTypeId="2689f830-0758-43f7-8ebd-6308cf3b6a21"/>
+  </producedTypes>
+  <name>гкс_ОтветственныеЛица</name>
+  <synonym>
+    <key>ru</key>
+    <value>Ответственные лица</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ОтветственныеЛица.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Ответственное лицо</value>
+  </objectPresentation>
+  <extendedListPresentation>
+    <key>ru</key>
+    <value>Ответственные лица организаций</value>
+  </extendedListPresentation>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>100</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultChoiceForm>Catalog.гкс_ОтветственныеЛица.Form.ФормаВыбора</defaultChoiceForm>
+  <attributes uuid="b9712e57-bbb5-4611-bff9-31c0d9472ff1">
+    <name>Должность</name>
+    <synonym>
+      <key>ru</key>
+      <value>Должность</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+  </attributes>
+  <forms uuid="e5a07acb-79e3-43bd-9dea-63545bacb9ec">
+    <name>ФормаВыбора</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма выбора</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

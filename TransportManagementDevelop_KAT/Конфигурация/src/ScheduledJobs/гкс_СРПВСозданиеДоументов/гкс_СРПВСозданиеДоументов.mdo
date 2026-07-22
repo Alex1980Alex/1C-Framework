@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="96cfacc1-4650-4425-85eb-43037e709a88">
+  <name>гкс_СРПВСозданиеДоументов</name>
+  <synonym>
+    <key>ru</key>
+    <value>СРПВ: Создание документов по сообщениям СРПВ</value>
+  </synonym>
+  <methodName>CommonModule.гкс_УчетВагоновСРПВ.ОтложенноеСозданиеДокументовПЛК</methodName>
+  <key>гкс_СРПВСозданиеДоументов</key>
+  <use>true</use>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

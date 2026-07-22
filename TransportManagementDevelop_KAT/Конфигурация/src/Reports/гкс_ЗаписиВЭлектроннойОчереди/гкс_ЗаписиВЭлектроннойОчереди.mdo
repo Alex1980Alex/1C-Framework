@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="936b51ab-6e6a-4ae0-b7b3-99b9b4ae706c">
+  <producedTypes>
+    <objectType typeId="6154d998-dfca-46f6-9a59-09fd1dcd22e2" valueTypeId="d37ac78c-2ca5-4e46-a6f3-f11fbb8d6805"/>
+    <managerType typeId="66a6d775-0bd0-431c-9748-a908f108823f" valueTypeId="11d592ce-c87d-4053-ac9f-d06417ceca96"/>
+  </producedTypes>
+  <name>гкс_ЗаписиВЭлектроннойОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Записи в электронной очереди</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_ЗаписиВЭлектроннойОчереди.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="02ebd063-fff2-4274-ba4f-7acd05ee565e">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

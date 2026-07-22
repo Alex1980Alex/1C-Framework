@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Document xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="00c1e352-bf84-4f41-9062-607386b74737">
+  <producedTypes>
+    <objectType typeId="71296774-a8e9-453d-b4de-9724587dfe01" valueTypeId="427c4e93-9cd3-4052-bd55-7ea33aebc0b3"/>
+    <refType typeId="1166a0e6-e287-42c9-85ed-22efbb1ce199" valueTypeId="e4d971a4-1131-4056-8ad2-87a466182b8f"/>
+    <selectionType typeId="b4174200-7b6f-4bce-a669-d061786b2738" valueTypeId="e4d67b33-9065-4b2e-827d-81b1cf03bc6e"/>
+    <listType typeId="e95af55e-3faa-45e6-9b24-4c9da9a2b503" valueTypeId="fd13ba20-32a9-4a8a-8987-63a3e7b26c1c"/>
+    <managerType typeId="1650976f-d94e-42d8-8c8f-2380c6674e9f" valueTypeId="82a14bd1-2f26-471c-ab0b-991c22733322"/>
+  </producedTypes>
+  <name>УдалитьДокументДляВнедренияБСП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Удалить документ для внедрения БСП</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Document.УдалитьДокументДляВнедренияБСП.StandardAttribute.Number</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <numberType>String</numberType>
+  <numberLength>9</numberLength>
+  <numberAllowedLength>Variable</numberAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <postInPrivilegedMode>true</postInPrivilegedMode>
+  <unpostInPrivilegedMode>true</unpostInPrivilegedMode>
+</mdclass:Document>

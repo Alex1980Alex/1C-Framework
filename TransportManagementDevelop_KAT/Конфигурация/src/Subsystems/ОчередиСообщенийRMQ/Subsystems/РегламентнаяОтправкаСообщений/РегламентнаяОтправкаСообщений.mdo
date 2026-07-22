@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0fe0720b-136f-43ce-b9ac-cd95b38b644e">
+  <name>РегламентнаяОтправкаСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Регламентная отправка сообщений</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Catalog.ИсходящиеСообщения</content>
+  <content>CommonModule.ОтправкаСообщений</content>
+  <content>ScheduledJob.ОтправкаИсходящихСообщений</content>
+  <content>Catalog.ЗаданияОтправкиИсходящихСообщений</content>
+  <content>Enum.ТипКаналаСвязиRMQ</content>
+  <content>Catalog.гкс_ПолучателиДанныхRMQ</content>
+  <content>Catalog.гкс_ОчередьОтложенногоФормированияИсходящихСообщений</content>
+  <parentSubsystem>Subsystem.ОчередиСообщенийRMQ</parentSubsystem>
+</mdclass:Subsystem>

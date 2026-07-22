@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8fe5388b-038f-4a37-b6c3-194bbe810300">
+  <producedTypes>
+    <containerType typeId="eb2bf8aa-d3b0-4e84-854b-ffae8095eabc" valueTypeId="11cb8b36-c12b-424a-aa3e-03eaad8b2d04"/>
+  </producedTypes>
+  <name>гкс_ПодписчикиНаРассылкиИОповещения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Подписчики на рассылки и оповещения (гкс)</value>
+  </synonym>
+  <type>
+    <types>String</types>
+    <types>CatalogRef.Пользователи</types>
+    <stringQualifiers>
+      <length>100</length>
+    </stringQualifiers>
+  </type>
+</mdclass:DefinedType>

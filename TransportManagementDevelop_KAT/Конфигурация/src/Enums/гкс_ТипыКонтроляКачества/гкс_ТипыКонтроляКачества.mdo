@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="718bddba-79f4-437a-90a9-9f1605f22a7e">
+  <producedTypes>
+    <refType typeId="ba643331-049f-4636-be70-58d1235dad05" valueTypeId="068e2f93-8ba8-4719-829b-253576885339"/>
+    <listType typeId="d7e83cbe-886a-4fd3-b005-267dd5714ab1" valueTypeId="8357c486-d5eb-4870-bf0b-b5a368fc38bf"/>
+    <managerType typeId="de1ab624-7918-4ce8-8869-7a7b7c22315d" valueTypeId="056204aa-8bd7-4bf6-8578-457ac2345d54"/>
+  </producedTypes>
+  <name>гкс_ТипыКонтроляКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы контроля качества</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="1bb1b40a-5884-43b4-8963-6765943d8f13">
+    <name>ВходнойКонтроль</name>
+    <synonym>
+      <key>ru</key>
+      <value>Входной контроль</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="b5df21dc-bbdd-401c-bd6d-c61f0a012b1d">
+    <name>УсиленныйКонтроль</name>
+    <synonym>
+      <key>ru</key>
+      <value>Усиленный контроль</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

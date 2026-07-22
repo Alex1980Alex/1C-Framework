@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="198133f5-d1d4-48eb-acb5-fdf144bf85c5">
+  <name>гкс_ОбработкаВходящихДанныхWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработка входящих данных Warehouse</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ИнтеграцияWarehouse.ОбработкаВходящихДанныхWarehouse</methodName>
+  <description>Обработка входящих данных Warehouse</description>
+  <key>ОбработкаВходящихДанныхWarehouse</key>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

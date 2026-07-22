@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c8915f08-0315-42a0-aaa6-4a3797c8374a">
+  <producedTypes>
+    <selectionType typeId="34cdadd4-a480-4efd-a6ff-bb7eb907bce4" valueTypeId="aa54c7f0-885a-4300-be5a-d024330a59c9"/>
+    <listType typeId="f39b2dfc-7ef3-4b06-a1dc-aa4659fb8818" valueTypeId="ffe2702b-80f0-41af-9923-877a8d9db5f7"/>
+    <managerType typeId="02ee68d5-e5b6-4325-b72e-55210533707d" valueTypeId="a72ffbb9-09e8-4d35-aa8e-1e9998634be9"/>
+    <recordSetType typeId="b11105bb-6d6e-450c-a9c3-51c0b6623e4e" valueTypeId="57893c91-2be1-4b5b-abc6-592fd25ea093"/>
+    <recordKeyType typeId="3bc45183-b39a-4976-a483-cebb7422fde7" valueTypeId="210b0e4a-9249-42c9-9ca3-6c712c58192e"/>
+    <recordType typeId="0773d05c-6b91-44a4-ab79-ad47c1fcf6bf" valueTypeId="24e30b60-867d-42d9-8323-640cd615907e"/>
+    <recordManagerType typeId="00078e9c-1f0b-4bd7-82fb-122cf46bcc9b" valueTypeId="645c5809-a484-4c6c-b77f-e4b31b7de47c"/>
+  </producedTypes>
+  <name>гкс_НастройкаПорядкаПоказателейВходнойКонтрольСырья</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка порядка показателей входной контроль сырья</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="92dde0d4-77f2-4905-81db-c6a67d55305c">
+    <name>НомерПоПорядку</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер по порядку</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>2</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="464016e0-cf03-439f-8438-8b720d497399">
+    <name>ПродуктоваяГруппа</name>
+    <synonym>
+      <key>ru</key>
+      <value>Продуктовая группа</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПродуктоваяГруппа</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="467a7421-87b1-4772-b186-bd48c37a7238">
+    <name>ТипПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип пробы</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыПроб</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="e36341e9-97f6-48e7-8c27-0febe025f4fb">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <commands uuid="74e0ec99-b518-411d-b16c-6e10b3c2bf9f">
+    <name>гкс_ОткрытьРегистрНастроекОтчетаВходнойКонтрольСырья</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройка порядка показателей входной контроль сырья</value>
+    </synonym>
+    <group>ActionsPanelTools</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:InformationRegister>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f9c0658a-51cd-4e24-9fe1-de486e9b5156">
+  <producedTypes>
+    <refType typeId="cdfb68ea-4386-44a5-bcc2-1897cb6ba93d" valueTypeId="7d7f345f-05d4-401e-9574-2105d564b40c"/>
+    <listType typeId="85395204-54b9-4f60-acf0-0f717cd9dda2" valueTypeId="7564a876-df7e-44fe-9555-00912f36c383"/>
+    <managerType typeId="e39af850-36b4-4711-8fbd-3edb2ff39313" valueTypeId="c251bbcb-9689-4b4d-aaca-74fdc36b19a9"/>
+  </producedTypes>
+  <name>гкс_ТипПараметраЗапроса</name>
+  <synonym>
+    <key>ru</key>
+    <value>Тип параметра запроса http запроса</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="d259d3a1-a52c-4da6-832e-725dc315a215">
+    <name>path</name>
+    <synonym>
+      <key>ru</key>
+      <value>path</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="abcd09bc-1bf2-4367-8e32-d8e282ed11d5">
+    <name>query</name>
+    <synonym>
+      <key>ru</key>
+      <value>query</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

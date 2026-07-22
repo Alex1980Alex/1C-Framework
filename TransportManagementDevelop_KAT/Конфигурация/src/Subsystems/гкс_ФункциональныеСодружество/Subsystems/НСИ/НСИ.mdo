@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="cf2c0154-688e-4c43-8ffd-7884f76fbaa1">
+  <name>НСИ</name>
+  <synonym>
+    <key>ru</key>
+    <value>НСИ</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Enum.ТипыУпаковок</content>
+  <content>Enum.ТипыИзмеряемыхВеличин</content>
+  <content>Enum.ТипыУпаковокНоменклатуры</content>
+  <content>Catalog.Склады</content>
+  <content>Catalog.Номенклатура</content>
+  <content>Catalog.Организации</content>
+  <content>Catalog.Контрагенты</content>
+  <content>Catalog.УпаковкиЕдиницыИзмерения</content>
+  <content>Document.гкс_СпецификацияКДоговоруКонтрагента</content>
+  <content>Document.гкс_ТранспортныйДокумент</content>
+  <content>Role.гкс_Документ_ТранспортныйДокумент_Просмотр</content>
+  <content>Role.гкс_Документ_ТранспортныйДокумент_ДобавлениеИзменение</content>
+  <content>Role.гкс_Справочник_ТранспортныеСредства_ДобавлениеИзменение</content>
+  <content>Role.гкс_Справочник_АлгоритмыРасчетаПоказателейКачества_ДобавлениеИзменение</content>
+  <content>Catalog.гкс_ОтветственныеЛица</content>
+  <content>ChartOfCharacteristicTypes.гкс_ПроизвольныеПредопределенныеОбъекты</content>
+  <content>Role.гкс_Справочник_ДоговорыКонтрагентов_ДобавлениеИзменение</content>
+  <content>Role.гкс_Справочник_ДоговорыКонтрагентов_Просмотр</content>
+  <content>InformationRegister.гкс_НоменклатураПЛК</content>
+  <content>Constant.гкс_ЕдиницаИзмеренияВеса</content>
+  <content>Constant.гкс_ТочкаМаршрутаБазы</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

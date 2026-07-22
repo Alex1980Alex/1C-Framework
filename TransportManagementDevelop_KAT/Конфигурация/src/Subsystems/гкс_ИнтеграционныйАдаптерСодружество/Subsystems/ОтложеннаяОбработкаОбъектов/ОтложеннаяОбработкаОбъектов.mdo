@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d7e50c6d-9ea0-4fbf-8081-039177fea2b7">
+  <name>ОтложеннаяОбработкаОбъектов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отложенная обработка объектов (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>InformationRegister.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>CommonModule.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>Enum.гкс_ДействияОтложеннойОбработки</content>
+  <content>ScheduledJob.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

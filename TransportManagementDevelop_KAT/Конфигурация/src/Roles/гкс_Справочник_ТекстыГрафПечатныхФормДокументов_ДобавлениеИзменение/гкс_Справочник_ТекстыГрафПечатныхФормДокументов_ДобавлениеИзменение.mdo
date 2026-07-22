@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6e093ccc-ae86-409c-893f-65a7b5c13a0d">
+  <name>гкс_Справочник_ТекстыГрафПечатныхФормДокументов_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение справочника &quot;Тексты граф печатных форм&quot;</value>
+  </synonym>
+</mdclass:Role>

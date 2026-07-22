@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="35cd7276-e76e-4620-94bc-380372139ee4">
+  <name>гкс_Документ_Фрахт_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление/Изменение документов &quot;Фрахт&quot;</value>
+  </synonym>
+</mdclass:Role>

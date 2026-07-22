@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:EventSubscription xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="02ac71e5-4266-4735-8c88-5db1640e076c">
+  <name>гкс_ОповещенияПриЗаписиДокументы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Оповещения при записи документы (гкс)</value>
+  </synonym>
+  <source>
+    <types>DocumentObject.гкс_Взвешивание</types>
+  </source>
+  <event>OnWrite</event>
+  <handler>CommonModule.гкс_РассылкиИОповещения.ИсточникОповещенияПриЗаписиДокументы</handler>
+</mdclass:EventSubscription>

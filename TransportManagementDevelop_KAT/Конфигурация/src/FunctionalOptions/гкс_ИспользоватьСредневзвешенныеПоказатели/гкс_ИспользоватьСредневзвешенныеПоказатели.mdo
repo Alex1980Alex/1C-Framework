@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="84f8f87e-a114-46d4-af22-415f91b3710c">
+  <name>гкс_ИспользоватьСредневзвешенныеПоказатели</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать средневзвешенные показатели</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьСредневзвешенныеПоказатели</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

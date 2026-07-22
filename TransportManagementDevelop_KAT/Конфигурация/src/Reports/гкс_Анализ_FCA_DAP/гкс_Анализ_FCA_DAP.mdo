@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ec40b30d-c7b7-4599-b571-f119816911d1">
+  <producedTypes>
+    <objectType typeId="8e98155c-cb4d-4755-87a8-861931f51bff" valueTypeId="61a83d60-d9f6-431c-ae12-b61c87b675a7"/>
+    <managerType typeId="be005927-2291-4e0d-a2b3-bbcbd0b7c74f" valueTypeId="75d4b326-d6aa-45f8-81e8-8edea85f66f0"/>
+  </producedTypes>
+  <name>гкс_Анализ_FCA_DAP</name>
+  <synonym>
+    <key>ru</key>
+    <value>Анализ FCA/DAP</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_Анализ_FCA_DAP.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="2aa81549-b240-4215-82b8-1ff1a28ccb56">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

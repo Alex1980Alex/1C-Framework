@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8cc66578-6827-4da1-ae7e-33cb3837b291">
+  <name>гкс_ОбновлениеТаблоЭлектроннойОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обновление табло электронной очереди (гкс)</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ЭлектроннаяОчередь.ОбновлениеТаблоЭлектроннойОчереди</methodName>
+  <description>Обновление табло электронной очереди </description>
+  <key>ОбновлениеТаблоЭлектроннойОчереди</key>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

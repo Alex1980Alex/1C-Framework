@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="708cf691-6559-4083-ae27-42552a7f967f">
+  <name>гкс_РегистрСведений_СостоянияФрахта_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление/Изменение регистра сведений &quot;Состояния фрахта&quot;</value>
+  </synonym>
+</mdclass:Role>

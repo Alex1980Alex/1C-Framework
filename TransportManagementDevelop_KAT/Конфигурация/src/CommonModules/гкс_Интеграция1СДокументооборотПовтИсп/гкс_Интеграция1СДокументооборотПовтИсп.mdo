@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="32fd3829-b442-4688-a5fc-9d3e1a1ab023">
+  <name>гкс_Интеграция1СДокументооборотПовтИсп</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция1С:Документооборот (повторное использование)</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+  <returnValuesReuse>DuringSession</returnValuesReuse>
+</mdclass:CommonModule>

@@ -1,0 +1,1148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f6f9c2cb-1292-4d18-905e-7cd276e349da">
+  <producedTypes>
+    <objectType typeId="ca0ca3c1-05e3-4f2f-8d04-b35d3cd18523" valueTypeId="5a34c4ab-7cb2-4600-8699-1bf41c1d1543"/>
+    <refType typeId="089f8e2f-4e69-447d-83f4-8c6a09126f65" valueTypeId="e9cd6652-ad57-49f6-a4a6-8670ced067cf"/>
+    <selectionType typeId="fa64e096-9839-4c2d-b96f-fa291429cab1" valueTypeId="4685a8e9-8594-413a-915c-f46f2985a86c"/>
+    <listType typeId="e64ed9cb-0747-4b1e-bd38-26431d36144b" valueTypeId="447614a8-65e8-4c35-b973-e9955a9d1ce2"/>
+    <managerType typeId="d7fe35d2-995e-42e9-8c60-1b197c6f3f09" valueTypeId="c258a34a-c165-4f60-a828-fdf51af9caa6"/>
+  </producedTypes>
+  <name>гкс_ПоказателиАнализовНоменклатуры</name>
+  <synonym>
+    <key>en</key>
+    <value>Quality parameters</value>
+  </synonym>
+  <synonym>
+    <key>uk</key>
+    <value>Показники аналізів номенклатури</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Показатели анализов номенклатуры</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ПоказателиАнализовНоменклатуры.StandardAttribute.Description</inputByString>
+  <inputByString>Catalog.гкс_ПоказателиАнализовНоменклатуры.StandardAttribute.Code</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>PredefinedDataName</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Predefined</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>DeletionMark</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>IsFolder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Owner</name>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Parent</name>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Description</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Code</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <createOnInput>Use</createOnInput>
+  <help>
+    <pages>
+      <lang>ru</lang>
+    </pages>
+  </help>
+  <fullTextSearch>Use</fullTextSearch>
+  <dataHistory>Use</dataHistory>
+  <hierarchical>true</hierarchical>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>71</descriptionLength>
+  <codeType>String</codeType>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="3c1691c7-bce6-4a5c-8fbf-c4cd342f7637">
+      <name>ГруппаЗараженность</name>
+      <description>Зараженность</description>
+      <code xsi:type="core:StringValue">
+        <value>000000039</value>
+      </code>
+      <isFolder>true</isFolder>
+      <content id="3a509c43-01a5-417a-af82-489cc4b1138c">
+        <name>ЗараженностьВредителями</name>
+        <description>Зараженность вредителями</description>
+        <code xsi:type="core:StringValue">
+          <value>000000019</value>
+        </code>
+      </content>
+      <content id="b4a743b8-6377-4117-94dc-4d6406404333">
+        <name>СтепеньЗараженности</name>
+        <description>Степень зараженности</description>
+        <code xsi:type="core:StringValue">
+          <value>000000040</value>
+        </code>
+      </content>
+    </items>
+    <items id="a1cdf77e-7d90-4ac7-b683-6c470ae20930">
+      <name>ГруппаЗерноваяПримесь</name>
+      <description>Зерновая примесь</description>
+      <code xsi:type="core:StringValue">
+        <value>000000026</value>
+      </code>
+      <isFolder>true</isFolder>
+      <content id="54fa250f-74ae-46b5-8cf0-f9b3099621c2">
+        <name>ЗерноваяПримесьБитыеЗернаГр</name>
+        <description>Битые зерна, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000069</value>
+        </code>
+      </content>
+      <content id="b1ded1af-3b6c-4a05-a876-1f98e3bf3c6b">
+        <name>ЗеренДругихКультурВсегоПроцент</name>
+        <description>Всего зерновой смеси других культур, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000080</value>
+        </code>
+      </content>
+      <content id="1c1e996a-f820-47fb-9e90-81ae3847f05d">
+        <name>ЗеренДругихКультурВсегоГр</name>
+        <description>Всего зерновой смеси других культур, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000079</value>
+        </code>
+      </content>
+      <content id="5a302ad4-ded2-41e0-8a32-143502da451d">
+        <name>ЗерноваяПримесь</name>
+        <description>Зерновая</description>
+        <code xsi:type="core:StringValue">
+          <value>000000018</value>
+        </code>
+      </content>
+      <content id="30646db4-7dd1-494b-89aa-907a0850a288">
+        <name>ЗерноваяПримесьИзъеденныеЗернаПроцент</name>
+        <description>Изъеденные зерна</description>
+        <code xsi:type="core:StringValue">
+          <value>000000029</value>
+        </code>
+      </content>
+      <content id="f092e726-94d1-4b19-bef3-5c34bb325ce6">
+        <name>ЗерноваяПримесьИзъеденныеЗернаГр</name>
+        <description>Изъеденные зерна, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000070</value>
+        </code>
+      </content>
+      <content id="9fd4fe12-dcdc-4823-ad9f-056a4893a8a5">
+        <name>ЗерноваяПримесьБитыеЗернаПроцент</name>
+        <description>Обрушенные зерна</description>
+        <code xsi:type="core:StringValue">
+          <value>000000030</value>
+        </code>
+      </content>
+      <content id="9d6cb7a8-d244-43b1-aa41-7c3ef2344f6e">
+        <name>ЗерноваяПримесьПроросшиеЗернаПроцент</name>
+        <description>Проросшие зерна</description>
+        <code xsi:type="core:StringValue">
+          <value>000000027</value>
+        </code>
+      </content>
+      <content id="b522bd64-c861-49ab-8dca-935359407e8d">
+        <name>ЗерноваяПримесьПроросшиеЗернаГр</name>
+        <description>Проросшие зерна, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000072</value>
+        </code>
+      </content>
+      <content id="ee5bab85-3238-4fb8-b5fc-88cd535daf84">
+        <name>ЗерноваяПримесьПрочее1Процент</name>
+        <description>Прочая (1) зерновая примесь, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000074</value>
+        </code>
+      </content>
+      <content id="103e1b2d-8ec7-42d4-a2b4-5a64a20ad828">
+        <name>ЗерноваяПримесьПрочее1Гр</name>
+        <description>Прочая (1) зерновая примесь, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000073</value>
+        </code>
+      </content>
+      <content id="311c3852-c6e9-4929-bddb-b2d480b953b3">
+        <name>ЗерноваяПримесьПрочее2Процент</name>
+        <description>Прочая (2) зерновая примесь, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000076</value>
+        </code>
+      </content>
+      <content id="88a75a8a-8ae2-4972-affc-403c9c2c8b71">
+        <name>ЗерноваяПримесьПрочее2Гр</name>
+        <description>Прочая (2) зерновая примесь, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000075</value>
+        </code>
+      </content>
+      <content id="94aa4ee0-4629-49e8-ad55-da770f08c62a">
+        <name>ЗерноваяПримесьПрочее3Процент</name>
+        <description>Прочая (3) зерновая примесь, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000078</value>
+        </code>
+      </content>
+      <content id="5f5862cd-1c7f-4957-85fb-85d6f89d8ad5">
+        <name>ЗерноваяПримесьПрочее3Гр</name>
+        <description>Прочая (3) зерновая примесь, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000077</value>
+        </code>
+      </content>
+      <content id="b732506c-08b1-4c0b-b8ef-1ce57bc47c27">
+        <name>ЗеренДругихПрочее1Процент</name>
+        <description>Прочие (а) зерна других культур, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000086</value>
+        </code>
+      </content>
+      <content id="af41cc2e-8a06-43f0-8e17-bd21cdeba303">
+        <name>ЗеренДругихПрочее1Гр</name>
+        <description>Прочие (а) зерна других культур, г.</description>
+        <code xsi:type="core:StringValue">
+          <value>000000081</value>
+        </code>
+      </content>
+      <content id="319d44bf-3d27-4948-bec3-c0fb2368678e">
+        <name>ЗеренДругихПрочее2Процент</name>
+        <description>Прочие (б) зерна других культур, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000087</value>
+        </code>
+      </content>
+      <content id="5dee96bb-8563-43dd-b4d9-3a88daca5d89">
+        <name>ЗеренДругихПрочее2Гр</name>
+        <description>Прочие (б) зерна других культур, г.</description>
+        <code xsi:type="core:StringValue">
+          <value>000000082</value>
+        </code>
+      </content>
+      <content id="ad351c1c-2e56-4056-828c-9adef4db0c58">
+        <name>ЗеренДругихПрочее3Процент</name>
+        <description>Прочие (в) зерна других культур, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000088</value>
+        </code>
+      </content>
+      <content id="1221bf06-e36c-484c-9387-459367b2d1b4">
+        <name>ЗеренДругихПрочее3Гр</name>
+        <description>Прочие (в) зерна других культур, г.</description>
+        <code xsi:type="core:StringValue">
+          <value>000000083</value>
+        </code>
+      </content>
+      <content id="d99aefba-6961-4626-ad29-aeb138bc2876">
+        <name>ЗеренДругихПрочее4Процент</name>
+        <description>Прочие (г) зерна других культур, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000089</value>
+        </code>
+      </content>
+      <content id="5e2cdf54-7d1b-43a8-a146-5b88894df15d">
+        <name>ЗеренДругихПрочее4Гр</name>
+        <description>Прочие (г) зерна других культур, г.</description>
+        <code xsi:type="core:StringValue">
+          <value>000000084</value>
+        </code>
+      </content>
+      <content id="8cf495a3-a788-464d-b576-d21bc1ad062a">
+        <name>ЗеренДругихПрочее5Процент</name>
+        <description>Прочие (д) зерна других культур, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000090</value>
+        </code>
+      </content>
+      <content id="b5d2d964-a690-4f2a-a94a-20f75080b9a6">
+        <name>ЗеренДругихПрочее5Гр</name>
+        <description>Прочие (д) зерна других культур, г.</description>
+        <code xsi:type="core:StringValue">
+          <value>000000085</value>
+        </code>
+      </content>
+      <content id="c71bc861-a472-4f9d-80a3-ac861b144022">
+        <name>ЗерноваяПримесьЩуплыеЗернаПроцент</name>
+        <description>Щуплые зерна</description>
+        <code xsi:type="core:StringValue">
+          <value>000000028</value>
+        </code>
+      </content>
+      <content id="8edb5051-8947-4b8d-8284-91b438c7d0e3">
+        <name>ЗерноваяПримесьЩуплыеЗернаГр</name>
+        <description>Щуплые зерна, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000071</value>
+        </code>
+      </content>
+    </items>
+    <items id="33929ee1-2136-4969-a092-c65504a8d454">
+      <name>ГруппаКлейковина</name>
+      <description>Клейковина</description>
+      <code xsi:type="core:StringValue">
+        <value>000000008</value>
+      </code>
+      <isFolder>true</isFolder>
+      <content id="8172705b-34b9-408c-8dae-f694a075423d">
+        <name>КлейковинаКачествоЕдиницаИДК</name>
+        <description>Единица прибора ИДК</description>
+        <code xsi:type="core:StringValue">
+          <value>000000010</value>
+        </code>
+      </content>
+      <content id="fdeac6e2-fe14-4845-95de-0a3daee3d4c4">
+        <name>КлейковинаГруппа</name>
+        <description>Клейковина группа</description>
+        <code xsi:type="core:StringValue">
+          <value>000000009</value>
+        </code>
+      </content>
+      <content id="323c5bf2-d1ee-4a7c-a5dd-7da56e88b341">
+        <name>Клейковина</name>
+        <description>Клейковина, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000011</value>
+        </code>
+      </content>
+    </items>
+    <items id="407cc1e6-79e8-4ac8-83bb-389459dd8e0f">
+      <name>НаружныйОсмотрПартии</name>
+      <description>Наружный осмотр партии</description>
+      <code xsi:type="core:StringValue">
+        <value>000000003</value>
+      </code>
+      <isFolder>true</isFolder>
+      <content id="bfca248d-0550-42e1-a8dd-57fab16272d9">
+        <name>Запах</name>
+        <description>Запах</description>
+        <code xsi:type="core:StringValue">
+          <value>000000004</value>
+        </code>
+      </content>
+      <content id="0aa77e90-9fdf-404f-8123-be36a9eccf55">
+        <name>Однородность</name>
+        <description>Однородность</description>
+        <code xsi:type="core:StringValue">
+          <value>000000005</value>
+        </code>
+      </content>
+      <content id="a9abab7c-668b-4365-b722-a7723db3cbe0">
+        <name>СостояниеЗерна</name>
+        <description>Состояние зерна</description>
+        <code xsi:type="core:StringValue">
+          <value>000000012</value>
+        </code>
+      </content>
+      <content id="b6adcc0b-ecc7-40cd-9f2b-98bf6ed61d68">
+        <name>Цвет</name>
+        <description>Цвет</description>
+        <code xsi:type="core:StringValue">
+          <value>000000006</value>
+        </code>
+      </content>
+    </items>
+    <items id="32a5ebdf-6dd5-48f5-a0f5-6008fb22a643">
+      <name>ГруппаСодержаниеМелкихЗерен</name>
+      <description>Содержание мелких зерен</description>
+      <code xsi:type="core:StringValue">
+        <value>000000024</value>
+      </code>
+      <isFolder>true</isFolder>
+      <content id="da2964c7-aa3a-43c9-949e-0673f97c9a18">
+        <name>СодержаниеМелкихЗерен</name>
+        <description>Мелкие зерна</description>
+        <code xsi:type="core:StringValue">
+          <value>000000025</value>
+        </code>
+      </content>
+    </items>
+    <items id="bac7f845-a753-445d-82ee-9e78bcb9872a">
+      <name>ГруппаСорнаяПримесь</name>
+      <description>Сорная примесь</description>
+      <code xsi:type="core:StringValue">
+        <value>000000020</value>
+      </code>
+      <isFolder>true</isFolder>
+      <content id="65a938c6-5f28-4b80-a266-357780ac64b1">
+        <name>ВреднаяВсегоПроцент</name>
+        <description>Вредная</description>
+        <code xsi:type="core:StringValue">
+          <value>000000021</value>
+        </code>
+      </content>
+      <content id="c6ead50f-41a0-48e2-a61c-892be78c62fc">
+        <name>ВреднаяВсегоГр</name>
+        <description>Всего вредной, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000049</value>
+        </code>
+      </content>
+      <content id="a736cffb-d85c-471d-84f0-a9bd37631cfb">
+        <name>ВреднаяВТомЧислеГоловняПроцент</name>
+        <description>Головня, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000054</value>
+        </code>
+      </content>
+      <content id="588a7803-a14a-4446-a32f-d06d0bcd9d6c">
+        <name>ВреднаяВТомЧислеГоловняГр</name>
+        <description>Головня, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000044</value>
+        </code>
+      </content>
+      <content id="baf1fc56-ed77-4492-8e80-92c43e3ec10c">
+        <name>СорнаяПримесьИспорченныеЗернаПроцент</name>
+        <description>Испорченные зерна, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000023</value>
+        </code>
+      </content>
+      <content id="b6896d24-200c-47cc-9e23-c8c936118249">
+        <name>СорнаяПримесьИспорченныеЗернаГр</name>
+        <description>Испорченные зерна, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000050</value>
+        </code>
+      </content>
+      <content id="8ec02b42-7216-47f2-9dcf-e6e4a625bc19">
+        <name>СорнаяПримесьМинеральнаяПроцент</name>
+        <description>Минеральная, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000041</value>
+        </code>
+      </content>
+      <content id="99666d1e-73b8-4da7-86e3-638a3031a699">
+        <name>СорнаяПримесьМинеральнаяГр</name>
+        <description>Минеральная, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000051</value>
+        </code>
+      </content>
+      <content id="997e6376-ec30-464b-aa28-55fefa5ae481">
+        <name>СорнаяПримесьОвсюгПроцент</name>
+        <description>Овсюг, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000042</value>
+        </code>
+      </content>
+      <content id="c506e148-cdd5-43af-9ba9-068e636bc51e">
+        <name>СорнаяПримесьОвсюгГр</name>
+        <description>Овсюг, г.</description>
+        <code xsi:type="core:StringValue">
+          <value>000000052</value>
+        </code>
+      </content>
+      <content id="0c714be7-d0ad-4d7a-9549-601d76087ca6">
+        <name>СорнаяПримесьОрганическаяПроцент</name>
+        <description>Органическая, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000043</value>
+        </code>
+      </content>
+      <content id="d151eec3-c718-4b65-84bc-7c752ae8b7ad">
+        <name>СорнаяПримесьОрганическаяГр</name>
+        <description>Органическая, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000053</value>
+        </code>
+      </content>
+      <content id="a918d588-ca2b-44ea-a6e2-1fa53536da38">
+        <name>СорнаяПримесьПроходПроцент</name>
+        <description>Проход ч/з сито, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000062</value>
+        </code>
+      </content>
+      <content id="567527e2-c0d3-44ba-a200-2e973c687d5c">
+        <name>СорнаяПримесьПроходГр</name>
+        <description>Проход ч/з сито, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000061</value>
+        </code>
+      </content>
+      <content id="1601b32e-c69d-4c76-bca5-933dfd477d08">
+        <name>СорнаяПримесьПрочее1Процент</name>
+        <description>Прочая (1) сорная примесь, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000064</value>
+        </code>
+      </content>
+      <content id="050830af-5a67-489d-b4aa-d14608a9fed9">
+        <name>СорнаяПримесьПрочее1Гр</name>
+        <description>Прочая (1) сорная примесь, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000063</value>
+        </code>
+      </content>
+      <content id="6250c481-d0af-43b8-adc3-ffe229fa7e4c">
+        <name>СорнаяПримесьПрочее2Процент</name>
+        <description>Прочая (2) сорная примесь, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000066</value>
+        </code>
+      </content>
+      <content id="d29a005f-fffb-408d-9303-af965d0031ce">
+        <name>СорнаяПримесьПрочее2Гр</name>
+        <description>Прочая (2) сорная примесь, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000065</value>
+        </code>
+      </content>
+      <content id="f999b0d8-8c47-4a4d-9fdf-88b1e10bb49a">
+        <name>СорнаяПримесьПрочее3Процент</name>
+        <description>Прочая (3) сорная примесь, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000068</value>
+        </code>
+      </content>
+      <content id="c0f0f2fa-cb9b-4318-a1d0-1ac60dfe95f7">
+        <name>СорнаяПримесьПрочее3Гр</name>
+        <description>Прочая (3) сорная примесь, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000067</value>
+        </code>
+      </content>
+      <content id="39acf352-57b4-49af-94c6-7f609b963f79">
+        <name>ВреднаяВТомЧислеПрочее1Процент</name>
+        <description>Прочее (1), %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000055</value>
+        </code>
+      </content>
+      <content id="7a1c9b32-cb30-4f73-a108-469e3dc11cfb">
+        <name>ВреднаяВТомЧислеПрочее1Гр</name>
+        <description>Прочее (1), г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000045</value>
+        </code>
+      </content>
+      <content id="3bc09328-43a8-4ae2-80e3-fa3125486481">
+        <name>ВреднаяВТомЧислеПрочее2Процент</name>
+        <description>Прочее (2), %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000056</value>
+        </code>
+      </content>
+      <content id="41d2a6c2-2d69-47a3-8050-7a65e8814153">
+        <name>ВреднаяВТомЧислеПрочее2Гр</name>
+        <description>Прочее (2), г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000046</value>
+        </code>
+      </content>
+      <content id="60fe6bea-faf6-4d2e-8d7f-1f9eb51dcc80">
+        <name>ВреднаяВТомЧислеПрочее3Процент</name>
+        <description>Прочее (3), %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000057</value>
+        </code>
+      </content>
+      <content id="5684a2a9-440b-4ae8-8a0a-13bbb8774248">
+        <name>ВреднаяВТомЧислеПрочее3Гр</name>
+        <description>Прочее (3), г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000047</value>
+        </code>
+      </content>
+      <content id="b269b82e-7c09-4124-918b-9dcae5c230fe">
+        <name>СорнаяПримесь</name>
+        <description>Сорная</description>
+        <code xsi:type="core:StringValue">
+          <value>000000016</value>
+        </code>
+      </content>
+      <content id="b41b1bfa-8f8e-4a78-ae5c-00573691bb55">
+        <name>СорнаяПримесьСорныеСеменаПроцент</name>
+        <description>Сорные семена, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000060</value>
+        </code>
+      </content>
+      <content id="45dff004-e94e-4505-b417-4e5183fd1784">
+        <name>СорнаяПримесьСорныеСеменаГр</name>
+        <description>Сорные семена, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000059</value>
+        </code>
+      </content>
+      <content id="03f2571f-4782-47a9-8238-db568abc978f">
+        <name>ВреднаяВТомЧислеСпорыньяПроцент</name>
+        <description>Спорынья, %</description>
+        <code xsi:type="core:StringValue">
+          <value>000000058</value>
+        </code>
+      </content>
+      <content id="0f79ff9e-24c3-4931-ba70-38548abf0a22">
+        <name>ВреднаяВТомЧислеСпорыньяГр</name>
+        <description>Спорынья, г</description>
+        <code xsi:type="core:StringValue">
+          <value>000000048</value>
+        </code>
+      </content>
+      <content id="439fe9f9-1dbb-4ee6-9997-07ef98f5d7fb">
+        <name>СорнаяПримесьТрудноотделимаяПроцент</name>
+        <description>Трудноотделимая</description>
+        <code xsi:type="core:StringValue">
+          <value>000000022</value>
+        </code>
+      </content>
+    </items>
+    <items id="82f2fd3c-3d9b-4181-b7df-fed11a9e0ce0">
+      <name>ВлажностьЗерна</name>
+      <description>Влажность зерна</description>
+      <code xsi:type="core:StringValue">
+        <value>000000001</value>
+      </code>
+    </items>
+    <items id="ed2db96e-4aef-40d7-8fe4-c05eac05e32b">
+      <name>Влажность</name>
+      <description>Влажность,%</description>
+      <code xsi:type="core:StringValue">
+        <value>000000096</value>
+      </code>
+    </items>
+    <items id="63058978-a1cb-4bec-a6b4-d63352268a25">
+      <name>ГМО</name>
+      <description>ГМО</description>
+      <code xsi:type="core:StringValue">
+        <value>000000102</value>
+      </code>
+    </items>
+    <items id="725c7ae7-4364-4c8f-b8aa-e334495b9c4d">
+      <name>КислотноеЧислоМасла</name>
+      <description>Кислотное число масла</description>
+      <code xsi:type="core:StringValue">
+        <value>000000093</value>
+      </code>
+    </items>
+    <items id="b21fa68d-2551-4cec-8e94-ec7528c824ad">
+      <name>Класс</name>
+      <description>Класс</description>
+      <code xsi:type="core:StringValue">
+        <value>000000031</value>
+      </code>
+    </items>
+    <items id="3e040c42-7f09-4479-92ce-fadfbe4907ac">
+      <name>КомкиПлесневелогоИСлежавшегосяПродукта</name>
+      <description>Комки плесневелого и слежавшегося продукта</description>
+      <code xsi:type="core:StringValue">
+        <value>000000101</value>
+      </code>
+    </items>
+    <items id="37a06a3f-ed98-4fa2-bc62-47ae10f06caf">
+      <name>МасличнаяПримесь</name>
+      <description>Масличная примесь, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000092</value>
+      </code>
+    </items>
+    <items id="f96700a8-c97b-4e09-a708-1da27d3beee2">
+      <name>МасличностьПриФактическойВлажности</name>
+      <description>Масличность при фактической влажности, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000097</value>
+      </code>
+    </items>
+    <items id="960dbd2f-1927-4adb-bdbe-3d2aedfd4a9e">
+      <name>МассоваяДоляМасла</name>
+      <description>Масличность, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000038</value>
+      </code>
+    </items>
+    <items id="151753ce-541a-4e61-bc30-7e5a97648350">
+      <name>МассоваяДоляМаслаАСВ</name>
+      <description>Масличность,% на АСВ</description>
+      <code xsi:type="core:StringValue">
+        <value>000000095</value>
+      </code>
+    </items>
+    <items id="208604c4-ebbc-4291-aada-92764fae9344">
+      <name>МассаНавески</name>
+      <description>Масса навески для опредления сорной и зерновой примесей, г</description>
+      <code xsi:type="core:StringValue">
+        <value>000000091</value>
+      </code>
+    </items>
+    <items id="5990c610-ee6d-4db8-919e-f69a0734ba4f">
+      <name>Натура</name>
+      <description>Натура</description>
+      <code xsi:type="core:StringValue">
+        <value>000000002</value>
+      </code>
+    </items>
+    <items id="e63830a2-c504-49ec-aea0-16ca6bb910fa">
+      <name>ОсновноеЗерно</name>
+      <description>Основное зерно, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000034</value>
+      </code>
+    </items>
+    <items id="06e6ae6d-b4e1-463e-8165-b9a2f1e19ea6">
+      <name>Пленчатость</name>
+      <description>Пленчатость, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000035</value>
+      </code>
+    </items>
+    <items id="fa5ac447-257b-4636-bbed-65382c03ea67">
+      <name>Подтип</name>
+      <description>Подтип</description>
+      <code xsi:type="core:StringValue">
+        <value>000000032</value>
+      </code>
+    </items>
+    <items id="e95672bb-f30b-4f1f-91e1-55d031072542">
+      <name>Предопределенный</name>
+      <description>Протеин</description>
+      <code xsi:type="core:StringValue">
+        <value>000000094</value>
+      </code>
+    </items>
+    <items id="4e7650b9-d047-42c3-b4bc-60caaf2574ea">
+      <name>Протеин</name>
+      <description>Протеин</description>
+      <code xsi:type="core:StringValue">
+        <value>000000094</value>
+      </code>
+    </items>
+    <items id="46c2a871-9ae0-4896-9e02-105ba2231498">
+      <name>ПротеинНаАСВ</name>
+      <description>Протеин на АСВ, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000098</value>
+      </code>
+    </items>
+    <items id="07a8abe4-71a4-47f4-99d8-e88783bdf9b0">
+      <name>СеменаПодсолнечника</name>
+      <description>Семена подсолнечника</description>
+      <code xsi:type="core:StringValue">
+        <value>000000103</value>
+      </code>
+    </items>
+    <items id="d0a650c8-651f-4aaf-a6b9-fbec2f203252">
+      <name>СодержаниеЗеренПоврежденныхКлопом</name>
+      <description>Содержание зерен, поврежденных клопом-черепашкой, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000014</value>
+      </code>
+    </items>
+    <items id="27ca6cba-71e4-4aee-8834-79b246e686df">
+      <name>СодержаниеЯдра</name>
+      <description>Содержание ядра, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000036</value>
+      </code>
+    </items>
+    <items id="cec42b00-9cce-46b1-9b77-00ada6a5a748">
+      <name>СорнаяИМасличнаяПримесьСуммарно</name>
+      <description>Сорная и масличная примесь суммарно, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000100</value>
+      </code>
+    </items>
+    <items id="37c385a0-816f-4d41-8634-521d8a316815">
+      <name>ОбщаяСтекловидность</name>
+      <description>Стекловидность</description>
+      <code xsi:type="core:StringValue">
+        <value>000000007</value>
+      </code>
+    </items>
+    <items id="485fcd81-db38-409e-90ee-2fd7f76cc4a9">
+      <name>Тип</name>
+      <description>Тип</description>
+      <code xsi:type="core:StringValue">
+        <value>000000033</value>
+      </code>
+    </items>
+    <items id="6e74ff53-bc2f-4043-ae96-b7537c3cd6c3">
+      <name>ТиповойПодтиповойСостав</name>
+      <description>Типовой, подтиповой состав</description>
+      <code xsi:type="core:StringValue">
+        <value>000000037</value>
+      </code>
+    </items>
+    <items id="1ef55f11-9f14-4a44-a9d3-472ace86a559">
+      <name>ЧислоПадения</name>
+      <description>Число падения, с</description>
+      <code xsi:type="core:StringValue">
+        <value>000000013</value>
+      </code>
+    </items>
+    <items id="8e8132e4-4943-4144-8f1f-a95edae49e7c">
+      <name>Амброзия</name>
+      <description>Амброзия</description>
+      <code xsi:type="core:StringValue">
+        <value>000000104</value>
+      </code>
+    </items>
+    <items id="42d551cf-a35b-480c-b104-dd650a40449d">
+      <name>Подмаренник</name>
+      <description>Подмаренник</description>
+      <code xsi:type="core:StringValue">
+        <value>000000105</value>
+      </code>
+    </items>
+    <items id="5246584c-4f87-4d46-866f-3909e9aa5a02">
+      <name>НедозрелыеСеменаСои</name>
+      <description>Недозрелые семена сои</description>
+      <code xsi:type="core:StringValue">
+        <value>000000106</value>
+      </code>
+    </items>
+    <items id="3433b829-9c10-4e2a-b92c-1368eb33315b">
+      <name>ПрочиеМасличныеКультурыПроцент</name>
+      <description>Прочие масличные культуры, %</description>
+      <code xsi:type="core:StringValue">
+        <value>000000107</value>
+      </code>
+    </items>
+  </predefined>
+  <predefinedDataUpdate>DontAutoUpdate</predefinedDataUpdate>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.гкс_ПоказателиАнализовНоменклатуры.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultChoiceForm>Catalog.гкс_ПоказателиАнализовНоменклатуры.Form.ФормаВыбора</defaultChoiceForm>
+  <attributes uuid="d1a1fe3b-29de-4201-860d-703418d99605">
+    <name>ВидРезультатаАнализа</name>
+    <synonym>
+      <key>en</key>
+      <value>Indicator type</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Вид результату аналізу</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Вид результата анализа</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>10</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="0201c2f9-2e8a-4c24-a0a5-b143306a71dc">
+    <name>МинЗначение</name>
+    <synonym>
+      <key>en</key>
+      <value>Minimum value</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Мінімальне значення</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Минимальное значение</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>5</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="51b9958b-13b9-410c-b087-3de14a121014">
+    <name>МаксЗначение</name>
+    <synonym>
+      <key>en</key>
+      <value>Maximum value</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Максимальне значення</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Максимальное значение</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>5</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="0dd9016f-1976-4093-9723-f8b2662ad222">
+    <name>ЕдиницаИзмерения</name>
+    <synonym>
+      <key>en</key>
+      <value>Unit</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Одиниця виміру</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Единица измерения</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="c477d5b5-f726-46f3-bf13-dbe906c7d3e4">
+    <name>НаименованиеПолное</name>
+    <synonym>
+      <key>en</key>
+      <value>Full description</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Повне найменування</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Наименование полное</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="558672ec-be55-43bd-bcc1-8c4bc7cfb4fd">
+    <name>гкс_ПриОтклоненииОтНормыОтклонятьКачество</name>
+    <synonym>
+      <key>ru</key>
+      <value>При отклонении от нормы отклонять качество (гкс)</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="1ed08534-0401-4bc8-ab78-ea089f73d6b0">
+    <name>гкс_ОбозначениеВФормуле</name>
+    <synonym>
+      <key>ru</key>
+      <value>Обозначение в формуле</value>
+    </synonym>
+    <comment>ERP-1537</comment>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="0f99288e-2d01-4d6d-91f3-98a1dfae29fb">
+    <name>гкс_СчитатьСреднееПоФормулеРазжижения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Считать среднее по формуле разжижения</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="b43d1f07-b325-429b-8996-e0d20f57f4f9">
+    <name>ТипПоказателя</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип показателя</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыПоказателейАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <tabularSections uuid="26d66bb4-2ea4-48bc-be16-5a9a45aefc36">
+    <producedTypes>
+      <objectType typeId="71af84b7-312e-4c06-84c6-7c3610e1d6cc" valueTypeId="757f587b-8c55-4cb2-9600-d4b73f8604c5"/>
+      <rowType typeId="92681ccf-404f-4914-aa19-9b434eef6eaa" valueTypeId="cf56085c-238b-4084-9e71-b4e73c419cdb"/>
+    </producedTypes>
+    <name>ДопустимыеЗначенияПоказателей</name>
+    <synonym>
+      <key>en</key>
+      <value>Valid values</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Допустимі значення показників</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Допустимые значения показателей</value>
+    </synonym>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="73e397b5-ce50-4815-b670-258abc1aa167">
+      <name>ЗначениеПоказателя</name>
+      <synonym>
+        <key>en</key>
+        <value>The value of the index</value>
+      </synonym>
+      <synonym>
+        <key>uk</key>
+        <value>Значення показника</value>
+      </synonym>
+      <synonym>
+        <key>ru</key>
+        <value>Значение показателя</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+        <types>String</types>
+        <types>Date</types>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>10</precision>
+        </numberQualifiers>
+        <stringQualifiers>
+          <length>10</length>
+        </stringQualifiers>
+        <dateQualifiers>
+          <dateFractions>Date</dateFractions>
+        </dateQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <forms uuid="41e67c55-0815-40c1-868a-c43d78a609cc">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>en</key>
+      <value>Form element</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Форма елемента</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="32fdeabd-4b1f-46a1-85e4-3ef1aa24a921">
+    <name>ФормаВыбора</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма выбора</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

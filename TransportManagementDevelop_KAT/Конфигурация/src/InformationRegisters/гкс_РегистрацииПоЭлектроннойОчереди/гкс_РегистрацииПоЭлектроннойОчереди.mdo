@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fc72f2bd-39ce-4f06-9abf-30724998353a">
+  <producedTypes>
+    <selectionType typeId="e271d372-e33f-4d92-b520-4f93d5c7471d" valueTypeId="4f1e2bc1-a2a3-494e-8d60-df2a3e107f8b"/>
+    <listType typeId="546fc578-5cc7-4d88-b5be-f075204fdc3d" valueTypeId="4c7668a2-2cdf-47f1-9091-072106c2c2ef"/>
+    <managerType typeId="84df6ea6-21d6-4530-a09b-177b83cfb69e" valueTypeId="a8c7f084-5b8f-4e07-87bf-14fee0fcd7cb"/>
+    <recordSetType typeId="2c6fae01-f923-44dc-b552-07895b298266" valueTypeId="de918c23-c5d0-4bbe-8967-523d72a0077f"/>
+    <recordKeyType typeId="3cf10e7d-864d-4a8d-a850-d56f6f5baf90" valueTypeId="8de5f379-791e-41c0-b802-9e07a5a5c234"/>
+    <recordType typeId="84d53bc4-867b-47fd-bc54-9e4e4d7af8d3" valueTypeId="306b80b9-2c31-4d22-85df-91968946d87c"/>
+    <recordManagerType typeId="6ef01ab9-5f98-48d7-808c-cfcbb5bf405d" valueTypeId="a37ce0e3-f5b7-4f2b-89fe-eaae2abe898a"/>
+  </producedTypes>
+  <name>гкс_РегистрацииПоЭлектроннойОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Регистрации по электронной очереди</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultListForm>InformationRegister.гкс_РегистрацииПоЭлектроннойОчереди.Form.ФормаСписка</defaultListForm>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="03ac48f2-65b2-40ca-9232-835d1549e231">
+    <name>РегистрацияНаПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация на ПЛК</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="f1551309-c9ff-4104-99ce-8b5bfa931af0">
+    <name>ОтклонениеВМинутах</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отклонение в минутах</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="6224b07d-6787-4b67-ad7a-229d93e71ba7">
+    <name>ЗаписьВОчередь</name>
+    <synonym>
+      <key>ru</key>
+      <value>Запись в электронную очередь</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_ДокументыЗаписьВОчередь</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="8e2602bf-803f-40eb-9765-c87f87ec0497">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

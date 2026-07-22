@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5d2ffd37-5f87-4b55-82bb-23960acf290b">
+  <producedTypes>
+    <refType typeId="33a9e457-78c5-4194-966a-167542ee4746" valueTypeId="08bae1ac-b117-4e97-a002-c0fad9db7d21"/>
+    <listType typeId="a8b97b2e-2728-4a6d-99b9-bf45b0de5aea" valueTypeId="7cf0ab5c-fcd3-40d2-92f0-336024ad8d55"/>
+    <managerType typeId="59c60534-dcca-4891-9440-00874668a169" valueTypeId="97af7f26-51ca-4802-a1c2-1e19fbe7a34a"/>
+  </producedTypes>
+  <name>гкс_ТипыВзвешивания</name>
+  <synonym>
+    <key>en</key>
+    <value>Type of weighting</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Типы взвешивания</value>
+  </synonym>
+  <synonym>
+    <key>es</key>
+    <value>Tipos de pesaje</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="15cacfe4-267e-49db-9a72-d5f6ba7db9f2">
+    <name>Въезд</name>
+    <synonym>
+      <key>en</key>
+      <value>Entry</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Въезд</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Entrada</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7bcc5804-c2a0-4dab-905d-900f27618cc7">
+    <name>Выезд</name>
+    <synonym>
+      <key>en</key>
+      <value>Exit</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Выезд</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Salida</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

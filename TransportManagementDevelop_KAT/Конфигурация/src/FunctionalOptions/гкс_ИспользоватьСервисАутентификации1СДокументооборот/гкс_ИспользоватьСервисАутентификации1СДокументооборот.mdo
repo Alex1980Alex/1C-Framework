@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2cab1229-86c3-4e88-aa1a-a446a5fdff3a">
+  <name>гкс_ИспользоватьСервисАутентификации1СДокументооборот</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать сервис аутентификации 1С:Документооборот</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьСервисАутентификации1СДокументооборот</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>CommonForm.гкс_НастройкаПодключенияКСервисуАутентификацииДО</content>
+</mdclass:FunctionalOption>

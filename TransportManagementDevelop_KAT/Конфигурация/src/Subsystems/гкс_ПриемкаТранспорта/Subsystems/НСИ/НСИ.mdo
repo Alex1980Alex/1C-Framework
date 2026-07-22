@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="cb8bf85f-3b56-4dc6-9c89-d1fad353f420">
+  <name>НСИ</name>
+  <synonym>
+    <key>ru</key>
+    <value>НСИ</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>InformationRegister.гкс_ДопустимыеМассыТранспортныхСредств</content>
+  <content>Catalog.гкс_СтатусыСудов</content>
+  <content>Catalog.гкс_ТочкиМаршрута</content>
+  <content>Role.гкс_Справочник_ДоговорыКонтрагентов_ДобавлениеИзменение</content>
+  <content>Catalog.Контрагенты</content>
+  <content>Constant.гкс_СмещениеПроизводственныхСуток</content>
+  <content>Catalog.ТранспортныеСредства</content>
+  <content>InformationRegister.гкс_КодыПоказателейКачестваЛИМС</content>
+  <content>Document.гкс_СпецификацияКДоговоруКонтрагента</content>
+  <content>Catalog.гкс_ЭлектронныеТабло</content>
+  <content>Document.гкс_ТранспортныйДокумент</content>
+  <content>Catalog.гкс_ПродуктоваяГруппа</content>
+  <content>Catalog.гкс_ОперацииПоВагонам</content>
+  <content>Catalog.Номенклатура</content>
+  <content>Role.гкс_Справочник_ДоговорыКонтрагентов_Просмотр</content>
+  <content>Constant.гкс_ТочкаМаршрутаБазы</content>
+  <content>Catalog.гкс_УсловияПроезда</content>
+  <content>Constant.гкс_ПредельноеОтклонениеВесаГруза</content>
+  <content>Catalog.ДоговорыКонтрагентов</content>
+  <content>InformationRegister.гкс_СегментацияКачестваНоменклатуры</content>
+  <content>Document.гкс_УстановкаНастроекНазначенияРазгрузки</content>
+  <content>Catalog.гкс_ОтветственныеЛица</content>
+  <content>Document.гкс_УстановкаНастроекГруппировкиПоЛотам</content>
+  <parentSubsystem>Subsystem.гкс_ПриемкаТранспорта</parentSubsystem>
+</mdclass:Subsystem>

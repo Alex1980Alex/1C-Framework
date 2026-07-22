@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2362af93-37d0-4bb7-8862-5c3936c86b2c">
+  <name>Отчеты</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отчеты</value>
+  </synonym>
+  <content>CommonCommand.гкс_ПанельОтчетов_ПриемкаТранспорта</content>
+  <content>CommonCommand.гкс_ПанельОтчетов_ЭлектроннаяОчередь</content>
+  <content>Report.гкс_ЗаписиВЭлектроннойОчереди</content>
+  <content>Report.гкс_АнализПредварительнойЗаписи</content>
+  <content>Report.гкс_КонтрольЗаездаПоЭлектроннойОчереди</content>
+  <content>Report.гкс_КонтрольПрохожденияОчередиПриемкиПЛК</content>
+  <content>Report.гкс_ОтчетОВремениОперацийАвтоНаПЛК</content>
+  <content>Report.гкс_ОтчетОПриемкеКачества</content>
+  <content>Report.гкс_ОтчетФормаВыездаЗаезда</content>
+  <content>Report.гкс_АнализИсполненияЗаписейПоЭлектроннойОчереди</content>
+  <parentSubsystem>Subsystem.СлужебныеПодсистемы</parentSubsystem>
+</mdclass:Subsystem>

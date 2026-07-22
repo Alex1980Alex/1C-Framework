@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5c886f92-d8b7-46a8-854e-ad0d01920e9b">
+  <name>гкс_Документ_РегистрацияНаПЛК_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр документов &quot;Регистрация на ПЛК&quot;</value>
+  </synonym>
+</mdclass:Role>

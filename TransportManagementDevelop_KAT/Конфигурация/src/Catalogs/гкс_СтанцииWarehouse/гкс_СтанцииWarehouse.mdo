@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="aea59690-4c50-4c9f-b52a-b6a8f5d2bfab">
+  <producedTypes>
+    <objectType typeId="f359072f-928a-400c-a4fe-7f68f7293fa0" valueTypeId="bae5beac-0b89-4d1e-83c3-d19588b04cb8"/>
+    <refType typeId="c5e62325-b4b9-4425-9773-40c6f51d689d" valueTypeId="a20e1de3-2797-4250-8377-5af129b91854"/>
+    <selectionType typeId="8a2c33e6-5828-4a85-abf8-6abcd5571cf1" valueTypeId="157b1bed-3492-400b-b7d7-29d5083cc403"/>
+    <listType typeId="ed13f53c-f77b-42df-a443-38fd45ac5f2d" valueTypeId="b0435971-4f61-495b-ba55-dae5977af527"/>
+    <managerType typeId="c66f82bf-0acf-4b5a-ac34-a9d700f5adc7" valueTypeId="b74b98a4-d126-4842-8264-52621dd8dbff"/>
+  </producedTypes>
+  <name>гкс_СтанцииWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse: Станции</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_СтанцииWarehouse.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>150</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <attributes uuid="6ce94b87-fc89-49b1-9f2c-f7f95b51fc70">
+    <name>КодЕСР</name>
+    <synonym>
+      <key>ru</key>
+      <value>Код ЕСР</value>
+    </synonym>
+    <comment>Код единой сетевой разметки</comment>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>6</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="65969888-84f0-4ae6-b0cd-6b9174673a79">
+    <name>ИдентификаторWarehouse</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор warehouse</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>36</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue">
+      <value>                                    </value>
+    </fillValue>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="94fb171d-9f23-4165-8f3e-da2f734bb94c">
+    <name>ДатаИзменения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата изменения</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+</mdclass:Catalog>

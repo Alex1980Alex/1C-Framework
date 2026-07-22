@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="bed17d80-4829-41ff-8cb1-4f1299eb6c37">
+  <producedTypes>
+    <selectionType typeId="08589cfc-08e1-47bc-89b7-2a011d1c7929" valueTypeId="31ec0a38-1fb3-4cf0-a543-64d712808ee7"/>
+    <listType typeId="29ce76bc-43e8-4f7a-96ba-5f184ebb992b" valueTypeId="7e798b07-0fc5-468c-9136-7efc26e074df"/>
+    <managerType typeId="6e10a633-2c23-4755-a63f-a4aa8c48d46e" valueTypeId="7e8ed57e-b904-4d71-835b-1f2a3ee5442f"/>
+    <recordSetType typeId="e58163dd-0678-4de4-88f9-15ba23f28e46" valueTypeId="787a111c-2da6-4252-9f55-1b40ca3fd632"/>
+    <recordKeyType typeId="87d1d8c2-efaf-4481-b30b-5151f9cb8514" valueTypeId="a2b0a317-19d5-433b-a54a-602b0e6e6342"/>
+    <recordType typeId="1229003a-3f27-4084-985e-c06b8cc2aa08" valueTypeId="e50459f8-4611-4e2d-9a70-00932274bcdc"/>
+    <recordManagerType typeId="628dc72e-17a8-466a-bf33-eebf1b1a966c" valueTypeId="6e008127-d8ae-423d-9235-7f58ef5d5d38"/>
+  </producedTypes>
+  <name>гкс_ОстаткиТочекМаршрутаMFM</name>
+  <synonym>
+    <key>ru</key>
+    <value>Остатки точек маршрута MFM</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultListForm>InformationRegister.гкс_ОстаткиТочекМаршрутаMFM.Form.ФормаСписка</defaultListForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="3cba0282-4d3a-45f4-8872-b776bc751f4c">
+    <name>Количество</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>3</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="50451f4f-dc2a-4e4b-9e84-76b09a6682bc">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="54fb1b80-bcda-42dd-a6d9-fd05b442c0d3">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

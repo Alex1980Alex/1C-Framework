@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0933d90c-e086-4498-8196-068e5ad47d1f">
+  <name>гкс_РегистрСведений_СостоянияРегистрации_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Состояния регистрации&quot;</value>
+  </synonym>
+</mdclass:Role>

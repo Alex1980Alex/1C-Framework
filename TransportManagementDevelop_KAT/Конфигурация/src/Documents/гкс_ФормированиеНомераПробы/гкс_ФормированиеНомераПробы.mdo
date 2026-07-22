@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c1b8ea42-bb61-4fa9-8605-2c5ff18fa120">
+  <producedTypes>
+    <objectType typeId="0c6b2aa0-4299-4c4d-9d50-47673ab8e5c7" valueTypeId="c86febe8-fb72-4ca0-a7ad-0a235db6f4e2"/>
+    <refType typeId="a64749d9-9d38-4237-a236-ddefc0aa7578" valueTypeId="6b768012-0d38-4c16-9faf-5d80a97c82e7"/>
+    <selectionType typeId="f708ae82-8c79-4d60-8082-0646e0a7cbd2" valueTypeId="e8bd807a-10e5-44c8-a5ac-6ef754c3d4fa"/>
+    <listType typeId="00427203-1428-4de2-a34f-140883264cb4" valueTypeId="2991c1e9-9b36-4755-bc25-7a5dfa83d934"/>
+    <managerType typeId="6ae957da-7603-4983-898d-286859c08704" valueTypeId="654fd656-fbe7-4e6e-b7df-415514083f40"/>
+  </producedTypes>
+  <name>гкс_ФормированиеНомераПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формирование номера пробы</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Document.гкс_ФормированиеНомераПробы.StandardAttribute.Number</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Posted</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>DeletionMark</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Date</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Number</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Формирование номера пробы</value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Формирования номеров проб</value>
+  </listPresentation>
+  <dataHistory>Use</dataHistory>
+  <numberType>String</numberType>
+  <numberLength>11</numberLength>
+  <numberAllowedLength>Variable</numberAllowedLength>
+  <numberPeriodicity>Year</numberPeriodicity>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultObjectForm>Document.гкс_ФормированиеНомераПробы.Form.ФормаДокумента</defaultObjectForm>
+  <defaultListForm>Document.гкс_ФормированиеНомераПробы.Form.ФормаСписка</defaultListForm>
+  <realTimePosting>Deny</realTimePosting>
+  <postInPrivilegedMode>true</postInPrivilegedMode>
+  <unpostInPrivilegedMode>true</unpostInPrivilegedMode>
+  <attributes uuid="94314df2-58c4-4b58-ba38-71390b77b88b">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="9afff5f7-dd8e-4472-a398-1681ea6a3946">
+    <name>ТипПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип пробы</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыПроб</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="fdf236da-cc4e-4d35-af6e-3aca90b2bfce">
+    <name>НомерПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер пробы</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_НомерПробы</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="768807dd-272c-4206-9d11-ce915e378b57">
+    <name>МестнаяДата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Местная дата</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="7afac7ed-f02d-4019-b02e-8439c59a784d">
+    <name>ПроизводственныеСуткиРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки регистрации</value>
+    </synonym>
+    <comment>ERP-1431</comment>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="2ecb768e-0203-4c13-96c3-d61a290c24bd">
+    <name>ФормаДокумента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма документа</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="462a6a1d-7575-4039-8f18-49c01992ba36">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="c1732aae-9d33-4fa2-850d-3a5da3b818b8">
+    <name>НастройкиПечатиАктОтбораОбразцов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки печати Акта отбора образцов</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <tabularSections uuid="a62aa43b-9391-4253-9554-ab73baee6dbe">
+    <producedTypes>
+      <objectType typeId="9d5474d9-5219-4970-8ac9-4b4dd5a65ff9" valueTypeId="4d2eb9c5-791a-4ac1-b077-e9e29120e552"/>
+      <rowType typeId="a2a18129-3c5a-496d-aa09-cd5ede2c1546" valueTypeId="d46d6411-b48b-435f-a874-f5d839463588"/>
+    </producedTypes>
+    <name>СписокРегистраций</name>
+    <synonym>
+      <key>ru</key>
+      <value>Список регистраций</value>
+    </synonym>
+    <fillChecking>ShowError</fillChecking>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="e27f3534-1be3-41e3-9b42-8d577e753f80">
+      <name>ДокументРегистрации</name>
+      <synonym>
+        <key>ru</key>
+        <value>Документ регистрации</value>
+      </synonym>
+      <type>
+        <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="6f14429a-d010-4c69-a241-4eab6333fd57">
+      <name>Организация</name>
+      <synonym>
+        <key>ru</key>
+        <value>Организация</value>
+      </synonym>
+      <type>
+        <types>CatalogRef.Организации</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <templates uuid="38c3bba5-f188-4807-b8e7-bcd7fb6a252a">
+    <name>ПФ_MXL_Этикетка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Макет этикетки</value>
+    </synonym>
+    <comment>ERP-1067</comment>
+  </templates>
+  <templates uuid="5c99befd-4338-4c81-9484-661e5f28ec90">
+    <name>ПФ_MXL_АктОтбораКП</name>
+    <synonym>
+      <key>ru</key>
+      <value>Акт отбора композитной пробы</value>
+    </synonym>
+  </templates>
+  <templates uuid="9438d224-9b8c-43d8-a611-98621916653d">
+    <name>ПФ_MXL_ЭтикеткаСтанцияОтправления</name>
+    <synonym>
+      <key>ru</key>
+      <value>Макет этикетки</value>
+    </synonym>
+    <comment>ERP-1067</comment>
+  </templates>
+  <commands uuid="9c1c7892-cd52-497b-8488-6dbce2f6d21b">
+    <name>СформироватьФайлСАРА</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сформировать файл для САРА</value>
+    </synonym>
+    <group>FormCommandBarImportant</group>
+    <commandParameterType>
+      <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    </commandParameterType>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:Document>

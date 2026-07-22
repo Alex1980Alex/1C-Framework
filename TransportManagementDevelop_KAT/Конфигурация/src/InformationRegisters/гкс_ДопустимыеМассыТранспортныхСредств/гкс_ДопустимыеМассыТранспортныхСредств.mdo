@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="15ef84da-dbaf-4d93-9e4c-80cfccd4243e">
+  <producedTypes>
+    <selectionType typeId="676706f9-86a8-4a28-9eb8-d2fbfa83b5d6" valueTypeId="2876f2f1-cc03-4d42-aa13-f490d16d9fa8"/>
+    <listType typeId="60ca8a39-e1ae-4536-b5a6-5d2aeffd692f" valueTypeId="43fc9581-91e3-4d4f-9dd5-3e499ed55afb"/>
+    <managerType typeId="7b17e749-da4a-430c-96eb-ac3f1e0f83fa" valueTypeId="aeed1668-3daf-476d-bcce-397ee58c12a4"/>
+    <recordSetType typeId="7b659c40-7ac9-4d40-ae7f-5cd02520b317" valueTypeId="f84e571e-4b5e-4768-bf50-5591d6c266a4"/>
+    <recordKeyType typeId="2be25538-83b7-40a3-a9e3-e8b4e51b4e14" valueTypeId="1feb4b27-293a-41aa-8095-6d64f30852d5"/>
+    <recordType typeId="16c7b0ba-b677-47a6-a6c1-186a0bf73282" valueTypeId="c60179cf-cca7-4e92-9ef1-5bdea1141dca"/>
+    <recordManagerType typeId="e7e4f61d-1286-4e0a-801b-8660fe4e1df3" valueTypeId="c099648d-05fd-43fd-914c-1afa52fb4d99"/>
+  </producedTypes>
+  <name>гкс_ДопустимыеМассыТранспортныхСредств</name>
+  <synonym>
+    <key>ru</key>
+    <value>Допустимые массы транспортных средств</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_ДопустимыеМассыТранспортныхСредств.Form.ФормаЗаписи</defaultRecordForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="70cc9568-cc4a-46eb-be2a-c346b3bff8e1">
+    <name>ДопустимаяМасса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Допустимая масса</value>
+    </synonym>
+    <comment>Допустимая масса транспортного средства, тонн</comment>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <scale>2</scale>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="8f2ae234-f0b1-494c-b0f8-ab495d10d254">
+    <name>ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:ReferenceValue">
+      <value>Enum.гкс_ТипыТранспортныхСредствДоставки.EnumValue.Автомобиль</value>
+    </fillValue>
+  </dimensions>
+  <dimensions uuid="0426c13a-ddd7-4775-b8ee-7b00844565f3">
+    <name>КоличествоОсей</name>
+    <synonym>
+      <key>ru</key>
+      <value>Количество осей</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_КоличествоОсейТранспортногоСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </dimensions>
+  <forms uuid="e733dd1d-6d18-491d-a710-9f489b9e33a5">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

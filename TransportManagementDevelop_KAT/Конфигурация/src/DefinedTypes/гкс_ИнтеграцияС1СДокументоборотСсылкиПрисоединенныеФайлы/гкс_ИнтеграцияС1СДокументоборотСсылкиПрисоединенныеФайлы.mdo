@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="36279e83-ccc1-4685-be7f-b6bd1f7c8ffe">
+  <producedTypes>
+    <containerType typeId="69b3ad12-27cb-4f51-886f-bd26080ff0de" valueTypeId="f061897e-0333-4d87-83cb-886891d97027"/>
+  </producedTypes>
+  <name>гкс_ИнтеграцияС1СДокументоборотСсылкиПрисоединенныеФайлы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция с 1С:Документоборот ссылки присоединенные файлы</value>
+  </synonym>
+  <comment>Ссылки на объекты метаданных, файлы которых хранятся в 1С:Документоборот без создания объекта в ДО </comment>
+  <type>
+    <types>DocumentRef.гкс_РеестрНакладныхЗПП3</types>
+    <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+  </type>
+</mdclass:DefinedType>

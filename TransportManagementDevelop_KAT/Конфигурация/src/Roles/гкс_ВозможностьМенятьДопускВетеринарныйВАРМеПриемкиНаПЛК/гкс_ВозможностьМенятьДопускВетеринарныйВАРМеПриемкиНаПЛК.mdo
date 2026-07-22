@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="78aca46d-e399-4b0f-bca6-cc375cc1e91a">
+  <name>гкс_ВозможностьМенятьДопускВетеринарныйВАРМеПриемкиНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Возможность менять допуск ветеринарный в АРМе приемки на ПЛК</value>
+  </synonym>
+</mdclass:Role>

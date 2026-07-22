@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="504c7f69-f932-4545-9c87-2675f4d40c21">
+  <name>гкс_Документ_Взвешивание_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Взвешивание&quot;</value>
+  </synonym>
+</mdclass:Role>

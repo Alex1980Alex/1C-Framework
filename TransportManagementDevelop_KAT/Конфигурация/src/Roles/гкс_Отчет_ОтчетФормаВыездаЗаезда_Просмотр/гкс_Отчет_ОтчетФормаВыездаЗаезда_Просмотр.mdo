@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="498d0fc2-b6f0-404e-a3ce-38e7fcf00a9a">
+  <name>гкс_Отчет_ОтчетФормаВыездаЗаезда_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр отчета &quot;Форма выезда\заезда&quot;</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="49beb132-d897-4128-a334-bd5384f7098e">
+  <name>гкс_ПриемкаТранспортаБезВходногоКонтроля_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Приемка транспорта без входного контроля добавление изменение</value>
+  </synonym>
+</mdclass:Role>

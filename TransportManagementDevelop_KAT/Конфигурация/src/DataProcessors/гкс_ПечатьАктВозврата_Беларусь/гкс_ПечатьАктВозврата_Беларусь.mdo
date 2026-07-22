@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d295e6e6-7b7c-4bb3-85ae-d9ae99a41f99">
+  <producedTypes>
+    <objectType typeId="bd63296e-c7d5-426e-a349-46026d83dc23" valueTypeId="120d9c27-7141-494a-8064-7cf04f485c94"/>
+    <managerType typeId="5bb129c0-8eee-4036-87cf-5565c6baf48a" valueTypeId="77e13a61-d1a1-4187-a665-73aa79f78af8"/>
+  </producedTypes>
+  <name>гкс_ПечатьАктВозврата_Беларусь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Печать акт возврата (Беларусь)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ПечатьАктВозврата_Беларусь.Form.Форма</defaultForm>
+  <forms uuid="7015226e-477b-48c0-b493-fa46496eb4a0">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="513b5f2b-e0c1-4d7d-96d6-dee0bf17efc5">
+    <name>ПФ_MXL_АктВозврата_by</name>
+    <synonym>
+      <key>ru</key>
+      <value>ПФ MXL акт возврата by</value>
+    </synonym>
+  </templates>
+</mdclass:DataProcessor>

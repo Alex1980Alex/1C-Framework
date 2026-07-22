@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="1ad3de10-c025-4b6d-bc1f-91be26c7b644">
+  <name>СтандартнаяСериализация</name>
+  <synonym>
+    <key>ru</key>
+    <value>Стандартная сериализация</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>DataProcessor.гкс_ФормировательСообщенийRMQСтандартнаяСериализация</content>
+  <content>CommonModule.гкс_СтандартнаяСериализацияОбмен</content>
+  <content>CommonModule.гкс_СтандартнаяСериализацияОбменПереопределяемый</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество.Subsystem.ФормированиеСообщений</parentSubsystem>
+</mdclass:Subsystem>

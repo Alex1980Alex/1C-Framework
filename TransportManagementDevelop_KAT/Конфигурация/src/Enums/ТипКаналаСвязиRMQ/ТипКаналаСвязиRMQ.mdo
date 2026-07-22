@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f7cb56e1-b4fe-41ad-bc2f-4a45f3449422">
+  <producedTypes>
+    <refType typeId="96a7b6cb-d926-48bc-8418-273de18ae8c7" valueTypeId="e9d844fd-5e7b-4143-b999-e668435d2d94"/>
+    <listType typeId="a165f0de-3f44-4060-b730-2b48514585e2" valueTypeId="9c2e50ba-bc49-415c-a891-0ea65e0afd2f"/>
+    <managerType typeId="3a80d113-e1cf-4360-8930-a4f1e5626747" valueTypeId="3ef2d9e3-634b-421e-9905-31ced2b9d588"/>
+  </producedTypes>
+  <name>ТипКаналаСвязиRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Тип канала связи RMQ</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="0e8c06b4-df99-46d9-9fa6-75c03ebe55ff">
+    <name>Строка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Строка</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="24cfcad5-b5ec-4975-bb28-65ac55858f9b">
+    <name>СтрокаGZIP</name>
+    <synonym>
+      <key>ru</key>
+      <value>Строка GZIP</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="43a15376-d2e4-42e0-92d6-7f59205e8fa9">
+    <name>ДвоичныеДанные</name>
+    <synonym>
+      <key>ru</key>
+      <value>Двоичные данные</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

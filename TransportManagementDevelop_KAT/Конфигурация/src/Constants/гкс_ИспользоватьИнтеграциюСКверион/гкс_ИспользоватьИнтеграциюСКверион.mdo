@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9b2002ba-be6e-42f1-93f6-dcffd8225e9e">
+  <producedTypes>
+    <managerType typeId="a9cd255c-677e-4b53-9889-81f460d5448d" valueTypeId="0253be07-8e99-4678-baee-a0cb6a3be219"/>
+    <valueManagerType typeId="57d4f620-f699-4742-9310-ed71b7dbfa6c" valueTypeId="41f49ca7-2ff6-4f72-a3e1-7e8730448a34"/>
+    <valueKeyType typeId="6d2b342f-966a-4afa-beaa-2a8dc8cbcd6a" valueTypeId="e1dd2062-ea1e-41b8-83a0-c63a11678455"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьИнтеграциюСКверион</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с Кверион</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

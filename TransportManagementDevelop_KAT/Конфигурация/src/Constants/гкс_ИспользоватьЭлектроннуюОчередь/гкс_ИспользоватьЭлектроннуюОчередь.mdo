@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5c5cff5f-9f9c-4940-ab16-0a8f9c13c905">
+  <producedTypes>
+    <managerType typeId="81be8919-3544-40e0-8b03-3d8666a7f04b" valueTypeId="23a61869-7cb0-4496-8704-255f1d562954"/>
+    <valueManagerType typeId="77daf95b-c8d6-491a-ac7d-38eff6c90159" valueTypeId="c7bb415e-44f3-45e2-912c-eb4e3b758d24"/>
+    <valueKeyType typeId="1fa053d6-8e3b-4e57-a5e6-a15c3e963bf6" valueTypeId="17365f8b-3485-4b61-947b-54a75840e0be"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьЭлектроннуюОчередь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать электронную очередь</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

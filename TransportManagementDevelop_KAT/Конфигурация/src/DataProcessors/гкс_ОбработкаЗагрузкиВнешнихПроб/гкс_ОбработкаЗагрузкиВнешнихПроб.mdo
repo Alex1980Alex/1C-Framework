@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0b08a527-cb5c-4e85-a340-05a836cdb5f2">
+  <producedTypes>
+    <objectType typeId="5ab386dd-4641-4642-a5a8-b1d8a16679f1" valueTypeId="8b5fb1bb-9793-4db1-b7d6-126bedb5b902"/>
+    <managerType typeId="e72675e8-c2eb-4c7c-9ea0-c7e9511abe4f" valueTypeId="caf20181-ba74-4c07-a32d-b798327fcfb3"/>
+  </producedTypes>
+  <name>гкс_ОбработкаЗагрузкиВнешнихПроб</name>
+  <synonym>
+    <key>ru</key>
+    <value>Загрузка данных в регистр сведений из табличного документа</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ОбработкаЗагрузкиВнешнихПроб.Form.Форма</defaultForm>
+  <attributes uuid="77c4b239-f3ff-4089-bd2c-40f0c0c48b42">
+    <name>ПерваяСтрокаДанныхТабличногоДокумента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Первая строка данных табличного документа</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="182500f8-411a-4910-8a5a-10cbe1682c63">
+    <name>СсылкаИсточника</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка источника</value>
+    </synonym>
+    <type>
+      <types>DocumentRef</types>
+      <types>CatalogRef</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="2105e3e1-b9c9-4602-bdcf-b8e3a0727caa">
+    <name>ТабличнаяЧастьИсточника</name>
+    <synonym>
+      <key>ru</key>
+      <value>Табличная часть источника</value>
+    </synonym>
+    <type/>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="3d617ec1-bd5b-4ea1-8c84-c2e2e0381374">
+    <name>ПередЗаписьюОбъекта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Перед записью объекта</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="d3593a7f-1ea5-4a60-b9df-2e0a0aeb691f">
+    <name>ПриЗаписиОбъекта</name>
+    <synonym>
+      <key>ru</key>
+      <value>При записи объекта</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="ff219a25-71f0-40dc-adbf-aabf9862b067">
+    <name>ПослеДобавленияСтроки</name>
+    <synonym>
+      <key>ru</key>
+      <value>После добавления строки</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="d0476724-cf04-4623-a4f4-077bcf8f6c17">
+    <name>ИмяВидаРегистра</name>
+    <synonym>
+      <key>ru</key>
+      <value>Имя вида регистра</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="0a2a10d4-52f7-4310-9ad9-242516914481">
+    <name>ЗамещатьСуществующиеЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Замещать существующие записи</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="af654571-1cdc-4eb2-af1b-9de9109bcb5f">
+    <name>ДополнительныеСвойства</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дополнительные свойства</value>
+    </synonym>
+    <type/>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="c0059276-e886-44d1-9814-a24ceb6a8d95">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиКачестваWarehouse</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="df0a6891-1f9a-4db3-bdaa-10fd2f46c3eb">
+    <name>ДатаПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата пробы</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="12ef4d6c-6cba-473a-9d77-19a7b9afa45d">
+    <name>Комментарий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Комментарий</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>250</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <forms uuid="9860bb97-bb9f-4f78-943e-de93cfa07428">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="1334c73b-19a8-4b28-9a04-d05c2d3df103">
+    <name>ФормаСравнения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма сравнения</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="bb4e775b-c4b9-4348-989c-db5d47cab20d">
+    <name>ШаблонСравненияПоказателей</name>
+    <synonym>
+      <key>ru</key>
+      <value>Шаблон сравнения показателей</value>
+    </synonym>
+  </templates>
+  <commands uuid="a90e527d-516d-4f35-ad47-68170a4637b3">
+    <name>СравнениеВнешнихПробСДаннымиФайла</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сравнение внешних проб с данными файла</value>
+    </synonym>
+    <group>ActionsPanelTools</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:DataProcessor>

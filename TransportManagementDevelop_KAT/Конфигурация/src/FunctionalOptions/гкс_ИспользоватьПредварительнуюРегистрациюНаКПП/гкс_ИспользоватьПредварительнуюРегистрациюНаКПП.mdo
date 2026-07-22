@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7aae5c71-4962-4fcf-89d4-79aa07133a5f">
+  <name>гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать предварительную регистрацию на КПП</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Document.гкс_ВъездНаКПП</content>
+  <content>Document.гкс_ВыездНаКПП</content>
+  <content>Report.гкс_ОтчетФормаВыездаЗаезда</content>
+  <content>Subsystem.гкс_КПП</content>
+  <content>DataProcessor.гкс_АРМКПП</content>
+</mdclass:FunctionalOption>

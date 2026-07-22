@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="60132b75-71df-4f91-a7f1-dba0cfa14ebf">
+  <producedTypes>
+    <selectionType typeId="6292932a-6211-4e9b-ac93-b99425bb6db3" valueTypeId="db5dfbd1-dd97-45c2-98e6-78a8ac99b77e"/>
+    <listType typeId="32489f8c-163f-4498-985d-c73b56d23467" valueTypeId="d0cc33b5-b1f1-4b31-9b3e-3a008fe4773b"/>
+    <managerType typeId="27cfe3d4-553a-40ea-8859-d49b1016da35" valueTypeId="578cccdd-d6eb-4e00-8a1d-868c660b678c"/>
+    <recordSetType typeId="e70ef373-4732-4b7b-aace-93ed93471c8f" valueTypeId="e09c8840-80be-441b-81bb-2e9459b56670"/>
+    <recordKeyType typeId="9243d54f-6513-485b-99c4-4cc75b5a3332" valueTypeId="d08492a6-098a-4364-9d01-43c5a4117d36"/>
+    <recordType typeId="96bd9b22-5ac8-45ce-8832-aabcb64426fe" valueTypeId="5fdf3c5f-8bbc-4834-8c3e-d27a2afd9d8b"/>
+    <recordManagerType typeId="30c8f537-c073-48e3-8863-1bb97bea9705" valueTypeId="d6ac7b56-c155-4122-baa8-11684a018820"/>
+  </producedTypes>
+  <name>гкс_ПроблемыОбменаДанными</name>
+  <synonym>
+    <key>ru</key>
+    <value>Проблемы обмена данными (ИАС)</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_ПроблемыОбменаДанными.Form.ФормаЗаписи</defaultRecordForm>
+  <informationRegisterPeriodicity>Second</informationRegisterPeriodicity>
+  <mainFilterOnPeriod>true</mainFilterOnPeriod>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <listPresentation>
+    <key>ru</key>
+    <value>Проблемы обмена данными</value>
+  </listPresentation>
+  <resources uuid="48e4e911-d8d6-4814-bff9-3b170f8f7cf2">
+    <name>Текст</name>
+    <synonym>
+      <key>ru</key>
+      <value>Содержание</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <multiLine>true</multiLine>
+    <extendedEdit>true</extendedEdit>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <attributes uuid="1d794a97-0f89-4e08-aca6-09869c21b12c">
+    <name>ПредставлениеОбъекта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Представление объекта</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <toolTip>
+      <key>ru</key>
+      <value>Представление объекта обмена данными. </value>
+    </toolTip>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </attributes>
+  <dimensions uuid="f0db563a-2741-44da-a613-9665c8c9e187">
+    <name>ТипПроблемы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип проблемы</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТипыПроблемОбменаДанными</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="934672a1-bf81-4137-9b23-e1ba12f42047">
+    <name>ПроблемныйОбъект</name>
+    <synonym>
+      <key>ru</key>
+      <value>Проблемный объект</value>
+    </synonym>
+    <type>
+      <types>DocumentRef</types>
+      <types>CatalogRef</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="b221cb8b-cd06-4b03-a415-4f2f9017354b">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <commands uuid="f9665f52-c6e4-476a-9795-b2dff81ef795">
+    <name>ПроблемыОбменаСообщениями</name>
+    <synonym>
+      <key>ru</key>
+      <value>Проблемы обмена данными</value>
+    </synonym>
+    <group>FormNavigationPanelGoTo</group>
+    <commandParameterType>
+      <types>CatalogRef.ИсходящиеСообщения</types>
+      <types>CatalogRef.гкс_ОчередьОтложенногоФормированияИсходящихСообщений</types>
+      <types>CatalogRef.гкс_ВходящиеСообщенияRMQ</types>
+    </commandParameterType>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:InformationRegister>

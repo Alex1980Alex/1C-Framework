@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f019cbed-7448-4fb5-ac96-c722d5e55e46">
+  <producedTypes>
+    <objectType typeId="c80663ff-b9e4-41a2-82e7-b21410e33f54" valueTypeId="0f1f6941-9307-451b-b231-a028388d73e6"/>
+    <refType typeId="abcea589-b478-4096-a2a2-922d9e388571" valueTypeId="8d526403-7f38-482e-b7fa-1186e72b896f"/>
+    <selectionType typeId="cab01766-3b85-43d2-871f-931d543aa880" valueTypeId="2733293a-f2d1-4b95-999a-2cb3139ca18a"/>
+    <listType typeId="879fc0dd-867a-4e7c-8287-5d107d39d811" valueTypeId="0229d42e-098d-4274-ab8b-25f1c793769a"/>
+    <managerType typeId="c2470370-d6f5-493b-bef6-47a6944d76af" valueTypeId="d09d033e-cbec-4d81-8c59-886e13d25f1c"/>
+  </producedTypes>
+  <name>гкс_ВыездНаКПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Регистрация выезда через КПП</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Document.гкс_ВыездНаКПП.StandardAttribute.Number</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <basedOn>Document.гкс_ВъездНаКПП</basedOn>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <numberType>String</numberType>
+  <numberLength>12</numberLength>
+  <numberAllowedLength>Variable</numberAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultObjectForm>Document.гкс_ВыездНаКПП.Form.ФормаДокумента</defaultObjectForm>
+  <postInPrivilegedMode>true</postInPrivilegedMode>
+  <unpostInPrivilegedMode>true</unpostInPrivilegedMode>
+  <attributes uuid="b533bc21-ecd2-476b-a6ec-b1a939fb3abd">
+    <name>ВремяВыезда</name>
+    <synonym>
+      <key>ru</key>
+      <value>Время выезда</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="7b8f7fbd-a4db-444c-b508-a885b0fd9b12">
+    <name>ДокументОснование</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ основание</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ВъездНаКПП</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="b11b297f-a4c1-4e5b-9ef6-da66f30e50a2">
+    <name>ФормаДокумента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма документа</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Document>

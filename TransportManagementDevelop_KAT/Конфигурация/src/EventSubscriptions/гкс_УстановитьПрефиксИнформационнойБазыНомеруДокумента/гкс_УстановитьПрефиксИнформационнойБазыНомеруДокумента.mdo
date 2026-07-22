@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:EventSubscription xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e959ab1c-18f4-46f5-ace0-9d5e280e4fe5">
+  <name>гкс_УстановитьПрефиксИнформационнойБазыНомеруДокумента</name>
+  <synonym>
+    <key>ru</key>
+    <value>Установить префикс информационной базы номеру документа</value>
+  </synonym>
+  <source>
+    <types>DocumentObject.гкс_ФормированиеНомераПробы</types>
+    <types>DocumentObject.гкс_ЗаданияНаПроверкуКачества</types>
+  </source>
+  <event>OnSetNewNumber</event>
+  <handler>CommonModule.ПрефиксацияОбъектовСобытия.УстановитьПрефиксИнформационнойБазы</handler>
+</mdclass:EventSubscription>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="71de2dfc-6cc2-4b2c-a71a-b003fb0b0d46">
+  <producedTypes>
+    <refType typeId="52278433-c495-4643-be41-511f890de529" valueTypeId="5d21d75c-972f-47b7-99e7-4acbc7fe7d85"/>
+    <listType typeId="a3c06be4-571a-4da0-b5ae-59727edefeaa" valueTypeId="4f9dce93-58bb-4dd1-ab79-37b61809af37"/>
+    <managerType typeId="918bcde2-fdb4-45f0-8bca-4362cf95ec72" valueTypeId="5ca1af1f-fc5a-44f7-9da0-5a0cfdb1a5e8"/>
+  </producedTypes>
+  <name>гкс_ТипыОбъектовWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы объектов Warehouse</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="eb2473d3-92ea-46f3-a348-90d3d5f0e01d">
+    <name>Организация</name>
+    <synonym>
+      <key>ru</key>
+      <value>Организация</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="60426209-edc2-47b1-88be-ffcd8b8d34a9">
+    <name>Станция</name>
+    <synonym>
+      <key>ru</key>
+      <value>Станция</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="45af0dbf-efcd-430c-9d72-672393b6e503">
+    <name>Сюрвейер</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сюрвейер</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="745209fb-2e1c-4bc5-bc55-c3caa1925084">
+    <name>Элеватор</name>
+    <synonym>
+      <key>ru</key>
+      <value>Элеватор</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ddca6527-5fe1-4b1b-a3c0-10d478992919">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

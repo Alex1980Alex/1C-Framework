@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="45cdfa26-3702-4f9f-b0f2-ef2780b6049e">
+  <producedTypes>
+    <selectionType typeId="5b4de72f-a040-4cdc-99d1-60ce1dbb5bcd" valueTypeId="c933a4e2-125f-4cd5-b66a-f0215bcfe987"/>
+    <listType typeId="a9a4b773-5a3a-4dcf-99f4-3924e931e15e" valueTypeId="6fb0307a-fb44-4e98-a9e2-6ee3069403d6"/>
+    <managerType typeId="f9f38e3a-0401-4514-800c-cfd1d055b9f6" valueTypeId="bf281b43-501a-43d3-85db-23e81c1d5f4d"/>
+    <recordSetType typeId="99a9f82f-de9a-42d6-9d1b-ee63bd5dd8c9" valueTypeId="a98b4454-0951-4423-a582-89087a2a818a"/>
+    <recordKeyType typeId="0c5d9db5-630a-482c-80b3-24b1a027b856" valueTypeId="33771c3c-ce85-49f6-a97f-ada5dcf1d174"/>
+    <recordType typeId="620799f4-ad36-4b4e-8b50-23719c2baf7a" valueTypeId="11e3f887-4a1a-4c15-8de5-682a7916f093"/>
+    <recordManagerType typeId="a9465498-fc32-4785-a9e9-2628015d54bf" valueTypeId="b4171d14-f5bd-4269-b509-cedf9701f06a"/>
+  </producedTypes>
+  <name>гкс_ХранилищеНастроек</name>
+  <synonym>
+    <key>ru</key>
+    <value>Хранилище настроек</value>
+  </synonym>
+  <comment>GKSTCPLK-254</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_ХранилищеНастроек.Form.ФормаЗаписи</defaultRecordForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="c062a077-7731-4754-bea4-f3caaa8396ac">
+    <name>Настройки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки</value>
+    </synonym>
+    <type>
+      <types>ValueStorage</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="cb784f4b-0efe-49a5-bb60-ecc28eda8283">
+    <name>КлючОбъекта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ объекта</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>255</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="ebd52b9e-2914-493f-aa2c-f86f85ce1baf">
+    <name>КлючНастроек</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ настроек</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>255</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="b908f195-8987-4b9f-be68-0123a789ae46">
+    <name>НастройкаЭлементовФормы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройка элементов формы</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="2df4a1de-0256-4277-b287-f5b599142a69">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

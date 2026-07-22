@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4be7c311-9071-49df-8528-6a1c36b60d3c">
+  <name>ОтправкаИсходящихСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отправка исходящих сообщений</value>
+  </synonym>
+  <methodName>CommonModule.ОтправкаСообщений.ПоФИФОИзОчередиИсходящих</methodName>
+  <description>ОтправкаИсходящихСообщений</description>
+  <key>ОтправкаИсходящихСообщений</key>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

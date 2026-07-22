@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d66c3c59-764e-45ad-b267-faee9a183621">
+  <name>гкс_ЭлектроннаяОчередьКлиент</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс электронная очередь клиент</value>
+  </synonym>
+  <clientManagedApplication>true</clientManagedApplication>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

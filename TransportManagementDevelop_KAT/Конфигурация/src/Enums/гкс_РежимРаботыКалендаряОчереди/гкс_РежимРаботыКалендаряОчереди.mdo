@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="207a6fcc-28a6-4db2-a8d3-db82cde78481">
+  <producedTypes>
+    <refType typeId="b671c2ed-e53b-46c1-bafa-d5e0ae466705" valueTypeId="0f4e4169-6314-4cfc-9fcd-4b90bdc230d4"/>
+    <listType typeId="2b5969b7-273d-4e95-9c66-783581ce5964" valueTypeId="0369a38d-4b95-4fdf-be56-a4ec4197ccb4"/>
+    <managerType typeId="6e8e777b-8855-4fcf-ab84-34ac6c1d11bf" valueTypeId="5dfd4e97-05af-4ced-bf5d-e1dfc7b061b5"/>
+  </producedTypes>
+  <name>гкс_РежимРаботыКалендаряОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Режим работы календаря очереди (гкс)</value>
+  </synonym>
+  <comment>Режим работы календаря электронной очереди </comment>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="b7bb301b-3d12-4f52-b41d-62a53b86c88d">
+    <name>Менеджер</name>
+    <synonym>
+      <key>ru</key>
+      <value>Менеджер</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="593bb58d-8738-4575-bda5-6922b280e679">
+    <name>Диспетчер</name>
+    <synonym>
+      <key>ru</key>
+      <value>Диспетчер</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

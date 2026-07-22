@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8df7c2fc-d1df-43c9-86ae-273112320b2f">
+  <name>гкс_Документ_РабочаяСмена_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление/Изменение документов &quot;Рабочая смена&quot;</value>
+  </synonym>
+</mdclass:Role>

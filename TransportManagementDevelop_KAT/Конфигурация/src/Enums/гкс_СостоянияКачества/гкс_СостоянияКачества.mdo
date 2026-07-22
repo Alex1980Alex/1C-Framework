@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="078a2180-bd0d-4871-ae9d-464d8735c1e7">
+  <producedTypes>
+    <refType typeId="206b0053-e951-427d-b92a-04e3851c3cc6" valueTypeId="d6d3ba46-8df2-40c4-97ea-1dca05be82fd"/>
+    <listType typeId="802c7ad9-a0e8-452a-aeac-cb1b6b679b83" valueTypeId="6918b8ca-ecb7-4e46-ad5c-4a0b10dcd630"/>
+    <managerType typeId="010b0b33-5042-4710-b6ff-e10002365b46" valueTypeId="15865dcc-6147-49a7-8b3c-03c94b024072"/>
+  </producedTypes>
+  <name>гкс_СостоянияКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Cостояния качества</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="9baa6dc1-e061-4fc2-b4f6-4da5672652d4">
+    <name>ОжиданиеОбщегоРезультата</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ожидание общего результата</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="aedcf92c-8416-402c-85c9-f57a8e78c4c0">
+    <name>ОтборПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отбор проб</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="a3887214-c376-433f-ba82-6d2951216cca">
+    <name>ПробыНеТребуются</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пробы не требуются</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="13ef0611-4f72-4ad7-9e29-e69486b47cee">
+    <name>КачествоПринято</name>
+    <synonym>
+      <key>ru</key>
+      <value>Качество принято</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ca24d29a-10c6-4212-81ee-413984701499">
+    <name>КачествоНеПринято</name>
+    <synonym>
+      <key>ru</key>
+      <value>Качество не принято</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="f4324bd4-acee-4ac0-a854-76a54d40a640">
+    <name>РезультатыПробПолучены</name>
+    <synonym>
+      <key>ru</key>
+      <value>Результаты проб получены</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4d1abb9e-6d75-4f39-9301-ebf7bb471bb9">
+    <name>НеПринятоВходнойКонтроль</name>
+    <synonym>
+      <key>ru</key>
+      <value>Не принято входной контроль</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

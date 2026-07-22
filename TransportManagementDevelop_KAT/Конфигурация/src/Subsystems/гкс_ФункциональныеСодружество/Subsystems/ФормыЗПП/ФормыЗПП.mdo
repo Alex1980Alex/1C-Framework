@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="dee420eb-3d25-40fe-8b1f-4349ca27c9c2">
+  <name>ФормыЗПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формы ЗПП</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>Document.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</content>
+  <content>Catalog.гкс_ОтветственныеЛица</content>
+  <content>Report.гкс_ЖурналВзвешиванияЗПП</content>
+  <content>DataProcessor.гкс_ПечатьПриемныйАкт_ЗПП14</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

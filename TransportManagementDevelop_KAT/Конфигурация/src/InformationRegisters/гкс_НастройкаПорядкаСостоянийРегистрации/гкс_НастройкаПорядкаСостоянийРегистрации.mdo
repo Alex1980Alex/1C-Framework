@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0213ed29-f246-42b8-b2b1-8d4adfffe963">
+  <producedTypes>
+    <selectionType typeId="574cfb79-9416-407b-9a1b-0cb56f2a181c" valueTypeId="2a753569-52e3-4f3d-893a-a433e3a91d03"/>
+    <listType typeId="d10132bf-e151-4766-8e02-e57b37733d5c" valueTypeId="f381f64d-fa04-489f-ab08-7f23760eaa0e"/>
+    <managerType typeId="b23f8e80-6b52-4ad3-8907-9b020be82b2a" valueTypeId="c9827c36-fbc8-4e45-ba0b-9534c02ba9cc"/>
+    <recordSetType typeId="b0863597-a4eb-40a4-87e7-5aefa6c4efb5" valueTypeId="2835647a-c487-4ca8-aaaf-70fda1b162df"/>
+    <recordKeyType typeId="0714bb23-b5ce-469e-99a7-b309bd3e8da7" valueTypeId="8a00c406-f24c-4244-8868-c026e61712c5"/>
+    <recordType typeId="18d130c3-5dfa-42eb-878f-1794e8f986c1" valueTypeId="7cd73c31-ddf7-4c79-8b00-24d21593bfe3"/>
+    <recordManagerType typeId="4859d623-3d41-41fe-810e-9bef5107d099" valueTypeId="cfe3ddb4-0180-40a4-8a67-6bed0a878942"/>
+  </producedTypes>
+  <name>гкс_НастройкаПорядкаСостоянийРегистрации</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка порядка состояний регистрации</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <informationRegisterPeriodicity>Day</informationRegisterPeriodicity>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="d30b311a-a48c-4ee0-940f-88a8b4bb79dd">
+    <name>ПорядокСостояний</name>
+    <synonym>
+      <key>ru</key>
+      <value>Порядок состояний</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПорядокСостоянийРегистрации</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="38f27429-ef2b-44ad-92d7-6af6bd880bd9">
+    <name>Пользователь</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пользователь</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Пользователи</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="fe888991-e935-4eb3-9120-2e1eb61f1684">
+    <name>Комментарий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Комментарий</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="e282b607-f534-4b73-8042-ef0460a9834b">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="9afebfcb-849f-4281-8829-d0729366136c">
+    <name>ТипРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип регистрации</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипРегистрации</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="26ba18bc-9dd8-40cd-b600-7b5ab6d17199">
+    <name>ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

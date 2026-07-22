@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f9e335b3-e1b9-44ed-b5d5-95a456f2b46a">
+  <name>САРА</name>
+  <synonym>
+    <key>ru</key>
+    <value>САРА</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_ИнтеграцияСАРАКлиент</content>
+  <content>CommonModule.гкс_ИнтеграцияСАРАВызовСервера</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюССАРА</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюССАРА</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

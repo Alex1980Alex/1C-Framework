@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="bfa0c107-350c-4d91-9026-660b6176ee0e">
+  <producedTypes>
+    <objectType typeId="4e92194f-1c3a-49e4-905c-c4e228c9470d" valueTypeId="deb0a981-f0a7-4f6b-8b18-865406ff6a9a"/>
+    <managerType typeId="6e72623d-904c-4cb3-8efb-d0f45f9a567b" valueTypeId="965212a9-eb4b-4610-8153-3a82302025f6"/>
+  </producedTypes>
+  <name>гкс_ЗапросникКВебСервисам</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс запросник к веб сервисам</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+</mdclass:DataProcessor>

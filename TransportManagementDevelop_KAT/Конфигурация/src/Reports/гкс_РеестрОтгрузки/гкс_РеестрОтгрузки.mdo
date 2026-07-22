@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f705f641-646a-4cc7-8ea8-11395d79f821">
+  <producedTypes>
+    <objectType typeId="1b03ab2d-cd5e-425e-836b-cc98e832c66f" valueTypeId="fe71e0b0-ff00-44a3-8002-2feb0df1ef19"/>
+    <managerType typeId="a54264dd-9013-4f6c-9809-023b0698a72d" valueTypeId="73c42cbe-4cf0-4509-a1dd-2e7ab026a821"/>
+  </producedTypes>
+  <name>гкс_РеестрОтгрузки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Реестр отгрузки</value>
+  </synonym>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_РеестрОтгрузки.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="fa0c837d-d7ec-4ab0-9ca3-bc54b6e806a9">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

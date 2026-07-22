@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="24b847b7-1fb8-43fc-bd2d-dbd8f60c135c">
+  <producedTypes>
+    <refType typeId="f4f83fed-146d-4e6b-8875-ae352ced8cbf" valueTypeId="321021e3-94d3-4299-9eef-93ba154e668a"/>
+    <listType typeId="2951fa54-4eb4-4084-bf5c-87f47719394c" valueTypeId="084e3654-25cc-4cf4-ae8c-9247530c0c28"/>
+    <managerType typeId="4b04b4cb-a2fb-4704-b2a6-c4971713309e" valueTypeId="c48a2dcc-efef-4c66-9c0e-4df5c35cc066"/>
+  </producedTypes>
+  <name>гкс_ТехнологииОбменаДанными</name>
+  <synonym>
+    <key>ru</key>
+    <value>Технологии обмена данными</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="bfc23350-9826-4a26-93b9-6b50da02f350">
+    <name>REST</name>
+    <synonym>
+      <key>ru</key>
+      <value>REST</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7d4d5fc7-556c-48fe-ae83-906afcc14c17">
+    <name>SOAP</name>
+    <synonym>
+      <key>ru</key>
+      <value>SOAP</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

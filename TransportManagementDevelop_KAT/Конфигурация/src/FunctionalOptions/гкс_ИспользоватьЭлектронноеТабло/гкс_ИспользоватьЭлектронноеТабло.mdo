@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="742f1169-f308-4df2-8b79-f9af58bbfa77">
+  <name>гкс_ИспользоватьЭлектронноеТабло</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать электронное табло</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьЭлектронноеТабло</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Catalog.гкс_ЭлектронныеТабло</content>
+  <content>InformationRegister.гкс_НастройкаЭлектронногоТабло</content>
+  <content>InformationRegister.гкс_ЭлектронныеТабло</content>
+  <content>Enum.гкс_ВидыЭлектронныхТабло</content>
+</mdclass:FunctionalOption>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="13a699b6-40a2-46c5-b532-a91c91b5fb1e">
+  <producedTypes>
+    <selectionType typeId="42920efd-ad85-4045-8f54-067777d13f5b" valueTypeId="21bd97b1-3a93-42c3-9a75-5c4c0e9f32bf"/>
+    <listType typeId="d9738a9e-1e9f-4f80-a239-a32c3837a262" valueTypeId="44b36ad5-f4ad-4755-8a80-07d675d7d1b8"/>
+    <managerType typeId="5c553af1-d313-4e00-8974-ce30a58ca2e3" valueTypeId="f61c1d45-6691-4740-ae04-20dde22e5574"/>
+    <recordSetType typeId="396336a7-7989-4929-ae9f-44bd55259743" valueTypeId="d288a98e-940a-4f08-9568-9fd740a06751"/>
+    <recordKeyType typeId="72046100-b2ad-4644-943d-61a809d11eba" valueTypeId="5b540f11-1a53-400d-9ae7-4142a902db61"/>
+    <recordType typeId="56c099e9-ba9d-49f2-8d3b-36b9a406e24a" valueTypeId="525ee39a-fe13-4e7d-9d65-8e6684ff5463"/>
+    <recordManagerType typeId="e332a596-22ec-4c52-bc33-047c5b1d91c2" valueTypeId="28fc1057-acaf-47e5-8d63-1464fa722bfb"/>
+  </producedTypes>
+  <name>гкс_СопоставлениеФНПЛабАнализа</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сопоставление ФНП и лаб анализа</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="3b5a4e20-92f0-4568-b046-238fa327a7e5">
+    <name>ЛабораторныйАнализ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лабораторный анализ</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ЛабораторныйАнализ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+  </resources>
+  <resources uuid="0bbd30ca-fab5-4219-9ec7-9326b1c690ff">
+    <name>ТипПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип пробы</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыПроб</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="1a484f15-7d42-460e-ad8d-58323d2caba1">
+    <name>НазначениеИспользования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение использования</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_НазначенияИспользованияКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="289c5b0a-3c03-4f71-b90e-6aeb451807da">
+    <name>УсиленныйКонтроль</name>
+    <synonym>
+      <key>ru</key>
+      <value>Усиленный контроль</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="b79403a2-a826-4263-bd87-3ca521301fb6">
+    <name>ФормированиеНомераПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Формирование номера пробы</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ФормированиеНомераПробы</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

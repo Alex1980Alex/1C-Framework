@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:HTTPService xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b86553dc-5509-4ee8-81d4-b0d0e1ffa07f">
+  <name>gks_LIMSIntegrationService</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сервис интеграции с ЛИМС</value>
+  </synonym>
+  <rootURL>lims</rootURL>
+  <reuseSessions>AutoUse</reuseSessions>
+  <sessionMaxAge>20</sessionMaxAge>
+  <urlTemplates uuid="64aa0dbd-bc66-483f-bf1b-598608f2119e">
+    <name>ping</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ping</value>
+    </synonym>
+    <template>/ping</template>
+    <methods uuid="6ff82586-f894-4a83-bc76-67ed1e312e7e">
+      <name>Any</name>
+      <synonym>
+        <key>ru</key>
+        <value>Any</value>
+      </synonym>
+      <httpMethod>Any</httpMethod>
+      <handler>Ping</handler>
+    </methods>
+  </urlTemplates>
+  <urlTemplates uuid="59231546-f725-4c0c-b490-7cf8d1c1217c">
+    <name>api_Samples_ExportByCode</name>
+    <synonym>
+      <key>ru</key>
+      <value>Api samples export by code</value>
+    </synonym>
+    <comment>ERP-1486</comment>
+    <template>/api/Samples/ExportByCode/{code}</template>
+    <methods uuid="c617d47c-e6d4-4371-a8d3-46e119011c21">
+      <name>GET</name>
+      <synonym>
+        <key>ru</key>
+        <value>GET</value>
+      </synonym>
+      <handler>api_Samples_ExportByCodeGET</handler>
+    </methods>
+  </urlTemplates>
+  <urlTemplates uuid="7a8b99b4-31b4-4517-957e-87e94a8f8b2f">
+    <name>api_Samples</name>
+    <synonym>
+      <key>ru</key>
+      <value>Api samples</value>
+    </synonym>
+    <comment>ERP-1487</comment>
+    <template>/api/Samples/{id}</template>
+    <methods uuid="43014109-efba-4210-9dc1-fb7615db1038">
+      <name>PUT</name>
+      <synonym>
+        <key>ru</key>
+        <value>PUT</value>
+      </synonym>
+      <httpMethod>PUT</httpMethod>
+      <handler>api_SamplesPUT</handler>
+    </methods>
+    <methods uuid="95d75218-1045-4fd3-8dcb-8e82698c522a">
+      <name>GET</name>
+      <synonym>
+        <key>ru</key>
+        <value>GET</value>
+      </synonym>
+      <handler>api_SamplesGET</handler>
+    </methods>
+  </urlTemplates>
+</mdclass:HTTPService>

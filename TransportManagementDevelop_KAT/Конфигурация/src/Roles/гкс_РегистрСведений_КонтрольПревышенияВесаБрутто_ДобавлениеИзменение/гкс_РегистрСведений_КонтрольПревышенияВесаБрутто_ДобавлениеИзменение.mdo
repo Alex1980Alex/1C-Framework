@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4c9be86a-44a2-4ea8-9118-5dfa687bca6c">
+  <name>гкс_РегистрСведений_КонтрольПревышенияВесаБрутто_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Контроль превышения веса брутто&quot;</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0672c7fc-3043-4c8c-993e-63646c1f37dc">
+  <name>гкс_ЭлектронныеТаблоВызовСервера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Электронная очередь приемки авто (Вызов сервера)</value>
+  </synonym>
+  <server>true</server>
+  <serverCall>true</serverCall>
+</mdclass:CommonModule>

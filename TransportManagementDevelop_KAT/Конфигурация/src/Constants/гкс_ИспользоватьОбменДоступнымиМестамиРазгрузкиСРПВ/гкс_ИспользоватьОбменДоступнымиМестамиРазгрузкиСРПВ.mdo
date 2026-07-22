@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="af17a1d1-d5bc-4817-a21b-27a55fa634cd">
+  <producedTypes>
+    <managerType typeId="42c1737c-2db3-4fa8-913e-f9a5796c2771" valueTypeId="2b9e69d9-f10a-4454-935a-41b94139b9cf"/>
+    <valueManagerType typeId="6497f2e2-9287-4a2b-8b3d-f238ccce331c" valueTypeId="225802a5-be55-434d-8d32-a19e25739be3"/>
+    <valueKeyType typeId="3700bc6b-0862-4e4d-bde7-b673df0117e6" valueTypeId="5fa0636d-f46a-4c16-8a44-e2462c79e30f"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать обмен доступными местами разгрузки СРПВ</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

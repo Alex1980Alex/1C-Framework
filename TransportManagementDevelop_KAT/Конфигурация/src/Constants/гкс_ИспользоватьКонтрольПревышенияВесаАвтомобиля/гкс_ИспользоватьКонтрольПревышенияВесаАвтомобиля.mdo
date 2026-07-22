@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6983ce1f-5758-40f1-b2e5-709a85942788">
+  <producedTypes>
+    <managerType typeId="36661150-8a16-4065-9aa3-b684d8ec07d4" valueTypeId="763d7965-bc3f-4d79-a503-30bbc5a354f1"/>
+    <valueManagerType typeId="f28a33d4-4ae7-4ee6-944c-05a6b3724a8a" valueTypeId="3a6f056e-1289-4c2d-a6bc-bb355e7ee039"/>
+    <valueKeyType typeId="b695fc01-5a92-4724-b7a3-1135df33d25c" valueTypeId="310574e1-f920-403b-ad83-db5de833b8b2"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиля</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль превышения веса автомобиля</value>
+  </synonym>
+  <comment>Использовать контроль веса автомобиля по осям</comment>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

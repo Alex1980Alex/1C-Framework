@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="318fd930-b9f3-429d-b7f3-41cf8c032da0">
+  <name>гкс_ПакетнаяВыгрузкаОбъектовВRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Пакетная выгрузка объектов в Rabbit MQ (Интеграционный адаптер &quot;Содружество&quot;);</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3edcd6f3-2721-4184-b291-9bd21aed2e3d">
+  <producedTypes>
+    <objectType typeId="a17f341f-dac4-41ab-8d39-9ee491102b96" valueTypeId="40a229a0-00d2-4f5e-93e4-3f5f56b8f3d6"/>
+    <managerType typeId="1711a449-8772-4fb3-89c4-2a3e0d5d1a48" valueTypeId="15d8b74c-5757-4054-b69a-413c4b65b733"/>
+  </producedTypes>
+  <name>гкс_АРМКомпозитныеПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>АРМ &quot;Композитные пробы&quot;</value>
+  </synonym>
+  <defaultForm>DataProcessor.гкс_АРМКомпозитныеПробы.Form.Форма</defaultForm>
+  <attributes uuid="40d94634-e66e-4df4-ba25-31349fd8f3f8">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="4258d67b-cdf1-4b88-a1c1-df7290960d98">
+    <name>ВидПеревозки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид перевозки</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыТранспортныхСредствДоставки</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="e4d9288d-ffbb-47c4-8dfa-535262a05269">
+    <name>Контрагент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Контрагент</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Контрагенты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="c6dcce93-54c3-41d5-b1cb-8d07021eb6e6">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="79e3d529-bb0c-46bd-8b2d-54d71547c295">
+    <name>Силос</name>
+    <synonym>
+      <key>ru</key>
+      <value>Силос</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="3829dc97-d786-43ef-ac8d-1db65b29dc50">
+    <name>СписокСостояний</name>
+    <synonym>
+      <key>ru</key>
+      <value>Список состояний</value>
+    </synonym>
+    <type>
+      <types>ValueList</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="88783f51-98f3-401c-b5e5-58639c8bd59b">
+    <name>ПроизводственныеСуткиРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки регистрации</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="3f1b8b64-49cf-4b2d-aea6-13b8136bde2b">
+    <name>СтанцияОтправления</name>
+    <synonym>
+      <key>ru</key>
+      <value>Станция отправления</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_КлассификаторСтанцийЖД</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="33c6c78e-7bb4-4b46-9b0f-2eae45fc8427">
+    <name>Грузоотправитель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Грузоотправитель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Контрагенты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="4fb8cbc0-1da4-4048-aa31-9215976af1b0">
+    <name>СлужебнаяНоменклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Служебная номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="3142391e-9388-4780-b9d7-0e6b1f795706">
+    <name>Договор</name>
+    <synonym>
+      <key>ru</key>
+      <value>Договор</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ДоговорыКонтрагентов</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <choiceParameterLinks>
+      <name>Отбор.Контрагент</name>
+      <field>DataProcessor.гкс_АРМКомпозитныеПробы.Attribute.Контрагент</field>
+    </choiceParameterLinks>
+  </attributes>
+  <tabularSections uuid="b8ec9a78-4e26-42cb-b491-8f35d8c68cf8">
+    <producedTypes>
+      <objectType typeId="3b85cf0b-51d7-4316-8826-6299e243b19c" valueTypeId="28f8a704-175a-43be-813f-12a5c9dcb2bb"/>
+      <rowType typeId="08f7db08-901d-4650-b602-a770015b7722" valueTypeId="33bba55e-715b-4e47-9eb0-5297921835b0"/>
+    </producedTypes>
+    <name>ТаблицаРегистраций</name>
+    <synonym>
+      <key>ru</key>
+      <value>Таблица регистраций</value>
+    </synonym>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="dc8eea32-7690-470f-aa73-f721c17235ac">
+      <name>ДокументРегистрации</name>
+      <synonym>
+        <key>ru</key>
+        <value>Документ регистрации</value>
+      </synonym>
+      <type>
+        <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillValue xsi:type="core:UndefinedValue"/>
+    </attributes>
+    <attributes uuid="67bd9baf-efa9-4178-a03a-576e33d7d187">
+      <name>ВесНетто</name>
+      <synonym>
+        <key>ru</key>
+        <value>Вес нетто</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>15</precision>
+          <scale>3</scale>
+        </numberQualifiers>
+      </type>
+      <markNegatives>true</markNegatives>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillValue xsi:type="core:UndefinedValue"/>
+    </attributes>
+  </tabularSections>
+  <forms uuid="a57ccd08-d148-46db-ad24-442a7c3542ff">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="73cbff25-770c-4f72-8a0f-6c54981652cc">
+    <name>ФормаФормированиеКомпозитнойФормы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма формирование композитной формы</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <commands uuid="6595b97c-3a2f-499f-9eb5-dc3dd076b086">
+    <name>КомпозитныеПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Композитные пробы</value>
+    </synonym>
+    <group>NavigationPanelOrdinary</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:DataProcessor>

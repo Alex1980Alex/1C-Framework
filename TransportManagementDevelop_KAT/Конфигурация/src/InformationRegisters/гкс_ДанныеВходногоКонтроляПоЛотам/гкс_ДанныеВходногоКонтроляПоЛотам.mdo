@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a801261b-06a4-4c27-8ef3-750b7aff8938">
+  <producedTypes>
+    <selectionType typeId="c92ad8a9-50ba-43ed-84ab-47fc33842e7d" valueTypeId="d1460b15-7f1f-44b3-afec-8901184327f8"/>
+    <listType typeId="0b4bc6b8-9a58-490e-8e2a-95989fb8c197" valueTypeId="ad04f4f6-452b-40e1-973f-4ccb62c1e383"/>
+    <managerType typeId="cdb7bbfb-1839-4bd5-b8ec-5741c8913840" valueTypeId="2a6151b7-73ed-452b-8cd2-bfb039e13540"/>
+    <recordSetType typeId="ed480dcc-0ba2-4486-a279-3fb262eb1f86" valueTypeId="0b7f8b52-da83-46e0-a3a3-a0591e1b07ac"/>
+    <recordKeyType typeId="7382ad07-521e-40d1-b44d-3a0ad5133fa4" valueTypeId="6ca4c69c-4b1e-4df9-aab7-3edc64ff1952"/>
+    <recordType typeId="8ed9718e-1e8a-4bdc-9bfa-61d21b4ba8c5" valueTypeId="a9dc9ef0-78f8-4e79-8900-25957fae9464"/>
+    <recordManagerType typeId="27ff0de2-7cb1-400c-b292-f8e8a8496419" valueTypeId="181111ba-b5bf-43c3-9db1-f4c902af9256"/>
+  </producedTypes>
+  <name>гкс_ДанныеВходногоКонтроляПоЛотам</name>
+  <synonym>
+    <key>ru</key>
+    <value>Данные входного контроля по Лотам</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Данные входного контроля по Лотам</value>
+  </recordPresentation>
+  <resources uuid="989b4d4e-0295-4887-85e6-c703ace960af">
+    <name>ЛабораторныйАнализ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лабораторный анализ</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ЛабораторныйАнализ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="e2cd84c0-34b8-47df-87f7-099b33457f3d">
+    <name>Фрахт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Фрахт</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="153efacd-765f-4b37-9e55-5b7e8057fcb5">
+    <name>Лот</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лот</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_Лоты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

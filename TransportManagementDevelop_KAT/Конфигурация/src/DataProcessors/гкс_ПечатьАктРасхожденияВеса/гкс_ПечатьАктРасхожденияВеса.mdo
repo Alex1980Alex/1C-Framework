@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8bd08041-291e-41df-8daa-e97b45a808b1">
+  <producedTypes>
+    <objectType typeId="5cef2337-10ec-412a-a23e-0d96aeed7bd9" valueTypeId="9d98d7fe-c76b-47f8-9e63-563f026a917e"/>
+    <managerType typeId="9069e912-5b67-4fd5-8c2a-5af2c132cdc3" valueTypeId="3ab57a60-bedd-4772-b5fa-5d237b9b8f72"/>
+  </producedTypes>
+  <name>гкс_ПечатьАктРасхожденияВеса</name>
+  <synonym>
+    <key>ru</key>
+    <value>Печать акта расхождения веса</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ПечатьАктРасхожденияВеса.Form.Форма</defaultForm>
+  <forms uuid="1edb9b16-cd35-45c7-98f0-747202543f78">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="c903506c-039e-42d0-b630-05950ff06a72">
+    <name>ПФ_MXL_АктРасхожденияВеса_by</name>
+    <synonym>
+      <key>ru</key>
+      <value>акт расхождения веса by</value>
+    </synonym>
+  </templates>
+</mdclass:DataProcessor>

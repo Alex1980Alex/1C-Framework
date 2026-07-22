@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommandGroup xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6d5d7866-2efd-46ec-9003-ff9ac4019bb0">
+  <name>гкс_ПовторноеПроигрывание</name>
+  <synonym>
+    <key>ru</key>
+    <value>Повторное проигрывание</value>
+  </synonym>
+  <representation>Auto</representation>
+  <category>FormCommandBar</category>
+</mdclass:CommandGroup>

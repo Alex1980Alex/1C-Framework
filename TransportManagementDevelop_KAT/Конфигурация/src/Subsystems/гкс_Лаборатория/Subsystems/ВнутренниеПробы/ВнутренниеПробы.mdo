@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fd6b59c5-ad76-4347-b57f-879505a9f4fe">
+  <name>ВнутренниеПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Внутренние пробы</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Document.гкс_УстановкаМинимальныхПоказателейПриемки</content>
+  <content>InformationRegister.гкс_МинимальныеПоказателиКачестваПриемки</content>
+  <content>Constant.гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков</content>
+  <content>InformationRegister.гкс_РезультатыНормативнойСертификацииНоменклатуры</content>
+  <content>Catalog.гкс_АлгоритмыРасчетаПоказателейКачестваНоменклатуры</content>
+  <content>Catalog.гкс_НомерПробы</content>
+  <content>FunctionalOption.гкс_ИспользоватьКонтрольПоПредельнымУровнямКачестваПоставщиков</content>
+  <content>Role.гкс_ИзменениеСтатусаВыполненЛабораторномАнализе</content>
+  <content>InformationRegister.гкс_СопоставлениеПоказателейАнализовНоменклатуры</content>
+  <content>Document.гкс_ФормированиеНомераПробы</content>
+  <content>Document.гкс_НормативнаяСертификацияНоменклатуры</content>
+  <content>Document.гкс_ЛабораторныйАнализ</content>
+  <content>Constant.гкс_ДатаОкончанияПериодаСертификацииПоУмолчанию</content>
+  <content>Role.гкс_НастройкаТаблицыКлючей</content>
+  <content>Role.гкс_Документ_ЗаданияНаПроверкуКачества_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаданияНаПроверкуКачества_Просмотр</content>
+  <content>Catalog.гкс_ПоказателиАнализовНоменклатуры</content>
+  <content>Role.гкс_РегистрСведений_СопоставлениеПоказателейАнализовНоменклатуры_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_СопоставлениеПоказателейАнализовНоменклатуры_Редактирование</content>
+  <parentSubsystem>Subsystem.гкс_Лаборатория</parentSubsystem>
+</mdclass:Subsystem>

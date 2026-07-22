@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="19d494f3-c289-41b3-82a4-99fc8ef26270">
+  <name>гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиля</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль превышения веса автомобиля</value>
+  </synonym>
+  <comment>Использовать контроль превышения веса автомобиля по осям</comment>
+  <location>Constant.гкс_ИспользоватьКонтрольПревышенияВесаАвтомобиля</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>InformationRegister.гкс_ДопустимыеМассыТранспортныхСредств</content>
+  <content>Catalog.ТранспортныеСредства.Attribute.КоличествоОсей</content>
+</mdclass:FunctionalOption>

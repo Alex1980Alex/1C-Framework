@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ecefdc26-edce-4131-92bc-848f9c533dbe">
+  <name>гкс_ВыполнитьРегламентноеЗаданиеВручную</name>
+  <synonym>
+    <key>ru</key>
+    <value>Выполнить регламентное задание вручную (ИАС)</value>
+  </synonym>
+</mdclass:CommonPicture>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="12d28cb6-9860-4068-a479-c639db946079">
+  <producedTypes>
+    <selectionType typeId="6f67577a-abc1-4566-86df-bdc9c97ccb85" valueTypeId="ff40007a-3a6f-498f-b925-463b63673fb4"/>
+    <listType typeId="c1e3d8bb-b323-461c-9f3d-57fb5a1eafee" valueTypeId="8c99fa25-c937-4d44-9586-cdb0e403ef27"/>
+    <managerType typeId="4d48dbc8-df0a-4952-8bfe-60b2f6200881" valueTypeId="60e922ee-b08a-41dc-a591-cc5f887dad04"/>
+    <recordSetType typeId="b0f1415f-2770-48b4-8964-9bb5e157905d" valueTypeId="675077e3-5486-4438-84fb-b8efd08bbf20"/>
+    <recordKeyType typeId="e9809c2c-9389-4827-9f14-411e6de86cfd" valueTypeId="c1d5ed1d-5f99-47c4-aae7-f5ab049a799d"/>
+    <recordType typeId="c5c10285-de61-4e54-a31b-897eac2422ce" valueTypeId="5aab821a-d552-46f3-8718-88f9b1b2d2e0"/>
+    <recordManagerType typeId="87a4c37f-9375-4bd7-bd08-31b716815954" valueTypeId="46115ef6-cdf3-4779-864c-c02e1f88a99e"/>
+  </producedTypes>
+  <name>гкс_КонтрагентыНоменклатурыЛИМС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Контрагенты номенклатуры (ЛИМС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="cc1980a8-67b5-41e9-9834-10a4fefc6ac2">
+    <name>Контрагент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Контрагент</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Контрагенты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="c372925c-92af-44bf-a019-cc4fbfd90d9d">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <commands uuid="7986ffa7-20c1-4314-9883-f6ff883ced33">
+    <name>ОткрытьРегистрКонтрагентыНоменклатурыЛИМС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Контрагенты номенклатуры (ЛИМС)</value>
+    </synonym>
+    <group>ActionsPanelTools</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:InformationRegister>

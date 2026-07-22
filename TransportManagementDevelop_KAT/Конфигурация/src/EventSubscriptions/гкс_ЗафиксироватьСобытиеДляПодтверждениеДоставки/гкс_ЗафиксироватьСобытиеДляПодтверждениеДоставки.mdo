@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:EventSubscription xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c5d0b942-be0f-4ac4-be42-95643111c633">
+  <name>гкс_ЗафиксироватьСобытиеДляПодтверждениеДоставки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Зафиксировать событие для подтверждение доставки</value>
+  </synonym>
+  <source>
+    <types>InformationRegisterRecordSet.гкс_СостоянияИсходящихСообщений</types>
+  </source>
+  <event>OnWrite</event>
+  <handler>CommonModule.гкс_ПодтверждениеДоставкиСообщений.ЗафиксироватьСобытиеДляПодтверждениеДоставки</handler>
+</mdclass:EventSubscription>

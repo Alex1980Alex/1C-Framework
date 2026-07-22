@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4444b3e8-9659-4c23-8aa8-5afcf3248a84">
+  <producedTypes>
+    <objectType typeId="7a79563e-636f-4e19-b238-5be10a1c283b" valueTypeId="03a6e54d-4261-47f0-a754-9a35eb163195"/>
+    <refType typeId="7fade307-2d1b-4fce-9504-2dcaa0294a36" valueTypeId="d0280ee7-e04c-4925-b522-86c7cff8c1e1"/>
+    <selectionType typeId="e4e1dbf4-962e-4dc7-b0f4-8449ee5e5d88" valueTypeId="03a803a7-c4a5-4748-98c7-ff5a677bee19"/>
+    <listType typeId="9bf1c3e0-0f01-4d1e-ad9c-b9b6483af633" valueTypeId="b9c26c68-d6a0-4a40-a335-cacedf3d782d"/>
+    <managerType typeId="bae6d00c-cba4-42bc-a617-17d9be976383" valueTypeId="05848a16-ca98-4519-a87a-e795bc431b49"/>
+  </producedTypes>
+  <name>гкс_УсловияПроезда</name>
+  <synonym>
+    <key>ru</key>
+    <value>Условия проезда</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_УсловияПроезда.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_УсловияПроезда.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>25</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="094c70a4-7f37-4284-be66-0441cbbcac7c">
+      <name>FCA</name>
+      <description>FCA</description>
+      <code xsi:type="core:StringValue">
+        <value>000000001</value>
+      </code>
+    </items>
+    <items id="d8b61ee2-468d-4e88-b83a-4e98646db922">
+      <name>DAP</name>
+      <description>DAP</description>
+      <code xsi:type="core:StringValue">
+        <value>000000002</value>
+      </code>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+</mdclass:Catalog>

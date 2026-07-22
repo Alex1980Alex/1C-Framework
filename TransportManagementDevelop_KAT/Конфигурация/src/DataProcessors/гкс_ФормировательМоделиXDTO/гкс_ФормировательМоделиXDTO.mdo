@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="11df8b8c-13ca-4675-ab54-00fac2bdcb43">
+  <producedTypes>
+    <objectType typeId="5d366002-0360-4a1a-99bb-172d353c98e1" valueTypeId="8b7d92c2-eec4-4b29-b942-ba1b4cc45bfa"/>
+    <managerType typeId="8f283235-312e-4df1-b3cb-aaebcf6fc788" valueTypeId="a0042ebe-b633-4b82-8af1-d5b829bf0d45"/>
+  </producedTypes>
+  <name>гкс_ФормировательМоделиXDTO</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формирователь модели XDTO (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ФормировательМоделиXDTO.Form.Форма</defaultForm>
+  <forms uuid="12b9eba8-f23e-4dc6-b580-798a457e2910">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:DataProcessor>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5ea3875d-50ab-4275-8abd-c09575f84e66">
+  <producedTypes>
+    <refType typeId="32f75863-5de5-42eb-b335-bd45a24ec9c2" valueTypeId="8ffe3b90-c967-44d6-a880-428c92af5295"/>
+    <listType typeId="d0785ec8-28af-4e8e-b1f8-fed192c12ba4" valueTypeId="644f65cb-eadb-4cb5-b013-c6aa4bdca538"/>
+    <managerType typeId="e0b6c4eb-f2fa-40af-91c4-aeddf019efcc" valueTypeId="c0648b1e-6e19-4e8a-b4ae-94b9a6518017"/>
+  </producedTypes>
+  <name>гкс_ТипыПодключаемогоОборудования</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы подключаемого оборудования (гкс)</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="62e37a13-71f2-4051-8852-0e4fa7281f41">
+    <name>ЭлектронныеВесы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Электронные весы</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

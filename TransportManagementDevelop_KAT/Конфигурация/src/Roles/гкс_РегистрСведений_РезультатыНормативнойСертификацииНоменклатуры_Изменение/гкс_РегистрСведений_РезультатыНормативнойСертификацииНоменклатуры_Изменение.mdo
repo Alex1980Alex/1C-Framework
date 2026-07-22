@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="1cd69e10-7b02-46e3-b8be-660ab2e13223">
+  <name>гкс_РегистрСведений_РезультатыНормативнойСертификацииНоменклатуры_Изменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Результаты нормативной сертификации номенклатуры&quot;</value>
+  </synonym>
+</mdclass:Role>

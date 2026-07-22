@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ad1fd327-513e-46f9-b33c-f69b8f02d067">
+  <producedTypes>
+    <managerType typeId="74944aa6-a6fa-4f38-a4c8-194532b158b1" valueTypeId="c36b41fd-b6e3-4c26-a0ba-9fd4ab48727d"/>
+    <valueManagerType typeId="e96cd217-b084-431c-baaa-ab4b44d0b1dc" valueTypeId="d6cc414d-a6e8-4c9a-963a-0ff5db7a6f2a"/>
+    <valueKeyType typeId="123423a8-7d2a-4055-ab4d-02ed772afaa5" valueTypeId="0afde254-c297-4d8d-9415-e296ed016393"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьЭлектронноеТабло</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать электронное табло</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

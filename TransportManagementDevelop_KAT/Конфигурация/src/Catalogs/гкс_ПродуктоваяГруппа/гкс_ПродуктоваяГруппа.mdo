@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="dc05aa5e-6920-4e86-b084-58ec76d9a493">
+  <producedTypes>
+    <objectType typeId="b1aa5484-01c2-474f-b200-c11527e9bc08" valueTypeId="2c8c795d-3d25-487e-97cb-edfcc6cb1e75"/>
+    <refType typeId="9b843fe5-c3d2-4e86-81da-cb71683ee9d1" valueTypeId="fa0b8f89-69ea-4731-9e33-b66be0713436"/>
+    <selectionType typeId="8a32acc6-e2e6-4c61-9602-d6aa2e7fa926" valueTypeId="ec2350f9-f525-4c87-99f3-beb985da56b6"/>
+    <listType typeId="3eac56b1-05b5-41c2-b57a-eed69a5e5eac" valueTypeId="9787144e-7f94-4426-b4b0-846f9db775aa"/>
+    <managerType typeId="1c95f1b3-f47f-41b6-b8c0-e28b59747d3b" valueTypeId="30d553e4-53f6-4115-b7b8-6d93ca8471bd"/>
+  </producedTypes>
+  <name>гкс_ПродуктоваяГруппа</name>
+  <synonym>
+    <key>ru</key>
+    <value>Продуктовая группа</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ПродуктоваяГруппа.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_ПродуктоваяГруппа.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>11</codeLength>
+  <descriptionLength>100</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="c335c1b0-e36e-479b-adff-e790e2b5c001">
+      <name>Рапс</name>
+      <description>Рапс</description>
+      <code xsi:type="core:StringValue">
+        <value>00000000001</value>
+      </code>
+    </items>
+    <items id="c5bac025-95ff-4b40-aa0c-14662cff0206">
+      <name>Соя</name>
+      <description>Соя</description>
+      <code xsi:type="core:StringValue">
+        <value>00000000002</value>
+      </code>
+    </items>
+    <items id="093bb94e-ccc4-45a1-ae40-87ec6e1ddea8">
+      <name>Рыжик</name>
+      <description>Рыжик</description>
+      <code xsi:type="core:StringValue">
+        <value>00000000003</value>
+      </code>
+    </items>
+    <items id="ec6bb45a-3d1a-4f68-a889-2e6e08134a49">
+      <name>Лен</name>
+      <description>Лен</description>
+      <code xsi:type="core:StringValue">
+        <value>00000000004</value>
+      </code>
+    </items>
+  </predefined>
+  <predefinedDataUpdate>DontAutoUpdate</predefinedDataUpdate>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+</mdclass:Catalog>

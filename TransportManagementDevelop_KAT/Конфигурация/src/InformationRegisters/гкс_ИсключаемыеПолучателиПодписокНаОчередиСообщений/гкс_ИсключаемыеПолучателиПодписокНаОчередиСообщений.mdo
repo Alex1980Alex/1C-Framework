@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="def90539-d0bf-4888-84bc-10f8a0fe1792">
+  <producedTypes>
+    <selectionType typeId="64e61073-37ad-4d99-b5ac-9f5712675b34" valueTypeId="4cabe095-aeed-4fe2-a3d1-aaceb1be8dee"/>
+    <listType typeId="d98adcff-2b33-4ec6-a4a0-10a69e984491" valueTypeId="94ed4c71-2b7b-4413-b2bd-9b164740ca72"/>
+    <managerType typeId="587851d1-0d53-4f8c-861f-de3cacc3edb5" valueTypeId="ea23c6dd-cfe1-432f-a284-37fb38747ee0"/>
+    <recordSetType typeId="a0775477-db24-4b70-a2c7-a7f8fddac9a9" valueTypeId="60aa6a4c-151d-4cf0-9747-6e48d71f71e2"/>
+    <recordKeyType typeId="c1cff73f-97b6-4062-86b3-7b4b024c3f1d" valueTypeId="8fbb22c9-9ef8-4abf-b331-ead829224438"/>
+    <recordType typeId="8c5cb07d-64a7-4d75-87ca-a0d6d6af9bd0" valueTypeId="fea20f3a-635d-4275-900d-9e6d39a7d269"/>
+    <recordManagerType typeId="3780b9fe-8532-4185-ae73-1ba16b40d68a" valueTypeId="c28c54e5-d780-432c-91da-ca2629bcab7a"/>
+  </producedTypes>
+  <name>гкс_ИсключаемыеПолучателиПодписокНаОчередиСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Исключаемые получатели подписок на очереди сообщений (ИАС)</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Связь исключаемого получателя с подписикой на очередь сообщений</value>
+  </recordPresentation>
+  <dimensions uuid="fe22786d-3fb7-4f0f-a49e-84e51043cac3">
+    <name>Подписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Подписка</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ПодпискиНаОчередиСообщений</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="59ae3b90-7904-4847-bd9c-38848b858a09">
+    <name>Получатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Получатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПолучателиДанныхRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9a428c4e-27de-4557-94f4-d2d230bfd58d">
+  <name>гкс_Справочник_ОтветственныеЛица_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение ответственных лиц</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d3150cb6-ee64-4cd6-87de-342b5aae653c">
+  <producedTypes>
+    <objectType typeId="ded70930-1050-4be7-8352-050fba3f18c3" valueTypeId="7bc9521e-4126-44e4-b081-627816537258"/>
+    <managerType typeId="0f7fd550-afd1-41ac-a44f-f8e7c651205a" valueTypeId="5983caeb-8f67-43aa-9c18-ea6cc9557759"/>
+  </producedTypes>
+  <name>гкс_ОтчетФормаВыездаЗаезда</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отчет форма выезда\заезда</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_ОтчетФормаВыездаЗаезда.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="9c0868b9-9ae1-4612-8775-7339896a6c07">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

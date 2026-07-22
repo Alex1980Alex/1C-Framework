@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b7b6eb79-6ccb-49bf-bfec-703b2660da38">
+  <producedTypes>
+    <selectionType typeId="2d11b68e-3317-410c-af2c-39029a234195" valueTypeId="836da987-29f9-439a-877c-5808df9d5775"/>
+    <listType typeId="5692ded7-af8a-4339-b55e-d03103fdf9fb" valueTypeId="95cd3d95-6066-4b22-8376-8c2e09cf3693"/>
+    <managerType typeId="8347ba7e-dcf0-42c0-a5ef-76d7c5674103" valueTypeId="b6ea3d1c-968a-4843-87d3-71993ae2e444"/>
+    <recordSetType typeId="d99bb23d-bdc8-4a64-a1c0-fab53587659a" valueTypeId="51ed8eb1-561b-49d2-b623-38abe5769702"/>
+    <recordKeyType typeId="01c78041-cd33-4ee9-9419-098034a9d05e" valueTypeId="5fc77a44-3e41-4e94-ac18-19a56f5c8697"/>
+    <recordType typeId="336f958a-b0da-4259-93ab-0e9cfa6ac690" valueTypeId="8e1b0e09-27e5-4ddc-8347-a7edbc08c6bf"/>
+    <recordManagerType typeId="fe80fc06-90aa-4e9b-a114-8b0687e645db" valueTypeId="034b271e-82c2-4420-907b-acc6961266f9"/>
+  </producedTypes>
+  <name>гкс_УдостоверенияКачестваПоРегистрацииПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Удостоверения качества по регистрации ПЛК</value>
+  </synonym>
+  <comment>Данные удостоверения качества и безопасности для документа Регистрация на ПЛК (при приёмке ЖД-транспортом контролируемой номенклатуры)</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_УдостоверенияКачестваПоРегистрацииПЛК.Form.ФормаЗаписи</defaultRecordForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="b4c6378f-f6d5-4bfa-8e93-36e8230d1fa1">
+    <name>НомерУдостоверения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер удостоверения</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>5</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="7468a311-efe1-4a13-970a-742e013ed31f">
+    <name>ДатаУдостоверения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата удостоверения</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="f7b5a515-6cfb-4d40-837f-09cfbe8c6166">
+    <name>ДатаВыработкиНачало</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата выработки начало</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="c86819f0-1d30-470a-a507-7ce272a9e7c9">
+    <name>ДатаВыработкиКонец</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата выработки конец</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="34635685-6e30-43e6-8f3a-98db80aa6e76">
+    <name>СрокХраненияМесяцев</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок хранения месяцев</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>2</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="20bb4a0b-c45e-4b00-8151-799071f17df9">
+    <name>СрокГодности</name>
+    <synonym>
+      <key>ru</key>
+      <value>Срок годности</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="f4ea5e5c-0513-47b1-b0ae-d2901b63b665">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="8114837a-32d7-48fb-832a-9464979104c9">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

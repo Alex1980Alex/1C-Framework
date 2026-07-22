@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f573bdfb-cc7e-42fb-9e6c-a972c18333dc">
+  <name>ЭлектроннаяОчередьОтгрузки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Очередь отгрузки</value>
+  </synonym>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Document.гкс_ЗаписьВГрафикОтгрузкиПЛК</content>
+  <content>Document.гкс_ЗаписьВОчередьОтгрузкиПЛК</content>
+  <content>InformationRegister.гкс_ОчередьОтгрузкиПЛК</content>
+  <content>CommonModule.гкс_ЭлектроннаяОчередьОтгрузки</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикОтгрузкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьОтгрузкиПЛК_ДобавлениеИзменение</content>
+  <content>Role.гкс_Документ_ЗаписьВГрафикОтгрузкиПЛК_Просмотр</content>
+  <content>Role.гкс_Документ_ЗаписьВОчередьОтгрузкиПЛК_Просмотр</content>
+  <content>Constant.гкс_ИспользоватьКонтрольВесаОтгрузки</content>
+  <content>Enum.гкс_РежимРаботыКалендаряОчереди</content>
+  <parentSubsystem>Subsystem.ЭлектроннаяОчередь</parentSubsystem>
+</mdclass:Subsystem>

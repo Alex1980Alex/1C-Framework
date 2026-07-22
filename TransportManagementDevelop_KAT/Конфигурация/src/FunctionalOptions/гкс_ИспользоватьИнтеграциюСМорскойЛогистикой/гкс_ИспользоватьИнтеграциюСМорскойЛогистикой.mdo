@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="68adbe70-b8f1-4389-b2cb-f1a641232200">
+  <name>гкс_ИспользоватьИнтеграциюСМорскойЛогистикой</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с Морской логистикой</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьИнтеграциюСМорскойЛогистикой</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Subsystem.гкс_ПриемкаТранспорта.Subsystem.МорскаяЛогистика</content>
+  <content>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции.Subsystem.МорскаяЛогистика</content>
+  <content>Document.гкс_Фрахт</content>
+  <content>Enum.гкс_ВидыОперацийФрахта</content>
+  <content>Catalog.гкс_СтатусыСудов</content>
+  <content>InformationRegister.гкс_НастройкиГруппировкиПоЛотам</content>
+  <content>Document.гкс_УстановкаНастроекГруппировкиПоЛотам</content>
+  <content>InformationRegister.гкс_ПланыРазгрузкиСудов</content>
+  <content>Document.гкс_РабочаяСмена</content>
+  <content>Document.гкс_ПрибытиеСуднаНаПЛК</content>
+  <content>InformationRegister.гкс_СостоянияФрахта</content>
+  <content>Enum.гкс_СостоянияТранспортныхСредств</content>
+  <content>InformationRegister.гкс_СостоянияОбработкиСудов</content>
+  <content>Enum.гкс_СостоянияОбработкиСудна</content>
+  <content>AccumulationRegister.гкс_ОбработкаСудов</content>
+  <content>InformationRegister.гкс_ТранспортныеДокументыФрахта</content>
+  <content>Catalog.гкс_Лоты</content>
+  <content>InformationRegister.гкс_ДанныеВходногоКонтроляПоЛотам</content>
+  <content>AccumulationRegister.гкс_ВыработкаСмены</content>
+</mdclass:FunctionalOption>

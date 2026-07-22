@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ad97e46b-e661-4ee9-90d5-3a2c3fd3a47b">
+  <name>ИнтеграцияСБСП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция с библиотекой стандартных подсистем</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_ОбновлениеИнформационнойБазыУправлениеТранспортомНаПЛК</content>
+  <content>CommonTemplate.ОписаниеИзмененийСистемы</content>
+  <content>EventSubscription.гкс_УстановитьПрефиксИнформационнойБазыИОрганизацииНомеруДокумента</content>
+  <content>EventSubscription.гкс_УстановитьПрефиксИнформационнойБазыКодуСправочника</content>
+  <content>FunctionalOption.ПрефиксыОрганизаций</content>
+  <content>FunctionalOptionsParameter.Организация</content>
+  <content>EventSubscription.гкс_УстановитьПрефиксИнформационнойБазыНомеруДокумента</content>
+  <content>CommonModule.гкс_УправлениеДоступом</content>
+  <content>EventSubscription.гкс_ПередЗаписьюДокументаПроверкаНомераПоДатеИОрганизации</content>
+  <subsystems>РассылкиОповещения</subsystems>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

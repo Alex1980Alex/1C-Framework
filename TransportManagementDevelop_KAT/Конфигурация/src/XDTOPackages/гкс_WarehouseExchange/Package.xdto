@@ -1,0 +1,114 @@
+<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="https://warehouse.sodru.com">
+	<objectType name="ExternalSample">
+		<property name="date" type="xs:dateTime"/>
+		<property name="loadDate" type="xs:dateTime"/>
+		<property name="goodId" type="xs:string"/>
+		<property name="goodShortName" type="xs:string"/>
+		<property name="goodName" type="xs:string"/>
+		<property name="stationId" type="xs:string"/>
+		<property name="stationName" type="xs:string"/>
+		<property name="stationDestId" type="xs:string"/>
+		<property name="stationDestName" type="xs:string"/>
+		<property name="orderNumber" type="xs:string"/>
+		<property name="createdOn" type="xs:dateTime"/>
+		<property name="createdUserName" type="xs:string"/>
+		<property name="contractorId" type="xs:string"/>
+		<property xmlns:d3p1="https://warehouse.sodru.com" name="contractor" type="d3p1:Contractor"/>
+		<property name="elevatorId" type="xs:string"/>
+		<property xmlns:d3p1="https://warehouse.sodru.com" name="elevator" type="d3p1:Elevator"/>
+		<property name="logisticsCenterId" type="xs:string"/>
+		<property xmlns:d3p1="https://warehouse.sodru.com" name="logisticsCenter" type="d3p1:LogisticsCenter"/>
+		<property name="inspectionPlace" type="xs:string"/>
+		<property name="clientId" type="xs:string"/>
+		<property xmlns:d3p1="https://warehouse.sodru.com" name="client" type="d3p1:Client"/>
+		<property name="refId" type="xs:string"/>
+		<property name="surveyorElevator" type="xs:string"/>
+		<property name="laboratoryCode" type="xs:string"/>
+		<property name="laboratoryName" type="xs:string"/>
+		<property name="id" type="xs:string"/>
+		<property name="groupId" type="xs:string"/>
+		<property name="isDeleted" type="xs:boolean"/>
+		<property name="userName" type="xs:string"/>
+		<property xmlns:d3p1="https://warehouse.sodru.com" name="externalSampleTestResults" type="d3p1:ExternalSampleTestResults" lowerBound="0" upperBound="-1"/>
+		<property name="transport" type="xs:string"/>
+		<property name="weightGross" type="xs:float"/>
+		<property name="weightTare" type="xs:float"/>
+		<property name="weightNet" type="xs:float"/>
+		<property name="isProcessed" type="xs:boolean"/>
+		<property name="commentary" type="xs:string"/>
+		<property name="sampleId" type="xs:string"/>
+		<property name="receiptId" type="xs:string"/>
+		<property name="receiptStatus" type="xs:integer"/>
+		<property name="priorityExSampleTypeName" type="xs:string"/>
+		<property name="updatedOn" type="xs:dateTime"/>
+	</objectType>
+	<objectType name="Contractor">
+		<property name="id" type="xs:string"/>
+		<property name="name" type="xs:string"/>
+		<property name="name_en" type="xs:string"/>
+		<property name="shortName" type="xs:string"/>
+		<property name="shortName_en" type="xs:string"/>
+		<property name="isDeleted" type="xs:boolean"/>
+		<property name="userName" type="xs:string"/>
+		<property name="isSystem" type="xs:boolean"/>
+		<property name="isOurOrganization" type="xs:boolean"/>
+		<property name="erpId" type="xs:string"/>
+		<property name="updatedOn" type="xs:dateTime"/>
+	</objectType>
+	<objectType name="Elevator">
+		<property name="id" type="xs:string"/>
+		<property name="name" type="xs:string"/>
+		<property name="name_en" type="xs:string"/>
+		<property name="shortName" type="xs:string"/>
+		<property name="shortName_en" type="xs:string"/>
+		<property name="isDeleted" type="xs:boolean"/>
+		<property name="userName" type="xs:string"/>
+		<property name="isSystem" type="xs:boolean"/>
+		<property name="isOurOrganization" type="xs:boolean"/>
+		<property name="erpId" type="xs:string"/>
+		<property name="updatedOn" type="xs:dateTime"/>
+	</objectType>
+	<objectType name="LogisticsCenter">
+		<property name="id" type="xs:string"/>
+		<property name="name" type="xs:string"/>
+		<property name="name_en" type="xs:string"/>
+		<property name="isDeleted" type="xs:boolean"/>
+		<property name="isLocal" type="xs:boolean"/>
+		<property name="isDefaultLogisticsCenter" type="xs:boolean"/>
+		<property name="erpId" type="xs:string"/>
+	</objectType>
+	<objectType name="Client">
+		<property name="id" type="xs:string"/>
+		<property name="name" type="xs:string"/>
+		<property name="name_en" type="xs:string"/>
+		<property name="shortName" type="xs:string"/>
+		<property name="shortName_en" type="xs:string"/>
+		<property name="isDeleted" type="xs:boolean"/>
+		<property name="userName" type="xs:string"/>
+		<property name="isSystem" type="xs:boolean"/>
+		<property name="isOurOrganization" type="xs:boolean"/>
+		<property name="erpId" type="xs:string"/>
+		<property name="updatedOn" type="xs:dateTime"/>
+	</objectType>
+	<objectType name="ExternalSampleTestResults">
+		<property name="id" type="xs:string"/>
+		<property name="externalSampleId" type="xs:string"/>
+		<property name="qualityIndicatorId" type="xs:string"/>
+		<property name="value" type="xs:float"/>
+		<property name="userName" type="xs:string"/>
+		<property name="commentary" type="xs:string"/>
+		<property name="externalSampleTypeId" type="xs:string"/>
+		<property name="externalSampleTypeName" type="xs:string"/>
+		<property xmlns:d3p1="https://warehouse.sodru.com" name="externalSampleType" type="d3p1:ExternalSampleType"/>
+	</objectType>
+	<objectType name="ExternalSampleType">
+		<property name="id" type="xs:string"/>
+		<property name="name" type="xs:string"/>
+		<property name="name_en" type="xs:string"/>
+		<property name="description" type="xs:string"/>
+		<property name="isDeleted" type="xs:boolean"/>
+		<property name="priority" type="xs:integer"/>
+		<property name="isComposite" type="xs:boolean"/>
+		<property name="erpId" type="xs:string"/>
+	</objectType>
+</package>

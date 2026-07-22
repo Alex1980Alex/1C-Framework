@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="69cd7ea4-5771-4b99-b267-8ee990528969">
+  <name>БазовыеОбъекты</name>
+  <synonym>
+    <key>ru</key>
+    <value>Базовые объекты</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>InformationRegister.гкс_ЛогСобытийВебСервисов</content>
+  <content>DataProcessor.гкс_ЗапросникКВебСервисам</content>
+  <content>Catalog.гкс_РесурсыВебСервисов</content>
+  <content>Catalog.гкс_ПодключениеКВебСервисам</content>
+  <content>Role.гкс_ПросмотрЛоговСобытийВебСервисов</content>
+  <content>Role.гкс_НастройкаПодключенийКВебСервисам</content>
+  <content>CommonModule.КоннекторHTTP</content>
+  <content>CommonModule.гкс_РаботаСВебСервисами</content>
+  <content>ScheduledJob.гкс_ОчисткаЛогаВебСервисов</content>
+  <content>CommonModule.гкс_РаботаСВебСервисамиПовтИсп</content>
+  <content>Enum.гкс_ТехнологииОбменаДанными</content>
+  <content>CommonModule.гкс_ПодтверждениеДоставкиСообщений</content>
+  <content>EventSubscription.гкс_ЗафиксироватьСобытиеДляПодтверждениеДоставки</content>
+  <content>InformationRegister.гкс_ПодтвержденияДоставкиСообщений</content>
+  <content>Enum.гкс_ТипПараметраЗапроса</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

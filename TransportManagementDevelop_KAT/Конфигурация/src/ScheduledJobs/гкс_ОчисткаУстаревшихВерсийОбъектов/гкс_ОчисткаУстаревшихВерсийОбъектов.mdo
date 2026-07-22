@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="76d14293-93ca-4b3c-acda-b08a1d4efe50">
+  <name>гкс_ОчисткаУстаревшихВерсийОбъектов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Очистка устаревших версий объектов (истории данных)</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ВерсионированиеОбъектов.ОчисткаУстаревшихВерсийОбъектов</methodName>
+  <description>Очистка устаревших версий объектов (истории данных)</description>
+  <key>Очистка устаревших версий объектов</key>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

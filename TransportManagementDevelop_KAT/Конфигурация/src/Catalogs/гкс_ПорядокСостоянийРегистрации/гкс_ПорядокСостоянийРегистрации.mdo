@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="97879dbf-3336-43b4-9d26-b408ad083aa8">
+  <producedTypes>
+    <objectType typeId="d886f222-5422-45b4-b6c0-8cf0823e0a67" valueTypeId="750a35f8-567b-4024-8b1e-9fc7534bdb02"/>
+    <refType typeId="c03f3d83-09da-4c97-9e8d-e814570f5aec" valueTypeId="5cbe9964-57eb-48ed-821d-ad17c737eb4a"/>
+    <selectionType typeId="618794a4-8bce-4d04-9cb0-3cc56696e5a6" valueTypeId="952fba72-a4c5-4f96-a893-558c7be0ecc0"/>
+    <listType typeId="b34f593d-cba5-4774-ac62-52185f2df677" valueTypeId="339aa0fa-2bb1-4c52-b78d-7f8160a38f0b"/>
+    <managerType typeId="5cb873a9-214c-490c-b57e-77da2b5296ad" valueTypeId="5d452922-f91b-4b18-8b38-05d3df8c78f0"/>
+  </producedTypes>
+  <name>гкс_ПорядокСостоянийРегистрации</name>
+  <synonym>
+    <key>ru</key>
+    <value>Порядок состояний регистрации</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ПорядокСостоянийРегистрации.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_ПорядокСостоянийРегистрации.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>50</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.гкс_ПорядокСостоянийРегистрации.Form.ФормаЭлемента</defaultObjectForm>
+  <attributes uuid="79728c66-3893-4b2b-ad74-7be34174465c">
+    <name>Комментарий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Комментарий</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>200</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="fd03179a-a6ad-4973-a965-33db8b42e5d5">
+    <name>Ответственный</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ответственный</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Пользователи</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <tabularSections uuid="27788e36-a187-4696-ac97-4d2d0fb89612">
+    <producedTypes>
+      <objectType typeId="8ccb4d14-297a-443f-9561-1077418b1111" valueTypeId="3d129b92-f9d5-4956-96a4-45deefed59dd"/>
+      <rowType typeId="10ec151f-c9ec-4e92-89a5-732fe0b903f6" valueTypeId="a2a2914d-176b-4f96-aa7d-65c04860132e"/>
+    </producedTypes>
+    <name>ПорядокСостояний</name>
+    <synonym>
+      <key>ru</key>
+      <value>Порядок состояний</value>
+    </synonym>
+    <attributes uuid="741abbb4-461d-4a83-b0d1-ca5c9678dbc0">
+      <name>НомерПоПорядку</name>
+      <synonym>
+        <key>ru</key>
+        <value>Номер по порядку</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>2</precision>
+          <nonNegative>true</nonNegative>
+        </numberQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="6de5dc91-f4c7-49f2-a3d5-97897703298c">
+      <name>СостояниеРегистрации</name>
+      <synonym>
+        <key>ru</key>
+        <value>Состояние регистрации</value>
+      </synonym>
+      <type>
+        <types>EnumRef.гкс_СостоянияРегистрации</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <forms uuid="b29e4b92-475a-4cd9-959a-9b91ecd1754e">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

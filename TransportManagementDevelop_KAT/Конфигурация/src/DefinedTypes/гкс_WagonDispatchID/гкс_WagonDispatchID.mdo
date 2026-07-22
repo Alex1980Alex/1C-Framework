@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e8f20f3e-9720-4861-9433-f623269e8c07">
+  <producedTypes>
+    <containerType typeId="e61c698c-ceda-4069-96d2-03ede290d997" valueTypeId="91debe47-fd50-481c-9df3-a4f66dd1ea9f"/>
+  </producedTypes>
+  <name>гкс_WagonDispatchID</name>
+  <synonym>
+    <key>ru</key>
+    <value>wagon dispatch ID</value>
+  </synonym>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>15</precision>
+    </numberQualifiers>
+  </type>
+</mdclass:DefinedType>

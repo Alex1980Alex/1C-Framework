@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4dcf8868-433d-4343-97a6-be9d71710c8e">
+  <producedTypes>
+    <refType typeId="95e57600-455b-481d-bce1-e8de1d0b5f28" valueTypeId="eb4a6480-b052-4089-962d-b140f6de4b0a"/>
+    <listType typeId="73de3b2c-a894-413e-80f8-1f18a18459fa" valueTypeId="7a6e0d1b-0efa-412f-a915-78e16eb822b5"/>
+    <managerType typeId="612ff0e1-3702-4d51-8d8d-9819972bfd3e" valueTypeId="f963ac93-01a6-4e81-8be3-774b40d4fc4a"/>
+  </producedTypes>
+  <name>гкс_СостоянияОчередиОтложенногоФормирования</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс состояния очереди отложенного формирования</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="62b28bcb-543e-4d7e-818e-bf6b07893e8d">
+    <name>ЕстьПроблемы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Есть проблемы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="33b963bf-ef6a-4833-9ee9-3aa95f2f4e2f">
+    <name>ОжидаетФормирования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ожидает формирования</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="6282f7dc-22a5-4896-ba72-2bd6d3262147">
+    <name>Пропущено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пропущено</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="ea855889-b7cd-4234-9125-33ccf1fced93">
+    <name>Сформировано</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сформировано</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

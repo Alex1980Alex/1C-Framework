@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f7954be1-86f2-4e13-9837-d2a42dc4d403">
+  <producedTypes>
+    <objectType typeId="4d871765-93b2-4fec-b6dc-0c5aaf4afef5" valueTypeId="f01e06b7-3237-4e5c-8394-219edca8d8fd"/>
+    <refType typeId="9b43f6ee-37ab-4690-83d1-9b8034db6728" valueTypeId="2d2e4e83-c0d8-4ac0-98c3-38f715201385"/>
+    <selectionType typeId="7849a3ae-2fbc-44b2-90b8-1d013b0ba659" valueTypeId="114ea22d-d8af-477d-9da2-ce16e4e79cf9"/>
+    <listType typeId="41660d48-5f4d-405a-81f8-8355be42c984" valueTypeId="41c937a1-2baa-4da0-9882-8809ef1205a9"/>
+    <managerType typeId="a9774ebb-4211-4aea-98db-1495b9a7ffcd" valueTypeId="0d56e029-544a-4730-8a9e-5c339fb5c65e"/>
+  </producedTypes>
+  <name>гкс_ПроизвольныеНастройкиИнтеграций</name>
+  <synonym>
+    <key>ru</key>
+    <value>Произвольные настройки интеграций  (ИАС)</value>
+  </synonym>
+  <inputByString>Catalog.гкс_ПроизвольныеНастройкиИнтеграций.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Произвольная настройка интеграции</value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Произвольные настройки интеграции</value>
+  </listPresentation>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>150</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="1943d2b5-6939-4628-96aa-3aafb65dc696">
+      <name>НеПереноситьДляТестирования</name>
+      <description>Не переносить (Элемент для тестирования)</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <attributes uuid="9f8eb78e-1cbe-41e9-9240-35ef4ace121a">
+    <name>ДопСвойства</name>
+    <synonym>
+      <key>ru</key>
+      <value>Доп свойства</value>
+    </synonym>
+    <type>
+      <types>ValueStorage</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <tabularSections uuid="05eaf328-d5be-4e7b-90f6-0c245f5888bc">
+    <producedTypes>
+      <objectType typeId="92657cfc-93f8-495b-a856-52ed718739d1" valueTypeId="0e6083a5-2ea5-4d81-93dd-338901afbff6"/>
+      <rowType typeId="88195264-b59d-4c8d-8751-293f6a7c001d" valueTypeId="1818d8df-090c-4871-9212-f032a87d7363"/>
+    </producedTypes>
+    <name>Свойства</name>
+    <synonym>
+      <key>ru</key>
+      <value>Свойства</value>
+    </synonym>
+    <attributes uuid="4057ede0-2c77-4630-ba90-13eae2cb911b">
+      <name>Ключ</name>
+      <synonym>
+        <key>ru</key>
+        <value>Ключ</value>
+      </synonym>
+      <type>
+        <types>String</types>
+        <stringQualifiers>
+          <length>150</length>
+        </stringQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="7dbc80a5-8863-4cec-b3b3-b3c76d03b314">
+      <name>Значение</name>
+      <synonym>
+        <key>ru</key>
+        <value>Значение</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+        <types>String</types>
+        <types>Date</types>
+        <types>Number</types>
+        <types>AnyRef</types>
+        <numberQualifiers>
+          <precision>15</precision>
+          <scale>3</scale>
+        </numberQualifiers>
+        <stringQualifiers>
+          <length>150</length>
+        </stringQualifiers>
+        <dateQualifiers/>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+</mdclass:Catalog>

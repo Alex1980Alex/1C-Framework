@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ChartOfCharacteristicTypes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0c6050b8-b79a-411d-a0e3-c62d35746bfd">
+  <producedTypes>
+    <objectType typeId="a02c1958-53b6-472c-a616-c7e4e4651cfe" valueTypeId="5616a22f-5d13-4a82-88c1-8be0d8524049"/>
+    <refType typeId="9172a1da-1538-42db-87bc-327e9c3c4b48" valueTypeId="80e4684d-ef4b-4fa0-9566-ffc02cd20291"/>
+    <selectionType typeId="a272d639-a5c9-4f79-900d-e8cf001b52d8" valueTypeId="b3e01b3c-f4f1-4021-bef7-71f392cc5833"/>
+    <listType typeId="ac55e0b6-b0bb-4de6-a321-ba8a897ad53b" valueTypeId="7bdf09f4-8706-4312-b6e2-102ba6fb0aa4"/>
+    <managerType typeId="01b39558-b6a7-4bce-b1c4-3d3dbc633742" valueTypeId="d9229def-04ab-4c2d-b34c-03afd1df9480"/>
+    <containerType typeId="8684495d-3c32-4c14-8707-de04cf565bed" valueTypeId="914628d1-f80f-4da0-a723-d66ef70a8d55"/>
+  </producedTypes>
+  <name>гкс_ПроизвольныеПредопределенныеОбъекты</name>
+  <synonym>
+    <key>ru</key>
+    <value>Произвольные предопределенные объекты</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>ChartOfCharacteristicTypes.гкс_ПроизвольныеПредопределенныеОбъекты.StandardAttribute.Description</inputByString>
+  <inputByString>ChartOfCharacteristicTypes.гкс_ПроизвольныеПредопределенныеОбъекты.StandardAttribute.Code</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>PredefinedDataName</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>ValueType</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Description</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Code</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>IsFolder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Parent</name>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Predefined</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>DeletionMark</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <createOnInput>DontUse</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <type>
+    <types>CatalogRef.ВидыНоменклатуры</types>
+    <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+    <types>CatalogRef.гкс_ОтветственныеЛица</types>
+    <types>CatalogRef.гкс_ПолучателиДанныхRMQ</types>
+  </type>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <descriptionLength>150</descriptionLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="52445416-958f-4e92-b881-c66ffd6cb8e5">
+      <name>ВидНоменклатурыПродукция</name>
+      <description>Продукция (вид номенклатуры)</description>
+      <code>000000001</code>
+      <type>
+        <types>CatalogRef.ВидыНоменклатуры</types>
+      </type>
+    </items>
+    <items id="4d494cf9-3667-4d1f-8ed6-f1d9b082c8e8">
+      <name>ВидНоменклатурыСырье</name>
+      <description>Сырье (вид номенклатуры)</description>
+      <code>000000002</code>
+      <type>
+        <types>CatalogRef.ВидыНоменклатуры</types>
+      </type>
+    </items>
+    <items id="232f7c8b-9ec2-4be6-afab-02b0f0985cf6">
+      <name>ВидНоменклатурыТорговыеГрузы</name>
+      <description>ТорговыеГрузы (Вид нмоенклатуры)</description>
+      <code>000000003</code>
+      <type>
+        <types>CatalogRef.ВидыНоменклатуры</types>
+      </type>
+    </items>
+    <items id="143e9f6b-1f65-4ec8-ac26-057530b04c40">
+      <name>ЕдиницаИзмеренияТранспортногоДокумента</name>
+      <description>Единица измерения Транспортного документа</description>
+      <code>000000004</code>
+      <type>
+        <types>CatalogRef.УпаковкиЕдиницыИзмерения</types>
+      </type>
+    </items>
+    <items id="fd5466b1-8fd1-4f71-abdd-55821a323f5b">
+      <name>ВидНоменклатурыТовар</name>
+      <description>Вид номенклатуры товар</description>
+      <code>000000005</code>
+      <type>
+        <types>CatalogRef.ВидыНоменклатуры</types>
+      </type>
+    </items>
+    <items id="78a9898c-79de-4e03-8e76-5f7136c00492">
+      <name>РуководительЛаборатории</name>
+      <description>Руководитель лаборатории</description>
+      <code>000000006</code>
+      <type>
+        <types>CatalogRef.гкс_ОтветственныеЛица</types>
+      </type>
+    </items>
+    <items id="715e8804-a55a-4689-bbac-1deaa9f01b3f">
+      <name>ВидыНоменклатурыЭталоныКачества</name>
+      <description>Эталоны качества</description>
+      <code>000000007</code>
+      <type>
+        <types>CatalogRef.ВидыНоменклатуры</types>
+      </type>
+    </items>
+    <items id="9c16b4d2-8604-4267-b3c0-ef8c69860bc4">
+      <name>ПолучательДанныхУправлениеДвором</name>
+      <description>Получатель данных управление двором</description>
+      <code>000000008</code>
+      <type>
+        <types>CatalogRef.гкс_ПолучателиДанныхRMQ</types>
+      </type>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>ChartOfCharacteristicTypes.гкс_ПроизвольныеПредопределенныеОбъекты.Form.ФормаЭлемента</defaultObjectForm>
+  <attributes uuid="c68d8fb8-33e7-4ed9-984d-9f5cca4ea95c">
+    <name>СсылкаНаОбъект</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка на объект</value>
+    </synonym>
+    <type>
+      <types>Characteristic.гкс_ПроизвольныеПредопределенныеОбъекты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <linkByType>
+      <field>ChartOfCharacteristicTypes.гкс_ПроизвольныеПредопределенныеОбъекты.StandardAttribute.ValueType</field>
+    </linkByType>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="7514bc9c-0061-42f9-bf24-e9ec7343ae82">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:ChartOfCharacteristicTypes>

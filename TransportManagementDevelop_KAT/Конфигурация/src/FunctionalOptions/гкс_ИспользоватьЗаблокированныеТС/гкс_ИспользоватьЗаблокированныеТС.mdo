@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e56e0382-0cc5-49dd-9776-d14719e06d6c">
+  <name>гкс_ИспользоватьЗаблокированныеТС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать заблокированные ТС</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьЗаблокированныеТС</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

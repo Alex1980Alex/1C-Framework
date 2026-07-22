@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a06a40ea-1b79-49c5-a6f8-acb53ff3fc99">
+  <name>гкс_Справочник_ЭлектронныеТабло_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение справочника  Электронные табло</value>
+  </synonym>
+</mdclass:Role>

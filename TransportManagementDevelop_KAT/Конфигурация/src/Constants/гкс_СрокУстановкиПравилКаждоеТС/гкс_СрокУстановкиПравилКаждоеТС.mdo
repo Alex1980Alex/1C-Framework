@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d900fab2-a389-468b-9b40-67a2d59d9d9a">
+  <producedTypes>
+    <managerType typeId="df89fae0-52e9-41a1-9929-599aa92f39de" valueTypeId="02a53cdf-3489-40ef-94d5-a1f3192ca2c6"/>
+    <valueManagerType typeId="c117607b-1694-4554-a3b4-9fa6eca6b254" valueTypeId="157cd0bd-41a9-4ce2-8a58-d11f4ff07352"/>
+    <valueKeyType typeId="cc4ef9ef-c72c-45aa-a4e6-6f077912f030" valueTypeId="fb763ade-e46f-4667-b581-dbb12da5a73d"/>
+  </producedTypes>
+  <name>гкс_СрокУстановкиПравилКаждоеТС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Срок установки правил каждое ТС</value>
+  </synonym>
+  <comment>для усиленного контроля</comment>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>2</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

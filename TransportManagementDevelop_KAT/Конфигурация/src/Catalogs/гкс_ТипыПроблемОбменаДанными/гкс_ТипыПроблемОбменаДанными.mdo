@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="daef2f2b-d787-49aa-b180-c5f68982f78b">
+  <producedTypes>
+    <objectType typeId="d247d82a-3844-4f52-a06b-e3cc9a696243" valueTypeId="3769facf-eef2-4a65-bf65-e30c0694a528"/>
+    <refType typeId="3e83f47b-66ef-4277-8a26-93c16c2be23d" valueTypeId="f06e3d64-b069-4fce-abf3-66012480d63e"/>
+    <selectionType typeId="53eadf9c-bc1f-4dfd-ac48-635baf9f28b7" valueTypeId="e57daf43-9a2b-4656-b807-0435e1d26230"/>
+    <listType typeId="82515cfe-fc49-4071-af9e-fafadf6d9b86" valueTypeId="da649090-e929-4993-bd50-d7b1ef85dcf7"/>
+    <managerType typeId="d0c61898-4654-4da4-a38e-74246950938d" valueTypeId="5624a7be-f04e-4e7f-914d-b7df88f7ed42"/>
+  </producedTypes>
+  <name>гкс_ТипыПроблемОбменаДанными</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы проблем обмена данными (ИАС)</value>
+  </synonym>
+  <inputByString>Catalog.гкс_ТипыПроблемОбменаДанными.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Тип проблем обмена данными</value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Типы проблем обмена данными</value>
+  </listPresentation>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>150</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="fac6f3ee-547f-4265-99d2-55563efa34a4">
+      <name>НезаполненныеРеквизиты</name>
+      <description>Незаполненные реквизиты</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="1baab930-1cbd-44a0-8e29-c6a4a448a82a">
+      <name>Неструктурированная</name>
+      <description>Неструктурированная</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="41e0d7f7-203b-439c-be53-5bf59a1ba1e1">
+      <name>ОтложеннаяЗаписьОбъекта</name>
+      <description>Отложенная запись объекта</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="b4d170fc-4cd8-4a90-ac1e-e0e56dd0ca1d">
+      <name>ОтложенноеПроведениеДокумента</name>
+      <description>Отложенное проведение документа</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="b4b6b530-b89c-4532-aab7-9e1b907b8c3b">
+      <name>ОшибкаВыполненияКодаОбработчиковПриОтправкеДанных</name>
+      <description>Ошибка выполнения кода обработчиков при отправке данных</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="bb649725-1209-4590-b052-100d4afbf359">
+      <name>ОшибкаВыполненияКодаОбработчиковПриПолученииДанных</name>
+      <description>Ошибка выполнения кода обработчиков при получении данных</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="86e3f4c6-c49e-41c8-9925-f12f4de39043">
+      <name>ОшибкаОтложенногоФормирования</name>
+      <description>Ошибка отложенного формирования исходящих сообщений</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="b3a95170-0cf0-47e2-9501-55233718d530">
+      <name>ОшибкаПроверкиСконвертированногоОбъекта</name>
+      <description>Ошибка проверки сконвертированного объекта</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="e67a31e0-d77b-4287-ae24-2aebf2a7f6e3">
+      <name>ПроведениеДокумента</name>
+      <description>Проведение документа</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <attributes uuid="d35ae93d-4501-4d1d-9227-7949126ca6bd">
+    <name>Описание</name>
+    <synonym>
+      <key>ru</key>
+      <value>Описание</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+</mdclass:Catalog>

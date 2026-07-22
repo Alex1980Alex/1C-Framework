@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="84e72209-77ff-43fa-8715-a774af529b6f">
+  <producedTypes>
+    <selectionType typeId="6b461ee5-65b6-4447-8fdc-a6dd157abb85" valueTypeId="1142980d-9d85-4a44-addc-6e3cf4a231f3"/>
+    <listType typeId="2e3964ab-9273-4870-9986-2a7970ecdadd" valueTypeId="2f5ca26c-a552-4b4d-afeb-0c8ee5dda052"/>
+    <managerType typeId="b776483f-92a6-4a96-aab5-91da1b273a5a" valueTypeId="aa71c0ff-14c7-4229-8471-7a5a5ee8eee0"/>
+    <recordSetType typeId="a8e9b8ee-629d-4598-91bb-7db76829fcb5" valueTypeId="b02209fd-d19f-4f95-b40a-0ba3d39c2633"/>
+    <recordKeyType typeId="cb93a98c-19d9-4379-abe0-865e8d673563" valueTypeId="f6e6b6ff-3e84-4f3c-94e3-f7ae96931675"/>
+    <recordType typeId="2450073b-85bb-4765-868d-87fbaaa4216c" valueTypeId="2ba631d9-0cf1-4302-a106-01e67b668a23"/>
+    <recordManagerType typeId="1d164653-e9ea-4228-8cdd-fda938006dec" valueTypeId="629183c2-cda6-48c5-aa5a-259a89cf3667"/>
+  </producedTypes>
+  <name>гкс_СРПВТранспортныеДокументыЖДПолученные</name>
+  <synonym>
+    <key>ru</key>
+    <value>Транспортные документы ЖД полученные (СРПВ)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <attributes uuid="c3c2b47c-bb38-446d-9752-53cb71899b87">
+    <name>ДатаПрибытия</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата прибытия</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="27803eb3-ffb8-4cc0-9786-ec406438fe3b">
+    <name>Подобран</name>
+    <synonym>
+      <key>ru</key>
+      <value>Подобран</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="ba250f90-05aa-4268-b935-3c2127e6e4b9">
+    <name>НомерВагона</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер вагона</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_НомерВагона</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="62ae75bd-6c6c-4c5a-bd8c-1447d220f30a">
+    <name>Зарегистрирован</name>
+    <synonym>
+      <key>ru</key>
+      <value>Зарегистрирован</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="44a1d308-4ba3-4afd-b5bc-544049b401c1">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="4033c765-9be0-4361-9237-cd6323d13611">
+    <name>КлючАналитикиСРПВ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ аналитики СРПВ</value>
+    </synonym>
+    <comment>Идентификатор отправки</comment>
+    <type>
+      <types>CatalogRef.гкс_КлючиАналитикиСРПВ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="2174dca8-1573-47f1-ad30-ca61f8cccab8">
+    <name>Прибытие</name>
+    <synonym>
+      <key>ru</key>
+      <value>Прибытие</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_СРПВПрибытиеНаПуть</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="3230061e-6be6-4888-a53f-342cf8e891a6">
+    <name>ТранспортныйДокумент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортный документ</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

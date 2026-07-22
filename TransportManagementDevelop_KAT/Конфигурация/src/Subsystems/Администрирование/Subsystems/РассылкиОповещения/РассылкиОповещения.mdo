@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="30d082f9-451d-4e62-a231-90e466f9f10e">
+  <name>РассылкиОповещения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Рассылки оповещения</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>InformationRegister.гкс_ОчередьСобытийДляОповещений</content>
+  <content>Catalog.гкс_ПодпискиНаРассылкиИОповещения</content>
+  <content>Catalog.ШаблоныСообщений</content>
+  <content>CommonForm.гкс_ОповещениеПользователей</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

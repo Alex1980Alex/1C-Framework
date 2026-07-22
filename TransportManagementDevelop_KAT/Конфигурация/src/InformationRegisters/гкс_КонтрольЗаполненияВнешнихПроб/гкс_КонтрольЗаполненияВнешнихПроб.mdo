@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7ffdef11-f2e6-46ed-89cf-a47082abc454">
+  <producedTypes>
+    <selectionType typeId="5d9c4c80-8be1-4c3e-bfc1-6edc93e63581" valueTypeId="58311a38-9175-41bd-9b9c-6d52419e47aa"/>
+    <listType typeId="0e0f31ba-889f-47d0-bc19-642f6570cba5" valueTypeId="cad525c3-b60a-4c74-92d5-47da986dc1f1"/>
+    <managerType typeId="8eadaa8c-b9dd-4863-866f-bed373a4aeae" valueTypeId="e1ef372a-4759-4ec3-80e8-fb96fc79f58f"/>
+    <recordSetType typeId="1d9a3483-0595-4553-baa8-67603ffa8c24" valueTypeId="8c141a1b-f1d9-4921-815b-c6f06dd29b63"/>
+    <recordKeyType typeId="4b822dc8-d82d-4b9a-b096-a072134871ca" valueTypeId="c23eae53-bfec-4520-8c80-5cf897b644e7"/>
+    <recordType typeId="e3ea8186-8ac4-4775-91e1-4856583a9eb3" valueTypeId="71e7af3c-a9b5-41da-b34d-df39a32b7efb"/>
+    <recordManagerType typeId="c621e6d0-c62c-4b86-94a7-2efb612758de" valueTypeId="35881b22-e221-4f82-baaa-47692975acb2"/>
+  </producedTypes>
+  <name>гкс_КонтрольЗаполненияВнешнихПроб</name>
+  <synonym>
+    <key>ru</key>
+    <value>Контроль заполнения внешних проб</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <attributes uuid="a33a4d03-e012-4842-8162-6bf66935ad14">
+    <name>ТипОбъекта</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип объекта</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыОбъектовWarehouse</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="e93eee12-96ab-4ad0-8f2f-77ce18d92950">
+    <name>ВнешняяПроба</name>
+    <synonym>
+      <key>ru</key>
+      <value>Внешняя проба</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ВнешняяПроба</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="ab02d120-dc81-4ec5-879d-00589610ba24">
+    <name>ОбъектWarehouse</name>
+    <synonym>
+      <key>ru</key>
+      <value>Объект warehouse</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_WarehouseСправочники</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="479f16d8-5951-4707-a6cc-cf85108824de">
+    <name>ФормаСопоставления</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма сопоставления</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <commands uuid="a048df69-a2ab-4359-8623-86ff27935acf">
+    <name>СопостовлениеОбъектовWarehouse</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сопостовление объектов warehouse</value>
+    </synonym>
+    <group>NavigationPanelOrdinary</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:InformationRegister>

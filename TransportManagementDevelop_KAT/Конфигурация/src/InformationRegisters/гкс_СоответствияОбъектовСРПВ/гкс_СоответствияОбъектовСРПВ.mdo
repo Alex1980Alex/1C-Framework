@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a648cd32-d7a8-43ac-a4c6-7c5fbb42b723">
+  <producedTypes>
+    <selectionType typeId="8cb8fe8d-f850-4000-915d-5c7dad15ed73" valueTypeId="4c1df92a-c8e8-45db-ac44-1c6768887183"/>
+    <listType typeId="2d68c652-c6c9-413e-a04e-2bc461e75fad" valueTypeId="2ed48427-6038-4ba9-b668-ec11547906a3"/>
+    <managerType typeId="d137129f-5f69-44dc-a724-c075f560476a" valueTypeId="4e81a75b-0062-4cb3-ade6-a2996a08063b"/>
+    <recordSetType typeId="34f812a2-1d25-4c95-9072-0331020da088" valueTypeId="9a528519-ec7b-48db-ab46-419e349ca264"/>
+    <recordKeyType typeId="a615b59f-e88c-4d8b-82f6-b07a9eafd549" valueTypeId="357c9b58-895f-4ab6-91ee-a40311df3830"/>
+    <recordType typeId="14db7563-1b3b-44d3-9d40-4f415b9faee0" valueTypeId="975dac85-a67b-4918-987a-2b08cc58308b"/>
+    <recordManagerType typeId="5e894e8d-188a-4a0b-aa3e-5de70134444b" valueTypeId="11375243-b938-4415-9f2d-dbf9f1d304f2"/>
+  </producedTypes>
+  <name>гкс_СоответствияОбъектовСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Соответствие объектов (СРПВ)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="1d1a0395-6ab3-427f-a91f-e19acb61f31b">
+    <name>Ссылка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка</value>
+    </synonym>
+    <type>
+      <types>DefinedType.гкс_ИнтеграцияСРПВСправочники</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+  </resources>
+  <dimensions uuid="5f997dee-4bfd-43a0-a2ce-e958b49dd955">
+    <name>ТипОбъектаСРПВ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип объекта СРПВ</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыОбъектовСРПВ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="fe78889d-b5ef-468b-9682-1ab8a10292ff">
+    <name>ИдентификаторСРПВ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор СРПВ</value>
+    </synonym>
+    <comment>Идентификатор объекта СРПВ</comment>
+    <type>
+      <types>DefinedType.гкс_ИдентификаторыСРПВ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

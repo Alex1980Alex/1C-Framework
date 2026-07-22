@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e9989566-7619-48c2-9f8f-edb99648b283">
+  <producedTypes>
+    <refType typeId="9ea33b37-2033-4379-93d5-9d7e62635c6e" valueTypeId="0758ba90-bc72-477a-bd52-bada5d2c944a"/>
+    <listType typeId="1acf0818-e69c-4e19-a32f-e32f58fadeaf" valueTypeId="8684062d-8741-4adc-829f-6d8edcdca883"/>
+    <managerType typeId="cdcb700d-2592-4bac-ae31-ff567cb2d7f2" valueTypeId="83aaa1ce-1989-41dd-bad5-d214913b0054"/>
+  </producedTypes>
+  <name>гкс_СостоянияВходящихСообщенийRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Cостояния обработки сообщений RMQ</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="380e9b80-2667-4228-980a-6a92586bce9d">
+    <name>ВОбработке</name>
+    <synonym>
+      <key>ru</key>
+      <value>В обработке</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="eb2cdd1c-7890-4ecb-8f13-61516c8d8f70">
+    <name>Зарегистрировано</name>
+    <synonym>
+      <key>ru</key>
+      <value>Зарегистрировано</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="02fb1bde-215b-4f58-be73-4b1970a62d2c">
+    <name>Обработано</name>
+    <synonym>
+      <key>ru</key>
+      <value>Обработано</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="0f285a6c-e763-4c11-940f-b0a48c16dd8d">
+    <name>ОшибкаОбработки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ошибка обработки</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="8ee17671-38a5-4e78-99d6-a0088de6c8a9">
+    <name>Пропущено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Пропущено (Не обрабатывать)</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="fa4503c7-7198-4fc7-8458-a128de697dc4">
+    <name>ОшибкаОбработкиЗакрыто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ошибка обработки закрыто</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

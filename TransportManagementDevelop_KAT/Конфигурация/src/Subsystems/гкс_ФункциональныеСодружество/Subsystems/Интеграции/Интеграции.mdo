@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="87bb1cf5-bfac-422d-89e4-48a9ff049fce">
+  <name>Интеграции</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграции</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Role.гкс_БазовыаПраваИнтеграционныйАдаптер</content>
+  <subsystems>БазовыеОбъекты</subsystems>
+  <subsystems>Warehouse</subsystems>
+  <subsystems>Regonline</subsystems>
+  <subsystems>АСУТП</subsystems>
+  <subsystems>Кверион</subsystems>
+  <subsystems>ЛИМС</subsystems>
+  <subsystems>САРА</subsystems>
+  <subsystems>СРПВ</subsystems>
+  <subsystems>УправлениеМатериальнымиПотоками</subsystems>
+  <subsystems>ФГИСЗерно</subsystems>
+  <subsystems>ЭлектронныеТабло</subsystems>
+  <subsystems>ИнтеграцияMFM</subsystems>
+  <subsystems>МорскаяЛогистика</subsystems>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество</parentSubsystem>
+</mdclass:Subsystem>

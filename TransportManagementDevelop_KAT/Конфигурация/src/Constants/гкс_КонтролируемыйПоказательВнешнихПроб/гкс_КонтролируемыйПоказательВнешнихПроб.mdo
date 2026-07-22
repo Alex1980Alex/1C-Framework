@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8d79fd6f-60ca-40b8-a5e1-6900da47f9e2">
+  <producedTypes>
+    <managerType typeId="f775f022-517b-49fc-8ac0-8dfc38fd5116" valueTypeId="5aa3163e-03a6-4d1c-b389-057c613b8535"/>
+    <valueManagerType typeId="22b7215a-7fb5-42bc-b6aa-9ffa00d6df6d" valueTypeId="5f7aae8a-e208-4483-b319-fadba7804342"/>
+    <valueKeyType typeId="2a9d99a3-7f4e-4b08-ba69-241c01502bd0" valueTypeId="5492b2b8-52ea-4655-b4a6-df1440755199"/>
+  </producedTypes>
+  <name>гкс_КонтролируемыйПоказательВнешнихПроб</name>
+  <synonym>
+    <key>ru</key>
+    <value>Контролируемый показатель внешних проб</value>
+  </synonym>
+  <type>
+    <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

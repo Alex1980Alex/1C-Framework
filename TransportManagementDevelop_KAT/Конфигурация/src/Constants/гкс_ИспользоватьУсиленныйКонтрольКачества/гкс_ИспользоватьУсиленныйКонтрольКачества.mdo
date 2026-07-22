@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="45333994-018c-4ab3-b5bf-6a07b9b8a37f">
+  <producedTypes>
+    <managerType typeId="eccad6bd-51ba-46f3-9cb2-c04de46ae6da" valueTypeId="b89f36d6-9652-425c-98bf-2dbd15e9a0e9"/>
+    <valueManagerType typeId="be6443b5-24f0-4eb9-934c-4a7a85f53f6b" valueTypeId="a2258071-898d-4da1-8308-de92f88cb426"/>
+    <valueKeyType typeId="ce34894e-46eb-4194-ac51-0e068566fe26" valueTypeId="d3d93089-db21-41dd-876d-1b7263fd8572"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьУсиленныйКонтрольКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать усиленный контроль качества</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="db5d632a-1a64-4a81-9dbf-ea6a461571ba">
+  <producedTypes>
+    <managerType typeId="3d7c1ce6-fc64-4be8-acce-53d49bd0e16c" valueTypeId="7e613396-c055-41ad-9844-00c81c9d6e46"/>
+    <valueManagerType typeId="e12caf66-d6fd-4d8d-bc67-656342f80adb" valueTypeId="aab35496-a63c-4969-8a2a-dd3b98c8372b"/>
+    <valueKeyType typeId="270ecde7-5c16-4f9c-b4f8-50fe1ac8fa55" valueTypeId="d954ecc2-1e21-4ebd-b44d-bb752fa6c6a0"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьИнтеграциюСМорскойЛогистикой</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию с Морской логистикой</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

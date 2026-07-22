@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8b671a9c-6117-45d2-9f73-330dae9ee07e">
+  <name>ТранспортныеСредстваЛокализация_by</name>
+  <synonym>
+    <key>ru</key>
+    <value>Транспортные средства локализация by</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

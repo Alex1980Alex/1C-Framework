@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="eec6449b-8434-42e2-90e1-8622b8ff04a1">
+  <producedTypes>
+    <objectType typeId="2c99120f-7f09-4576-b3ea-7d3fefe05570" valueTypeId="d300bf31-11c9-4f5f-892c-5ed6556e8048"/>
+    <managerType typeId="1fc41bdb-5c0c-4741-8cf8-c44f3fdf339c" valueTypeId="64652090-7bc3-4b31-9d96-8bb4c5a2b3b1"/>
+  </producedTypes>
+  <name>ИздательСобытий</name>
+  <synonym>
+    <key>ru</key>
+    <value>Издатель событий</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <attributes uuid="c9d5fa4b-e085-41dd-98df-39e199aabf48">
+    <name>ТипТочкиОбмена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип точки обмена</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="a4b1d1f8-3cec-44ef-ba1d-41d6a1ec24a2">
+    <name>ИмяТочкиОбмена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Имя точки обмена</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="9ce58211-84f5-40df-a03a-fbb54a93d339">
+    <name>КлючСоединения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ соединения</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="4e82fcbb-b94d-49c7-93b4-567ca4be5861">
+    <name>ЧастотаПульса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Частота пульса</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+</mdclass:DataProcessor>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2d52db56-4c61-4f0b-8bf3-b8b90f6e9ee7">
+  <name>ИнтеграцияWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция Warehouse</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Catalog.гкс_ПоказателиКачестваWarehouse</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюСWarehouse</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюСWarehouse</content>
+  <content>ScheduledJob.гкс_ПолучениеДанныхWarehouse</content>
+  <content>ScheduledJob.гкс_ОбработкаВходящихДанныхWarehouse</content>
+  <content>Role.гкс_ДобавлениеИзменениеИнтеграцииWarehouse</content>
+  <content>Role.гкс_ЧтениеИнтеграцииWarehouse</content>
+  <content>CommonModule.гкс_ИнтеграцияWarehouse</content>
+  <content>Catalog.гкс_ПродукцияWarehouse</content>
+  <content>Catalog.гкс_ЕдиницыИзмеренияWarehouse</content>
+  <content>Catalog.гкс_ТипыВнешнихПробWarehouse</content>
+  <content>Catalog.гкс_СтанцииWarehouse</content>
+  <content>Catalog.гкс_КонтрагентыWarehouse</content>
+  <content>InformationRegister.гкс_СоответствиеОбъектовWarehouse</content>
+  <content>Constant.гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</content>
+  <content>FunctionalOption.гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4b327c9d-fdfe-4383-a8df-32fc3ba8d599">
+  <name>ОбработкаВызововАсинхронныхСервисов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработка вызовов асинхронных сервисов</value>
+  </synonym>
+  <methodName>CommonModule.АсинхронныеСервисыСлужебный.СлушатьВызовыАсинхронногоСервиса</methodName>
+  <description>Получение сообщений из очереди асинхронно</description>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

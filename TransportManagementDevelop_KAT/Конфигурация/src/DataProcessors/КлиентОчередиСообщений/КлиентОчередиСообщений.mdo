@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4334dcab-d606-48c0-a7b2-0c87ad4ab505">
+  <producedTypes>
+    <objectType typeId="48e0fd29-27ce-404a-a213-116db30cb861" valueTypeId="20d97b55-871b-4969-a2ff-497a05a0111d"/>
+    <managerType typeId="7e07fe09-3bd4-420b-bbe6-919678eed6de" valueTypeId="b97d7e6a-df87-44a8-8577-530f5a1cc957"/>
+  </producedTypes>
+  <name>КлиентОчередиСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Клиент очереди сообщений</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <forms uuid="0c335afe-1b39-475a-8ebd-c7d99f89c510">
+    <name>ТекстОшибки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Текст ошибки</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:DataProcessor>

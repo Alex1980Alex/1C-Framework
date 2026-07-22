@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9eb48d83-0e59-45ba-9ca5-4674df9c1d82">
+  <name>гкс_Документ_ТранспортныйДокумент_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр документов &quot;Транспортный документ&quot;</value>
+  </synonym>
+</mdclass:Role>

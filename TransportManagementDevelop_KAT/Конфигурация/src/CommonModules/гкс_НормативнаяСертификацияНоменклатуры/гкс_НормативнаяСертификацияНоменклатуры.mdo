@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0486857c-6a0a-4fd1-b766-28fbc3e3bb16">
+  <name>гкс_НормативнаяСертификацияНоменклатуры</name>
+  <synonym>
+    <key>ru</key>
+    <value>Нормативная сертификация номеклатуры</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

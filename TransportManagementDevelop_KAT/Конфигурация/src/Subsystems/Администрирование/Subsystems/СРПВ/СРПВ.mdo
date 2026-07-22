@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2e0a405e-9b5d-4190-8825-8ea4c79a7017">
+  <name>СРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>СРПВ</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>InformationRegister.гкс_СоответствияОбъектовСРПВ</content>
+  <content>DefinedType.гкс_ИнтеграцияСРПВСправочники</content>
+  <content>Catalog.гкс_КлючиАналитикиСРПВ</content>
+  <content>DefinedType.гкс_ИдентификаторыСРПВ</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюСРПВ</content>
+  <content>CommonModule.гкс_УчетВагоновСРПВ</content>
+  <content>InformationRegister.гкс_СРПВСписокПунктовРазгрузки</content>
+  <content>Document.гкс_СРПВПрибытиеНаПуть</content>
+  <content>Document.гкс_СРПВПеревеска</content>
+  <content>Document.гкс_СРПВРегистрацияОперацииСВагоном</content>
+  <content>ScheduledJob.гкс_СРПВСозданиеДоументов</content>
+  <content>Enum.гкс_СРПВСтатусыВагонов</content>
+  <content>Constant.гкс_КоличествоДнейВидимостиПрибывшихВагонов</content>
+  <content>DefinedType.гкс_ДокументыСРПВ</content>
+  <content>InformationRegister.гкс_НахождениеВагоновНаПутяхСРПВ</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

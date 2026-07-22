@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0eec80ac-8385-43a5-8371-9d1f70b9ef40">
+  <name>гкс_ОповещениеОПроблемахДоставкиСообщенийСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Оповещение о проблемах доставки сообщений СРПВ</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ПодтверждениеДоставкиСообщений.ОповещениеОПроблемахДоставкиСообщенийСРПВ</methodName>
+  <key>гкс_ОповещениеОПроблемахДоставкиСообщенийСРПВ</key>
+  <use>true</use>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

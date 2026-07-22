@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="16e79d8a-71fa-4263-b1dc-039de9245544">
+  <producedTypes>
+    <refType typeId="1691daae-0ce7-4b39-a740-19c718611063" valueTypeId="7e7c1f89-4271-4488-924f-8192166b1910"/>
+    <listType typeId="ee6a37ed-a6bd-4b6c-9591-04bf161b30e4" valueTypeId="0340ac65-6ecb-4e93-8ceb-028cbc127689"/>
+    <managerType typeId="e81fc05f-68f3-41ca-9704-2e6aeeb0a63e" valueTypeId="0e20682b-30b3-4961-b103-895ef0893da2"/>
+  </producedTypes>
+  <name>гкс_РолиПриПриемкеНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Роли при приемке на ПЛК (гкс)</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="a03a64f7-f045-4e19-8618-00077e1210ff">
+    <name>ВсеРоли</name>
+    <synonym>
+      <key>ru</key>
+      <value>Все роли</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="b15e644b-4d44-4750-a573-9562e4db33ad">
+    <name>Диспетчер</name>
+    <synonym>
+      <key>ru</key>
+      <value>Диспетчер</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="0f8aed80-e167-43fe-b9b0-30184676f880">
+    <name>Регистрация</name>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="e6396bdb-97ad-4afe-9702-41eddca513ff">
+    <name>ВзвешиваниеНаВъезде</name>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешивание на въезде</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="b5dd1a8c-a406-424f-a3ab-cd4925161872">
+    <name>Лаборант</name>
+    <synonym>
+      <key>ru</key>
+      <value>Лаборант</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="eb86bccc-cfb5-4494-8e9f-56b39d69f005">
+    <name>ТолькоПросмотр</name>
+    <synonym>
+      <key>ru</key>
+      <value>Только просмотр</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="fb53fb1b-ff18-408b-a350-e783a0474993">
+    <name>ВзвешиваниеНаВыезде</name>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешивание на выезде</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="9ab8ff40-2948-42a9-8aeb-f22200c74df6">
+    <name>ОтборПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отбор проб</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="713c51af-ca1b-4835-8d26-3d21faaa2c31">
+    <name>РегистрацияЭлектроннойОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация электронной очереди</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="30e41cd7-2dcd-4eac-86c4-f073b957d584">
+    <name>ПодтверждениеРазгрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Подтверждение разгрузки</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="5d5dfffc-2bc6-45b9-8f0f-d10398bda57a">
+    <name>АдминистраторНаПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>Администратор на ПЛК</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="820bbb76-c79f-44d3-a0b0-09860a7f7256">
+    <name>ПереносВЭлектроннойОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Перенос в электронной очереди</value>
+    </synonym>
+    <comment>ERP-1028</comment>
+  </enumValues>
+  <enumValues uuid="5436166d-5c39-466d-b4d6-fe620ae89bbd">
+    <name>ОформлениеПриемки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Оформление приемки / отгрузки</value>
+    </synonym>
+    <comment>ERP-1068</comment>
+  </enumValues>
+  <enumValues uuid="b42352a4-9d4c-4b8c-92d7-2790453dacae">
+    <name>НазначениеЯмРазгрузки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение ям разгрузки</value>
+    </synonym>
+    <comment>ERP-1094</comment>
+  </enumValues>
+  <enumValues uuid="2a136814-a5e9-4412-b7fb-c22fcd568675">
+    <name>РазблокироватьРегистрацию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Разблокировать регистрацию</value>
+    </synonym>
+    <comment>ERP-1673</comment>
+  </enumValues>
+  <enumValues uuid="7e35c30f-00b4-40b6-9f92-e30f9d951646">
+    <name>ПринятиеПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Принятие проб</value>
+    </synonym>
+    <comment>ERP-1966</comment>
+  </enumValues>
+</mdclass:Enum>

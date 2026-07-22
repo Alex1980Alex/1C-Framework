@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c8500549-4bd2-46b7-97f8-24345bb426db">
+  <name>ФормированиеСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формирование сообщений (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>DataProcessor.гкс_ФормировательСообщенийRMQ</content>
+  <content>EventSubscription.гкс_ПриЗаписиРегистровСинхронизацииRMQ</content>
+  <content>EventSubscription.гкс_ПриЗаписиСправочниковСинхронизацииRMQ</content>
+  <content>EventSubscription.гкс_ПриЗаписиДокументовСинхронизацииRMQ</content>
+  <content>EventSubscription.гкс_ПередУдалениемСправочниковОбъектовСинхронизацииRMQ</content>
+  <content>EventSubscription.гкс_ПередУдалениемДокументовОбъектовСинхронизацииRMQ</content>
+  <content>EventSubscription.гкс_ПередЗаписьюСправочниковСинхронизацииRMQ</content>
+  <content>EventSubscription.гкс_ПередЗаписьюДокументовСинхронизацииRMQ</content>
+  <content>DefinedType.гкс_СправочникиОбъектыСинхронизацииRMQ</content>
+  <content>DefinedType.гкс_ДокументыОбъектыСинхронизацииRMQ</content>
+  <content>DefinedType.гкс_НаборыЗаписейОбъектыСинхронизацияRMQ</content>
+  <content>Catalog.гкс_ПолучателиДанныхRMQ</content>
+  <content>Catalog.ИсходящиеСообщения</content>
+  <content>InformationRegister.гкс_СостоянияИсходящихСообщений</content>
+  <content>Enum.гкс_СостоянияИсходящихСообщенийRMQ</content>
+  <content>InformationRegister.гкс_ДанныеОбъектовДляРегистрацииВОбменах</content>
+  <content>CommonCommand.гкс_ПакетнаяВыгрузкаОбъектов</content>
+  <content>DataProcessor.гкс_ОбработчикОчередиОтложенныхСообщений</content>
+  <content>ScheduledJob.гкс_ОтложенноеФормированиеИсходящихСообщений</content>
+  <content>CommonModule.гкс_АлгоритмыИСтруктурыОбработкиИАС</content>
+  <content>Catalog.гкс_ОчередьОтложенногоФормированияИсходящихСообщений</content>
+  <content>Enum.гкс_СостоянияОчередиОтложенногоФормирования</content>
+  <content>XDTOPackage.гкс_EnterpriseDataService</content>
+  <content>InformationRegister.гкс_ИсключаемыеПолучателиПодписокНаОчередиСообщений</content>
+  <content>InformationRegister.гкс_ТекущиеСостоянияСообщений</content>
+  <subsystems>СтандартнаяСериализация</subsystems>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

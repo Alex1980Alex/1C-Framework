@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="edaa1df8-f8ae-47b4-ae84-b56210cff63c">
+  <name>РегламентноеПолучениеСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Регламентное получение сообщений</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.ПолучениеСообщенийСлужебный</content>
+  <content>ScheduledJob.ПолучениеСообщенийИзОчередей</content>
+  <content>CommonModule.ПолучениеСообщенийПереопределяемый</content>
+  <content>Catalog.ПодпискиНаОчередиСообщений</content>
+  <content>Catalog.ОбработчикиСобытийRMQ</content>
+  <content>Enum.ТипКаналаСвязиRMQ</content>
+  <content>InformationRegister.гкс_ОчередьОбработкиВходящихСообщенийRMQ</content>
+  <content>Catalog.гкс_ВходящиеСообщенияRMQ</content>
+  <parentSubsystem>Subsystem.ОчередиСообщенийRMQ</parentSubsystem>
+</mdclass:Subsystem>

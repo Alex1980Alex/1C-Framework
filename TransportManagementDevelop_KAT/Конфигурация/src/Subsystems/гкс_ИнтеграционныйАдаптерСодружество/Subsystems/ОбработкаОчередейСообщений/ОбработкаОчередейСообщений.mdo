@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="33e13a88-9cc3-417f-89cf-af02649bcdef">
+  <name>ОбработкаОчередейСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработка очередей сообщений (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>InformationRegister.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>InformationRegister.гкс_ОчередьОбработкиВходящихСообщенийRMQ</content>
+  <content>InformationRegister.гкс_ПроблемыОбменаДанными</content>
+  <content>DataProcessor.гкс_ЗагрузчикСообщенийRMQ</content>
+  <content>DataProcessor.гкс_ОбработчикСообщенийRMQ</content>
+  <content>Enum.гкс_ДействияОтложеннойОбработки</content>
+  <content>Enum.гкс_СостоянияВходящихСообщенийRMQ</content>
+  <content>Catalog.гкс_ВходящиеСообщенияRMQ</content>
+  <content>ScheduledJob.гкс_ОбработкаОчередиВходящихСообщений</content>
+  <content>ScheduledJob.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>Enum.гкс_СостоянияОбработкиСообщенийRMQ</content>
+  <content>CommonCommand.гкс_ВернутьВОчередь</content>
+  <content>CommonCommand.гкс_ОбработатьБезОчереди</content>
+  <content>CommonCommand.гкс_ПовторноеПроигрываниеСообщений</content>
+  <content>CommonCommand.гкс_ПропуститьОбработку</content>
+  <content>CommandGroup.гкс_ПовторноеПроигрывание</content>
+  <content>DataProcessor.гкс_ЗагрузчикСообщенийRMQСтандартнаяСериализация</content>
+  <content>Catalog.гкс_ПотокиСобытий</content>
+  <content>Catalog.гкс_ЗаданияОбработкиОчередиВходящихСообщенийRMQ</content>
+  <content>CommonModule.гкс_ОбработкаОчередиВходящихСообщенийRMQ</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

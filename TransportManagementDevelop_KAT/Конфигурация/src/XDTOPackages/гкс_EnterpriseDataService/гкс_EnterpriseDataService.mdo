@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:XDTOPackage xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6520c22e-1b08-4969-9c31-a63aa0d51dbf">
+  <name>гкс_EnterpriseDataService</name>
+  <synonym>
+    <key>ru</key>
+    <value>Enterprise data service</value>
+  </synonym>
+  <namespace>http://sodru.com/edi/edi_stnd/EnterpriseData/Service/1.1</namespace>
+</mdclass:XDTOPackage>

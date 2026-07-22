@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d02537b1-5f73-4765-ba1d-7d327d32ab49">
+  <producedTypes>
+    <selectionType typeId="869f5fe3-5714-48ac-a598-f319610b8372" valueTypeId="45c03339-1833-4111-b63b-0c352fe7f6b5"/>
+    <listType typeId="955e1333-c833-46c8-98fc-732d606538f2" valueTypeId="fe0f799c-fcd5-429e-a6e8-dbcd54001364"/>
+    <managerType typeId="155a2b18-4d4f-4126-9b60-74575d068b33" valueTypeId="b517b83c-be77-4db8-ac0b-67519c309133"/>
+    <recordSetType typeId="a5e060ef-d985-4a1d-a134-2c80c944f49a" valueTypeId="def1ae70-df61-4d77-bd13-45db40eca2ba"/>
+    <recordKeyType typeId="84c5b6e6-ad1a-4a64-ac7b-b5d0ba13ab02" valueTypeId="51863694-d1ed-441e-a13c-ef6b4c873d12"/>
+    <recordType typeId="a87c004d-1df7-4fbb-a07b-cf94d0751b4c" valueTypeId="6ec182ad-f43a-4a18-8fe0-a42ed129573a"/>
+    <recordManagerType typeId="d892e192-485e-491a-8de8-53759ba4b18f" valueTypeId="38de9d75-5c5c-433a-b1e2-3661f1ff9d20"/>
+  </producedTypes>
+  <name>гкс_СостоянияВходящихСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Состояние входящих сообщений (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultListForm>InformationRegister.гкс_СостоянияВходящихСообщений.Form.ФормаСписка</defaultListForm>
+  <informationRegisterPeriodicity>Second</informationRegisterPeriodicity>
+  <mainFilterOnPeriod>true</mainFilterOnPeriod>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <listPresentation>
+    <key>ru</key>
+    <value>Состояние входящих сообщений</value>
+  </listPresentation>
+  <resources uuid="e5cc3962-a5d0-423d-b77a-f94757f5d5c0">
+    <name>Состояние</name>
+    <synonym>
+      <key>ru</key>
+      <value>Состояние</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СостоянияВходящихСообщенийRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+  </resources>
+  <dimensions uuid="a0dd0f05-d8d1-47ec-94aa-2cdafbb8f7db">
+    <name>Сообщение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сообщение</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ВходящиеСообщенияRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="45207733-7e50-4a8b-9f02-0be5d0b1fe37">
+    <name>УниверсальнаяДатаСобытияВМиллисекундах</name>
+    <synonym>
+      <key>ru</key>
+      <value>Универсальная дата события в миллисекундах</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <indexing>Index</indexing>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="7c55c492-2b1c-4149-9de9-45d5403931dd">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

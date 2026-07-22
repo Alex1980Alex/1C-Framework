@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:XDTOPackage xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a4cda078-d574-4b38-a168-7b55e82ec165">
+  <name>гкс_ЭлектронныеТаблоПриемкиАвто</name>
+  <synonym>
+    <key>ru</key>
+    <value>Электронные табло приемки авто (гкс)</value>
+  </synonym>
+  <namespace>http://sodrugestvo.com/onec-adapter/online-car-queue-acceptance</namespace>
+</mdclass:XDTOPackage>

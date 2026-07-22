@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e978ed31-98db-4787-9ec5-9fa124540f38">
+  <name>гкс_ВзаимодействиеССервисомLIMs</name>
+  <synonym>
+    <key>ru</key>
+    <value>Взаимодействие с сервисом ЛИМС</value>
+  </synonym>
+</mdclass:Role>

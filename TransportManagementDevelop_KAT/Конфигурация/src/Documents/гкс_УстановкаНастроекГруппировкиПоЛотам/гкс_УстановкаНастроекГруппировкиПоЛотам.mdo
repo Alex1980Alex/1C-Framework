@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="be702525-7a95-46ce-a922-81c5ddda966d">
+  <producedTypes>
+    <objectType typeId="39a6f57c-aa9d-4511-bb9e-6ecd14a7c551" valueTypeId="f0e2663a-6fd8-41cc-b0f9-a4db3b6bf223"/>
+    <refType typeId="c4fccacf-a73c-4c83-a2c0-88c168cff29b" valueTypeId="9c5228d6-c792-4d8f-9f48-6bcd5430b33f"/>
+    <selectionType typeId="63a2756b-63c0-4a0a-8e48-ca62949fd3ec" valueTypeId="82c5622d-a6d9-4cd4-bdb2-a2bd9373e327"/>
+    <listType typeId="81d0f7ea-8104-4eaf-b010-5fd8aa63bbfd" valueTypeId="6b1ef77a-f095-40ac-9850-06d486e7d136"/>
+    <managerType typeId="b014cd7f-a496-412f-8187-2b474689409d" valueTypeId="a42816ef-3d38-4e21-a27c-a0ca2fbb529d"/>
+  </producedTypes>
+  <name>гкс_УстановкаНастроекГруппировкиПоЛотам</name>
+  <synonym>
+    <key>ru</key>
+    <value>Установка настроек группировки по лотам</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Document.гкс_УстановкаНастроекГруппировкиПоЛотам.StandardAttribute.Number</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <numberType>String</numberType>
+  <numberLength>9</numberLength>
+  <numberAllowedLength>Variable</numberAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultObjectForm>Document.гкс_УстановкаНастроекГруппировкиПоЛотам.Form.ФормаДокумента</defaultObjectForm>
+  <registerRecords>InformationRegister.гкс_НастройкиГруппировкиПоЛотам</registerRecords>
+  <postInPrivilegedMode>true</postInPrivilegedMode>
+  <unpostInPrivilegedMode>true</unpostInPrivilegedMode>
+  <attributes uuid="094df92e-dca1-4b6e-a2cc-6f384846b149">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>ПЛК</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="a017aeaa-e662-4ff2-99a2-32654217760b">
+    <name>ФормаДокумента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма документа</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <tabularSections uuid="f1facafc-42d7-440b-8448-8e04e4cdd4b6">
+    <producedTypes>
+      <objectType typeId="8418b98a-3b36-41f5-a4a0-5cce3e5f3868" valueTypeId="83987508-6e18-4db9-b89c-888dcbbc8428"/>
+      <rowType typeId="111e19cc-49c5-4722-96b5-1ae93aea55fd" valueTypeId="c6ebb458-dcd1-4cee-abbd-646964fefca2"/>
+    </producedTypes>
+    <name>НастройкиГруппировки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки группировки</value>
+    </synonym>
+    <attributes uuid="c8b39ffc-bb7a-4140-bfff-56204b686b36">
+      <name>ОбъемГрузаОт</name>
+      <synonym>
+        <key>ru</key>
+        <value>Объем груза, от (т)</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>10</precision>
+          <nonNegative>true</nonNegative>
+        </numberQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="4fe30f77-b997-42d8-9b50-9a25d66bdc4b">
+      <name>ОбъемГрузаДо</name>
+      <synonym>
+        <key>ru</key>
+        <value>Объем груза, до (т)</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>10</precision>
+          <nonNegative>true</nonNegative>
+        </numberQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="0b79326f-5e09-468e-bed9-e4ad32215a73">
+      <name>ОбъемЛота</name>
+      <synonym>
+        <key>ru</key>
+        <value>Объем лота (т)</value>
+      </synonym>
+      <type>
+        <types>Number</types>
+        <numberQualifiers>
+          <precision>10</precision>
+          <nonNegative>true</nonNegative>
+        </numberQualifiers>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+</mdclass:Document>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="878b1766-3102-4000-83a2-6f7473b2258c">
+  <name>ИспользованиеОчередейСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использование очередей сообщений</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2341b24b-9aa7-4aab-9646-e208039071da">
+  <producedTypes>
+    <managerType typeId="cf95b1a8-9a55-4178-a00d-fdd294a3e34f" valueTypeId="2d61ad51-88b8-459c-9fa6-d3440dbec758"/>
+    <valueManagerType typeId="cdc54727-1594-4b51-8de3-029bbfcd9c4c" valueTypeId="78a50820-1a24-465b-82db-aa715f03eee8"/>
+    <valueKeyType typeId="573ca1fb-5c8a-43dd-bcd6-8c2608e78475" valueTypeId="b55ae222-9c0a-41a1-b5c3-26334fc515dd"/>
+  </producedTypes>
+  <name>гкс_ОпределятьГрузополучателяПоМестуХранения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Определять грузополучателя по месту хранения</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

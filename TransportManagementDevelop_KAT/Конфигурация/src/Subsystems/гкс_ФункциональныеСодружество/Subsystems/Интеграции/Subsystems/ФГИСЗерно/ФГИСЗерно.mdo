@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="36f46ea0-06c4-4a06-ab65-6a4b5d56e6be">
+  <name>ФГИСЗерно</name>
+  <synonym>
+    <key>ru</key>
+    <value>ФГИСЗерно</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Catalog.гкс_СДИЗЗЕРНО</content>
+  <content>Enum.СтатусыСДИЗЗЕРНО</content>
+  <content>Constant.гкс_ИспользоватьФГИСЗерно</content>
+  <content>FunctionalOption.гкс_ИспользоватьФГИСЗерно</content>
+  <content>CommonModule.гкс_УчетФГИСЗерно</content>
+  <content>AccumulationRegister.гкс_СДИЗНаПЛК</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

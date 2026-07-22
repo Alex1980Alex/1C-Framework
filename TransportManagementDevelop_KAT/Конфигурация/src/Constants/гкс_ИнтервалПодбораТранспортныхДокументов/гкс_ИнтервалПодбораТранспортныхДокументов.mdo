@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="54bf7688-9918-4e51-8436-b3fe9fa54fa9">
+  <producedTypes>
+    <managerType typeId="c93e7624-02ef-4ea3-874b-616f0b0ed440" valueTypeId="52035732-f343-4d6e-a3c7-49aa9a73ad49"/>
+    <valueManagerType typeId="cfc59a78-55da-4c1a-b110-d1f62b992c34" valueTypeId="3d377993-fd34-4441-b6d2-ace821e6cdc2"/>
+    <valueKeyType typeId="55263b99-dd2e-42e2-80b6-6b957410484c" valueTypeId="9248f9e7-9d21-4aca-b934-e5b7e09f96b8"/>
+  </producedTypes>
+  <name>гкс_ИнтервалПодбораТранспортныхДокументов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интервал подбора транспортных документов</value>
+  </synonym>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>3</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <explanation>
+    <key>ru</key>
+    <value>Количество дней отступа от даты регистрации для определения даты начала поиска транспортного документа</value>
+  </explanation>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

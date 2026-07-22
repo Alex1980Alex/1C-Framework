@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="efaac457-aa16-441d-8f26-984bf388d9ec">
+  <producedTypes>
+    <managerType typeId="f1e227a1-1ab5-4045-941d-36c30a54b85b" valueTypeId="9c4fd69c-aaba-4d0b-8f4b-7e5ece76cc9f"/>
+    <valueManagerType typeId="530012c1-38ea-4ca9-be3b-651683780c26" valueTypeId="de37e6cd-d3af-4463-b4da-d0266783a573"/>
+    <valueKeyType typeId="247bfaf8-67f8-4fb6-8650-525bf1fdcdf4" valueTypeId="1d6b0e02-2216-45d1-83fb-1378685792f3"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьКонтрольВместимостиСкладов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль вместимости складов</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

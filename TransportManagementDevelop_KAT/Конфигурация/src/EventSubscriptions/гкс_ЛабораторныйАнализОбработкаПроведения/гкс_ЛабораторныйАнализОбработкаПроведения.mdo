@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:EventSubscription xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4fe2e0f4-89fc-43b4-a879-ed2c2790fdb6">
+  <name>гкс_ЛабораторныйАнализОбработкаПроведения</name>
+  <synonym>
+    <key>ru</key>
+    <value>После проведения лабораторного анализа</value>
+  </synonym>
+  <source>
+    <types>DocumentObject.гкс_ЛабораторныйАнализ</types>
+  </source>
+  <event>Posting</event>
+  <handler>CommonModule.гкс_ВходнойКонтрольКачества.ПриПроведенииЛабораторногоАнализа</handler>
+</mdclass:EventSubscription>

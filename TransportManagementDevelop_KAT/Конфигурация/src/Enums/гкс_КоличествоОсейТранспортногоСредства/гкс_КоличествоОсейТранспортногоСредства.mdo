@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fc6069ff-910a-4d06-93cd-8c9dd273eaec">
+  <producedTypes>
+    <refType typeId="97fc2ddd-aa90-4a05-8e92-feff6cd235e1" valueTypeId="dc244550-c127-41e0-a5f6-1a6c643516a1"/>
+    <listType typeId="f66fa91f-9706-4727-a141-78647ef56a86" valueTypeId="1f634400-6b10-4421-88ba-986bc9da23ba"/>
+    <managerType typeId="f0dfeb4d-b654-4ff9-af6a-3af5c5145326" valueTypeId="388190f6-3ab0-4afa-91f8-925b76a10039"/>
+  </producedTypes>
+  <name>гкс_КоличествоОсейТранспортногоСредства</name>
+  <synonym>
+    <key>ru</key>
+    <value>Количество осей транспортного средства</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="28df17b8-a64a-4296-87b9-d211c5ea98de">
+    <name>Двухосный</name>
+    <synonym>
+      <key>ru</key>
+      <value>2-осный</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="a1b53056-261a-4dfe-ac63-4a28feb2b424">
+    <name>Трехосный</name>
+    <synonym>
+      <key>ru</key>
+      <value>3-осный</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="42082cc4-24e1-4b41-9eff-fbd5eacae56c">
+    <name>Четырехосный</name>
+    <synonym>
+      <key>ru</key>
+      <value>4-осный</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="9c81072a-18cc-4a4e-9123-9d0932882003">
+    <name>Пятиосный</name>
+    <synonym>
+      <key>ru</key>
+      <value>5-осный</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="93bfa57c-1ddd-4225-b7de-71dd1f19d0ea">
+    <name>Шестиосный</name>
+    <synonym>
+      <key>ru</key>
+      <value>6-осный</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

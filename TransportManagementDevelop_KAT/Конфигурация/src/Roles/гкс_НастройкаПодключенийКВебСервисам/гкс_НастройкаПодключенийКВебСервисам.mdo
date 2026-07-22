@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="485c3956-7779-4df1-84b1-76f5194fcc4f">
+  <name>гкс_НастройкаПодключенийКВебСервисам</name>
+  <synonym>
+    <key>ru</key>
+    <value>(гкс) Настройка подключений к веб сервисам</value>
+  </synonym>
+</mdclass:Role>

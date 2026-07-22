@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c58c6b29-2b6f-4045-aacb-76b7be250d66">
+  <name>гкс_РегистрСведений_ОформленныеПартии_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Оформленные партии&quot;</value>
+  </synonym>
+</mdclass:Role>

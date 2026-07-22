@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f68cf1b0-4df7-45b5-af07-4cdd4a3f5e87">
+  <producedTypes>
+    <selectionType typeId="5214b585-0ecc-4e5a-8eb0-6bf6ea515ee4" valueTypeId="96884e70-db7d-48e5-8ee2-7b223db7299d"/>
+    <listType typeId="80ee69f5-0b74-4061-b6e7-6d43371043ff" valueTypeId="dc574e84-7e9c-4bdf-8111-8a0c75dc35b0"/>
+    <managerType typeId="5c61fb50-0067-4818-9b21-636d83439b3e" valueTypeId="2272c61e-cfca-4516-96bf-c4be25777844"/>
+    <recordSetType typeId="e1e6b6e5-ef0c-4a3e-91b2-10f61d991c49" valueTypeId="841951dc-eaf2-46e4-bfa4-453f80aedff1"/>
+    <recordKeyType typeId="93a75565-2b68-4dbe-856a-6789615fd269" valueTypeId="07dc03e1-6a05-4e56-8710-d16114eec011"/>
+    <recordType typeId="8faf6149-7648-4f7e-a1ea-4aa67134fdfb" valueTypeId="dda27532-4c92-4086-abcf-67df5fadc492"/>
+    <recordManagerType typeId="da98bc91-4932-423b-83ac-3711034b31a3" valueTypeId="ba2dfcdf-bd89-42bf-a812-8de010725f41"/>
+  </producedTypes>
+  <name>гкс_ТекущиеСостоянияСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Текущие состояния сообщений</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultListForm>InformationRegister.гкс_ТекущиеСостоянияСообщений.Form.ФормаСписка</defaultListForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="cd52df97-4a72-4aad-8c57-4de97ce6414f">
+    <name>Состояние</name>
+    <synonym>
+      <key>ru</key>
+      <value>Состояние</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СостоянияИсходящихСообщенийRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <indexing>Index</indexing>
+  </resources>
+  <dimensions uuid="4ab07369-9474-476c-88d9-d8014ca58e61">
+    <name>Сообщение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сообщение</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ИсходящиеСообщения</types>
+      <types>CatalogRef.гкс_ВходящиеСообщенияRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="65095f0f-0b2b-45d6-8b30-ea11498986ec">
+    <name>ТипСообщения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип сообщения</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыСообщений</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="6511125b-2522-4c81-92b2-512acb34aed5">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

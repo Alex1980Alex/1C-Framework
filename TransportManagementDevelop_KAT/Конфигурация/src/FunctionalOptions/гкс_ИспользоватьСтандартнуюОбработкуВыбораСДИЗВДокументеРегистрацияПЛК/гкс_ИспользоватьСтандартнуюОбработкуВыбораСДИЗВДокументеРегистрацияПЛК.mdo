@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="68167479-85f9-4814-9c52-3f126612eb90">
+  <name>гкс_ИспользоватьСтандартнуюОбработкуВыбораСДИЗВДокументеРегистрацияПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать стандартную обработку выбора СДИЗ в документе Регистрация на ПЛК</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьСтандартнуюОбработкуВыбораСДИЗВДокументеРегистрацияПЛК</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

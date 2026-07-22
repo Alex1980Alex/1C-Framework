@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b232aa61-739f-42f7-bf48-53ef6aaa0ffd">
+  <name>гкс_РегистрСведений_КодыПоказателейКачестваЛИМС_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;Коды показателей качества ЛИМС&quot;</value>
+  </synonym>
+</mdclass:Role>

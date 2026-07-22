@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="427e5ba5-edac-4a42-960b-2144e5909392">
+  <producedTypes>
+    <managerType typeId="343264ff-6999-4b0b-ba03-a98044e0cfcb" valueTypeId="0ecfbd15-836b-4c76-b023-9a98fda1ac34"/>
+    <valueManagerType typeId="63f62c75-ac6c-4291-b7f9-e8eb64bee5cb" valueTypeId="98114cfc-5300-44f7-9356-f5c65dd7e295"/>
+    <valueKeyType typeId="b8800f92-5107-45e3-b3b9-bbfa0e9c51f7" valueTypeId="0334859f-031b-4ff2-be92-91b2bf443d8b"/>
+  </producedTypes>
+  <name>гкс_АвтоматическаяПечатьЭтикеток</name>
+  <synonym>
+    <key>ru</key>
+    <value>Автоматическая печать этикеток</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

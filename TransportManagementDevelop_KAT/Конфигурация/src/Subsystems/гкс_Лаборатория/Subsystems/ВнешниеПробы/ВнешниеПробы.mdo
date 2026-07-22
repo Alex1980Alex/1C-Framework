@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8af123a4-5b66-4a32-9600-ab4bac9c798a">
+  <name>ВнешниеПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Внешние пробы</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Catalog.гкс_ПоказателиКачестваWarehouse</content>
+  <content>Role.гкс_ЧтениеЛабораторияВнешнихПроб</content>
+  <content>Role.гкс_ДобавлениеИзменениеЛабораторияВнешнихПроб</content>
+  <content>Catalog.гкс_ПродукцияWarehouse</content>
+  <content>DataProcessor.гкс_ОбработкаЗагрузкиВнешнихПроб</content>
+  <content>Document.гкс_ВнешняяПроба</content>
+  <content>Document.гкс_ЗаявкаНаПеревозку</content>
+  <content>InformationRegister.гкс_ВнешниеПробыПоЗаявкамНаПеревозку</content>
+  <content>InformationRegister.гкс_КонтрольЗаполненияВнешнихПроб</content>
+  <content>Report.гкс_НаличиеВнешнейПробы</content>
+  <content>Constant.гкс_КонтролируемыйПоказательВнешнихПроб</content>
+  <parentSubsystem>Subsystem.гкс_Лаборатория</parentSubsystem>
+</mdclass:Subsystem>

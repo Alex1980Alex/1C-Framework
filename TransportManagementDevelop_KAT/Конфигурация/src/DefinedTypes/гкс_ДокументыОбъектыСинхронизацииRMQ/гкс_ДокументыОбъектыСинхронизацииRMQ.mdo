@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b1bec7d5-1c1a-4abb-8769-fe07b623cbf9">
+  <producedTypes>
+    <containerType typeId="794fc88d-cbda-403c-931c-8be0287e4ae1" valueTypeId="ae0b35f3-59eb-4a1d-8416-bed4e0c539b2"/>
+  </producedTypes>
+  <name>гкс_ДокументыОбъектыСинхронизацииRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Документы-объекты синхронизации RMQ (Интеграционый адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+  <type>
+    <types>DocumentObject.гкс_ОснованиеДляДвиженияЗапасов</types>
+    <types>DocumentObject.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</types>
+    <types>DocumentObject.гкс_ВнешняяПроба</types>
+    <types>DocumentObject.гкс_ТранспортныйДокумент</types>
+    <types>DocumentObject.гкс_НаправлениеНаРазгрузку</types>
+    <types>DocumentObject.гкс_ЗаписьВГрафикПриемкиПЛК</types>
+    <types>DocumentObject.гкс_РегистрацияНаПЛК</types>
+    <types>DocumentObject.гкс_СРПВПеревеска</types>
+    <types>DocumentObject.гкс_ЗаписьВГрафикОтгрузкиПЛК</types>
+    <types>DocumentObject.гкс_ЗаписьВОчередьОтгрузкиПЛК</types>
+    <types>DocumentObject.гкс_РеестрНакладныхЗПП3</types>
+    <types>DocumentObject.гкс_ЛабораторныйАнализ</types>
+    <types>DocumentObject.гкс_ЗаписьВОчередьПриемкиПЛК</types>
+    <types>DocumentObject.гкс_ВъездНаКПП</types>
+  </type>
+</mdclass:DefinedType>

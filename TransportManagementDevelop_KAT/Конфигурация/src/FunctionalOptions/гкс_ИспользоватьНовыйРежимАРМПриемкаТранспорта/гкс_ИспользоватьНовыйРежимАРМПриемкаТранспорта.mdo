@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="016949be-41fe-4680-90f7-541490f0d38a">
+  <name>гкс_ИспользоватьНовыйРежимАРМПриемкаТранспорта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать новый режим АРМ Приемка транспорта</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьНовыйРежимАРМПриемкаТранспорта</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

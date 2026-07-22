@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="dc570f6f-17cb-47eb-8a66-569e287cce7f">
+  <producedTypes>
+    <objectType typeId="8a4a6381-1e20-43c1-b009-0f6cbc99b502" valueTypeId="d843bd3e-3ef9-4761-a9b9-956da0717b2a"/>
+    <managerType typeId="c7e6d052-8ab6-4d55-ae18-e14757c8eb95" valueTypeId="9e203f4d-a62b-43cb-a933-0fd934e13ca5"/>
+  </producedTypes>
+  <name>гкс_ПечатьПриемныйАкт_ЗПП14</name>
+  <synonym>
+    <key>ru</key>
+    <value>Печать приемного акта ЗПП-14</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>DataProcessor.гкс_ПечатьПриемныйАкт_ЗПП14.Form.Форма</defaultForm>
+  <forms uuid="9ca8a353-29e8-4418-8358-b957f04f55d4">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="e0f309e7-ade7-48a7-ae87-892fb6ab90ad">
+    <name>ПФ_MXL_ПриемныйАктЛокализация_by</name>
+    <synonym>
+      <key>ru</key>
+      <value>форма Приемный акт</value>
+    </synonym>
+  </templates>
+</mdclass:DataProcessor>

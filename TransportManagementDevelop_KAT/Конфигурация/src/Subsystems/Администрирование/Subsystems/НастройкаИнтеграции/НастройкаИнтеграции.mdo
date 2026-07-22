@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e2b21c49-6663-4da3-93ac-7c762e6e2473">
+  <name>НастройкаИнтеграции</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка интеграции</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>DataProcessor.ПанельАдминистрированияБИД</content>
+  <content>Constant.гкс_ИспользоватьСервисАутентификации1СДокументооборот</content>
+  <content>CommonForm.гкс_НастройкаПодключенияКСервисуАутентификацииДО</content>
+  <content>Catalog.гкс_ПодключениеКВебСервисам</content>
+  <content>InformationRegister.гкс_НастройкиПодтвержденияДоставкиСообщений</content>
+  <parentSubsystem>Subsystem.Администрирование</parentSubsystem>
+</mdclass:Subsystem>

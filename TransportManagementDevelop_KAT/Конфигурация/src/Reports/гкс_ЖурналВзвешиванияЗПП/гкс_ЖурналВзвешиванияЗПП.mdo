@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2969ca6a-2178-489a-b48f-70cb3d68ca0b">
+  <producedTypes>
+    <objectType typeId="431bf549-1be5-449b-a09f-f03405703b96" valueTypeId="dc1e649f-2818-4aac-9146-8cc72586ca64"/>
+    <managerType typeId="b14bcdd4-3ab3-4dca-8fd5-9e209a45c036" valueTypeId="b4dcf20e-0a56-4af7-87ef-c1c6211a52f2"/>
+  </producedTypes>
+  <name>гкс_ЖурналВзвешиванияЗПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Журнал взвешивания</value>
+  </synonym>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_ЖурналВзвешиванияЗПП.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="074defb3-6704-477b-8e26-db16fab5c590">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="175214a6-e4b4-4c7a-8d31-059dfb1897da">
+  <producedTypes>
+    <selectionType typeId="960836fc-4962-4965-9ab9-b7713ddfb9da" valueTypeId="e96b892d-a9dd-4625-8307-cb3067e830d6"/>
+    <listType typeId="fc38bb6c-c5a1-48b2-a797-5bdce75ec210" valueTypeId="3a450d14-3f3d-44a7-bee3-7af8e198a566"/>
+    <managerType typeId="41d9cd64-48a5-48fb-918d-3bb9ba9f2525" valueTypeId="0307ac22-0b2d-49aa-82a4-30a84a239f74"/>
+    <recordSetType typeId="40d5c8a8-ffc1-4b01-863f-f0ace5e239b1" valueTypeId="9932bb6f-ae22-42f2-b487-4bf79b3f206a"/>
+    <recordKeyType typeId="b64a2988-f3d1-48b5-8a4d-1c6d600a1e81" valueTypeId="8cf0784b-c744-4841-9a36-0b2b08c6be4a"/>
+    <recordType typeId="fa5ab634-b2be-408c-9795-2482bf3df9f1" valueTypeId="e46a1967-b2ee-4a1d-918f-ed0c61290b08"/>
+    <recordManagerType typeId="ee29ca49-7719-477a-a870-f47fe66d53bf" valueTypeId="d3d8d875-4230-47e3-a59f-cfb9aea46bff"/>
+  </producedTypes>
+  <name>гкс_ПриоритетыПоказателейКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Приоритеты показателей качества</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="87e5b9cb-84ea-4a79-b502-e3665743d280">
+    <name>Приоритет</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приоритет</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>2</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="658aec3c-9680-4a3c-a529-3f74c5ff9ef9">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="aaf1bf06-c19c-4b6e-a4e5-c285b1303de0">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

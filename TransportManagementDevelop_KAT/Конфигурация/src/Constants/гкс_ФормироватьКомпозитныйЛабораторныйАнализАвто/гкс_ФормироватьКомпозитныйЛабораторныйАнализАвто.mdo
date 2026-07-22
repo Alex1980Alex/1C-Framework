@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="25254245-c8c1-4bde-ac25-f7255124a063">
+  <producedTypes>
+    <managerType typeId="8e09b9c9-42f0-47d6-81ea-22dbbe8f73a3" valueTypeId="c9c91b92-1dca-4699-89c5-ae40b6893d0f"/>
+    <valueManagerType typeId="47a6994b-d3c4-4e71-8241-c3a17329ecbc" valueTypeId="4bec76fe-79f8-4217-9597-5e55a9c62dc7"/>
+    <valueKeyType typeId="c6b19c75-a69f-49ad-9924-dc85a63d7f5e" valueTypeId="0b4a781c-93df-423d-8675-8cc37d3f8bc6"/>
+  </producedTypes>
+  <name>гкс_ФормироватьКомпозитныйЛабораторныйАнализАвто</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формировать композитный лабораторный анализ авто</value>
+  </synonym>
+  <comment>Формировать композитный лабораторный анализ авто</comment>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2d33f810-3977-4ce8-aead-4fb95c3be670">
+  <producedTypes>
+    <managerType typeId="cb184052-6d1f-4c87-a79d-4ae5be93f1a1" valueTypeId="a8b3eea4-9385-434c-b67b-c151be94ab5c"/>
+    <valueManagerType typeId="87b4d28a-6f09-41c9-9dba-0c99dac36682" valueTypeId="1b604fea-9967-4cbc-a84e-7858bf57295b"/>
+    <valueKeyType typeId="edbf092a-9888-4cc5-9c00-9383d5b9a08e" valueTypeId="8d70d3c8-c2e8-4306-aaef-4aa281f244f9"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьСтандартнуюОбработкуВыбораСДИЗВДокументеРегистрацияПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать стандартную обработку выбора СДИЗ в документе Регистрация на ПЛК</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

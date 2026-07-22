@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3e319451-ccf9-4f76-9161-0a6bb42bf1d8">
+  <producedTypes>
+    <selectionType typeId="a4013c1a-df9e-4bc0-80cd-93d8eb765da1" valueTypeId="079eec15-566d-4dee-8016-1f1d451c78fc"/>
+    <listType typeId="43633b8f-7baa-44ad-b62a-36e70b961385" valueTypeId="3dfe445b-549e-41d9-8045-8e348dcc2d94"/>
+    <managerType typeId="609cef23-2c14-496c-9dc8-99085966525f" valueTypeId="372e0de3-c381-40f4-9e73-60b470bb5959"/>
+    <recordSetType typeId="df47b8ab-fc30-4bf2-9579-6708f4127333" valueTypeId="e1412b20-1504-4616-b2fa-006f8853bd9c"/>
+    <recordKeyType typeId="fff96211-7146-462a-ac7c-17af5f479670" valueTypeId="f4692481-4c1a-46fa-b444-23379afd4e21"/>
+    <recordType typeId="605dd46b-2ad9-4984-8970-f741f1895ad4" valueTypeId="40c17ad0-716e-497f-9655-5fff9a26eca2"/>
+    <recordManagerType typeId="6e75d65e-ff17-43e9-a8c1-eb7047136a71" valueTypeId="0c6415ed-cfad-4ae8-a77d-1252298ab1b1"/>
+  </producedTypes>
+  <name>гкс_НастройкиНапоминанияПользователя</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройки напоминания пользователя</value>
+  </synonym>
+  <comment>GKSTCPLK-317</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_НастройкиНапоминанияПользователя.Form.ФормаЗаписи</defaultRecordForm>
+  <defaultListForm>InformationRegister.гкс_НастройкиНапоминанияПользователя.Form.ФормаСписка</defaultListForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Настройка напоминания пользователя</value>
+  </recordPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Настройки напоминания пользователя</value>
+  </listPresentation>
+  <resources uuid="a2673178-89e3-4b35-8324-fd0d3b988cb5">
+    <name>Настройки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройки</value>
+    </synonym>
+    <type>
+      <types>ValueStorage</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="34a70208-0211-464a-9341-cb43c4837056">
+    <name>Объект</name>
+    <synonym>
+      <key>ru</key>
+      <value>Объект</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ИдентификаторыОбъектовМетаданных</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="6b4b08c7-2b8b-4dcb-ba6b-203e8ee26253">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="75c6b973-ece9-4c5b-9f11-aaf4d1a96d5e">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="25e2ba53-d4f5-489e-9be0-1eba95773640">
+  <name>гкс_ПриемкаТранспортаВызовСервера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Приемка транспорта (Вызов сервера)</value>
+  </synonym>
+  <server>true</server>
+  <serverCall>true</serverCall>
+</mdclass:CommonModule>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="2947c7a1-e0e3-4297-91db-2e74a6a7a644">
+  <name>КоллекцияВидовСторон</name>
+  <synonym>
+    <key>ru</key>
+    <value>Виды сторон подписания</value>
+  </synonym>
+  <comment>Коллекция видов сторон</comment>
+</mdclass:CommonPicture>

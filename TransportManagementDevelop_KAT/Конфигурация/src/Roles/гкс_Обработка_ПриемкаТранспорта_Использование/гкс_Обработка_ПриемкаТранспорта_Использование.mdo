@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a97576de-448b-485a-bea5-21b4b34796a9">
+  <name>гкс_Обработка_ПриемкаТранспорта_Использование</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использование обработки Приемка траснпорта (Автоприемка, ЖДприемка)</value>
+  </synonym>
+</mdclass:Role>

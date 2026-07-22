@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3dacc9fe-dd65-48a3-8d6e-141a5af12baf">
+  <producedTypes>
+    <selectionType typeId="0c4a31d5-fabd-418b-abd1-1d8640dcc2a7" valueTypeId="95bf999c-2995-41e5-a488-3a09706db65f"/>
+    <listType typeId="1e94b747-35c5-438f-931a-f02f13eefefc" valueTypeId="d0add1a8-0880-434f-aa97-68a110912d40"/>
+    <managerType typeId="aac51fa7-5a3f-44f0-940a-a500ac1006e9" valueTypeId="440e380e-b054-48aa-838f-4bcba6e8d353"/>
+    <recordSetType typeId="4b6a45b7-9b60-4945-aa6c-a09ad2d50146" valueTypeId="02eaf8bb-b12e-402e-a480-d1bf1921c4ce"/>
+    <recordKeyType typeId="838ca90a-afac-4750-8990-2b39e7ce7a8f" valueTypeId="21a14dc6-af4c-4817-9eb0-032c04388ac0"/>
+    <recordType typeId="3dc6e9f1-404e-4c51-adb1-3f400aa56a1e" valueTypeId="66796bc6-9520-4171-a4f3-d1c9850bdcca"/>
+    <recordManagerType typeId="dd252d5f-fa73-4078-b12d-72540fc5b510" valueTypeId="75119188-5e68-4b32-9e3f-032f0cbac53c"/>
+  </producedTypes>
+  <name>гкс_ИдентификаторыСинхронизируемыхОбъектов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Идентификаторы синхронизируемых объектов (ИАС)</value>
+  </synonym>
+  <editType>InDialog</editType>
+  <defaultRecordForm>InformationRegister.гкс_ИдентификаторыСинхронизируемыхОбъектов.Form.ФормаЗаписи</defaultRecordForm>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Идентификатор синхронизируемого объекта</value>
+  </recordPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Идентификаторы синхронизируемых объектов</value>
+  </listPresentation>
+  <dimensions uuid="fbf526c3-4b0d-4911-82bd-26e33579d050">
+    <name>Идентификатор</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>36</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="20ffda7d-f81b-4fe0-afac-04f97127cd71">
+    <name>Ссылка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка</value>
+    </synonym>
+    <type>
+      <types>DocumentRef</types>
+      <types>ChartOfCharacteristicTypesRef</types>
+      <types>CatalogRef</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="c92a6b40-2a71-4876-9b85-a03631957f9f">
+    <name>Приложение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приложение</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_УчастникиОбменаRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="34f23cba-1a63-4742-9e96-d0414e880740">
+    <name>ФормаЗаписи</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма записи</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

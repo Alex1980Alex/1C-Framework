@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b414285d-553c-48c4-ab6c-6b2bd6db04ad">
+  <producedTypes>
+    <objectType typeId="7e1d8255-89d4-4ddf-9c2f-43453ca67418" valueTypeId="1b2ac633-3bff-42e6-9f81-363f2e1b6983"/>
+    <managerType typeId="fb41ae5e-58c5-43fb-acff-6701d3d1dac2" valueTypeId="0611bb01-72d0-451d-b11b-cf6f648030f7"/>
+  </producedTypes>
+  <name>гкс_АнализИсполненияЗаписейПоЭлектроннойОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Анализ исполнения записей по электронной очереди</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <mainDataCompositionSchema>Report.гкс_АнализИсполненияЗаписейПоЭлектроннойОчереди.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="758c5820-0519-4f41-a13a-af141006ba52">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

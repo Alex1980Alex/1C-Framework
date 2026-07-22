@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="79d5c674-93de-4475-b8d5-a7830390b687">
+  <name>гкс_Интеграция1СДокументооборотКлиент</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция с 1С:Документооборот (клиент)</value>
+  </synonym>
+  <clientManagedApplication>true</clientManagedApplication>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

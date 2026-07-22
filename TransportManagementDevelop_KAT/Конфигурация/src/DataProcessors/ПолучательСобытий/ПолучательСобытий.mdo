@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="254ccff8-f4c4-4e56-a301-8584a28a1fb5">
+  <producedTypes>
+    <objectType typeId="ccbdaa1d-f094-428c-b9ff-de88dce03aa6" valueTypeId="9ef41d78-4708-4dcf-99b1-94585da1fe97"/>
+    <managerType typeId="9707c655-ee6b-45e9-9150-fd10f715f97b" valueTypeId="14c9bf4b-ad6f-4f94-8670-e5a04b037409"/>
+  </producedTypes>
+  <name>ПолучательСобытий</name>
+  <synonym>
+    <key>ru</key>
+    <value>Получатель событий</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+</mdclass:DataProcessor>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="af280592-b493-4d94-b7a4-361d22894737">
+  <name>гкс_ОчередьСообщенийRMQСлужебный</name>
+  <synonym>
+    <key>ru</key>
+    <value>Очередь сообщений RMQ служебный (гкс)</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

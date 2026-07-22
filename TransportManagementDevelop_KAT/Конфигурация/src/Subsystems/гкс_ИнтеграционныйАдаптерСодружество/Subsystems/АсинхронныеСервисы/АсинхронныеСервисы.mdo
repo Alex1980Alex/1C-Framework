@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fad6ac9d-12f2-4eee-abcc-f00d171d1139">
+  <name>АсинхронныеСервисы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Асинхронные сервисы (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>DataProcessor.гкс_ОбработчикСообщенийАсинхронногоСервиса</content>
+  <content>InformationRegister.гкс_ЛогЗапросовАсинхронныхСервисов</content>
+  <content>XDTOPackage.гкс_AsynxExchangeServices</content>
+  <content>CommonModule.гкс_АсинхронныеСервисыПереопределяемый</content>
+  <content>CommonModule.гкс_АсинхронныеСервисыВызовСервера</content>
+  <content>CommonModule.гкс_АсинхронныеСервисы</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="da08e537-cdb0-4412-a712-1d346a6ea0a5">
+  <producedTypes>
+    <selectionType typeId="c4076bc6-aab7-4406-bb0e-a3264dfea4c6" valueTypeId="4d3d90b4-ac08-480e-acfe-23dbf86461f7"/>
+    <listType typeId="582674f1-abab-4dda-8a7c-39bb301ec083" valueTypeId="094d0c65-1251-4198-af74-4398789f6d1c"/>
+    <managerType typeId="d10b8bf3-1409-423b-8862-f3e02f2f6654" valueTypeId="1e24967c-284c-4423-8507-cdc3c992a0ee"/>
+    <recordSetType typeId="8aee5eaa-7cab-4523-8e65-40486fa943ea" valueTypeId="dc99c464-808c-45fc-b814-3a8e169295e0"/>
+    <recordKeyType typeId="d095a9a4-e6d8-479f-8149-d802a2e82373" valueTypeId="5290fc0f-8bfc-4104-98b6-1580cabf48ec"/>
+    <recordType typeId="8d9f090c-3e96-4aa4-a3d1-c3da9787b17d" valueTypeId="665f0e0e-b937-402d-affc-015608ea1808"/>
+    <recordManagerType typeId="b2de475d-8ccc-4bcc-8f29-f283eb793585" valueTypeId="e6577ba0-fa61-4a29-a116-67ba766795e0"/>
+  </producedTypes>
+  <name>гкс_СегментацияКачестваНоменклатуры</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сегментация качества</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <dimensions uuid="9e25bca5-cdc0-4ae1-a5b3-04e68fe42614">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="a0aec4d6-df4b-41f6-99a5-441f862670a6">
+    <name>СлужебнаяНоменклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Служебная номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

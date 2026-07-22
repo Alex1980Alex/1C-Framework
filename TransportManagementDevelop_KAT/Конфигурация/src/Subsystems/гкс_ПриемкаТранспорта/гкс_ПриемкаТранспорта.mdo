@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d3e9995e-851a-4014-a881-c850dd6e53e9">
+  <name>гкс_ПриемкаТранспорта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Приемка транспорта</value>
+  </synonym>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <picture xsi:type="core:PictureRef">
+    <picture>CommonPicture.гкс_РазделПриемкаНаПЛК</picture>
+  </picture>
+  <content>Report.гкс_ЖурналВзвешивания</content>
+  <content>Report.гкс_ОтчетОВремениОперацийАвтоНаПЛК</content>
+  <content>Report.гкс_ОтчетОПриемкеКачества</content>
+  <content>Report.гкс_ЖурналВзвешиванияЗПП</content>
+  <content>FunctionalOption.гкс_ИспользоватьДоговорыКонтрагентов</content>
+  <content>Constant.гкс_ИспользоватьДоговорыКонтрагентов</content>
+  <content>Constant.гкс_ФормироватьКомпозитныйЛабораторныйАнализАвто</content>
+  <content>Report.гкс_РеестрОтгрузки</content>
+  <content>Report.гкс_РеестрПриемки</content>
+  <content>Role.гкс_РазделПриемкаТранспорта</content>
+  <content>DataProcessor.гкс_ГрупповоеИзменениеДатыВРегистрацииСвязанныхОбъектов</content>
+  <content>Constant.гкс_АвтоматическаяПечатьЭтикеток</content>
+  <content>Report.гкс_СравнительныйОтчетПоОтклонениямДанных</content>
+  <content>Report.гкс_ВремяНахожденияТСНаПЛКОтгрузка</content>
+  <content>Report.гкс_ВремяНахожденияТСНаПЛКПриемка</content>
+  <content>DataProcessor.гкс_СопоставлениеОбъектовВнешнихСистем</content>
+  <content>CommonPicture.гкс_Балкер_128</content>
+  <subsystems>РабочиеМеста</subsystems>
+  <subsystems>Документы</subsystems>
+  <subsystems>НСИ</subsystems>
+  <subsystems>Аналитика</subsystems>
+  <subsystems>МорскаяЛогистика</subsystems>
+</mdclass:Subsystem>

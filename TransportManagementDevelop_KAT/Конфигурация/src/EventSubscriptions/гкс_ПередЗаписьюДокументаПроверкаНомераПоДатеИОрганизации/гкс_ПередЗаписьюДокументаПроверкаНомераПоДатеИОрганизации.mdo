@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:EventSubscription xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="1081fd07-28f1-4711-bb8c-eae0613c9a8c">
+  <name>гкс_ПередЗаписьюДокументаПроверкаНомераПоДатеИОрганизации</name>
+  <synonym>
+    <key>ru</key>
+    <value>Перед записью документа проверка номера по дате и организации</value>
+  </synonym>
+  <source>
+    <types>DocumentObject.гкс_ПриказНаОтпускПродукцииЭлеватораЗПП16</types>
+    <types>DocumentObject.гкс_ЗаявкаНаОтгрузкуПродукции</types>
+  </source>
+  <event>BeforeWrite</event>
+  <handler>CommonModule.ПрефиксацияОбъектовСобытия.ПроверитьНомерДокументаПоДатеИОрганизации</handler>
+</mdclass:EventSubscription>

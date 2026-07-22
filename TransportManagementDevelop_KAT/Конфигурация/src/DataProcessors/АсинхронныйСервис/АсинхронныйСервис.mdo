@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c98106de-6c18-40d8-bc04-ddb26882deb7">
+  <producedTypes>
+    <objectType typeId="86176a6b-14fb-4110-ab9b-c45e7d195809" valueTypeId="25e6fc2b-872a-41bc-a733-680a2386684e"/>
+    <managerType typeId="61709c06-e278-4a45-9001-5d4c114fad72" valueTypeId="0eff2f78-382b-46e2-8c02-7bfc347ba217"/>
+  </producedTypes>
+  <name>АсинхронныйСервис</name>
+  <synonym>
+    <key>ru</key>
+    <value>Асинхронный сервис</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <attributes uuid="98506595-9517-457e-bc69-5921b89ca751">
+    <name>КлючСоединения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ соединения</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="c9d54bb2-0044-4d64-9741-bbe6bea4f381">
+    <name>ВерсияПротоколаRPC</name>
+    <synonym>
+      <key>ru</key>
+      <value>Версия протокола RPC</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>1</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+</mdclass:DataProcessor>

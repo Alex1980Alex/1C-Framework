@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="de5ffa48-6d81-457a-a7b3-fe09e3ca0fa7">
+  <producedTypes>
+    <managerType typeId="e8dcf339-ee9a-45cb-9e65-ca6e3195a9ec" valueTypeId="6e6f7b4f-4db3-4b17-8065-37d5794af91f"/>
+    <valueManagerType typeId="0e1e71a8-0ad4-4b35-af13-237cb8beb68c" valueTypeId="109f03f5-df4c-4a71-b1de-17478d0d988d"/>
+    <valueKeyType typeId="37c26906-4eef-4303-99e1-82fd9839ba9f" valueTypeId="d2db0bb6-c71e-436b-bffa-e934a9609954"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьСервисАутентификации1СДокументооборот</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать сервис аутентификации 1С:Документооборот</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <toolTip>
+    <key>ru</key>
+    <value>Использование автоматического запроса аутентификации пользователя в 1С:Документороборт, через сервис аутентификации</value>
+  </toolTip>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

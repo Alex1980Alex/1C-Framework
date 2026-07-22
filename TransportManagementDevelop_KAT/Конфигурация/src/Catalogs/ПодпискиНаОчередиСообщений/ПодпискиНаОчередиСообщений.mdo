@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ff65ee71-5233-42c2-9e7d-7c644e114915">
+  <producedTypes>
+    <objectType typeId="85d4997a-8e92-4d23-b505-9570fdf9a682" valueTypeId="0f7afe8d-c26f-4fcd-85cc-b2afa37d1081"/>
+    <refType typeId="7f38e300-acee-4a4c-958b-c8a866ed5350" valueTypeId="8914c429-bef5-470f-81bc-a9ca04de539a"/>
+    <selectionType typeId="710d7cdd-b612-413f-a23e-1cfca749149f" valueTypeId="0d362386-54e2-4861-bd8c-374e101f98d7"/>
+    <listType typeId="d269fb68-7d21-4090-b068-574b3d34a91f" valueTypeId="b1daf8de-a5cb-4a29-a2f6-9771b8042296"/>
+    <managerType typeId="af39b0de-765e-46f5-8452-05e912607c95" valueTypeId="f9fdd136-155b-420c-bd2e-0e18dda90097"/>
+  </producedTypes>
+  <name>ПодпискиНаОчередиСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Подписки на очереди сообщений (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.ПодпискиНаОчередиСообщений.StandardAttribute.Description</inputByString>
+  <inputByString>Catalog.ПодпискиНаОчередиСообщений.StandardAttribute.Code</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <basedOn>Catalog.ОбработчикиСобытийRMQ</basedOn>
+  <createOnInput>Use</createOnInput>
+  <help>
+    <pages>
+      <lang>ru</lang>
+    </pages>
+  </help>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Подписка на очередь сообщений </value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Подписки на очереди сообщений </value>
+  </listPresentation>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>50</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.ПодпискиНаОчередиСообщений.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultListForm>Catalog.ПодпискиНаОчередиСообщений.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="2c38983a-1d03-410f-a0f2-0d10605d04ab">
+    <name>Активно</name>
+    <synonym>
+      <key>ru</key>
+      <value>Активно</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="ae3fae3d-b982-4b89-a7c6-23983c9c5902">
+    <name>ИмяОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Имя очереди</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="ce66be51-b678-4cb9-9fa1-41f62d1f17dc">
+    <name>РасписаниеЗадания</name>
+    <synonym>
+      <key>ru</key>
+      <value>Расписание задания</value>
+    </synonym>
+    <type>
+      <types>ValueStorage</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="1b2aaf3c-1b07-44be-9b0e-c9a2b14357ec">
+    <name>ИдентификаторЗадания</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификатор задания</value>
+    </synonym>
+    <type>
+      <types>UUID</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="1aff2c27-dea9-4caa-87e8-f0d132cba567">
+    <name>ИнтервалОжиданияСобытия</name>
+    <synonym>
+      <key>ru</key>
+      <value>Интервал ожидания события (сек)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>4</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <toolTip>
+      <key>ru</key>
+      <value>Время, в течение которого ожидается поступление сообщения</value>
+    </toolTip>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="9872a2e8-1930-4ab8-8bcb-1e58eca9d973">
+    <name>Асинхронно</name>
+    <synonym>
+      <key>ru</key>
+      <value>Это обработчик вызова сервиса</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="da3f4975-8e41-4b6d-bf95-995510896377">
+    <name>Обработчик</name>
+    <synonym>
+      <key>ru</key>
+      <value>Обработчик</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ОбработчикиСобытийRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="711bbbca-7681-46ad-b7d8-999b43f4d6fb">
+    <name>СерверОчередей</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сервер очередей</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.СерверыОчередейRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="473156c9-341f-4f2a-ad13-0db835e0d6dd">
+    <name>ЧастотаПульса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Частота пульса (сек.)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <toolTip>
+      <key>ru</key>
+      <value>Частота отправки пакетов heartbeat</value>
+    </toolTip>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="13dbdced-f8b1-48a6-9f2c-797dc89dcc55">
+    <name>УдалитьКлючСоединения</name>
+    <synonym>
+      <key>ru</key>
+      <value>Удалить ключ соединения</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="eb686801-9404-493d-a353-dd039fcdd01b">
+    <name>ТипДанныхВОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип данных в очереди</value>
+    </synonym>
+    <type>
+      <types>EnumRef.ТипКаналаСвязиRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="92db29c8-ef87-49a3-8128-e4bf9ffaf2aa">
+    <name>ИспользуетсяQuorumQueues</name>
+    <synonym>
+      <key>ru</key>
+      <value>Используется quorum queues</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="c943f185-3783-4173-871a-8b3a02511afa">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="74cbff01-0883-4530-a7ae-3675f1b02913">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

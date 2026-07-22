@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7a44f0fc-960b-44e5-9403-36fbf924274d">
+  <producedTypes>
+    <objectType typeId="a4ee0d43-c9c6-4156-ac64-7b2930de9cfa" valueTypeId="03c7355c-392e-4d1f-8eae-e46b27ddfea8"/>
+    <managerType typeId="878fbdd4-0b28-4f47-aa12-879b77a615e1" valueTypeId="983b024f-8cde-475a-9567-e0c5033ef35a"/>
+  </producedTypes>
+  <name>гкс_ИсследовательGUID</name>
+  <synonym>
+    <key>ru</key>
+    <value>Исследователь GUID (ИАС)</value>
+  </synonym>
+  <defaultForm>DataProcessor.гкс_ИсследовательGUID.Form.ФормаУправляемая</defaultForm>
+  <extendedPresentation>
+    <key>ru</key>
+    <value>Исследователь GUID</value>
+  </extendedPresentation>
+  <attributes uuid="d6828e32-f903-48ba-ab4b-836c1191648b">
+    <name>Ссылка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ссылка</value>
+    </synonym>
+    <type/>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <forms uuid="c8958c76-d8c4-4c79-ba4e-f210e7460aac">
+    <name>ФормаУправляемая</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма управляемая</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:DataProcessor>

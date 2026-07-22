@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f5b1cbdb-f9dd-4d9a-abc4-4880e185e4fe">
+  <name>гкс_РегистраСведений_гкс_КонтрагентыНоменклатурыЛИМС_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра сведений Контрагенты номенклатуры ЛИМС</value>
+  </synonym>
+</mdclass:Role>

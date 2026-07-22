@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="9687150a-0f10-49ae-bda1-07a58f1acf2c">
+  <producedTypes>
+    <managerType typeId="593e5a22-a556-448a-a592-015cc5cf4bc7" valueTypeId="e4ca62a0-bec1-4b5d-a7cc-16dd9b9375e3"/>
+    <valueManagerType typeId="9c383d5d-a3ac-4548-8c8d-9fc4b2964a44" valueTypeId="6e834021-400e-49bc-b245-d703703003ca"/>
+    <valueKeyType typeId="15796bed-1e43-47c4-902d-4df7bed14052" valueTypeId="d37c1982-27e9-4fd2-b383-b38f099b1753"/>
+  </producedTypes>
+  <name>гкс_СтранаЛокализации</name>
+  <synonym>
+    <key>ru</key>
+    <value>Страна локализации (гкс)</value>
+  </synonym>
+  <type>
+    <types>CatalogRef.СтраныМира</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <fillChecking>ShowError</fillChecking>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

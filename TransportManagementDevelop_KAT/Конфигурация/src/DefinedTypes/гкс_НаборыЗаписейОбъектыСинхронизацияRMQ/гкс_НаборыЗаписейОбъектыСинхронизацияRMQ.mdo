@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5fc4a2f3-42b7-415a-b05c-d298bbd6681a">
+  <producedTypes>
+    <containerType typeId="9d770f41-2d88-4ef4-8de2-ac093a27f202" valueTypeId="1e212936-ff2d-4a3f-ba8d-7d98c23c2bb6"/>
+  </producedTypes>
+  <name>гкс_НаборыЗаписейОбъектыСинхронизацияRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Наборы записей объекты RMQ (Интеграционый адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+  <type>
+    <types>InformationRegisterRecordSet.БезопасноеХранилищеДанных</types>
+  </type>
+</mdclass:DefinedType>

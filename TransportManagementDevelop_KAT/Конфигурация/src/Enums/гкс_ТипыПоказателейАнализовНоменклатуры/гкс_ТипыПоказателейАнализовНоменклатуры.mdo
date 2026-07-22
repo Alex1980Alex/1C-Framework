@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="15baad06-b68e-4761-a038-d9a15a5ada86">
+  <producedTypes>
+    <refType typeId="744c3b6e-3237-4ba4-a82e-8b45a68ce533" valueTypeId="6e10eea7-113a-4e09-9dfd-a5ac1913a506"/>
+    <listType typeId="426b1659-a247-49ae-bc60-1fcca966b359" valueTypeId="2a7334ba-f478-4312-9d15-f6c0f36580b4"/>
+    <managerType typeId="b236b11e-e111-4522-bc01-33efb6fc663c" valueTypeId="d978d211-a146-4c23-9480-b7c388623f8c"/>
+  </producedTypes>
+  <name>гкс_ТипыПоказателейАнализовНоменклатуры</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы показателей анализов номенклатуры</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="6a414530-5d38-4ce3-9545-18ab125d61f5">
+    <name>СорнаяПримесь</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сорная примесь</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="0a49b16c-acbd-4dcf-8e10-624fb92d410c">
+    <name>ЗерноваяПримесь</name>
+    <synonym>
+      <key>ru</key>
+      <value>Зерновая примесь</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="79063877-5964-4e64-92cc-3aaa691ea44e">
+    <name>ВреднаяПримесь</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вредная примесь</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="63ca4806-a1a5-41d2-9404-d9b8066e56f7">
+    <name>ЗернаДругихКультур</name>
+    <synonym>
+      <key>ru</key>
+      <value>Зерна других культур</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

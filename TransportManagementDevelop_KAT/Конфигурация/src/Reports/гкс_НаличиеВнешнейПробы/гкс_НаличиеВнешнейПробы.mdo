@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="01751c2f-12b6-47f5-af48-f4a36552bcc6">
+  <producedTypes>
+    <objectType typeId="32e37ce2-a82c-4a58-a40a-4caa3d32abfb" valueTypeId="0a51672a-59ca-48b1-b861-c351ba6baa71"/>
+    <managerType typeId="ab24eb62-f988-41bb-8b9e-452ca64b65f7" valueTypeId="f23e9202-6f9b-4ff5-a975-7824d26251cd"/>
+  </producedTypes>
+  <name>гкс_НаличиеВнешнейПробы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Наличие внешней пробы</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_НаличиеВнешнейПробы.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <templates uuid="8e6b97f9-d648-47d5-add3-3baff57398f6">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

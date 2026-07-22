@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="39af7a0d-f2c6-4f41-b74f-486678eac585">
+  <producedTypes>
+    <managerType typeId="53a55942-7b30-4c5b-a0ce-f84420890120" valueTypeId="feddd362-5448-4818-987d-fe8283cdfe45"/>
+    <valueManagerType typeId="2827c8e4-2359-4ca5-a1c5-c2d3c55abed2" valueTypeId="8222f18a-1c67-441f-9dfc-5be6a878fc28"/>
+    <valueKeyType typeId="85e5c0d2-0f17-490a-b2cc-62139b273efc" valueTypeId="e3bd5d75-ef47-4312-ba09-67afe1a083dd"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьНовыйРежимАРМПриемкаТранспорта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать новый режим АРМ Приемка транспорта</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

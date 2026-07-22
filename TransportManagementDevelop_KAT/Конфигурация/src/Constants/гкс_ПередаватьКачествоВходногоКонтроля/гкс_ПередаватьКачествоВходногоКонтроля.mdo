@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="aff7b887-6289-47bf-aa47-d38aa9d5729b">
+  <producedTypes>
+    <managerType typeId="120c87cc-4b6b-47ba-b895-831456be4722" valueTypeId="6d805ea7-b035-4abb-9eff-55b97e9d31e6"/>
+    <valueManagerType typeId="b90be06d-ca3c-40cf-ac8f-ae485b701686" valueTypeId="2cf2064c-360f-477f-8b7a-ddba116b0f28"/>
+    <valueKeyType typeId="ff17c543-611f-410c-8dcc-910770883b02" valueTypeId="7e03b2e7-52dd-407a-b4b7-4ec1f92c68ea"/>
+  </producedTypes>
+  <name>гкс_ПередаватьКачествоВходногоКонтроля</name>
+  <synonym>
+    <key>ru</key>
+    <value>Передавать в силосную карту качество входного контроля</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

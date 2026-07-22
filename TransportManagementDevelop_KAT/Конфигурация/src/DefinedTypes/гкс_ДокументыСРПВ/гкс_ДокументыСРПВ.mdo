@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="47c4c844-74de-4501-9768-1ea0c5ee97a4">
+  <producedTypes>
+    <containerType typeId="7b9119bf-3f50-4312-8ab8-33676ce4cff2" valueTypeId="13477a37-e715-487c-9bd3-352597d22dae"/>
+  </producedTypes>
+  <name>гкс_ДокументыСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Документы СРПВ</value>
+  </synonym>
+  <type>
+    <types>DocumentRef.гкс_СРПВПеревеска</types>
+    <types>DocumentRef.гкс_СРПВРегистрацияОперацииСВагоном</types>
+    <types>String</types>
+    <types>DocumentRef.гкс_СРПВПрибытиеНаПуть</types>
+    <stringQualifiers>
+      <length>10</length>
+    </stringQualifiers>
+  </type>
+</mdclass:DefinedType>

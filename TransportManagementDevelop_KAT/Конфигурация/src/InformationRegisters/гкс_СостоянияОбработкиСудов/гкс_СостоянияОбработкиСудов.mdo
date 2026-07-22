@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="06196ea2-de3a-4331-9cd1-807104070a38">
+  <producedTypes>
+    <selectionType typeId="469d9aab-ba7b-492b-85da-8e9b8515b74f" valueTypeId="ab577d1f-e969-427e-98fb-4ad323e9a28f"/>
+    <listType typeId="38a22529-560a-4202-acd0-d0f534c1d50a" valueTypeId="463c1f49-cd41-4eb3-aa7e-e57d85b44eb2"/>
+    <managerType typeId="6cacc90e-20e3-4381-8697-7c84a5bd067d" valueTypeId="0479d44b-3a7f-4484-83ee-022988c78689"/>
+    <recordSetType typeId="838f107a-44ef-4a6b-888c-e555efbaabde" valueTypeId="356c263f-1840-4938-af1e-67f4f3bd4b5d"/>
+    <recordKeyType typeId="0ec52552-85af-4c02-80ce-e08a20a256f2" valueTypeId="4df22c80-2f46-464b-b00f-b16009b2046e"/>
+    <recordType typeId="af45ba8e-9524-44c5-92a6-e82f294a8b58" valueTypeId="c70f33c0-b200-4404-8b8d-3f716f83e71a"/>
+    <recordManagerType typeId="8236aabe-b82b-4b71-8e85-ae72dbf44fab" valueTypeId="d1ff918c-1eb7-4b04-b2c1-04b9a897054e"/>
+  </producedTypes>
+  <name>гкс_СостоянияОбработкиСудов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Состояния обработки судов</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <informationRegisterPeriodicity>Second</informationRegisterPeriodicity>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Состояние обработки судна</value>
+  </recordPresentation>
+  <resources uuid="ff8e22bf-f761-4d5d-9ebf-f74cb77425bc">
+    <name>Состояние</name>
+    <synonym>
+      <key>ru</key>
+      <value>Состояние</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СостоянияОбработкиСудна</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="37c64716-fa99-403e-b3f1-0020c9aacb58">
+    <name>ПроизводственныеСутки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="e31271b3-fb37-4643-bb7f-80decd6c11f8">
+    <name>Силос</name>
+    <synonym>
+      <key>ru</key>
+      <value>Силос</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="8d3d0c91-dd1f-440e-8d6f-8e5e7089bfb8">
+    <name>Коносамент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Коносамент</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="a001b759-5616-4dac-93c7-dc8cbc175aab">
+    <name>Весы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Весы</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ОборудованиеПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="aa17d364-5a7c-442a-a590-aa26fc900606">
+    <name>Фрахт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Фрахт</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="74bd216c-8b86-4758-8105-0bfc7e781955">
+    <name>Трюм</name>
+    <synonym>
+      <key>ru</key>
+      <value>Трюм</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

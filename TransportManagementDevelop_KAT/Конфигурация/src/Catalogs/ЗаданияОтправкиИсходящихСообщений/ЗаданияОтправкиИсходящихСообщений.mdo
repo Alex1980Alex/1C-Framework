@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="21818b92-9401-4eae-ad76-f3d4bb93e5b6">
+  <producedTypes>
+    <objectType typeId="93471267-82b9-4b20-bf6b-0a617ccd2860" valueTypeId="00f135cd-31d7-436e-8657-85b8cd8656f3"/>
+    <refType typeId="66398e63-bb59-46d2-86cf-0111fa12aabd" valueTypeId="02e248cb-748c-45ea-bbcd-f1adda3f8185"/>
+    <selectionType typeId="50befcba-1e38-4525-8448-c5b78fc8de5a" valueTypeId="e11a71b0-969a-4b50-b9d8-36b4a8a267b2"/>
+    <listType typeId="a15d4d1a-2acf-4631-9093-66df49a804fa" valueTypeId="3db0c5ab-8475-4197-91e4-d86aedcb1ae4"/>
+    <managerType typeId="7abfeb2e-e127-491b-b12b-c72b3d85e38b" valueTypeId="588bbe19-29b7-4118-9a61-0988bc2387b8"/>
+  </producedTypes>
+  <name>ЗаданияОтправкиИсходящихСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Задания отправки сообщений (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.ЗаданияОтправкиИсходящихСообщений.StandardAttribute.Description</inputByString>
+  <inputByString>Catalog.ЗаданияОтправкиИсходящихСообщений.StandardAttribute.Code</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Задание отправки сообщений</value>
+  </objectPresentation>
+  <listPresentation>
+    <key>ru</key>
+    <value>Задания отправки сообщений</value>
+  </listPresentation>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>50</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.ЗаданияОтправкиИсходящихСообщений.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultListForm>Catalog.ЗаданияОтправкиИсходящихСообщений.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="204bfd23-515b-4f47-be4e-1307154bf2e4">
+    <name>СерверОчередей</name>
+    <synonym>
+      <key>ru</key>
+      <value>Сервер очередей</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.СерверыОчередейRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:ReferenceValue">
+      <value>Catalog.СерверыОчередейRMQ.EmptyRef</value>
+    </fillValue>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="27e0f3c8-bc8b-42ac-b409-763b0bacff3b">
+    <name>ТочкаПубликации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка публикации</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="29cdcf06-cc36-48b8-bda0-8d7c8952dd1b">
+    <name>ЕстьОтборСерверОчередей</name>
+    <synonym>
+      <key>ru</key>
+      <value>Есть отбор сервер очередей</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="02159d1f-6ea3-457c-bf90-8563271c81b1">
+    <name>ЕстьОтборТочкаПубликации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Есть отбор точка публикации</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="4f0c01f3-8682-41dd-abdf-77793fed4936">
+    <name>РасписаниеЗадания</name>
+    <synonym>
+      <key>ru</key>
+      <value>Расписание задания</value>
+    </synonym>
+    <type>
+      <types>ValueStorage</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="4a88a090-25dc-4d49-b912-7a8547d3c8e7">
+    <name>ЧислоПотоковОбработки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Число потоков обработки</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <tabularSections uuid="555bf043-8d03-495b-a951-dbab732a7a3c">
+    <producedTypes>
+      <objectType typeId="0d7a31ab-51eb-43d4-944a-4322f59c38b1" valueTypeId="0c0a2251-a99b-4d4b-8ce1-adb59c77d552"/>
+      <rowType typeId="a6457b7d-f4bb-477d-9043-0788258e76e7" valueTypeId="b03d4fc4-6fc9-424e-a568-4a39ed5e1675"/>
+    </producedTypes>
+    <name>ИдентификаторыЗаданий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Идентификаторы заданий</value>
+    </synonym>
+    <attributes uuid="7d553f65-2a0f-41ee-ac41-658775f9ba2f">
+      <name>ИдентификаторЗадания</name>
+      <synonym>
+        <key>ru</key>
+        <value>Идентификатор задания</value>
+      </synonym>
+      <type>
+        <types>UUID</types>
+      </type>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+    </attributes>
+  </tabularSections>
+  <forms uuid="ae169d12-1b86-4deb-9f5c-6c0bf1468515">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="59e29970-7eb0-44b9-87ed-6fcf54392b48">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

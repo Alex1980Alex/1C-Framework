@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d544dc10-c8da-45f4-ac9c-a0ce8898c072">
+  <producedTypes>
+    <selectionType typeId="63c715d7-3bc1-455f-b4f7-226b6f124d0e" valueTypeId="d9f7d013-761a-4161-87ea-a8849c176ede"/>
+    <listType typeId="3cce2e43-9171-4d74-93ae-3d7999afb315" valueTypeId="b93cb1a6-b9bb-41a1-8dce-9dabca6f5259"/>
+    <managerType typeId="ce8f7f68-d10d-4d27-ac70-988a3a97f05d" valueTypeId="737125a1-6f13-444a-91b8-611918ecc3e3"/>
+    <recordSetType typeId="aab6ec65-3b9c-4fff-9714-94ef08adb403" valueTypeId="72f8e193-215f-4046-acad-04660e6a7ca4"/>
+    <recordKeyType typeId="b53698f9-175f-43aa-aae6-e13f2c090038" valueTypeId="7ce6dae2-116a-4708-9cf6-ee137f2ba9cf"/>
+    <recordType typeId="1d5461f0-0616-46a7-a8f9-655a74bd31b0" valueTypeId="7e9f117b-115c-494a-b88c-48c2f2397d77"/>
+    <recordManagerType typeId="b88c3fab-4377-47d2-b945-2d71a37c416f" valueTypeId="0363d6f1-3213-4e39-b1de-7437fc560c73"/>
+  </producedTypes>
+  <name>гкс_ТранспортныеДокументыФрахта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Транспортные документы фрахта</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <recordPresentation>
+    <key>ru</key>
+    <value>Транспортные документы фрахта</value>
+  </recordPresentation>
+  <resources uuid="8973a4f2-a50e-4ae7-839b-d3b19c63de11">
+    <name>Коносамент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Коносамент</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_ТранспортныйДокумент</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="c6207fa9-7ff1-4b0e-9cdc-8e4b4aaa28da">
+    <name>Фрахт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Фрахт</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_Фрахт</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="7154d12c-3d6f-4de3-ab75-cc62bede666d">
+    <name>Трюм</name>
+    <synonym>
+      <key>ru</key>
+      <value>Трюм</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

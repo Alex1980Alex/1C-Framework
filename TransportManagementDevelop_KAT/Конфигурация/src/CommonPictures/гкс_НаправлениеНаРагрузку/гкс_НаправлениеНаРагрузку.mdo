@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="17ad1526-10d4-4790-83bd-9d8f9d8f5b25">
+  <name>гкс_НаправлениеНаРагрузку</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс направление на рагрузку</value>
+  </synonym>
+  <comment>&lt;a href=&quot;https://www.flaticon.com/ru/free-icons/&quot; title=&quot;разгрузка иконки&quot;>Разгрузка иконки от Freepik - Flaticon&lt;/a></comment>
+</mdclass:CommonPicture>

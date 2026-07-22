@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="363faa10-b923-4926-b5ae-a072015e5790">
+  <name>гкс_ОценкаПроизводительностиRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Оценка производительности RMQ (гкс)</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

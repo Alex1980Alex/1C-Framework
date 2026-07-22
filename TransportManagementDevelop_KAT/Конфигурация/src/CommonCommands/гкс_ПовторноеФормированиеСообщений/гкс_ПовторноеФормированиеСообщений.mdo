@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonCommand xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7b9bd71d-b247-4e56-8a66-7dcc5226a6ba">
+  <name>гкс_ПовторноеФормированиеСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сформировать сообщение (по уже сформированным)</value>
+  </synonym>
+  <group>CommandGroup.гкс_ПовторноеПроигрывание</group>
+  <commandParameterType>
+    <types>CatalogRef.ИсходящиеСообщения</types>
+  </commandParameterType>
+  <parameterUseMode>Multiple</parameterUseMode>
+  <representation>Auto</representation>
+</mdclass:CommonCommand>

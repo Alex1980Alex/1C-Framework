@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6c8686d2-038c-4bce-8b16-673c6f51a4e6">
+  <producedTypes>
+    <containerType typeId="acd80fcc-7554-4d73-a456-dd05d94001f2" valueTypeId="ca1cf1f3-010f-4f41-9fed-8bdfabc13c40"/>
+  </producedTypes>
+  <name>ИнтеграцияС1СДокументооборотСправочникиОбъектыПереопределяемый</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграция с 1С:Документооборотом, интегрируемые справочники объект</value>
+  </synonym>
+  <type>
+    <types>CatalogObject.гкс_ТочкиМаршрута</types>
+  </type>
+</mdclass:DefinedType>

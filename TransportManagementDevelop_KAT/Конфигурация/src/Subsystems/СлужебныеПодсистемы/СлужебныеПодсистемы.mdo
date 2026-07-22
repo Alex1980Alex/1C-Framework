@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8c861071-43bf-41ac-b4fa-56960bc81d6b">
+  <name>СлужебныеПодсистемы</name>
+  <synonym>
+    <key>ru</key>
+    <value>Служебные подсистемы</value>
+  </synonym>
+  <explanation>
+    <key>ru</key>
+    <value>Технологическая подсистема.</value>
+  </explanation>
+  <subsystems>Отчеты</subsystems>
+</mdclass:Subsystem>

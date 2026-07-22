@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7ab3f282-43ea-4d29-94b7-ecc9090a383c">
+  <producedTypes>
+    <selectionType typeId="6bddf021-ccdb-403f-b629-151de9ce1351" valueTypeId="c6bac5c3-bb89-4e42-8b9c-85137a60983d"/>
+    <listType typeId="5f87609e-46dc-4ab9-9b51-01cebb2e0531" valueTypeId="e8575ca9-b31d-4a72-a9d4-c53a2c938cc4"/>
+    <managerType typeId="4c9b1029-0212-44a3-81fe-366631b12b43" valueTypeId="8352f27e-01af-4f12-821b-458c01619678"/>
+    <recordSetType typeId="bc7a5c0b-5e54-4ab0-b47f-4203554e263d" valueTypeId="07177783-d9d3-43fa-98ad-3c814e598a57"/>
+    <recordKeyType typeId="6a6a693a-22be-46ea-aad6-43a530247faa" valueTypeId="69800536-4555-4dfa-bcf3-dd22986faae9"/>
+    <recordType typeId="9b16f48a-7a4a-4ab8-90d5-805ce945f6d2" valueTypeId="6b5325a1-ef0f-40b0-b50a-3ef21b3e6340"/>
+    <recordManagerType typeId="f607ad54-cd54-4b88-bb74-1e2b545f1370" valueTypeId="8b5c02ae-500c-4f53-87bb-141e09971ec4"/>
+  </producedTypes>
+  <name>гкс_СопоставлениеПоказателейАнализовНоменклатуры</name>
+  <synonym>
+    <key>ru</key>
+    <value>Сопоставление показателей анализов номенклатуры</value>
+  </synonym>
+  <comment>GKSTCPLK-1866</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <defaultListForm>InformationRegister.гкс_СопоставлениеПоказателейАнализовНоменклатуры.Form.ФормаСписка</defaultListForm>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="19bfa6c2-702d-40a3-8f56-7af5e8b9c471">
+    <name>КоммерческийПоказатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Коммерческий показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <choiceParameters>
+      <name>Отбор.Предопределенный</name>
+      <value xsi:type="core:BooleanValue">
+        <value>true</value>
+      </value>
+    </choiceParameters>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="ea1076a7-1f95-46fd-8d4d-a8776fba30ec">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <choiceParameters>
+      <name>Отбор.Предопределенный</name>
+      <value xsi:type="core:BooleanValue"/>
+    </choiceParameters>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="4f587ae3-2c69-4d6d-bdba-ae4f00251816">
+    <name>ТочкаМаршрута</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка маршрута</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ТочкиМаршрута</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <forms uuid="2512a1f1-901e-4c31-84b6-eaac4f53db00">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:InformationRegister>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b8fb35d0-35c7-4118-b2a8-9f6b13f2c0e8">
+  <producedTypes>
+    <selectionType typeId="4e0736b9-4949-4ac4-9048-b365547bdaab" valueTypeId="bcfdf980-3ba7-4de6-b066-30f0a921abc6"/>
+    <listType typeId="1a229788-e4b2-432c-b2d0-0502628a35c5" valueTypeId="5857627d-faa2-4351-98fb-56fabb52cfce"/>
+    <managerType typeId="6c0ffef5-1310-4d14-a3a7-3050ad30d7c1" valueTypeId="53b3f2a9-8656-4fc4-ba24-f0f6add285e1"/>
+    <recordSetType typeId="7bae5069-e2c1-4dc3-b737-2d3693f53732" valueTypeId="76277bc8-ff47-4d78-a250-e06055358d7d"/>
+    <recordKeyType typeId="a54484fd-ed80-4eab-9501-52909a4bdae9" valueTypeId="563e5e1a-09ff-419e-9d45-6977724f61ad"/>
+    <recordType typeId="162608db-3e2f-407a-b8c2-90a2ac91e389" valueTypeId="9842abe1-cb1e-40de-aed6-1cad2515c06d"/>
+    <recordManagerType typeId="b50cc72f-1a5d-4f61-9c01-3632416a1cc8" valueTypeId="81f21e90-8759-4683-8168-6191ee979fe5"/>
+  </producedTypes>
+  <name>гкс_КомментарииКСтатусуКачествоНеПринято</name>
+  <synonym>
+    <key>ru</key>
+    <value>Комментарии к статусу качество не принято</value>
+  </synonym>
+  <comment>ERP-1403</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="6875eec3-2206-404a-a034-e068b44f0fb8">
+    <name>Комментарий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Комментарий</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <dimensions uuid="c86e5bf5-bc1b-4f54-a77a-c9b2c251f950">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

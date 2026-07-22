@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="16dad65b-127a-450e-b35c-3b2956b93c12">
+  <name>гкс_Документ_НаправлениеНаРазгрузку_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр документа Направление на разгрузку (гкс)</value>
+  </synonym>
+</mdclass:Role>

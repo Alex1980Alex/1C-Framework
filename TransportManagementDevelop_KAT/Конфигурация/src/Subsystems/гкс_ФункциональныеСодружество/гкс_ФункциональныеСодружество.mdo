@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d469c7ec-0ab2-4ec4-960a-4af8ce223e91">
+  <name>гкс_ФункциональныеСодружество</name>
+  <synonym>
+    <key>ru</key>
+    <value>Функциональные подсистемы</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>CommonModule.гкс_РегламентныеЗадания</content>
+  <content>StyleItem.гкс_ШрифтЗаголовкаНастройкиРазгрузки</content>
+  <subsystems>Интеграции</subsystems>
+  <subsystems>Лаборатория</subsystems>
+  <subsystems>НСИ</subsystems>
+  <subsystems>ПриемкаТранспорта</subsystems>
+  <subsystems>ИнтеграцияСБСП</subsystems>
+  <subsystems>Служебные</subsystems>
+  <subsystems>ФормыЗПП</subsystems>
+  <subsystems>ВходнойКонтрольКачества</subsystems>
+</mdclass:Subsystem>

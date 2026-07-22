@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="352f4d58-4714-4047-91f8-8cfb6c922cdc">
+  <name>гкс_Справочник_АлгоритмыРасчетаПоказателейКачества_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение алгоритмов расчета показателей качества номенклатуры</value>
+  </synonym>
+</mdclass:Role>

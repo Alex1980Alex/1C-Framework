@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="88357e5f-098f-4f49-a29c-2614a713f7ed">
+  <name>гкс_ИспользоватьИнтеграциюСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать интеграцию СРПВ</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьИнтеграциюСРПВ</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Enum.гкс_СРПВТипыОперацийСВагоном</content>
+  <content>Document.гкс_СРПВПрибытиеНаПуть</content>
+  <content>Document.гкс_СРПВПеревеска</content>
+  <content>Document.гкс_СРПВРегистрацияОперацииСВагоном</content>
+  <content>Subsystem.Администрирование.Subsystem.СРПВ</content>
+  <content>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции.Subsystem.СРПВ</content>
+  <content>InformationRegister.гкс_СоответствияОбъектовСРПВ</content>
+  <content>Enum.гкс_ТипыОбъектовСРПВ</content>
+  <content>InformationRegister.гкс_СРПВТранспортныеДокументыЖДПолученные</content>
+  <content>Catalog.гкс_КлючиАналитикиСРПВ</content>
+  <content>Enum.гкс_СРПВСтатусыВагонов</content>
+  <content>InformationRegister.гкс_СРПВСтатусыОформленияВагонов</content>
+  <content>Constant.гкс_КоличествоДнейВидимостиПрибывшихВагонов</content>
+  <content>InformationRegister.гкс_НахождениеВагоновНаПутяхСРПВ</content>
+  <content>InformationRegister.гкс_ПодтвержденияДоставкиСообщений</content>
+  <content>Constant.гкс_ПериодОжиданияОтветаОтСРПВ</content>
+</mdclass:FunctionalOption>

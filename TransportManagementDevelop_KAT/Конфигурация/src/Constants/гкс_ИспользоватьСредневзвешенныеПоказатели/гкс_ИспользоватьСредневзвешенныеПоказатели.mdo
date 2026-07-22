@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="25ae63f7-0af4-48da-976b-e70d741435d1">
+  <producedTypes>
+    <managerType typeId="f2b4cc47-06bb-4732-acaa-7540e2ffaf89" valueTypeId="1116f6c1-6ac7-4fd7-a5ac-37a3dbff61f0"/>
+    <valueManagerType typeId="c43e9af5-845c-4b9a-b47f-2322b7e8c982" valueTypeId="863fd1e9-9a16-45bd-98f6-e843e7eb9aea"/>
+    <valueKeyType typeId="e5f6239f-10b4-43d6-be03-d98c4a4e5fef" valueTypeId="208a1162-3520-42ca-bc86-49ea7a5968fc"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьСредневзвешенныеПоказатели</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать средневзвешенные показатели</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

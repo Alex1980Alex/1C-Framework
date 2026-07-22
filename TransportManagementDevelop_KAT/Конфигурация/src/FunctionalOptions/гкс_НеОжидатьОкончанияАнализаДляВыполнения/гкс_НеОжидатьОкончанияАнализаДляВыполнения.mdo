@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="45dd5946-f859-465e-a52e-d3b6d0dda5e0">
+  <name>гкс_НеОжидатьОкончанияАнализаДляВыполнения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Не ожидать окончания анализа для выполнения</value>
+  </synonym>
+  <location>Constant.гкс_НеОжидатьОкончанияАнализаДляВыполнения</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

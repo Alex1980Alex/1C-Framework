@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="70a11a17-811e-47fa-abd4-90ba2ba033ca">
+  <producedTypes>
+    <refType typeId="47bd027d-5245-4734-b9bd-4d2f6aacf93b" valueTypeId="06d63d41-8fc9-44cd-8a72-4d3ba16745d8"/>
+    <listType typeId="91ea1a58-90f6-4539-a166-6b981f77066b" valueTypeId="0b0f15f5-f8e6-4007-bd30-975895abfdbd"/>
+    <managerType typeId="132bcd0d-4553-4e4d-b1d9-d8d57d4ab8f0" valueTypeId="dfe13340-1851-40eb-8642-f65732bf324d"/>
+  </producedTypes>
+  <name>СтатусыСДИЗЗЕРНО</name>
+  <synonym>
+    <key>ru</key>
+    <value>Статусы СДИЗЗЕРНО</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="fd79af19-3540-4193-a393-4f203045a688">
+    <name>Проект</name>
+    <synonym>
+      <key>ru</key>
+      <value>Проект</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="9998f5b9-8b98-4792-839a-17eb07654ad2">
+    <name>Оформлен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Оформлен</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="83ca900a-821b-41c9-b68b-b4c6c820ac89">
+    <name>ОформленИПодтвержден</name>
+    <synonym>
+      <key>ru</key>
+      <value>Оформлен и подтвержден</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="755e8af4-15e7-4259-b29a-485218bdf555">
+    <name>Погашен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Погашен</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="79db3e0d-f02d-4ea2-a977-899ffc965ef9">
+    <name>Аннулирован</name>
+    <synonym>
+      <key>ru</key>
+      <value>Аннулирован</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

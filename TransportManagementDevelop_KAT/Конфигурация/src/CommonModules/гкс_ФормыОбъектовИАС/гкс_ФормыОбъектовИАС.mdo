@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="925d975c-f5b5-4dd4-b86e-86637a4ec47d">
+  <name>гкс_ФормыОбъектовИАС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Формы объектов (Интеграционный адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6248d0f4-011e-4a3d-9862-6ac287980dfb">
+  <name>гкс_Обработка_АРМКПП_Использование</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использование обработки АРМ КПП</value>
+  </synonym>
+</mdclass:Role>

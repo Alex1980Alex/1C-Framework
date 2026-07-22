@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="84059f3b-7e58-4d27-a7a2-399140074bc2">
+  <producedTypes>
+    <selectionType typeId="87d28909-6569-4cd3-b04f-5b2aa69d3e73" valueTypeId="3a664d56-d587-4a28-9c14-2851eeb6a0d6"/>
+    <listType typeId="f467d033-43b8-4253-afe5-b91513c50f0b" valueTypeId="05bc1166-272c-403d-8544-d9dece6bb2e3"/>
+    <managerType typeId="cb9f3bce-ed85-404c-87c5-bbd0a33d4c49" valueTypeId="b4bd40dc-9395-46f1-b4bb-82d289a5bd8d"/>
+    <recordSetType typeId="2f9eb798-10c3-433a-9bb5-e46c17d7ec07" valueTypeId="85e5cb73-ed8e-4e8f-b95f-862324991dde"/>
+    <recordKeyType typeId="e31ebf61-f120-47bf-9069-97de3c07ce8f" valueTypeId="59c4ed74-2234-480c-bae0-abf8868ed2e5"/>
+    <recordType typeId="fc61d667-a5d2-4625-9b82-e74ce73f507c" valueTypeId="51847635-9070-4cf4-84a3-3062668f6f3f"/>
+    <recordManagerType typeId="06f847ba-3690-4bb8-acca-bf6d45096727" valueTypeId="dc8892da-9294-47a0-8f60-eb0be8ea15c5"/>
+  </producedTypes>
+  <name>гкс_СтатусыДопускаВагоновКВскрытию</name>
+  <synonym>
+    <key>ru</key>
+    <value>Статусы допуска вагонов к вскрытию</value>
+  </synonym>
+  <comment>ERP-2051</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Active</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>LineNumber</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Recorder</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Period</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <informationRegisterPeriodicity>Second</informationRegisterPeriodicity>
+  <mainFilterOnPeriod>true</mainFilterOnPeriod>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="9f228b63-0ac8-4c01-9a80-3b20a597e8eb">
+    <name>ВскрытиеЗапрещено</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вскрытие запрещено</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="dfe471df-afd9-40b4-b49a-af83b97568ae">
+    <name>Ответственный</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ответственный</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Пользователи</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="26c489d9-a7cc-4050-a2b9-6638c81bd0bc">
+    <name>Комментарий</name>
+    <synonym>
+      <key>ru</key>
+      <value>Комментарий</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <dimensions uuid="a0923223-c2f8-473d-a07d-dc340ee79e50">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="a724f2d3-3def-45fd-a6c3-2aa80d16b391">
+    <name>Вагон</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вагон</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="61290365-6b96-4113-b1d5-26cd8b2962b7">
+    <name>ДопускКВскрытию</name>
+    <synonym>
+      <key>ru</key>
+      <value>Допуск к вскрытию</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ДопускиКВскрытиюВагонов</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

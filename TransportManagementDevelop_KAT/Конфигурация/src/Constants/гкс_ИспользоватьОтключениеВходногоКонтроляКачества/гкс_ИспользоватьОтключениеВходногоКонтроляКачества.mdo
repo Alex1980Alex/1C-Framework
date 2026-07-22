@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8e56b932-1c4f-48ab-b85a-8429c6d69dec">
+  <producedTypes>
+    <managerType typeId="499188e5-4ef9-47e9-86ce-a1139317931b" valueTypeId="7c33da77-da74-4958-8c24-f6d51578406b"/>
+    <valueManagerType typeId="c41342b1-2dc8-499e-be24-55b37bfce6b7" valueTypeId="0785b084-5027-4770-a63b-a92ab04317dd"/>
+    <valueKeyType typeId="0448cc93-122c-4879-b888-d74eb0ff2e17" valueTypeId="25d27093-0484-488c-8e97-1dbe9ff6d771"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьОтключениеВходногоКонтроляКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать отключение входного контроля качества</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.гкс_ОсновныеНастройки</defaultForm>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

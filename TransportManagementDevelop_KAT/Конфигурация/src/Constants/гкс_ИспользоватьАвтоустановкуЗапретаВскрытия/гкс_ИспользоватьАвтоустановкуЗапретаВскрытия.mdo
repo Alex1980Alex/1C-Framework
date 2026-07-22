@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="08651cec-26d6-4c6e-8764-cb98aeb7f20c">
+  <producedTypes>
+    <managerType typeId="916c18f8-2e73-4b95-8867-82600ffa9fe5" valueTypeId="9a748e65-91f1-4b53-a319-bea00f0b719e"/>
+    <valueManagerType typeId="9ca7133a-38ba-44fd-a3d1-ffdb7af35820" valueTypeId="b30424c8-e3ed-44d3-82ff-abf8ace7a8c3"/>
+    <valueKeyType typeId="0ba0716d-d4ce-4352-a898-b24b96c0882d" valueTypeId="6aa312ee-c3b1-4095-b8ba-91dc3c5bb38d"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьАвтоустановкуЗапретаВскрытия</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать автоустановку запрета вскрытия по номенклатуре</value>
+  </synonym>
+  <comment>GKSTCPLK-2507</comment>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <defaultForm>CommonForm.гкс_ОсновныеНастройки</defaultForm>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

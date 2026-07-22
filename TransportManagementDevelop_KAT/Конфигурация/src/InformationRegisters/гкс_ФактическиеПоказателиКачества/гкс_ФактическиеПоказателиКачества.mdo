@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="82aff47b-aea0-44c6-aa02-32428fe0268d">
+  <producedTypes>
+    <selectionType typeId="31e48056-038e-4106-96db-390cac20bb9c" valueTypeId="21c7a968-23a5-47bb-8048-1eb5d45d2b04"/>
+    <listType typeId="a0fbfe7d-4a2e-417f-ae65-f1c85dd6ab1c" valueTypeId="5424598a-fe89-46e3-ab6e-dcf7d9e10a19"/>
+    <managerType typeId="8801c423-31f4-46e5-8bf0-1ead3412a8b0" valueTypeId="90fd2573-70e2-40dd-a2e9-3008b96eba80"/>
+    <recordSetType typeId="1d509537-0e17-4b9d-9867-c8faed4fba09" valueTypeId="bee1325d-dfef-4187-aba9-a72cea97870f"/>
+    <recordKeyType typeId="1f54ead8-699d-407c-a865-9485c73f6e4a" valueTypeId="d784098e-75b4-45e9-b060-9506f6bf7bb2"/>
+    <recordType typeId="07fbebff-f456-406d-9363-d590132321f0" valueTypeId="1f0cc8d0-34d3-479b-9193-48df6995fd87"/>
+    <recordManagerType typeId="2ca0e91b-a9e1-4301-9792-8e8f34785eb0" valueTypeId="f65c9613-a12a-496a-bffc-f514ca5dcbf5"/>
+  </producedTypes>
+  <name>гкс_ФактическиеПоказателиКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Фактические показатели качества</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="9996352a-dd22-4644-a7f9-5324e11f2479">
+    <name>Значение</name>
+    <synonym>
+      <key>en</key>
+      <value>Value</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Значення</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Значение</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>5</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="19c70f4d-269e-41c8-93e4-cf588ddebe46">
+    <name>СоответствуетНормативу</name>
+    <synonym>
+      <key>en</key>
+      <value>Match</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Відповідає нормативу</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Соответствует нормативу</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="b0416638-4bc0-4d20-8f2d-ef966324519f">
+    <name>ОтклонятьКачество</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отклонять качество</value>
+    </synonym>
+    <comment>При отклонении от нормы - отклонять качество</comment>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="648cb9d6-2fd5-4051-9943-aa52244337b8">
+    <name>УсиленныйКонтроль</name>
+    <synonym>
+      <key>ru</key>
+      <value>Усиленный контроль</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="67655b4b-a727-4d47-a9e9-3de29c41cedd">
+    <name>СостояниеКачества</name>
+    <synonym>
+      <key>ru</key>
+      <value>Состояние качества</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_СостоянияКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="d8978648-d36b-40ff-a998-db688491b29d">
+    <name>ЭтоЗначениеВнешнейПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Это значение внешней пробы</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <attributes uuid="646896fd-6104-429d-860d-647aec905435">
+    <name>ДатаАнализа</name>
+    <synonym>
+      <key>ru</key>
+      <value>Дата анализа</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers/>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <dimensions uuid="97986d5b-b9d8-460d-a123-74897436695f">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>en</key>
+      <value>Item</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="efbe9925-bf0a-42cc-8eb8-a4cb89837e13">
+    <name>Показатель</name>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="ef3d8b69-6074-4e73-979e-5a5093d74632">
+    <name>РегистрацияНаПЛК</name>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация на ПЛК</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="4a38ce59-bc86-4b43-bef4-bff6be2a0914">
+    <name>НазначениеИспользованияКачества</name>
+    <synonym>
+      <key>ru</key>
+      <value>Назначение использования качества</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_НазначенияИспользованияКачества</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="a30df825-9e5e-4f42-aee2-ce8ca8c111f5">
+    <name>ГруппаТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Группа ТС</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ГруппыТС</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

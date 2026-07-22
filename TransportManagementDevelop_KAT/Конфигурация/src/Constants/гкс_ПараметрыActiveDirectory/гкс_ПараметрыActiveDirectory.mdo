@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5a6943e9-f14b-48bd-9749-b18f36c925d0">
+  <producedTypes>
+    <managerType typeId="a05ac0dd-feee-4095-9afb-dc9a72664cef" valueTypeId="9ee86ed7-ec2a-451b-81b7-af28818db9ef"/>
+    <valueManagerType typeId="712aa686-c3d2-4369-90d4-45e9fefa3a6f" valueTypeId="6e17f706-c7ad-4426-a0e2-abe59b479951"/>
+    <valueKeyType typeId="5450b8c4-f40c-4be0-b081-e707a4625120" valueTypeId="36120748-d25c-4fd9-bb16-f9a6ac571065"/>
+  </producedTypes>
+  <name>гкс_ПараметрыActiveDirectory</name>
+  <synonym>
+    <key>ru</key>
+    <value>Параметры active directory (гкс)</value>
+  </synonym>
+  <type>
+    <types>ValueStorage</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

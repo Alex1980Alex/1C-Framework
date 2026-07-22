@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="818f4fd6-260d-497a-9440-ab09e9c692d9">
+  <name>гкс_Документ_ПриказНаОтпускПродукцииЭлеватораЗПП16_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Приказ на отпуск продукции (ЗПП-16)&quot;</value>
+  </synonym>
+</mdclass:Role>

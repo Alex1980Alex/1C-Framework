@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b01d7cd6-8d6a-46cc-9775-fea8ba23e28e">
+  <name>гкс_ОбработкаОчередиВходящихСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обработка очереди входящих сообщений (ИАС)</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ОчередьСообщенийRMQСлужебный.ОбработатьОчередьВходящихСообщений</methodName>
+  <description>Обработка очереди входящих сообщений RMQ (ИАС)</description>
+  <key>Обработка очереди входящих сообщений RMQ (ИАС)</key>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

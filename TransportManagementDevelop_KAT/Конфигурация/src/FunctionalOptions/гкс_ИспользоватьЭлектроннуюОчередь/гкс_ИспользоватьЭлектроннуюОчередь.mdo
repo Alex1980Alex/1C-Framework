@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="edd1fbbf-1905-4915-8f25-9ed6bdf2c9e9">
+  <name>гкс_ИспользоватьЭлектроннуюОчередь</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать электронную очередь</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьЭлектроннуюОчередь</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Document.гкс_ЗаписьВГрафикОтгрузкиПЛК</content>
+  <content>Document.гкс_ЗаписьВГрафикПриемкиПЛК</content>
+  <content>Document.гкс_ЗаписьВОчередьОтгрузкиПЛК</content>
+  <content>Document.гкс_ЗаписьВОчередьПриемкиПЛК</content>
+  <content>Report.гкс_КонтрольЗаездаПоЭлектроннойОчереди</content>
+  <content>DataProcessor.гкс_КалендарьОчереди</content>
+  <content>Report.гкс_АнализПредварительнойЗаписи</content>
+  <content>Subsystem.ЭлектроннаяОчередь.Subsystem.ЭлектроннаяОчередьПриемки</content>
+  <content>Subsystem.ЭлектроннаяОчередь.Subsystem.ЭлектроннаяОчередьОтгрузки</content>
+  <content>Subsystem.ЭлектроннаяОчередь</content>
+  <content>Subsystem.ЭлектроннаяОчередь.Subsystem.ДиспетчеризацияТранспорта</content>
+  <content>Subsystem.ЭлектроннаяОчередь.Subsystem.Аналитика</content>
+  <content>Report.гкс_КонтрольПрохожденияОчередиПриемкиПЛК</content>
+  <content>Report.гкс_Анализ_FCA_DAP</content>
+  <content>InformationRegister.гкс_ГрафикОтгрузкиПЛК</content>
+  <content>InformationRegister.гкс_ГрафикПриемкиПЛК</content>
+  <content>InformationRegister.гкс_ОчередьОтгрузкиПЛК</content>
+  <content>InformationRegister.гкс_ОчередьПриемкиПЛК</content>
+  <content>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции.Subsystem.Regonline</content>
+</mdclass:FunctionalOption>

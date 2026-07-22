@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonCommand xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="3d6add99-0781-4bc1-9236-b009c41dd63b">
+  <name>гкс_РаспространениеФорматаИАС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Распространение формата</value>
+  </synonym>
+  <group>NavigationPanelSeeAlso</group>
+  <representation>Auto</representation>
+</mdclass:CommonCommand>

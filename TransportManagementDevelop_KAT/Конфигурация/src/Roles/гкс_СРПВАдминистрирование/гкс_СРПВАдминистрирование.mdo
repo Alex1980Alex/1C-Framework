@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0f4fe42f-d807-4da8-b99e-a35c6719553a">
+  <name>гкс_СРПВАдминистрирование</name>
+  <synonym>
+    <key>ru</key>
+    <value>СРПВ. Администрирование</value>
+  </synonym>
+</mdclass:Role>

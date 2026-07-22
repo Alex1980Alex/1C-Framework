@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0ab4ff8f-417f-4665-b7e2-0a4490107ac4">
+  <name>гкс_ОтправкаСтатистикиСообщенийRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Отправка статистики сообщений RMQ</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ОчередьСообщенийRMQСлужебный.ОтправкаСтатистикиСообщенийRMQ</methodName>
+  <description>Отправка статистики сообщений RMQ</description>
+  <key>ОтправкаСтатистикиСообщенийRMQ</key>
+  <use>true</use>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

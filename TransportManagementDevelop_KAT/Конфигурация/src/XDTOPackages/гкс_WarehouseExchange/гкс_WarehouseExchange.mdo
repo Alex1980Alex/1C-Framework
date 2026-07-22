@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:XDTOPackage xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a0d0e320-8e8e-410e-82e4-2aea9e45c506">
+  <name>гкс_WarehouseExchange</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse exchange</value>
+  </synonym>
+  <namespace>https://warehouse.sodru.com</namespace>
+</mdclass:XDTOPackage>

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="273187d9-6c6e-4603-854a-b8523faabca6">
+  <producedTypes>
+    <objectType typeId="1f43148e-c027-4f3c-ad23-e7c11d28862d" valueTypeId="d7bd6859-ab69-49a9-b525-1d0d6f5c87ab"/>
+    <refType typeId="366d6f53-605e-4220-9079-bba14277492f" valueTypeId="58f59257-a48f-4b77-9a0b-459c3f8652c6"/>
+    <selectionType typeId="1b207625-9e63-43e1-8fbf-7a291443dfae" valueTypeId="7129bb92-907d-44e3-9958-da2c101c10b0"/>
+    <listType typeId="0484987d-0abf-445c-9377-40200772c763" valueTypeId="30330ff7-5fa5-4098-b05a-dd19b2f7e3c0"/>
+    <managerType typeId="7685b6e6-a294-481e-816c-45a30b080637" valueTypeId="0d13aa95-e346-49f1-9328-44536e4ab5ba"/>
+  </producedTypes>
+  <name>гкс_ОборудованиеПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Оборудование на ПЛК</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ОборудованиеПЛК.StandardAttribute.Code</inputByString>
+  <inputByString>Catalog.гкс_ОборудованиеПЛК.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <hierarchical>true</hierarchical>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <codeLength>9</codeLength>
+  <descriptionLength>50</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <checkUnique>true</checkUnique>
+  <autonumbering>true</autonumbering>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.гкс_ОборудованиеПЛК.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultListForm>Catalog.гкс_ОборудованиеПЛК.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="e07446cd-5de2-4072-9ef8-9547cd076f27">
+    <name>Номер</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер (САРА)</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>10</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="fd0c74f3-778f-42b3-9d61-e2bf56d8c330">
+    <name>ТипОборудования</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип оборудования</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыПодключаемогоОборудования</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="f6e55acb-7e7e-4a30-ada2-13e73248289f">
+    <name>КраткоеНазвание</name>
+    <synonym>
+      <key>ru</key>
+      <value>Краткое название</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>10</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="d3c8062a-0fbd-4dba-a0c1-3e086abb43c8">
+    <name>гкс_НомерПроезда</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номер проезда (Кверион)</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>2</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="4f2661d0-b9cf-4a6a-ad90-a8bae31f32b1">
+    <name>ТочкаОбмена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка обмена</value>
+    </synonym>
+    <comment>Точка обмена через очереди RabbitMQ</comment>
+    <type>
+      <types>CatalogRef.гкс_ТочкиОбменаRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="6c0b93cf-b188-4d57-906c-d6df882a0799">
+    <name>КлючМаршрутизации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ маршрутизации</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>50</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:StringValue">
+      <value>.KeyUtWd.</value>
+    </fillValue>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="742faad4-ecf4-4780-9d6e-ea91c09bbcd7">
+    <name>МаксимальноеКоличествоОпросов</name>
+    <synonym>
+      <key>ru</key>
+      <value>Максимальное количество опросов</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>2</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:NumberValue">
+      <value>20</value>
+    </fillValue>
+  </attributes>
+  <attributes uuid="4fe8b5e0-cf24-4ae0-acca-b3615551c38f">
+    <name>ТипВзвешивания</name>
+    <synonym>
+      <key>en</key>
+      <value>Type of weighting</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Тип взвешивания</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Tipo de pesaje</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_ТипыВзвешивания</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="24e88e6c-0686-43bb-951a-59e8cfdf41fa">
+    <name>ИспользоватьАвтоматическоеВзвешивание</name>
+    <synonym>
+      <key>ru</key>
+      <value>Использовать автоматическое взвешивание</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="5b57539d-085f-4a49-a6ab-e3677bb85caf">
+    <name>ВремяОжиданияОтвета</name>
+    <synonym>
+      <key>ru</key>
+      <value>Время ожидания ответа</value>
+    </synonym>
+    <comment>Время ожидания ответа от сервиса, мс</comment>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>6</precision>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:NumberValue">
+      <value>10000</value>
+    </fillValue>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="eb350997-c869-4694-a533-47309bb97601">
+    <name>АвтоудалениеОчередиОтвета</name>
+    <synonym>
+      <key>ru</key>
+      <value>Автоудаление очереди ответа</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <forms uuid="7901cdd8-ade2-4fbb-968c-11e2e935446c">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="f3aad5a0-bc6b-4c6e-8c97-dd653db94353">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+</mdclass:Catalog>

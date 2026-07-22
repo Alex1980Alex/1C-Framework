@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="98500c84-bdc9-4522-a168-6eed654c8e86">
+  <producedTypes>
+    <managerType typeId="2574cba2-7706-438b-a627-7e732c337201" valueTypeId="3efef12c-78a0-4f0b-9f0c-e2d496c2ac35"/>
+    <valueManagerType typeId="fe1e35ba-8fb2-44c9-b3ad-0ded47ae4c0c" valueTypeId="ec5aed1a-ade0-43b0-b645-acb5da502bdd"/>
+    <valueKeyType typeId="9a35e725-1d95-4793-bab8-4108bed31079" valueTypeId="29b63e28-e3f8-41cd-a22e-248dc513cef1"/>
+  </producedTypes>
+  <name>гкс_ВременнойРазбросДляКПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>Временной разброс для КПП-1(мин)</value>
+  </synonym>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>10</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

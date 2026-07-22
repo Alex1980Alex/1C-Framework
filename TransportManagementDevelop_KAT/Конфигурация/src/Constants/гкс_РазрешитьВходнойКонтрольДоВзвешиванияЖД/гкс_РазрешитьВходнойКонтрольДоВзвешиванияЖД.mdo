@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5bda7f27-8573-4720-aec4-e6c3936cd77f">
+  <producedTypes>
+    <managerType typeId="ca424995-aeff-4386-9685-5f4b191e85aa" valueTypeId="e9824b1a-7dde-44c0-98dc-9c233fc5ee56"/>
+    <valueManagerType typeId="3c0844f6-de6c-4a38-b26b-cb821784227f" valueTypeId="d5bdd068-0cbf-4bbb-89eb-b8ac8b3a4b26"/>
+    <valueKeyType typeId="727fc57f-ab23-4ed2-874b-78499e83e79d" valueTypeId="f296db17-ef89-4ad3-b496-9fb0a8bf0714"/>
+  </producedTypes>
+  <name>гкс_РазрешитьВходнойКонтрольДоВзвешиванияЖД</name>
+  <synonym>
+    <key>ru</key>
+    <value>Разрешить входной контроль до взвешивания (ЖД транспорт)</value>
+  </synonym>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <toolTip>
+    <key>ru</key>
+    <value>Для ЖД транспорта при приемке разрешается оформлять Лабораторный анализ входного контроля до взвешивания вагона</value>
+  </toolTip>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

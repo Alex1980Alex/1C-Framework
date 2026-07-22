@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="43ab5b32-a925-4d05-a01b-00493d97defc">
+  <name>гкс_ОбменДаннымиЭлектронныеТабло</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обмен данными. Электронная очередь. (гкс)</value>
+  </synonym>
+  <comment>Модуль обмена как интерфейс для ИАС</comment>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

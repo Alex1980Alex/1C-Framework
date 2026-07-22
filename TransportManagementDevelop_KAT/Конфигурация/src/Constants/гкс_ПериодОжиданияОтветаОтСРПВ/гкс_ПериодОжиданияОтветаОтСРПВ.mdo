@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a7ee83a9-5751-4659-aadb-675a285a63b8">
+  <producedTypes>
+    <managerType typeId="7f90be51-6699-4a40-857f-f8e03ae84caf" valueTypeId="667b069b-42cb-43fe-92ec-759eb8d4822b"/>
+    <valueManagerType typeId="7bef9cc4-ee2f-4eb0-91fc-f5cbe7d395bc" valueTypeId="713f6586-0b89-4bf4-bf3d-3880d7547e75"/>
+    <valueKeyType typeId="e4c2bca3-f637-4202-a18d-a634154663ae" valueTypeId="44bed191-1dfa-4979-800a-561ea0e90197"/>
+  </producedTypes>
+  <name>гкс_ПериодОжиданияОтветаОтСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Период ожидания ответа от СРПВ (сек)</value>
+  </synonym>
+  <type>
+    <types>Number</types>
+    <numberQualifiers>
+      <precision>10</precision>
+      <nonNegative>true</nonNegative>
+    </numberQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

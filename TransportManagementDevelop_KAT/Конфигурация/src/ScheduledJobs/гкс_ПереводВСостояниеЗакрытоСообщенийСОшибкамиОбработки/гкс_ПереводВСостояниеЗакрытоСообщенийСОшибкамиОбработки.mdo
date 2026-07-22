@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6422961f-ca67-4ab8-b0d2-afe98a84f618">
+  <name>гкс_ПереводВСостояниеЗакрытоСообщенийСОшибкамиОбработки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Перевод в состояние закрыто сообщений с ошибками обработки (ИАС)</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ОчередьСообщенийRMQСлужебный.ПереводВСостояниеЗакрытоСообщенийСОшибкамиОбработки</methodName>
+  <description>Перевод в состояние закрыто сообщений с ошибками обработки (ИАС)</description>
+  <key>34ce0571-5add-4ef9-bfb5-903934953372</key>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

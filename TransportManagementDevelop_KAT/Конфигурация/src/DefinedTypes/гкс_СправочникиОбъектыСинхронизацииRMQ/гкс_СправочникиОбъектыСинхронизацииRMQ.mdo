@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DefinedType xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="70316caf-7e2a-410c-9194-28aedf4db0f6">
+  <producedTypes>
+    <containerType typeId="42d5b4cd-84e6-46fc-9bfe-8ea58a307552" valueTypeId="15156125-d62a-4b54-9f77-bd515a586eb7"/>
+  </producedTypes>
+  <name>гкс_СправочникиОбъектыСинхронизацииRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Справочники-объекты синхронизации RMQ (Интеграционый адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+  <type>
+    <types>CatalogObject.гкс_АлгоритмыРасчетаПоказателейКачестваНоменклатуры</types>
+    <types>CatalogObject.гкс_ПоказателиКачестваWarehouse</types>
+    <types>CatalogObject.гкс_ЭлектронныеТабло</types>
+    <types>CatalogObject.ТранспортныеСредства</types>
+    <types>CatalogObject.гкс_ПродукцияWarehouse</types>
+  </type>
+</mdclass:DefinedType>

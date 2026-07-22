@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="361e8947-b55c-4015-a8e2-334aae142b13">
+  <name>ОчередиСообщенийRMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Интеграционный адаптер &quot;Содружество&quot;</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <picture xsi:type="core:PictureRef">
+    <picture>CommonPicture.гкс_RabbitMQ</picture>
+  </picture>
+  <content>CommonModule.ОчередьСообщений</content>
+  <content>DataProcessor.ИздательСобытий</content>
+  <content>DataProcessor.ПолучательСобытий</content>
+  <content>DataProcessor.АсинхронныйСервис</content>
+  <content>DataProcessor.КлиентАсинхронногоСервиса</content>
+  <content>DataProcessor.КлиентОчередиСообщений</content>
+  <content>Role.ИспользованиеОчередейСообщений</content>
+  <content>CommonTemplate.V8RMQClient</content>
+  <content>CommonModule.ОбновлениеИнформационнойБазыИАС</content>
+  <content>Role.УправлениеСобытийнымОбменом</content>
+  <content>InformationRegister.УдалитьСервераОчередей</content>
+  <content>Catalog.ОбработчикиСобытийRMQ</content>
+  <content>Catalog.СерверыОчередейRMQ</content>
+  <content>CommonModule.ОчередьСообщенийВызовСервера</content>
+  <content>CommonModule.ОчередьСообщенийПовтИсп</content>
+  <content>DataProcessor.НастройкаИнтеграционногоАдаптера</content>
+  <content>InformationRegister.гкс_НастройкиФорматовОбменаОбщие</content>
+  <content>Enum.гкс_ТипыТочекОбменаRMQ</content>
+  <content>Enum.гкс_ТипыФорматовОбменаRMQ</content>
+  <content>Catalog.гкс_МоделиДанныхXDTO</content>
+  <content>Catalog.гкс_ТочкиОбменаRMQ</content>
+  <content>Catalog.гкс_ФорматыОбменаИАС</content>
+  <content>DataProcessor.гкс_ИсследовательGUID</content>
+  <content>Catalog.ИсходящиеСообщения</content>
+  <content>Catalog.гкс_ВходящиеСообщенияRMQ</content>
+  <content>CommonCommand.гкс_НастройкаИнтеграционногоАдаптера</content>
+  <content>InformationRegister.гкс_ОтложеннаяОбработкаОбъектов</content>
+  <content>CommonCommand.гкс_ПакетнаяВыгрузкаОбъектов</content>
+  <content>Role.гкс_НастройкаТаблицыКлючей</content>
+  <content>InformationRegister.гкс_НастройкиФорматовОбменаED</content>
+  <content>CommonCommand.гкс_РаспространениеФорматаИАС</content>
+  <subsystems>РегламентноеПолучениеСообщений</subsystems>
+  <subsystems>АсинхронныеСервисы</subsystems>
+  <subsystems>РегламентнаяОтправкаСообщений</subsystems>
+</mdclass:Subsystem>

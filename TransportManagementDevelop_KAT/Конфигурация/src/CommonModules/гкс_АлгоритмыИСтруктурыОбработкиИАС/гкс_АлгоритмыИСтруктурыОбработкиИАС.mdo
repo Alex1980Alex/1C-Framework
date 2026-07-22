@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="1d6a0745-8c85-4551-9dfa-a6adaf38607d">
+  <name>гкс_АлгоритмыИСтруктурыОбработкиИАС</name>
+  <synonym>
+    <key>ru</key>
+    <value>Алгоритмы и структуры обработки (Интеграционный адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

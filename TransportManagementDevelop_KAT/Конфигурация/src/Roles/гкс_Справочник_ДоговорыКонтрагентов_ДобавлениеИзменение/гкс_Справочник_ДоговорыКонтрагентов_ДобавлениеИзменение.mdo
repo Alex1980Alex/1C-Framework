@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0800bbba-90ff-4073-97cd-f42a4f53b1a8">
+  <name>гкс_Справочник_ДоговорыКонтрагентов_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение договоров контрагентов</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="67a98341-e673-4a75-94fe-2354088863cf">
+  <producedTypes>
+    <objectType typeId="db2decc8-a4a0-42a2-9645-ce2a6ac6864a" valueTypeId="8c182ca4-03a0-4c1a-b5a2-6e7406562c85"/>
+    <managerType typeId="5dfd6f29-8c92-4398-9da3-c0aee999ac64" valueTypeId="2e667df5-ad78-498c-9441-d129ba98307a"/>
+  </producedTypes>
+  <name>гкс_КалендарьОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Календарь очереди</value>
+  </synonym>
+  <defaultForm>DataProcessor.гкс_КалендарьОчереди.Form.Форма</defaultForm>
+  <attributes uuid="8cea5a56-39c8-4fa0-bba7-0c1e0f46ca34">
+    <name>РежимРаботы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Режим работы</value>
+    </synonym>
+    <type>
+      <types>EnumRef.гкс_РежимРаботыКалендаряОчереди</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+  </attributes>
+  <attributes uuid="794048ef-8c83-4f40-998f-941fc0749aa2">
+    <name>ВидОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Вид очереди</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>30</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <attributes uuid="57703c2c-99b8-40ea-a3f3-97c502818be6">
+    <name>УсловиеПроезда</name>
+    <synonym>
+      <key>ru</key>
+      <value>Условие проезда</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_УсловияПроезда</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </attributes>
+  <forms uuid="8bfb9cf5-98d8-4a91-b0cf-e01725b38998">
+    <name>Форма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="5a76fa82-3642-409b-a4ff-98f5c52e810f">
+    <name>ФормаНастроек</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма настроек</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="5d5af5ab-0884-44b8-adc3-653a16da42bf">
+    <name>ФормаВспомогательногоПланировщика</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма вспомогательного планировщика</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="f0b645cf-69af-437f-a89c-b97f8f7dd130">
+    <name>ФормаНастройкиНоменклатуры</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма настройки номенклатуры</value>
+    </synonym>
+    <comment>ERP-1048</comment>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <commands uuid="edf79b18-fbfb-4ced-8968-5baca3899add">
+    <name>КалендарьОчереди</name>
+    <synonym>
+      <key>ru</key>
+      <value>Календарь очереди</value>
+    </synonym>
+    <group>NavigationPanelImportant</group>
+    <representation>Auto</representation>
+  </commands>
+</mdclass:DataProcessor>

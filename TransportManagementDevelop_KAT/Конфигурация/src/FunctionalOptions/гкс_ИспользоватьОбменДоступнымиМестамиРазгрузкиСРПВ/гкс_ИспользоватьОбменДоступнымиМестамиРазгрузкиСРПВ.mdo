@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f77b892a-79d3-4d7e-9d37-c5e24f2779e5">
+  <name>гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать обмен доступными местами разгрузки СРПВ</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</location>
+  <privilegedGetMode>true</privilegedGetMode>
+  <content>Document.гкс_НаправлениеНаРазгрузку.TabularSection.ДоступныеМестаРазгрузки</content>
+</mdclass:FunctionalOption>

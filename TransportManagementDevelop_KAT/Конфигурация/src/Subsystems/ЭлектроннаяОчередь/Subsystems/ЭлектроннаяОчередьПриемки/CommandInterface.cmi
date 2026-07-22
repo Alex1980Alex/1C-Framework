@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmi:CommandInterface xmlns:cmi="http://g5.1c.ru/v8/dt/cmi">
+  <commandsVisibility>
+    <visibilityFragments>
+      <command>Document.гкс_ЗаписьВГрафикПриемкиПЛК.StandardCommand.OpenList</command>
+      <visible>
+        <common>true</common>
+        <for>
+          <value>true</value>
+          <role>Role.гкс_Документ_ЗаписьВГрафикПриемкиПЛК_ДобавлениеИзменение</role>
+        </for>
+      </visible>
+    </visibilityFragments>
+    <visibilityFragments>
+      <command>Document.гкс_ЗаписьВОчередьПриемкиПЛК.StandardCommand.OpenList</command>
+      <visible>
+        <common>true</common>
+        <for>
+          <value>true</value>
+          <role>Role.гкс_Документ_ЗаписьВОчередьПриемкиПЛК_Просмотр</role>
+        </for>
+        <for>
+          <value>true</value>
+          <role>Role.гкс_Документ_ЗаписьВОчередьПриемкиПЛК_ДобавлениеИзменение</role>
+        </for>
+      </visible>
+    </visibilityFragments>
+  </commandsVisibility>
+</cmi:CommandInterface>

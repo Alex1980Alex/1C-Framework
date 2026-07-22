@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="be6f52d3-030b-4cf8-af7d-9db398f50540">
+  <name>гкс_ЭлектроннаяОчередьСервер</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс электронная очередь сервер</value>
+  </synonym>
+  <server>true</server>
+  <serverCall>true</serverCall>
+</mdclass:CommonModule>

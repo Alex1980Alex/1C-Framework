@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b37abef0-6b1e-4d98-9e65-e946be0b0e7f">
+  <name>гкс_Документ_РегистрацияНаПЛК_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Регистрация транспорта на ПЛК&quot;</value>
+  </synonym>
+</mdclass:Role>

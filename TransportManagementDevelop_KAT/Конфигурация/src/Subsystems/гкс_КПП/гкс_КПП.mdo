@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="c801ba7b-846d-4227-b050-3642503910dc">
+  <name>гкс_КПП</name>
+  <synonym>
+    <key>ru</key>
+    <value>КПП</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <picture xsi:type="core:PictureRef">
+    <picture>CommonPicture.гкс_ВъездТранспорта</picture>
+  </picture>
+  <content>DataProcessor.гкс_АРМКПП</content>
+  <content>Role.гкс_Отчет_ОтчетФормаВыездаЗаезда_Просмотр</content>
+  <content>Report.гкс_ОтчетФормаВыездаЗаезда</content>
+  <content>Constant.гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</content>
+  <content>FunctionalOption.гкс_ИспользоватьПредварительнуюРегистрациюНаКПП</content>
+  <content>Role.гкс_Обработка_АРМКПП_Использование</content>
+  <subsystems>Документы</subsystems>
+</mdclass:Subsystem>

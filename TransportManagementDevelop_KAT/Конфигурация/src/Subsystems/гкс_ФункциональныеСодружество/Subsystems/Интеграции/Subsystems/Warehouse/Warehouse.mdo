@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4a431c17-6351-44bf-96fb-b11f4497a56c">
+  <name>Warehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Warehouse</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>InformationRegister.гкс_ВнешниеПробы</content>
+  <content>CommonModule.гкс_ИнтеграцияWarehouse</content>
+  <content>ScheduledJob.гкс_ПолучениеДанныхWarehouse</content>
+  <content>Enum.гкс_ТипыОбъектовWarehouse</content>
+  <content>ScheduledJob.гкс_ОбработкаВходящихДанныхWarehouse</content>
+  <content>Catalog.гкс_ПоказателиКачестваWarehouse</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюСWarehouse</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюСWarehouse</content>
+  <content>Role.гкс_ДобавлениеИзменениеЛабораторияВнешнихПроб</content>
+  <content>Role.гкс_ЧтениеЛабораторияВнешнихПроб</content>
+  <content>Role.гкс_ЧтениеИнтеграцииWarehouse</content>
+  <content>Role.гкс_ДобавлениеИзменениеИнтеграцииWarehouse</content>
+  <content>Catalog.гкс_ПродукцияWarehouse</content>
+  <content>Document.гкс_ВнешняяПроба</content>
+  <content>InformationRegister.гкс_СоответствиеОбъектовWarehouse</content>
+  <content>CommonModule.гкс_ОбменДаннымиWarehouse</content>
+  <content>CommonModule.гкс_ИнтеграцияWarehouseКлиент</content>
+  <content>CommonModule.гкс_ИнтеграцияWarehouseВызовСервера</content>
+  <content>XDTOPackage.гкс_WarehouseExchange</content>
+  <content>Catalog.гкс_ЕдиницыИзмеренияWarehouse</content>
+  <content>Catalog.гкс_ТипыВнешнихПробWarehouse</content>
+  <content>InformationRegister.гкс_ВнешниеПробыРегистрации</content>
+  <content>Catalog.гкс_СтанцииWarehouse</content>
+  <content>Catalog.гкс_КонтрагентыWarehouse</content>
+  <content>InformationRegister.гкс_КонтрольЗаполненияВнешнихПроб</content>
+  <content>Constant.гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</content>
+  <content>FunctionalOption.гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

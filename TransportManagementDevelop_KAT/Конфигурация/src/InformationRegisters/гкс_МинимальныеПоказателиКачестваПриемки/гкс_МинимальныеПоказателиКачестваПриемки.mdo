@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b1236f8d-aa46-41b2-bd20-0f1fb328ca7d">
+  <producedTypes>
+    <selectionType typeId="b971ecf3-3b79-4ceb-8964-58a2926d1f65" valueTypeId="a7822ccf-a3b3-41bf-957c-cd94f7c3f8fb"/>
+    <listType typeId="fd24742d-55ac-414f-a5af-321250676614" valueTypeId="57f80407-a61f-4882-aa5f-df9abaa6ff17"/>
+    <managerType typeId="b8036012-da76-4256-8a47-9184f8379f14" valueTypeId="fa545155-7449-42e2-8bdf-63f7ae02a4d9"/>
+    <recordSetType typeId="43b33727-d1a6-4451-8952-0a9ab75118b6" valueTypeId="caea6de3-b3c8-4de0-8964-2ef88ead65c0"/>
+    <recordKeyType typeId="2b9677f0-171c-48c0-9239-94a895965f29" valueTypeId="0ed63e0e-8ae0-4020-871f-3b7d8016bc62"/>
+    <recordType typeId="fc01bcb9-b953-43ef-b718-ae2c74e9b24d" valueTypeId="4739c71e-46a3-4621-8e9b-702181a13509"/>
+    <recordManagerType typeId="afa06324-e51d-484a-a7a8-b3a193f6368e" valueTypeId="8110e84d-9511-4675-bef7-1d099f108061"/>
+  </producedTypes>
+  <name>гкс_МинимальныеПоказателиКачестваПриемки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Минимальные показатели качества приемки</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <informationRegisterPeriodicity>RecorderPosition</informationRegisterPeriodicity>
+  <writeMode>RecorderSubordinate</writeMode>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="9d0640b0-87a8-453d-9671-199548b92a5c">
+    <name>Действует</name>
+    <synonym>
+      <key>ru</key>
+      <value>Действует</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="c17199e2-186d-4b41-81df-3428a79ddbf6">
+    <name>ЗначениеПоказателя</name>
+    <synonym>
+      <key>en</key>
+      <value>Value</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Значення показника</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Значение показателя</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>15</precision>
+        <scale>5</scale>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="2fcd1a4d-fedc-4b77-9934-3c5c55cbd82a">
+    <name>ОстатокДляПриемки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Остаток для приемки</value>
+    </synonym>
+    <type>
+      <types>Number</types>
+      <numberQualifiers>
+        <precision>10</precision>
+        <scale>3</scale>
+        <nonNegative>true</nonNegative>
+      </numberQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="0bf83c10-8bc1-41c9-beab-2330c5eda01d">
+    <name>ШаблонКомментария</name>
+    <synonym>
+      <key>ru</key>
+      <value>Шаблон комментария</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>100</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:StringValue"/>
+  </resources>
+  <dimensions uuid="de86390e-fdc6-4cc6-a4c0-8a47ddf90ce1">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="b1362d08-220f-4509-bc57-3f57e9c9cee3">
+    <name>Показатель</name>
+    <synonym>
+      <key>en</key>
+      <value>Indicator</value>
+    </synonym>
+    <synonym>
+      <key>uk</key>
+      <value>Показник</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Показатель</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПоказателиАнализовНоменклатуры</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="ea45e0f2-86e0-485b-9d1a-fc43879ca75a">
+    <name>Контрагент</name>
+    <synonym>
+      <key>ru</key>
+      <value>Контрагент</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Контрагенты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillChecking>ShowError</fillChecking>
+    <denyIncompleteValues>true</denyIncompleteValues>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <master>true</master>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="72313925-695a-420d-8050-40e452bfb39a">
+  <producedTypes>
+    <managerType typeId="b623bfb2-55ba-4db9-9d23-e094540baee3" valueTypeId="cceb2cbf-4e92-43c1-884e-670d1ed86580"/>
+    <valueManagerType typeId="88881acf-285f-460b-853b-7c2496f0c99e" valueTypeId="cc8cfa0d-3d23-4a0b-b872-48a1dc8b9f57"/>
+    <valueKeyType typeId="fafd778a-2890-4cce-90eb-1450cf395b31" valueTypeId="2cf90047-b4a6-4ca3-b6c7-148942a495a8"/>
+  </producedTypes>
+  <name>гкс_ИспользоватьКонтрольВесаОтгрузки</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль веса отгрузки</value>
+  </synonym>
+  <comment>Использовать контроль веса при записи в электронную очередь отгрузки</comment>
+  <type>
+    <types>Boolean</types>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

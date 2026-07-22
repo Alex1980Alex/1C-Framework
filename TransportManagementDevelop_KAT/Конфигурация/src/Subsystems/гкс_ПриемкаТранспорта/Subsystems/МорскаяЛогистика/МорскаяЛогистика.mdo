@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="1d8761da-8dd1-40d9-9a62-676d6c7af7a0">
+  <name>МорскаяЛогистика</name>
+  <synonym>
+    <key>ru</key>
+    <value>Морская логистика</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Document.гкс_Фрахт</content>
+  <content>InformationRegister.гкс_НастройкиГруппировкиПоЛотам</content>
+  <content>InformationRegister.гкс_ПланыРазгрузкиСудов</content>
+  <content>Document.гкс_РабочаяСмена</content>
+  <content>Document.гкс_ПрибытиеСуднаНаПЛК</content>
+  <content>Enum.гкс_СостоянияТранспортныхСредств</content>
+  <content>Enum.гкс_СостоянияОбработкиСудна</content>
+  <content>AccumulationRegister.гкс_ОбработкаСудов</content>
+  <content>InformationRegister.гкс_ТранспортныеДокументыФрахта</content>
+  <content>Role.гкс_РегистрСведений_СостоянияФрахта_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_СостоянияФрахта_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_ТранспортныеДокументыФрахта_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_ТранспортныеДокументыФрахта_ДобавлениеИзменение</content>
+  <content>Catalog.гкс_Лоты</content>
+  <content>InformationRegister.гкс_ДанныеВходногоКонтроляПоЛотам</content>
+  <content>Role.гкс_Справочник_Лоты_ДобавлениеИзменение</content>
+  <content>Role.гкс_Справочник_Лоты_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_ДанныеВходногоКонтроляПоЛотам_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_ДанныеВходногоКонтроляПоЛотам_Просмотр</content>
+  <content>CommonModule.гкс_МорскаяЛогистикаКлиентСервер</content>
+  <content>AccumulationRegister.гкс_ВыработкаСмены</content>
+  <content>Role.гкс_РегистрНакопления_ОбработкаСудов_Просмотр</content>
+  <content>Role.гкс_РегистрНакопления_ВыработкаСмены_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрНакопления_ВыработкаСмены_Просмотр</content>
+  <content>Role.гкс_РегистрНакопления_ОбработкаСудов_ДобавлениеИзменение</content>
+  <parentSubsystem>Subsystem.гкс_ПриемкаТранспорта</parentSubsystem>
+</mdclass:Subsystem>

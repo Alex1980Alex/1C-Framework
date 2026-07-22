@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fa80d7a7-d642-4d54-b02b-104345b9cad4">
+  <name>гкс_Документ_ЗаданияНаПроверкуКачества_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение документов &quot;Задания на проверку качества&quot;</value>
+  </synonym>
+</mdclass:Role>

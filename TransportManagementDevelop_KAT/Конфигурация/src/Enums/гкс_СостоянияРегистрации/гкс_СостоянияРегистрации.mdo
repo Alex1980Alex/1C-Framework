@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="7d6f1bf4-1423-4b4b-9192-b6c0114295d9">
+  <producedTypes>
+    <refType typeId="9991fc2f-f856-48b3-9ffc-a77fab591916" valueTypeId="e5ec5869-2c63-4c1b-b6c3-b23150a06f95"/>
+    <listType typeId="ee31f15d-fdb4-47d7-a75c-269edd2ebeae" valueTypeId="d354ba32-f2b2-43b3-aac4-6c68cb04d493"/>
+    <managerType typeId="e63a798e-51a7-47da-9239-c5c9ed9b3670" valueTypeId="119edd4c-afbd-4e45-8976-0ddc558c7e40"/>
+  </producedTypes>
+  <name>гкс_СостоянияРегистрации</name>
+  <synonym>
+    <key>en</key>
+    <value>Registation status</value>
+  </synonym>
+  <synonym>
+    <key>ru</key>
+    <value>Состояния регистрации (гкс)</value>
+  </synonym>
+  <synonym>
+    <key>es</key>
+    <value>Estados de registro</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="df361cba-a765-4625-9220-3d50d12c4d37">
+    <name>Прибыл</name>
+    <synonym>
+      <key>ru</key>
+      <value>Прибыл</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="53b86833-37fc-4ff8-bcbf-11d2575d3b51">
+    <name>ВзвешенБрутто</name>
+    <synonym>
+      <key>en</key>
+      <value>Entry weighting</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешен брутто</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Pesaje de entrada</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="dee34df5-12d4-4ad1-87c3-5528ae380001">
+    <name>НеПринятоПоПревышениюМаксимальногоВеса</name>
+    <synonym>
+      <key>ru</key>
+      <value>Не принято по весу</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="40244430-44ca-4456-b6e6-1a9fad4d17b1">
+    <name>Регистрация</name>
+    <synonym>
+      <key>en</key>
+      <value>Registration</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Registrarse</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="586a2922-b6cf-4a56-86d2-3b48efade2f5">
+    <name>ГотовКОтборуПроб</name>
+    <synonym>
+      <key>ru</key>
+      <value>Готов к отбору проб</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="be125c93-dcc5-4de0-95d4-78f829163747">
+    <name>ВзятыПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Взяты пробы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="8eda8ce4-bbc2-449f-967f-89f0464ee32a">
+    <name>РезультатыПробПолучены</name>
+    <synonym>
+      <key>en</key>
+      <value>Analysis enter</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Результаты проб получены</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Analisado</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="c9905f3c-ee1e-4041-813e-0ce9f8eff7ff">
+    <name>КачествоПринято</name>
+    <synonym>
+      <key>ru</key>
+      <value>Качество принято</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="26bd3b64-97a5-48aa-9545-4a462cd16302">
+    <name>КачествоНеПринято</name>
+    <synonym>
+      <key>ru</key>
+      <value>Качество не принято</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7c3861cf-76d9-4769-b069-a0869b0c4ad2">
+    <name>ВыгрузкаРазрешена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Выгрузка разрешена</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="85d314da-8a24-40e4-a37b-b6681fc911bc">
+    <name>Выгружен</name>
+    <synonym>
+      <key>en</key>
+      <value>Unloading</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Выгружен</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Descarga</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="bed72983-89b7-427e-9e45-d61855acace5">
+    <name>ВзвешенТара</name>
+    <synonym>
+      <key>en</key>
+      <value>Exit weighting</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешен тара</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Pesaje en la carretera</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="394e76f2-c45f-4287-b187-299a24c6aeee">
+    <name>Убыл</name>
+    <synonym>
+      <key>en</key>
+      <value>Receipt</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Убыл</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Aceptado</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4ad54d5e-afe0-4ad3-9594-54a7b265592a">
+    <name>НеПринято</name>
+    <synonym>
+      <key>en</key>
+      <value>Shipped</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Не принято</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Embarcado</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="e7daffc5-8468-43e4-8dd2-b0d42c18db41">
+    <name>ПринятыПробы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Приняты пробы</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="4099371e-3d69-4268-a99f-d12ca29a6451">
+    <name>ПогрузкаРазрешена</name>
+    <synonym>
+      <key>ru</key>
+      <value>Погрузка разрешена</value>
+    </synonym>
+    <comment>ERP-2029</comment>
+  </enumValues>
+  <enumValues uuid="01933a25-477e-4b5f-9ecf-540dd2a2c94d">
+    <name>Погружен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Погружен</value>
+    </synonym>
+    <comment>ERP-2029</comment>
+  </enumValues>
+</mdclass:Enum>

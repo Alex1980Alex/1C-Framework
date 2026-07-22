@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ca08387e-c4d4-4a1d-ba45-315d787a2cbc">
+  <name>гкс_ОбновитьИсториюДанных</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обновить историю данных</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ВерсионированиеОбъектов.ОбновитьИсториюДанных</methodName>
+  <description>Обновление истории данных</description>
+  <key>Обновление истории данных</key>
+  <use>true</use>
+  <predefined>true</predefined>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

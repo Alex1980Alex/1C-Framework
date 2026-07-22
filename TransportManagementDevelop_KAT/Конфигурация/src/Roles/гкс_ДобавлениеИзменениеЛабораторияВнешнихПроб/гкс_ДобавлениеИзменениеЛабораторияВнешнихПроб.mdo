@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a76cbd3d-cccf-497d-8da3-51c34e65d037">
+  <name>гкс_ДобавлениеИзменениеЛабораторияВнешнихПроб</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление и изменение &quot;Лаборатория - Внешние пробы&quot;</value>
+  </synonym>
+</mdclass:Role>

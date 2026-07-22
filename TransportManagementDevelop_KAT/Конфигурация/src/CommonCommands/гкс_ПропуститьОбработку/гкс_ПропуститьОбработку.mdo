@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonCommand xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e13a4172-8a7d-41c5-9912-182104cf4c36">
+  <name>гкс_ПропуститьОбработку</name>
+  <synonym>
+    <key>ru</key>
+    <value>Пропустить обработку</value>
+  </synonym>
+  <group>FormCommandBarImportant</group>
+  <commandParameterType>
+    <types>CatalogRef.ИсходящиеСообщения</types>
+    <types>CatalogRef.гкс_ОчередьОтложенногоФормированияИсходящихСообщений</types>
+    <types>CatalogRef.гкс_ВходящиеСообщенияRMQ</types>
+  </commandParameterType>
+  <parameterUseMode>Multiple</parameterUseMode>
+  <modifiesData>true</modifiesData>
+  <representation>Auto</representation>
+</mdclass:CommonCommand>

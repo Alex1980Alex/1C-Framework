@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="897043a0-0836-4abc-b661-a54d748d8b08">
+  <name>гкс_Обработка_АРМКомпозитныеПробы_Использование</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использование обработки &quot;Композитные пробы&quot;</value>
+  </synonym>
+</mdclass:Role>

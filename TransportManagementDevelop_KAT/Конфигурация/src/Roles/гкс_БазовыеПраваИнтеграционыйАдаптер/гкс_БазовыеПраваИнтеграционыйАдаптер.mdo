@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ff31d14a-0a3a-4fd7-99a4-cf45c189723a">
+  <name>гкс_БазовыеПраваИнтеграционыйАдаптер</name>
+  <synonym>
+    <key>ru</key>
+    <value>Базовые права (Интеграционый адаптер &quot;Содружество&quot;) </value>
+  </synonym>
+  <comment>!Только для режима запуска - толстый клиент обычное приложение.В этой роли собраны права, которые необходимо установтить для корректнгой работы и формирования сообщений.</comment>
+</mdclass:Role>

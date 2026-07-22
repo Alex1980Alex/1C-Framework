@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="4f012460-77f1-4b75-9581-e19be020c126">
+  <producedTypes>
+    <selectionType typeId="a4f68a93-968e-41a3-9f67-e9484ca917ac" valueTypeId="c69ee553-3d06-4964-9e16-b68b07cde316"/>
+    <listType typeId="4f17799c-fb02-4b77-a038-ef15844782ba" valueTypeId="b9399a22-3184-43b9-a872-8c3ee87b7cc8"/>
+    <managerType typeId="5eeb198a-eebc-4044-8f06-832dbf09c783" valueTypeId="d00087e9-f941-4358-93bb-f276bffa1cf2"/>
+    <recordSetType typeId="36c8035e-db73-4a53-8ea4-3ee7aebc78bf" valueTypeId="a3bef2b1-f70d-402d-8fc0-bc988de42cae"/>
+    <recordKeyType typeId="7a0dc43c-e919-4315-a2a6-c43968891238" valueTypeId="4c64e10f-80bf-47d4-b1e0-58ac70374ebd"/>
+    <recordType typeId="edf91080-66e8-4b69-b9ef-719d62b47b02" valueTypeId="60ae0e32-48e3-448f-a23b-d6cb6db6f5b4"/>
+    <recordManagerType typeId="d19ca189-cacd-404f-9c9e-546ede5585c9" valueTypeId="487c90a2-0b06-4311-9752-0a578c4584bb"/>
+  </producedTypes>
+  <name>гкс_ПриемкаТранспортаБезВходногоКонтроля</name>
+  <synonym>
+    <key>ru</key>
+    <value>Приемка транспорта без входного контроля</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="e3bfe159-de02-4395-9b73-e3fa20414f73">
+    <name>ПроизводственныеСутки</name>
+    <synonym>
+      <key>ru</key>
+      <value>Производственные сутки</value>
+    </synonym>
+    <type>
+      <types>Date</types>
+      <dateQualifiers>
+        <dateFractions>Date</dateFractions>
+      </dateQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="7abe035b-73c1-42bd-9041-47ef15d6faa9">
+    <name>Поставщик</name>
+    <synonym>
+      <key>ru</key>
+      <value>Поставщик</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Контрагенты</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="26988736-1ee9-49e5-8c0e-0919a6189ce8">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <resources uuid="c41310a4-b761-410e-af15-5bf1891a684f">
+    <name>ТранспортноеСредство</name>
+    <synonym>
+      <key>ru</key>
+      <value>Транспортное средство</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ТранспортныеСредства</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="332dfcea-e728-469e-9432-d924fd662e0a">
+    <name>ДокументРегистрации</name>
+    <synonym>
+      <key>ru</key>
+      <value>Документ регистрации</value>
+    </synonym>
+    <type>
+      <types>DocumentRef.гкс_РегистрацияНаПЛК</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0d3036ef-bf94-49d0-b3c0-b9c364ed87eb">
+  <producedTypes>
+    <refType typeId="b9254012-9a4e-4014-b529-2b0c8754a0a0" valueTypeId="7211c004-c6f5-4eb1-9493-22ad0c9b991a"/>
+    <listType typeId="f8d41444-8d1d-48cc-97f4-e2cbfb73ded2" valueTypeId="fb99f4ff-0e59-490b-a9a3-99d7341fbdca"/>
+    <managerType typeId="43db16b0-3ed9-4f33-9ebd-5252e60d1af4" valueTypeId="c3d85c02-6ba8-423f-a7e2-b0763443c269"/>
+  </producedTypes>
+  <name>гкс_ТипыУсиленногоКонтроляКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Тип усиленного контроля качества</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="7e1c5ca7-ab48-4a1f-a73d-90a6dade6476">
+    <name>КаждоеТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Каждое ТС</value>
+    </synonym>
+    <comment>Каждое транспортное средство</comment>
+  </enumValues>
+  <enumValues uuid="a8d0f9b2-c328-4fa7-ba1c-6b9f2414492e">
+    <name>ПервоеТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Первое ТС</value>
+    </synonym>
+    <comment>Первое транспортное средство</comment>
+  </enumValues>
+  <enumValues uuid="d1452501-c675-4b0f-9e2b-666cca1eb6a8">
+    <name>ГруппыТС</name>
+    <synonym>
+      <key>ru</key>
+      <value>Группы ТС</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

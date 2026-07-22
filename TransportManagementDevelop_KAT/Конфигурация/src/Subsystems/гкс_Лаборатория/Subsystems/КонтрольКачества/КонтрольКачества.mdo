@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a199800e-f7a9-4269-b219-0c2bcb0bd6bf">
+  <name>КонтрольКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Контроль качества</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>DataProcessor.гкс_АРМПриемкаПоКачеству</content>
+  <content>InformationRegister.гкс_НастройкиУсиленногоКонтроляКачества</content>
+  <content>InformationRegister.гкс_НастройкиОтключенияВходногоКонтроляКачества</content>
+  <content>InformationRegister.гкс_ФактическиеПоказателиКачества</content>
+  <content>Catalog.гкс_ПараметрыСозданияНастроекУсиленногоКонтроля</content>
+  <parentSubsystem>Subsystem.гкс_Лаборатория</parentSubsystem>
+</mdclass:Subsystem>

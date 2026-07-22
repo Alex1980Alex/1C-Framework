@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Report xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="393623df-f397-41f2-8d40-9b9e5a34cc0e">
+  <producedTypes>
+    <objectType typeId="a4ae45cb-013c-419d-9bfd-8fe79f135b96" valueTypeId="9c5f43c2-75cb-469b-abf0-63441f4cef8d"/>
+    <managerType typeId="ee0ea41e-5a8e-4344-a928-aea0867c5a41" valueTypeId="4d66e030-7707-405d-a595-e49c1a09f318"/>
+  </producedTypes>
+  <name>гкс_ОтчетОВремениОперацийАвтоНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Время операций транспорта на ПЛК</value>
+  </synonym>
+  <comment>ERP-1131</comment>
+  <defaultForm>CommonForm.ФормаОтчета</defaultForm>
+  <mainDataCompositionSchema>Report.гкс_ОтчетОВремениОперацийАвтоНаПЛК.Template.ОсновнаяСхемаКомпоновкиДанных</mainDataCompositionSchema>
+  <defaultSettingsForm>CommonForm.ФормаНастроекОтчета</defaultSettingsForm>
+  <defaultVariantForm>CommonForm.ФормаВариантаОтчета</defaultVariantForm>
+  <variantsStorage>SettingsStorage.ХранилищеВариантовОтчетов</variantsStorage>
+  <templates uuid="b3c26770-ebbd-48ea-bb06-44f4cb41153e">
+    <name>ОсновнаяСхемаКомпоновкиДанных</name>
+    <synonym>
+      <key>ru</key>
+      <value>Основная схема компоновки данных</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Report>

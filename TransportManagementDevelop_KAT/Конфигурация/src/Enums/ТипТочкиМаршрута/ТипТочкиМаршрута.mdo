@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="1a2b1984-8aee-40eb-a5ac-625ead97e761">
+  <producedTypes>
+    <refType typeId="fbf7b838-5409-4082-84f3-ef1ea405cdad" valueTypeId="27305338-2278-4c46-82ae-f6ef056a8f95"/>
+    <listType typeId="bd3b8942-c9ec-4e09-9bdc-dd26e41e21fa" valueTypeId="7bc379e1-b624-4cf2-8346-6f78086a0329"/>
+    <managerType typeId="f8078971-5250-4cf9-976e-5bb8894713b5" valueTypeId="9f57127f-0792-48ec-86c1-231c117ceb0a"/>
+  </producedTypes>
+  <name>ТипТочкиМаршрута</name>
+  <synonym>
+    <key>ru</key>
+    <value>Тип точки маршрута</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="e298da85-2f34-47af-a0b0-92f926271285">
+    <name>ЖДСтанция</name>
+    <synonym>
+      <key>ru</key>
+      <value>ЖД Станция</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="27e0c371-31f2-4cb2-84f6-6fa6bbb09b3c">
+    <name>Порт</name>
+    <synonym>
+      <key>ru</key>
+      <value>Порт</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="415beb32-2bd6-4b34-b2c4-3de1d36dac41">
+    <name>Прочее</name>
+    <synonym>
+      <key>ru</key>
+      <value>Прочее</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="434760fd-9f01-4445-97a1-981210c1533d">
+    <name>ТаможенныйТерминал</name>
+    <synonym>
+      <key>ru</key>
+      <value>Таможенный терминал</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="7fb13e31-e637-45fd-9d4e-491db9a5a46c">
+    <name>Склад</name>
+    <synonym>
+      <key>ru</key>
+      <value>Склад</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="a26f3a48-d861-4781-8441-07b4dd908c12">
+    <name>ТочкаКонтрагента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Точка контрагента</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="8bc0665f-65bd-4567-86fb-5588d4578b59">
+    <name>Судно</name>
+    <synonym>
+      <key>ru</key>
+      <value>Судно</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

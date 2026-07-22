@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Constant xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="557debf4-01a4-44ef-af87-e6c94dd23023">
+  <producedTypes>
+    <managerType typeId="3fbb1a49-f8ff-4025-934a-56ea35c79097" valueTypeId="91010354-bb97-451f-b203-a1fdba8d943f"/>
+    <valueManagerType typeId="8a1fc556-4dd5-4edb-a54f-105c67f6697f" valueTypeId="43fab08d-2320-4208-b589-cb83b8721eef"/>
+    <valueKeyType typeId="edcf1ed6-d9a0-4574-b445-e9ef739fa3e9" valueTypeId="d4521fa1-466d-487c-a2f9-402558593e26"/>
+  </producedTypes>
+  <name>гкс_ПутьКДокументамСАРА</name>
+  <synonym>
+    <key>ru</key>
+    <value>Путь к документам САРА</value>
+  </synonym>
+  <dataHistory>Use</dataHistory>
+  <type>
+    <types>String</types>
+    <stringQualifiers>
+      <length>150</length>
+    </stringQualifiers>
+  </type>
+  <useStandardCommands>true</useStandardCommands>
+  <minValue xsi:type="core:UndefinedValue"/>
+  <maxValue xsi:type="core:UndefinedValue"/>
+  <dataLockControlMode>Managed</dataLockControlMode>
+</mdclass:Constant>

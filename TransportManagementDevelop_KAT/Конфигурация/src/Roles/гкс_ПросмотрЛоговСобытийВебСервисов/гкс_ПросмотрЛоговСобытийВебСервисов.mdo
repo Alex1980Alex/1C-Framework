@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="11833839-2241-4487-80d7-d613ca532458">
+  <name>гкс_ПросмотрЛоговСобытийВебСервисов</name>
+  <synonym>
+    <key>ru</key>
+    <value>(гкс) Просмотр журнала (логов) событий веб сервисов</value>
+  </synonym>
+</mdclass:Role>

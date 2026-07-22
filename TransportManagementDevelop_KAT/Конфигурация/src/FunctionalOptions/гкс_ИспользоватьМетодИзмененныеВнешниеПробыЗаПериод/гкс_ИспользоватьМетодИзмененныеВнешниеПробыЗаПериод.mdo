@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="14dda325-53f5-4d1b-b666-5c0be8ade841">
+  <name>гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать метод &quot;Измененные внешние пробы за период&quot;</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьМетодИзмененныеВнешниеПробыЗаПериод</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

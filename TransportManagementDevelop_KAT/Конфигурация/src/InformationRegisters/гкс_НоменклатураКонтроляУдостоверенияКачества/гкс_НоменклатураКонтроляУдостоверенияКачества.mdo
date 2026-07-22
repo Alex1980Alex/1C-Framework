@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="6e048ce9-8221-49e3-91dd-520de3fea887">
+  <producedTypes>
+    <selectionType typeId="76d924bf-8e4e-441b-8347-12811046748c" valueTypeId="c85d95a1-901c-42de-b40f-abee5be727d6"/>
+    <listType typeId="148052a8-4ee4-40f8-8c48-282b10008a91" valueTypeId="1c449f25-f26a-41c3-9d8d-c482abccce5f"/>
+    <managerType typeId="de292dd5-d1cb-4066-b36c-07f0871f80db" valueTypeId="ce533115-3bfd-450f-b8e9-77f4df2c8ebf"/>
+    <recordSetType typeId="4850f231-a520-42a9-899c-1c8b3638cd0e" valueTypeId="57622f27-cbfb-43cd-a6c4-a93b6e66329d"/>
+    <recordKeyType typeId="3736ebb8-41b8-448a-be70-0d16c6eb53de" valueTypeId="3e710b6e-4dc5-4103-9159-9a9ede9de9f7"/>
+    <recordType typeId="12419ec5-f715-4169-8490-ef937ff1f058" valueTypeId="396d15b9-6319-46d2-92b3-6eb26c1d0724"/>
+    <recordManagerType typeId="f3ad177a-90e4-4983-b7e2-fc697e50dd57" valueTypeId="04451cf6-8646-441f-bcf2-be1af821aa76"/>
+  </producedTypes>
+  <name>гкс_НоменклатураКонтроляУдостоверенияКачества</name>
+  <synonym>
+    <key>ru</key>
+    <value>Номенклатура контроля удостоверения качества</value>
+  </synonym>
+  <comment>Список номенклатур, для которых при приёмке ЖД-транспортом обязательны данные удостоверения качества</comment>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="28ef6c6e-085f-4262-9159-758a18efd3a5">
+    <name>Контролируется</name>
+    <synonym>
+      <key>ru</key>
+      <value>Контролируется</value>
+    </synonym>
+    <comment>Требуется внесение данных удостоверения качества</comment>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:BooleanValue">
+      <value>true</value>
+    </fillValue>
+  </resources>
+  <dimensions uuid="c391cf89-94a5-409a-bc87-8fe8e7b4efc1">
+    <name>Номенклатура</name>
+    <synonym>
+      <key>ru</key>
+      <value>Номенклатура</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.Номенклатура</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

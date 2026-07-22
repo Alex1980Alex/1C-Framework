@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="8949aa13-a559-4490-9c49-c725044411fc">
+  <name>гкс_ВъездТранспорта</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс въезд транспорта</value>
+  </synonym>
+  <comment>&lt;a href=&quot;https://www.flaticon.com/ru/free-icons/&quot; title=&quot;Автокафе иконки&quot;>Автокафе иконки от Freepik - Flaticon&lt;/a></comment>
+</mdclass:CommonPicture>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="b3cd9dbe-b38f-46b0-82e9-79b042d12861">
+  <producedTypes>
+    <refType typeId="4e24b46c-8d5b-411b-98f2-3d91ac5e659c" valueTypeId="5ed749cf-7da2-4ab5-8efd-817c5819d047"/>
+    <listType typeId="29f3c3b3-6dc1-4625-8689-cc3693aeb878" valueTypeId="4ef48f07-f5ad-4ffb-a034-406bbe90d7dd"/>
+    <managerType typeId="e9ec36fb-4e21-42b8-8c83-8be12b728a53" valueTypeId="5fa40dcb-86f0-4aa3-83fe-24c4d05e2b88"/>
+  </producedTypes>
+  <name>гкс_ТипыСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Типы сообщений</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="01006a71-6218-4cc4-91e6-7a4dbac6a7ca">
+    <name>ИсходящееСообщение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Исходящее сообщение</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="c1ff3230-2b22-4d87-8b16-73111f83e9fc">
+    <name>ВходящееСообщение</name>
+    <synonym>
+      <key>ru</key>
+      <value>Входящее сообщение</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

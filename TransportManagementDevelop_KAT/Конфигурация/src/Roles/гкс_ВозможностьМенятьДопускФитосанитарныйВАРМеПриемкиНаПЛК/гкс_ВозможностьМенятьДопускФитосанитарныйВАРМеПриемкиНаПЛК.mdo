@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0903c102-ef13-44ee-a2eb-b9fb1234b7fe">
+  <name>гкс_ВозможностьМенятьДопускФитосанитарныйВАРМеПриемкиНаПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Возможность менять допуск фитосанитарный в АРМе приемки на ПЛК</value>
+  </synonym>
+  <comment>ERP-2051</comment>
+</mdclass:Role>

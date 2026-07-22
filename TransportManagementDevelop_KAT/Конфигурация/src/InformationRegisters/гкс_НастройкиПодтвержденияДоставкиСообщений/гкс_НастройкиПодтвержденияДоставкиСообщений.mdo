@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:InformationRegister xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="5b57856e-4f90-443c-8ed5-efa8ddfddaf0">
+  <producedTypes>
+    <selectionType typeId="141bb523-a44d-4b47-8d59-1ce0ad521c3d" valueTypeId="7b0e7f1d-c56a-4de2-8a0f-be1b85467ee6"/>
+    <listType typeId="7958d0a2-3ba6-4cd0-afe2-d0e879c93bce" valueTypeId="f18b248f-ab10-47f3-8570-ebb76d4082b3"/>
+    <managerType typeId="d874caca-75f1-4fea-b314-df0c03ac511c" valueTypeId="0762f88a-1549-4e54-8070-e0abc2edf289"/>
+    <recordSetType typeId="d6a26a45-7014-4d9d-ad4a-a15f98050253" valueTypeId="fb79c1bf-c5b2-4077-a50e-f9a91c6e4a93"/>
+    <recordKeyType typeId="88ac1034-79b5-4bfa-88a2-c2fe309fafef" valueTypeId="9e980cad-e9dc-4f73-b3bb-b5e635968e04"/>
+    <recordType typeId="8188351f-ff1c-47f7-b57e-17a739527143" valueTypeId="14568082-d5e0-4fc6-8daa-5b63af48c8ac"/>
+    <recordManagerType typeId="106ea582-accc-452b-9810-222ebe250e9c" valueTypeId="32c7cce1-95b3-46b2-860f-b46b09ffa529"/>
+  </producedTypes>
+  <name>гкс_НастройкиПодтвержденияДоставкиСообщений</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройки подтверждения доставки сообщений</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <editType>InDialog</editType>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <resources uuid="f8bb0af3-d822-49da-88f3-67716e99c5d8">
+    <name>КлючИдентификатораСобытия</name>
+    <synonym>
+      <key>ru</key>
+      <value>Ключ идентификатора события</value>
+    </synonym>
+    <type>
+      <types>String</types>
+      <stringQualifiers>
+        <length>150</length>
+      </stringQualifiers>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+  </resources>
+  <dimensions uuid="1ca739ed-15d8-453d-9ad7-fafe6442af49">
+    <name>НастройкаПолучателя</name>
+    <synonym>
+      <key>ru</key>
+      <value>Настройка получателя</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.гкс_ПолучателиДанныхRMQ</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+  <dimensions uuid="13f839da-3551-40d4-80f5-42cbe3c47753">
+    <name>ТипОбъектаСобытия</name>
+    <synonym>
+      <key>ru</key>
+      <value>Тип объекта события</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ИдентификаторыОбъектовМетаданных</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <mainFilter>true</mainFilter>
+  </dimensions>
+</mdclass:InformationRegister>

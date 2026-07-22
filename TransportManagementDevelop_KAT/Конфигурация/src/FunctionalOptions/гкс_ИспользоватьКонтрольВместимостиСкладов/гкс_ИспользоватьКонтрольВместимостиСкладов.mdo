@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:FunctionalOption xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="dffe2ec0-67a2-4253-8baa-5b90637a458e">
+  <name>гкс_ИспользоватьКонтрольВместимостиСкладов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Использовать контроль вместимости складов</value>
+  </synonym>
+  <location>Constant.гкс_ИспользоватьКонтрольВместимостиСкладов</location>
+  <privilegedGetMode>true</privilegedGetMode>
+</mdclass:FunctionalOption>

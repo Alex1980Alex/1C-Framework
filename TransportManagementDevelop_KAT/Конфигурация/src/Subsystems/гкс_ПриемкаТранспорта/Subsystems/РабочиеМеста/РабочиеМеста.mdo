@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a959a5cb-8838-41e8-a7f2-9692a307b445">
+  <name>РабочиеМеста</name>
+  <synonym>
+    <key>ru</key>
+    <value>Рабочие места</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>DataProcessor.гкс_ПриемкаТранспорта</content>
+  <content>DataProcessor.гкс_АРМКомпозитныеПробы</content>
+  <content>Constant.гкс_АвтоматическаяПечатьЭтикеток</content>
+  <content>DataProcessor.гкс_АРМПромежуточныйКомпозит</content>
+  <parentSubsystem>Subsystem.гкс_ПриемкаТранспорта</parentSubsystem>
+</mdclass:Subsystem>

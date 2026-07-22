@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ScheduledJob xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f1218ac6-5b44-4f15-a7e0-fd96add0e10a">
+  <name>гкс_ОбновлениеИнформацииОВагонахСРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обновление информации о вагонах из СРПВ</value>
+  </synonym>
+  <methodName>CommonModule.гкс_ИнтеграцияСРПВ.ПолучитьИнформациюОНахожденииВагонов</methodName>
+  <description>Обновление информации о вагонах из СРПВ</description>
+  <key>ОбновлениеИнформацииОВагонахСРПВ</key>
+  <use>true</use>
+  <restartCountOnFailure>3</restartCountOnFailure>
+  <restartIntervalOnFailure>10</restartIntervalOnFailure>
+</mdclass:ScheduledJob>

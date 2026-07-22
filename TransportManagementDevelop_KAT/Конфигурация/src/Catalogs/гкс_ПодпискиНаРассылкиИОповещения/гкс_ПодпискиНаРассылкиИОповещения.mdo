@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="347c07f6-05e9-410c-8588-b34fc9922b50">
+  <producedTypes>
+    <objectType typeId="33f8b631-9006-4737-8481-13f4b483e227" valueTypeId="0726e451-31d1-44de-b3d9-957fe3a86b71"/>
+    <refType typeId="f1871c1f-1259-4733-a91d-b96f3741ce79" valueTypeId="1c08fdfd-8aba-4f03-9f30-d53acdba9581"/>
+    <selectionType typeId="6a29ac72-cc8e-4063-9fa2-74de9d884b62" valueTypeId="60351224-6423-4ef5-8448-26dae22957a1"/>
+    <listType typeId="0775e82e-677a-4a5c-9bbc-ca86e84d079d" valueTypeId="812c4706-3668-4519-bc54-b0b44be20c5c"/>
+    <managerType typeId="79ed488e-9c3f-4a2d-806c-985b2bf2fd2e" valueTypeId="78713876-474c-4eef-97d0-e6e50f3b5e2c"/>
+  </producedTypes>
+  <name>гкс_ПодпискиНаРассылкиИОповещения</name>
+  <synonym>
+    <key>ru</key>
+    <value>Подписки на рассылки и оповещения</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+  <inputByString>Catalog.гкс_ПодпискиНаРассылкиИОповещения.StandardAttribute.Description</inputByString>
+  <fullTextSearchOnInputByString>DontUse</fullTextSearchOnInputByString>
+  <createOnInput>Use</createOnInput>
+  <dataLockControlMode>Managed</dataLockControlMode>
+  <fullTextSearch>Use</fullTextSearch>
+  <objectPresentation>
+    <key>ru</key>
+    <value>Подписка на рассылки и оповещения</value>
+  </objectPresentation>
+  <hierarchical>true</hierarchical>
+  <levelCount>2</levelCount>
+  <foldersOnTop>true</foldersOnTop>
+  <descriptionLength>150</descriptionLength>
+  <codeType>String</codeType>
+  <codeAllowedLength>Variable</codeAllowedLength>
+  <defaultPresentation>AsDescription</defaultPresentation>
+  <predefined>
+    <items id="e7fef1f3-8935-492c-bf20-38feb77bb4fb">
+      <name>НедоступностьИБ</name>
+      <description>Недоступность информационной базы</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="0aa7e4d4-0998-4b88-9eb6-e134f6fe40de">
+      <name>НесоответствиеВесаГруза</name>
+      <description>Оповещение о несоответствии веса груза</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="f9489274-ee85-4c20-b66f-dc5e8a79c840">
+      <name>ОтгрузкаАвтотранспортом</name>
+      <description>Отгрузка автотранспортом</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="680fc34b-3277-4eb5-8c7f-449f9048ae60">
+      <name>ПревышениеРазрешеннойМаксивальнойМассы</name>
+      <description>Превышение разрешенной максивальной массы</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="41a9bdac-54ba-4103-a723-6cf053529f34">
+      <name>ПроблемыПодготовкиОтправкиСообщенийДляСРПВ</name>
+      <description>Проблемы подготовки отправки сообщений для СРПВ</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+    <items id="6f7ac941-8ae3-4562-884a-95a15d89e222">
+      <name>ПроблемыДоставкиОбработкиСообщенийОтСРПВ</name>
+      <description>Проблемы доставки обработки сообщений от СРПВ</description>
+      <code xsi:type="core:StringValue">
+        <value></value>
+      </code>
+    </items>
+  </predefined>
+  <editType>InDialog</editType>
+  <choiceMode>BothWays</choiceMode>
+  <defaultObjectForm>Catalog.гкс_ПодпискиНаРассылкиИОповещения.Form.ФормаЭлемента</defaultObjectForm>
+  <defaultListForm>Catalog.гкс_ПодпискиНаРассылкиИОповещения.Form.ФормаСписка</defaultListForm>
+  <attributes uuid="61207c80-c0eb-46eb-bf3e-4f15f0fde8cd">
+    <name>ШаблонЭлектронногоПисьма</name>
+    <synonym>
+      <key>ru</key>
+      <value>Шаблон электронного письма</value>
+    </synonym>
+    <type>
+      <types>CatalogRef.ШаблоныСообщений</types>
+    </type>
+    <toolTip>
+      <key>ru</key>
+      <value>Шаблон, который будет использован при отправке электронного письма.</value>
+    </toolTip>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <attributes uuid="fece47e5-24a6-4bce-a7b6-23ee4a6cffb0">
+    <name>ПодпискаДействует</name>
+    <synonym>
+      <key>ru</key>
+      <value>Подписка действует</value>
+    </synonym>
+    <type>
+      <types>Boolean</types>
+    </type>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+    <fillFromFillingValue>true</fillFromFillingValue>
+    <fillValue xsi:type="core:BooleanValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <dataHistory>Use</dataHistory>
+  </attributes>
+  <tabularSections uuid="3c1f0130-2e8a-499f-ad02-11f144d47782">
+    <producedTypes>
+      <objectType typeId="c4fbede0-ef50-442d-86bc-ea6c56756329" valueTypeId="191dbaea-e1e2-46a5-a7f2-61a816ab5398"/>
+      <rowType typeId="6123d7f0-0234-45aa-91a3-395775395380" valueTypeId="9f797528-22ba-481b-b5fe-ac85ebecdf14"/>
+    </producedTypes>
+    <name>Получатели</name>
+    <synonym>
+      <key>ru</key>
+      <value>Получатели</value>
+    </synonym>
+    <standardAttributes>
+      <dataHistory>Use</dataHistory>
+      <name>LineNumber</name>
+      <fillValue xsi:type="core:UndefinedValue"/>
+      <fullTextSearch>Use</fullTextSearch>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+    </standardAttributes>
+    <attributes uuid="367e1340-e880-4d8a-a5a0-0a2d218b0ec1">
+      <name>Подписчик</name>
+      <synonym>
+        <key>ru</key>
+        <value>Подписчик</value>
+      </synonym>
+      <type>
+        <types>DefinedType.гкс_ПодписчикиНаРассылкиИОповещения</types>
+      </type>
+      <toolTip>
+        <key>ru</key>
+        <value>Электронная почты для уведомления</value>
+      </toolTip>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <fillChecking>ShowError</fillChecking>
+      <dataHistory>Use</dataHistory>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+    <attributes uuid="9f91a5a8-f515-418c-9749-5e04b8bd2495">
+      <name>Исключен</name>
+      <synonym>
+        <key>ru</key>
+        <value>Исключен</value>
+      </synonym>
+      <type>
+        <types>Boolean</types>
+      </type>
+      <toolTip>
+        <key>ru</key>
+        <value>Исключенные получатели не участвуют в рассылке.</value>
+      </toolTip>
+      <minValue xsi:type="core:UndefinedValue"/>
+      <maxValue xsi:type="core:UndefinedValue"/>
+      <dataHistory>Use</dataHistory>
+      <indexing>Index</indexing>
+      <fullTextSearch>Use</fullTextSearch>
+    </attributes>
+  </tabularSections>
+  <forms uuid="a3e7ce42-4340-4a20-b458-fb12178001e0">
+    <name>ФормаСписка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма списка</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <forms uuid="58afecdf-a1e2-4e16-89b4-73463efc4ae2">
+    <name>ФормаЭлемента</name>
+    <synonym>
+      <key>ru</key>
+      <value>Форма элемента</value>
+    </synonym>
+    <usePurposes>PersonalComputer</usePurposes>
+    <usePurposes>MobileDevice</usePurposes>
+  </forms>
+  <templates uuid="f86db6bd-c112-44a9-994f-45c4b23e764b">
+    <name>НесоответствиеВесаГруза</name>
+    <synonym>
+      <key>ru</key>
+      <value>Несоответствие веса груза</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <templates uuid="fc383815-b04e-4f8a-b1a8-391cba285782">
+    <name>ПревышениеРазрешеннойМаксивальнойМассы</name>
+    <synonym>
+      <key>ru</key>
+      <value>Превышение разрешенной максивальной массы</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <templates uuid="6893889b-132d-4b10-bf92-1853942f6b5f">
+    <name>ОтгрузкаАвтотранспортом</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отгрузка автотранспортом</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <templates uuid="25611019-39d2-4ed1-9d63-776891eb3261">
+    <name>ПроблемыДоставкиОбработкиСообщенийОтСРПВ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Проблемы доставки обработки сообщений от СРПВ</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+  <templates uuid="93321197-aca9-41ca-9338-96e627fc7edc">
+    <name>ПроблемыПодготовкиОтправкиСообщенийДляСРПВ</name>
+    <synonym>
+      <key>ru</key>
+      <value>Проблемы подготовки отправки сообщений для СРПВ</value>
+    </synonym>
+    <templateType>DataCompositionSchema</templateType>
+  </templates>
+</mdclass:Catalog>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="40e31d1c-5b88-4573-a1dd-fb5667c6bb74">
+  <name>ОчередьСообщенийВызовСервера</name>
+  <synonym>
+    <key>ru</key>
+    <value>Очередь сообщений вызов сервера</value>
+  </synonym>
+  <clientManagedApplication>true</clientManagedApplication>
+  <server>true</server>
+  <serverCall>true</serverCall>
+</mdclass:CommonModule>

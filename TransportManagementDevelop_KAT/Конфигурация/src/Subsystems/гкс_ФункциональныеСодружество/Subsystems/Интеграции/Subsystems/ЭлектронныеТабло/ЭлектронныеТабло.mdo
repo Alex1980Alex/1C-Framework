@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="fa439b91-c4a0-48c2-b4ea-107bea07271f">
+  <name>ЭлектронныеТабло</name>
+  <synonym>
+    <key>ru</key>
+    <value>Электронные табло</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>InformationRegister.гкс_НастройкаЭлектронногоТабло</content>
+  <content>Constant.гкс_ИспользоватьЭлектронноеТабло</content>
+  <content>FunctionalOption.гкс_ИспользоватьЭлектронноеТабло</content>
+  <content>Role.гкс_Справочник_ЭлектронныеТабло_ДобавлениеИзменение</content>
+  <content>Role.гкс_РегистрСведений_ЭлектронныеТабло_Просмотр</content>
+  <content>Role.гкс_РегистрСведений_НастройкаЭлектронногоТабло_ДобавлениеИзменение</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

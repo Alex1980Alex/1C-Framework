@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="56a8c377-cd5b-4a57-ab5b-1a9adf4295c6">
+  <name>гкс_РегистрСведений_РегистрацииПоЭлектроннойОчереди_Просмотр</name>
+  <synonym>
+    <key>ru</key>
+    <value>Просмотр регистра сведений &quot;Регистрации по электронной очереди&quot;</value>
+  </synonym>
+</mdclass:Role>

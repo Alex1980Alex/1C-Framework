@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonModule xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="d46c0beb-0d68-4d3e-bd58-3f79133ddb9b">
+  <name>гкс_УправлениеПечатьюЛокализация_ru</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс управление печатью локализация ru</value>
+  </synonym>
+  <server>true</server>
+  <externalConnection>true</externalConnection>
+  <clientOrdinaryApplication>true</clientOrdinaryApplication>
+</mdclass:CommonModule>

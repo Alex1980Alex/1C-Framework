@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a0451107-4448-44b7-9c56-5734da3096ba">
+  <producedTypes>
+    <refType typeId="d4f77454-721f-476d-8934-928254ef3301" valueTypeId="f686febd-3293-4d9a-ac26-8884d2fb93ce"/>
+    <listType typeId="6bffc7b4-c9df-479f-869f-ae4469fe4061" valueTypeId="b72c9a50-3687-4394-82d6-a1ba850fedc0"/>
+    <managerType typeId="4f21c222-f7ee-4f82-a56a-2127e9d59579" valueTypeId="a2610360-f52a-4480-ba8c-6555517e6a54"/>
+  </producedTypes>
+  <name>гкс_ВидыОперацийПЛК</name>
+  <synonym>
+    <key>ru</key>
+    <value>Виды операций ПЛК</value>
+  </synonym>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="8a8a0dae-92a5-4c58-8468-837f575931f2">
+    <name>ВзвешиваниеБрутто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешивание брутто</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="97554f0a-4848-4fa0-ab9d-2d838e8d2a98">
+    <name>ВзвешиваниеНетто</name>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешивание нетто</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="34b91267-5bf4-48e4-8fde-58bd0f29c8ee">
+    <name>Погрузка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Погрузка</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="c4f3158b-ec7b-4cc8-b19f-0ec4828d3833">
+    <name>Разгрузка</name>
+    <synonym>
+      <key>ru</key>
+      <value>Разгрузка</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="e3de052c-b1f3-4368-8151-038704df3e76">
+    <name>Регистрация</name>
+    <synonym>
+      <key>ru</key>
+      <value>Регистрация</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="02354e85-487a-4d5c-aaa1-9adb6e6798f0">
+  <name>гкс_НастройкаТаблицыКлючей</name>
+  <synonym>
+    <key>ru</key>
+    <value>Настройка таблицы ключей (Интеграционный адаптер &quot;Содружество&quot;);</value>
+  </synonym>
+  <comment>ADAPTER-214</comment>
+</mdclass:Role>

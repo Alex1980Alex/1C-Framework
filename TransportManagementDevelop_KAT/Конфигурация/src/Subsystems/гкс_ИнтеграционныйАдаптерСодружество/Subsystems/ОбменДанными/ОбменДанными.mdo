@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ab6d72ec-9a7f-4946-b058-b8a766116542">
+  <name>ОбменДанными</name>
+  <synonym>
+    <key>ru</key>
+    <value>Обмен данными (ИАС)</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <content>Enum.гкс_РезультатыВыполненияОбмена</content>
+  <content>InformationRegister.гкс_ИдентификаторыСинхронизируемыхОбъектов</content>
+  <content>CommonModule.гкс_ОбменДаннымиXDTOСервер</content>
+  <content>CommonModule.гкс_ОбменДаннымиПовтИсп</content>
+  <content>CommonModule.гкс_ОбменДаннымиСервер</content>
+  <content>CommonModule.гкс_СтандартныеПодсистемыПовтИсп</content>
+  <content>XDTOPackage.ExchangeMessage</content>
+  <content>Role.гкс_ПакетнаяВыгрузкаОбъектовВRMQ</content>
+  <content>InformationRegister.гкс_НастройкиФорматовОбменаED</content>
+  <content>CommonModule.гкс_МенеджерОбменаЧерезУниверсальныйФорматСлужебный</content>
+  <content>CommonModule.гкс_ОбменЧерезУниверсальныйФормат</content>
+  <content>CommonModule.гкс_ОбменЧерезУниверсальныйФорматПовтИсп</content>
+  <parentSubsystem>Subsystem.гкс_ИнтеграционныйАдаптерСодружество</parentSubsystem>
+</mdclass:Subsystem>

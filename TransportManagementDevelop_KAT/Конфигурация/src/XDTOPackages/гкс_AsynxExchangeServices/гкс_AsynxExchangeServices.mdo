@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:XDTOPackage xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="a50d36b0-116e-49ba-9f9c-60f43005965a">
+  <name>гкс_AsynxExchangeServices</name>
+  <synonym>
+    <key>ru</key>
+    <value>Asynx RPC (Интеграционный адаптер &quot;Содружество&quot;)</value>
+  </synonym>
+  <synonym>
+    <key>en</key>
+    <value>Asynx RPC (Integration adapter &quot;Sodrugestvo&quot;)</value>
+  </synonym>
+  <namespace>http://sodru.com/AsynxExchangeServices</namespace>
+</mdclass:XDTOPackage>

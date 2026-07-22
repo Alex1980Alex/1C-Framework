@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="f6c1c6fc-40ce-486b-b365-d776f3a98da0">
+  <name>Кверион</name>
+  <synonym>
+    <key>ru</key>
+    <value>Кверион</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>Catalog.гкс_СчитывателиUHFRFID</content>
+  <content>CommonModule.гкс_ИнтеграцияСКверионВызовСервера</content>
+  <content>CommonModule.гкс_ИнтеграцияСКверионКлиент</content>
+  <content>CommonModule.гкс_ИнтеграцияСКверионПовтИсп</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюСКверион</content>
+  <content>Constant.гкс_ИспользоватьИнтеграциюСКверион</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

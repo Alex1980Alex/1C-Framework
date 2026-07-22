@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Subsystem xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="380fa18f-a2c8-4428-a05b-1410714dbb7f">
+  <name>СРПВ</name>
+  <synonym>
+    <key>ru</key>
+    <value>СРПВ</value>
+  </synonym>
+  <includeHelpInContents>true</includeHelpInContents>
+  <includeInCommandInterface>true</includeInCommandInterface>
+  <content>CommonModule.гкс_ОбменДаннымиСРПВ</content>
+  <content>FunctionalOption.гкс_ИспользоватьИнтеграциюСРПВ</content>
+  <content>CommonModule.гкс_ИнтеграцияСРПВ</content>
+  <content>XDTOPackage.гкс_SRPV</content>
+  <content>Document.гкс_СРПВПрибытиеНаПуть</content>
+  <content>Enum.гкс_СРПВТипыОперацийСВагоном</content>
+  <content>Document.гкс_СРПВРегистрацияОперацииСВагоном</content>
+  <content>Document.гкс_СРПВПеревеска</content>
+  <content>InformationRegister.гкс_СоответствияОбъектовСРПВ</content>
+  <content>Enum.гкс_ТипыОбъектовСРПВ</content>
+  <content>DefinedType.гкс_WagonDispatchID</content>
+  <content>DefinedType.гкс_НомерВагона</content>
+  <content>Catalog.гкс_КлючиАналитикиСРПВ</content>
+  <content>Enum.гкс_СРПВСтатусыВагонов</content>
+  <content>DefinedType.гкс_ДокументыСРПВ</content>
+  <content>InformationRegister.гкс_СРПВСтатусыОформленияВагонов</content>
+  <content>Constant.гкс_КоличествоДнейВидимостиПрибывшихВагонов</content>
+  <content>Role.гкс_СРПВАдминистрирование</content>
+  <content>Role.гкс_СРПВЧтение</content>
+  <content>InformationRegister.гкс_СРПВТранспортныеДокументыЖДПолученные</content>
+  <content>CommonModule.гкс_ИнтеграцияСРПВПовтИсп</content>
+  <content>ScheduledJob.гкс_ОбновлениеИнформацииОВагонахСРПВ</content>
+  <content>Constant.гкс_ПериодОжиданияОтветаОтСРПВ</content>
+  <content>ScheduledJob.гкс_ОповещениеОПроблемахДоставкиСообщенийСРПВ</content>
+  <content>FunctionalOption.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</content>
+  <content>Constant.гкс_ИспользоватьОбменДоступнымиМестамиРазгрузкиСРПВ</content>
+  <parentSubsystem>Subsystem.гкс_ФункциональныеСодружество.Subsystem.Интеграции</parentSubsystem>
+</mdclass:Subsystem>

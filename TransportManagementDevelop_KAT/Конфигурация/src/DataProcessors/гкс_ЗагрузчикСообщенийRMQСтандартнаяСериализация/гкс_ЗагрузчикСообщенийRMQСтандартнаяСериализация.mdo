@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:DataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="0583b8bf-eab2-4c77-bc06-d9e6dae453c2">
+  <producedTypes>
+    <objectType typeId="693d7041-7e0b-42e6-add7-005ebbf092eb" valueTypeId="898c1263-dee7-4825-8f9f-b31cfbd54385"/>
+    <managerType typeId="d9d56e7a-ae94-4199-8e90-4dd107121385" valueTypeId="69a65551-b636-433b-bc1a-142741ab5d23"/>
+  </producedTypes>
+  <name>гкс_ЗагрузчикСообщенийRMQСтандартнаяСериализация</name>
+  <synonym>
+    <key>ru</key>
+    <value>Загрузчик сообщений, реализация для стандартной сериализации (ИАС)</value>
+  </synonym>
+  <useStandardCommands>true</useStandardCommands>
+</mdclass:DataProcessor>

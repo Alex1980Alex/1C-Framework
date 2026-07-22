@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="e35fe311-a35c-47d5-b722-ee5cd64797d8">
+  <producedTypes>
+    <refType typeId="49b42d37-cf05-4a1e-be14-99f6fdf09e61" valueTypeId="152d3862-8d14-437a-a716-bc13fef9d4ff"/>
+    <listType typeId="49236fd1-6a60-4feb-8a4e-42a452655985" valueTypeId="e32b38e9-1c4b-437a-b81a-248b1ae8a7ca"/>
+    <managerType typeId="30c01489-dd89-4492-9e18-409af2e1e562" valueTypeId="8ebb63e1-98f0-4c0b-abb0-0bb1a7538a9a"/>
+  </producedTypes>
+  <name>гкс_СРПВСтатусыВагонов</name>
+  <synonym>
+    <key>ru</key>
+    <value>Гкс СРПВСтатусы вагонов</value>
+  </synonym>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="f00b54e1-d732-4b98-a15b-006d12155475">
+    <name>Прибыл</name>
+    <synonym>
+      <key>ru</key>
+      <value>Прибыл</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="f86eae68-5026-4fe9-8939-ecf992c203e7">
+    <name>ВзвешенБрутто</name>
+    <synonym>
+      <key>en</key>
+      <value>Entry weighting</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешен брутто</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Pesaje de entrada</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="1629f761-6c38-4077-8845-c407c68142d2">
+    <name>ВзвешенТара</name>
+    <synonym>
+      <key>en</key>
+      <value>Exit weighting</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Взвешен тара</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Pesaje en la carretera</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="34454703-dd32-4420-abfd-5336ed7b92a3">
+    <name>Выгружен</name>
+    <synonym>
+      <key>en</key>
+      <value>Unloading</value>
+    </synonym>
+    <synonym>
+      <key>ru</key>
+      <value>Выгружен</value>
+    </synonym>
+    <synonym>
+      <key>es</key>
+      <value>Descarga</value>
+    </synonym>
+  </enumValues>
+  <enumValues uuid="2b65d193-2653-4f85-9a33-f7bec841afb1">
+    <name>Погружен</name>
+    <synonym>
+      <key>ru</key>
+      <value>Погружен</value>
+    </synonym>
+  </enumValues>
+</mdclass:Enum>

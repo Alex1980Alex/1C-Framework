@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Role xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ecf7d39e-516f-44b2-98e7-ee776cda8f61">
+  <name>гкс_РегистрСведений_АРМПриемкиНаПЛКСписокРегистраций_ДобавлениеИзменение</name>
+  <synonym>
+    <key>ru</key>
+    <value>Добавление изменение регистра сведений &quot;АРМ приемки на ПЛК список регистраций&quot;</value>
+  </synonym>
+</mdclass:Role>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:CommonPicture xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="ad3b4665-0e9e-4ecc-8abf-9bfa8f228b6a">
+  <name>гкс_RabbitMQ</name>
+  <synonym>
+    <key>ru</key>
+    <value>RabbitMQ (sodru)</value>
+  </synonym>
+</mdclass:CommonPicture>

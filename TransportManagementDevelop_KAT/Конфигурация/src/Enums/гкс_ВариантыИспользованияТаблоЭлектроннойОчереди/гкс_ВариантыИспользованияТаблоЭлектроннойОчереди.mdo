@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:Enum xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:core="http://g5.1c.ru/v8/dt/mcore" xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="efda53fd-9de7-43ad-961e-c725a0298dc0">
+  <producedTypes>
+    <refType typeId="8665d5d8-8d86-48a2-a6c6-3b83d416c9bf" valueTypeId="7c6d4dbb-d9cb-411c-873f-b5861a7db5ba"/>
+    <listType typeId="0e891b19-904c-4b30-bb01-d96caacfd66f" valueTypeId="763ad69f-63bf-4db9-9473-c1371d5e4978"/>
+    <managerType typeId="64a77a65-bfb7-46b1-87f9-be33f5d2261a" valueTypeId="2f406b41-1515-4c08-8d3b-eec0d8a9cbcc"/>
+  </producedTypes>
+  <name>гкс_ВариантыИспользованияТаблоЭлектроннойОчереди</name>
+  <synonym>
+    <key>ru</key>
+    <value>Варианты использования табло электронной очереди</value>
+  </synonym>
+  <comment>ERP-2673</comment>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Order</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <standardAttributes>
+    <dataHistory>Use</dataHistory>
+    <name>Ref</name>
+    <fillValue xsi:type="core:UndefinedValue"/>
+    <fullTextSearch>Use</fullTextSearch>
+    <minValue xsi:type="core:UndefinedValue"/>
+    <maxValue xsi:type="core:UndefinedValue"/>
+  </standardAttributes>
+  <quickChoice>true</quickChoice>
+  <choiceMode>BothWays</choiceMode>
+  <enumValues uuid="94150b86-45a2-4fd7-b78d-bfa08ef9ff08">
+    <name>ОтборПоНоменклатуре</name>
+    <synonym>
+      <key>ru</key>
+      <value>Отбор по номенклатуре</value>
+    </synonym>
+    <comment>Табло используется для определенной номенклатуры.</comment>
+  </enumValues>
+  <enumValues uuid="735429c0-f0e0-4ee8-bf2d-35bb3d6b8ab9">
+    <name>БезОтбора</name>
+    <synonym>
+      <key>ru</key>
+      <value>Без отбора</value>
+    </synonym>
+    <comment>Табло используется для всей принимаемой номенклатуры</comment>
+  </enumValues>
+</mdclass:Enum>
