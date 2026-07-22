@@ -1,0 +1,44 @@
+{
+  "task": "gkstcplk-2673",
+  "title": "gkstcplk-2673",
+  "created_at": "2026-07-22T08:03:36",
+  "updated_at": "2026-07-22T08:56:36",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "01-architecture.md",
+      "status": "done",
+      "completed_at": "2026-07-22T08:03:37"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "done",
+      "completed_at": "2026-07-22T08:03:37",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-22T08:03:37"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "03-implementation.md",
+      "status": "done",
+      "completed_at": "2026-07-22T08:56:36"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "done",
+      "completed_at": "2026-07-22T08:56:36"
+    }
+  ]
+}
