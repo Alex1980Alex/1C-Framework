@@ -25,10 +25,13 @@ Flow:
 Large .md (>50 lines) is enforced even under docs/ — long prose IS delegatable —
 except under .claude/ and pipeline/ (_MD_EXEMPT_PREFIXES): ADR-018 makes pipeline
 artefacts mandatory, so blocking them pitted this guard against pipeline-protocol-stop.
+Same carve-out by FILE NAME for the 1C-pipeline reports (ANALYSIS-REPORT.md /
+IMPLEMENTATION-PROGRESS.md) inside configuration/ — see _MD_EXEMPT_BASENAMES below.
 
 Tests: tests/unit/hooks/test_z_ai_write_guard_scope.py (both exemptions are narrow —
-src/ and large docs/*.md must still block) and tests/unit/test_z_ai_guard_bsl_exempt.py
-(BSL/OneScript are never delegated — see the _CODE_EXTENSIONS note below).
+src/ and large docs/*.md must still block), tests/unit/test_z_ai_guard_bsl_exempt.py
+(BSL/OneScript are never delegated — see the _CODE_EXTENSIONS note below) and
+tests/unit/test_z_ai_guard_1c_reports_exempt.py (1C-pipeline reports).
 """
 
 import os
@@ -110,6 +113,17 @@ _EXEMPT_PREFIXES = [
 # pipeline/ as process artefacts, not product (its own SKIP_PATTERNS).
 _MD_EXEMPT_PREFIXES = [".claude/", "pipeline/"]
 
+# Артефакты 1С-пайплайна (гл. 43): ANALYSIS-REPORT.md / IMPLEMENTATION-PROGRESS.md.
+# Тот же класс, что BSL-исключение в _CODE_EXTENSIONS: это не «длинная проза», а
+# выверенный аналитический артефакт — номера строк модулей, UUID реальных объектов,
+# дословные выдержки ИТС. Делегирование переписывает именно эти позиции и тихо
+# искажает факты, на которые потом опирается /implement-1c-task. Плюс тот же конфликт
+# энфорсеров, что закрыл pipeline/: onec-task-completion-stop и pipeline-1c-advance
+# ТРЕБУЮТ эти файлы, а гард их запрещал.
+# Скоуп узкий: только эти два имени и только внутри configuration/ (папки ведения задач).
+_MD_EXEMPT_BASENAMES = ["analysis-report.md", "implementation-progress.md"]
+_MD_EXEMPT_BASENAME_SCOPE = "configuration/"
+
 # Paths within data/ that ARE enforced for large .md files (not exempt)
 _ENFORCED_DATA_PATHS = [
     "data/analyze-1c-research/",
@@ -170,6 +184,10 @@ class ZAIWriteGuard(BaseHook):
             ext == ".md"
             and line_count > _LARGE_MD_THRESHOLD
             and not any(fp.startswith(p) or f"/{p}" in fp for p in _MD_EXEMPT_PREFIXES)
+            and not (
+                (fp.startswith(_MD_EXEMPT_BASENAME_SCOPE) or f"/{_MD_EXEMPT_BASENAME_SCOPE}" in fp)
+                and os.path.basename(fp) in _MD_EXEMPT_BASENAMES
+            )
         )
         # data/ is generally exempt for .md, EXCEPT enforced paths
         if is_large_md and (fp.startswith("data/") or "/data/" in fp):
