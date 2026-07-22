@@ -55,6 +55,8 @@ def test_is_config_bsl_detects_registry_configs_incl_mfm():
     assert srs._is_config_bsl("MFM/Конфигурация/src/CommonModules/x/Module.bsl")
     assert srs._is_config_bsl("ИБTransportManagementDevelop/Конфигурация/src/M/Module.bsl")
     assert srs._is_config_bsl("TransportManagementDevelop_SVETLY/Конфигурация/src/M/Module.bsl")
+    # utp-kat (2026-07-23): KAT в главном репо, В скоупе (sonar_projects/sonar_sources += KAT)
+    assert srs._is_config_bsl("TransportManagementDevelop_KAT/Конфигурация/src/M/Module.bsl")
     # configuration/<JIRA> (ведение задач) по-прежнему исключён
     assert not srs._is_config_bsl("configuration/260304_JIRA/Конфигурация/src/M/Module.bsl")
 

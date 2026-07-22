@@ -45,6 +45,12 @@ def test_project_for_path_maps_mfm():
     assert r is not None and r[0] == "utp-mfm" and r[2] == "src/CommonModules/x/Module.bsl"
 
 
+def test_project_for_path_maps_kat():
+    # KAT-конфиг в главном репо (не сабмодуль) → utp-kat; comp_rel = путь внутри конфига
+    r = sp.project_for_path("TransportManagementDevelop_KAT/Конфигурация/src/Catalogs/x/Module.bsl")
+    assert r is not None and r[0] == "utp-kat" and r[2] == "src/Catalogs/x/Module.bsl"
+
+
 def test_project_for_path_outside_registry_is_none():
     # configuration/<JIRA> (ведение задач), framework — вне реестра
     assert sp.project_for_path("configuration/260304_JIRA/Конфигурация/src/M/Module.bsl") is None
@@ -60,7 +66,8 @@ def test_projects_have_required_keys():
     for p in sp.PROJECTS:
         assert set(p) >= {"key", "root", "name"}
     keys = [p["key"] for p in sp.PROJECTS]
-    assert keys == ["utp-ib", "utp-svetly", "utp-mfm"]  # 3 проекта (ADR-048 A7 вар.а: utp-mfm вкл.)
+    # 4 проекта: +utp-kat (2026-07-23, KAT-конфиг в главном репо, не сабмодуль)
+    assert keys == ["utp-ib", "utp-svetly", "utp-mfm", "utp-kat"]
 
 
 def test_roots_matches_declared():

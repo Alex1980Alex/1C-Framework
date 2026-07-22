@@ -50,6 +50,14 @@ PROJECTS: list[dict[str, str]] = [
         "root": "MFM/Конфигурация",
         "name": "УправлениеМатериальнымиПотоками (MFM)",
     },
+    {
+        # KAT-конфиг закоммичен ПРЯМО в главный репо (не сабмодуль, в отличие от ИБ/SVETLY/MFM),
+        # 2026-07-23. Детект гейта path-shaped (_is_config_bsl) уже флагает правки KAT под /src/
+        # → без записи здесь split-verify fail-closed'ит их как «вне реестра» (неустранимый блок).
+        "key": "utp-kat",
+        "root": "TransportManagementDevelop_KAT/Конфигурация",
+        "name": "УправлениеТранспортомНаПЛК (KAT)",
+    },
 ]
 
 
