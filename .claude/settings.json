@@ -419,6 +419,16 @@
         ]
       },
       {
+        "matcher": "Write|Edit|mcp__edt-mcp__write_module_source",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "C:/1С-Framework/.venv/Scripts/python.exe C:/1С-Framework/.claude/hooks/bsl-user-rules-check.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "TaskUpdate",
         "hooks": [
           {
