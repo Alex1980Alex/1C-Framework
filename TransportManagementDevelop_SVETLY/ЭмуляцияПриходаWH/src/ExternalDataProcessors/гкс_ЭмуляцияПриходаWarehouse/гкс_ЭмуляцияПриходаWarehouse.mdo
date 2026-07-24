@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdclass:ExternalDataProcessor xmlns:mdclass="http://g5.1c.ru/v8/dt/metadata/mdclass" uuid="aa718483-1806-4f0d-9d78-a9986cbbb1fc">
+  <producedTypes>
+    <objectType typeId="3e59c351-cf28-4f4f-b44b-1261f2f4c56e" valueTypeId="e3fed1b0-5359-4329-9f4d-248d81a0fedd"/>
+  </producedTypes>
+  <name>гкс_ЭмуляцияПриходаWarehouse</name>
+  <synonym>
+    <key>ru</key>
+    <value>Эмуляция прихода данных Warehouse</value>
+  </synonym>
+  <comment>Время сборки: 2026-07-24 18:14:29</comment>
+  <forms uuid="39e53857-c70f-4841-b576-ab93b1cf86f1">
+    <name>Форма</name>
+  </forms>
+</mdclass:ExternalDataProcessor>

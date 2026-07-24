@@ -1,0 +1,44 @@
+{
+  "task": "gkstcplk-2685-testing-analysis",
+  "title": "GKSTCPLK-2685: глубокий анализ методики тестирования (ANALYSIS-REPORT §15)",
+  "created_at": "2026-07-24T16:08:03",
+  "updated_at": "2026-07-24T16:08:03",
+  "current_stage": 4,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "разведка кода обмена + live-срезы SVETLY",
+      "status": "done",
+      "completed_at": "2026-07-24T16:08:03"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "структура методики (харнесс/сценарии/юнит/чистка)",
+      "status": "done",
+      "completed_at": "2026-07-24T16:08:03",
+      "approved": false,
+      "approved_by": null,
+      "approved_at": null
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "ANALYSIS-REPORT.md §15 записан",
+      "status": "done",
+      "completed_at": "2026-07-24T16:08:03"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "04-testing.md",
+      "status": "pending",
+      "completed_at": null
+    }
+  ]
+}
