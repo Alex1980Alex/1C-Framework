@@ -9,6 +9,24 @@
   ],
   "records": [
     {
+      "id": "ADR-056",
+      "file": "056-retire-src-bsl-mcp-server.md",
+      "title": "Ретирмент src/bsl/mcp_server — устаревший vendored-близнец vladimir-kharin/1c_mcp py_server: 0 фичевых коммитов за жизнь модуля, рантайм-вызывающих нет (продакшн = сабмодуль external/1c_mcp через scripts/mcp_1c_stdio_launcher.py), уникальная часть OAuth 2.1+PKCE уже извлечена в src/shared/mcp_oauth (Phase 12.3), upstream license:null. Удалить прокси-ядро + мигрировать test_bsl_oauth_wrapper на shared; src/bsl/mcp_integration/1c_ext (исходники расширения 1С mcp_APIBackend) НЕ трогать",
+      "status": "proposed",
+      "date": "2026-07-24",
+      "research": "cache/1c-bsl-tooling-ecosystem-2026.md Verified 2026-07-24: gh api (upstream 466★ пуш 07-17 license:null; feenlace/mcp-1c 173★ MIT пуш 07-22; FSerg/mcp-1c-v1 161★ stale 2025-08; Untru/1c-mcp 132★; MCP35 30★; mcp-bsl-lsp-bridge 63★) + дифф src/bsl/mcp_server ↔ external/1c_mcp/src/py_server + git-история + PHASE_46",
+      "tags": [
+        "retirement",
+        "dead-code",
+        "mcp",
+        "1c-mcp-crud",
+        "vendored-fork",
+        "oauth-extraction",
+        "license-null",
+        "audit-docs"
+      ]
+    },
+    {
       "id": "ADR-055",
       "file": "055-tool-health-known-issues-suppression.md",
       "title": "Known-issues слой в tool-health («xfail для инструментов»): вердикт known-issue (🔕) вместо broken для тулов со сломом по ИЗВЕСТНОЙ внешней причине (config data/reports/tools/known_issues.json {tool,reason,ref,review_by}) — виден в отчёте/баннере, но НЕ эскалирует mandatory-задачу (убирает whack-a-mole). 4 свойства из best-practice (Alertmanager silences + pytest xfail strict): reason+audit-trail, review_by обязателен (missing→fail-closed, нет вечного mute), xpass-детект восстановления, overlay после infra. Кейс codepilot1c qa_run/qa_generate (W13). Fail-soft (нет config→прежнее поведение)",
