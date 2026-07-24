@@ -145,6 +145,11 @@ def _auto_commit(files: list[str]) -> dict:
     """Perform git add + git commit for tracked files."""
     start = time.time()
     try:
+        # step 0: clear an orphaned .git/index.lock (crashed git left it behind;
+        # live incident 2026-07-24). Fresh locks are untouched.
+        from shared.auto_save_core import clear_stale_index_lock
+
+        clear_stale_index_lock(str(PROJECT_ROOT))
         # Stage files
         staged_files: list[str] = []
         for fp in files:

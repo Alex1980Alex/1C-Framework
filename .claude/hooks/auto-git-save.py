@@ -331,6 +331,14 @@ def perform_sync_commit(
     log.debug(f"perform_sync_commit files={modified_files} timeout={timeout}")
 
     try:
+        # Step 0: clear an orphaned .git/index.lock (crashed git left it behind;
+        # live incident 2026-07-24 — a 4.5h-old lock blocked every commit).
+        # Fresh locks are untouched: a live git process wins, we fail normally.
+        from shared.auto_save_core import clear_stale_index_lock
+
+        if clear_stale_index_lock(str(PROJECT_ROOT)):
+            log.debug("step0: removed stale .git/index.lock")
+
         # Step 1: Check git status
         log.debug("step1: git status --porcelain")
         status = subprocess.run(

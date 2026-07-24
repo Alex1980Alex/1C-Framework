@@ -106,6 +106,11 @@ def _git_commit(files: list[str]) -> bool:
         return False
     try:
         project_dir = os.path.dirname(os.path.dirname(_HOOK_DIR))
+        # step 0: clear an orphaned .git/index.lock (crashed git left it behind;
+        # live incident 2026-07-24). Fresh locks are untouched.
+        from shared.auto_save_core import clear_stale_index_lock
+
+        clear_stale_index_lock(project_dir)
         # git add each file
         for f in files:
             subprocess.run(

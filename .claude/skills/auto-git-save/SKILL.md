@@ -144,6 +144,20 @@ ruff-format'ит **staged .py** под `[tool.ruff] line-length` из pyproject 
 - **Exclude:** vendored/generated деревья (`tools/`, `external/`, `infra/`, `src/bsl/` …) пропускаются —
   зеркало top-level `exclude:` в `.pre-commit-config.yaml`.
 
+### 1.7 Stale index.lock guard (2026-07-24)
+
+Все три коммит-пути перед первой git-командой вызывают `auto_save_core.clear_stale_index_lock(project_root)`:
+осиротевший `.git/index.lock` **старше 10 минут** (`STALE_INDEX_LOCK_MAX_AGE_SEC=600`) снимается, свежий
+(живой git-процесс) не трогается. Живой инцидент: 0-байтовый лок 4.5-часовой давности от упавшего
+auto-save блокировал ВСЕ коммиты main-репо до ручного `rm`.
+
+- **Fail-safe в обе стороны:** исчезновение лока в окне getmtime→remove ловится `OSError`→False;
+  будущий mtime (сдвиг часов) даёт отрицательный age → трактуется как свежий → не трогаем.
+- Порог 600с на порядки больше любой легитимной git-операции; git при долгой записи обновляет
+  mtime самого lock-файла — двойная защита от false-positive.
+- Регресс: [tests/unit/test_auto_save_stale_lock.py](../../../tests/unit/test_auto_save_stale_lock.py)
+  (4 теста: снят/нетронут/нет файла/кастомный порог). Roadmap: [260724 Б-2/В-3](../../../docs/roadmap/260724_ROADMAP_1C_TOOLING_RELIABILITY.md).
+
 ### 2. Zombie Task Prevention
 
 `sync_pending_tasks_with_git()` вызывается на **каждый** PostToolUse. Проверяет:

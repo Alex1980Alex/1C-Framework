@@ -22,6 +22,39 @@ from collections.abc import Iterable
 
 DEFAULT_MAX_DISPLAY = 3
 
+# A .git/index.lock older than this is treated as an orphan of a crashed /
+# interrupted git process (live incident 2026-07-24: a 4.5-hour-old 0-byte
+# lock from a dead auto-save run blocked every subsequent commit). Git itself
+# never holds the index lock for minutes.
+STALE_INDEX_LOCK_MAX_AGE_SEC = 600
+
+
+def clear_stale_index_lock(
+    project_root: str,
+    max_age_sec: int = STALE_INDEX_LOCK_MAX_AGE_SEC,
+) -> bool:
+    """Remove .git/index.lock if it is older than max_age_sec.
+
+    Returns True when a stale lock was removed. Fresh locks (a live git
+    process) and any OS error leave the file alone — callers proceed and
+    let git report the conflict normally.
+    """
+    import time
+
+    lock_path = os.path.join(project_root, ".git", "index.lock")
+    try:
+        age = time.time() - os.path.getmtime(lock_path)
+    except OSError:
+        return False
+    if age < max_age_sec:
+        return False
+    try:
+        os.remove(lock_path)
+        return True
+    except OSError:
+        return False
+
+
 # Mirror of .pre-commit-config.yaml top-level `exclude:` for the .py-relevant
 # trees — ruff-format must leave vendored / generated code alone (those carry
 # their own lint configs).
