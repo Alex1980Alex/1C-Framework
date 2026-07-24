@@ -30,7 +30,7 @@ related:
 | `MCP_OAUTH_ACCESS_TTL` | `3600` | TTL access token в секундах (1 час) |
 | `MCP_OAUTH_REFRESH_TTL` | `86400` | TTL refresh token в секундах (24 часа, ротация инкрементирует counter) |
 
-Конфиг в [.mcp.json](../../../.mcp.json) под `pdf-vector-graph` → `env`. Для BSL MCP (`src/bsl/mcp_server`) переменные читаются через [src/bsl/mcp_server/config.py](../../../src/bsl/mcp_server/config.py).
+Конфиг в [.mcp.json](../../../.mcp.json) под `pdf-vector-graph` → `env`. BSL MCP-прокси `src/bsl/mcp_server` ретирован 2026-07-24 (ADR-056) — продакшн-доступ к 1С идёт через сабмодуль `external/1c_mcp` (запуск `scripts/mcp_1c_stdio_launcher.py`).
 
 ## 2. Quick start — auth flow с curl
 
@@ -137,22 +137,7 @@ async def acquire_token(base_url: str, client_id: str, redirect_uri: str) -> dic
 
 ## 4. Migration path (BSL legacy → generic)
 
-Legacy импорт продолжает работать через wrapper:
-
-```python
-# Старый код — продолжает работать
-from src.bsl.mcp_server.auth.oauth2 import OAuth2Service, OAuth2Store
-
-store = OAuth2Store()
-service = OAuth2Service(store)
-await store.start_cleanup_task(interval=60)
-code = await service.generate_authorization_code(
-    login="user", password="pw",
-    redirect_uri="http://localhost/cb",
-    code_challenge=challenge,
-)
-creds = await service.validate_access_token(token)  # → (login, password) | None
-```
+Legacy-обёртка (`src.bsl.mcp_server.auth.oauth2`) удалена вместе с модулем `src/bsl/mcp_server` 2026-07-24 (ADR-056). Прежний BSL-паттерн `(login, password)` воспроизводится на generic-API через `user_data={"login": ..., "password": ...}`.
 
 Новый код использует generic напрямую:
 

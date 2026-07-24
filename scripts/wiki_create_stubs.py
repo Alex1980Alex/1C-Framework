@@ -116,7 +116,7 @@ STUBS = {
             "(`src/bsl/`). Canonical reference in `CLAUDE.md` BSL Development section.\n\n"
             "## Components\n\n"
             "- `src/bsl/semantic_search/`: vector search over BSL code\n"
-            "- `src/bsl/mcp_server/`: MCP server for BSL queries\n"
+            "- `external/1c_mcp/` (submodule): 1C MCP proxy for 1c-mcp-crud\n"
             "- `tools/auto-documenter/`: Node.js BSL doc generator\n"
             "- `tools/bsl-debug-server/`: Python RDBG wrapper (1c-debug, 1c-debug-hmr)\n\n"
             "**Status: stub.** Expand with embedding-pipeline diagram + MCP tool list."

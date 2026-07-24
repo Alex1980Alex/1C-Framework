@@ -23,13 +23,15 @@ related:
 > Ф6 как «23 pending», но `src/shared/mcp_oauth/` существует с тестами. Реальный
 > остаток меньше декларированного.
 
+> **Обновление 2026-07-24 (ADR-056):** BSL legacy wrapper и весь модуль `src/bsl/mcp_server` удалены; единственная живая реализация — `src/shared/mcp_oauth`. Разделы про BSL legacy ниже — исторический снимок аудита 2026-05-14.
+
 ## Текущее состояние (две реализации сосуществуют)
 
 | | BSL legacy | Generic shared |
 |---|---|---|
-| Путь | [`src/bsl/mcp_server/auth/oauth2.py`](../../../src/bsl/mcp_server/auth/oauth2.py) | [`src/shared/mcp_oauth/`](../../../src/shared/mcp_oauth/) |
+| Путь | `src/bsl/mcp_server/auth/oauth2.py` *(удалён, ADR-056)* | [`src/shared/mcp_oauth/`](../../../src/shared/mcp_oauth/) |
 | Размер | **78 LoC thin wrapper** (после F5.1 2026-05-15, было 214) | ~485 LoC (models 34 + service 165 + store 157 + audit ~110 + **init** ~19) |
-| Tests | [`tests/unit/test_bsl_oauth_wrapper.py`](../../../tests/unit/test_bsl_oauth_wrapper.py) — 9 passing | [`tests/unit/test_mcp_oauth.py`](../../../tests/unit/test_mcp_oauth.py) 16 + [`tests/unit/test_mcp_oauth_audit.py`](../../../tests/unit/test_mcp_oauth_audit.py) 9 = 25 passing |
+| Tests | `tests/unit/test_bsl_oauth_wrapper.py` — 9 passing *(удалён с обёрткой)* | [`tests/unit/test_mcp_oauth.py`](../../../tests/unit/test_mcp_oauth.py) 16 + [`tests/unit/test_mcp_oauth_audit.py`](../../../tests/unit/test_mcp_oauth_audit.py) 9 = 25 passing |
 | Пользовательские данные | login + password (packed в `user_data` через wrapper) | абстрактный `user_data: dict` |
 | Store backends | inherited from generic | pluggable через `OAuth2StoreBackend` ABC (in-memory готов, SQLite/Redis — TODO) |
 | Audit logging | inherited from generic | `AuditedOAuth2Service` + `OAuthAuditEvent` (5 event types, F5.4 2026-05-15) |

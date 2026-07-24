@@ -1,10 +1,12 @@
 # Активация OAuth2 для MCP сервера
 
+> ⚠ **Обновление 2026-07-24 (ADR-056):** гайд писался для BSL MCP-прокси `src/bsl/mcp_server` (ретирован). Живая реализация OAuth2 — `src/shared/mcp_oauth` + `build_oauth_router()` (FastAPI); для `pdf-vector-graph` активация через env `MCP_OAUTH_ENABLED=1` и `MCP_OAUTH_*` (см. [09.2 Авторизация](../framework%20documentation/7_ПРОВЕРКА/7.2_АДМИНИСТРИРОВАНИЕ/09.2_Авторизация.md)).
+
 ## 1. Предварительные условия
 
 - MCP сервер работает (`MCP_AUTH_MODE=none`)
 - Python 3.10+ с пакетами: `python-jose`, `cryptography`
-- Доступ к `.env` и `src/bsl/mcp_server/auth/`
+- Доступ к `.env` и `src/shared/mcp_oauth/`
 
 ## 2. Шаги активации
 
@@ -26,9 +28,8 @@ MCP_ALLOWED_SCOPES=read:documents,write:documents,manage:indexes
 ### Шаг 3: Сгенерировать credentials
 
 ```bash
-python src/bsl/mcp_server/auth/generate_client_credentials.py
-# Client ID:     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# Client Secret: yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+# скрипт-генератор входил в ретированный модуль; credentials генерируются стандартно:
+python -c "import secrets; print('Client ID:    ', secrets.token_hex(16)); print('Client Secret:', secrets.token_hex(32))"
 ```
 
 ### Шаг 4: Тест PKCE flow

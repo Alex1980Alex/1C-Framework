@@ -1,7 +1,7 @@
 # ADR-056: Ретирмент src/bsl/mcp_server (устаревший vendored-близнец 1c_mcp py_server)
 
 **Дата:** 2026-07-24
-**Статус:** proposed
+**Статус:** accepted (реализован 2026-07-24: модуль и тест обёртки удалены, доки обновлены, аудит 23→21 gaps, shared OAuth-тесты 38/38)
 **Исследование:** [1c-bsl-tooling-ecosystem-2026.md](../cache/1c-bsl-tooling-ecosystem-2026.md) (раздел Verified 2026-07-24)
 
 ## Контекст
@@ -14,7 +14,7 @@
 4. **Уникальная ценность уже извлечена:** OAuth 2.1 + PKCE вынесен в `src/shared/mcp_oauth` (Phase 12.3, openspec `2026-05-15-hermes-llm-wiki` oauth-extraction). В модуле остался thin compat-wrapper `auth/oauth2.py` + тест `tests/unit/test_bsl_oauth_wrapper.py` [exp].
 5. **GitHub-экосистема жива** (gh api 2026-07-24): upstream `vladimir-kharin/1c_mcp` 466★/109 forks, пуш 2026-07-17, **license:null** (юр. риск редистрибуции); альтернативы - `feenlace/mcp-1c` (Go, 173★, MIT, пуш 2026-07-22), `FSerg/mcp-1c-v1` (161★, MIT, stale c 2025-08), каталог `Untru/1c-mcp` (132★), `SteelMorgan/mcp-bsl-lsp-bridge` (63★, Apache-2.0), `infaton/MCP35` (30★, MIT, 51 tool) [web].
 
-## Решение (предложение)
+## Решение
 
 Ретирмент `src/bsl/mcp_server/`:
 - Удалить прокси-ядро (`main.py`, `mcp_server.py`, `onec_client.py`, `http_server.py`, `stdio_server.py`, `config.py`, `__main__.py`).
@@ -46,4 +46,5 @@
 
 `src/bsl/mcp_server/**`, `src/shared/mcp_oauth/**`, `tests/unit/test_bsl_oauth_wrapper.py`,
 `scripts/mcp_1c_stdio_launcher.py`, `external/1c_mcp` (сабмодуль), `src/bsl/mcp_integration/1c_ext/**` (не трогать),
-`docs/framework documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md`, `scripts/audit_docs_skills.py`.
+`docs/framework documentation/3_ИНСТРУМЕНТЫ/3.2_ПОДКЛЮЧЕНИЕ_1С/16.5_MCP_серверы_для_1С.md`, `scripts/audit_docs_skills.py`,
+`scripts/wiki_create_stubs.py:119` (строка-упоминание в генерируемом wiki-стабе, не импорт - поправить текст при ретирменте).
