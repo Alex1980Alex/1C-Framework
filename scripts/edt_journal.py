@@ -99,9 +99,12 @@ def parse_journal(
     current_ts: datetime | None = None
 
     for line in text.splitlines():
-        entry = _ENTRY_RE.match(line)
-        if entry:
-            ours = entry.group("bundle").startswith(bundle_prefix)
+        # Контекст обнуляет ЛЮБАЯ строка `!ENTRY`, а не только распознанная: строка нестандартной
+        # формы (иная severity/битая дата) иначе оставила бы активным время ПРЕДЫДУЩЕЙ своей
+        # записи, и чужое сообщение унаследовало бы чужой таймстемп.
+        if line.startswith("!ENTRY"):
+            entry = _ENTRY_RE.match(line)
+            ours = bool(entry) and entry.group("bundle").startswith(bundle_prefix)
             current_ts = _parse_ts(entry.group("ts")) if ours else None
             continue
         if current_ts is None:

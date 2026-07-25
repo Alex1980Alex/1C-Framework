@@ -91,13 +91,31 @@ def test_parse_journal_extracts_completed_and_failures():
 
 
 def test_parse_journal_broken_timestamp_drops_following_messages():
-    """Битый `!ENTRY` не должен приписывать сообщению чужое время — запись теряется."""
+    """Битый `!ENTRY` не должен приписывать сообщению чужое время — запись теряется.
+
+    ПЕРЕД битой записью стоит валидная СВОЯ: без неё тест зеленел бы по ложной причине
+    (`current_ts` изначально None), не проверяя сброс контекста (находка ре-ревью N1)."""
     text = (
+        "!ENTRY com.ditrix.edt.mcp.server 1 0 2026-07-23 13:00:38.100\n"
+        "!MESSAGE Completed tools/call: list_projects in 12ms, outcome=ok\n"
         "!ENTRY com.ditrix.edt.mcp.server 1 0 НЕ-ДАТА\n"
         "!MESSAGE Completed tools/call: update_database in 99999ms, outcome=ok\n"
     )
     completed, failures = ej.parse_journal(text)
-    assert completed == [] and failures == []
+    assert [r["tool"] for r in completed] == ["list_projects"]  # вторая не унаследовала время
+    assert failures == []
+
+
+def test_parse_journal_malformed_entry_line_resets_context():
+    """Строка `!ENTRY` нестандартной формы (не прошла regex) тоже обнуляет контекст."""
+    text = (
+        "!ENTRY com.ditrix.edt.mcp.server 1 0 2026-07-23 13:00:38.100\n"
+        "!MESSAGE Completed tools/call: list_projects in 12ms, outcome=ok\n"
+        "!ENTRY какая-то-другая-форма-строки\n"
+        "!MESSAGE Completed tools/call: update_database in 99999ms, outcome=ok\n"
+    )
+    completed, _ = ej.parse_journal(text)
+    assert [r["tool"] for r in completed] == ["list_projects"]
 
 
 def test_parse_journal_survives_absurd_duration():
