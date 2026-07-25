@@ -1,0 +1,44 @@
+{
+  "task": "retro-260725-impl",
+  "title": "Реализация ретро 260725 (P0-P3)",
+  "created_at": "2026-07-25T14:16:27",
+  "updated_at": "2026-07-25T14:16:27",
+  "current_stage": 2,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "../../docs/roadmap/260725_ROADMAP_SESSION_RETRO.md",
+      "status": "done",
+      "completed_at": "2026-07-25T14:16:27"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "02-design.md",
+      "status": "pending",
+      "completed_at": null,
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-25T14:16:27"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "../../docs/roadmap/260725_ROADMAP_SESSION_RETRO.md",
+      "status": "done",
+      "completed_at": "2026-07-25T14:16:27"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "../../docs/roadmap/260725_ROADMAP_SESSION_RETRO.md",
+      "status": "done",
+      "completed_at": "2026-07-25T14:16:27"
+    }
+  ]
+}

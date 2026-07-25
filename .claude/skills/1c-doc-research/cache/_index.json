@@ -1,6 +1,6 @@
 {
   "doc_version": "8.3.27",
-  "last_reindex": null,
+  "last_reindex": "2026-07-25",
   "topics": {
     "sonarqube-bsl-замечания-устранение": {
       "title": "SonarQube/bsl-language-server замечания BSL и устранение: MagicNumber → именованная константа (исключения -1/0/1); конкатенация → СтрШаблон/СтрСоединить; дубль вызова → переменная, дубль предиката → приватная функция-предикат; ADR-037 гейт = 0 BLOCKER/CRITICAL на изменённых строках; split-проекты utp-ib/svetly/mfm",
@@ -1799,6 +1799,30 @@
         "произвольное назначение шаблона",
         "видимость шаблона БСП",
         "НовыйПолучателиПисьма структура не коллекция"
+      ]
+    },
+    "update-database-реструктуризация-подтверждение": {
+      "title": "Обновление конфигурации БД: перед реструктуризацией платформа ждёт ДИАЛОГ подтверждения (§2.14.2) → headless update_database висит до 60с-потолка; проверка stateAfter повторным вызовом, fullUpdate=true, диалог в EDT UI",
+      "file": "update-database-restructuring-confirmation.md",
+      "created": "2026-07-25",
+      "last_verified": "2026-07-25",
+      "keywords": [
+        "update_database",
+        "реструктуризация",
+        "обновление конфигурации базы данных",
+        "диалог подтверждения",
+        "edt-mcp",
+        "TelemetrySafeError",
+        "headless",
+        "fullUpdate",
+        "stateAfter",
+        "60 секунд таймаут"
+      ],
+      "sources": [
+        "kb.1ci.com §2.14.2 (8.3.23 Developer Guide)",
+        "1c-dn.com configuration_update",
+        "yellow-erp.com ConfigUpdatingDatabaseConfiguration",
+        "github.com/DitriXNew/EDT-MCP"
       ]
     }
   }
