@@ -240,24 +240,37 @@ def completion_stats(
     failed = in_flight = blocked_n = client_timeout = 0
     unused_blocks = list(blocked or [])
     unused_server_ok = list(server_ok or [])
-    for i, p in enumerate(pres_sorted):
-        pts = parse_ts(p.get("ts"))
-        if i in paired_idx:
-            # Парный (успешный) вызов забирает СВОЮ серверную запись первым — иначе она
-            # могла бы «оправдать» соседний непарный вызов того же тула.
-            if unused_server_ok and pts is not None:
+
+    # ПЕРВЫЙ проход: парные (успешно вернувшиеся) вызовы забирают свои серверные записи —
+    # безусловно, до всякого непарного. Иначе порядок решал бы исход: непарный Pre, стоящий
+    # РАНЬШЕ парного, съел бы его запись (в проде недостижимо — парные короче потолка, — но
+    # инвариант не должен зависеть от эмпирики).
+    if unused_server_ok:
+        for i, p in enumerate(pres_sorted):
+            if i not in paired_idx:
+                continue
+            pts = parse_ts(p.get("ts"))
+            if pts is not None:
                 _take_server_ok(unused_server_ok, _naive(pts))
+
+    for i, p in enumerate(pres_sorted):
+        if i in paired_idx:
             continue
+        pts = parse_ts(p.get("ts"))
+        cid = p.get("tool_call_id") or ""
         if pts is not None and (now - _naive(pts)).total_seconds() < grace_sec:
             in_flight += 1  # Post ещё может прийти — не считаем провалом
         elif pts is not None and _take_block(unused_blocks, p.get("session") or "", _naive(pts)):
             blocked_n += 1  # вызов отклонён гардом — тул не исполнялся
-            if blocked_ids is not None:
-                blocked_ids.add(p.get("tool_call_id") or "")
+            # Пустой id в множество НЕ кладём: второй разрез сопоставляет по членству, и один
+            # `""` списал бы ВСЕ безыдентификаторные вызовы группы (провалы бы исчезли).
+            # Цена — второй разрез недосчитает это объяснение; недовычет безопаснее перевычета.
+            if blocked_ids is not None and cid:
+                blocked_ids.add(cid)
         elif pts is not None and _take_server_ok(unused_server_ok, _naive(pts)):
             client_timeout += 1  # сервер завершил успешно — клиент не дождался ответа
-            if server_ok_ids is not None:
-                server_ok_ids.add(p.get("tool_call_id") or "")
+            if server_ok_ids is not None and cid:
+                server_ok_ids.add(cid)
         else:
             failed += 1
     return {

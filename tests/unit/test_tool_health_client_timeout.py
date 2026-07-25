@@ -15,8 +15,10 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
-from datetime import datetime, timedelta
+import types
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -302,20 +304,164 @@ def test_agent_rollup_matches_per_tool_deduction():
 
 
 def test_server_ok_by_tool_maps_bare_names_and_applies_cap(tmp_path, monkeypatch):
+    """Порог отсекает успехи КОРОЧЕ клиентского потолка, включая 20с — он в «пустой полосе»
+    между максимумом парного вызова (13.4с) и минимумом оборванного (60.3с), поэтому его
+    вычет недоказуем. Снижение CLIENT_CAP_MS обязано покраснить этот тест."""
     log = tmp_path / "ws" / ".metadata" / ".log"
     log.parent.mkdir(parents=True)
-    log.write_text(JOURNAL, encoding="utf-8")
+    log.write_text(
+        JOURNAL
+        + "\n!ENTRY com.ditrix.edt.mcp.server 1 0 2026-07-23 14:00:00.000\n"
+        + "!MESSAGE Completed tools/call: build_external_objects in 20000ms, outcome=ok\n",
+        encoding="utf-8",
+    )
     monkeypatch.setattr(ej, "find_journals", lambda root=None: [log])
 
     got = ath.server_ok_by_tool(datetime(2026, 7, 25), window_days=14)
-    assert set(got) == {"mcp__edt-mcp__update_database"}  # короткий успех отсечён CLIENT_CAP_MS
+    assert set(got) == {"mcp__edt-mcp__update_database"}  # 12мс и 20 000мс отсечены порогом
     assert got["mcp__edt-mcp__update_database"][0][1] == 119398
+
+
+def test_client_cap_env_cannot_disable_threshold(monkeypatch):
+    """`TOOL_HEALTH_CLIENT_CAP_MS=0` не должен превращать вычет в глобальное подавление."""
+    monkeypatch.setenv("TOOL_HEALTH_CLIENT_CAP_MS", "0")
+    spec = importlib.util.spec_from_file_location("_ath_cap_env", _ATH_PATH)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.CLIENT_CAP_MS >= 1_000
+
+    monkeypatch.setenv("TOOL_HEALTH_CLIENT_CAP_MS", "не-число")  # мусор не роняет импорт
+    mod2 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod2)
+    assert mod2.CLIENT_CAP_MS == 55_000
 
 
 def test_server_ok_by_tool_without_journals_is_empty(monkeypatch):
     """Нет журналов → {} и прежнее поведение метрики (вычета просто нет)."""
     monkeypatch.setattr(ej, "find_journals", lambda root=None: [])
     assert ath.server_ok_by_tool(NOW, window_days=14) == {}
+
+
+def test_parse_journal_ignores_foreign_bundle():
+    """Записи чужого плагина не берём: в общий журнал пишут все, имена тулов пересекаются."""
+    text = (
+        "!ENTRY com.codepilot1c.core 1 0 2026-07-23 13:00:38.100\n"
+        "!MESSAGE Completed tools/call: create_metadata in 119398ms, outcome=ok\n"
+        "!ENTRY com.ditrix.edt.mcp.server 1 0 2026-07-23 13:05:00.000\n"
+        "!MESSAGE Completed tools/call: create_metadata in 119398ms, outcome=ok\n"
+    )
+    completed, _ = ej.parse_journal(text)
+    assert len(completed) == 1
+    assert completed[0]["end"] == datetime(2026, 7, 23, 13, 5, 0)
+
+
+def test_read_journals_deduplicates_paths(tmp_path):
+    """Один журнал, поданный дважды, не должен удваивать записи (и вычет)."""
+    log = tmp_path / "ws" / ".metadata" / ".log"
+    log.parent.mkdir(parents=True)
+    log.write_text(JOURNAL, encoding="utf-8")
+    completed, _ = ej.read_journals(journals=[log, log])
+    assert len(completed) == 3
+
+
+def test_aware_pre_ts_matches_naive_journal_record():
+    """Aware-ts у Pre против naive-времени журнала: рецидивирующий класс бага (tz-крэш)."""
+    local_naive = T0
+    aware = local_naive.astimezone(UTC)  # тот же момент, но с tzinfo
+    pres = [
+        {
+            "event": "PreToolUse",
+            "tool": "mcp__edt-mcp__update_database",
+            "tool_call_id": "a",
+            "ts": aware.isoformat(),
+            "session": "s1",
+        }
+    ]
+    got = te.completion_stats(pres, [], now=NOW, server_ok=[(local_naive, 119398)])
+    assert got["client_timeout"] == 1
+
+
+def test_empty_tool_call_id_never_enters_explained_sets():
+    """Пустой id в множество объяснённых НЕ кладём: он не идентифицирует вызов, и во втором
+    разрезе одно объяснение списало бы ВСЕ безыдентификаторные Pre группы."""
+    no_id = {"event": "PreToolUse", "tool": _DP, "ts": T0.isoformat(), "session": "s"}
+    ct_ids: set[str] = set()
+    blk_ids: set[str] = set()
+    got = te.completion_stats([no_id], [], now=NOW, server_ok=[(T0, 134035)], server_ok_ids=ct_ids)
+    assert got["client_timeout"] == 1  # сам вычет per-tool работает
+    assert ct_ids == set()  # но во второй разрез пустой id не уходит
+
+    got_b = te.completion_stats(
+        [dict(no_id)], [], now=NOW, blocked=[("s", T0)], blocked_ids=blk_ids
+    )
+    assert got_b["blocked"] == 1
+    assert blk_ids == set()
+
+
+def test_empty_tool_call_id_not_charged_to_every_call():
+    """Пустой id не идентифицирует вызов: одно объяснение не должно списать все такие Pre."""
+    rows = [
+        {"event": "PreToolUse", "tool": _DP, "ts": T0.isoformat(), "session": "s"},
+        {
+            "event": "PreToolUse",
+            "tool": _DP,
+            "ts": (T0 + timedelta(minutes=30)).isoformat(),
+            "session": "s",
+        },
+    ]
+    for i, r in enumerate(rows):
+        r["agent_id"] = f"agent-{i}"
+    server_ok = {_DP: [(T0, 134035)]}  # объясняет РОВНО один вызов
+    per_agent = ath.agent_rollup(rows, now=NOW, server_ok=server_ok)
+    assert sum(v["client_timeout"] for v in per_agent.values()) <= 1
+
+
+# ── 5. проводка в run(): без неё вычет тихо умирает в проде ───────────────────
+
+
+def test_run_wires_deduction_into_sidecar_and_report(tmp_path, monkeypatch):
+    """САБОТАЖ-ИНВАРИАНТ проводки: удаление `server_ok=` в run() обязано покраснить тест."""
+    monkeypatch.setattr(ath, "REPORTS", tmp_path)
+    monkeypatch.setattr(ath, "iter_window_rows", lambda *a, **k: _delete_project_rows())
+    monkeypatch.setattr(
+        ath,
+        "server_ok_by_tool",
+        lambda *a, **k: {_DP: [(T0, 134035), (T0 + timedelta(minutes=30), 203137)]},
+    )
+    monkeypatch.setattr(ath, "guard_blocks_by_tool", lambda *a, **k: {})
+    monkeypatch.setattr(ath, "gather_infra_alerts", lambda *a, **k: [])  # без внешних вызовов
+    monkeypatch.setattr(ath, "earliest_log_ts", lambda *a, **k: None)
+    monkeypatch.setattr(
+        ath,
+        "journal_failures_for",
+        lambda tools, now, window_days, limit=12: [
+            {
+                "tool": _DP,
+                "ts": "2026-07-24T18:16:12",
+                "ms": 0,
+                "text": "Project not found",
+                "source": "ws",
+            }
+        ],
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "otel_crosscheck",
+        types.SimpleNamespace(
+            run_crosscheck=lambda **k: {"available": False}, format_section=lambda cc: ""
+        ),
+    )
+
+    sidecar = ath.run(window_days=14, now=NOW)
+
+    assert sidecar["client_timeouts"][_DP] == 2  # вычет доехал до sidecar
+    assert sidecar["tools"][_DP]["verdict"] != "broken"  # и до вердикта
+    assert sidecar["journal_failures"], "причины отказов сервера не попали в sidecar"
+    md = (tmp_path / "_latest.md").read_text(encoding="utf-8")
+    assert "Серверные исходы (журнал EDT)" in md
+    assert "Клиентский потолок" in md
+    written = json.loads((tmp_path / "_latest.json").read_text(encoding="utf-8"))
+    assert written["client_timeouts"][_DP] == 2
 
 
 def test_journal_failures_only_for_alerting_edt_tools(tmp_path, monkeypatch):

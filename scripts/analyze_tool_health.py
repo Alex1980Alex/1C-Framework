@@ -111,7 +111,9 @@ VERDICTS_CAP_BYTES = 5_000_000  # ротация verdicts.jsonl (append-исто
 # ниже него объяснение «клиент не дождался» недоказуемо, и вызов остаётся провалом.
 CLIENT_CAP_MS = 55_000
 try:
-    CLIENT_CAP_MS = int(os.environ.get("TOOL_HEALTH_CLIENT_CAP_MS") or CLIENT_CAP_MS)
+    # клампим снизу: `TOOL_HEALTH_CLIENT_CAP_MS=0` (или отрицательный) превратил бы вычет в
+    # глобальное подавление — любой серверный успех оправдывал бы любой непарный Pre
+    CLIENT_CAP_MS = max(1_000, int(os.environ.get("TOOL_HEALTH_CLIENT_CAP_MS") or CLIENT_CAP_MS))
 except ValueError:  # мусор в env не должен ронять прогон
     pass
 # Журнал EDT принадлежит плагину одного MCP-сервера: короткие имена тулов в нём
@@ -286,6 +288,8 @@ def guard_blocks_by_tool(
                     e = json.loads(line)
                 except ValueError:
                     continue
+                if not isinstance(e, dict):  # валидный JSON-не-объект (`123`) → не роняем прогон
+                    continue
                 if (
                     e.get("category") != "hook"
                     or e.get("event") != "PreToolUse"
@@ -325,10 +329,10 @@ def server_ok_by_tool(
         return {}
     try:
         bare = server_ok_calls(
-            since=now - timedelta(days=window_days),
+            since=_to_naive_local(now) - timedelta(days=window_days),
             min_ms=CLIENT_CAP_MS if min_ms is None else min_ms,
         )
-    except OSError:
+    except (OSError, TypeError):  # TypeError: aware-`now` против naive-времени журнала
         return {}
     return {f"mcp__{EDT_JOURNAL_SERVER}__{tool}": calls for tool, calls in bare.items()}
 
@@ -357,8 +361,10 @@ def journal_failures_for(
     except ImportError:
         return []
     try:
-        completed, failures = read_journals(since=now - timedelta(days=window_days))
-    except OSError:
+        completed, failures = read_journals(
+            since=_to_naive_local(now) - timedelta(days=window_days)
+        )
+    except (OSError, TypeError):  # TypeError: aware-`now` против naive-времени журнала
         return []
     # длительность берём из парной записи `Completed` (тот же тул, ±1с от текста отказа)
     out: list[dict] = []
@@ -524,9 +530,12 @@ def agent_rollup(
         aid, _tool = key
         posts = post[key]
         comp = completion_stats(pre[key], posts, now=now)
-        # из провалов этой группы вычитаем объяснённые глобально (блок / серверный успех)
-        blocked_here = sum(1 for p in pre[key] if (p.get("tool_call_id") or "") in blocked_ids)
-        ct_here = sum(1 for p in pre[key] if (p.get("tool_call_id") or "") in server_ok_ids)
+        # из провалов этой группы вычитаем объяснённые глобально (блок / серверный успех).
+        # Пустой id не сопоставляем: он не идентифицирует вызов, и одно объяснение списало бы
+        # все безыдентификаторные Pre группы (симметрично записи в множества выше).
+        ids = [cid for p in pre[key] if (cid := p.get("tool_call_id"))]
+        blocked_here = sum(1 for cid in ids if cid in blocked_ids)
+        ct_here = sum(1 for cid in ids if cid in server_ok_ids)
         failed = max(0, comp["failed"] - blocked_here - ct_here)
         a = acc[aid]
         a["completed"] += len(posts)
@@ -1148,8 +1157,10 @@ def render_md(health: dict, window_days: int) -> str:
         "(Bash non-zero exit / Edit «строка не найдена» / Read miss) — это ЕДИНСТВЕННЫЙ честный "
         "сигнал провала built-in (NB1, roadmap 260718). НЕ попадают в «неуд.»: отклонённые "
         "гардом вызовы (тул не исполнялся) и оборванные клиентским потолком при серверном "
-        "`outcome=ok` (тул исполнился успешно — см. «Серверные исходы»). Решение по "
-        "alert'ам — за человеком; broken эскалируется авто-задачей (SessionStart-баннер).",
+        "`outcome=ok` (тул исполнился успешно — см. «Серверные исходы»). ⚠ Вычтенные вызовы "
+        "уходят и из знаменателя «Вызовов», поэтому у тула с вычетом success-rate может "
+        "показывать 0% при фактических серверных успехах — их число смотри в «Серверных "
+        "исходах». Решение по alert'ам — за человеком; broken эскалируется авто-задачей.",
     ]
     return "\n".join(lines) + "\n"
 

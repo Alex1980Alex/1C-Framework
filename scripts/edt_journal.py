@@ -40,15 +40,19 @@ ROOT = Path(__file__).resolve().parents[1]
 #: где искать журналы: каждый EDT-воркспейс — свой `.metadata/.log` (+ архивы ротации)
 JOURNAL_GLOBS = ("*/.metadata/.log", "*/.metadata/*.bak*.log")
 
-#: bundle плагина MCP — единственный, кто пишет `tools/call` (проверено на всех журналах:
-#: 63 записи, других bundle'ов нет). Отдельная проверка не нужна: префикс сообщения уникален.
-BUNDLE = "com.ditrix.edt.mcp.server"
+#: bundle плагина MCP в EDT. На живых журналах `tools/call` пишет ТОЛЬКО он, но полагаться
+#: на это нельзя: в один `.metadata/.log` пишут все плагины воркспейса, а имена инструментов
+#: у `edt-mcp` и `codepilot1c` массово пересекаются (`create_metadata`, `debug_status`,
+#: `validate_query`…) — чужая долгая запись «оправдала» бы провал не своего сервера.
+#: Сверяем по ПРЕФИКСУ: под-бандлы (`…mcp.server.core`) остаются своими, а смена id
+#: у апстрима просто выключит вычет (fail-soft), но не даст ложного.
+BUNDLE_PREFIX = "com.ditrix.edt.mcp"
 
 _TS_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 # дробная часть — `\d+`, а не фиксированные 3 знака: точность лога = деталь реализации Eclipse
 _ENTRY_RE = re.compile(
-    r"^!ENTRY\s+\S+\s+\d+\s+\d+\s+(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)"
+    r"^!ENTRY\s+(?P<bundle>\S+)\s+\d+\s+\d+\s+(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)"
 )
 _COMPLETED_RE = re.compile(
     r"^!MESSAGE\s+Completed\s+tools/call:\s*(?P<tool>\S+)\s+in\s+"
@@ -77,14 +81,18 @@ def _parse_ts(raw: str) -> datetime | None:
         return None
 
 
-def parse_journal(text: str, source: str = "") -> tuple[list[dict], list[dict]]:
+def parse_journal(
+    text: str, source: str = "", bundle_prefix: str = BUNDLE_PREFIX
+) -> tuple[list[dict], list[dict]]:
     """Содержимое журнала → (завершённые вызовы, тексты отказов).
 
     Завершённый: ``{tool, start, end, ms, outcome, source}`` (``start`` = ``end − ms``).
     Отказ: ``{tool, ts, text, source}``.
 
-    Битый таймстемп `!ENTRY` обнуляет контекст: последующие `!MESSAGE` пропускаются до
-    следующего корректного `!ENTRY` — лучше потерять запись, чем приписать ей чужое время.
+    Берутся ТОЛЬКО записи бандла ``bundle_prefix`` (см. его комментарий: в общий журнал
+    пишут все плагины, а имена тулов пересекаются). Битый таймстемп `!ENTRY` обнуляет
+    контекст: последующие `!MESSAGE` пропускаются до следующего корректного `!ENTRY` —
+    лучше потерять запись, чем приписать ей чужое время (или чужой бандл).
     """
     completed: list[dict] = []
     failures: list[dict] = []
@@ -93,7 +101,8 @@ def parse_journal(text: str, source: str = "") -> tuple[list[dict], list[dict]]:
     for line in text.splitlines():
         entry = _ENTRY_RE.match(line)
         if entry:
-            current_ts = _parse_ts(entry.group("ts"))
+            ours = entry.group("bundle").startswith(bundle_prefix)
+            current_ts = _parse_ts(entry.group("ts")) if ours else None
             continue
         if current_ts is None:
             continue
@@ -141,7 +150,9 @@ def read_journals(
     Нечитаемый файл пропускается молча. ``source`` = имя воркспейса (`<ws>/.metadata/.log`)
     — в отчёте видно, ГДЕ исполнялся вызов.
     """
-    paths = journals if journals is not None else find_journals()
+    # dict.fromkeys — дедуп путей: один и тот же журнал дважды = удвоение записей,
+    # а значит и удвоение вычета у потребителя
+    paths = list(dict.fromkeys(journals if journals is not None else find_journals()))
     all_completed: list[dict] = []
     all_failures: list[dict] = []
 
