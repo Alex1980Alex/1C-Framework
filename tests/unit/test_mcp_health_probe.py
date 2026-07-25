@@ -61,13 +61,18 @@ def test_sqlite_ok_real_db(tmp_path):
 
 
 def test_probe_all_structure(monkeypatch):
-    """probe_all даёт 4 цели с обязательными ключами и картой affects."""
+    """probe_all покрывает базовые зависимости и даёт полную запись на каждую цель.
+
+    Набор целей растёт (N-P2.1: +6× `1c-mcp-crud`, skill-learning, langfuse), поэтому
+    пинится ПОДМНОЖЕСТВО обязательных целей + контракт записи, а не точный список —
+    иначе каждый новый пробник красит регресс.
+    """
     probe = _load_probe()
     monkeypatch.setattr(probe, "_http_ok", lambda *a, **k: (True, 5, ""))
     monkeypatch.setattr(probe, "_sqlite_ok", lambda *a, **k: (True, 1, ""))
     probes = probe.probe_all(timeout=0.5)
     targets = {p["target"] for p in probes}
-    assert targets == {"qdrant", "tei", "memory-ai", "bsl-code-search"}
+    assert {"qdrant", "tei", "memory-ai", "bsl-code-search"} <= targets
     for p in probes:
         assert {"target", "kind", "endpoint", "ok", "latency_ms", "error", "affects"} <= set(p)
         assert isinstance(p["affects"], list) and p["affects"]
@@ -86,14 +91,15 @@ def test_run_writes_jsonl_and_sidecar(tmp_path, monkeypatch):
     monkeypatch.setattr(probe, "_sqlite_ok", lambda *a, **k: (True, 1, ""))
 
     summary = probe.run(timeout=0.5, now=datetime(2026, 7, 14, 12, 0, 0))
-    assert summary["total"] == 4
+    expected_total = len(probe.probe_all(timeout=0.5))
+    assert summary["total"] == expected_total
     assert any(d["target"] == "qdrant" for d in summary["down"])
     # sidecar записан
     sc = json.loads((tmp_path / "_mcp_health.json").read_text(encoding="utf-8"))
     assert sc["up"] == summary["up"]
-    # jsonl содержит 4 строки
+    # jsonl: строка на каждую цель
     lines = (tmp_path / "mcp-health.jsonl").read_text(encoding="utf-8").strip().splitlines()
-    assert len(lines) == 4
+    assert len(lines) == expected_total
 
 
 # ── SessionStart hook ────────────────────────────────────────────────────────

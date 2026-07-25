@@ -55,6 +55,10 @@ FILE_LEVEL_BANNERS = [
     "Phase 8 + 9.1",
     "Phase 8 production reference",
     "DROPPED",
+    # Конвенция перенумерации 2026-07-04: главы устаревшего стека помечаются
+    # баннером «⚠️ ARCHIVE (устаревший стек …)» + ссылкой на актуальную главу.
+    # Без этой строки тест ругался на СОБСТВЕННЫЙ баннер файла (гл. 2.5, 19.x).
+    "ARCHIVE",
 ]
 ALLOWLIST_DIRS = {"31_QWEN3_RETRIEVAL_PRODUCTION"}
 

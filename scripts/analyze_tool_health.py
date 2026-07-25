@@ -152,7 +152,11 @@ def _is_content_variable(tool: str) -> bool:
 # субагентов unpaired конфлатит «провал» и «background/кросс-сессионный Post» →
 # из error_rate/attempts ИСКЛЮЧАЕМ (поле incomplete остаётся для глаз). p95 у них off
 # (уже в CONTENT_VARIABLE_BUILTINS). Метрика Agent считается по завершённым (paired).
-ASYNC_UNPAIRED_UNRELIABLE = frozenset({"Agent", "Task"})
+# AskUserQuestion (разбор degraded 2026-07-25): тот же класс по ДРУГОЙ причине —
+# интерактивный тул. Непарный Pre = пользователь не ответил / прервал / выбрал
+# «Other» вне диалога; это нормальный исход взаимодействия, а не отказ инструмента
+# (живьём 5/24 = 21% непарных при нуле записей с ошибкой → ложный degraded).
+ASYNC_UNPAIRED_UNRELIABLE = frozenset({"Agent", "Task", "AskUserQuestion"})
 
 
 # ── чтение лога за окно ───────────────────────────────────────────────────────

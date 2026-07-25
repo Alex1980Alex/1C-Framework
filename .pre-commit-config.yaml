@@ -26,6 +26,11 @@
 #                         without trailing newline → perpetual eof-fixer churn).
 # - .claude/**/cache/     generated knowledge/skill caches (_index.json etc) —
 #                         tool-written, not hand-edited.
+# - EDT-воркспейсы 1С (TransportManagementDevelop_KAT/, _SVETLY/,
+#   ИБTransportManagementDevelop/, MFM/, configuration/) — тот же класс, что
+#   src/bsl/: BSL/XML/HTML выгружает платформа, whitespace и EOL контролирует она.
+#   KAT лежит в ГЛАВНОМ репо (не сабмодуль) → без этого исключения хуки правили
+#   2610 продуктовых файлов конфигурации и job «Pre-commit Hooks» был красным.
 exclude: |
   (?x)^(
     tools/.*|
@@ -45,7 +50,12 @@ exclude: |
     docs/documentation/.*|
     tmp/.*|
     \.obsidian/.*|
-    \.claude/.*/cache/.*
+    \.claude/.*/cache/.*|
+    TransportManagementDevelop_KAT/.*|
+    TransportManagementDevelop_SVETLY/.*|
+    ИБTransportManagementDevelop/.*|
+    MFM/.*|
+    configuration/.*
   )$
 
 repos:

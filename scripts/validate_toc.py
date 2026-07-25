@@ -31,32 +31,85 @@ LINK_RE = re.compile(r"\[(?P<text>[^\]]+)\]\((?P<href>[^)]+)\)")
 
 
 def parse_toc_links(toc_path: Path, docs_root: Path) -> set[Path]:
-    """Извлекает declared `.md` пути из TOC, нормализует относительно `docs_root`.
+    """Извлекает набор .md-файлов, покрытых оглавлением.
 
-    Игнорирует:
-      - directory-only ссылки (path кончается на `/`)
-      - external URLs (http/https/mailto)
-      - non-`.md` файлы
+    Ссылка на каталог (href оканчивается на "/" либо резолвится в директорию)
+    трактуется как покрытие ВСЕГО поддерева .md-файлов внутри неё: после
+    перенумерации по слоям (Harness 2026-07-04) TOC ссылается на каталоги
+    глав, а не на каждый файл главы по отдельности — без этого правила
+    все файлы внутри такого каталога ошибочно считались бы orphan
+    (не упомянутыми в оглавлении).
     """
+    root = docs_root.resolve()
     text = toc_path.read_text(encoding="utf-8")
-    declared: set[Path] = set()
+    result: set[Path] = set()
+
     for match in LINK_RE.finditer(text):
         href = unquote(match.group("href")).strip()
+
         if href.startswith(("http://", "https://", "mailto:", "#")):
             continue
-        if href.endswith("/"):
-            continue
+
         if "#" in href:
             href = href.split("#", 1)[0]
-        if not href.lower().endswith(".md"):
+        if not href:
             continue
+
         target = (docs_root / href).resolve()
         try:
-            rel = target.relative_to(docs_root.resolve())
+            rel = target.relative_to(root)
         except ValueError:
             continue
-        declared.add(rel)
-    return declared
+
+        if href.endswith("/") or target.is_dir():
+            if target.is_dir():
+                for md_file in target.rglob("*.md"):
+                    result.add(md_file.resolve().relative_to(root))
+            continue
+
+        if not href.lower().endswith(".md"):
+            continue
+
+        result.add(rel)
+
+    return result
+
+
+def parse_toc_dirs(toc_path: Path, docs_root: Path) -> set[Path]:
+    """Извлекает набор каталогов, на которые ссылается оглавление.
+
+    Нужна отдельно от parse_toc_links для проверки «TOC объявляет каталог,
+    которого нет на диске» — parse_toc_links молча игнорирует
+    несуществующие каталоги, а эта функция позволяет её вызывающему
+    сверить объявленные пути с реальным деревом.
+    """
+    root = docs_root.resolve()
+    text = toc_path.read_text(encoding="utf-8")
+    result: set[Path] = set()
+
+    for match in LINK_RE.finditer(text):
+        href = unquote(match.group("href")).strip()
+
+        if href.startswith(("http://", "https://", "mailto:", "#")):
+            continue
+
+        if "#" in href:
+            href = href.split("#", 1)[0]
+        if not href:
+            continue
+
+        if not href.endswith("/"):
+            continue
+
+        target = (docs_root / href).resolve()
+        try:
+            rel = target.relative_to(root)
+        except ValueError:
+            continue
+
+        result.add(rel)
+
+    return result
 
 
 def collect_fs_md(docs_root: Path, ignore_filenames: set[str]) -> set[Path]:
@@ -100,7 +153,14 @@ def main() -> int:
     declared = parse_toc_links(toc_path, docs_root)
     fs = collect_fs_md(docs_root, ignore_filenames)
 
-    declared_missing = sorted(declared - fs)
+    # Каталог, объявленный в TOC, но отсутствующий на диске, в `declared` не попадает
+    # (раскрытие поддерева даёт пустоту) — добавляем его в missing явно, иначе битая
+    # директорная ссылка проходит незамеченной.
+    missing_dirs = sorted(
+        d for d in parse_toc_dirs(toc_path, docs_root) if not (docs_root / d).is_dir()
+    )
+
+    declared_missing = sorted(declared - fs) + missing_dirs
     orphan_fs = sorted(fs - declared)
 
     def _rel(p: Path) -> str:
