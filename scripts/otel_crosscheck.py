@@ -105,13 +105,37 @@ def _coerce_int(v: object) -> int | None:
     return None
 
 
+def native_log_files(path: Path = NATIVE_LOGS) -> list[Path]:
+    """Живой файл + ротированные архивы-сиблинги, в хронологическом порядке.
+
+    File-exporter ротирует лог по размеру (20МБ) в ``<stem>-<ts>-size<suffix>`` рядом
+    с живым файлом. Чтение ТОЛЬКО живого файла схлопывало окно крос-чека до остатка
+    после ротации: замерено 2026-07-25 — 1485 событий в отчёте 10:53 против 17 через
+    13 минут. Тот же класс single-retention, что закрыли каскадной ротацией для
+    hook-лога (roadmap 260718 N-P0.2).
+
+    Архивы идут ПЕРЕД живым файлом: потребитель схлопывает дубли по ``tool_use_id``
+    «последним», значит выигрывает самая свежая запись."""
+    archives = sorted(p for p in path.parent.glob(f"{path.stem}-*{path.suffix}") if p.is_file())
+    return [*archives, path] if path.exists() else archives
+
+
 def parse_native_tool_results(path: Path = NATIVE_LOGS) -> list[dict]:
     """События ``claude_code.tool_result`` из OTLP-JSON file-exporter'а.
 
+    Читает живой файл И ротированные архивы (см. ``native_log_files``).
     Возвращает нормализованные dict'ы: ``tool_use_id``/``tool``/``success``/
     ``duration_ms``/``error_type``/``ts`` (ISO, из timeUnixNano)/``session``.
     Дубли по id допустимы (батч-ретраи) — потребитель схлопывает по последнему.
     Не падает на битой строке/неполном атрибуте (per-line try)."""
+    out: list[dict] = []
+    for f in native_log_files(path):
+        out.extend(_parse_native_file(f))
+    return out
+
+
+def _parse_native_file(path: Path) -> list[dict]:
+    """Разбор ОДНОГО OTLP-JSON файла (см. ``parse_native_tool_results``)."""
     if not path.exists():
         return []
     out: list[dict] = []
@@ -317,6 +341,34 @@ def _latency_deltas(nat: dict, pre_by_id: dict, post_by_id: dict) -> dict:
 # ── публичный вход + markdown ─────────────────────────────────────────────────
 
 
+def _hook_rows_windowed(
+    hook_log: Path, since_days: int, now: datetime
+) -> tuple[list[dict], list[dict]]:
+    """Canonical Pre/Post за окно — из ЖИВОГО лога И ротированных архивов.
+
+    Симметрия окон обязательна: native-сторона покрывает всё, что дал file-exporter,
+    и если hook-сторону читать одним файлом, разница уезжает в ``native_only`` и
+    крос-чек становится нечитаемым (замерено 2026-07-25: hook_ids 1304 против ~6300
+    в архивах). Политику чтения hook-лога владеет ``analyze_tool_health``
+    (``_all_logs`` + tz-guard ``iter_window_rows``) — переиспользуем её, а не заводим
+    второй ридер. Импорт ленивый: обратная сторона уже импортирует нас лениво.
+    """
+    try:
+        from analyze_tool_health import _all_logs, iter_window_rows
+    except ImportError:  # автономный запуск без соседнего модуля
+        return parse_hook_rows(hook_log, since=now - timedelta(days=since_days))
+    logs = _all_logs() if hook_log == HOOK_LOG else [hook_log]
+    pres: list[dict] = []
+    posts: list[dict] = []
+    for r in iter_window_rows(now, since_days, logs=logs):
+        ev = r.get("event")
+        if ev == "PreToolUse":
+            pres.append(r)
+        elif ev == "PostToolUse":
+            posts.append(r)
+    return pres, posts
+
+
 def run_crosscheck(
     otel_logs: Path = NATIVE_LOGS,
     hook_log: Path = HOOK_LOG,
@@ -331,7 +383,7 @@ def run_crosscheck(
             "available": False,
             "reason": "нет data/otel/claude-otel-logs.jsonl (OTel off / пусто)",
         }
-    pres, posts = parse_hook_rows(hook_log, since=now - timedelta(days=since_days))
+    pres, posts = _hook_rows_windowed(hook_log, since_days=since_days, now=now)
     result = crosscheck(native, pres, posts, now=now)
     result["since_days"] = since_days
     return result

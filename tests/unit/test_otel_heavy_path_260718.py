@@ -201,6 +201,69 @@ def test_parse_native_missing_file():
     assert cc.parse_native_tool_results(Path("/nope/does-not-exist.jsonl")) == []
 
 
+# ── H-P3: ротация native-лога (регрессия 2026-07-25) ──────────────────────────
+# file-exporter ротирует по 20МБ в `claude-otel-logs-<ts>-size.jsonl`. Чтение ТОЛЬКО
+# живого файла схлопывало окно: 1485 событий в отчёте 10:53 → 17 через 13 минут.
+
+
+def _rotated(tmp_path, ts: str) -> Path:
+    """Архив с реальным именем, как его пишет file-exporter."""
+    return tmp_path / f"claude-otel-logs-{ts}-size.jsonl"
+
+
+def test_parse_native_reads_rotated_archives(tmp_path):
+    """САБОТАЖ-ИНВАРИАНТ: события из ротированных архивов ПОПАДАЮТ в выборку.
+
+    Откат к чтению одного файла оставляет только `toolu_live` → тест краснеет.
+    """
+    live = tmp_path / "claude-otel-logs.jsonl"
+    live.write_text(_otlp_line("Read", "toolu_live", True, 5) + "\n", encoding="utf-8")
+    _rotated(tmp_path, "2026-07-19T16-39-30.462").write_text(
+        _otlp_line("Bash", "toolu_old", False, 42, "ShellError") + "\n", encoding="utf-8"
+    )
+    _rotated(tmp_path, "2026-07-23T09-55-35.203").write_text(
+        _otlp_line("Glob", "toolu_mid", True, 7) + "\n", encoding="utf-8"
+    )
+
+    ids = {e["tool_use_id"] for e in cc.parse_native_tool_results(live)}
+    assert ids == {"toolu_old", "toolu_mid", "toolu_live"}
+
+
+def test_native_log_files_orders_archives_before_live(tmp_path):
+    """Архивы по возрастанию имени, живой файл последним: потребитель схлопывает
+    дубли по tool_use_id «последним», значит выигрывать должна свежая запись."""
+    live = tmp_path / "claude-otel-logs.jsonl"
+    live.write_text("", encoding="utf-8")
+    newer = _rotated(tmp_path, "2026-07-23T09-55-35.203")
+    older = _rotated(tmp_path, "2026-07-19T16-39-30.462")
+    for p in (newer, older):
+        p.write_text("", encoding="utf-8")
+
+    assert cc.native_log_files(live) == [older, newer, live]
+
+
+def test_native_log_files_ignores_foreign_stem(tmp_path):
+    """Рядом лежит `claude-otel-traces.jsonl` (другой сигнал) — не подхватывать."""
+    live = tmp_path / "claude-otel-logs.jsonl"
+    live.write_text("", encoding="utf-8")
+    (tmp_path / "claude-otel-traces.jsonl").write_text("", encoding="utf-8")
+    (tmp_path / "claude-otel-traces-2026-07-22T10-59-18.746-size.jsonl").write_text(
+        "", encoding="utf-8"
+    )
+
+    assert cc.native_log_files(live) == [live]
+
+
+def test_native_log_files_archives_only_when_live_absent(tmp_path):
+    """Живой файл ещё не создан после ротации → работаем по архивам, не пустуем."""
+    live = tmp_path / "claude-otel-logs.jsonl"
+    arch = _rotated(tmp_path, "2026-07-19T16-39-30.462")
+    arch.write_text(_otlp_line("Bash", "toolu_a", True, 1) + "\n", encoding="utf-8")
+
+    assert cc.native_log_files(live) == [arch]
+    assert [e["tool_use_id"] for e in cc.parse_native_tool_results(live)] == ["toolu_a"]
+
+
 def test_coerce_bool_string_false_is_false():
     """САБОТАЖ-ИНВАРИАНТ: платформа шлёт success как stringValue "false" — наивный
     bool("false")==True сделал бы все провалы «успехом» (NB1-класс на OTel-парсинге)."""
