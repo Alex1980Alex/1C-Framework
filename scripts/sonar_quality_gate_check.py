@@ -51,8 +51,7 @@ def main():
     )
     for c in failed:
         print(
-            "  FAIL %s: %s (порог %s)"
-            % (c.get("metricKey"), c.get("actualValue"), c.get("errorThreshold"))
+            f"  FAIL {c.get('metricKey')}: {c.get('actualValue')} (порог {c.get('errorThreshold')})"
         )
     if status == "ERROR" and not a.soft:
         print("HARD GATE: QG=ERROR -> exit 1 (снять: SONAR_QG_HARD!=1 либо --soft)")
