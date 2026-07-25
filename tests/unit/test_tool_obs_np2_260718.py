@@ -39,12 +39,31 @@ NOW = datetime(2026, 7, 18, 12, 0, 0)
 # ── N-P2.1: config + probe helpers ────────────────────────────────────────────
 
 
-def test_load_1c_instances_reads_mcp_json():
-    """_load_1c_instances находит все 1c-mcp-crud* с непустым MCP_ONEC_URL."""
+def test_load_1c_instances_reads_mcp_json(tmp_path, monkeypatch):
+    """_load_1c_instances находит все 1c-mcp-crud* с непустым MCP_ONEC_URL.
+
+    Читаем ФИКСТУРУ, а не живой `.mcp.json`: он в `.gitignore`, поэтому на CI-раннере
+    отсутствует и тест краснел на пустом множестве при исправном коде.
+    """
+    (tmp_path / ".mcp.json").write_text(
+        json.dumps(
+            {
+                "mcpServers": {
+                    "1c-mcp-crud": {"env": {"MCP_ONEC_URL": "http://localhost/base/hs/mcp"}},
+                    "1c-mcp-crud-mfm": {"env": {"MCP_ONEC_URL": "http://localhost/mfm/hs/mcp"}},
+                    "1c-mcp-crud-nourl": {"env": {"MCP_ONEC_URL": "  "}},  # пустой → отбрасывается
+                    "edt-mcp": {"env": {"MCP_ONEC_URL": "http://localhost/other"}},  # не 1С-crud
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(probe, "ROOT", tmp_path)
     inst = probe._load_1c_instances()
     names = {n for n, _ in inst}
     assert "1c-mcp-crud" in names
     assert any(n.startswith("1c-mcp-crud-") for n in names)  # хотя бы один инстанс
+    assert "1c-mcp-crud-nourl" not in names and "edt-mcp" not in names
     assert all(url.startswith("http") for _, url in inst)
 
 

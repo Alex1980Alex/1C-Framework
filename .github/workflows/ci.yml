@@ -203,7 +203,11 @@ jobs:
         run: uv pip install --system -e ".[dev,qdrant,morphology]"
 
       - name: Run pre-commit
-        run: uv run pre-commit run --all-files
+        # `pre-commit` напрямую, НЕ `uv run pre-commit`: зависимости ставятся
+        # `uv pip install --system`, а `uv run` поднимает изолированное окружение,
+        # где их нет → local-хук `kb-lint` (language: system) падал с
+        # `ModuleNotFoundError: No module named 'kb_lint'`, хотя пакет объявлен в [dev].
+        run: pre-commit run --all-files
 
   test-unit:
     name: Unit Tests (Python ${{ matrix.python-version }})

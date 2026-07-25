@@ -99,8 +99,12 @@ def test_large_docs_md_still_enforced(tmp_path: Path) -> None:
 
 
 def test_scratchpad_outside_repo_is_exempt(tmp_path: Path) -> None:
-    outside = "C:/Users/T/AppData/Local/Temp/claude/P/sess/scratchpad/tool.py"
-    assert not _blocked(outside, tmp_path=tmp_path)
+    """Путь строим от tmp_path, а не литералом `C:/…`: на POSIX-раннере CI строка
+    с драйв-буквой НЕ абсолютна, гард приклеивает её к корню репо и честно блокирует —
+    тест краснел на ubuntu при полностью исправном гарде."""
+    outside = tmp_path / "claude" / "sess" / "scratchpad" / "tool.py"
+    assert not outside.is_relative_to(_ROOT)  # предпосылка: путь действительно вне репо
+    assert not _blocked(str(outside), tmp_path=tmp_path)
 
 
 def test_pipeline_artefacts_are_exempt(tmp_path: Path) -> None:
