@@ -16,8 +16,14 @@
 	branch = master
 [submodule "external/1c_mcp"]
 	path = external/1c_mcp
-	url = https://github.com/vladimir-kharin/1c_mcp.git
-	branch = main
+	# Форк: 5 локальных патчей расширения (mcp_ОтладкаВыполненияКода, B1 debug-worker)
+	# существовали ТОЛЬКО на диске, из-за чего гитлинк был недостижим и
+	# `clone --recursive` не собирался. Отдать их в upstream нельзя - репозиторий чужой.
+	# Патчи лежат ветвью framework-patches (форк создан от свежего upstream, наша база
+	# старее; ребейз чужого расширения без прогона небезопасен). upstream остался
+	# вторым remote'ом в сабмодуле для синхронизации.
+	url = https://github.com/Alex1980Alex/1c_mcp.git
+	branch = framework-patches
 [submodule "tools/bsl-ls/tree-sitter-bsl-src"]
 	path = tools/bsl-ls/tree-sitter-bsl-src
 	url = https://github.com/Alex1980Alex/tree-sitter-bsl.git
