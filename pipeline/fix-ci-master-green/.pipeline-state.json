@@ -1,0 +1,44 @@
+{
+  "task": "fix-ci-master-green",
+  "title": "Возврат master в зелёное + разбор degraded + сабмодули",
+  "created_at": "2026-07-25T10:39:40",
+  "updated_at": "2026-07-25T10:40:20",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T10:40:20"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T10:40:20",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-25T10:40:20"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T10:40:20"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T10:40:20"
+    }
+  ]
+}
