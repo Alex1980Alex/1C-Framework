@@ -95,6 +95,12 @@ temp_*.txt
 # Ralph Wiggum state files (runtime, prevents stop-hook infinite loop)
 .claude/hooks/.ralph_*
 
+# Agent worktrees (git worktree'ы ЭТОГО же репозитория, создаются Agent-тулом).
+# Без игнора `git add -A` авто-сейва фиксирует путь как gitlink (mode 160000) без
+# записи в .gitmodules → `git submodule status|foreach|update` падает exit 128
+# на весь репозиторий (инцидент 2026-07-25: agent-a4e6ce0279d63bbb6).
+.claude/worktrees/
+
 # YAxUnit runner config (содержит креды ИБ — НИКОГДА не коммитить; .runtime генерит launcher)
 tools/mcp-jars/.runtime/
 tools/mcp-jars/application-*.yml
