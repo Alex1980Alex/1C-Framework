@@ -20,7 +20,7 @@ pytestmark = pytest.mark.unit
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import tool_llm_judge as lj  # noqa: E402
+import tool_llm_judge as lj
 
 
 @pytest.fixture(autouse=True)
@@ -267,7 +267,7 @@ def test_run_scores_and_advances_cursor(tmp_path):
     fake = lambda _p: '{"argument_correctness": 0.9, "task_completion": 0.2, "comment": "пусто"}'  # noqa: E731
     res = lj.run(judge_fn=fake, source="mcp-calls", root=tmp_path)
     assert res["available"] is True and res["scored"] == 1
-    assert lj._load_cursor(lj.CURSOR_PATH)["mcp-x-calls.jsonl"] == "2026-07-25T10:00:00.000"
+    assert lj._load_cursor()["mcp-x-calls.jsonl"] == "2026-07-25T10:00:00.000"
 
     # повторный прогон: тот же вызов не пересуживается
     res2 = lj.run(judge_fn=fake, source="mcp-calls", root=tmp_path)
@@ -295,9 +295,9 @@ def test_cursor_not_advanced_when_run_fails(tmp_path, monkeypatch):
     )
     with pytest.raises(OSError):
         lj.run(judge_fn=lambda _p: "{}", source="mcp-calls", root=tmp_path)
-    assert lj._load_cursor(lj.CURSOR_PATH) == {}
+    assert lj._load_cursor() == {}
 
 
 def test_corrupt_cursor_falls_back_to_full_window(tmp_path):
-    lj.CURSOR_PATH.write_text("{не json", encoding="utf-8")
-    assert lj._load_cursor(lj.CURSOR_PATH) == {}
+    (tmp_path / "cursor.json").write_text("{не json", encoding="utf-8")
+    assert lj._load_cursor() == {}
