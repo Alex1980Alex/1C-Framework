@@ -220,11 +220,19 @@ auto-save блокировал ВСЕ коммиты main-репо до ручн
 
 ### Path-prefix exempt (2026-05-29) — `docs/roadmap/`
 
-Помимо basename-фильтра `IGNORE_PATTERNS`, оба auto-save хука исключают **path-prefix** `docs/roadmap/`:
+Помимо basename-фильтра `IGNORE_PATTERNS`, **все три** хука трио исключают **path-prefix** `docs/roadmap/`:
 - `auto-git-save.py` — `IGNORE_PATH_PREFIXES` + `_is_path_ignored()`, проверяется в `should_track_file()` (threshold) И `get_uncommitted_files()` (commit-путь, включая drift-set split-commit).
 - `posttooluse-auto-git-save.py` — `"docs/roadmap/"` в `SKIP_PATTERNS`.
+- `auto-git-save-prompt.py` — `IGNORE_PATH_PREFIXES`, проверяется в `_should_track()` (**добавлено 2026-07-25**).
 
-**Зачем:** §18 Progress Log дорожных карт должен получать осознанный коммит `docs(roadmap): progress log` (протокол §19), а не `chore: auto-save` preempt. Safety net — `git-commit-enforcer` (watches `docs/`) заблокирует Stop, если §18-правка осталась uncommitted → потери нет. См. [roadmap 260523 §19.3](../../../docs/roadmap/260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md). При добавлении новых «manual-commit» директорий — дополнять обе точки (`IGNORE_PATH_PREFIXES` + `SKIP_PATTERNS`).
+⚠ **Третий хук был пропущен при внедрении 2026-05-29** и полтора месяца уносил roadmap-правки
+безымянным `chore: auto-commit` (живьём: E12 ретро 260725 — файл ретро уехал в авто-коммит вместе
+с чужим сабжем, потребовался `reset --soft` для пересборки). Урок: у трио **три** точки фильтрации,
+а не две — правка «в оба хука» оставляет дырку в UserPromptSubmit-пути. Регресс пинит инвариант для
+всех трёх сразу: [`tests/unit/test_auto_save_roadmap_exempt.py`](../../../tests/unit/test_auto_save_roadmap_exempt.py)
+(+ обратная сторона: обычный код по-прежнему автосейвится).
+
+**Зачем:** §18 Progress Log дорожных карт должен получать осознанный коммит `docs(roadmap): progress log` (протокол §19), а не `chore: auto-save` preempt. Safety net — `git-commit-enforcer` (watches `docs/`) заблокирует Stop, если §18-правка осталась uncommitted → потери нет. См. [roadmap 260523 §19.3](../../../docs/roadmap/260523_ROADMAP_FULL_DEV_LIFECYCLE_ANALYSIS.md). При добавлении новых «manual-commit» директорий — дополнять **все три** точки.
 
 ---
 

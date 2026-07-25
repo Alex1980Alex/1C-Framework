@@ -71,6 +71,18 @@ idle → classified → decomposed → skill_checked → ALLOW Write/Edit
 | `decomposed` | TaskCreate вызван | BLOCKED |
 | `skill_checked` | Skill() вызван | ALLOWED |
 
+**Фаза монотонна — назад не откатывается** (фикс 2026-07-25, ретро 260725). До фикса
+`record_decomposition` писала `decomposed` безусловно, поэтому порядок
+**Skill() → TaskCreate → Write** сбрасывал уже достигнутый `skill_checked` и ронял
+легитимную запись в ложный блок «Decomposed but skills not checked» (за одну сессию
+сработало 5 раз). Теперь `decomposed` ставится только если фаза ещё не `skill_checked`;
+`subtask_count` растёт независимо от фазы. Симметрично `set_task_classified`, где guard
+«не понижать из decomposed» был с самого начала.
+Регресс: [`tests/unit/test_task_protocol_phase_monotonic.py`](../../../tests/unit/test_task_protocol_phase_monotonic.py).
+
+Сброс в `idle` на новом промпте (UserPromptSubmit) — **штатное** поведение: новый промпт =
+новая задача, скилл нужно подтвердить заново.
+
 ---
 
 ## Classification Heuristic
@@ -164,7 +176,10 @@ Rejected-silo блокирует повторный авто-захват это
 ## Enforcement
 
 - **task-protocol-enforcer** (PreToolUse:Write|Edit) — blocks unless phase == `skill_checked`
-- **task-protocol-observer** (PostToolUse:TaskCreate|Skill) — records decomposition and skill check
+- **task-protocol-observer** (**PreToolUse**:`Skill` / `TaskCreate` / `llm_complete`) — records
+  decomposition and skill check. ⚠ Именно **Pre**, а не Post (сверено с `settings.json`
+  2026-07-25): регистрация на PostToolUse была бы ненадёжна на Windows (#6305), но её и нет —
+  прежняя строка «PostToolUse:TaskCreate|Skill» была дрейфом документации
 - **skill-eval-enforcer-shell** (UserPromptSubmit) — auto-classifies, resets protocol
 - Exempt files: `.claude/`, `docs/`, `data/`, config files (`.json`, `.toml`, `.yml`, `.env`)
 
