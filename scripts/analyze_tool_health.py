@@ -349,29 +349,81 @@ def aggregate_tools(
     return out
 
 
-def agent_rollup(rows: list[dict], now: datetime | None = None) -> dict[str, dict]:
+def agent_rollup(
+    rows: list[dict],
+    now: datetime | None = None,
+    guard_blocks: dict[str, list[tuple[str, datetime]]] | None = None,
+) -> dict[str, dict]:
     """Разрез вызовов по agent_id (N-P2.4): делегирование в субагенты vs основная
     сессия. Поле agent_id теперь заполняется платформой (B2 ожил) — считаем per-agent
-    attempts/errors/success (та же incomplete-aware логика). '(main)' = основная сессия."""
+    attempts/errors/success (та же incomplete-aware логика). '(main)' = основная сессия.
+
+    Блоки гардов вычитаются так же, как в ``aggregate_tools`` (иначе таблица врёт:
+    замер 2026-07-25 — 76 из 281 «ошибки» у ``(main)`` были отклонёнными вызовами,
+    27% error-count при сдвиге success-rate ~1пп). Группировка по (агент, тул), потому
+    что ``blocked`` осмыслен только per-tool, а block-записи ``agent_id`` НЕ несут
+    (проверено: 198 блоков, у всех поле пустое) — атрибуция агенту идёт через Pre,
+    который блок объясняет.
+
+    ⚠ Сумма ``errors`` здесь ВЫШЕ, чем по ``aggregate_tools``, и это не расхождение:
+    этот разрез сырой и НЕ применяет ``ASYNC_UNPAIRED_UNRELIABLE`` (замер 2026-07-25:
+    ровно 10 = Agent 5 + AskUserQuestion 5). Совпадать обязан ``blocked`` — общий
+    механизм вычета; он сходится бит-в-бит.
+    """
     now = now or datetime.now()
-    pre: dict[str, list] = defaultdict(list)
-    post: dict[str, list] = defaultdict(list)
+    pre: dict[tuple[str, str], list] = defaultdict(list)
+    post: dict[tuple[str, str], list] = defaultdict(list)
     for e in rows:
-        aid = e.get("agent_id") or "(main)"
-        (post if e.get("event") == "PostToolUse" else pre)[aid].append(e)
+        key = (e.get("agent_id") or "(main)", e.get("tool") or "")
+        (post if e.get("event") == "PostToolUse" else pre)[key].append(e)
+
+    # Блоки расходуются ОДИН раз на весь разрез: сопоставление идёт по (сессия, ±5с) и
+    # не знает про агента, поэтому наивная передача одного списка в каждую (агент, тул)
+    # группу списала бы один блок дважды (поймано тестом test_agent_rollup_separates_agents).
+    # Поэтому сперва один общий проход per-tool собирает id отклонённых вызовов.
+    blocked_ids: set[str] = set()
+    if guard_blocks:
+        by_tool_pre: dict[str, list] = defaultdict(list)
+        by_tool_post: dict[str, list] = defaultdict(list)
+        for (_aid, tool), items in pre.items():
+            by_tool_pre[tool] += items
+        for (_aid, tool), items in post.items():
+            by_tool_post[tool] += items
+        for tool, blocks in guard_blocks.items():
+            completion_stats(
+                by_tool_pre.get(tool, []),
+                by_tool_post.get(tool, []),
+                now=now,
+                blocked=blocks,
+                blocked_ids=blocked_ids,
+            )
+
+    acc: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"completed": 0, "post_errors": 0, "failed": 0, "blocked": 0}
+    )
+    for key in set(pre) | set(post):
+        aid, _tool = key
+        posts = post[key]
+        comp = completion_stats(pre[key], posts, now=now)
+        # из провалов этой группы вычитаем те, что объяснены блоком глобально
+        blocked_here = sum(1 for p in pre[key] if (p.get("tool_call_id") or "") in blocked_ids)
+        failed = max(0, comp["failed"] - blocked_here)
+        a = acc[aid]
+        a["completed"] += len(posts)
+        a["post_errors"] += sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
+        a["failed"] += failed
+        a["blocked"] += min(blocked_here, comp["failed"])
+
     out: dict[str, dict] = {}
-    for aid in set(pre) | set(post):
-        posts = post[aid]
-        completed = len(posts)
-        post_errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
-        comp = completion_stats(pre[aid], posts, now=now)
-        attempts = completed + comp["failed"]
-        errors = post_errors + comp["failed"]
+    for aid, a in acc.items():
+        attempts = a["completed"] + a["failed"]
+        success = a["completed"] - a["post_errors"]
         out[aid] = {
             "calls": attempts,
-            "errors": errors,
-            "success_rate": round((completed - post_errors) / attempts, 4) if attempts else 1.0,
-            "incomplete": comp["failed"],
+            "errors": a["post_errors"] + a["failed"],
+            "success_rate": round(success / attempts, 4) if attempts else 1.0,
+            "incomplete": a["failed"],
+            "blocked": a["blocked"],
         }
     return out
 
@@ -471,7 +523,8 @@ def compute_health(
     return {
         "tools": tools,
         "servers": servers,
-        "agents": agent_rollup(rows, now=now),  # N-P2.4: разрез по субагентам
+        # N-P2.4: разрез по субагентам; guard_blocks - тот же вычет, что per-tool
+        "agents": agent_rollup(rows, now=now, guard_blocks=guard_blocks),
         "generated": now.isoformat(timespec="seconds"),
     }
 

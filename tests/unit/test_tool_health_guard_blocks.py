@@ -167,6 +167,59 @@ def test_guard_blocks_respects_window_and_broken_lines(tmp_path):
     assert got["Write"] == [("s1", OLD)]  # вне окна отброшен, битая строка не роняет
 
 
+# ── 1b. agent_rollup вычитает блоки так же, как per-tool (W2, ретро 260725) ───
+
+
+def _agent_pre(tool, tcid, ts, agent="", session="s1"):
+    r = _pre(tool, tcid, ts, session=session)
+    r["agent_id"] = agent
+    return r
+
+
+def test_agent_rollup_subtracts_guard_blocks():
+    """САБОТАЖ-ИНВАРИАНТ: отклонённый гардом вызов не попадает в errors агента.
+
+    Живьём у `(main)` таких «ошибок» было 76 из 281 (27% error-count).
+    """
+    rows = [_agent_pre("Write", "id1", OLD)]
+    without = ath.agent_rollup(rows, now=NOW)
+    with_blocks = ath.agent_rollup(rows, now=NOW, guard_blocks={"Write": [("s1", OLD)]})
+
+    assert without["(main)"]["errors"] == 1
+    assert with_blocks["(main)"]["errors"] == 0
+    assert with_blocks["(main)"]["blocked"] == 1
+
+
+def test_agent_rollup_block_is_tool_aware():
+    """Блок по Write НЕ оправдывает непарный Pre у Bash - группировка (агент, тул)."""
+    rows = [_agent_pre("Bash", "idB", OLD)]
+    got = ath.agent_rollup(rows, now=NOW, guard_blocks={"Write": [("s1", OLD)]})
+    assert got["(main)"]["errors"] == 1 and got["(main)"]["blocked"] == 0
+
+
+def test_agent_rollup_without_blocks_behavior_preserved():
+    """Без guard_blocks поведение прежнее (аддитивность правки)."""
+    rows = [
+        _agent_pre("Write", "id1", OLD),
+        _agent_pre("Write", "id2", OLD, agent="sub1"),
+    ]
+    got = ath.agent_rollup(rows, now=NOW)
+    assert got["(main)"]["errors"] == 1 and got["(main)"]["blocked"] == 0
+    assert got["sub1"]["errors"] == 1
+
+
+def test_agent_rollup_separates_agents():
+    """Разрез не смешивает агентов: блок в сессии объясняет Pre своего агента."""
+    rows = [
+        _agent_pre("Write", "id1", OLD),
+        _agent_pre("Write", "id2", OLD, agent="sub1"),
+    ]
+    got = ath.agent_rollup(rows, now=NOW, guard_blocks={"Write": [("s1", OLD)]})
+    total_blocked = sum(v["blocked"] for v in got.values())
+    assert total_blocked == 1  # один блок - ровно один объяснённый Pre
+    assert sorted(got) == ["(main)", "sub1"]
+
+
 # ── 2. error-rate у shell-тулов не движет degraded ────────────────────────────
 
 

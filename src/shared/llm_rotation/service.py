@@ -525,11 +525,38 @@ class LLMRotationService:
         # max_turns=3: Claude Code CLI in headless mode is agentic by default
         # and may use 1-2 tool-use turns before responding. max_turns=1 fails
         # empirically ~50% of the time. Higher cap absorbs agentic overhead.
+        #
+        # Контракт сервиса — «промпт → ТЕКСТ»; мутировать репозиторий делегат не должен.
+        # С `permission_mode="bypassPermissions"` и без ограничений он брал любые
+        # инструменты без спроса: инцидент 2026-07-25 (W11/E11 ретро 260725) — промпт
+        # «сгенерируй файл для docs/roadmap» исполнился АГЕНТНО, субпроцесс сам записал
+        # файл в репозиторий, причём side-effect пережил `asyncio.wait_for`-таймаут
+        # вызывающего (клиент отвалился на 60с, а запись состоялась).
+        #
+        # ⚠ Запрет держится на `disallowed_tools`, а НЕ на пустом `allowed_tools`: замер
+        # 2026-07-25 (SDK 0.2.82) показал, что `allowed_tools=[]` трактуется как
+        # «allowlist не задан» — делегат отчитался, что ему доступны
+        # Glob/Grep/Read/Skill/ToolSearch. Пустой список оставлен декларацией намерения
+        # (станет строже, если версия SDK начнёт его уважать), но полагаться нельзя.
+        # Read-only (Glob/Grep/Read) сознательно НЕ запрещены — не мутируют и позволяют
+        # отвечать по фактам файла. AskUserQuestion запрещён: в headless-делегате он
+        # способен только съесть turn.
         options = ClaudeAgentOptions(
             system_prompt=system_prompt or "",
             max_turns=3,
             permission_mode="bypassPermissions",
             model=full_model,
+            allowed_tools=[],
+            disallowed_tools=[
+                "Write",
+                "Edit",
+                "NotebookEdit",
+                "Bash",
+                "PowerShell",
+                "Task",
+                "Agent",
+                "AskUserQuestion",
+            ],
         )
 
         effective_timeout: int = timeout or self._settings.timeout

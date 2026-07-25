@@ -153,6 +153,7 @@ def completion_stats(
     now: datetime | None = None,
     grace_sec: int = 120,
     blocked: list[tuple[str, datetime]] | None = None,
+    blocked_ids: set[str] | None = None,
 ) -> dict:
     """Честный сигнал незавершения built-in вызова из НЕПАРНЫХ Pre (roadmap 260718 N-P0.1).
 
@@ -188,6 +189,9 @@ def completion_stats(
     Возвращает ``{completed, failed, in_flight, blocked}`` (Pre-сторона; ``completed``
     = число Pre, получивших Post — для сверки, аналитика берёт ``len(posts)``).
     ``blocked`` пуст без аргумента ``blocked`` → поведение бит-в-бит прежнее.
+    ``blocked_ids`` (опц.) — сюда складываются ``tool_call_id`` отклонённых вызовов:
+    нужно тем, кто считает ту же выборку ВТОРЫМ разрезом (``agent_rollup``), чтобы один
+    блок не списался дважды — расходуемый список у каждого вызова свой (копия).
     """
     now = _naive(now) if now is not None else datetime.now()
     pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
@@ -225,6 +229,8 @@ def completion_stats(
             in_flight += 1  # Post ещё может прийти — не считаем провалом
         elif pts is not None and _take_block(unused_blocks, p.get("session") or "", _naive(pts)):
             blocked_n += 1  # вызов отклонён гардом — тул не исполнялся
+            if blocked_ids is not None:
+                blocked_ids.add(p.get("tool_call_id") or "")
         else:
             failed += 1
     return {
