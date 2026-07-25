@@ -140,9 +140,16 @@
         "local",
         "offline",
         "windows",
-        "gpu"
+        "gpu",
+        "youtube",
+        "yt-dlp",
+        "url",
+        "captions",
+        "subtitles",
+        "transcript",
+        "youtube-transcript-api"
       ],
-      "last_verified": "2026-06-29"
+      "last_verified": "2026-07-25"
     },
     {
       "file": "sonarqube-mcp-server-2026.md",

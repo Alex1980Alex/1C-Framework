@@ -902,6 +902,13 @@
       "title": "В3 новые 1С-инструменты (bsl-lsp/formsserver/test-post)",
       "status": "accepted",
       "date": "2026-07-18"
+    },
+    {
+      "id": "ADR-057",
+      "file": "057-youtube-transcript-two-layer.md",
+      "title": "Транскрипт по ссылке: captions-first + локальный ASR (без второго Whisper-стека)",
+      "status": "accepted",
+      "date": "2026-07-25"
     }
   ]
 }

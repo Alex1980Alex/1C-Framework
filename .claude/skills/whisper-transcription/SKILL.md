@@ -1,6 +1,6 @@
 ---
 name: whisper-transcription
-description: whisper — MCP-сервер локальной транскрипции аудио/видео (faster-whisper) + генерация субтитров. ИСПОЛЬЗУЙ когда нужно расшифровать речь из медиа в текст, сделать субтитры (SRT/VTT), пакетно обработать папку медиа, выбрать/скачать модель whisper. Триггеры 'транскрибировать аудио', 'расшифровать видео', 'речь в текст', 'субтитры из видео', 'generate_subtitles', 'transcribe_audio', 'whisper модель', 'batch транскрипция', 'SRT из аудио'. НЕ для раскадровки видео по сменам сцен (→ scene-detect-mcp), НЕ для метаданных/транскриптов YouTube.
+description: whisper — MCP-сервер локальной транскрипции аудио/видео (whisper.cpp + Vulkan GPU) + генерация субтитров, И маршрут «ссылка на видео → текст» (captions-first через MCP youtube-transcript, ASR-fallback через yt-dlp + whisper). ИСПОЛЬЗУЙ когда нужно расшифровать речь из медиа или ПО ССЫЛКЕ (YouTube и др.), сделать субтитры (SRT/VTT), пакетно обработать папку, выбрать/скачать модель. Триггеры 'транскрибировать аудио', 'расшифровать видео', 'речь в текст', 'транскрипт по ссылке', 'ссылка на youtube в текст', 'субтитры из видео', 'generate_subtitles', 'transcribe_audio', 'get_transcript', 'yt-dlp', 'whisper модель', 'batch транскрипция'. НЕ для раскадровки видео по сменам сцен (→ scene-detect-mcp).
 metadata:
   type: reference
 ---
@@ -37,6 +37,34 @@ transcribe_audio(path)  # или generate_subtitles(path, format="srt")
 # папка/много файлов:
 start_batch(dir) → check_batch_progress (поллить до done)
 ```
+
+## Транскрипт ПО ССЫЛКЕ (YouTube и др.) — два слоя, ADR-057
+
+Правило: **сперва готовые субтитры, ASR только когда их нет или нужно качество.** Не транскрибировать
+то, что уже существует текстом (канон экосистемы, [ADR-057](../architecture-research/adr/057-youtube-transcript-two-layer.md)).
+
+```
+1) mcp__youtube-transcript__get_transcript(url, lang)     # секунды, бесплатно, без GPU
+   ├─ есть субтитры  → готово (get_timed_transcript — с таймкодами,
+   │                   get_available_languages — какие языки есть, get_video_info — метаданные)
+   └─ субтитров нет / RU-автосубтитры без пунктуации / нужна приватность
+        v
+2) yt-dlp -x --audio-format mp3 --no-playlist \
+     -o "<dir>/%(id)s.%(ext)s" --print "after_move:filepath" "<URL>"   # .venv/Scripts/yt-dlp.exe
+        v
+   transcribe_audio(<полученный путь>, language="auto")   # whisper.cpp + Vulkan GPU, large-v3-turbo
+```
+
+| Слой | Когда он правильный |
+|---|---|
+| A `youtube-transcript` | англоязычные ролики с субтитрами, нужен быстрый текст/таймкоды, длинное видео (пагинация `next_cursor`) |
+| B `yt-dlp` + `whisper` | субтитров нет · RU-речь (large-v3-turbo даёт пунктуацию, автосубтитры — нет) · чувствительный контент (аудио и текст не покидают машину) · не-YouTube источник |
+
+**Операционные ноты**
+- MCP `youtube-transcript` пинён на git-SHA: PyPI-релиз 0.3.5 отстал и даёт ОДИН инструмент, git-`main` (0.7.0) — четыре (проверено stdio-пробой). Правка `.mcp.json` действует после `/mcp reconnect`.
+- Слой A ломается блокировкой YouTube по IP → в апстриме есть `--webshare-proxy-username/password` и `--http(s)-proxy`; добавлять в `args` при отказах.
+- `yt-dlp` предупреждает `No supported JavaScript runtime` — часть форматов может быть недоступна; лечится установкой deno (`--js-runtimes`). При отказах извлечения первым делом `pip install -U yt-dlp` (YouTube ломает извлечение регулярно).
+- Сервер whisper требует **явного подтверждения пользователя** перед возвратом текста в API; `privacy_mode=true` = транскрипт только в локальный файл (подтверждение всё равно спрашивается). Для несекретного контента снимается через `WHISPER_CONSENT_ACKNOWLEDGED=true` в env сервера.
 
 ## Выбор модели (баланс скорость/точность)
 
