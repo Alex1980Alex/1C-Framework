@@ -1802,7 +1802,7 @@
       ]
     },
     "update-database-реструктуризация-подтверждение": {
-      "title": "Обновление конфигурации БД: перед реструктуризацией платформа ждёт ДИАЛОГ подтверждения (§2.14.2) → headless update_database висит до 60с-потолка; проверка stateAfter повторным вызовом, fullUpdate=true, диалог в EDT UI",
+      "title": "Обновление конфигурации БД: диалог реструктуризации существует (§2.14.2), но ПРОВЕРКА журналом EDT 2026-07-25 показала другую причину 60с-отказов update_database - consent-гейт плагина (mcpDestructiveConsentLevel=ask_always) и запрос об исключительной блокировке ИБ; операция при этом outcome=ok (119с/215с/52мин), fullUpdate НЕ выключает диалог",
       "file": "update-database-restructuring-confirmation.md",
       "created": "2026-07-25",
       "last_verified": "2026-07-25",
@@ -1816,13 +1816,21 @@
         "headless",
         "fullUpdate",
         "stateAfter",
-        "60 секунд таймаут"
+        "60 секунд таймаут",
+        "consent gate",
+        "mcpDestructiveConsentLevel",
+        "mcpDestructiveAllowedTools",
+        "исключительная блокировка информационной базы",
+        "журнал EDT outcome=ok",
+        "Project is building wait and retry"
       ],
       "sources": [
         "kb.1ci.com §2.14.2 (8.3.23 Developer Guide)",
         "1c-dn.com configuration_update",
         "yellow-erp.com ConfigUpdatingDatabaseConfiguration",
-        "github.com/DitriXNew/EDT-MCP"
+        "github.com/DitriXNew/EDT-MCP",
+        "журнал EDT .metadata/.log + .bak_N.log (2026-07-22..25)",
+        "com.ditrix.edt.mcp.server_2.6.1.jar: PreferenceConstants, ConsentSettingsService$Level"
       ]
     }
   }

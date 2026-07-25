@@ -75,6 +75,12 @@ get_project_errors(project, objects=["CommonForm.<Форма>"])       # 0 ош�
 | `qa_run` → `ThickClientInfo … null` / `getThickClientInfo(InfobaseReference)` NoSuchMethodError | EDT-runtime путь сломан на EDT 2025.2.6 (метода нет в API — апстрим-баг) | binary-путь: `edt.use_runtime=false` + `platform.bin_path=…\1cv8c.exe` (exe!) + `ib_connection` c `Usr=`; `reference_codepilot1c_qa_run_binary_path` |
 | `qa_run` `status:infra_error` при exit 0 | ложный (стартер 1cv8c детачится, va.log не прокинут) | истина в `<run_dir>/junit/junit.xml`; ждать ~30-60 с |
 | `qa_run` «Превышено ограничение лицензии… Тонкий клиент запрещён» | зависшие клиенты съели слоты dev-лицензии | `rac session list`/`terminate` зависших 1CV8C + kill сирот; надёжно — ПРОФ |
+| `inspect_form_layout` → `[METADATA_NOT_FOUND] formFqn is required` **хотя параметр передан** | ⚠ **сообщение врёт**: схема тула требует `form_fqn` (snake_case), а текст ошибки называет `formFqn` — послушавшись сообщения, получишь тот же отказ | передавать **`form_fqn`**; `form_id`/`formFqn` не существуют (разбор W9а, ретро 260725) |
+| `apply_form_recipe` → `[INVALID_METADATA_CHANGE] Unknown form property: data_path` | ⚠ **дефект апстрима**: `attributes[].data_path` описан в схеме тула, но сервером отвергается | `data_path` указывать ТОЛЬКО в `layout[].add_field`; в `attributes[]` — `name` + `type` |
+| `apply_form_recipe` → `[EDT_TRANSACTION_FAILED] The path can not be resolved: /<Реквизит>` | реквизит создаётся и связывается `add_field` в ОДНОМ рецепте — layout резолвится раньше материализации реквизита | двумя вызовами: сначала рецепт только с `attributes[]`, затем отдельный с `layout[]` |
+| повтор рецепта → `[METADATA_ALREADY_EXISTS] Form attribute already exists` | ⚠ рецепт **НЕ атомарен**: на упавшем layout-шаге реквизит остаётся созданным, несмотря на `TRANSACTION_FAILED` | в повторе `action:"upsert"` вместо `create` (либо снять реквизит перед повтором) |
+| `mutate_form_model` → `Unknown form property: <Заголовок>` | русское имя свойства в `set_item` | имена свойств — английские (`title`, `toolTip`); ru/en-aware только FQN-токены |
+| `mutate_form_model` → `Target parent item is not a container: id=null` | `parent_item_id`/`parent_item_name` не указывает на группу | взять id родителя из `inspect_form_layout` |
 
 ## Антипаттерны
 
