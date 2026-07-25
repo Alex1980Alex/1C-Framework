@@ -166,6 +166,16 @@ def _is_content_variable(tool: str) -> bool:
 # (латентность = время раздумий пользователя).
 ASYNC_UNPAIRED_UNRELIABLE = frozenset({"Agent", "Task", "AskUserQuestion"})
 
+# Разбор degraded 2026-07-25: у shell-тулов непарный Pre — ЧЕСТНЫЙ провал (native OTel
+# подтверждает success=false: PowerShell 30/36, Bash 41/107), но провал АВТОРСТВА
+# ВЫЗЫВАЮЩЕГО: команда завершилась non-zero (кривой синтаксис, отсутствующий файл,
+# `Select-Object -First` погасивший upstream). Здоровье самого инструмента этим не
+# измеряется — error-rate тут метрика качества команд, а не тула, и держит вечный
+# degraded (живьём PowerShell 14%, p95 = ровно 120 000мс = дефолтный таймаут).
+# Симметрично NB2: гасим ТОЛЬКО degraded-порог; broken (success-rate < 50% / 0 успехов)
+# остаётся — реальный слом shell-тула по-прежнему всплывёт.
+CALLER_AUTHORED_FAILURES = frozenset({"Bash", "PowerShell"})
+
 
 # ── чтение лога за окно ───────────────────────────────────────────────────────
 
@@ -234,10 +244,61 @@ def earliest_log_ts(logs: list[Path] | None = None) -> datetime | None:
     return None
 
 
+def guard_blocks_by_tool(
+    now: datetime, window_days: int, logs: list[Path] | None = None
+) -> dict[str, list[tuple[str, datetime]]]:
+    """Блокировки энфорсеров (``outcome=block`` на PreToolUse) за окно, по инструментам.
+
+    Отклонённый гардом вызов НЕ исполняется, значит парного Post не будет никогда, —
+    а canonical Pre при блоке через ``decision:"block"`` всё равно пишется. Метрика
+    читала такой Pre как провал инструмента: замер 2026-07-25 — 36 из 49 непарных
+    Write объясняются блокировками (native OTel о них не знает вовсе), реальных
+    провалов Write в окне 0. Связка по (session, ts): ``tool_call_id`` у block-записей
+    всегда пуст.
+    """
+    result: dict[str, list[tuple[str, datetime]]] = defaultdict(list)
+    cutoff = now - timedelta(days=window_days)
+    for log in logs if logs is not None else _all_logs():
+        if not log.exists():
+            continue
+        with open(log, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                except ValueError:
+                    continue
+                if (
+                    e.get("category") != "hook"
+                    or e.get("event") != "PreToolUse"
+                    or e.get("outcome") != "block"
+                ):
+                    continue
+                tool = e.get("tool")
+                if not tool:  # Stop-хуки блокируют без тула
+                    continue
+                try:
+                    ts = _to_naive_local(datetime.fromisoformat(e.get("ts")))
+                except (ValueError, TypeError):
+                    continue
+                if ts is None or ts < cutoff:
+                    continue
+                result[tool].append((e.get("session") or "", ts))
+    for blocks in result.values():
+        blocks.sort(key=lambda pair: pair[1])
+    return dict(result)
+
+
 # ── агрегация per-tool ────────────────────────────────────────────────────────
 
 
-def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, dict]:
+def aggregate_tools(
+    rows: list[dict],
+    now: datetime | None = None,
+    guard_blocks: dict[str, list[tuple[str, datetime]]] | None = None,
+) -> dict[str, dict]:
     """Per-tool статистика вызовов.
 
     **NB1 (roadmap 260718):** платформа НЕ шлёт PostToolUse на неуспешный built-in
@@ -258,7 +319,8 @@ def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, 
         posts = sorted(post[tool], key=lambda e: e.get("ts", ""))
         completed = len(posts)
         post_errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
-        comp = completion_stats(pre[tool], posts, now=now)  # непарные Pre = провалы
+        # непарные Pre = провалы, КРОМЕ отклонённых гардом (тул не исполнялся)
+        comp = completion_stats(pre[tool], posts, now=now, blocked=(guard_blocks or {}).get(tool))
         incomplete = comp["failed"]
         # W10: у Agent/Task непарный Pre ненадёжен (background/кросс-сессионный Post) →
         # не считаем провалом (в error_rate/attempts не входит; остаётся в incomplete-поле).
@@ -277,6 +339,7 @@ def aggregate_tools(rows: list[dict], now: datetime | None = None) -> dict[str, 
             "completed": completed,
             "incomplete": incomplete,  # непарные Pre (fail/interrupt) — сигнал NB1
             "in_flight": comp["in_flight"],
+            "blocked": comp["blocked"],  # отклонены гардом: не провал инструмента
             "p50_ms": round(percentile(durations, 0.50), 1),
             "p95_ms": round(percentile(durations, 0.95), 1),
             "paired": len(durations),
@@ -334,7 +397,7 @@ def assign_verdict(stats: dict, baseline: dict | None, tool: str = "") -> tuple[
     # единичная транзиентная ошибка (calls=1, er=1.0) через baseline-ветку er−base>5пп
     # иначе светила бы degraded ~14д (adversarial-review 260713 #1b).
     if calls >= DEGRADED_MIN_CALLS:
-        if er > DEGRADED_ERROR_RATE:
+        if er > DEGRADED_ERROR_RATE and tool not in CALLER_AUTHORED_FAILURES:
             return "degraded", f"error-rate {er:.0%} > 10% ({calls} вызовов)"
         if baseline:
             # NB2: p95-regression ТОЛЬКО у инструментов со стабильной латентностью
@@ -349,7 +412,11 @@ def assign_verdict(stats: dict, baseline: dict | None, tool: str = "") -> tuple[
             ):
                 return "degraded", f"p95 {stats['p95_ms']:.0f}ms > 2× baseline ({base_p95:.0f}ms)"
             base_er = baseline.get("error_rate")
-            if base_er is not None and er - base_er > ERROR_RATE_RATCHET:
+            if (
+                base_er is not None
+                and tool not in CALLER_AUTHORED_FAILURES  # та же метрика, вторая ветка
+                and er - base_er > ERROR_RATE_RATCHET
+            ):
                 return "degraded", f"error-rate +{(er - base_er):.0%} к baseline"
 
     # ineffective — в целом работает (error_rate ≤ 10%, иначе выше отдал бы degraded),
@@ -365,9 +432,14 @@ def assign_verdict(stats: dict, baseline: dict | None, tool: str = "") -> tuple[
     return "healthy", f"{sr:.0%} success, {calls} вызовов"
 
 
-def compute_health(rows: list[dict], baseline: dict, now: datetime) -> dict:
+def compute_health(
+    rows: list[dict],
+    baseline: dict,
+    now: datetime,
+    guard_blocks: dict[str, list[tuple[str, datetime]]] | None = None,
+) -> dict:
     """Собрать per-tool статистику + вердикты + детект unused (был в baseline, 0 вызовов сейчас)."""
-    stats = aggregate_tools(rows, now=now)
+    stats = aggregate_tools(rows, now=now, guard_blocks=guard_blocks)
     tools: dict[str, dict] = {}
     for tool, st in stats.items():
         verdict, reason = assign_verdict(st, baseline.get(tool), tool=tool)
@@ -876,7 +948,9 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     now = now or datetime.now()
     rows = list(iter_window_rows(now, window_days))
     baseline = _load_json(REPORTS / "baseline.json", {})
-    health = compute_health(rows, baseline, now)
+    health = compute_health(
+        rows, baseline, now, guard_blocks=guard_blocks_by_tool(now, window_days)
+    )
 
     # N-P1.1: свести probe (MCP-down) + sink-регрессию в вердикты (NB4) — единый отчёт
     infra_alerts = gather_infra_alerts(now)

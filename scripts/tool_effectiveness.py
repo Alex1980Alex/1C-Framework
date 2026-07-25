@@ -144,11 +144,15 @@ def _naive(ts: datetime) -> datetime:
     return ts
 
 
+BLOCK_MATCH_SEC = 5  # блок и canonical Pre — соседи в одной Pre-цепочке (мс-разрыв)
+
+
 def completion_stats(
     pres: list[dict],
     posts: list[dict],
     now: datetime | None = None,
     grace_sec: int = 120,
+    blocked: list[tuple[str, datetime]] | None = None,
 ) -> dict:
     """Честный сигнал незавершения built-in вызова из НЕПАРНЫХ Pre (roadmap 260718 N-P0.1).
 
@@ -158,16 +162,21 @@ def completion_stats(
     ``outcome`` Post-строки почти всегда ``allow`` → error-rate из Post ≡ 0.
     Единственный честный сигнал провала built-in = **Pre без парного Post**.
 
-    Блоки хуков сюда НЕ попадают: enforcer ``exit 2`` в Pre-цепочке преемптит
-    canonical-логгер (эмпирически Write unpaired=0 при реальном блоке), поэтому
-    непарный canonical Pre ≈ провал/прерывание, а не «запрещено гардом».
+    ⚠ **Блоки хуков ПОПАДАЮТ сюда** (замер 2026-07-25 опроверг прежнее «exit 2
+    преемптит canonical-логгер, Write unpaired=0 при живом блоке»): из 49 непарных
+    Write 36 совпали по (сессия, тул, ±5с) с block-записью энфорсера, а native OTel
+    не знает о них вовсе — тул не исполнялся. Часть энфорсеров блокирует через
+    ``decision:"block"``, при котором Pre-цепочка доходит до логгера. Поэтому
+    вызывающий передаёт ``blocked`` — отклонённые вызовы уходят в отдельный счётчик,
+    а не в ``failed`` (иначе активность гардов читается как поломка инструмента).
 
     Пары считаются по ``tool_call_id`` (в проде заполнен всегда), непарные посты
     добираются FIFO по ts. Непарные Pre моложе ``grace_sec`` от ``now`` =
     ``in_flight`` (Post ещё может прийти) и в провал НЕ идут.
 
-    Возвращает ``{completed, failed, in_flight}`` (Pre-сторона; ``completed`` = число
-    Pre, получивших Post — для сверки, аналитика берёт ``len(posts)``).
+    Возвращает ``{completed, failed, in_flight, blocked}`` (Pre-сторона; ``completed``
+    = число Pre, получивших Post — для сверки, аналитика берёт ``len(posts)``).
+    ``blocked`` пуст без аргумента ``blocked`` → поведение бит-в-бит прежнее.
     """
     now = _naive(now) if now is not None else datetime.now()
     pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
@@ -195,16 +204,37 @@ def completion_stats(
                 paired_idx.add(i)
                 posts_no_id -= 1
 
-    failed = in_flight = 0
+    failed = in_flight = blocked_n = 0
+    unused_blocks = list(blocked or [])
     for i, p in enumerate(pres_sorted):
         if i in paired_idx:
             continue
         pts = parse_ts(p.get("ts"))
         if pts is not None and (now - _naive(pts)).total_seconds() < grace_sec:
             in_flight += 1  # Post ещё может прийти — не считаем провалом
+        elif pts is not None and _take_block(unused_blocks, p.get("session") or "", _naive(pts)):
+            blocked_n += 1  # вызов отклонён гардом — тул не исполнялся
         else:
             failed += 1
-    return {"completed": len(paired_idx), "failed": failed, "in_flight": in_flight}
+    return {
+        "completed": len(paired_idx),
+        "failed": failed,
+        "in_flight": in_flight,
+        "blocked": blocked_n,
+    }
+
+
+def _take_block(blocks: list[tuple[str, datetime]], session: str, ts: datetime) -> bool:
+    """Снять из ``blocks`` запись, объясняющую непарный Pre (та же сессия, ±окно).
+
+    Расходуемое сопоставление 1:1 — один блок объясняет РОВНО один непарный Pre,
+    иначе одна block-запись «оправдала» бы серию реальных провалов. ``tool_call_id``
+    у block-записей пуст, поэтому ключ — (сессия, близость по времени)."""
+    for idx, (b_session, b_ts) in enumerate(blocks):
+        if b_session == session and abs((b_ts - ts).total_seconds()) <= BLOCK_MATCH_SEC:
+            blocks.pop(idx)
+            return True
+    return False
 
 
 def _is_error_post(e: dict) -> bool:
