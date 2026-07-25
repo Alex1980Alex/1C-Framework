@@ -41,7 +41,7 @@ def main():
         with urllib.request.urlopen(req, timeout=30) as r:
             data = json.load(r)
     except Exception as e:
-        print("QG check: сервер недоступен (%s) -> skip" % e)
+        print(f"QG check: сервер недоступен ({e}) -> skip")
         return 0
     ps = data.get("projectStatus", {})
     status = ps.get("status", "NONE")

@@ -42,7 +42,7 @@ def evaluate_gates(context, policies):
         try:
             d = p(context)
         except Exception as e:  # fail-closed: ошибка policy = deny
-            d = decision(getattr(p, "__name__", "policy"), False, "policy error: %s" % e)
+            d = decision(getattr(p, "__name__", "policy"), False, f"policy error: {e}")
         decisions.append(d)
     denied = [d["gate"] for d in decisions if not d.get("allow", False)]
     return {"allow": not denied, "decisions": decisions, "denied_by": denied}
