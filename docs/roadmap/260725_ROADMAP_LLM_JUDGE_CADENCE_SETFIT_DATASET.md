@@ -1,0 +1,161 @@
+# Roadmap 260725 — LLM-judge в каденс качества + автосбор датасета SetFit
+
+**Дата:** 2026-07-25
+**Статус:** proposed
+**Источник:** разбор инфографики «10 навыков ИИ» → два реальных пробела фреймворка
+(п.9 «Оценка и качество» замкнут не до конца; п.2 «файнтюнинг» заблокирован ручной разметкой).
+**Research-базис:** кеш [tool-call-observability-effectiveness-2026](../../.claude/skills/architecture-research/cache/tool-call-observability-effectiveness-2026.md)
+(консенсус 2026: rule-слой + LLM-judge на сэмпле, всё пришпилено к трейсу; online-evaluators → drift),
+[intent-detection-routing-best-practices](../../.claude/skills/architecture-research/cache/intent-detection-routing-best-practices.md),
+[code-retrieval-golden-set-construction-2025](../../.claude/skills/architecture-research/cache/code-retrieval-golden-set-construction-2025.md)
+(LLM-as-judge для авторазметки + human-in-the-loop), ADR-025 (SetFit opt-in), ADR-051/052 (heavy path gating).
+План отревьюирован независимой моделью (sonnet через llm_complete, 5 поправок вшиты: курсор
+вместо окна, явный порог промоута, дизамбигуация вето, фиксированный held-out, per-job cooldown).
+
+## Зачем (диагноз)
+
+1. **LLM-judge существует, но не живёт.** [`scripts/tool_llm_judge.py`](../../scripts/tool_llm_judge.py)
+   (H-P4, 260718) написан, покрыт тестами, advisory-only — но запускается только вручную.
+   Метрики инструментов в этом проекте дважды «тихо врали» (260713 → 260718: error-rate ≡ 0,
+   unpaired-Pre, stringValue-баг OTel), и каждый раз лечение = регулярная независимая сверка.
+   Rule-слой уже в каденсе (`[REGRESSION]`-маркер в `memory-maintenance-cadence`), семантический — нет.
+2. **SetFit-гейт обучен и выключен.** ADR-025: активация ⟸ разметка 150–300 примеров.
+   GT = 230 и не растёт, при этом маршрутизатор ежедневно порождает де-факто размеченные
+   примеры: `route_1c_task`-решения, ответы пользователя на `ask_1c`, toolgate-события
+   (606 строк в `.claude/cache/onec-toolgate-events.jsonl`), `data/gate-decisions.jsonl`.
+   Ручная разметка «когда-нибудь» не случится никогда — это ровно тот класс труда,
+   который надо автоматизировать.
+
+## Принципы (из best practices 2026)
+
+- **Judge = advisory поверх rule-слоя, на сэмпле, не на потоке** (deepeval/Confident-AI;
+  уже заложено в H-P4: все провалы + 10% успехов, cap 50, хеш-детерминизм).
+- **Каждая метрика пришпилена к вызову** (`tool_use_id`) — вердикт судьи должен джойниться
+  с rule-вердиктом, не жить отдельным файлом-силосом.
+- **Лестница промоута как ADR-035:** advisory → замер follow-rate/FP → только потом hard.
+  Судья НИКОГДА не двигает вердикты broken/degraded сам — он даёт вторую сигнатуру.
+- **Авторазметка через слабые метки + human-in-the-loop** (golden-set-паттерн Chroma/InPars):
+  слабая метка из фактического исхода, спорное — на подтверждение, никогда не переобучать
+  молча на неподтверждённых метках.
+- **Токен-экономия:** судья через `llm_complete` (sonnet-first, [[feedback-delegation-aggressive]]),
+  НЕ через Opus в основной сессии.
+
+---
+
+## Часть 1 — LLM-judge в каденс (J-P0…J-P3)
+
+### J-P0. Источник judge-items без PII-компромисса (блокер, 0.5 дня)
+
+Судье нужны args/result. Контент есть в: (а) native OTel при `OTEL_LOG_TOOL_CONTENT=1`
+(off по умолчанию — осознанно), (б) per-call логах MCP-серверов
+`.claude/cache/mcp-<server>-calls.jsonl` (P2.3/N-P2.2 — уже пишутся, аргументы там есть).
+**Решение:** адаптер `judge_items_from_mcp_calls()` в `tool_llm_judge.py` — читает per-call
+jsonl, маппит в контракт judge-item (`tool/args/result/success/duration_ms`), `_truncate`
+cap 800 уже есть. Native OTel остаётся opt-in источником, НЕ требованием.
+**Курсор, не окно (ревью-п.1):** state-файл `.claude/cache/llm-judge-cursor.json` с
+`{file: last_ts}` последней обработанной записи — каденс фаерит нерегулярно (cooldown,
+detach-фейлы), жёсткое «24ч от сейчас» теряло бы записи между прогонами. Дедуп по
+`tool_call_id` против уже осуждённых.
+Критерий: `--source mcp-calls` выдаёт ≥1 item на живых логах; повторный прогон
+не пересуживает те же вызовы.
+
+### J-P1. Проводка в каденс (0.5 дня) — ядро
+
+По образцу уже живого `_check_regressions`: `memory-maintenance-cadence.py` при фаере
+детачем спавнит `tool_llm_judge.py --source mcp-calls --cap 50` (паттерн
+post-indexing-analyzer: detached Popen, не блокирует Stop).
+**Per-job cooldown (ревью-п.5):** у judge-спавна СВОЙ cooldown 24ч и свой ключ в state
+(не общий с memory-джобами) — инцидент перегрузки cadence-хука не повторяем; inline-бюджет
+хука не растёт (спавн <100мс).
+Выход: `data/reports/tools/llm-judge.jsonl` (история). Opt-out:
+`TOOL_LLM_JUDGE_CADENCE_DISABLE=1`. Fail-soft: провайдер down (`is_provider_down`) →
+skip-запись в jsonl (`{"skipped": "provider_down"}`), не ошибка и не тишина
+([[reference-cadence-dry-run-silent-noop]] — rc=0 ≠ джоб работал).
+Критерий: два фаера каденса подряд → два батча вердиктов без ручных действий;
+третий в тот же день → skip по cooldown.
+
+### J-P2. Вердикты судьи в отчёт tool-health (0.5 дня)
+
+`analyze_tool_health.py` читает `llm-judge.jsonl` за окно 14д → секция
+«Семантика (LLM-judge, advisory)» в `_latest.md`: per-tool медианы
+argument_correctness / task_completion + расхождения («rule=healthy, judge<0.5» —
+кандидат в ineffective). В sidecar — ключ `llm_judge`. **Блок-решения не трогаем**
+(инвариант ADR-035/N-P0). SessionStart-баннер сюрфейсит только расхождения с ≥3 вызовами.
+Критерий: parity-harness зелёный (advisory не влияет на hard), секция появляется в отчёте.
+
+### J-P3. Замер и решение о промоуте (окно 14д после J-P2)
+
+Валидатор по образцу `onec_toolgate_validation.py`: сколько judge-расхождений
+подтвердилось диагностикой (истинные) vs шум.
+**Явный числовой критерий (ревью-п.2), фиксируется ДО окна:** `promote-candidate` ⟺
+precision расхождений ≥0.5 (≥половина проверенных расхождений подтвердилась как реальный
+дефект) И ≥5 расхождений за окно; иначе `keep-advisory`. Порог тот же класс, что
+follow_rate≥0.5 у tdd-guard. Промоут в hard — ТОЛЬКО руками по вердикту
+(урок ADR-035: не авто-флип), и «hard» здесь = judge-расхождение создаёт
+диагностическую задачу (как broken), НЕ двигает вердикт.
+
+## Часть 2 — автосбор датасета SetFit (S-P0…S-P2)
+
+### S-P0. Харвестер слабых меток (1 день)
+
+`scripts/harvest_1c_gt.py` (stdlib): кандидаты из (а) `gate-decisions.jsonl` — промпт +
+решение маршрута; (б) `onec-toolgate-events.jsonl` — slug 1С-задач = позитивы;
+(в) hook-invocations UPS-записи `onec-task-input` (промпт + flow).
+Слабые метки: `auto`/`confident_1c` без отката пользователем → `is_1c=1`;
+`ask_*` → карантин (метка = фактический ответ пользователя в том же сеансе, иначе не брать).
+**Дизамбигуация вето (ревью-п.3):** `none`-вето → негатив ТОЛЬКО при отсутствии
+1С-сигналов вовсе (`signals==[]` и `confidence<0.7`); вето при `confidence∈[0.7,0.9)`
+(CamelCase под тех-контекстом, C4-tier) — в карантин, НЕ в негативы: это «1С-похожее,
+задавленное контекстом», льёт систематический шум в негативный класс.
+Дедуп по нормализованному тексту против GT. Провенанс обязателен:
+`{source, session, ts, weak_label, veto_tier}` — тот же инвариант, что GT-контракт
+skill-router (`transcript-router ⇒ quarantine`).
+Критерий: dry-run ≥50 кандидатов с провенансом, 0 дублей GT, ни один C4-tier-вето
+не попал в негативы.
+
+### S-P1. Human-in-the-loop подтверждение + переобучение (0.5 дня)
+
+SessionStart-баннер (паттерн `skill-learning-pending-on-start`): «N кандидатов GT ждут
+подтверждения» раз в день, cap 10 за раз. Подтверждённые →
+`data/1c-detector-ground-truth.json` (`source: "harvest-confirmed"`).
+**Фиксированный held-out (ревью-п.4):** ПЕРЕД первым пополнением заморозить eval-сплит
+из текущих GT=230 (стратифицированный, `split:"frozen-eval-260725"`); новые подтверждённые
+идут ТОЛЬКО в train. Сравнение «F1 ≥ 0.974» — всегда на этом замороженном held-out,
+иначе рост датасета смещает баланс классов и regression выглядит как improvement.
+Активация `ONEC_SETFIT_ENABLE=1` при +50 подтверждённых И F1(frozen-eval) ≥ каскада.
+Критерий: цикл кандидат→подтверждение→GT→retrain без ручного редактирования json;
+frozen-eval не пересекается с train (assert в train-скрипте).
+
+### S-P2. Каденс-джоб (0.5 дня)
+
+Харвест раз в неделю тем же `memory-maintenance-cadence`, **свой cooldown-ключ**
+(ревью-п.5), dry-run по умолчанию (apply только явным флагом,
+[[reference-cadence-dry-run-silent-noop]]). TTL кандидатов 30д auto-drop
+(паттерн review_pending).
+
+## Порядок и оценка
+
+| Этап | Объём | Зависимости |
+|---|---|---|
+| J-P0 адаптер mcp-calls + курсор | 0.5 д | — |
+| J-P1 каденс-проводка (свой cooldown) | 0.5 д | J-P0 |
+| J-P2 секция в отчёте | 0.5 д | J-P1 |
+| J-P3 валидатор (порог precision≥0.5, n≥5) | окно 14д | J-P2 |
+| S-P0 харвестер (вето-дизамбигуация) | 1 д | — (параллельно J) |
+| S-P1 frozen-eval + подтверждение + retrain | 0.5 д | S-P0 |
+| S-P2 каденс | 0.5 д | S-P1 |
+
+**Не делаем (анти-скоуп):** авто-промоут judge в hard; переобучение на неподтверждённых
+метках; K8s/serverless (YAGNI — одна машина с локальным GPU-стеком); Langfuse как
+обязательная зависимость (opt-in, ADR-052); отдельный новый каденс-хук (расширяем
+существующий с per-job cooldown'ами).
+
+## Риски
+
+- **Судья судит судью:** llm_complete-модель может завышать оценки своих же паттернов →
+  J-P3 сверяет расхождения с фактической диагностикой, не с судьёй.
+- **Слабые метки дрейфуют:** ошибки маршрутизатора попадут в GT → только подтверждённое
+  человеком уходит в train (S-P1); C4-tier-вето в карантине (S-P0).
+- **Каденс перегружен:** per-job cooldown + строго detached; inline-бюджет хука не растёт.
+- **Курсор-файл повреждён/потерян:** fail-safe = начать с mtime самого старого живого
+  per-call лога, дедуп по `tool_call_id` не даст пересудить.
