@@ -265,6 +265,50 @@ class TestFreshnessRegression:
         assert any(r["source"] == "ingestion" for r in report["regressions"])
         assert "observability regression" in md.lower()
 
+    def test_event_driven_sinks_are_quiet_not_regressions(self, tmp_path, monkeypatch):
+        """САБОТАЖ-ИНВАРИАНТ: у propagation/circuit/links нет планового писателя —
+        они пишут только по событию, поэтому молчание НЕ регрессия (у circuit оно
+        прямо означает «ни один breaker не сработал»). Замер 2026-07-25: все три
+        висели в алерте, а их последние записи совпадали с сессиями собственной
+        реализации — органического трафика у них не было никогда.
+        """
+        import scripts.memory_observability_report as rep
+
+        cache = tmp_path / ".claude" / "cache"
+        cache.mkdir(parents=True)
+        now = datetime(2026, 6, 5, 12, 0, 0)
+        old_ts = (now - timedelta(hours=1000)).isoformat(timespec="milliseconds")
+        for fname in ("memory-propagation.log", "memory-circuit.log", "memory-links.log"):
+            (cache / fname).write_text(
+                json.dumps({"ts": old_ts, "event": "x"}) + "\n", encoding="utf-8"
+            )
+        monkeypatch.setattr(rep, "PROJECT_ROOT", tmp_path)
+
+        report = rep.build_report(since=None, now=now, stale_hours=168)
+        by_src = {f["source"]: f for f in report["freshness"]}
+        assert by_src["propagation"]["status"] == "quiet"
+        assert by_src["circuit"]["status"] == "quiet"
+        assert by_src["links"]["status"] == "quiet"
+        assert report["regressions"] == []  # маркер [REGRESSION] не выстрелит
+
+    def test_scheduled_sink_still_flagged(self, tmp_path, monkeypatch):
+        """Исключение адресное: у синка с плановым писателем staleness работает."""
+        import scripts.memory_observability_report as rep
+
+        cache = tmp_path / ".claude" / "cache"
+        cache.mkdir(parents=True)
+        now = datetime(2026, 6, 5, 12, 0, 0)
+        old_ts = (now - timedelta(hours=1000)).isoformat(timespec="milliseconds")
+        (cache / "memory-first-surfacing.log").write_text(
+            json.dumps({"ts": old_ts, "event": "surface"}) + "\n", encoding="utf-8"
+        )
+        monkeypatch.setattr(rep, "PROJECT_ROOT", tmp_path)
+
+        report = rep.build_report(since=None, now=now, stale_hours=168)
+        by_src = {f["source"]: f for f in report["freshness"]}
+        assert by_src["surfacing"]["status"] == "stale"
+        assert [r["source"] for r in report["regressions"]] == ["surfacing"]
+
 
 # --------------------------------------------------------------------------- #
 # D3.2 — cross-sink fact trace (DuckDB; skipped when duckdb absent)

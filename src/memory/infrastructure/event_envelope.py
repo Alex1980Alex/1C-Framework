@@ -57,6 +57,19 @@ CACHE_LOGS: dict[str, str] = {
 AUDIT_REL_PATH = ("data", "services", "audit.jsonl")
 AUDIT_LABEL = "audit"
 
+# Sinks with NO scheduled / hook-driven writer: they emit only when a specific event
+# happens (a breaker transitions, an edge is created, ``propagate_update`` is invoked).
+# Staleness is therefore not a health signal for them — for ``circuit`` silence is
+# actively GOOD news (no breaker tripped). Measured 2026-07-25: all three had been
+# flagged as "regressions" while their last writes coincided exactly with the sessions
+# that IMPLEMENTED them (propagation 2026-06-11 = honest-failure contract, circuit and
+# links 2026-07-17 = payload hardening) — i.e. they never had organic traffic to lose.
+# ``propagate_update`` has no production caller at all (only the orchestrator MCP tool),
+# and the one hook-side ``create_link`` site (``shared/reflection.py``) is imported by
+# no hook. Same class as the §26 Q1 ADR decision on experience/conversation collections:
+# a 0-writer sink must be retired or exempted, not alerted on.
+EVENT_DRIVEN_SOURCES: frozenset[str] = frozenset({"propagation", "circuit", "links"})
+
 # All canonical source labels (the "expected set" for regression detection).
 SOURCE_LABELS: tuple[str, ...] = tuple(CACHE_LOGS.values()) + (AUDIT_LABEL,)
 
@@ -243,6 +256,7 @@ def make_envelope(
 __all__ = [
     "AUDIT_LABEL",
     "CACHE_LOGS",
+    "EVENT_DRIVEN_SOURCES",
     "SOURCE_LABELS",
     "known_sinks",
     "make_envelope",

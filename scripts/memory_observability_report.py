@@ -44,7 +44,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from memory.infrastructure.event_envelope import known_sinks
+from memory.infrastructure.event_envelope import EVENT_DRIVEN_SOURCES, known_sinks
 from memory.maintenance.dashboard import aggregate_ingest_events
 from scripts.analyze_memory_effectiveness import (
     _parse_since,
@@ -271,6 +271,10 @@ def analyze_freshness(now: datetime, stale_hours: float) -> list[dict[str, Any]]
         except ValueError:
             age = None
         status = "stale" if (age is not None and age > stale_hours) else "fresh"
+        if status == "stale" and label in EVENT_DRIVEN_SOURCES:
+            # Нет планового писателя: пишут только по событию (см. EVENT_DRIVEN_SOURCES).
+            # Молчание не регрессия, а у circuit — хорошая новость.
+            status = "quiet"
         out.append(
             {
                 "source": label,
@@ -343,13 +347,14 @@ def render_markdown(report: dict[str, Any]) -> str:
     n_fresh = sum(1 for f in fresh if f["status"] == "fresh")
     n_stale = sum(1 for f in fresh if f["status"] == "stale")
     n_cold = sum(1 for f in fresh if f["status"] in ("missing", "empty"))
+    n_quiet = sum(1 for f in fresh if f["status"] == "quiet")
 
     lines = [
         "# Memory Observability Report (§27 P4)",
         "",
         f"- **Generated:** {report['generated']}  ·  **Window:** {report['window']}",
-        f"- **Sinks:** {n_fresh} fresh · {n_stale} stale (regressions) · {n_cold} cold/empty "
-        f"(of {len(fresh)})",
+        f"- **Sinks:** {n_fresh} fresh · {n_stale} stale (regressions) · {n_quiet} quiet "
+        f"(event-driven) · {n_cold} cold/empty (of {len(fresh)})",
         "",
         "## Effectiveness verdict",
         "",
@@ -432,6 +437,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         "> `missing`/`empty` sinks are cold (never run / disabled), not regressions — "
         "MCP-side logs (routing/read/propagation/circuit/metrics) need an orchestrator run.",
+        "",
+        "> `quiet` = event-driven sink with no scheduled writer "
+        f"({', '.join(sorted(EVENT_DRIVEN_SOURCES))}): it writes only when the event fires, "
+        "so silence is not a regression — for `circuit` it means no breaker tripped.",
         "",
     ]
     return "\n".join(lines)
