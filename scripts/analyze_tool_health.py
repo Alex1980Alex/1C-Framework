@@ -126,6 +126,9 @@ CONTENT_VARIABLE_BUILTINS = frozenset(
         "TaskOutput",
         "WebFetch",
         "WebSearch",
+        # Интерактивный тул: латентность = время раздумий пользователя, не здоровье
+        # инструмента (разбор degraded 2026-07-25).
+        "AskUserQuestion",
     }
 )
 # MCP-операции с рантайм-исполнением произвольного кода/запроса/тестов
@@ -136,6 +139,9 @@ CONTENT_VARIABLE_MCP_SUFFIXES = (
     "run_module_tests",
     "build_project",
     "run_yaxunit_tests",
+    # Живой скан workspace вместо индекса — длительность задаёт размер конфигурации
+    # (p95 11.4с при baseline 1.8с): постоянное свойство, а не поломка.
+    "search_in_code",
 )
 
 
@@ -156,6 +162,8 @@ def _is_content_variable(tool: str) -> bool:
 # интерактивный тул. Непарный Pre = пользователь не ответил / прервал / выбрал
 # «Other» вне диалога; это нормальный исход взаимодействия, а не отказ инструмента
 # (живьём 5/24 = 21% непарных при нуле записей с ошибкой → ложный degraded).
+# Его p95-ветка гасится отдельно — членством в CONTENT_VARIABLE_BUILTINS выше
+# (латентность = время раздумий пользователя).
 ASYNC_UNPAIRED_UNRELIABLE = frozenset({"Agent", "Task", "AskUserQuestion"})
 
 

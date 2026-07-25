@@ -51,11 +51,6 @@ exclude: |
     tmp/.*|
     \.obsidian/.*|
     \.claude/.*/cache/.*|
-    TransportManagementDevelop_KAT/.*|
-    TransportManagementDevelop_SVETLY/.*|
-    ИБTransportManagementDevelop/.*|
-    MFM/.*|
-    configuration/.*
   )$
 
 repos:
@@ -72,23 +67,38 @@ repos:
         # - pipeline/                pipeline_state.py state JSON + scratch artifacts
         # - docs/wiki/log.md, drafts auto-appended by wiki hooks
         # - .mcp.json.example        generated mirror of .mcp.json
+        # - EDT-воркспейсы 1С        выгрузка платформы (её whitespace/EOL), тот же
+        #   класс, что src/bsl/; KAT лежит в ГЛАВНОМ репо, поэтому без исключения
+        #   хуки правили 2610 продуктовых файлов и job был красным. Держим здесь,
+        #   а не в top-level exclude, чтобы gitleaks/check-json их всё же сканировали.
         exclude: |
           (?x)^(
             \.claude/settings(\.local)?\.json|
             pipeline/.*|
             docs/wiki/log\.md|
             docs/wiki/drafts/.*|
-            \.mcp\.json\.example
+            \.mcp\.json\.example|
+            TransportManagementDevelop_KAT/.*|
+            TransportManagementDevelop_SVETLY/.*|
+            ИБTransportManagementDevelop/.*|
+            MFM/.*|
+            configuration/.*
           )$
       - id: end-of-file-fixer
         name: Fix End of Files
+        # Зеркало exclude из trailing-whitespace (см. обоснование там же).
         exclude: |
           (?x)^(
             \.claude/settings(\.local)?\.json|
             pipeline/.*|
             docs/wiki/log\.md|
             docs/wiki/drafts/.*|
-            \.mcp\.json\.example
+            \.mcp\.json\.example|
+            TransportManagementDevelop_KAT/.*|
+            TransportManagementDevelop_SVETLY/.*|
+            ИБTransportManagementDevelop/.*|
+            MFM/.*|
+            configuration/.*
           )$
       - id: check-yaml
         name: Check YAML
