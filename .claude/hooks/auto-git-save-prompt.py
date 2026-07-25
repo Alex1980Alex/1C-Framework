@@ -53,6 +53,17 @@ IGNORE_PATTERNS = [
     "auto-git-save-debug.log",
 ]
 
+# Path-prefix exemptions (POSIX, relative to repo root) — зеркало
+# `auto-git-save.py::IGNORE_PATH_PREFIXES` и `posttooluse-auto-git-save.py::SKIP_PATTERNS`.
+# ⚠ Исключение было проведено в ДВА хука трио из трёх, а этот (UserPromptSubmit,
+# префикс `chore: auto-commit`) остался без него — и уносил roadmap-правки безымянным
+# авто-коммитом раньше, чем автор успевал дать им осмысленное сообщение
+# (живьём 2026-07-25: E12 ретро 260725 — файл ретро уехал в `chore: auto-commit`).
+# Safety net при пропуске — Stop-level `git-commit-enforcer` (watches docs/).
+IGNORE_PATH_PREFIXES = [
+    "docs/roadmap/",  # §18 Progress Log → осознанный `docs(roadmap): …` коммит
+]
+
 # Cooldown: seconds between auto-commits (prevent rapid commits)
 COOLDOWN_SECONDS = 30
 
@@ -105,10 +116,14 @@ def _should_track(filepath: str) -> bool:
     """Check if file should be tracked.
 
     Gitignore-first: any file visible to git is tracked, except
-    internal hook state files listed in IGNORE_PATTERNS.
+    internal hook state files listed in IGNORE_PATTERNS и путей из
+    IGNORE_PATH_PREFIXES.
     """
     name = Path(filepath).name
-    return name not in IGNORE_PATTERNS
+    if name in IGNORE_PATTERNS:
+        return False
+    rel_posix = filepath.replace("\\", "/").lstrip("./")
+    return not any(rel_posix.startswith(p) for p in IGNORE_PATH_PREFIXES)
 
 
 def _get_uncommitted_tracked_files() -> list[str]:

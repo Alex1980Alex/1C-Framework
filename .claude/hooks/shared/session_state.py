@@ -396,12 +396,21 @@ class SessionState:
     def record_decomposition(cls) -> None:
         """Called from task-protocol-observer on TaskCreate.
 
-        Sets phase to 'decomposed' and increments subtask_count.
+        Increments subtask_count; переводит фазу в 'decomposed' ТОЛЬКО вперёд.
+
+        ⚠ Фаза монотонна: ``decomposed`` стоит ДО ``skill_checked``
+        (idle → classified → decomposed → skill_checked), поэтому безусловная
+        запись откатывала уже пройденный ``skill_checked`` назад. Живой эффект
+        (ретро 260725, W4): порядок «активация скилла → TaskCreate → Write» ронял
+        Write в ложный блок «Decomposed but skills not checked» — при том что скилл
+        был честно активирован. Симметрично соседнему ``set_task_classified``, где
+        такой же guard («Don't downgrade from 'decomposed'») стоял с самого начала.
         """
 
         def _do(state):
             protocol = state.get("task_protocol", cls._default_task_protocol())
-            protocol["phase"] = "decomposed"
+            if protocol.get("phase") != "skill_checked":
+                protocol["phase"] = "decomposed"
             protocol["subtask_count"] = protocol.get("subtask_count", 0) + 1
             protocol["decomposed_at"] = datetime.now().isoformat()
             state["task_protocol"] = protocol

@@ -386,7 +386,27 @@ def run_crosscheck(
     pres, posts = _hook_rows_windowed(hook_log, since_days=since_days, now=now)
     result = crosscheck(native, pres, posts, now=now)
     result["since_days"] = since_days
+    result["windows"] = _source_windows(native, pres, posts)
     return result
+
+
+def _source_windows(native: list[dict], pres: list[dict], posts: list[dict]) -> dict:
+    """Фактически покрытые окна каждой стороны (W6, ретро 260725).
+
+    Ретеншн у сторон РАЗНЫЙ: native ограничен ``max_backups: 5`` × 20МБ в
+    ``docker/otel-collector.yaml``, hook-лог держит ``HOOK_LOG_ARCHIVES=12``. Значит
+    ``native_only``/``hook_only`` смещены ПО ПОСТРОЕНИЮ, и без показанных границ их
+    читают как рассинхрон источников. Печатаем границы, чтобы разница объяснялась сама.
+    """
+
+    def span(values: list[str]) -> dict:
+        vals = sorted(v for v in values if v)
+        return {"from": vals[0][:19] if vals else None, "to": vals[-1][:19] if vals else None}
+
+    return {
+        "native": span([e.get("ts") or "" for e in native]),
+        "hook": span([r.get("ts") or "" for r in (*pres, *posts)]),
+    }
 
 
 def format_section(res: dict) -> str:
@@ -408,6 +428,18 @@ def format_section(res: dict) -> str:
         f"- **TP (согласны)**: {res['tp']} · in-flight пропущено: {res['skipped_in_flight']}.",
         f"- native провалов всего: {res['native_failures']}.",
         "",
+    ]
+    win = res.get("windows") or {}
+    if win.get("native") and win.get("hook"):
+        n, h = win["native"], win["hook"]
+        lines += [
+            f"Покрытые окна (ретеншн у сторон разный — `max_backups: 5` у OTel против "
+            f"`HOOK_LOG_ARCHIVES=12`): native `{n['from']} .. {n['to']}` · "
+            f"hook `{h['from']} .. {h['to']}`. Перекос `native_only`/`hook_only` "
+            f"объясняется этой разницей, а не рассинхроном источников.",
+            "",
+        ]
+    lines += [
         f"Латентность native↔hook-direct (валидация H-P0.1): совпадений {lat['native_vs_direct']['count']}, "
         f"дельта p50 {lat['native_vs_direct']['p50']}мс / max {lat['native_vs_direct']['max']}мс "
         f"(≈0 = захват точен).",
