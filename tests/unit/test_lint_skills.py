@@ -94,7 +94,9 @@ def test_overconstrained_fires_on_excess_absolutes(tmp_path):
 
 
 def test_no_overconstrained_on_reasonable(tmp_path):
-    d = _skill(tmp_path, "calm", "---\nname: calm\ndescription: d\n---\n\nОБЯЗАТЕЛЬНО прочитай X.\n")
+    d = _skill(
+        tmp_path, "calm", "---\nname: calm\ndescription: d\n---\n\nОБЯЗАТЕЛЬНО прочитай X.\n"
+    )
     assert not any(f["rule"] == "OVERCONSTRAINED" for f in MOD.lint_one(d))
 
 
@@ -103,13 +105,19 @@ def test_badmaturity_flags_unknown_value(tmp_path):
     d = _skill(tmp_path, "mat", "---\nname: mat\ndescription: d\nmaturity: bogus\n---\n\nbody\n")
     assert any(f["rule"] == "BADMATURITY" for f in MOD.lint_one(d))
     # валидное значение -> нет флага
-    d2 = _skill(tmp_path, "mat2", "---\nname: mat2\ndescription: d\nmaturity: experimental\n---\n\nbody\n")
+    d2 = _skill(
+        tmp_path, "mat2", "---\nname: mat2\ndescription: d\nmaturity: experimental\n---\n\nbody\n"
+    )
     assert not any(f["rule"] == "BADMATURITY" for f in MOD.lint_one(d2))
 
 
 def test_fragmented_flags_many_crumbs(tmp_path):
     # over-fragmentation: >3 крошечных references -> advisory FRAGMENTED
-    d = _skill(tmp_path, "fragged", "---\nname: fragged\ndescription: d\n---\n\nbody [r](references/a.md)\n")
+    d = _skill(
+        tmp_path,
+        "fragged",
+        "---\nname: fragged\ndescription: d\n---\n\nbody [r](references/a.md)\n",
+    )
     refs = d / "references"
     refs.mkdir()
     for i in range(5):  # 5 крошек по 5 строк

@@ -24,8 +24,15 @@ url = os.environ.get("SONAR_HOST_URL", "http://localhost:9000")
 url = url.replace("localhost", "host.docker.internal").replace("127.0.0.1", "host.docker.internal")
 tok = os.environ.get("SONAR_TOKEN", "")
 image = "sonarsource" + "/" + "sonarqube-mcp"
-cmd = ["docker", "run", "-i", "--rm",
-       "-e", "SONARQUBE_URL=" + url,
-       "-e", "SONARQUBE_TOKEN=" + tok,
-       image]
+cmd = [
+    "docker",
+    "run",
+    "-i",
+    "--rm",
+    "-e",
+    "SONARQUBE_URL=" + url,
+    "-e",
+    "SONARQUBE_TOKEN=" + tok,
+    image,
+]
 sys.exit(subprocess.run(cmd).returncode)

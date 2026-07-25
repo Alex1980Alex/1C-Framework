@@ -98,4 +98,3 @@ Element name: 'ВесПоДокументам' -> DataPath: 'Объект.Вес
 Use the ELEMENT NAME in VA steps, not the DataPath or attribute name.
 
 ---
-

@@ -46,6 +46,7 @@ def test_ignores_comments_blanks_and_badlines(tmp_path, monkeypatch):
     assert mod.load_dotenv(str(env)) == 2
     assert os.environ["KEY1"] == "v1" and os.environ["KEY2"] == "v2"
 
+
 def test_corrupt_encoding_noop(tmp_path):
     # не-UTF-8 .env → graceful (broad except), не кидает (рек. code-verify)
     env = tmp_path / ".env"

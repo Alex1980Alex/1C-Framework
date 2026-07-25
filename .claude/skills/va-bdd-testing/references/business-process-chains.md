@@ -95,4 +95,3 @@
 | гкс_НаправлениеНаРазгрузку | Yes (ARM) | Yes (external) | ARM / external |
 
 ---
-

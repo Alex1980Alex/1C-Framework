@@ -264,5 +264,3 @@ TECH_TERMS = [
 | Блокировка без причины | Claude не понимает что делать | Всегда указывать `reason` в `block()` |
 | Относительные пути в settings.json | Не находит python.exe | Абсолютные: `D:\\1С-Framework\\.venv\\Scripts\\python.exe` |
 | Тяжёлые вычисления в хуке | Timeout (3-5s) | Хуки должны быть лёгкими (keyword matching, file read) |
-
-

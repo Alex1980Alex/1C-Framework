@@ -245,5 +245,3 @@ ls -lh cache/bsl_call_graph.db
 - Фаза 48: BSL Debugger
 - Фаза 52: Serena LSP Integration
 - Фаза 57: MCP Reasoner (3 BSL-стратегии)
-
-

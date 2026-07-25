@@ -25,7 +25,9 @@ TEI = os.environ.get("TEI_URL", "http://localhost:8080")
 QDRANT = os.environ.get("QDRANT_URL", "http://localhost:6333")
 COLL = "cc_docs"
 UA = {"User-Agent": "Mozilla/5.0 (cc-docs-index)"}
-QWEN3_QUERY = "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+QWEN3_QUERY = (
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+)
 
 
 def _get(url: str, timeout: float = 30) -> bytes:
@@ -35,7 +37,9 @@ def _get(url: str, timeout: float = 30) -> bytes:
 
 def _req(method: str, url: str, obj=None, timeout: float = 120):
     data = json.dumps(obj).encode() if obj is not None else None
-    r = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json", **UA}, method=method)
+    r = urllib.request.Request(
+        url, data=data, headers={"Content-Type": "application/json", **UA}, method=method
+    )
     with urllib.request.urlopen(r, timeout=timeout) as resp:
         body = resp.read()
     return json.loads(body) if body else {}
@@ -111,7 +115,9 @@ def _pid(url: str, idx: int) -> int:
 def _ensure_collection(dim: int) -> None:
     cols = [c["name"] for c in _req("GET", f"{QDRANT}/collections")["result"]["collections"]]
     if COLL not in cols:
-        _req("PUT", f"{QDRANT}/collections/{COLL}", {"vectors": {"size": dim, "distance": "Cosine"}})
+        _req(
+            "PUT", f"{QDRANT}/collections/{COLL}", {"vectors": {"size": dim, "distance": "Cosine"}}
+        )
         sys.stderr.write(f"[cc_docs] создана коллекция {COLL} ({dim}d)\n")
 
 
@@ -140,13 +146,25 @@ def do_index(limit: int | None, incremental: bool) -> int:
             chunks = chunk_md(md)
             vectors = tei_embed(chunks)
             if len(vectors) != len(chunks):
-                sys.stderr.write(f"[cc_docs] warn: TEI {len(vectors)}/{len(chunks)} векторов для {url}\n")
+                sys.stderr.write(
+                    f"[cc_docs] warn: TEI {len(vectors)}/{len(chunks)} векторов для {url}\n"
+                )
             if dim is None and vectors:
                 dim = len(vectors[0])
                 _ensure_collection(dim)
             for i, (ch, vec) in enumerate(zip(chunks, vectors)):
                 points.append(
-                    {"id": _pid(url, i), "vector": vec, "payload": {"url": url, "title": title, "heading": _heading(ch), "content": ch, "lastmod": lastmod}}
+                    {
+                        "id": _pid(url, i),
+                        "vector": vec,
+                        "payload": {
+                            "url": url,
+                            "title": title,
+                            "heading": _heading(ch),
+                            "content": ch,
+                            "lastmod": lastmod,
+                        },
+                    }
                 )
             ok += 1
             if len(points) >= 256 and dim is not None:
@@ -183,7 +201,11 @@ def do_check() -> int:
 
 def do_search(query: str, top: int) -> int:
     vec = tei_embed([QWEN3_QUERY + query])[0]
-    res = _req("POST", f"{QDRANT}/collections/{COLL}/points/search", {"vector": vec, "limit": top, "with_payload": True})
+    res = _req(
+        "POST",
+        f"{QDRANT}/collections/{COLL}/points/search",
+        {"vector": vec, "limit": top, "with_payload": True},
+    )
     hits = res.get("result", [])
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -197,7 +219,9 @@ def do_search(query: str, top: int) -> int:
         p = h.get("payload", {})
         head = p.get("heading") or p.get("title", "")
         snippet = " ".join((p.get("content", "")).split())[:200]
-        print(f"{i}. [{round(h.get('score', 0), 3)}] {p.get('title', '')} — {head}\n   {p.get('url', '')}\n   {snippet}\n")
+        print(
+            f"{i}. [{round(h.get('score', 0), 3)}] {p.get('title', '')} — {head}\n   {p.get('url', '')}\n   {snippet}\n"
+        )
     return 0
 
 
@@ -206,7 +230,9 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     pi = sub.add_parser("index")
     pi.add_argument("--limit", type=int, default=None)
-    pi.add_argument("--incremental", action="store_true", help="только изменённые/новые (по sitemap lastmod)")
+    pi.add_argument(
+        "--incremental", action="store_true", help="только изменённые/новые (по sitemap lastmod)"
+    )
     sub.add_parser("check")
     psr = sub.add_parser("search")
     psr.add_argument("query")

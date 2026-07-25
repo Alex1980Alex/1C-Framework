@@ -484,4 +484,3 @@ with zero active registrations (all previous registrations are in `Убыл` sta
 ```
 
 ---
-

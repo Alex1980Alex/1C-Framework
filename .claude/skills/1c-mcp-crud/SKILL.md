@@ -227,5 +227,3 @@ Claude Code ──MCP stdio──► Python launcher ──HTTP Basic──► �
 - Тестирование через VA BDD — skill `va-bdd-testing`, использует `1c-mcp-crud` как источник проверок (Stage 4a)
 - Анализ задачи — skill `analyze-1c-task-v2` (использует `1c-mcp-crud` для проверки реквизитов и валидации запросов)
 - Реализация задачи — skill `implement-1c-task` (обязательные циклы `validate_query` → `execute_query` → запись через EDT-MCP)
-
-

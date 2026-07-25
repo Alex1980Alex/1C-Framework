@@ -542,9 +542,7 @@ class BSLSearchService:
                             )
                         ).points
                     except Exception as exc:
-                        logger.warning(
-                            f"DBSF fusion unavailable, falling back to RRF: {exc}"
-                        )
+                        logger.warning(f"DBSF fusion unavailable, falling back to RRF: {exc}")
                         search_results = (
                             await asyncio.to_thread(
                                 self._qdrant_client.query_points,

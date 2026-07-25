@@ -22,7 +22,9 @@ def test_source_trust_tiers():
     assert _m._source_trust("https://its.1c.ru/db/x") == 1.0
     assert _m._source_trust("https://v8.1c.ru/platforma/x") == 1.0
     assert _m._source_trust("https://infostart.ru/1c/articles/1") == 0.9
-    assert _m._source_trust("https://forum.infostart.ru/forum9/topic1") == 0.8  # специфичнее infostart.ru
+    assert (
+        _m._source_trust("https://forum.infostart.ru/forum9/topic1") == 0.8
+    )  # специфичнее infostart.ru
     assert _m._source_trust("https://random-blog.ru/x") == 0.7
 
 

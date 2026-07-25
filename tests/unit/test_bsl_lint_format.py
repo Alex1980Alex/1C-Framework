@@ -120,7 +120,13 @@ def test_selective_format_all_legacy_untouched():
 def test_build_sarif_schema_and_levels():
     """P4.1: build_sarif → SARIF 2.1.0; severity bsl-ls → уровень SARIF (error/warning/note)."""
     diags = [
-        {"file": "src/CommonModules/гкс_Т/Module.bsl", "line": 12, "severity": "error", "code": "MethodSize", "message": "m1"},
+        {
+            "file": "src/CommonModules/гкс_Т/Module.bsl",
+            "line": 12,
+            "severity": "error",
+            "code": "MethodSize",
+            "message": "m1",
+        },
         {"file": "x.bsl", "line": None, "severity": "info", "code": None, "message": "m2"},
         {"file": "y.bsl", "line": 3, "severity": "hint", "code": "R2", "message": "m3"},
     ]
@@ -130,7 +136,9 @@ def test_build_sarif_schema_and_levels():
     assert [r["level"] for r in res] == ["error", "note", "note"]  # error→error, info/hint→note
     assert res[1]["locations"][0]["physicalLocation"]["region"]["startLine"] == 1  # None→1
     assert res[0]["ruleId"] == "MethodSize"
-    assert res[0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"].endswith("Module.bsl")
+    assert res[0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"].endswith(
+        "Module.bsl"
+    )
 
 
 def test_build_sarif_result_shape_matches_sonar():
@@ -138,12 +146,28 @@ def test_build_sarif_result_shape_matches_sonar():
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
-        "sonar_issues_pull_t", Path(__file__).resolve().parents[2] / "scripts" / "sonar_issues_pull.py"
+        "sonar_issues_pull_t",
+        Path(__file__).resolve().parents[2] / "scripts" / "sonar_issues_pull.py",
     )
     sp = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sp)
-    a = bsl_lint.build_sarif([{"file": "f.bsl", "line": 1, "severity": "error", "code": "R", "message": "m"}])
-    b = sp.build_sarif([{"rule": "R", "severity": "BLOCKER", "message": "m", "_file": "f.bsl", "line": 1, "type": "BUG", "_class": "judgment"}], "proj")
+    a = bsl_lint.build_sarif(
+        [{"file": "f.bsl", "line": 1, "severity": "error", "code": "R", "message": "m"}]
+    )
+    b = sp.build_sarif(
+        [
+            {
+                "rule": "R",
+                "severity": "BLOCKER",
+                "message": "m",
+                "_file": "f.bsl",
+                "line": 1,
+                "type": "BUG",
+                "_class": "judgment",
+            }
+        ],
+        "proj",
+    )
     assert sorted(a["runs"][0]["results"][0].keys()) == sorted(b["runs"][0]["results"][0].keys())
     assert a["$schema"] == b["$schema"] and a["version"] == b["version"]
 

@@ -29,9 +29,19 @@ _AUTH = _ROOT / "playwright" / ".auth" / "its.json"
 _DEFAULT_LOGIN_URL = "https://its.1c.ru/user/auth"
 _CHECK_URL = "https://its.1c.ru/db/v8std"
 # login.1c.ru SSO форма (разведано 2026-06-24)
-_LOGIN_FIELD_SELECTORS = ("#username", "input[name='username']", "input[type='email']", "input[name='login']")
+_LOGIN_FIELD_SELECTORS = (
+    "#username",
+    "input[name='username']",
+    "input[type='email']",
+    "input[name='login']",
+)
 _PWD_FIELD_SELECTORS = ("#password", "input[name='password']", "input[type='password']")
-_SUBMIT_SELECTORS = ("#loginButton", "button[type='submit']", "input[type='submit']", "button:has-text('Войти')")
+_SUBMIT_SELECTORS = (
+    "#loginButton",
+    "button[type='submit']",
+    "input[type='submit']",
+    "button:has-text('Войти')",
+)
 _PORTAL_SELECTORS = ("#login_portal", "button:has-text('Войти через Портал')")
 _COOKIE_ACCEPT = ("button:has-text('Принимаю')", "button:has-text('Принять')")
 
@@ -91,7 +101,9 @@ def _login_flow(page, ctx, login: str | None, pwd: str | None) -> bool:
             pass
     # форма login.1c.ru
     if login and pwd:
-        if _fill_first(page, _LOGIN_FIELD_SELECTORS, login) and _fill_first(page, _PWD_FIELD_SELECTORS, pwd):
+        if _fill_first(page, _LOGIN_FIELD_SELECTORS, login) and _fill_first(
+            page, _PWD_FIELD_SELECTORS, pwd
+        ):
             _click_first(page, _SUBMIT_SELECTORS)
             try:
                 page.wait_for_load_state("networkidle", timeout=30000)
@@ -126,7 +138,9 @@ def do_login() -> int:
                 except Exception:
                     pass
         if not ctx.cookies():
-            sys.stderr.write("[its_fetch] ВНИМАНИЕ: cookies не найдены — вход не выполнен? Сессия может быть пустой.\n")
+            sys.stderr.write(
+                "[its_fetch] ВНИМАНИЕ: cookies не найдены — вход не выполнен? Сессия может быть пустой.\n"
+            )
         ctx.storage_state(path=str(_AUTH))
         browser.close()
     sys.stderr.write(f"[its_fetch] Сессия сохранена: {_AUTH}\n")
@@ -141,7 +155,9 @@ def do_auto_login() -> int:
     login = os.environ.get("ITS_LOGIN")
     pwd = os.environ.get("ITS_PASSWORD")
     if not (login and pwd):
-        sys.stderr.write("[its_fetch] Нет ITS_LOGIN/ITS_PASSWORD (env или .env.its). Для авто-входа задай их.\n")
+        sys.stderr.write(
+            "[its_fetch] Нет ITS_LOGIN/ITS_PASSWORD (env или .env.its). Для авто-входа задай их.\n"
+        )
         return 4
     _AUTH.parent.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
@@ -155,7 +171,9 @@ def do_auto_login() -> int:
     if logged:
         sys.stderr.write(f"[its_fetch] Сессия сохранена: {_AUTH}\n")
         return 0
-    sys.stderr.write("[its_fetch] Авто-вход не удался (капча/2FA/изменилась форма). Запусти --login вручную.\n")
+    sys.stderr.write(
+        "[its_fetch] Авто-вход не удался (капча/2FA/изменилась форма). Запусти --login вручную.\n"
+    )
     return 4
 
 
@@ -183,7 +201,9 @@ def _extract_content(page) -> str:
         try:
             import trafilatura
 
-            md = trafilatura.extract(html, output_format="markdown", include_tables=True, include_formatting=True)
+            md = trafilatura.extract(
+                html, output_format="markdown", include_tables=True, include_formatting=True
+            )
             if md and len(md.strip()) > 80:
                 return md
         except Exception:
@@ -195,7 +215,9 @@ def do_fetch(url: str, out: str | None) -> int:
     from playwright.sync_api import sync_playwright
 
     if not _AUTH.exists():
-        sys.stderr.write("[its_fetch] Нет сессии. Сначала: python scripts/its_fetch.py --login (или --auto-login)\n")
+        sys.stderr.write(
+            "[its_fetch] Нет сессии. Сначала: python scripts/its_fetch.py --login (или --auto-login)\n"
+        )
         return 2
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -207,7 +229,9 @@ def do_fetch(url: str, out: str | None) -> int:
         browser.close()
 
     if re.search(r"/(user/auth|login)(\?|/|$)", final_url) or "login.1c.ru" in final_url:
-        sys.stderr.write("[its_fetch] Сессия истекла (редирект на вход). Повтори --auto-login или --login.\n")
+        sys.stderr.write(
+            "[its_fetch] Сессия истекла (редирект на вход). Повтори --auto-login или --login.\n"
+        )
         return 3
 
     try:
@@ -227,7 +251,9 @@ def do_check() -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Авторизованный fetch its.1c.ru (Playwright storageState)")
+    ap = argparse.ArgumentParser(
+        description="Авторизованный fetch its.1c.ru (Playwright storageState)"
+    )
     ap.add_argument("url", nargs="?", help="URL страницы ИТС")
     ap.add_argument("--login", action="store_true", help="видимый браузер -> сохранить сессию")
     ap.add_argument("--auto-login", action="store_true", help="headless авто-вход по env-кредам")

@@ -99,4 +99,3 @@ mcp__1c-mcp-crud__execute_query(
 ```
 
 ---
-

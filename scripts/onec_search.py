@@ -56,7 +56,9 @@ _DOMAIN_TRUST = {
 }
 
 
-def _http(url: str, *, data: bytes | None = None, headers: dict | None = None, timeout: float = 15.0):
+def _http(
+    url: str, *, data: bytes | None = None, headers: dict | None = None, timeout: float = 15.0
+):
     """GET/POST -> JSON, иначе None (graceful)."""
     try:
         req = urllib.request.Request(url, data=data, headers={"User-Agent": UA, **(headers or {})})
@@ -66,7 +68,9 @@ def _http(url: str, *, data: bytes | None = None, headers: dict | None = None, t
         return None
 
 
-def search_searxng(query: str, *, lang: str = "ru-RU", limit: int = 20, site: str | None = None) -> list[dict]:
+def search_searxng(
+    query: str, *, lang: str = "ru-RU", limit: int = 20, site: str | None = None
+) -> list[dict]:
     """SearXNG JSON API -> [{title,url,content,engine,published}]. site -> ограничение домена."""
     q = f"site:{site} {query}" if site else query
     url = f"{SEARXNG_URL}/search?q={urllib.parse.quote(q)}&format=json&language={lang}"
@@ -176,7 +180,14 @@ def _apply_authority_recency(ranked: list[dict]) -> list[dict]:
         base = float(base) if base is not None else 0.0
         trust = _source_trust(it.get("url", ""))
         rec = _recency_boost(it)
-        out.append(dict(it, trust=round(trust, 2), recency=round(rec, 2), final=round(base * trust * (1 + rec), 4)))
+        out.append(
+            dict(
+                it,
+                trust=round(trust, 2),
+                recency=round(rec, 2),
+                final=round(base * trust * (1 + rec), 4),
+            )
+        )
     out.sort(key=lambda x: x.get("final") or 0.0, reverse=True)
     return out
 
@@ -278,20 +289,33 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, OSError):
         pass
-    ap = argparse.ArgumentParser(description="1С/RU web-search (ADR-040) — SearXNG + RAG-Fusion + reranker + authority×recency")
+    ap = argparse.ArgumentParser(
+        description="1С/RU web-search (ADR-040) — SearXNG + RAG-Fusion + reranker + authority×recency"
+    )
     ap.add_argument("query", help="тема поиска")
     ap.add_argument("--top", type=int, default=10, help="сколько результатов (default 10)")
     ap.add_argument("--lang", default="ru-RU", help="язык SearXNG (default ru-RU)")
     ap.add_argument("--site", default=None, help="ограничить домен, напр. infostart.ru")
-    ap.add_argument("--no-fusion", action="store_true", help="отключить RAG-Fusion (одиночный запрос)")
-    ap.add_argument("--no-rank", action="store_true", help="отключить authority×recency пересортировку")
-    ap.add_argument("--engagement", action="store_true", help="Ф4: blend Infostart views (МЕДЛЕННО, Scrapling)")
+    ap.add_argument(
+        "--no-fusion", action="store_true", help="отключить RAG-Fusion (одиночный запрос)"
+    )
+    ap.add_argument(
+        "--no-rank", action="store_true", help="отключить authority×recency пересортировку"
+    )
+    ap.add_argument(
+        "--engagement", action="store_true", help="Ф4: blend Infostart views (МЕДЛЕННО, Scrapling)"
+    )
     ap.add_argument("--json", action="store_true", help="машинный JSON вместо Markdown")
     args = ap.parse_args()
 
     ranked = search(
-        args.query, top=args.top, lang=args.lang, site=args.site,
-        fusion=not args.no_fusion, engagement=args.engagement, rank=not args.no_rank,
+        args.query,
+        top=args.top,
+        lang=args.lang,
+        site=args.site,
+        fusion=not args.no_fusion,
+        engagement=args.engagement,
+        rank=not args.no_rank,
     )
     if args.json:
         print(json.dumps({"query": args.query, "items": ranked}, ensure_ascii=False))

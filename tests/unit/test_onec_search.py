@@ -12,7 +12,9 @@ if str(_ROOT) not in sys.path:
 
 _IMPORT_OK = True
 try:
-    _spec = importlib.util.spec_from_file_location("onec_search", _ROOT / "scripts" / "onec_search.py")
+    _spec = importlib.util.spec_from_file_location(
+        "onec_search", _ROOT / "scripts" / "onec_search.py"
+    )
     _m = importlib.util.module_from_spec(_spec)
     _spec.loader.exec_module(_m)
 except Exception:
@@ -26,11 +28,14 @@ pytestmark = [
 
 def test_search_searxng_parses(monkeypatch):
     monkeypatch.setattr(
-        _m, "_http",
-        lambda *a, **k: {"results": [
-            {"title": "T1", "url": "u1", "content": "c1", "engine": "yandex"},
-            {"title": "", "url": "u2"},
-        ]},
+        _m,
+        "_http",
+        lambda *a, **k: {
+            "results": [
+                {"title": "T1", "url": "u1", "content": "c1", "engine": "yandex"},
+                {"title": "", "url": "u2"},
+            ]
+        },
     )
     r = _m.search_searxng("q", limit=10)
     assert len(r) == 1 and r[0]["engine"] == "yandex" and r[0]["url"] == "u1"
@@ -43,7 +48,9 @@ def test_search_searxng_graceful_when_down(monkeypatch):
 
 def test_rerank_reorders_by_score(monkeypatch):
     items = [{"title": "A", "content": ""}, {"title": "B", "content": ""}]
-    monkeypatch.setattr(_m, "_http", lambda *a, **k: [{"index": 1, "score": 0.9}, {"index": 0, "score": 0.1}])
+    monkeypatch.setattr(
+        _m, "_http", lambda *a, **k: [{"index": 1, "score": 0.9}, {"index": 0, "score": 0.1}]
+    )
     r = _m.rerank_tei("q", items, top=10)
     assert [x["title"] for x in r] == ["B", "A"] and r[0]["rerank_score"] == 0.9
 
@@ -120,7 +127,9 @@ def test_parse_infostart_views():
 def test_enrich_engagement_blends_infostart(monkeypatch):
     # Ф4: infostart-items получают views + blended (relevance x engagement)
     monkeypatch.setattr(_m, "_HAS_ENGAGEMENT", True)
-    monkeypatch.setattr(_m, "_infostart_engagement", lambda url: {"a": 100, "b": 10000}.get(url.rsplit("/", 1)[-1]))
+    monkeypatch.setattr(
+        _m, "_infostart_engagement", lambda url: {"a": 100, "b": 10000}.get(url.rsplit("/", 1)[-1])
+    )
     ranked = [
         {"title": "A", "url": "https://infostart.ru/x/a", "rerank_score": 0.6},
         {"title": "B", "url": "https://infostart.ru/x/b", "rerank_score": 0.55},

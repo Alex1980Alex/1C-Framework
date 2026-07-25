@@ -74,18 +74,47 @@ _PRECISION_RE = re.compile(
 
 # query->tag (#1): закрытый набор тегов Lobsters/Dev.to (тег-based, не free-text).
 _TAG_SYNONYMS = {
-    "python": "python", "rust": "rust", "go": "go", "golang": "go",
-    "javascript": "javascript", "js": "javascript", "typescript": "javascript",
-    "java": "java", "ruby": "ruby", "php": "php",
-    "ai": "ai", "ml": "ai", "llm": "ai", "llms": "ai", "rag": "ai", "agent": "ai",
-    "agents": "ai", "embedding": "ai", "embeddings": "ai", "langchain": "ai",
-    "langgraph": "ai", "gpt": "ai", "neural": "ai", "nlp": "ai",
-    "security": "security", "infosec": "security",
-    "database": "databases", "databases": "databases", "sql": "databases",
-    "postgres": "databases", "postgresql": "databases",
-    "web": "web", "frontend": "web", "react": "web",
-    "devops": "devops", "kubernetes": "devops", "k8s": "devops", "docker": "devops",
-    "linux": "linux", "android": "android", "ios": "ios",
+    "python": "python",
+    "rust": "rust",
+    "go": "go",
+    "golang": "go",
+    "javascript": "javascript",
+    "js": "javascript",
+    "typescript": "javascript",
+    "java": "java",
+    "ruby": "ruby",
+    "php": "php",
+    "ai": "ai",
+    "ml": "ai",
+    "llm": "ai",
+    "llms": "ai",
+    "rag": "ai",
+    "agent": "ai",
+    "agents": "ai",
+    "embedding": "ai",
+    "embeddings": "ai",
+    "langchain": "ai",
+    "langgraph": "ai",
+    "gpt": "ai",
+    "neural": "ai",
+    "nlp": "ai",
+    "security": "security",
+    "infosec": "security",
+    "database": "databases",
+    "databases": "databases",
+    "sql": "databases",
+    "postgres": "databases",
+    "postgresql": "databases",
+    "web": "web",
+    "frontend": "web",
+    "react": "web",
+    "devops": "devops",
+    "kubernetes": "devops",
+    "k8s": "devops",
+    "docker": "devops",
+    "linux": "linux",
+    "android": "android",
+    "ios": "ios",
 }
 
 
@@ -133,8 +162,7 @@ def fetch_hn(query: str, since_ts: int, limit: int = 30) -> list[dict]:
     """Hacker News stories за окно (Algolia). engagement = points + comments."""
     q = urllib.parse.quote(query)
     url = (
-        f"{HN_API}?query={q}&tags=story"
-        f"&numericFilters=created_at_i>{since_ts}&hitsPerPage={limit}"
+        f"{HN_API}?query={q}&tags=story&numericFilters=created_at_i>{since_ts}&hitsPerPage={limit}"
     )
     data = _http_json(url)
     out: list[dict] = []
@@ -360,7 +388,9 @@ def to_markdown(query: str, ranked: list[dict], days: int) -> str:
     if not ranked:
         lines.append("_Ничего релевантного не найдено (или все источники недоступны)._")
         return "\n".join(lines)
-    lines.append(f"Топ-{len(ranked)} по engagement × relevance (free HN/SO/GitHub/Lobsters/Dev.to):")
+    lines.append(
+        f"Топ-{len(ranked)} по engagement × relevance (free HN/SO/GitHub/Lobsters/Dev.to):"
+    )
     lines.append("")
     for i, it in enumerate(ranked, 1):
         eng = int(it.get("engagement") or 0)
