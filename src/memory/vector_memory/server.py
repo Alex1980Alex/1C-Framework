@@ -611,6 +611,9 @@ _MCP_SERVER_SLUG = "vector-memory"
 @app.call_tool()  # type: ignore  # MCP decorator codes differ across mypy versions
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     with _track_call(_MCP_SERVER_SLUG, name) as _st:
+        # J-P0.1: контент для LLM-судьи — пишется ТОЛЬКО при MCP_CALL_LOG_CONTENT=1,
+        # иначе присваивание бесплатно и запись остаётся metadata-only.
+        _st["args"] = arguments
         try:
             handlers = {
                 "save_pattern": handle_save_pattern,
@@ -627,7 +630,9 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 _st["ok"] = False
                 _st["error_type"] = "unknown_tool"
                 return [TextContent(type="text", text=f"Unknown tool: {name}")]
-            return await handler(arguments)
+            _result = await handler(arguments)
+            _st["result"] = _result
+            return _result
         except Exception as e:
             _st["ok"] = False
             _st["error_type"] = type(e).__name__

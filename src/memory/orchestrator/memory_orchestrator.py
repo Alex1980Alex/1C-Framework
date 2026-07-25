@@ -2925,7 +2925,11 @@ async def list_tools() -> list[Tool]:
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     with _track_call(_MCP_SERVER_SLUG, name) as _st:
-        return await _dispatch_tool(name, arguments, _st)
+        # J-P0.1: контент для LLM-судьи — только при MCP_CALL_LOG_CONTENT=1.
+        _st["args"] = arguments
+        _result = await _dispatch_tool(name, arguments, _st)
+        _st["result"] = _result
+        return _result
 
 
 async def _dispatch_tool(name: str, arguments: dict, _st: dict) -> list[TextContent]:

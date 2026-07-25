@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 from collections.abc import Callable
@@ -153,6 +154,155 @@ def judge_items(items: list[dict], judge_fn: Callable[[str], str]) -> list[dict]
 
 
 # ── источники judge-items ─────────────────────────────────────────────────────
+#
+# J-P0 (roadmap 260725). Живая проверка опровергла исходное допущение плана:
+# per-call логи MCP несут ТОЛЬКО метаданные (`error_type/ms/ok/server/tool/ts`),
+# args/result там нет по контракту «metadata only». Судить по имени тула и
+# длительности нельзя — это ровно те же данные, что у rule-слоя. Поэтому:
+#   • J-P0.1 — контент в собственный лог под флагом `MCP_CALL_LOG_CONTENT=1`;
+#   • J-P0.2 — native OTel (`OTEL_LOG_TOOL_CONTENT=1`) как второй, полный источник;
+#   • J-P0.3 — общий контракт + курсор + fail-loud вместо молчаливого пустого батча.
+
+CURSOR_PATH = ROOT / ".claude" / "cache" / "llm-judge-cursor.json"
+MCP_CALLS_GLOB = ".claude/cache/mcp-*-calls.jsonl"
+OTEL_LOGS_GLOB = "data/otel/claude-otel-logs*.jsonl"
+
+
+def _cursor_path(path: Path | None = None) -> Path:
+    """Путь курсора резолвится ПО ВЫЗОВУ: default-аргумент биндится при импорте
+    и делает путь неподменяемым (тот же урок, что `_cache_dir` в mcp_call_log)."""
+    return path or Path(os.environ.get("TOOL_JUDGE_CURSOR") or CURSOR_PATH)
+
+
+def _load_cursor(path: Path | None = None) -> dict[str, str]:
+    """`{файл: ts последней осуждённой записи}`. Битый/отсутствующий → пустой."""
+    try:
+        data = json.loads(_cursor_path(path).read_text(encoding="utf-8"))
+        return {str(k): str(v) for k, v in data.items()} if isinstance(data, dict) else {}
+    except Exception:
+        return {}  # fail-safe: пересмотрим окно заново, дедуп не даст пересудить
+
+
+def _save_cursor(cursor: dict[str, str], path: Path | None = None) -> None:
+    """Атомарная запись курсора (best-effort — прогон важнее курсора)."""
+    try:
+        path = _cursor_path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(cursor, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+
+def judge_items_from_mcp_calls(
+    root: Path | None = None, cursor: dict[str, str] | None = None
+) -> tuple[list[dict], dict[str, str]]:
+    """Собственные per-call логи MCP → judge-items (нужен `MCP_CALL_LOG_CONTENT=1`).
+
+    Записи БЕЗ контент-дайджестов пропускаются молча — это норма при выключенном
+    флаге; на «пусто вообще» реагирует `run()` (fail-loud), а не адаптер.
+    Возвращает `(items, новый_курсор)`.
+    """
+    base = root or ROOT
+    cur = dict(cursor or {})
+    items: list[dict] = []
+    for path in sorted(base.glob(MCP_CALLS_GLOB)):
+        key = path.name
+        last_ts = cur.get(key, "")
+        newest = last_ts
+        for ln in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                rec = json.loads(ln)
+            except ValueError:
+                continue
+            ts = str(rec.get("ts", ""))
+            if last_ts and ts <= last_ts:  # ISO-8601 сравним лексикографически
+                continue
+            if ts > newest:
+                newest = ts
+            if "args_digest" not in rec and "result_digest" not in rec:
+                continue  # metadata-only запись: судить нечего
+            items.append(
+                {
+                    "tool": rec.get("tool", ""),
+                    "tool_use_id": f"{rec.get('server', '')}:{ts}",
+                    "args": rec.get("args_digest", ""),
+                    "result": rec.get("result_digest", ""),
+                    "success": bool(rec.get("ok", True)),
+                    "duration_ms": rec.get("ms"),
+                    "source": "mcp-calls",
+                    "server": rec.get("server", ""),
+                }
+            )
+        if newest:
+            cur[key] = newest
+    return items, cur
+
+
+def judge_items_from_otel(
+    root: Path | None = None, cursor: dict[str, str] | None = None
+) -> tuple[list[dict], dict[str, str]]:
+    """Native OTel-логи → judge-items (нужен `OTEL_LOG_TOOL_CONTENT=1` у клиента).
+
+    Покрывает built-in тулы (Bash/Edit/Read) и ЧУЖИЕ MCP-серверы — то, чего
+    собственный лог не видит принципиально.
+
+    ⚠ Коэрсинг обязателен: Claude Code кодирует `success`/`duration_ms` как
+    `stringValue` («false»/«3879»), наивный `bool("false")` == True прочитал бы
+    ВСЕ провалы как успехи (поймано на живых данных в H-P3).
+    """
+    from otel_crosscheck import _attrs_map, _coerce_bool, _coerce_int  # локальный импорт
+
+    base = root or ROOT
+    cur = dict(cursor or {})
+    items: list[dict] = []
+    for path in sorted(base.glob(OTEL_LOGS_GLOB)):
+        key = path.name
+        last_ts = cur.get(key, "")
+        newest = last_ts
+        for ln in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                obj = json.loads(ln)
+            except ValueError:
+                continue
+            for rl in obj.get("resourceLogs", []):
+                for sl in rl.get("scopeLogs", []):
+                    for rec in sl.get("logRecords", []):
+                        attrs = _attrs_map(rec.get("attributes", []))
+                        name = str(attrs.get("event.name") or "")
+                        if "tool_result" not in name:
+                            continue
+                        ts = str(rec.get("timeUnixNano") or "")
+                        if last_ts and ts <= last_ts:
+                            continue
+                        if ts > newest:
+                            newest = ts
+                        args = attrs.get("tool_input") or attrs.get("tool_args") or ""
+                        result = attrs.get("tool_result") or attrs.get("tool_output") or ""
+                        if not args and not result:
+                            continue  # контент выключен у клиента
+                        succ = attrs.get("success")
+                        items.append(
+                            {
+                                "tool": attrs.get("tool_name") or "",
+                                "tool_use_id": attrs.get("tool_use_id") or "",
+                                "args": args,
+                                "result": result,
+                                "success": _coerce_bool(succ) if succ is not None else True,
+                                "duration_ms": _coerce_int(attrs.get("duration_ms")),
+                                "source": "otel",
+                            }
+                        )
+        if newest:
+            cur[key] = newest
+    return items, cur
 
 
 def load_items_from_jsonl(path: Path) -> list[dict]:
@@ -243,33 +393,84 @@ def _post_langfuse_scores(records: list[dict], endpoint: str, pk: str, sk: str) 
 # ── вход ──────────────────────────────────────────────────────────────────────
 
 
+def _judge_out() -> Path:
+    """Путь журнала вердиктов (env-override — чтобы тесты не пачкали живой отчёт)."""
+    override = os.environ.get("TOOL_JUDGE_OUT")
+    return Path(override) if override else JUDGE_OUT
+
+
+def _append_records(records: list[dict], now: datetime) -> None:
+    """Дописать вердикты (или маркер content_disabled) в общий jsonl-журнал."""
+    out = _judge_out()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    ts = now.isoformat(timespec="seconds")
+    with out.open("a", encoding="utf-8") as fh:
+        for r in records:
+            fh.write(json.dumps({"ts": ts, **r}, ensure_ascii=False) + "\n")
+
+
+def _collect_items(
+    source: str, source_jsonl: Path | None, root: Path | None
+) -> tuple[list[dict], dict[str, str] | None]:
+    """Собрать judge-items по выбранному источнику. Курсор — None для явного jsonl."""
+    if source == "jsonl":
+        return (load_items_from_jsonl(source_jsonl) if source_jsonl else []), None
+    cursor = _load_cursor()
+    if source == "mcp-calls":
+        return judge_items_from_mcp_calls(root, cursor)
+    if source == "otel":
+        return judge_items_from_otel(root, cursor)
+    # auto: оба лога, курсор общий (ключи — имена файлов, не пересекаются)
+    mcp_items, cur = judge_items_from_mcp_calls(root, cursor)
+    otel_items, cur = judge_items_from_otel(root, cur)
+    return mcp_items + otel_items, cur
+
+
+def _no_content_reason(source: str) -> str:
+    """Внятная причина пустоты: чаще всего выключен контент-флаг, а не «нет вызовов»."""
+    hints = {
+        "mcp-calls": "content off: включи MCP_CALL_LOG_CONTENT=1 (J-P0.1) и перезапусти MCP-серверы",
+        "otel": "content off: включи OTEL_LOG_TOOL_CONTENT=1 у клиента (глобальный PII-тумблер)",
+        "jsonl": "нет content-источника: передай непустой --source-file",
+    }
+    return hints.get(
+        source, "content off: включи MCP_CALL_LOG_CONTENT=1 либо OTEL_LOG_TOOL_CONTENT=1"
+    )
+
+
 def run(
-    source_jsonl: Path | None,
+    source_jsonl: Path | None = None,
     judge_fn: Callable[[str], str] | None = None,
     rate: float = _DEFAULT_SAMPLE_RATE,
     cap: int = _DEFAULT_CAP,
     now: datetime | None = None,
+    source: str = "jsonl",
+    root: Path | None = None,
 ) -> dict:
-    """Прогон: источник → сэмпл → судья → jsonl. Нет источника/пусто → no-op."""
+    """Прогон: источник → сэмпл → судья → jsonl.
+
+    Пустой источник — НЕ тихий no-op (J-P0.3): пишем маркерную запись
+    `status="content_disabled"` в тот же jsonl, чтобы отчёт видел разницу между
+    «судья ничего не нашёл» и «судья не работал» ([[reference-cadence-dry-run-silent-noop]]).
+    """
     now = now or datetime.now()
-    items = load_items_from_jsonl(source_jsonl) if source_jsonl else []
+    items, cursor = _collect_items(source, source_jsonl, root)
     if not items:
-        return {
-            "available": False,
-            "reason": "нет judge-items (нужен content-источник: OTEL_LOG_TOOL_CONTENT=1 "
-            "или явный --source jsonl)",
-        }
+        reason = f"нет judge-items из источника «{source}» — {_no_content_reason(source)}"
+        _append_records([{"status": "content_disabled", "source": source, "reason": reason}], now)
+        return {"available": False, "source": source, "reason": reason}
     sample = stratified_sample(items, rate=rate, cap=cap)
     fn = judge_fn or _default_judge_fn
     scored = judge_items(sample, fn)
-    JUDGE_OUT.parent.mkdir(parents=True, exist_ok=True)
-    ts = now.isoformat(timespec="seconds")
-    with JUDGE_OUT.open("a", encoding="utf-8") as fh:
-        for r in scored:
-            fh.write(json.dumps({"ts": ts, **r}, ensure_ascii=False) + "\n")
+    _append_records(scored, now)
+    # Курсор двигаем ТОЛЬКО после успешной записи вердиктов: упавший прогон
+    # должен пересмотреть те же вызовы, а не потерять их молча.
+    if cursor is not None:
+        _save_cursor(cursor)
     n_scored = sum(1 for r in scored if r.get("status") == "scored")
     return {
         "available": True,
+        "source": source,
         "total_items": len(items),
         "sampled": len(sample),
         "scored": n_scored,
@@ -285,19 +486,28 @@ def main(argv: list[str] | None = None) -> int:
     except Exception:
         pass
     p = argparse.ArgumentParser(description="LLM-judge tool-call'ов на сэмпле (260718 H-P4)")
-    p.add_argument("--source", help="jsonl с judge-items (content-источник)")
+    p.add_argument(
+        "--source",
+        default="jsonl",
+        choices=["mcp-calls", "otel", "jsonl", "auto"],
+        help="источник judge-items (J-P0.3); jsonl требует --source-file",
+    )
+    p.add_argument("--source-file", help="путь к jsonl с judge-items (для --source jsonl)")
     p.add_argument("--rate", type=float, default=_DEFAULT_SAMPLE_RATE, help="доля успехов в сэмпле")
     p.add_argument("--cap", type=int, default=_DEFAULT_CAP, help="потолок вызовов судьи")
     p.add_argument("--langfuse", action="store_true", help="слать Scores в Langfuse (env creds)")
     args = p.parse_args(argv)
 
-    res = run(Path(args.source) if args.source else None, rate=args.rate, cap=args.cap)
+    res = run(
+        Path(args.source_file) if args.source_file else None,
+        rate=args.rate,
+        cap=args.cap,
+        source=args.source,
+    )
     if not res.get("available"):
         print(f"llm-judge: no-op — {res.get('reason')}")
         return 0
     if args.langfuse:
-        import os
-
         sent = _post_langfuse_scores(
             res["records"],
             os.environ.get("LANGFUSE_HOST", ""),

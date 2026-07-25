@@ -25,8 +25,13 @@ its own ``call_tool`` handler returns/raises.
 
 Conventions (mirror trace_log, do not break):
   - **Fail-soft** — never raises into a caller (file/JSON errors swallowed).
-  - **Metadata only** — tool name / ok / ms / truncated error type; NEVER
-    argument or result bodies.
+  - **Metadata only BY DEFAULT** — tool name / ok / ms / truncated error type.
+    Argument/result bodies are written **only** when the caller opts in *and*
+    ``MCP_CALL_LOG_CONTENT=1`` is set (roadmap 260725 J-P0.1): the LLM-judge
+    needs args/result — metadata alone carries no semantic signal. With the
+    flag unset the emitted record is byte-identical to the pre-J-P0.1 format
+    (pinned by ``tests/unit/test_mcp_call_log_content.py``). Secrets are
+    redacted **fail-closed**: an unredactable value drops the field entirely.
   - **Opt-out** — global ``MCP_CALL_LOG_DISABLE=1``.
   - **Atomic size-rotation** at ~2 MB (keep the newest half).
 
@@ -37,6 +42,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 import time
 from collections.abc import Iterator
@@ -48,6 +54,52 @@ from typing import Any
 # scripts/ -> <project root>
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _CAP_BYTES = 2_000_000
+
+
+# Секреты в аргументах: одно правило покрывает и «k=v», и JSON «"k": "v"» —
+# двойная обработка (отдельный JSON-регекс) только ломала бы кавычки.
+_SECRET_KV_RE = re.compile(
+    r"(?i)((?:token|password|passwd|api[_-]?key|secret)\"?\s*[=:]\s*)"
+    r"(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'|\S+)"
+)
+_BEARER_RE = re.compile(r"(?i)\bBearer\s+\S+")
+_CONTENT_CAP_DEFAULT = 800
+
+
+def _content_enabled() -> bool:
+    """Пишем ли тела аргументов/результата (по умолчанию — нет)."""
+    return os.environ.get("MCP_CALL_LOG_CONTENT") == "1"
+
+
+def _content_cap() -> int:
+    """Потолок длины дайджеста в символах."""
+    try:
+        return max(1, int(os.environ.get("MCP_CALL_LOG_CONTENT_CAP", _CONTENT_CAP_DEFAULT)))
+    except Exception:
+        return _CONTENT_CAP_DEFAULT
+
+
+def _redact(text: str) -> str | None:
+    """Вычищает секреты из строки; fail-closed — при любой ошибке None."""
+    try:
+        out = _BEARER_RE.sub("Bearer ***", text)
+        return _SECRET_KV_RE.sub(lambda m: f"{m.group(1)}***", out)
+    except Exception:
+        return None
+
+
+def _digest(value: object, cap: int) -> str | None:
+    """Сериализует, редактирует и усекает значение; fail-closed — None."""
+    try:
+        text = (
+            value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
+        )
+        redacted = _redact(text)
+        if redacted is None:
+            return None
+        return redacted if len(redacted) <= cap else redacted[:cap] + "…[truncated]"
+    except Exception:
+        return None
 
 
 def _cache_dir() -> Path:
@@ -83,11 +135,14 @@ def log_mcp_call(
     ok: bool,
     ms: float,
     error_type: str | None = None,
+    args: object | None = None,
+    result: object | None = None,
     **extra: Any,
 ) -> None:
     """Append one MCP call record to ``.claude/cache/mcp-<server>-calls.jsonl``.
 
-    Fully fail-soft. Metadata only — never pass argument/result bodies.
+    Fully fail-soft. Metadata only unless ``MCP_CALL_LOG_CONTENT=1`` **and** the
+    caller passes ``args``/``result`` (J-P0.1) — see the module docstring.
 
     Args:
         server: server slug, e.g. ``"memory-orchestrator"`` / ``"1c-mcp-crud"``.
@@ -96,6 +151,9 @@ def log_mcp_call(
         ms: wall-clock duration in milliseconds.
         error_type: low-cardinality error class (exception name / "tool_error"),
             None on success.
+        args: call arguments — written as redacted ``args_digest`` only when the
+            content flag is on; ignored otherwise (no cost when disabled).
+        result: call result — same contract, field ``result_digest``.
         **extra: additional metadata-only fields (counts/ids/floats).
     """
     if os.environ.get("MCP_CALL_LOG_DISABLE") == "1":  # global kill-switch
@@ -113,6 +171,16 @@ def log_mcp_call(
         }
         if error_type:
             record["error_type"] = str(error_type)[:120]
+        # Контент — только по флагу И только если вызывающий его передал.
+        # fail-closed: нередактируемое значение (None из _digest) поле не пишет.
+        if _content_enabled():
+            cap = _content_cap()
+            for field, value in (("args_digest", args), ("result_digest", result)):
+                if value is None:
+                    continue
+                digest = _digest(value, cap)
+                if digest is not None:
+                    record[field] = digest
         if extra:
             record.update(extra)
         with open(path, "a", encoding="utf-8") as fh:
@@ -131,10 +199,18 @@ def track_call(server: str, tool: str, **extra: Any) -> Iterator[dict[str, Any]]
     is recorded automatically (``ok=False``, ``error_type=<ExcName>``) and then
     re-raised.
 
+    For the LLM-judge (J-P0.1) the caller may additionally set ``state["args"]``
+    / ``state["result"]``. They are **ignored** unless ``MCP_CALL_LOG_CONTENT=1``,
+    so wiring them costs nothing while the flag is off — the decision to capture
+    bodies stays with the operator, the decision *what* is capturable stays with
+    the call site (never wire a server whose arguments carry production data).
+
     Example::
 
         with track_call("memory-orchestrator", name) as st:
+            st["args"] = arguments
             result = await handler(...)
+            st["result"] = result
             if getattr(result, "isError", False):
                 st["ok"] = False
                 st["error_type"] = "tool_error"
@@ -151,6 +227,8 @@ def track_call(server: str, tool: str, **extra: Any) -> Iterator[dict[str, Any]]
             ok=False,
             ms=ms,
             error_type=type(exc).__name__,
+            args=state.get("args"),
+            result=state.get("result"),
             **extra,
         )
         raise
@@ -162,6 +240,8 @@ def track_call(server: str, tool: str, **extra: Any) -> Iterator[dict[str, Any]]
             ok=bool(state.get("ok", True)),
             ms=ms,
             error_type=state.get("error_type"),
+            args=state.get("args"),
+            result=state.get("result"),
             **extra,
         )
 
