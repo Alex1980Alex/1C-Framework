@@ -86,6 +86,34 @@ def test_render_markdown_has_autogen_marker_and_counts(tmp_path):
     assert "`a.py`" in md and "`Write`" in md and "3s" in md
 
 
+def test_render_markdown_escapes_pipes_in_matcher(tmp_path):
+    """Голый `|` в matcher-ячейке рвёт markdown-таблицу на лишние колонки."""
+    settings = _write_settings(
+        tmp_path,
+        {
+            "PostToolUse": [
+                {"matcher": "Write|Edit|Bash", "hooks": [{"command": "hooks/a.py", "timeout": 3}]}
+            ]
+        },
+    )
+    md = MOD.render_markdown(MOD.load_catalog(settings))
+    row = next(line for line in md.splitlines() if "`a.py`" in line)
+    assert "`Write\\|Edit\\|Bash`" in row
+    assert row.count("|") - row.count("\\|") == 4  # ровно 4 неэкранированных разделителя
+
+
+def test_render_markdown_escapes_backslash_before_pipe(tmp_path):
+    """Бэкслеш экранируется первым — иначе литеральный `\\|` во входе даст `\\\\|` и разрыв ячейки."""
+    settings = _write_settings(
+        tmp_path,
+        {"PreToolUse": [{"matcher": "a\\|b", "hooks": [{"command": "hooks/b.py", "timeout": 3}]}]},
+    )
+    md = MOD.render_markdown(MOD.load_catalog(settings))
+    row = next(line for line in md.splitlines() if "`b.py`" in line)
+    assert "`a\\\\\\|b`" in row
+    assert row.count("|") - row.count("\\|") == 4
+
+
 def test_ordered_events_puts_known_first(tmp_path):
     settings = _write_settings(
         tmp_path,

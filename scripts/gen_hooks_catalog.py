@@ -181,7 +181,11 @@ def render_markdown(catalog: dict[str, list[dict[str, Any]]]) -> str:
         lines.append("|-----|---------|---------|")
         for r in rows:
             to = f"{r['timeout']}s" if r["timeout"] is not None else "—"
-            lines.append(f"| `{r['script']}` | `{r['matcher']}` | {to} |")
+            # Matcher — регекс с альтернативами (`Write|Edit`): голый `|` внутри ячейки
+            # markdown-таблицы разрывает строку на лишние колонки, поэтому экранируем.
+            # Бэкслеш экранируется первым, иначе матчер с литеральным `\|` дал бы `\\|`.
+            matcher = str(r["matcher"]).replace("\\", "\\\\").replace("|", "\\|")
+            lines.append(f"| `{r['script']}` | `{matcher}` | {to} |")
         lines.append("")
     return "\n".join(lines)
 

@@ -1,0 +1,44 @@
+{
+  "task": "impl-close-doc-gaps-21",
+  "title": "Закрытие 21 doc-gap аудита (bsl_tool + memory + hook)",
+  "created_at": "2026-07-25T08:58:42",
+  "updated_at": "2026-07-25T09:29:22",
+  "current_stage": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "architecture",
+      "command": "pl-plan",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T09:29:22"
+    },
+    {
+      "n": 2,
+      "name": "design",
+      "command": "pl-design",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T09:29:22",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-25T09:29:22"
+    },
+    {
+      "n": 3,
+      "name": "implementation",
+      "command": "pl-code",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T09:29:22"
+    },
+    {
+      "n": 4,
+      "name": "testing",
+      "command": "pl-test",
+      "artifact": "pipeline.md",
+      "status": "done",
+      "completed_at": "2026-07-25T09:29:22"
+    }
+  ]
+}
