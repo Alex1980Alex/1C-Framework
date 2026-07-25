@@ -72,6 +72,11 @@ Examples:
 сырые UUID отклоняются ValueError); CRUD эмитит `link_create`/`link_delete`
 в sink `memory-links.log` (§27, P3.1), пустой каскад виден событием
 `cascade_empty` (P3.2). Acceptance: `scripts/link_registry_acceptance.py`.
+⚠ `memory-links.log` — **event-driven** синк (как `memory-propagation.log` и
+`memory-circuit.log`): планового писателя нет, пишется только при создании/удалении
+ребра. В `EVENT_DRIVEN_SOURCES` (`event_envelope.py`), поэтому в отчёте freshness он
+получает статус `quiet`, а не `stale`, и НЕ поднимает `[REGRESSION]`. Молчание тут
+диагностируется по «происходило ли событие», а не по давности записи (2026-07-25).
 
 **§26 P3 cross-store sync (auto-links).** [`scripts/cross_store_sync.py`](../../../scripts/cross_store_sync.py) + [`src/memory/orchestrator/cross_store_sync.py`](../../../src/memory/orchestrator/cross_store_sync.py) консолидируют дубли (из [`cross_store_index`](../../../src/memory/orchestrator/cross_store_index.py), D3.1): `ConflictResolver(SOURCE_PRIORITY)` выбирает canonical store (`wiki > learned_patterns > skill_learning > memory_ai`) и создаёт `MIRRORS`-связи (mirror→canonical) в link_registry — **idempotent, dry-run default, additive/reversible** (`--apply` для записи). [`WikiPromoter`](../../../src/memory/librarian/wiki_promoter.py) создаёт `PROMOTED_TO` при promotion learned→wiki (opt-in `link_registry`, fail-soft). `unified_search` `Deduplicator` уже коллапсит идентичный контент при запросе; `MIRRORS` добавляет персистентную провенанс-связь. См. [roadmap §26 P3](../../../docs/roadmap/260602_ROADMAP_MEMORY_INGESTION_SYNC.md).
 
