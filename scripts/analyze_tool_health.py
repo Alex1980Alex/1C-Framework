@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -103,6 +104,21 @@ ERROR_RATE_RATCHET = 0.05  # +5пп к baseline error-rate = degraded
 INEFFECTIVE_MIN_CALLS_ABANDON = 3  # abandonment учитывается при calls ≥ этого
 BASELINE_UNUSED_TTL_DAYS = 30  # неактивный тул выбывает из baseline (unused не вечен, #2)
 VERDICTS_CAP_BYTES = 5_000_000  # ротация verdicts.jsonl (append-история не безгранична, #3)
+
+# ── клиентский потолок ожидания (260725): непарный Pre ≠ провал, если сервер успел ──
+# Замер журнала EDT: максимум ПАРНОГО (успешно вернувшегося) вызова 13.4с, минимум
+# оборванного при серверном `outcome=ok` — 60.3с. Порог ставим в этой пустой полосе:
+# ниже него объяснение «клиент не дождался» недоказуемо, и вызов остаётся провалом.
+CLIENT_CAP_MS = 55_000
+try:
+    CLIENT_CAP_MS = int(os.environ.get("TOOL_HEALTH_CLIENT_CAP_MS") or CLIENT_CAP_MS)
+except ValueError:  # мусор в env не должен ронять прогон
+    pass
+# Журнал EDT принадлежит плагину одного MCP-сервера: короткие имена тулов в нём
+# (`update_database`) отображаются в метрику как `mcp__edt-mcp__update_database`.
+# Переименуют сервер в .mcp.json → вычет просто перестанет находить тул (fail-soft,
+# ложного вычета не будет).
+EDT_JOURNAL_SERVER = "edt-mcp"
 
 # NB2 (roadmap 260718): у инструментов с КОНТЕНТ-ЗАВИСИМОЙ латентностью (Bash с
 # pytest-прогоном ≠ echo; Grep по репо ≠ по файлу; execute_code произвольного BSL)
@@ -291,6 +307,86 @@ def guard_blocks_by_tool(
     return dict(result)
 
 
+def server_ok_by_tool(
+    now: datetime, window_days: int, min_ms: int | None = None
+) -> dict[str, list[tuple[datetime, int]]]:
+    """Подтверждённые СЕРВЕРОМ успехи дольше клиентского потолка, по инструментам (260725).
+
+    Клиент обрывает ожидание (~60с) и Post не приходит — метрика читает это как провал
+    инструмента, хотя журнал EDT говорит `outcome=ok` (живьём: `update_database` до 52
+    минут, `delete_project` 134/203с). Тул исполнился успешно ⇒ вычитаем из провалов
+    (счётчик `client_timeout`), вердикт не должен светить broken/degraded по потолку.
+
+    Graceful: нет модуля/журналов/нечитаемо → {} и прежнее поведение (вычета нет).
+    """
+    try:
+        from edt_journal import server_ok_calls
+    except ImportError:
+        return {}
+    try:
+        bare = server_ok_calls(
+            since=now - timedelta(days=window_days),
+            min_ms=CLIENT_CAP_MS if min_ms is None else min_ms,
+        )
+    except OSError:
+        return {}
+    return {f"mcp__{EDT_JOURNAL_SERVER}__{tool}": calls for tool, calls in bare.items()}
+
+
+def journal_failures_for(
+    tools: dict[str, dict], now: datetime, window_days: int, limit: int = 12
+) -> list[dict]:
+    """Тексты отказов сервера по alert-тулам (broken/degraded) — «почему» к вердикту.
+
+    Текст отказа живёт ТОЛЬКО в журнале EDT и транскрипте: hook-лог и native OTel его не
+    несут, из-за чего корень непарного Pre искали вручную (ретро 260725 W9). Отчёт теперь
+    объясняет свои вердикты сам. Длительность в записи — тоже сигнал: отказ на 0мс = аргумент
+    отклонён до работы (ошибка вызывающего), отказ через секунды = тул пытался и не смог.
+
+    Graceful: нет модуля/журналов → пустой список (секции в отчёте просто не будет).
+    """
+    alerting = {
+        t.split("__")[-1]
+        for t, s in tools.items()
+        if s.get("verdict") in ("broken", "degraded") and t.startswith(f"mcp__{EDT_JOURNAL_SERVER}")
+    }
+    if not alerting:
+        return []
+    try:
+        from edt_journal import read_journals
+    except ImportError:
+        return []
+    try:
+        completed, failures = read_journals(since=now - timedelta(days=window_days))
+    except OSError:
+        return []
+    # длительность берём из парной записи `Completed` (тот же тул, ±1с от текста отказа)
+    out: list[dict] = []
+    for f in reversed(failures):  # свежие сначала: они объясняют текущее окно
+        if f["tool"] not in alerting:
+            continue
+        ms = next(
+            (
+                c["ms"]
+                for c in completed
+                if c["tool"] == f["tool"] and abs((c["end"] - f["ts"]).total_seconds()) <= 1
+            ),
+            None,
+        )
+        out.append(
+            {
+                "tool": f"mcp__{EDT_JOURNAL_SERVER}__{f['tool']}",
+                "ts": f["ts"].isoformat(timespec="seconds"),
+                "ms": ms,
+                "text": f["text"][:200],
+                "source": f["source"],
+            }
+        )
+        if len(out) >= limit:
+            break
+    return out
+
+
 # ── агрегация per-tool ────────────────────────────────────────────────────────
 
 
@@ -298,6 +394,7 @@ def aggregate_tools(
     rows: list[dict],
     now: datetime | None = None,
     guard_blocks: dict[str, list[tuple[str, datetime]]] | None = None,
+    server_ok: dict[str, list[tuple[datetime, int]]] | None = None,
 ) -> dict[str, dict]:
     """Per-tool статистика вызовов.
 
@@ -319,8 +416,15 @@ def aggregate_tools(
         posts = sorted(post[tool], key=lambda e: e.get("ts", ""))
         completed = len(posts)
         post_errors = sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
-        # непарные Pre = провалы, КРОМЕ отклонённых гардом (тул не исполнялся)
-        comp = completion_stats(pre[tool], posts, now=now, blocked=(guard_blocks or {}).get(tool))
+        # непарные Pre = провалы, КРОМЕ отклонённых гардом (тул не исполнялся) и
+        # оборванных клиентским потолком при серверном успехе (тул исполнился успешно)
+        comp = completion_stats(
+            pre[tool],
+            posts,
+            now=now,
+            blocked=(guard_blocks or {}).get(tool),
+            server_ok=(server_ok or {}).get(tool),
+        )
         incomplete = comp["failed"]
         # W10: у Agent/Task непарный Pre ненадёжен (background/кросс-сессионный Post) →
         # не считаем провалом (в error_rate/attempts не входит; остаётся в incomplete-поле).
@@ -340,6 +444,8 @@ def aggregate_tools(
             "incomplete": incomplete,  # непарные Pre (fail/interrupt) — сигнал NB1
             "in_flight": comp["in_flight"],
             "blocked": comp["blocked"],  # отклонены гардом: не провал инструмента
+            # оборваны клиентом при серверном успехе: тоже не провал (260725)
+            "client_timeout": comp["client_timeout"],
             "p50_ms": round(percentile(durations, 0.50), 1),
             "p95_ms": round(percentile(durations, 0.95), 1),
             "paired": len(durations),
@@ -353,6 +459,7 @@ def agent_rollup(
     rows: list[dict],
     now: datetime | None = None,
     guard_blocks: dict[str, list[tuple[str, datetime]]] | None = None,
+    server_ok: dict[str, list[tuple[datetime, int]]] | None = None,
 ) -> dict[str, dict]:
     """Разрез вызовов по agent_id (N-P2.4): делегирование в субагенты vs основная
     сессия. Поле agent_id теперь заполняется платформой (B2 ожил) — считаем per-agent
@@ -367,8 +474,8 @@ def agent_rollup(
 
     ⚠ Сумма ``errors`` здесь ВЫШЕ, чем по ``aggregate_tools``, и это не расхождение:
     этот разрез сырой и НЕ применяет ``ASYNC_UNPAIRED_UNRELIABLE`` (замер 2026-07-25:
-    ровно 10 = Agent 5 + AskUserQuestion 5). Совпадать обязан ``blocked`` — общий
-    механизм вычета; он сходится бит-в-бит.
+    ровно 10 = Agent 5 + AskUserQuestion 5). Совпадать обязаны ``blocked`` и
+    ``client_timeout`` — общие механизмы вычета; они сходятся бит-в-бит.
     """
     now = now or datetime.now()
     pre: dict[tuple[str, str], list] = defaultdict(list)
@@ -381,38 +488,52 @@ def agent_rollup(
     # не знает про агента, поэтому наивная передача одного списка в каждую (агент, тул)
     # группу списала бы один блок дважды (поймано тестом test_agent_rollup_separates_agents).
     # Поэтому сперва один общий проход per-tool собирает id отклонённых вызовов.
+    # Серверные успехи (client_timeout) расходуются тем же одним общим проходом: они
+    # сопоставляются по времени и агента не знают — иначе одна запись журнала списалась бы
+    # в каждой (агент, тул) группе.
     blocked_ids: set[str] = set()
-    if guard_blocks:
+    server_ok_ids: set[str] = set()
+    if guard_blocks or server_ok:
         by_tool_pre: dict[str, list] = defaultdict(list)
         by_tool_post: dict[str, list] = defaultdict(list)
         for (_aid, tool), items in pre.items():
             by_tool_pre[tool] += items
         for (_aid, tool), items in post.items():
             by_tool_post[tool] += items
-        for tool, blocks in guard_blocks.items():
-            completion_stats(
+        for tool in set(guard_blocks or {}) | set(server_ok or {}):
+            completion_stats(  # один вызов на тул: оба механизма расходуют выборку вместе
                 by_tool_pre.get(tool, []),
                 by_tool_post.get(tool, []),
                 now=now,
-                blocked=blocks,
+                blocked=(guard_blocks or {}).get(tool),
                 blocked_ids=blocked_ids,
+                server_ok=(server_ok or {}).get(tool),
+                server_ok_ids=server_ok_ids,
             )
 
     acc: dict[str, dict[str, int]] = defaultdict(
-        lambda: {"completed": 0, "post_errors": 0, "failed": 0, "blocked": 0}
+        lambda: {
+            "completed": 0,
+            "post_errors": 0,
+            "failed": 0,
+            "blocked": 0,
+            "client_timeout": 0,
+        }
     )
     for key in set(pre) | set(post):
         aid, _tool = key
         posts = post[key]
         comp = completion_stats(pre[key], posts, now=now)
-        # из провалов этой группы вычитаем те, что объяснены блоком глобально
+        # из провалов этой группы вычитаем объяснённые глобально (блок / серверный успех)
         blocked_here = sum(1 for p in pre[key] if (p.get("tool_call_id") or "") in blocked_ids)
-        failed = max(0, comp["failed"] - blocked_here)
+        ct_here = sum(1 for p in pre[key] if (p.get("tool_call_id") or "") in server_ok_ids)
+        failed = max(0, comp["failed"] - blocked_here - ct_here)
         a = acc[aid]
         a["completed"] += len(posts)
         a["post_errors"] += sum(1 for p in posts if p.get("outcome") == "error" or p.get("error"))
         a["failed"] += failed
         a["blocked"] += min(blocked_here, comp["failed"])
+        a["client_timeout"] += min(ct_here, max(0, comp["failed"] - blocked_here))
 
     out: dict[str, dict] = {}
     for aid, a in acc.items():
@@ -424,6 +545,7 @@ def agent_rollup(
             "success_rate": round(success / attempts, 4) if attempts else 1.0,
             "incomplete": a["failed"],
             "blocked": a["blocked"],
+            "client_timeout": a["client_timeout"],
         }
     return out
 
@@ -489,9 +611,10 @@ def compute_health(
     baseline: dict,
     now: datetime,
     guard_blocks: dict[str, list[tuple[str, datetime]]] | None = None,
+    server_ok: dict[str, list[tuple[datetime, int]]] | None = None,
 ) -> dict:
     """Собрать per-tool статистику + вердикты + детект unused (был в baseline, 0 вызовов сейчас)."""
-    stats = aggregate_tools(rows, now=now, guard_blocks=guard_blocks)
+    stats = aggregate_tools(rows, now=now, guard_blocks=guard_blocks, server_ok=server_ok)
     tools: dict[str, dict] = {}
     for tool, st in stats.items():
         verdict, reason = assign_verdict(st, baseline.get(tool), tool=tool)
@@ -523,8 +646,8 @@ def compute_health(
     return {
         "tools": tools,
         "servers": servers,
-        # N-P2.4: разрез по субагентам; guard_blocks - тот же вычет, что per-tool
-        "agents": agent_rollup(rows, now=now, guard_blocks=guard_blocks),
+        # N-P2.4: разрез по субагентам; guard_blocks/server_ok - те же вычеты, что per-tool
+        "agents": agent_rollup(rows, now=now, guard_blocks=guard_blocks, server_ok=server_ok),
         "generated": now.isoformat(timespec="seconds"),
     }
 
@@ -911,6 +1034,39 @@ def render_md(health: dict, window_days: int) -> str:
             )
         lines += [""]
 
+    # ── 260725: серверные исходы (журнал EDT) — «почему» к вердиктам выше ──
+    ct_tools = {t: s for t, s in tools.items() if s.get("client_timeout")}
+    jf = health.get("journal_failures") or []
+    if ct_tools or jf:
+        lines += ["## Серверные исходы (журнал EDT)", ""]
+        if ct_tools:
+            total = sum(s["client_timeout"] for s in ct_tools.values())
+            lines += [
+                f"**Клиентский потолок:** {total} вызов(ов) оборван(ы) клиентом, но на сервере "
+                f"завершились `outcome=ok` — из провалов вычтены (не дефект инструмента):",
+                "",
+            ]
+            for tool, s in sorted(ct_tools.items(), key=lambda kv: -kv[1]["client_timeout"]):
+                lines.append(f"- `{tool}` — {s['client_timeout']}")
+            lines += [
+                "",
+                "> Крос-чек OTel ниже по этим же вызовам даёт `success=false` — противоречия нет: "
+                "native смотрит **глазами клиента** и попадает в TP как «согласны, Post не пришёл», "
+                "а исход операции знает только сервер. Крос-чек проверяет ДЕТЕКТОР непарности, "
+                "а не факт поломки инструмента.",
+                "",
+            ]
+        if jf:
+            lines += [
+                "**Отказы сервера по alert-тулам** (текста нет ни в hook-логе, ни в native OTel; "
+                "`0ms` = аргумент отклонён до работы, т.е. ошибка вызывающего):",
+                "",
+            ]
+            for f in jf:
+                ms = f"{f['ms']}ms" if f.get("ms") is not None else "—"
+                lines.append(f"- `{f['tool']}` {f['ts'][5:16]} [{ms}] — {f['text']}")
+            lines += [""]
+
     # ── H-P3.2: cross-check native OTel ↔ hook (FP/FN unpaired-Pre детектора) ──
     cc = health.get("otel_crosscheck") or {}
     if cc.get("available"):
@@ -990,7 +1146,9 @@ def render_md(health: dict, window_days: int) -> str:
         "> Латентность p95 = реальная (Pre→Post-пара), не overhead хука. *«неуд.» = непарный "
         "Pre (Pre без Post): платформа НЕ шлёт PostToolUse на неуспешный built-in вызов "
         "(Bash non-zero exit / Edit «строка не найдена» / Read miss) — это ЕДИНСТВЕННЫЙ честный "
-        "сигнал провала built-in (NB1, roadmap 260718); блоки гардов сюда не попадают. Решение по "
+        "сигнал провала built-in (NB1, roadmap 260718). НЕ попадают в «неуд.»: отклонённые "
+        "гардом вызовы (тул не исполнялся) и оборванные клиентским потолком при серверном "
+        "`outcome=ok` (тул исполнился успешно — см. «Серверные исходы»). Решение по "
         "alert'ам — за человеком; broken эскалируется авто-задачей (SessionStart-баннер).",
     ]
     return "\n".join(lines) + "\n"
@@ -1002,8 +1160,17 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
     rows = list(iter_window_rows(now, window_days))
     baseline = _load_json(REPORTS / "baseline.json", {})
     health = compute_health(
-        rows, baseline, now, guard_blocks=guard_blocks_by_tool(now, window_days)
+        rows,
+        baseline,
+        now,
+        guard_blocks=guard_blocks_by_tool(now, window_days),
+        server_ok=server_ok_by_tool(now, window_days),
     )
+
+    # 260725: причины отказов с СЕРВЕРА (журнал EDT) — их нет ни в hook-логе, ни в native
+    # OTel, поэтому раньше корень непарного Pre искался вручную грепом. Сюрфейсим только
+    # по alert-тулам: отчёт должен объяснять свои же вердикты.
+    health["journal_failures"] = journal_failures_for(health["tools"], now, window_days)
 
     # N-P1.1: свести probe (MCP-down) + sink-регрессию в вердикты (NB4) — единый отчёт
     infra_alerts = gather_infra_alerts(now)
@@ -1067,6 +1234,11 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
             if s.get("recovered_known_issue")
         ],
         "infra_alerts": health.get("infra_alerts", []),  # N-P1.1: MCP-down + stale-sink (баннер)
+        # 260725: сколько провалов объяснено серверным успехом + причины отказов с сервера
+        "client_timeouts": {
+            t: s["client_timeout"] for t, s in health["tools"].items() if s.get("client_timeout")
+        },
+        "journal_failures": health.get("journal_failures", []),
         "trend": health.get("trend", {}),  # N-P1.2: переходы broken↔healthy за 30д
         "counts": {
             v: sum(1 for s in health["tools"].values() if s["verdict"] == v) for v in _VERDICT_ORDER

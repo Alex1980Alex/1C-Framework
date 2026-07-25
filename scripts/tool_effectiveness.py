@@ -145,6 +145,10 @@ def _naive(ts: datetime) -> datetime:
 
 
 BLOCK_MATCH_SEC = 5  # блок и canonical Pre — соседи в одной Pre-цепочке (мс-разрыв)
+# Серверная запись об исходе и Pre — тот же вызов: замер 2026-07-25 на 22 живых записях
+# журнала EDT дал Δ(journal.start − Pre.ts) = +0.065…+0.548с. Допуск 2с с запасом, но
+# сильно уже BLOCK_MATCH_SEC: чем он шире, тем выше риск приписать запись чужому вызову.
+SERVER_OK_MATCH_SEC = 2
 
 
 def completion_stats(
@@ -154,6 +158,8 @@ def completion_stats(
     grace_sec: int = 120,
     blocked: list[tuple[str, datetime]] | None = None,
     blocked_ids: set[str] | None = None,
+    server_ok: list[tuple[datetime, int]] | None = None,
+    server_ok_ids: set[str] | None = None,
 ) -> dict:
     """Честный сигнал незавершения built-in вызова из НЕПАРНЫХ Pre (roadmap 260718 N-P0.1).
 
@@ -182,16 +188,28 @@ def completion_stats(
     где native говорит ``success=true`` (потерянный Post) — две методики сошлись
     независимо.
 
+    ⚠ **Клиентский потолок — второй класс ложного провала** (260725, тот же приём вычета):
+    у долгой операции клиент обрывает ожидание (~60с) и Post не приходит, ХОТЯ на сервере
+    вызов завершился успешно — журнал EDT показал `outcome=ok` при 60 253мс
+    (``create_project``), 134 035/203 137мс (``delete_project``), 119 398/215 360/3 147 392мс
+    (``update_database``). Дефекта инструмента тут нет, поэтому вызывающий передаёт
+    ``server_ok`` — список ``(start, ms)`` подтверждённых сервером успехов (см.
+    ``edt_journal.server_ok_calls``), и такие непарные Pre уходят в счётчик
+    ``client_timeout``, а не в ``failed``. Отличие от ``blocked``: там тул НЕ исполнялся,
+    здесь исполнился и УСПЕШНО — потерян лишь ответ. Оба остаются видимы в отчёте:
+    вычитается вердикт, а не факт.
+
     Пары считаются по ``tool_call_id`` (в проде заполнен всегда), непарные посты
     добираются FIFO по ts. Непарные Pre моложе ``grace_sec`` от ``now`` =
     ``in_flight`` (Post ещё может прийти) и в провал НЕ идут.
 
-    Возвращает ``{completed, failed, in_flight, blocked}`` (Pre-сторона; ``completed``
-    = число Pre, получивших Post — для сверки, аналитика берёт ``len(posts)``).
-    ``blocked`` пуст без аргумента ``blocked`` → поведение бит-в-бит прежнее.
-    ``blocked_ids`` (опц.) — сюда складываются ``tool_call_id`` отклонённых вызовов:
-    нужно тем, кто считает ту же выборку ВТОРЫМ разрезом (``agent_rollup``), чтобы один
-    блок не списался дважды — расходуемый список у каждого вызова свой (копия).
+    Возвращает ``{completed, failed, in_flight, blocked, client_timeout}`` (Pre-сторона;
+    ``completed`` = число Pre, получивших Post — для сверки, аналитика берёт ``len(posts)``).
+    ``blocked``/``client_timeout`` нулевые без соответствующего аргумента → поведение
+    бит-в-бит прежнее. ``blocked_ids``/``server_ok_ids`` (опц.) — сюда складываются
+    ``tool_call_id`` объяснённых вызовов: нужно тем, кто считает ту же выборку ВТОРЫМ
+    разрезом (``agent_rollup``), чтобы одно объяснение не списалось дважды — расходуемый
+    список у каждого вызова свой (копия).
     """
     now = _naive(now) if now is not None else datetime.now()
     pres_sorted = sorted(pres, key=lambda e: e.get("ts", ""))
@@ -219,18 +237,27 @@ def completion_stats(
                 paired_idx.add(i)
                 posts_no_id -= 1
 
-    failed = in_flight = blocked_n = 0
+    failed = in_flight = blocked_n = client_timeout = 0
     unused_blocks = list(blocked or [])
+    unused_server_ok = list(server_ok or [])
     for i, p in enumerate(pres_sorted):
-        if i in paired_idx:
-            continue
         pts = parse_ts(p.get("ts"))
+        if i in paired_idx:
+            # Парный (успешный) вызов забирает СВОЮ серверную запись первым — иначе она
+            # могла бы «оправдать» соседний непарный вызов того же тула.
+            if unused_server_ok and pts is not None:
+                _take_server_ok(unused_server_ok, _naive(pts))
+            continue
         if pts is not None and (now - _naive(pts)).total_seconds() < grace_sec:
             in_flight += 1  # Post ещё может прийти — не считаем провалом
         elif pts is not None and _take_block(unused_blocks, p.get("session") or "", _naive(pts)):
             blocked_n += 1  # вызов отклонён гардом — тул не исполнялся
             if blocked_ids is not None:
                 blocked_ids.add(p.get("tool_call_id") or "")
+        elif pts is not None and _take_server_ok(unused_server_ok, _naive(pts)):
+            client_timeout += 1  # сервер завершил успешно — клиент не дождался ответа
+            if server_ok_ids is not None:
+                server_ok_ids.add(p.get("tool_call_id") or "")
         else:
             failed += 1
     return {
@@ -238,6 +265,7 @@ def completion_stats(
         "failed": failed,
         "in_flight": in_flight,
         "blocked": blocked_n,
+        "client_timeout": client_timeout,
     }
 
 
@@ -250,6 +278,21 @@ def _take_block(blocks: list[tuple[str, datetime]], session: str, ts: datetime) 
     for idx, (b_session, b_ts) in enumerate(blocks):
         if b_session == session and abs((b_ts - ts).total_seconds()) <= BLOCK_MATCH_SEC:
             blocks.pop(idx)
+            return True
+    return False
+
+
+def _take_server_ok(records: list[tuple[datetime, int]], ts: datetime) -> bool:
+    """Снять из ``records`` серверный успех, объясняющий вызов, начатый в ``ts``.
+
+    Расходуемое сопоставление 1:1 (как у блоков): одна запись объясняет РОВНО один
+    вызов, иначе один долгий успех «оправдал» бы серию реальных провалов. Ключ — только
+    близость по времени начала: ``tool_call_id`` серверу неизвестен, а имя тула уже
+    учтено вызывающим (список приходит per-tool).
+    """
+    for idx, (start, _ms) in enumerate(records):
+        if abs((start - ts).total_seconds()) <= SERVER_OK_MATCH_SEC:
+            records.pop(idx)
             return True
     return False
 
