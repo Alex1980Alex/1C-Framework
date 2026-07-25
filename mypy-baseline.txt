@@ -1234,6 +1234,7 @@ src/mcp_server/server.py:0: note: Use "-> None" if function does not return a va
 src/mcp_server/server.py:0: error: Call to untyped function "main" in typed context  [no-untyped-call]
 src/api/app.py:0: error: Function is missing a return type annotation  [no-untyped-def]
 src/memory/orchestrator/memory_orchestrator.py:0: error: Cannot infer value of type parameter "KT" of <dict>  [misc]
+src/memory/orchestrator/memory_orchestrator.py:0: note: Try assigning the literal to a variable annotated as dict[<key>, <val>]
 src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: error: Unused "type: ignore[assignment, misc]" comment  [unused-ignore]
 src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: error: Unused "type: ignore[assignment, misc]" comment  [unused-ignore]
 src/pdf_framework/callbacks/langfuse/langfuse_callback.py:0: error: Class cannot subclass "_LangfuseNativeHandler" (has type "Any")  [misc]
