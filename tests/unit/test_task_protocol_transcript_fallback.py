@@ -94,6 +94,22 @@ def test_no_prompt_anchor_fail_closed(tmp_path):
     assert ts.skill_checked_after_last_prompt(str(p)) is False
 
 
+def test_sidechain_skill_does_not_unlock(tmp_path):
+    """Активация внутри субагента (isSidechain) — не протокол главной цепочки."""
+    sub = _skill()
+    sub["isSidechain"] = True
+    p = _write(tmp_path / "t.jsonl", [_prompt(), sub])
+    assert ts.skill_checked_after_last_prompt(str(p)) is False
+
+
+def test_sidechain_prompt_does_not_move_anchor(tmp_path):
+    """Промпт субагенту не сбрасывает якорь: главная активация после него в силе."""
+    sub_prompt = _prompt("задача субагенту")
+    sub_prompt["isSidechain"] = True
+    p = _write(tmp_path / "t.jsonl", [_prompt(), sub_prompt, _skill()])
+    assert ts.skill_checked_after_last_prompt(str(p)) is True
+
+
 def test_no_skill_call_at_all(tmp_path):
     p = _write(tmp_path / "t.jsonl", [_prompt(), _tool_result()])
     assert ts.skill_checked_after_last_prompt(str(p)) is False

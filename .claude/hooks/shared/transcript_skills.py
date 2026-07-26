@@ -113,6 +113,8 @@ def skill_checked_after_last_prompt(path: str) -> bool:
             continue
         if not isinstance(entry, dict):
             continue
+        if entry.get("isSidechain"):
+            continue  # ветка субагента: его активация не считается за протокол главной цепочки
         if is_user_prompt(entry):
             last_prompt = idx
         elif is_skill_call(entry):
