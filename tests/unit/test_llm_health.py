@@ -91,3 +91,39 @@ def test_single_failure_does_not_disarm(tmp_path, monkeypatch):
         ],
     )
     assert llm_health.is_provider_down() is False
+
+
+def test_data_dir_env_override_read_at_call_time(tmp_path, monkeypatch):
+    """LLM_HEALTH_DATA_DIR читается В МОМЕНТ ВЫЗОВА, а не на импорте.
+
+    Пин по замечанию ревьюера 2026-07-26: (1) сам override не был закреплён ничем —
+    его удаление оставляло весь набор зелёным; (2) при связывании на импорте
+    monkeypatch.setenv в уже загруженном модуле был бы молчаливым no-op, то есть
+    изоляция тестов оказалась бы фиктивной (класс мёртвой CLAUDE_SESSION_STATE_PATH).
+    """
+    import json
+    from datetime import datetime
+
+    from shared import llm_health as m
+
+    fresh = datetime.now().isoformat()
+    (tmp_path / "llm-rotation-completions.jsonl").write_text(
+        "\n".join(
+            json.dumps({"ts": fresh, "provider": "none", "model": "none", "error": "All failed"})
+            for _ in range(3)
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("LLM_HEALTH_DATA_DIR", str(tmp_path))
+    assert m._data_dir() == tmp_path
+    assert m.is_provider_down() is True, "env-override не применился => изоляция фиктивна"
+
+    # пустой каталог => провайдер считается живым (fail-closed для гарда)
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    monkeypatch.setenv("LLM_HEALTH_DATA_DIR", str(empty))
+    assert m.is_provider_down() is False
+
+    # переменная снята => возвращаемся к дефолту модуля, прод не затронут
+    monkeypatch.delenv("LLM_HEALTH_DATA_DIR", raising=False)
+    assert m._data_dir() == m._DATA
