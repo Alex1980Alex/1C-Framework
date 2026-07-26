@@ -174,7 +174,9 @@ def test_incompatible_model_skips_to_capable_provider(monkeypatch):
     )
     calls: list[tuple[str, str]] = []
 
-    async def fake_call(state, prompt, system_prompt, model, temperature, max_tokens, timeout):
+    async def fake_call(
+        state, prompt, system_prompt, model, temperature, max_tokens, timeout, **kw
+    ):
         calls.append((state.config.name, model))
         return {
             "provider": state.config.name,
@@ -219,7 +221,9 @@ def test_explicit_model_not_substituted_on_fallback(monkeypatch):
     svc._settings.primary_provider = "p0"
     calls: list[tuple[str, str]] = []
 
-    async def fake_call(state, prompt, system_prompt, model, temperature, max_tokens, timeout):
+    async def fake_call(
+        state, prompt, system_prompt, model, temperature, max_tokens, timeout, **kw
+    ):
         calls.append((state.config.name, model))
         if state.config.name == "p0":
             raise RuntimeError("p0 down")
@@ -253,7 +257,9 @@ def test_explicit_model_routes_to_its_own_tier_provider(monkeypatch):
     svc._settings.primary_provider = "claude-cli-sonnet"
     calls: list[tuple[str, str]] = []
 
-    async def fake_call(state, prompt, system_prompt, model, temperature, max_tokens, timeout):
+    async def fake_call(
+        state, prompt, system_prompt, model, temperature, max_tokens, timeout, **kw
+    ):
         calls.append((state.config.name, model))
         return {
             "provider": state.config.name,
@@ -341,7 +347,9 @@ def test_budget_caps_primary_and_leaves_room_for_fallback(monkeypatch):
     monkeypatch.setattr("src.shared.llm_rotation.service.time.monotonic", lambda: clock["t"])
     calls: list[tuple[str, int]] = []
 
-    async def fake_call(state, prompt, system_prompt, model, temperature, max_tokens, timeout):
+    async def fake_call(
+        state, prompt, system_prompt, model, temperature, max_tokens, timeout, **kw
+    ):
         calls.append((state.config.name, timeout))
         if state.config.name == "p0":
             clock["t"] += 9.0  # каждая primary-попытка «длится» 9с
