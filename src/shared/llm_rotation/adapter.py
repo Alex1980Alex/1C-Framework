@@ -60,10 +60,15 @@ def _get_enabled_components() -> set[str]:
     if env_val:
         _enabled_components = {c.strip() for c in env_val.split(",") if c.strip()}
     else:
-        # Default: all Category 1 components
-        _enabled_components = {
-            name for name, cfg in COMPONENT_REGISTRY.items() if cfg["category"] == 1
-        }
+        # Default (2026-07-26): ВСЕ зарегистрированные компоненты, включая Category 2
+        # (section_summary, entity_extractor, community_summarizer) — раньше дефолт брал
+        # только Category 1, а включение Category 2 числилось «opt-in через env».
+        # Это было мёртвой настройкой: env читается сырым os.environ, а load_dotenv() во
+        # фреймворке не зовётся нигде, кроме zai_proxy — запись в .env не подхватилась бы
+        # ни одним процессом. Страховка качества прежняя: пустой/провальный ответ дешёвого
+        # тира → cheap_llm_call возвращает "" → вызывающий уходит на Claude.
+        # Откат к прежнему поведению — явным LLM_ROTATION_COMPONENTS со списком Cat-1.
+        _enabled_components = set(COMPONENT_REGISTRY)
 
     if _enabled_components:
         logger.info("[CHEAP-LLM] Enabled for: %s", ", ".join(sorted(_enabled_components)))

@@ -1,7 +1,8 @@
 """
-LLM Rotation MCP Server — 5 tools for multi-provider LLM access.
+LLM Rotation MCP Server — 7 tools for multi-provider LLM access.
 
-Tools: llm_complete, llm_get_stats, llm_reset_provider, llm_test_providers, llm_list_providers.
+Tools: llm_complete, llm_complete_batch, llm_get_stats, llm_reset_provider,
+llm_test_providers, llm_list_providers, llm_route_explain.
 
 Migrated from D:\\1C-Enterprise_Framework\\shared\\llm_rotation_mcp.py
 """
@@ -94,10 +95,73 @@ async def list_tools() -> list[Tool]:
                     },
                     "timeout": {
                         "type": "integer",
-                        "description": "Request timeout in seconds (auto: 60s short, 90s generation)",
+                        "description": (
+                            "Request timeout in seconds. Auto by max_tokens tier: 90s (≤1024), "
+                            "120s (≤3000), 240s (above)."
+                        ),
                     },
                 },
                 "required": ["prompt"],
+            },
+        ),
+        Tool(
+            name="llm_complete_batch",
+            description=(
+                "Send N prompts to LLM in PARALLEL using the same rotation/fallback as "
+                "llm_complete. Use for batch generation (drafts, summaries, extraction) — "
+                "one call instead of N sequential ones. A single prompt's failure is returned "
+                "in its own slot and does NOT abort the batch. Note: claude-cli providers spawn "
+                "a full Claude Code process per call, so their concurrency is capped separately "
+                "by LLM_ROTATION_BATCH_CLI_CONCURRENCY."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "prompts": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Prompts to send; results are index-aligned with this list",
+                    },
+                    "system_prompt": {
+                        "type": "string",
+                        "description": "Optional system prompt, shared across all prompts",
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": (
+                            "Explicit tier 'haiku' | 'sonnet' | 'opus'; opus only on explicit "
+                            "request, never via auto-fallback. STRICT tier match — only a "
+                            "provider that declares the model executes it, otherwise the call "
+                            "fails rather than silently swapping model. Applied to all prompts."
+                        ),
+                    },
+                    "preferred_provider": {
+                        "type": "string",
+                        "description": "Preferred provider name (optional)",
+                    },
+                    "temperature": {
+                        "type": "number",
+                        "description": "Temperature (0.0-2.0)",
+                        "default": 0.7,
+                    },
+                    "max_tokens": {
+                        "type": "integer",
+                        "description": "Max tokens to generate per prompt",
+                        "default": 2048,
+                    },
+                    "timeout": {
+                        "type": "integer",
+                        "description": "Per-prompt timeout in seconds (auto by max_tokens tier)",
+                    },
+                    "concurrency": {
+                        "type": "integer",
+                        "description": (
+                            "Override parallelism; claude-cli calls are still clamped "
+                            "separately to protect commit memory"
+                        ),
+                    },
+                },
+                "required": ["prompts"],
             },
         ),
         Tool(
@@ -152,13 +216,18 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     started = time.monotonic()
 
-    def _done(ok: bool, error_type: str | None = None) -> None:
+    def _done(ok: bool, error_type: str | None = None, **extra) -> None:
+        # **extra (2026-07-26, находка ревьюера Р3): у `error_type` в этом стоке нет
+        # читателя — единственный потребитель (scripts/tool_llm_judge.py) смотрит только
+        # `ok`, поэтому батч «9 из 10 упало» читался бы как успех. Плоские счётчики
+        # batch_total/batch_failed машиночитаемы и переживают отсутствие читателя.
         _log_call(
             "llm-rotation",
             name,
             ok=ok,
             ms=(time.monotonic() - started) * 1000.0,
             error_type=error_type,
+            **extra,
         )
 
     try:
@@ -188,6 +257,70 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     text=json.dumps(result, ensure_ascii=False, indent=2),
                 )
             ]
+
+        if name == "llm_complete_batch":
+            prompts = arguments.get("prompts")
+            # Валидация на границе: пустой/неоднородный вход должен получить внятный
+            # отказ здесь, а не невнятный обрыв внутри asyncio.gather.
+            if not isinstance(prompts, list) or not prompts:
+                raise ValueError(
+                    "llm_complete_batch: 'prompts' must be a non-empty list of strings"
+                )
+            if not all(isinstance(p, str) for p in prompts):
+                raise ValueError("llm_complete_batch: all items in 'prompts' must be strings")
+
+            raw_results = await service.batch_complete(
+                prompts,
+                system_prompt=arguments.get("system_prompt"),
+                model=arguments.get("model"),
+                preferred_provider=arguments.get("preferred_provider"),
+                temperature=arguments.get("temperature", 0.7),
+                max_tokens=arguments.get("max_tokens", 2048),
+                timeout=arguments.get("timeout"),
+                concurrency=arguments.get("concurrency"),
+                return_exceptions=True,
+            )
+
+            results = []
+            ok_count = 0
+            failed_count = 0
+            for i, item in enumerate(raw_results):
+                if isinstance(item, BaseException):
+                    failed_count += 1
+                    results.append(
+                        {
+                            "index": i,
+                            "ok": False,
+                            "error_type": type(item).__name__,
+                            "error": str(item)[:500],
+                        }
+                    )
+                else:
+                    ok_count += 1
+                    # Служебные ключи ПОСЛЕ спреда: иначе одно новое поле в результате
+                    # провайдера тихо затрёт выравнивание по индексу и признак успеха.
+                    results.append({**item, "index": i, "ok": True})
+
+            payload = {
+                "total": len(raw_results),
+                "ok": ok_count,
+                "failed": failed_count,
+                "results": results,
+            }
+            # Текст собираем ДО _done: иначе падение сериализации дало бы вторую запись
+            # на тот же вызов из внешнего except (двойной лог одного tool_call).
+            text = json.dumps(payload, ensure_ascii=False, indent=2)
+
+            # Честная телеметрия: частичный провал ≠ полный провал ≠ чистый успех.
+            counts = {"batch_total": len(raw_results), "batch_failed": failed_count}
+            if failed_count == 0:
+                _done(True, **counts)
+            elif ok_count == 0:
+                _done(False, "all_failed", **counts)
+            else:
+                _done(True, "partial_failure", **counts)
+
+            return [TextContent(type="text", text=text)]
 
         elif name == "llm_get_stats":
             stats = service.get_stats()

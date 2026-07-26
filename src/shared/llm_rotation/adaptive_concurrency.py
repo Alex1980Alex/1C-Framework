@@ -52,6 +52,18 @@ EventType = Literal["cb_opened", "http_429", "http_5xx", "slow_call"]
 _DEFAULT_STATE_PATH = Path("data") / "llm-rotation-adaptive-concurrency.json"
 
 
+def _default_state_path() -> Path:
+    """Путь состояния с env-оверрайдом (2026-07-26, находка ревьюера Р10).
+
+    Был четвёртым — и ЕДИНСТВЕННЫМ неизолируемым — стоком llm-rotation: conftest
+    заводит tmp-пути для completions/adaptive/budget через env, а этот путь был
+    захардкожен. Первый же тест, гоняющий ветку классификации ошибок (429/5xx),
+    писал бы в боевой файл и подкручивал реальную конкурентность прода.
+    """
+    raw = os.environ.get("LLM_ROTATION_ADAPTIVE_CONCURRENCY_PATH", "").strip()
+    return Path(raw) if raw else _DEFAULT_STATE_PATH
+
+
 def _env_int(name: str, default: int) -> int:
     raw = os.environ.get(name, "")
     try:
@@ -117,7 +129,7 @@ class AdaptiveConcurrencyController:
             if slow_threshold_s is not None
             else _env_float("LLM_ROTATION_BATCH_SLOW_THRESHOLD_S", 30.0)
         )
-        self._state_path: Path = state_path or _DEFAULT_STATE_PATH
+        self._state_path: Path = state_path or _default_state_path()
         self._state: dict[str, ProviderConcurrencyState] = {}
         self._load()
 

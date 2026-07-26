@@ -9,7 +9,7 @@ description: "LLM Rotation Service — мульти-провайдерное LLM
 - Multi-provider LLM completion with automatic fallback
 - Provider health monitoring and rotation
 - Z.AI proxy (OpenAI -> Anthropic format translation)
-- MCP tools: `llm_complete`, `llm_get_stats`, `llm_reset_provider`, `llm_test_providers`, `llm_list_providers`, **`llm_route_explain`** (какая модель будет выбрана и почему — БЕЗ вызова LLM)
+- MCP tools: `llm_complete`, **`llm_complete_batch`** (веерная отправка N промптов ПАРАЛЛЕЛЬНО — один вызов вместо N последовательных), `llm_get_stats`, `llm_reset_provider`, `llm_test_providers`, `llm_list_providers`, **`llm_route_explain`** (какая модель будет выбрана и почему — БЕЗ вызова LLM)
 
 ## Architecture
 
@@ -131,11 +131,22 @@ Pulls (per `pyproject.toml`):
 
 ```env
 LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-sonnet
-LLM_ROTATION_MAX_RETRIES=3
-LLM_ROTATION_TIMEOUT=90
+LLM_ROTATION_MAX_RETRIES=5          # 3→5 (2026-07-26): три ротации давали каждому из
+                                    # трёх авто-провайдеров ровно одну попытку
+LLM_ROTATION_TIMEOUT=90             # per-попытка, базовый тир (max_tokens ≤1024)
 LLM_ROTATION_COOLDOWN_SECONDS=300
 LLM_ROTATION_RATE_LIMIT_COOLDOWN=60
 ```
+
+**Пропускная способность (2026-07-26, мандат «максимальное использование»):**
+
+| Ключ | Знач. | Смысл |
+|---|---|---|
+| `total_budget_seconds` | **270** | сквозной бюджет ВСЕГО `complete()`. Обязан быть строго ниже клиентского окна (`.mcp.json` → `llm-rotation.timeout` = 300000 мс), иначе клиент обрывает вызов раньше ответа. Инвариант запинен тестом |
+| `LLM_ROTATION_BATCH_CONCURRENCY` | **6** | стартовая параллельность `llm_complete_batch` (задана в `.mcp.json`; читается сырым `os.environ`, в `.env` НЕ подхватится) |
+| `batch_cli_concurrency` (`LLM_ROTATION_BATCH_CLI_CONCURRENCY`) | **3** | ⚠ отдельный потолок для `format="claude-cli"`. Каждый такой вызов спавнит **полный второй Claude Code** (своя сессия + цепочка хуков, ~2.8 ГБ commit) — шесть параллельных кладут сессию по нехватке commit-памяти (инцидент 2026-07-26 16:51). Режет и явный per-call `concurrency`: это предохранитель машины, а не подсказка. Клемп громкий (`logger.warning`) |
+
+⚠ **`LLM_ROTATION_TIMEOUT` убран из `.mcp.json`** (там стояло `60`, перебивая `.env`): живой максимум успешного claude-cli вызова — 66 с, то есть порог рвал вызовы. Теперь действует 90/120/240 по тиру `max_tokens`.
 
 API keys: только `ANTHROPIC_API_KEY` (для `anthropic-sonnet`, опционально — по умолчанию не задан → провайдер молча пропускается). Ключи `ZHIPU/GEMINI/OPENROUTER/MISTRAL` **больше не используются** (провайдеры удалены 2026-05-16; мёртвые записи вычищены из `.mcp.json` 2026-07-04). `ZAI_API_KEY` нужен только автономному `zai_proxy.py`, не самой ротации.
 
@@ -153,12 +164,19 @@ Bridge between LLM Rotation and framework components. Cheap LLM first, falls bac
 | query_expansion | 1 | 300 | `search/query_expansion.py` |
 | hyde | 1 | 512 | `search/hyde.py` |
 | search_classifier | 1 | 100 | `search/routing/classifier.py` |
+| context_generator | 1 | 200 | `processing/context_generator.py` |
+| qa_answer | 1 | 2048 | RAG-ответ `/search/ask` |
 | section_summary | 2 | 300 | `processing/section_summary.py` |
-| context_generator | 2 | 200 | `processing/context_generator.py` |
 | entity_extractor | 2 | 4096 | `processing/extractors/entity_extractor.py` |
 | community_summarizer | 2 | 1024 | `graph_store/summarizer.py` |
 
-Category 1 enabled by default. Category 2 opt-in via `LLM_ROTATION_COMPONENTS` env.
+**Все компоненты включены по умолчанию, включая Category 2** (2026-07-26). Раньше дефолт
+брал только Category 1, а Category 2 числилась «opt-in через `LLM_ROTATION_COMPONENTS`» —
+и это была **мёртвая настройка**: env читается сырым `os.environ`, а `load_dotenv()` во
+фреймворке не зовётся нигде, кроме `zai_proxy.py`, поэтому запись в `.env` не подхватилась
+бы ни одним процессом. Страховка качества прежняя: провал/пустой ответ дешёвого тира →
+`cheap_llm_call` возвращает `""` → вызывающий уходит на Claude. Откат к прежнему
+поведению — явным списком Cat-1 в `LLM_ROTATION_COMPONENTS`.
 
 ### Quality Criteria (`QUALITY_CRITERIA` in adapter.py)
 
@@ -186,8 +204,12 @@ JSONL: `data/llm-rotation-metrics.jsonl` (ts, component, provider, response_time
 | `src/shared/llm_rotation/service.py` | Core service + providers |
 | `src/shared/llm_rotation/adapter.py` | CheapLLM adapter + quality + auto-discovery |
 | `src/shared/llm_rotation/zai_proxy.py` | Z.AI OpenAI->Anthropic proxy |
-| `src/shared/llm_rotation/mcp.py` | MCP server (5 tools) |
-| `tests/integration/test_llm_rotation.py` | 33 integration tests |
+| `src/shared/llm_rotation/mcp.py` | MCP server (7 tools) |
+| `tests/integration/test_llm_rotation.py` | 34 теста. ⚠ 2026-07-26 файл не нёс **ни одного** маркера → оба CI-гейта (`-m "unit and not slow"` и `-m "integration or e2e"`) отсеивали его целиком, и `test_provider_priority_order` краснел незамеченным после ввода тира opus. Добавлен `pytestmark = pytest.mark.unit` (тесты офлайновые) |
+| `tests/unit/test_llm_rotation_batch.py` | 20 unit: батч, потолки конкурентности, MCP-тул, Category 2 |
+
+⚠ **После правки кода MCP-сервера — `/mcp reconnect`**: stdio держит старый код, новый
+`llm_complete_batch` до переподключения не появится ([[feedback-mcp-stale-code-reconnect]]).
 
 ## Usage
 
@@ -211,6 +233,7 @@ Registered in `.mcp.json` as `llm-rotation` server.
 | Tool | Description |
 |------|------------|
 | `llm_complete` | Send prompt with auto-rotation |
+| `llm_complete_batch` | N промптов ПАРАЛЛЕЛЬНО через ту же ротацию. Результаты выровнены по индексу, провал одного промпта возвращается в своём слоте и НЕ обрывает батч (`{total, ok, failed, results[]}`). Параметры те же + `concurrency`. ⚠ claude-cli режется отдельным потолком — см. ниже |
 | `llm_get_stats` | Provider statistics |
 | `llm_reset_provider` | Reset provider to HEALTHY |
 | `llm_test_providers` | Test all available providers |

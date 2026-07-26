@@ -12,6 +12,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+# Маркер обязателен (2026-07-26): файл не нёс НИ ОДНОГО маркера, поэтому оба CI-гейта
+# отсеивали все 34 теста — `-m "unit and not slow"` и `-m "integration or e2e"` одинаково
+# давали «no tests collected». Именно так test_provider_priority_order оставался красным
+# незамеченным после ввода тира opus. Тесты офлайновые (base_url="http://test" — данные
+# конфига, живых вызовов нет), поэтому место им в быстром unit-гейте, а не в
+# инфраструктурном. Тот же класс, что у test_delegation_canary.py.
+pytestmark = pytest.mark.unit
+
 from src.shared.llm_rotation.config import LLMRotationSettings
 from src.shared.llm_rotation.service import (
     DEFAULT_PROVIDERS,

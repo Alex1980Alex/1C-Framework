@@ -232,23 +232,6 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         priority=1,
         rate_limit_rpm=None,
     ),
-    # Тир opus вызывается ТОЛЬКО явно по мандату 2026-07-26 - из сессии любого тира,
-    # включая Fable, нужно дотягиваться до opus/sonnet/haiku по сложности задачи.
-    # explicit_only=True держит инвариант анти-эскалации - при model=None провайдер
-    # невидим, поэтому падение sonnet/haiku не уводит молча на самый дорогой тир.
-    # Выбор тира - за вызывающим, а не за фоллбэком.
-    ProviderConfig(
-        name="claude-cli-opus",
-        base_url="",
-        api_key_env="",
-        default_model="claude-opus-5",
-        models=["claude-opus-5"],
-        format="claude-cli",
-        requires_key=False,
-        priority=5,
-        rate_limit_rpm=None,
-        explicit_only=True,
-    ),
     ProviderConfig(
         name="ollama-local",
         base_url="http://localhost:11434",
@@ -275,6 +258,27 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         format="anthropic",
         priority=3,
         rate_limit_rpm=50,
+    ),
+    # Тир opus вызывается ТОЛЬКО явно по мандату 2026-07-26 - из сессии любого тира,
+    # включая Fable, нужно дотягиваться до opus/sonnet/haiku по сложности задачи.
+    # explicit_only=True держит инвариант анти-эскалации - при model=None провайдер
+    # невидим, поэтому падение sonnet/haiku не уводит молча на самый дорогой тир.
+    # Выбор тира - за вызывающим, а не за фоллбэком.
+    # Объявлен ПОСЛЕДНИМ (2026-07-26): порядок объявления обязан совпадать с priority —
+    # инвариант читаемости, который пинит test_provider_priority_order. Функционально
+    # порядок не значим (get_available_providers сортирует по priority), но вклинивание
+    # priority=5 между 1 и 2 краснило тест, а он не собирался НИ ОДНИМ CI-гейтом.
+    ProviderConfig(
+        name="claude-cli-opus",
+        base_url="",
+        api_key_env="",
+        default_model="claude-opus-5",
+        models=["claude-opus-5"],
+        format="claude-cli",
+        requires_key=False,
+        priority=5,
+        rate_limit_rpm=None,
+        explicit_only=True,
     ),
 ]
 
@@ -327,6 +331,9 @@ class LLMRotationService:
         if self._settings.persist_adaptive:
             self._scorer.load(self._settings.adaptive_data_path)
             self._budget.load(self._settings.budget_data_path)
+        # Гейт одновременных спавнов claude-cli — см. _cli_spawn_gate()
+        self._cli_sem: asyncio.Semaphore | None = None
+        self._cli_sem_loop: asyncio.AbstractEventLoop | None = None
         self._session: aiohttp.ClientSession | None = None
         self._health_task: asyncio.Task | None = None
 
@@ -712,6 +719,30 @@ class LLMRotationService:
             },
         }
 
+    def _cli_spawn_gate(self) -> asyncio.Semaphore:
+        """Семафор на ОДНОВРЕМЕННЫЕ спавны claude-cli (2026-07-26).
+
+        Контроль стоит в точке спавна, а не на уровне батча, потому что на уровне батча
+        он был fail-open: `resolved_provider` там — это ПРЕДПОЧТЕНИЕ, а исполнителя
+        выбирает ротация. Живой сценарий (находка ревьюера): `preferred_provider=
+        "ollama-local"` для дешёвого массового батча + недоступный ollama на 11434 →
+        фоллбэк на claude-cli-sonnet → 6 параллельных ПОЛНЫХ Claude Code, то есть ровно
+        инцидент 2026-07-26 16:51, против которого гард и писался. Симметрично не
+        клемпился и неизвестный `preferred_provider` (state=None).
+
+        В точке спавна инвариант «не больше N одновременных Claude Code» держится при
+        ЛЮБОМ маршруте, а общая параллельность батча (LLM_ROTATION_BATCH_CONCURRENCY=6)
+        остаётся живой для дешёвых провайдеров — иначе она была бы декоративной.
+
+        Семафор пересоздаётся при смене event loop: сервис — процессный синглтон
+        (`get_service()`), а тесты гоняют каждый кейс в своём `asyncio.run`.
+        """
+        loop = asyncio.get_running_loop()
+        if self._cli_sem is None or self._cli_sem_loop is not loop:
+            self._cli_sem = asyncio.Semaphore(max(1, self._settings.batch_cli_concurrency))
+            self._cli_sem_loop = loop
+        return self._cli_sem
+
     async def _call_provider(
         self,
         state: ProviderState,
@@ -734,9 +765,12 @@ class LLMRotationService:
                 state, prompt, system_prompt, model, temperature, max_tokens, timeout
             )
         elif state.config.format == "claude-cli":
-            data = await self._make_request_claude_cli(
-                state, prompt, system_prompt, model, temperature, max_tokens, timeout
-            )
+            # Гейт спавнов: каждый такой вызов = полный второй Claude Code (~2.8 ГБ
+            # commit). Удерживается всё время запроса — см. _cli_spawn_gate().
+            async with self._cli_spawn_gate():
+                data = await self._make_request_claude_cli(
+                    state, prompt, system_prompt, model, temperature, max_tokens, timeout
+                )
         else:
             data = await self._make_request_openai(
                 state, prompt, system_prompt, model, temperature, max_tokens, timeout
@@ -1262,25 +1296,12 @@ class LLMRotationService:
         )
         effective_concurrency = max(1, effective_concurrency)
 
-        # Каждый вызов claude-cli спавнит ПОЛНЫЙ второй Claude Code (своя сессия +
-        # цепочка хуков, ~35 python-процессов, ~2.8 ГБ commit) — 6 параллельных
-        # обрывают текущую сессию по нехватке commit-памяти (инцидент 2026-07-26 16:51).
-        # Дешёвые провайдеры (ollama/HTTP) этим потолком не задеты; клемп только для
-        # claude-cli и обязан быть громким, а не тихой подменой значения.
-        provider_state = self._providers.get(resolved_provider)
-        if provider_state is not None and provider_state.config.format == "claude-cli":
-            cli_cap = max(1, self._settings.batch_cli_concurrency)
-            if effective_concurrency > cli_cap:
-                logger.warning(
-                    "batch_complete: concurrency %d exceeds claude-cli cap %d for "
-                    "provider %r; clamping to avoid commit-memory exhaustion "
-                    "(override via LLM_ROTATION_BATCH_CLI_CONCURRENCY)",
-                    effective_concurrency,
-                    cli_cap,
-                    resolved_provider,
-                )
-                effective_concurrency = cli_cap
-
+        # Спавны claude-cli ограничены НЕ здесь, а в точке спавна (_cli_spawn_gate).
+        # Здесь известен лишь ПРЕДПОЧИТАЕМЫЙ провайдер, а исполнителя выбирает ротация,
+        # поэтому клемп по нему был fail-open: preferred="ollama-local" при лежащем
+        # ollama → фоллбэк на claude-cli → 6 полных Claude Code, ровно инцидент
+        # 2026-07-26 16:51. На этом уровне остаётся только общая параллельность батча —
+        # она и должна быть высокой для дешёвых провайдеров.
         sem = asyncio.Semaphore(effective_concurrency)
 
         logger.info(
@@ -1322,10 +1343,43 @@ class LLMRotationService:
                     # ProviderState.record_error; not double-counted here.
                     raise
 
-        results = await asyncio.gather(
-            *(_one(p) for p in prompts),
-            return_exceptions=return_exceptions,
-        )
+        # Агрегатный дедлайн батча (2026-07-26, находка ревьюера Р2). total_budget_seconds
+        # ограничивает ОДИН complete(), а батч — это ceil(N/concurrency) волн: на claude-cli
+        # (25-150с) уже N≈10-15 выходит за клиентское окно 300с. Голый gather отдаёт
+        # результаты только целиком, поэтому обрыв клиентом выбрасывал ВСЮ выполненную
+        # работу. Теперь по истечении бюджета невыполненные снимаются, а готовые
+        # возвращаются — частичный результат честнее пустого.
+        batch_budget = max(1, int(self._settings.batch_budget_seconds))
+        tasks = [asyncio.ensure_future(_one(p)) for p in prompts]
+        _, pending = await asyncio.wait(tasks, timeout=batch_budget)
+        if pending:
+            for task in pending:
+                task.cancel()
+            await asyncio.gather(*pending, return_exceptions=True)
+            logger.warning(
+                "[BATCH] бюджет %dс исчерпан: %d из %d промптов сняты недовыполненными "
+                "(LLM_ROTATION_BATCH_BUDGET_SECONDS)",
+                batch_budget,
+                len(pending),
+                len(prompts),
+            )
+
+        results: list[dict[str, Any] | BaseException] = []
+        for task in tasks:
+            # Порядок проверок важен: у снятой задачи .exception() сам роняет
+            # CancelledError, поэтому отменённые распознаём первыми.
+            if task.cancelled():
+                exc: BaseException = TimeoutError(
+                    f"batch budget {batch_budget}s exhausted before this prompt completed"
+                )
+            else:
+                exc = task.exception()  # type: ignore[assignment]
+            if exc is None:
+                results.append(task.result())
+                continue
+            if not return_exceptions:
+                raise exc
+            results.append(exc)
 
         # Diagnostics: log per-provider success rate after batch.
         n_ok = sum(1 for r in results if not isinstance(r, BaseException))

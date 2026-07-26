@@ -51,6 +51,11 @@ if os.environ.get("LLM_ROTATION_TEST_ISOLATION_DISABLE") != "1":
     os.environ["LLM_ROTATION_COMPLETIONS_LOG"] = str(_llm_iso_root / "completions.jsonl")
     os.environ["LLM_ROTATION_ADAPTIVE_DATA_PATH"] = str(_llm_iso_root / "adaptive.json")
     os.environ["LLM_ROTATION_BUDGET_DATA_PATH"] = str(_llm_iso_root / "budget.json")
+    # Четвёртый сток (2026-07-26): путь состояния adaptive-concurrency был захардкожен
+    # и мимо изоляции — тест ветки 429/5xx подкрутил бы боевую конкурентность.
+    os.environ["LLM_ROTATION_ADAPTIVE_CONCURRENCY_PATH"] = str(
+        _llm_iso_root / "adaptive-concurrency.json"
+    )
 
 
 # =============================================================================

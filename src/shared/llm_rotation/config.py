@@ -57,6 +57,14 @@ class LLMRotationSettings(BaseSettings):
     # не задеты. Поднимать осознанно, глядя на `\Memory\Committed Bytes`.
     batch_cli_concurrency: int = 3
 
+    # Агрегатный бюджет ВСЕГО батча (2026-07-26, находка ревьюера Р2). total_budget_seconds
+    # ограничивает ОДИН complete(), а батч — это ceil(N/concurrency) волн: при потолке
+    # claude-cli=3 и реальных 25-150с на вызов уже N≈10-15 выходит за клиентское окно 300с.
+    # Результаты отдаются только после сбора, поэтому обрыв клиентом выбрасывал бы ВСЮ
+    # выполненную работу. Теперь по истечении бюджета невыполненные снимаются, а готовые
+    # возвращаются с пометкой — частичный результат честнее пустого.
+    batch_budget_seconds: int = 250
+
     # Circuit Breaker
     cb_fail_threshold: int = 3
     cb_success_threshold: int = 1
