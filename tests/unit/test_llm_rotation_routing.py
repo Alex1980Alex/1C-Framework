@@ -97,9 +97,13 @@ def test_resolver_rejects_foreign_models():
 
 
 def test_default_providers_do_not_escalate_tier():
-    """Анти-эскалация: в списках models клод-провайдеров нет opus (живой случай
-    эскалации haiku→opus в логе). Под строгим совпадением тира (2026-07-26) это же
-    означает, что model='opus' не исполняет НИКТО — см. test_opus_not_callable_*."""
+    """Анти-эскалация: в списках models клод-провайдеров младших тиров нет opus
+    (живой случай эскалации haiku→opus в логе).
+
+    С 2026-07-26 тир opus ЗАВЕДЁН отдельным провайдером claude-cli-opus, но с
+    explicit_only=True - вызывается только по явному model и невидим для авто-ротации,
+    см. test_auto_rotation_never_escalates_to_opus. Инвариант этого теста прежний:
+    младший тир не должен уметь исполнять opus САМ."""
     by_name = {c.name: c for c in DEFAULT_PROVIDERS}
     for name in ("claude-cli-sonnet", "claude-cli-haiku"):
         expanded = {m.lower() for m in by_name[name].models}
@@ -446,3 +450,91 @@ def test_first_try_success_is_not_logged_as_retry(tmp_path, monkeypatch):
     assert rec["attempt"] == 1
     assert rec["primary_attempts"] == 1
     assert "primary_retries" not in rec, "имя поля должно означать попытки, а не ретраи"
+
+
+# ── тир opus: вызывается явно, но не участвует в авто-ротации ──────────────────
+#
+# Мандат 2026-07-26: из сессии любого тира (включая Fable) нужно дотягиваться до
+# opus/sonnet/haiku по сложности задачи. Раньше строгое совпадение тира давало на
+# model="opus" честный отказ, потому что провайдера этого тира не существовало.
+# Заводя его, обязаны сохранить исходный инвариант: авто-фоллбэк НЕ эскалирует.
+
+
+def test_opus_alias_points_to_current_tier():
+    """Алиас ведёт на claude-opus-5, а не на предыдущее поколение claude-opus-4-8.
+
+    Устаревший алиас означал бы, что явный model="opus" тихо исполняется на
+    прошлом поколении Opus - подмена тем же классом вранья, что и эскалация.
+    """
+    from src.shared.llm_rotation.service import MODEL_ALIASES
+
+    assert MODEL_ALIASES["opus"] == "claude-opus-5"
+
+
+def test_opus_provider_declared_explicit_only():
+    by_name = {c.name: c for c in DEFAULT_PROVIDERS}
+    opus = by_name["claude-cli-opus"]
+    assert opus.explicit_only is True, "иначе авто-фоллбэк сможет уйти на самый дорогой тир"
+    assert opus.models == ["claude-opus-5"]
+    # свой тир и только свой: чужие модели этот провайдер не исполняет
+    assert resolve_model_for_provider(opus, "opus") == "claude-opus-5"
+    assert resolve_model_for_provider(opus, "sonnet") is None
+
+
+def test_opus_invisible_in_auto_rotation_visible_when_explicit():
+    svc = LLMRotationService(settings=_settings())
+    auto = {s.config.name for s in svc.get_available_providers()}
+    explicit = {s.config.name for s in svc.get_available_providers(model="opus")}
+    assert "claude-cli-opus" not in auto
+    assert "claude-cli-opus" in explicit
+    # чужой явный тир не делает opus-провайдера видимым
+    assert "claude-cli-opus" not in {
+        s.config.name for s in svc.get_available_providers(model="haiku")
+    }
+
+
+def test_explicit_opus_reaches_opus_tier_provider(monkeypatch):
+    """Главный сценарий мандата: model="opus" исполняется провайдером своего тира."""
+    svc = LLMRotationService(settings=_settings())
+    svc._settings.primary_provider = "claude-cli-sonnet"
+    calls: list[tuple[str, str]] = []
+
+    async def fake_call(state, prompt, system_prompt, model, *a, **k):
+        calls.append((state.config.name, model))
+        return {"text": "ok", "provider": state.config.name, "model": model, "response_time": 0.1}
+
+    monkeypatch.setattr(svc, "_call_provider", fake_call)
+    result = _run(svc.complete("hi", model="opus"))
+    assert result["provider"] == "claude-cli-opus"
+    assert calls == [("claude-cli-opus", "claude-opus-5")], (
+        "младшие тиры обязаны скипаться, а не получать opus"
+    )
+
+
+def test_auto_rotation_never_escalates_to_opus(monkeypatch):
+    """Инвариант анти-эскалации: при model=None падение всех младших тиров даёт
+    отказ, а НЕ молчаливый уход на самый дорогой тир."""
+    svc = LLMRotationService(settings=_settings())
+    svc._settings.primary_provider = "claude-cli-sonnet"
+    seen: list[str] = []
+
+    async def failing_call(state, *a, **k):
+        seen.append(state.config.name)
+        if state.config.name == "claude-cli-opus":
+            raise AssertionError("авто-ротация не имеет права дойти до opus")
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(svc, "_call_provider", failing_call)
+    with pytest.raises(RuntimeError):
+        _run(svc.complete("hi"))
+    assert "claude-cli-opus" not in seen
+    assert seen, "остальные провайдеры должны были быть опробованы"
+
+
+def test_explain_route_names_explicit_only_skip():
+    svc = LLMRotationService(settings=_settings())
+    auto = {e["provider"]: e for e in svc.explain_route()["order"]}
+    assert "явному model" in (auto["claude-cli-opus"]["skip_reason"] or "")
+    explicit = {e["provider"]: e for e in svc.explain_route(model="opus")["order"]}
+    assert explicit["claude-cli-opus"]["skip_reason"] is None
+    assert explicit["claude-cli-opus"]["effective_model"] == "claude-opus-5"

@@ -245,8 +245,11 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             for pname, state in service._providers.items():
                 cfg = state.config
                 has_key = bool(os.environ.get(cfg.api_key_env, "")) if cfg.requires_key else True
+                # explicit_only виден в листинге: иначе провайдер выглядит как участник
+                # авто-ротации, хотя доступен только по явному model= своего тира.
+                tier_note = " — ТОЛЬКО по явному model=" if cfg.explicit_only else ""
                 lines.append(
-                    f"**{pname}** (priority {cfg.priority})\n"
+                    f"**{pname}** (priority {cfg.priority}){tier_note}\n"
                     f"  URL: {cfg.base_url}\n"
                     f"  Model: {cfg.default_model}\n"
                     f"  Format: {cfg.format} | Key: {'✅' if has_key else '❌'}\n"

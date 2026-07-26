@@ -55,7 +55,10 @@ def _log_completion(**kwargs) -> None:
 MODEL_ALIASES: dict[str, str] = {
     "haiku": "claude-haiku-4-5",
     "sonnet": "claude-sonnet-5",
-    "opus": "claude-opus-4-8",
+    # claude-opus-5, а не claude-opus-4-8 (2026-07-26): 4.8 - предыдущее поколение
+    # Opus. Алиас обязан указывать на ТЕКУЩИЙ тир, иначе явный model="opus" тихо
+    # исполнялся бы на прошлом поколении.
+    "opus": "claude-opus-5",
 }
 
 
@@ -115,6 +118,10 @@ class ProviderConfig:
     daily_limit: int | None = None
     rate_limit_rpm: int | None = None
     priority: int = 0
+    # Провайдер участвует ТОЛЬКО при явно запрошенной модели своего тира.
+    # При model=None (авто-ротация) он невидим: иначе падение младших тиров молча
+    # эскалировало бы на самый дорогой - ровно то, что закрыл строгий тир 2026-07-26.
+    explicit_only: bool = False
 
 
 @dataclass
@@ -225,6 +232,23 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         priority=1,
         rate_limit_rpm=None,
     ),
+    # Тир opus вызывается ТОЛЬКО явно по мандату 2026-07-26 - из сессии любого тира,
+    # включая Fable, нужно дотягиваться до opus/sonnet/haiku по сложности задачи.
+    # explicit_only=True держит инвариант анти-эскалации - при model=None провайдер
+    # невидим, поэтому падение sonnet/haiku не уводит молча на самый дорогой тир.
+    # Выбор тира - за вызывающим, а не за фоллбэком.
+    ProviderConfig(
+        name="claude-cli-opus",
+        base_url="",
+        api_key_env="",
+        default_model="claude-opus-5",
+        models=["claude-opus-5"],
+        format="claude-cli",
+        requires_key=False,
+        priority=5,
+        rate_limit_rpm=None,
+        explicit_only=True,
+    ),
     ProviderConfig(
         name="ollama-local",
         base_url="http://localhost:11434",
@@ -316,8 +340,12 @@ class LLMRotationService:
             self._session = aiohttp.ClientSession()
         return self._session
 
-    def get_available_providers(self) -> list[ProviderState]:
-        """Return list of available providers sorted by priority."""
+    def get_available_providers(self, model: str | None = None) -> list[ProviderState]:
+        """Return list of available providers sorted by priority.
+
+        `model` нужен для explicit_only-провайдеров: без явно запрошенной модели их
+        тира они невидимы, чтобы авто-фоллбэк не эскалировал на дорогой тир.
+        """
         available = []
         for state in self._providers.values():
             if not state.is_available():
@@ -326,14 +354,20 @@ class LLMRotationService:
                 api_key = os.environ.get(state.config.api_key_env, "")
                 if not api_key:
                     continue
+            if state.config.explicit_only and (
+                model is None or resolve_model_for_provider(state.config, model) is None
+            ):
+                continue
             available.append(state)
         # Check daily budget auto-reset
         self._budget.check_daily_reset()
         return sorted(available, key=lambda s: s.config.priority)
 
-    def get_best_provider(self, exclude: list[str] | None = None) -> ProviderState | None:
+    def get_best_provider(
+        self, exclude: list[str] | None = None, model: str | None = None
+    ) -> ProviderState | None:
         """Select the best available provider, optionally excluding names."""
-        available = self.get_available_providers()
+        available = self.get_available_providers(model=model)
         if exclude:
             available = [s for s in available if s.config.name not in exclude]
         if not available:
@@ -569,13 +603,10 @@ class LLMRotationService:
             ) from e
 
         target_alias = (model or state.config.default_model).lower()
-        # Map short aliases to full model names; pass through if already full.
-        alias_map = {
-            "haiku": "claude-haiku-4-5",
-            "sonnet": "claude-sonnet-5",
-            "opus": "claude-opus-4-8",
-        }
-        full_model = alias_map.get(target_alias, target_alias)
+        # Единая карта модуля, а не локальная копия (2026-07-26): дубль с теми же
+        # ключами разъезжается при первом же обновлении тира - ровно это и случилось
+        # с opus. Пробрасываем полное имя как есть, если алиас неизвестен.
+        full_model = MODEL_ALIASES.get(target_alias, target_alias)
 
         # max_turns=3: Claude Code CLI in headless mode is agentic by default
         # and may use 1-2 tool-use turns before responding. max_turns=1 fails
@@ -896,16 +927,27 @@ class LLMRotationService:
                 tried.append(primary_name)
 
         # --- Phase 2: Fallback rotation with model-level failover ---
-        for _ in range(self._settings.max_retries):
+        # Счётчик считает ПОПЫТКИ, а не итерации (2026-07-26): скип по несовместимости
+        # модели тратил единицу max_retries, поэтому провайдер нужного тира с низким
+        # приоритетом мог не получить очереди вовсе (живой случай: model="opus" при
+        # priority=5 - три скипа съедали бюджет до него). Цикл завершается по growing
+        # tried: get_best_provider(exclude=tried) рано или поздно вернёт None.
+        rotations = 0
+        while rotations < self._settings.max_retries:
             if _remaining(deadline) < 8:
                 failures.append(f"бюджет {budget:.0f}s исчерпан до завершения ротации")
                 break
+            # model прокидывается в выбор (2026-07-26): без него explicit_only-провайдер
+            # отфильтровывался бы и при ЯВНО запрошенной модели своего тира, то есть
+            # model="opus" не доходил бы до claude-cli-opus никогда.
+            # preferred_provider по имени - осознанный обход фильтра: вызывающий назвал
+            # провайдера прямо, это не молчаливая эскалация.
             if preferred_provider and preferred_provider in self._providers:
                 state = self._providers[preferred_provider]
                 if not state.is_available() or preferred_provider in tried:
-                    state = self.get_best_provider(exclude=tried)
+                    state = self.get_best_provider(exclude=tried, model=model)
             else:
-                state = self.get_best_provider(exclude=tried)
+                state = self.get_best_provider(exclude=tried, model=model)
 
             if state is None:
                 break
@@ -918,7 +960,9 @@ class LLMRotationService:
             resolved = resolve_model_for_provider(state.config, model)
             if model and resolved is None:
                 failures.append(f"{provider_name}: не исполняет model={model} (skip)")
-                continue
+                continue  # НЕ инкрементим rotations: скип - не попытка
+
+            rotations += 1
 
             # Rate limit check: wait if needed
             if self._settings.rate_limiting_enabled:
@@ -1069,6 +1113,8 @@ class LLMRotationService:
             skip = None
             if cfg.requires_key and not os.environ.get(cfg.api_key_env, ""):
                 skip = f"нет ключа {cfg.api_key_env}"
+            elif cfg.explicit_only and (model is None or resolved is None):
+                skip = f"только по явному model={cfg.default_model} (вне авто-ротации)"
             elif not state.is_available():
                 skip = f"недоступен ({state.status.value}, cb={state.circuit_breaker.state.value})"
             elif model and resolved is None:
@@ -1090,7 +1136,9 @@ class LLMRotationService:
             order.append(_entry(self._providers[primary_name], "1-force-primary"))
         seen = {e["provider"] for e in order}
         # Phase 2 в предсказанном порядке сортировки get_best_provider
-        remaining = [s for s in self.get_available_providers() if s.config.name not in seen]
+        remaining = [
+            s for s in self.get_available_providers(model=model) if s.config.name not in seen
+        ]
 
         def sort_key(s: ProviderState) -> tuple:
             adaptive = self._scorer.score(s.config.name) if self._settings.adaptive_routing else 0.5
