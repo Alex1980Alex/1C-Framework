@@ -1262,6 +1262,25 @@ class LLMRotationService:
         )
         effective_concurrency = max(1, effective_concurrency)
 
+        # Каждый вызов claude-cli спавнит ПОЛНЫЙ второй Claude Code (своя сессия +
+        # цепочка хуков, ~35 python-процессов, ~2.8 ГБ commit) — 6 параллельных
+        # обрывают текущую сессию по нехватке commit-памяти (инцидент 2026-07-26 16:51).
+        # Дешёвые провайдеры (ollama/HTTP) этим потолком не задеты; клемп только для
+        # claude-cli и обязан быть громким, а не тихой подменой значения.
+        provider_state = self._providers.get(resolved_provider)
+        if provider_state is not None and provider_state.config.format == "claude-cli":
+            cli_cap = max(1, self._settings.batch_cli_concurrency)
+            if effective_concurrency > cli_cap:
+                logger.warning(
+                    "batch_complete: concurrency %d exceeds claude-cli cap %d for "
+                    "provider %r; clamping to avoid commit-memory exhaustion "
+                    "(override via LLM_ROTATION_BATCH_CLI_CONCURRENCY)",
+                    effective_concurrency,
+                    cli_cap,
+                    resolved_provider,
+                )
+                effective_concurrency = cli_cap
+
         sem = asyncio.Semaphore(effective_concurrency)
 
         logger.info(
@@ -1282,6 +1301,7 @@ class LLMRotationService:
                         max_tokens=max_tokens,
                         timeout=timeout,
                         preferred_provider=preferred_provider,
+                        model=model,
                     )
                     elapsed = time.monotonic() - t0
                     # Record latency signal for adaptive throttling.
