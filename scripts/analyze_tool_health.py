@@ -1088,6 +1088,39 @@ def render_md(health: dict, window_days: int) -> str:
         except Exception:
             pass
 
+    # ── J-P2 (260725): семантический слой — вердикты LLM-судьи (ADVISORY) ──
+    judge = health.get("llm_judge") or {}
+    if judge.get("tools"):
+        lines += [
+            "## Семантика (LLM-judge, advisory)",
+            "",
+            "| Инструмент | Оценено | arg-correctness | task-completion | Расхождение с rule |",
+            "|---|---|---|---|---|",
+        ]
+        for tool, v in sorted(judge["tools"].items(), key=lambda kv: kv[1]["median_task"]):
+            mism = "⚠ да" if v.get("mismatch") else "—"
+            lines.append(
+                f"| `{tool}` | {v['scored']} | {v['median_arg']:.2f} | "
+                f"{v['median_task']:.2f} | {mism} |"
+            )
+        lines += [
+            "",
+            "> ⚠ Расхождение = rule-слой считает инструмент здоровым, а судья ставит "
+            "task-completion < 0.5 при ≥3 оценках: вызов технически успешен, но цели не достигает "
+            "(классика — запрос с неверным именем поля возвращает `ok=true` и пустой результат).",
+            "> **Вердикты broken/degraded этим НЕ меняются** — судья даёт вторую сигнатуру; "
+            "решение о промоуте принимается вручную по валидатору (J-P3).",
+            "",
+        ]
+    elif judge.get("content_disabled"):
+        lines += [
+            "## Семантика (LLM-judge, advisory)",
+            "",
+            f"> Судья не работал: {judge['content_disabled']}",
+            "> Это НЕ «нарушений нет» — семантический слой просто выключен.",
+            "",
+        ]
+
     # ── rule-слой P2.2: эффективность per-server (Tool Success Rate + step efficiency) ──
     servers = health.get("servers") or {}
     active_servers = {s: v for s, v in servers.items() if v.get("calls", 0) > 0}
@@ -1165,6 +1198,85 @@ def render_md(health: dict, window_days: int) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _median(values: list[float]) -> float:
+    """Медиана без statistics-импорта (stdlib-контракт файла)."""
+    if not values:
+        return 0.0
+    s = sorted(values)
+    mid = len(s) // 2
+    return s[mid] if len(s) % 2 else (s[mid - 1] + s[mid]) / 2
+
+
+def read_judge_verdicts(
+    now: datetime,
+    window_days: int,
+    tools: dict | None = None,
+    path: Path | None = None,
+) -> dict:
+    """J-P2: агрегировать вердикты LLM-судьи за окно (advisory, вердикты НЕ трогает).
+
+    Вход — `data/reports/tools/llm-judge.jsonl` (append-история прогонов J-P1).
+    Маркер `content_disabled` НЕ считается «нарушений нет»: он поднимается в отчёт
+    отдельной строкой, иначе выключенный слой выглядел бы как чистый.
+
+    Возвращает `{"tools": {tool: {scored, median_arg, median_task, mismatch}},
+    "content_disabled": <причина|"">}`.
+    """
+    src = path or (REPORTS / "llm-judge.jsonl")
+    if not src.exists():
+        return {}
+    cutoff = _to_naive_local(now) - timedelta(days=window_days)
+    per_tool: dict[str, list[tuple[float, float]]] = {}
+    disabled_reason = ""
+    for ln in src.read_text(encoding="utf-8", errors="replace").splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        try:
+            rec = json.loads(ln)
+        except ValueError:
+            continue
+        try:
+            ts = _to_naive_local(datetime.fromisoformat(str(rec.get("ts", ""))))
+        except (TypeError, ValueError):
+            continue
+        if ts < cutoff:
+            continue
+        if rec.get("status") == "content_disabled":
+            disabled_reason = str(rec.get("reason", "источник контента выключен"))
+            continue
+        if rec.get("status") != "scored":
+            continue
+        tool = str(rec.get("tool") or "")
+        arg, task = rec.get("argument_correctness"), rec.get("task_completion")
+        if not tool or arg is None or task is None:
+            continue
+        try:
+            per_tool.setdefault(tool, []).append((float(arg), float(task)))
+        except (TypeError, ValueError):
+            continue
+
+    rule = tools or {}
+    out: dict[str, dict] = {}
+    for tool, pairs in per_tool.items():
+        med_task = _median([p[1] for p in pairs])
+        # Расхождение — только при статистической опоре (≥3 оценки) И when rule молчит:
+        # ровно тот класс, что правила увидеть не могут (успех без достижения цели).
+        rule_verdict = (rule.get(tool) or {}).get("verdict", "")
+        out[tool] = {
+            "scored": len(pairs),
+            "median_arg": _median([p[0] for p in pairs]),
+            "median_task": med_task,
+            "mismatch": len(pairs) >= 3 and med_task < 0.5 and rule_verdict in ("healthy", ""),
+        }
+    result: dict = {}
+    if out:
+        result["tools"] = out
+    if disabled_reason and not out:
+        result["content_disabled"] = disabled_reason
+    return result
+
+
 def run(window_days: int = 14, now: datetime | None = None, json_only: bool = False) -> dict:
     """Полный прогон: прочитать окно → вердикты → записать отчёты + verdicts.jsonl + baseline."""
     now = now or datetime.now()
@@ -1194,6 +1306,12 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
 
     # N-P1.2: тренд из истории verdicts.jsonl (переходы broken↔healthy за 30д)
     health["trend"] = verdict_trend(now, 30, read_verdicts(REPORTS / "verdicts.jsonl"))
+    # J-P2 (260725): семантический слой поверх rule-вердиктов. ADVISORY — читается
+    # ПОСЛЕ compute_health и вердикты не переписывает (инвариант parity-harness).
+    try:
+        health["llm_judge"] = read_judge_verdicts(now, window_days, health.get("tools"))
+    except Exception:
+        health["llm_judge"] = {}  # судья никогда не роняет rule-отчёт
 
     # H-P3.2 (260718): cross-check нативного OTel ↔ hook-unpaired-Pre (FP/FN детектора).
     # Graceful: нет data/otel-сырца / модуля → секции нет, поведение как раньше.
@@ -1251,6 +1369,7 @@ def run(window_days: int = 14, now: datetime | None = None, json_only: bool = Fa
         },
         "journal_failures": health.get("journal_failures", []),
         "trend": health.get("trend", {}),  # N-P1.2: переходы broken↔healthy за 30д
+        "llm_judge": health.get("llm_judge", {}),  # J-P2: семантика (advisory, не вердикт)
         "counts": {
             v: sum(1 for s in health["tools"].values() if s["verdict"] == v) for v in _VERDICT_ORDER
         },
