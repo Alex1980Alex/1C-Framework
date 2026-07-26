@@ -63,13 +63,16 @@ def resolve_model_for_provider(cfg: "ProviderConfig", model: str | None) -> str 
     """Полное имя модели, которое ЭТОТ провайдер может исполнить, или None (несовместим).
 
     None — сигнал вызывающему СКИПНУТЬ провайдера, а не тихо подменить модель.
-    claude-cli/anthropic исполняют любую claude-* модель; остальные (ollama) — только
-    точные имена из своего конфига (регистронезависимо — ревью sonnet 2026-07-26).
+
+    СТРОГОЕ совпадение со СВОИМ набором моделей (default_model + models), одинаково для
+    ВСЕХ форматов. claude-cli технически запускает любую claude-модель, и раньше это
+    разрешалось — из-за чего провайдер с именем claude-cli-haiku исполнял opus (ровно
+    та строка лога, с которой началось расследование эскалации тира). Решение
+    пользователя 2026-07-26: чужой тир не исполняется «за компанию» — чтобы вызывать
+    тир, провайдера этого тира надо ЗАВЕСТИ явно, иначе честный отказ.
     """
     target = model or cfg.default_model
     full = MODEL_ALIASES.get(target.lower(), target)
-    if cfg.format in ("claude-cli", "anthropic"):
-        return full if full.startswith("claude-") else None
     # каноническое имя из конфига, матч регистронезависимый (ревью sonnet 2026-07-26):
     # вернуть пользовательский регистр нельзя — провайдер такой модели не знает
     canon = {
@@ -239,7 +242,10 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         base_url="https://api.anthropic.com",
         api_key_env="ANTHROPIC_API_KEY",
         default_model="claude-sonnet-5",
-        models=["claude-sonnet-5", "claude-haiku-4-5", "claude-opus-4-8"],
+        # Только свой тир (2026-07-26): под строгим совпадением любой лишний элемент здесь
+        # означал бы «этот платный провайдер исполнит и чужой тир» — для opus это молчаливый
+        # расход денег на самой дорогой модели при пустом ANTHROPIC_API_KEY-переключателе.
+        models=["claude-sonnet-5"],
         format="anthropic",
         priority=3,
         rate_limit_rpm=50,
@@ -990,6 +996,33 @@ class LLMRotationService:
         # [names]» не давал понять ни почему упали, ни почему кого-то скипнули
         # (model-несовместимость, бюджет). Диагноз должен читаться из самой ошибки.
         detail = "; ".join(failures[-6:]) or "нет попыток"
+        # Строгое совпадение тира: отделяем «модель никем НЕ ОБЪЯВЛЕНА» от «объявлена, но
+        # провайдер недоступен» (ключ / cooldown / бюджет). По факту скипов судить нельзя:
+        # достаточно одного скипа по модели рядом с закулдауненным провайдером СВОЕГО тира,
+        # чтобы отказ соврал про причину. Отказ обязан называть лечение, иначе читается
+        # как «сервис лежит».
+        if (
+            total_attempts == 0
+            and model
+            and not any(
+                resolve_model_for_provider(st.config, model) for st in self._providers.values()
+            )
+        ):
+            _log_completion(
+                provider="none",
+                model="none",
+                response_time=0,
+                attempt=0,
+                primary_attempts=0,
+                fallback=False,
+                error=f"No provider declares model={model}: {detail}"[:400],
+            )
+            raise RuntimeError(
+                f"Ни один провайдер не объявляет model={model}. Правило строгое: "
+                "совпадение тира - модель исполняет только тот провайдер, у которого "
+                "она своя. Лечение: завести провайдера этого тира явно "
+                f"(DEFAULT_PROVIDERS или аргумент providers=). {detail}"
+            )
         if total_attempts == 0:
             _log_completion(
                 provider="none",

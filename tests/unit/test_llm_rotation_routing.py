@@ -70,11 +70,19 @@ def _cfg(name: str, fmt: str = "claude-cli", priority: int = 0, **kw) -> Provide
 
 
 def test_resolver_alias_and_full_names():
-    cli = _cfg("cli")
+    cli = _cfg("cli")  # свой тир — sonnet
     assert resolve_model_for_provider(cli, None) == "claude-sonnet-5"
     assert resolve_model_for_provider(cli, "sonnet") == "claude-sonnet-5"
-    assert resolve_model_for_provider(cli, "haiku") == "claude-haiku-4-5"
-    assert resolve_model_for_provider(cli, "claude-opus-4-8") == "claude-opus-4-8"
+    assert resolve_model_for_provider(cli, "claude-sonnet-5") == "claude-sonnet-5"
+    # Строгое совпадение тира (решение пользователя 2026-07-26): claude-cli технически
+    # запускает любую claude-модель, но исполнять ЧУЖОЙ тир «за компанию» больше нельзя —
+    # иначе провайдер с именем claude-cli-haiku исполняет opus (живой лог эскалации).
+    assert resolve_model_for_provider(cli, "haiku") is None
+    assert resolve_model_for_provider(cli, "claude-opus-4-8") is None
+    # тир исполняется тем, кто его ОБЪЯВЛЯЕТ
+    haiku = _cfg("cli-haiku", default_model="haiku")
+    assert resolve_model_for_provider(haiku, "haiku") == "claude-haiku-4-5"
+    assert resolve_model_for_provider(haiku, "sonnet") is None
 
 
 def test_resolver_rejects_foreign_models():
@@ -96,6 +104,14 @@ def test_default_providers_do_not_escalate_tier():
         expanded = {m.lower() for m in by_name[name].models}
         assert "opus" not in expanded
         assert not any(m.startswith("claude-opus") for m in expanded)
+
+
+def test_paid_provider_declares_only_its_own_tier():
+    """anthropic-sonnet объявляет только свой тир: под строгим совпадением любой лишний
+    элемент означал бы, что платный провайдер молча исполнит чужой тир — для opus это
+    расход денег на самой дорогой модели."""
+    by_name = {c.name: c for c in DEFAULT_PROVIDERS}
+    assert by_name["anthropic-sonnet"].models == ["claude-sonnet-5"]
 
 
 # ── выбор провайдера ───────────────────────────────────────────────────────────
@@ -190,8 +206,8 @@ def test_explicit_model_not_substituted_on_fallback(monkeypatch):
     (models_to_try не разворачивается в перебор чужих моделей)."""
     svc = _service(
         [
-            _cfg("p0", priority=0),
-            _cfg("p1", priority=1),
+            _cfg("p0", priority=0, default_model="haiku"),
+            _cfg("p1", priority=1, default_model="haiku"),
         ],
         primary_max_retries=1,
     )
@@ -215,6 +231,92 @@ def test_explicit_model_not_substituted_on_fallback(monkeypatch):
     assert calls[0] == ("p0", "claude-haiku-4-5")
     assert calls[-1] == ("p1", "claude-haiku-4-5")  # та же модель, не подмена
     assert result["substituted"] is False
+
+
+def test_explicit_model_routes_to_its_own_tier_provider(monkeypatch):
+    """model='haiku' уходит провайдеру ТИРА haiku, а primary-sonnet скипается.
+
+    До этого запрос haiku исполнял primary claude-cli-sonnet, и имя провайдера в логе
+    расходилось с фактически исполняемой моделью.
+    """
+    svc = _service(
+        [
+            _cfg("claude-cli-sonnet", priority=0),
+            _cfg("claude-cli-haiku", priority=1, default_model="haiku"),
+        ]
+    )
+    svc._settings.primary_provider = "claude-cli-sonnet"
+    calls: list[tuple[str, str]] = []
+
+    async def fake_call(state, prompt, system_prompt, model, temperature, max_tokens, timeout):
+        calls.append((state.config.name, model))
+        return {
+            "provider": state.config.name,
+            "model": model,
+            "text": "ok",
+            "response_time": 0.01,
+            "usage": {},
+        }
+
+    monkeypatch.setattr(svc, "_call_provider", fake_call)
+    result = _run(svc.complete("hi", model="haiku"))
+    assert calls == [("claude-cli-haiku", "claude-haiku-4-5")]
+    assert result["provider"] == "claude-cli-haiku"
+
+
+def test_opus_not_callable_without_opus_tier_provider(monkeypatch):
+    """model='opus' — честный отказ, а НЕ исполнение на провайдере младшего тира.
+
+    Это и есть исходный симптом расследования: в живом логе `provider=claude-cli-haiku,
+    model=claude-opus-4-7`. Отказ обязан называть лечение (завести провайдера тира).
+    """
+    svc = _service(
+        [
+            _cfg("claude-cli-sonnet", priority=0),
+            _cfg("claude-cli-haiku", priority=1, default_model="haiku"),
+        ]
+    )
+    svc._settings.primary_provider = "claude-cli-sonnet"
+
+    async def fake_call(*a, **k):
+        raise AssertionError("провайдер младшего тира не должен получить opus")
+
+    monkeypatch.setattr(svc, "_call_provider", fake_call)
+    with pytest.raises(RuntimeError) as ei:
+        _run(svc.complete("hi", model="opus"))
+    msg = str(ei.value)
+    assert "model=opus" in msg
+    assert "DEFAULT_PROVIDERS" in msg, "отказ должен называть лечение, а не только факт"
+
+
+def test_unavailable_own_tier_does_not_claim_model_undeclared(monkeypatch):
+    """Провайдер нужного тира ЕСТЬ, но недоступен → отказ говорит про доступность,
+    а НЕ «модель никем не объявлена».
+
+    Судить по счётчику скипов нельзя: достаточно одного скипа по модели у чужого тира
+    (здесь ollama) рядом с закулдауненным провайдером своего тира, чтобы сообщение
+    соврало про причину. Поэтому ветка смотрит на ОБЪЯВЛЕНИЕ модели, а не на скипы.
+    """
+    svc = _service(
+        [
+            _cfg("cli-haiku", priority=0, default_model="haiku"),
+            _cfg("ollama", fmt="ollama", priority=1, models=["qwen2.5:7b"]),
+        ]
+    )
+    svc._settings.primary_provider = "cli-haiku"
+    for _ in range(3):  # свой тир объявлен, но провайдер закулдаунен
+        svc._providers["cli-haiku"].record_error("boom")
+    assert not svc._providers["cli-haiku"].is_available()
+
+    async def fake_call(*a, **k):
+        raise AssertionError("недоступный провайдер не должен вызываться")
+
+    monkeypatch.setattr(svc, "_call_provider", fake_call)
+    with pytest.raises(RuntimeError) as ei:
+        _run(svc.complete("hi", model="haiku"))
+    msg = str(ei.value)
+    assert "model=haiku" in msg
+    assert "не объявляет" not in msg, "тир объявлен — врать про объявление нельзя"
 
 
 def test_budget_caps_primary_and_leaves_room_for_fallback(monkeypatch):

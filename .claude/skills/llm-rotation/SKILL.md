@@ -74,11 +74,20 @@ claude-cli-sonnet и anthropic-sonnet прибиты к `claude-sonnet-5` явн
 - **⚠ Per-server timeout**: `.mcp.json` → `llm-rotation.timeout=300000`. Это поле
   **СИЛЬНЕЕ** env `MCP_TOOL_TIMEOUT` — прежние 60000 рвали вызовы на 60с при «живом»
   MCP_TOOL_TIMEOUT=240000. После правки — `/mcp reconnect`.
-- **Model-aware**: `model` фильтрует провайдеров (`resolve_model_for_provider`);
-  несовместимый скипается с причиной, явная модель НЕ подменяется тихо; в ответе
-  `requested_model` + `substituted`. Нет способного провайдера → честная ошибка со сводкой.
-- **Анти-эскалация**: списки `models` клод-провайдеров сужены до своего тира (opus
-  вычеркнут) — фоллбэк не уводит на дорогой тир; явный `model="opus"` остаётся возможным.
+- **Model-aware, строгое совпадение тира** (решение пользователя 2026-07-26):
+  `resolve_model_for_provider` сверяет запрошенную модель со СВОИМ набором провайдера
+  (`default_model` + `models`) — одинаково для всех форматов. claude-cli технически
+  запускает любую claude-модель, но исполнять чужой тир «за компанию» больше нельзя:
+  именно так провайдер `claude-cli-haiku` исполнял opus. Практика:
+  `model="haiku"` → `claude-cli-haiku` (primary-sonnet **скипается**),
+  `model="sonnet"` → `claude-cli-sonnet`,
+  `model="opus"` → **никто** → честный `RuntimeError`, называющий лечение.
+  Чтобы вызывать новый тир — завести провайдера этого тира в `DEFAULT_PROVIDERS`
+  (или передать `providers=`). Явная модель НЕ подменяется тихо; в ответе
+  `requested_model` + `substituted`.
+- **Анти-эскалация**: списки `models` сужены до своего тира у ВСЕХ провайдеров, включая
+  платный `anthropic-sonnet` (`["claude-sonnet-5"]`) — иначе явный opus молча ушёл бы на
+  самый дорогой платный тир.
 - **Priority > adaptive**: скор — только tie-breaker внутри одного приоритета
   (sonnet-first не подрывается; `max_latency` нормализации 30→120с — CLI-спавн 25-150с
   больше не дискриминируется).
