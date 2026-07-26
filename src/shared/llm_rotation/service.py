@@ -1284,10 +1284,11 @@ class LLMRotationService:
         sem = asyncio.Semaphore(effective_concurrency)
 
         logger.info(
-            "[BATCH] %d prompts, concurrency=%d, target=%s",
+            "[BATCH] %d prompts, concurrency=%d, target=%s, model=%s",
             len(prompts),
             effective_concurrency,
             resolved_provider,
+            model or "auto",
         )
 
         async def _one(p: str) -> dict[str, Any]:
