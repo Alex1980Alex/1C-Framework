@@ -117,9 +117,16 @@ def _session_writes_and_start(sid: str) -> tuple[bool, datetime | None]:
     пайплайн в сессии, где ни один файл не записан (git-дерево чистое). Тот же вычет, что
     ``blocked`` в tool-health (N-P4.3): отклонённый вызов не исполнялся ⇒ правки не было.
 
+    Инцидент 2026-07-26 (второй, тот же класс): сессия чистой верификации писала ТОЛЬКО
+    память в ``~/.claude/projects/.../memory/`` — вне корня проекта, git-дерево девственно
+    чистое — и всё равно получала блок. Запись вне репозитория не product-код (пайплайн её
+    не описывает, docs-энфорсеры её не видят), поэтому canonical-строки с ``in_repo: False``
+    пропускаются. Бит пишет ``tool-invocation-logger`` (путь в лог не попадает — контракт
+    приватности ``_args_fingerprint``).
+
     Fail-closed: если canonical-записей в сессии нет вовсе (логгер отключён/не
-    зарегистрирован на инструмент) либо их ``ts`` не парсится — считаем правкой, как
-    раньше. Гейт не должен ослабнуть из-за пробела в телеметрии.
+    зарегистрирован на инструмент), их ``ts`` не парсится либо бит ``in_repo`` отсутствует —
+    считаем правкой, как раньше. Гейт не должен ослабнуть из-за пробела в телеметрии.
     """
     start: datetime | None = None
     canonical: list[tuple[str, datetime]] = []  # (tool, ts) — фактические вызовы
@@ -146,17 +153,29 @@ def _session_writes_and_start(sid: str) -> tuple[bool, datetime | None]:
             if dt is not None:
                 blocks.setdefault(tool, []).append((sid, dt))
         elif o.get("category") == "tool_call":
+            # `in_repo is False` — цель вне корня проекта (память ~/.claude/…, настройки
+            # пользователя): не product-код, пайплайн её не описывает. Строго `is False`:
+            # отсутствие ключа/None/True ⟶ прежнее поведение (fail-closed).
+            outside = o.get("in_repo") is False
             if dt is None:
-                unmatchable = True
+                if not outside:
+                    unmatchable = True
             else:
-                canonical.append((tool, dt))
+                canonical.append((tool, dt, outside))
         else:
             legacy_write = True
     if canonical:
-        had_write = unmatchable or any(
-            not _take_block(blocks.get(tool, []), sid, ts)
-            for tool, ts in sorted(canonical, key=lambda p: p[1])
-        )
+        # Внешние записи участвуют в сопоставлении с блоками, но НЕ являются правкой.
+        # Почему они всё-таки забирают свой блок: block-запись бита `in_repo` не несёт (её
+        # пишет BaseHook-автолог, не tool-logger), поэтому отклонённый гардом ВНЕШНИЙ Write
+        # оставил бы блок бесхозным — и тот «оправдал» бы реальную правку в репозитории,
+        # попавшую в окно BLOCK_MATCH_SEC (ложный allow, находка ревьюера 2026-07-26).
+        # Проход строго хронологический: блок достаётся тому вызову, к которому относится.
+        had_write = unmatchable
+        for tool, ts, outside in sorted(canonical, key=lambda p: p[1]):
+            explained = _take_block(blocks.get(tool, []), sid, ts)
+            if not explained and not outside:
+                had_write = True
     else:
         had_write = legacy_write or unmatchable
     return had_write, start

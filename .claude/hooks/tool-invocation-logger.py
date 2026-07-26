@@ -119,6 +119,40 @@ BUILTIN_TOOLS = frozenset(
 )
 
 
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(_HOOK_DIR))  # .claude/hooks → корень проекта
+
+
+def _target_in_repo(tool_input: object) -> bool | None:
+    """Файловая цель вызова лежит внутри корня проекта? None = неизвестно.
+
+    Отдаём ОДИН БИТ, а не путь: `_args_fingerprint` ниже сознательно хеширует сырьё
+    («пути/секреты не утекают»), и ломать этот контракт ради одного предиката нельзя.
+
+    Зачем: `pipeline-protocol` считает правкой любую canonical Write/Edit-запись, из-за
+    чего сессия, которая ТОЛЬКО пишет память в `~/.claude/projects/.../memory/`, требовала
+    пайплайн при девственно чистом git-дереве (наблюдено 2026-07-26). Запись вне корня —
+    не product-код: пайплайн её не описывает, docs-энфорсеры её не видят.
+
+    Корень берём от расположения хука, НЕ от cwd: у Stop-хука рабочий каталог не гарантирован.
+    Относительный путь трактуем как внутренний (Claude Code шлёт абсолютные; относительный
+    резолвится от корня) — консервативно, в пользу срабатывания гейта.
+    """
+    if not isinstance(tool_input, dict):
+        return None
+    raw = tool_input.get("file_path") or tool_input.get("notebook_path")
+    if not raw or not isinstance(raw, str):
+        return None  # тул без файловой цели (Bash/Read/…) — бит не пишем
+    try:
+        from pathlib import Path
+
+        target = Path(raw)
+        if not target.is_absolute():
+            target = Path(_PROJECT_ROOT) / target
+        return Path(os.path.realpath(target)).is_relative_to(Path(os.path.realpath(_PROJECT_ROOT)))
+    except Exception:
+        return None  # неизвестно → потребитель обязан считать правкой (fail-closed)
+
+
 def _args_fingerprint(tool_input: object) -> str:
     """Стабильный sha1[:12] аргументов вызова → детект retry (тот же args = повтор).
     Хешируем, НЕ логируем сырьё (пути/секреты не утекают)."""
@@ -167,6 +201,7 @@ class ToolInvocationLogger(BaseHook):
                 error_type=("tool_error" if outcome == "error" else ""),
                 args_hash=args_hash,
                 duration_ms=duration_ms,
+                in_repo=_target_in_repo(inp.tool_input),
             )
         except Exception:
             pass  # Logging must never block

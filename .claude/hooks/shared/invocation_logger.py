@@ -168,6 +168,7 @@ def log_invocation(
     args_hash: str = "",  # ADR-022 P1: хеш аргументов вызова → детект retry (повтор идентичного)
     duration_ms: int
     | None = None,  # 260718 H-P0.1: реальная длительность тула из PostToolUse-payload
+    in_repo: bool | None = None,  # 2026-07-26: цель вызова внутри корня проекта? (см. докстринг)
 ) -> None:
     """Log a single hook invocation to JSONL file.
 
@@ -196,6 +197,13 @@ def log_invocation(
                 hooks via shared/run_context.get_run_id(session_id).
         causation_id: CloudEvents extension — id of the event that directly
                       triggered this one (parent in DAG). Empty for roots.
+        in_repo: 2026-07-26 — цель файлового вызова лежит внутри корня проекта?
+            ОДИН БИТ, а не путь: логгер осознанно не пишет сырьё аргументов
+            (`_args_fingerprint`: «пути/секреты не утекают»), а потребителю
+            (`pipeline-protocol`) нужно лишь отличить product-код от записи вовне
+            (память в `~/.claude/...`, пользовательские настройки). None ⟶ ключ не
+            пишется вовсе (тул без файловой цели / не удалось определить), и
+            потребитель обязан трактовать отсутствие fail-closed — как правку.
     """
     try:
         filepath = _get_log_file()
@@ -252,6 +260,10 @@ def log_invocation(
             # Пишется только когда платформа прислала (PostToolUse) — иначе ключа нет
             # (не null-шум), потребитель отличает «не было» от «0мс».
             **({"duration_ms": int(duration_ms)} if duration_ms is not None else {}),
+            # 2026-07-26: цель вызова внутри репозитория? Ключ пишется ТОЛЬКО когда
+            # определён — отсутствие означает «неизвестно», и потребитель трактует
+            # его fail-closed (как правку), а не как «вне репо».
+            **({"in_repo": bool(in_repo)} if in_repo is not None else {}),
             # --- OTel GenAI semconv алиасы (roadmap 260713 P2.1) ---
             # Аддитивно и дублируют плоские поля дословно: будущий OTel-экспорт
             # становится переименованием, существующие jq/DuckDB-запросы не ломаются.
