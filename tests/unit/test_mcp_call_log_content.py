@@ -119,6 +119,46 @@ def test_secret_redacted(mcl, tmp_path, monkeypatch, payload):
     assert "***" in digest
 
 
+@pytest.mark.parametrize(
+    "payload,leak",
+    [
+        # ⚠ Р1 (code-verify): вложенный объект как значение секретного ключа —
+        # regex по тексту обрывался на пробеле и хвост утекал сырым.
+        ({"auth": {"token": "ghp_nested"}}, "ghp_nested"),
+        ({"secret": {"k": "v-inner"}}, "v-inner"),
+        ({"outer": {"inner": {"password": "deep_pw"}}}, "deep_pw"),
+        ({"items": [{"api_key": "in_list"}]}, "in_list"),
+        # Authorization без слова Bearer + альтернативные схемы
+        ("Authorization: opaque-token-xyz", "opaque-token-xyz"),
+        ("Authorization: Basic dXNlcjpwYXNz", "dXNlcjpwYXNz"),
+        # ключи вне прежнего алфавита
+        ({"pwd": "old_pwd"}, "old_pwd"),
+        ({"private_key": "-----BEGINKEY-----"}, "BEGINKEY"),
+        ({"cookie": "session=abc123"}, "abc123"),
+        ({"credentials": "user:pass"}, "user:pass"),
+    ],
+)
+def test_secret_variants_redacted(mcl, tmp_path, monkeypatch, payload, leak):
+    monkeypatch.setenv("MCP_CALL_LOG_CONTENT", "1")
+    mcl.log_mcp_call("srv", "t", ok=True, ms=1.0, args=payload)
+    digest = _records(tmp_path)[0]["args_digest"]
+    assert leak not in digest, f"секрет утёк: {digest}"
+
+
+def test_recursive_redaction_keeps_business_data(mcl, tmp_path, monkeypatch):
+    """Чистим ТОЛЬКО секретные ключи: остальное судье нужно видеть."""
+    monkeypatch.setenv("MCP_CALL_LOG_CONTENT", "1")
+    mcl.log_mcp_call(
+        "srv",
+        "execute_query",
+        ok=True,
+        ms=1.0,
+        args={"query": "ВЫБРАТЬ Ссылка ИЗ Документ.Заказ", "auth": {"token": "sk-1"}},
+    )
+    digest = _records(tmp_path)[0]["args_digest"]
+    assert "Документ.Заказ" in digest and "sk-1" not in digest
+
+
 def test_benign_connection_string_survives(mcl, tmp_path, monkeypatch):
     """Строка подключения 1С — не секрет; глушить её нельзя, иначе судья слеп."""
     monkeypatch.setenv("MCP_CALL_LOG_CONTENT", "1")

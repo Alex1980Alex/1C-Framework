@@ -236,6 +236,9 @@ def judge_items_from_mcp_calls(
                     "duration_ms": rec.get("ms"),
                     "source": "mcp-calls",
                     "server": rec.get("server", ""),
+                    # служебные — для честного продвижения курсора (Р3), в вердикт не идут
+                    "_src_file": key,
+                    "_ts": ts,
                 }
             )
         if newest:
@@ -298,6 +301,8 @@ def judge_items_from_otel(
                                 "success": _coerce_bool(succ) if succ is not None else True,
                                 "duration_ms": _coerce_int(attrs.get("duration_ms")),
                                 "source": "otel",
+                                "_src_file": key,
+                                "_ts": ts,
                             }
                         )
         if newest:
@@ -411,19 +416,48 @@ def _append_records(records: list[dict], now: datetime) -> None:
 
 def _collect_items(
     source: str, source_jsonl: Path | None, root: Path | None
-) -> tuple[list[dict], dict[str, str] | None]:
-    """Собрать judge-items по выбранному источнику. Курсор — None для явного jsonl."""
+) -> tuple[list[dict], dict[str, str] | None, list[str]]:
+    """Собрать judge-items по выбранному источнику.
+
+    Возвращает `(items, курсор, ошибки_источников)`. Курсор — None для явного jsonl.
+
+    Каждый адаптер изолирован (Р2): падение одного (нечитаемый файл, отсутствующий
+    `otel_crosscheck`) НЕ должно уносить уже собранное вторым и терять курсор —
+    иначе один сбойный источник тихо выключает весь слой.
+    """
+    errors: list[str] = []
     if source == "jsonl":
-        return (load_items_from_jsonl(source_jsonl) if source_jsonl else []), None
+        return (load_items_from_jsonl(source_jsonl) if source_jsonl else []), None, errors
+
     cursor = _load_cursor()
-    if source == "mcp-calls":
-        return judge_items_from_mcp_calls(root, cursor)
-    if source == "otel":
-        return judge_items_from_otel(root, cursor)
-    # auto: оба лога, курсор общий (ключи — имена файлов, не пересекаются)
-    mcp_items, cur = judge_items_from_mcp_calls(root, cursor)
-    otel_items, cur = judge_items_from_otel(root, cur)
-    return mcp_items + otel_items, cur
+    items: list[dict] = []
+    adapters = {
+        "mcp-calls": judge_items_from_mcp_calls,
+        "otel": judge_items_from_otel,
+    }
+    wanted = [source] if source in adapters else list(adapters)
+    for name in wanted:
+        try:
+            got, cursor = adapters[name](root, cursor)
+            items += got
+        except Exception as exc:  # источник упал — фиксируем, но прогон продолжаем
+            errors.append(f"{name}: {type(exc).__name__}: {exc}")
+    return items, cursor, errors
+
+
+def _cursor_from_items(items: list[dict]) -> dict[str, str]:
+    """Курсор по фактически обработанным item'ам: `{файл: max(ts)}` (Р3).
+
+    Item'ы без служебных полей (явный jsonl-источник) в курсор не попадают.
+    """
+    out: dict[str, str] = {}
+    for it in items:
+        key, ts = it.get("_src_file"), it.get("_ts")
+        if not key or not ts:
+            continue
+        if ts > out.get(str(key), ""):
+            out[str(key)] = str(ts)
+    return out
 
 
 def _no_content_reason(source: str) -> str:
@@ -454,12 +488,20 @@ def run(
     «судья ничего не нашёл» и «судья не работал» ([[reference-cadence-dry-run-silent-noop]]).
     """
     now = now or datetime.now()
-    items, cursor = _collect_items(source, source_jsonl, root)
+    items, cursor, src_errors = _collect_items(source, source_jsonl, root)
+    # Р2: упавший источник виден отдельной записью — он НЕ равен «нечего судить».
+    if src_errors:
+        _append_records([{"status": "source_error", "source": source, "errors": src_errors}], now)
     if not items:
         reason = f"нет judge-items из источника «{source}» — {_no_content_reason(source)}"
         _append_records([{"status": "content_disabled", "source": source, "reason": reason}], now)
-        return {"available": False, "source": source, "reason": reason}
+        return {"available": False, "source": source, "reason": reason, "source_errors": src_errors}
     sample = stratified_sample(items, rate=rate, cap=cap)
+    # Р3: курсор двигаем ТОЛЬКО по вызовам, реально дошедшим до судьи. Адаптер
+    # прочитал весь файл, но `cap` срезает хвост — продвижение к max(ts) файла
+    # «съело» бы срезанные вызовы (включая приоритетные провалы) навсегда.
+    if cursor is not None and len(sample) < len(items):
+        cursor = _cursor_from_items(sample)
     fn = judge_fn or _default_judge_fn
     scored = judge_items(sample, fn)
     _append_records(scored, now)
@@ -517,7 +559,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"llm-judge: Langfuse scores отправлено {sent}")
     print(
         f"llm-judge: items={res['total_items']} sampled={res['sampled']} "
-        f"scored={res['scored']} skipped={res['skipped']} errors={res['errors']} → {JUDGE_OUT}"
+        f"scored={res['scored']} skipped={res['skipped']} errors={res['errors']} → {_judge_out()}"
     )
     return 0
 

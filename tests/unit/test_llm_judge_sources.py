@@ -298,6 +298,90 @@ def test_cursor_not_advanced_when_run_fails(tmp_path, monkeypatch):
     assert lj._load_cursor() == {}
 
 
+# ── Р2/Р3 (code-verify): изоляция источников и честный курсор ─────────────────
+
+
+def test_source_error_does_not_lose_other_source(tmp_path, monkeypatch):
+    """Р2: падение одного адаптера не должно уносить собранное вторым."""
+    _write_mcp_log(
+        tmp_path,
+        "mcp-x-calls.jsonl",
+        [
+            {
+                "ts": "2026-07-25T10:00:00.000",
+                "server": "x",
+                "tool": "t",
+                "ok": True,
+                "ms": 1.0,
+                "args_digest": "a",
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        lj,
+        "judge_items_from_otel",
+        lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("otel down")),
+    )
+    res = lj.run(
+        judge_fn=lambda _p: '{"argument_correctness":0.5,"task_completion":0.5}',
+        source="auto",
+        root=tmp_path,
+        rate=1.0,
+    )
+    assert res["available"] is True and res["scored"] == 1, "упавший источник унёс живой"
+    statuses = [r.get("status") for r in _read_out(tmp_path)]
+    assert "source_error" in statuses, "падение источника должно быть видно, а не молчать"
+
+
+def test_cap_does_not_swallow_unjudged_calls(tmp_path):
+    """Р3: срез по cap не должен «съедать» историю — курсор идёт по осуждённым."""
+    records = [
+        {
+            "ts": f"2026-07-25T10:00:{i:02d}.000",
+            "server": "x",
+            "tool": "t",
+            "ok": False,  # провалы берутся всегда → сэмпл упирается в cap
+            "ms": 1.0,
+            "args_digest": f"a{i}",
+        }
+        for i in range(10)
+    ]
+    _write_mcp_log(tmp_path, "mcp-x-calls.jsonl", records)
+    fake = lambda _p: '{"argument_correctness":0.5,"task_completion":0.5}'  # noqa: E731
+
+    first = lj.run(judge_fn=fake, source="mcp-calls", root=tmp_path, cap=3)
+    assert first["scored"] == 3
+    # оставшиеся 7 обязаны дождаться следующего прогона, а не пропасть
+    second = lj.run(judge_fn=fake, source="mcp-calls", root=tmp_path, cap=3)
+    assert second["available"] is True and second["scored"] == 3
+
+
+def test_service_fields_do_not_leak_into_verdict(tmp_path):
+    """Служебные `_src_file`/`_ts` — внутренние, в журнал вердиктов не попадают."""
+    _write_mcp_log(
+        tmp_path,
+        "mcp-x-calls.jsonl",
+        [
+            {
+                "ts": "2026-07-25T10:00:00.000",
+                "server": "x",
+                "tool": "t",
+                "ok": True,
+                "ms": 1.0,
+                "args_digest": "a",
+            }
+        ],
+    )
+    lj.run(
+        judge_fn=lambda _p: '{"argument_correctness":0.5,"task_completion":0.5}',
+        source="mcp-calls",
+        root=tmp_path,
+        rate=1.0,
+    )
+    scored = [r for r in _read_out(tmp_path) if r.get("status") == "scored"]
+    assert scored and "_src_file" not in scored[0] and "_ts" not in scored[0]
+
+
 def test_corrupt_cursor_falls_back_to_full_window(tmp_path):
     (tmp_path / "cursor.json").write_text("{не json", encoding="utf-8")
     assert lj._load_cursor() == {}

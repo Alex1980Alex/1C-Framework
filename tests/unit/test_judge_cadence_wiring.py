@@ -125,3 +125,62 @@ def test_launch_judge_survives_os_error(hook_mod, monkeypatch, tmp_path):
 def test_missing_script_is_graceful(hook_mod, monkeypatch, tmp_path):
     monkeypatch.setattr(hook_mod, "JUDGE_SCRIPT", tmp_path / "нет-такого.py")
     assert hook_mod._launch_judge() is False
+
+
+# ── execute(): проводка на месте ──────────────────────────────────────────────
+# Тесты выше проверяют функции ИЗОЛИРОВАННО — они останутся зелёными, если удалить
+# вызовы из execute() (дыра, найденная code-verify, Р4). Здесь пинится сама проводка.
+
+
+def _fire_cadence(hook_mod, monkeypatch, tmp_path, state: dict, calls: dict):
+    """Прогнать execute() на пороге фаера, подменив ввод-вывод состояния и спавны."""
+    monkeypatch.setattr(hook_mod, "_load_state", lambda: dict(state))
+    monkeypatch.setattr(hook_mod, "_save_state", lambda s: calls.setdefault("saved", []).append(s))
+    monkeypatch.setattr(hook_mod, "_launch", lambda apply: True)
+    monkeypatch.setattr(hook_mod, "_check_regressions", lambda *a, **k: None)
+    monkeypatch.setattr(
+        hook_mod,
+        "_launch_judge",
+        lambda: calls.setdefault("judge", 0) or calls.update(judge=1) or True,
+    )
+    monkeypatch.setenv("MEMORY_MAINTENANCE_EVERY", "2")
+    monkeypatch.delenv("TOOL_LLM_JUDGE_CADENCE_DISABLE", raising=False)
+
+    inp = type("I", (), {"detected_event": "Stop", "session_id": "s-new"})()
+    return hook_mod.MemoryMaintenanceCadence().execute(inp)
+
+
+def test_execute_spawns_judge_and_records_timestamp(hook_mod, monkeypatch, tmp_path):
+    """Фаер каденса + судья due → судья запущен и отметка сохранена."""
+    calls: dict = {}
+    monkeypatch.setattr(hook_mod, "_provider_down", lambda: False)
+    out = _fire_cadence(
+        hook_mod, monkeypatch, tmp_path, {"pending_sessions": ["a"], "last_fire": None}, calls
+    )
+    assert calls.get("judge") == 1, "execute() не вызывает _launch_judge — проводка потеряна"
+    assert any("last_judge" in s for s in calls.get("saved", [])), "отметка last_judge не записана"
+    assert out is not None and "LLM-judge" in out._data.get("systemMessage", "")
+
+
+def test_execute_skips_judge_when_provider_down(hook_mod, monkeypatch, tmp_path):
+    """Провайдер лежит → спавна нет, но пользователь об этом узнаёт (не тишина)."""
+    calls: dict = {}
+    monkeypatch.setattr(hook_mod, "_provider_down", lambda: True)
+    out = _fire_cadence(
+        hook_mod, monkeypatch, tmp_path, {"pending_sessions": ["a"], "last_fire": None}, calls
+    )
+    assert "judge" not in calls
+    assert out is not None and "провайдер недоступен" in out._data.get("systemMessage", "")
+
+
+def test_execute_respects_judge_cooldown(hook_mod, monkeypatch, tmp_path):
+    """Судья отработал час назад → каденс памяти фаерит, судья молчит."""
+    calls: dict = {}
+    monkeypatch.setattr(hook_mod, "_provider_down", lambda: False)
+    state = {
+        "pending_sessions": ["a"],
+        "last_fire": None,
+        "last_judge": datetime.now().isoformat(timespec="seconds"),
+    }
+    _fire_cadence(hook_mod, monkeypatch, tmp_path, state, calls)
+    assert "judge" not in calls

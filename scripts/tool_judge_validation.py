@@ -140,9 +140,10 @@ def validate(
 
     n_reviewed = len(reviewed)
     raw_precision = (len(confirmed) / n_reviewed) if n_reviewed else 0.0
-    corrected = None
-    if tpr is not None and fpr is not None:
-        corrected = _corrected_precision(raw_precision, tpr, fpr)
+    # Калибровка имеет смысл ТОЛЬКО парой: одна половина даёт видимость поправки
+    # при её отсутствии (Р5) — в JSON оказывался {"tpr": .., "fpr": null}.
+    calibrated = tpr is not None and fpr is not None
+    corrected = _corrected_precision(raw_precision, tpr, fpr) if calibrated else None
     effective = corrected if corrected is not None else raw_precision
 
     if n_reviewed < MIN_MISMATCHES:
@@ -183,7 +184,7 @@ def validate(
         "confirmed": len(confirmed),
         "raw_precision": round(raw_precision, 3),
         "corrected_precision": None if corrected is None else round(corrected, 3),
-        "judge_calibration": {"tpr": tpr, "fpr": fpr} if tpr is not None else None,
+        "judge_calibration": {"tpr": tpr, "fpr": fpr} if calibrated else None,
         "threshold": PRECISION_THRESHOLD,
         "min_mismatches": MIN_MISMATCHES,
         "verdict": verdict,

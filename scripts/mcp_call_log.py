@@ -56,14 +56,27 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _CAP_BYTES = 2_000_000
 
 
-# Секреты в аргументах: одно правило покрывает и «k=v», и JSON «"k": "v"» —
-# двойная обработка (отдельный JSON-регекс) только ломала бы кавычки.
-_SECRET_KV_RE = re.compile(
-    r"(?i)((?:token|password|passwd|api[_-]?key|secret)\"?\s*[=:]\s*)"
-    r"(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'|\S+)"
+# ── редакция секретов: два эшелона ────────────────────────────────────────────
+# 1) СТРУКТУРЫ (dict/list) чистятся рекурсивно ПО КЛЮЧАМ до сериализации.
+#    Regex по сериализованному тексту принципиально не ловит вложенный объект как
+#    значение (`"secret": {"k": "v"}`): ветка `\S+` обрывается на пробеле и хвост
+#    `"v"}` утекал бы сырым (найдено code-verify, Р1).
+# 2) СТРОКИ (и сериализованный остаток) — regex, как второй эшелон.
+_SECRET_KEY_RE = re.compile(
+    r"\b(?:token|password|passwd|pwd|api[_-]?key|secret|credentials?|passphrase|"
+    r"private[_-]?key|cookie|session[_-]?key|signature|sig|authorization|auth)\b",
+    re.IGNORECASE,
 )
-_BEARER_RE = re.compile(r"(?i)\bBearer\s+\S+")
+_SECRET_KV_RE = re.compile(
+    r"""(["']?\b(?:token|password|passwd|pwd|api[_-]?key|secret|credentials?|passphrase|"""
+    r"""private[_-]?key|cookie|session[_-]?key)\b["']?\s*[=:]\s*)"""
+    r"""("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\S+)""",
+    re.IGNORECASE,
+)
+_AUTH_HEADER_RE = re.compile(r"(\bauthorization\s*[:=]\s*)(\S+)", re.IGNORECASE)
+_BEARER_RE = re.compile(r"\b(Bearer|Basic|Digest)\s+(\S+)", re.IGNORECASE)
 _CONTENT_CAP_DEFAULT = 800
+_REDACT_MAX_DEPTH = 12  # страховка от самоссылающихся структур
 
 
 def _content_enabled() -> bool:
@@ -79,10 +92,33 @@ def _content_cap() -> int:
         return _CONTENT_CAP_DEFAULT
 
 
+def _redact_struct(value: object, depth: int = 0) -> object:
+    """Рекурсивно заменить значения секретных КЛЮЧЕЙ в dict/list на «***».
+
+    Первый эшелон (Р1): работает по структуре, поэтому закрывает случай, когда
+    секрет — вложенный объект, а не скаляр (`{"secret": {"k": "v"}}`).
+    """
+    if depth >= _REDACT_MAX_DEPTH:
+        return "***[depth]"
+    if isinstance(value, dict):
+        out: dict = {}
+        for k, v in value.items():
+            out[k] = (
+                "***"
+                if isinstance(k, str) and _SECRET_KEY_RE.search(k)
+                else _redact_struct(v, depth + 1)
+            )
+        return out
+    if isinstance(value, (list, tuple)):
+        return [_redact_struct(v, depth + 1) for v in value]
+    return value
+
+
 def _redact(text: str) -> str | None:
-    """Вычищает секреты из строки; fail-closed — при любой ошибке None."""
+    """Вычищает секреты из СТРОКИ (второй эшелон); fail-closed — ошибка → None."""
     try:
-        out = _BEARER_RE.sub("Bearer ***", text)
+        out = _BEARER_RE.sub(lambda m: f"{m.group(1)} ***", text)
+        out = _AUTH_HEADER_RE.sub(lambda m: f"{m.group(1)}***", out)
         return _SECRET_KV_RE.sub(lambda m: f"{m.group(1)}***", out)
     except Exception:
         return None
@@ -91,9 +127,11 @@ def _redact(text: str) -> str | None:
 def _digest(value: object, cap: int) -> str | None:
     """Сериализует, редактирует и усекает значение; fail-closed — None."""
     try:
-        text = (
-            value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
-        )
+        if isinstance(value, str):
+            text = value
+        else:
+            # структуру чистим ПО КЛЮЧАМ до сериализации (эшелон 1), затем строку — regex'ом
+            text = json.dumps(_redact_struct(value), ensure_ascii=False, default=str)
         redacted = _redact(text)
         if redacted is None:
             return None
