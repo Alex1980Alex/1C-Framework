@@ -16,6 +16,7 @@ Updated: 2026-07-17 (cross-process _mutate + os.replace retry — потеря �
 
 import json
 import os
+import sys
 import tempfile
 import threading
 import time
@@ -31,6 +32,22 @@ if _env_state_path:
 else:
     STATE_DIR = Path(__file__).parent.parent.parent / "data"
 STATE_FILE = STATE_DIR / "session-skills.json"
+
+# Лог аномалий записи (2026-07-26). Потеря мутации до сих пор была НЕВИДИМА: _save_state
+# честно ре-райзит, но все вызывающие (наблюдатель, энфорсеры, роутер) глушат исключение
+# `except Exception: pass` — «graceful degradation» ценой того, что класс лечится только
+# фолбэками, а частота неизвестна. Пишем факт в одну точку (_mutate), формат и ротация —
+# по образцу scripts/mcp_call_log.py. Каталог cache gitignored; путь резолвится ПО ВЫЗОВУ
+# (CLAUDE_CACHE_DIR — для тестов/переноса, как в mcp_call_log).
+FAILLOG_NAME = "session-state-failures.jsonl"
+_FAILLOG_CAP_BYTES = 262_144  # аномалий мало: 256КБ хватает на историю, ротация — половина
+
+
+def _faillog_path() -> Path:
+    override = os.environ.get("CLAUDE_CACHE_DIR")
+    # .../.claude/hooks/shared/session_state.py → .../.claude/cache (та же глубина, что STATE_DIR)
+    base = Path(override) if override else Path(__file__).parent.parent.parent / "cache"
+    return base / FAILLOG_NAME
 
 
 class SessionState:
@@ -151,6 +168,13 @@ class SessionState:
         """
         lock_path = str(STATE_FILE) + ".lock"
         fd = None
+        try:
+            # Без каталога O_CREAT отдаёт FileNotFoundError → тихий fail-open на САМОЙ
+            # первой мутации сессии (каталог создавал только _save_state, т.е. позже).
+            # Поймано тестом lock_fail_open-события (2026-07-26).
+            STATE_DIR.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass  # каталог недоступен — ниже честно уйдём в fail-open
         deadline = time.time() + cls._LOCK_WAIT_SEC
         while True:
             try:
@@ -210,19 +234,93 @@ class SessionState:
         return initial
 
     @classmethod
-    def _mutate(cls, mutator) -> None:
+    def _record_anomaly(
+        cls,
+        event: str,
+        op: str,
+        *,
+        error: BaseException | None = None,
+        locked: bool | None = None,
+        session_id: str | None = None,
+    ) -> None:
+        """Дописать строку в лог аномалий записи. НИКОГДА не кидает и не подменяет
+        исходное исключение: диагностика не имеет права стать причиной сбоя.
+
+        Ротация — половина файла при превышении cap (приём scripts/mcp_call_log._rotate).
+        Opt-out: SESSION_STATE_FAILLOG_DISABLE=1.
+        """
+        if os.environ.get("SESSION_STATE_FAILLOG_DISABLE") == "1":
+            return
+        try:
+            path = _faillog_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if path.exists() and path.stat().st_size > _FAILLOG_CAP_BYTES:
+                data = path.read_bytes()[-(_FAILLOG_CAP_BYTES // 2) :]
+                idx = data.find(b"\n")
+                fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=".sstate-", suffix=".tmp")
+                try:
+                    with os.fdopen(fd, "wb") as fh:
+                        fh.write(data[idx + 1 :] if idx != -1 else data)
+                    os.replace(tmp, str(path))
+                except OSError:
+                    if os.path.exists(tmp):
+                        os.unlink(tmp)
+            record = {
+                "ts": datetime.now().isoformat(),
+                "event": event,
+                "op": op,
+                "pid": os.getpid(),
+                "locked": locked,
+                "session_id": session_id,
+                "error_type": type(error).__name__ if error is not None else None,
+                "error": str(error)[:300] if error is not None else None,
+            }
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except Exception:
+            pass  # fail-soft: крошка не важнее операции
+
+    @classmethod
+    def _mutate(cls, mutator, op: str = "") -> None:
         """Единая точка read-modify-write: lock → свежее чтение → mutator → save.
 
         mutator(state) правит dict на месте; возврат False = «изменений нет,
         не сохранять» (кэш всё равно обновляется свежим снапшотом).
+
+        `op` — метка операции для лога аномалий: провал записи здесь ре-райзится (как
+        раньше), но перед этим фиксируется фактом, потому что ВСЕ вызывающие глушат
+        исключение. Дополнительно фиксируется fail-open межпроцессного лока — это ведущий
+        индикатор класса lost-update, тогда как провал записи — запаздывающий.
+
+        Метка не передаётся 13 внутренними вызывающими вручную: пустая → имя вызвавшего
+        classmethod'а из фрейма. Новый мутатор подписывается сам, дрейфа «забыли метку» нет.
         """
-        with cls._lock, cls._ipc_lock():
+        if not op:
+            try:
+                op = sys._getframe(1).f_code.co_name
+            except Exception:  # не-CPython / нет фреймов — метка не критична
+                op = "unknown"
+        with cls._lock, cls._ipc_lock() as locked:
             state = cls._read_disk_fresh()
-            changed = mutator(state)
-            if changed is not False:
-                cls._save_state(state)
-            else:
-                cls._state_cache = state
+            try:
+                changed = mutator(state)
+                if changed is not False:
+                    cls._save_state(state)
+                else:
+                    cls._state_cache = state
+            except Exception as exc:
+                cls._record_anomaly(
+                    "mutation_lost",
+                    op,
+                    error=exc,
+                    locked=locked,
+                    session_id=state.get("session_id"),
+                )
+                raise
+            if not locked:
+                cls._record_anomaly(
+                    "lock_fail_open", op, locked=False, session_id=state.get("session_id")
+                )
 
     @classmethod
     def add_activated_skill(cls, skill_name: str) -> None:

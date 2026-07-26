@@ -233,6 +233,21 @@ def _check_regressions(timeout: float = 8.0) -> str | None:
     return None
 
 
+def _check_state_failures(days: float = 7.0) -> str | None:
+    """Потери мутаций `session_state` за окно → строка `[STATE-WRITE] …`, иначе None.
+
+    Тот же приём, что `_check_regressions` (P1.4): сток без читателя = write-only, а этот
+    лог пишется именно потому, что вызывающие глушат исключение. Читаем ИНЛАЙН без
+    subprocess: файл маленький (аномалии редки), бюджет хука не растёт.
+    """
+    try:
+        from shared.session_state_failures import banner_line
+
+        return banner_line(days)
+    except Exception:
+        return None  # best-effort: каденс не ломаем
+
+
 class MemoryMaintenanceCadence(BaseHook):
     def execute(self, inp: HookInput) -> HookOutput | None:
         if inp.detected_event != "Stop":
@@ -268,6 +283,7 @@ class MemoryMaintenanceCadence(BaseHook):
             # P1.4 (B8): freshness/regression-детектор синхронно (read-only, <1с) —
             # замолчавшие memory-sinks сюрфейсим сразу в баннере каденса.
             regr = _check_regressions()
+            state_fail = _check_state_failures()
             # J-P1: судья на своём cooldown — фаер каденса лишь ПОВОД проверить, не команда.
             judge_note = ""
             if _judge_due(state):
@@ -299,13 +315,23 @@ class MemoryMaintenanceCadence(BaseHook):
                         f"\n⚠ {regr}\n  → sink(s) перестали писать (>7д, observability-регрессия). "
                         f"Проверь writer'ы; отчёт: data/reports/memory/observability-*.md."
                     )
+                if state_fail:
+                    msg += (
+                        f"\n⚠ {state_fail}\n  → запись состояния терялась (вызывающие глушат "
+                        f"исключение; энфорсеры живут на фолбэках). Разбор: "
+                        f"`python .claude/hooks/shared/session_state_failures.py --print`."
+                    )
                 return HookOutput().system_message(msg)
-            # launch не удался, но регрессию всё равно стоит показать
-            if regr:
-                return HookOutput().system_message(
-                    f"[MEMORY-MAINTENANCE] ⚠ {regr} — sink(s) перестали писать (>7д). "
+            # launch не удался, но регрессию/потери записи всё равно стоит показать
+            if regr or state_fail:
+                tail = f"\n⚠ {state_fail}" if state_fail else ""
+                head = (
+                    f"⚠ {regr} — sink(s) перестали писать (>7д). "
                     f"Отчёт: data/reports/memory/observability-*.md."
+                    if regr
+                    else "потери записи состояния за окно."
                 )
+                return HookOutput().system_message(f"[MEMORY-MAINTENANCE] {head}{tail}")
             return None
 
         state["pending_sessions"] = pending[-MAX_PENDING:]
