@@ -3,7 +3,7 @@
 Hook: posttooluse-delegation-tracker
 Event: PostToolUse
 Matcher: mcp__llm-rotation__llm_complete
-Purpose: Track Z.AI delegation outcomes — provider, model, response time,
+Purpose: Track LLM delegation outcomes — provider, model, response time,
          quality score. Log to data/delegation-outcomes.jsonl (JSONL append).
          hookSpecificOutput feedback on anomalies (slow/empty response).
 Timeout: 3s
@@ -36,8 +36,28 @@ def _classify_content(text: str) -> str:
     return "general"
 
 
-def _quality_heuristic(text: str, response_time: float) -> dict:
-    """Compute heuristic quality score."""
+# Норма латентности зависит от ФОРМАТА провайдера: claude-cli спавнит CLI-субпроцесс
+# (25-150с — штатно, см. скиллы llm-rotation / llm-delegation), HTTP-провайдеры отвечают
+# за секунды. Единый порог помечал «медленным» КАЖДЫЙ успешный вызов sonnet и советовал
+# сменить провайдера — против политики sonnet-first (живой прогон 2026-07-26: 66с = норма).
+# HTTP-порог намеренно 15с — это ПРЕЖНИЙ порог advisory; профиль не должен был заодно
+# ужесточить совет обычным HTTP-вызовам до 10с (там жил лишь штраф эвристики).
+_LATENCY_HTTP = (3.0, 15.0)
+_LATENCY_CLI = (30.0, 180.0)
+
+
+def _latency_profile(provider: str) -> tuple[float, float]:
+    """(fast_under, slow_over) в секундах — что считать нормой ДЛЯ ЭТОГО провайдера."""
+    return _LATENCY_CLI if provider.startswith("claude-cli") else _LATENCY_HTTP
+
+
+def _quality_heuristic(
+    text: str,
+    response_time: float,
+    fast_under: float = _LATENCY_HTTP[0],
+    slow_over: float = _LATENCY_HTTP[1],
+) -> dict:
+    """Compute heuristic quality score (пороги скорости — из профиля провайдера)."""
     score = 0.5
     details = {}
 
@@ -60,11 +80,11 @@ def _quality_heuristic(text: str, response_time: float) -> dict:
         score += 0.05
         details["has_structure"] = True
 
-    # Speed bonus/penalty
-    if response_time < 3.0:
+    # Speed bonus/penalty — относительно нормы ДЛЯ ЭТОГО провайдера
+    if response_time < fast_under:
         score += 0.1
         details["fast"] = True
-    elif response_time > 10.0:
+    elif response_time > slow_over:
         score -= 0.15
         details["slow"] = True
 
@@ -150,7 +170,8 @@ class PostToolUseDelegationTracker(BaseHook):
 
         # Classify and score
         content_type = _classify_content(text)
-        quality = _quality_heuristic(text, response_time)
+        fast_under, slow_over = _latency_profile(provider)
+        quality = _quality_heuristic(text, response_time, fast_under, slow_over)
 
         # Build entry
         entry = {
@@ -175,16 +196,18 @@ class PostToolUseDelegationTracker(BaseHook):
         messages = []
         if not text:
             messages.append(
-                "Z.AI returned empty response. Consider retrying or using a different provider."
+                f"Delegate ({provider}) returned empty response. "
+                "Check llm_route_explain: provider may be in cooldown."
             )
-        elif response_time > 15.0:
+        elif response_time > slow_over:
             messages.append(
-                f"Z.AI response was slow ({response_time:.1f}s "
-                f"from {provider}). Consider switching provider."
+                f"Delegate slow: {response_time:.1f}s from {provider} "
+                f"(normal < {slow_over:.0f}s). Check llm_route_explain for "
+                "circuit-breaker/budget state before retrying."
             )
         elif quality["score"] < 0.4:
             messages.append(
-                f"Z.AI quality score low ({quality['score']:.2f}). Response may need review."
+                f"Delegate quality score low ({quality['score']:.2f}). Response may need review."
             )
 
         if messages:

@@ -31,6 +31,29 @@ if os.environ.get("MEMORY_TEST_ISOLATION_DISABLE") != "1":
 
 
 # =============================================================================
+# LLM Rotation sink isolation (2026-07-26)
+# =============================================================================
+# Тесты не должны писать в продовые data/llm-rotation-*.{jsonl,json}: в живом
+# completions-логе накопилось 177 синтетических записей (mock/test-provider/working/
+# none), искажавших метрики. Хуже метрик — .claude/hooks/shared/llm_health.py читает
+# ЭТОТ ЖЕ файл и считает провалом записи с provider="none" либо error~"down"/"all
+# failed": тестовый мусор способен перевалить порог is_provider_down() и на 30 минут
+# разоружить z-ai-write-guard (гард graceful-пропускает большой code-write, когда
+# «провайдер лежит»). То есть загрязнение лога — дыра в enforcement, не косметика.
+#
+# Изоляция здесь, а не пофайловой фикстурой: opt-in по модулям уже протёк —
+# test_llm_rotation.py её получил, а test_backoff.py (5 записей за прогон) нет.
+# Пути читаются в момент записи (_completions_log_path) и через pydantic-settings
+# env_prefix LLM_ROTATION_ (adaptive/budget), поэтому import-time установки хватает.
+# Opt-out: LLM_ROTATION_TEST_ISOLATION_DISABLE=1.
+if os.environ.get("LLM_ROTATION_TEST_ISOLATION_DISABLE") != "1":
+    _llm_iso_root = Path(tempfile.mkdtemp(prefix="llmrot-sinks-"))
+    os.environ["LLM_ROTATION_COMPLETIONS_LOG"] = str(_llm_iso_root / "completions.jsonl")
+    os.environ["LLM_ROTATION_ADAPTIVE_DATA_PATH"] = str(_llm_iso_root / "adaptive.json")
+    os.environ["LLM_ROTATION_BUDGET_DATA_PATH"] = str(_llm_iso_root / "budget.json")
+
+
+# =============================================================================
 # Pipeline-state pollution guard (order-flake defense, 2026-06-18)
 # =============================================================================
 # pipeline_state пишет 1С-реестр / CURRENT / generic-состояния под РЕАЛЬНЫЙ

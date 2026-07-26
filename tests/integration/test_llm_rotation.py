@@ -21,6 +21,10 @@ from src.shared.llm_rotation.service import (
     ProviderStatus,
 )
 
+# Изоляция completions/adaptive/budget-синков — в tests/conftest.py (единая точка).
+# Пофайловая фикстура тут была и протекла: соседний test_backoff.py её не получил
+# и продолжал писать в продовый лог (2026-07-26).
+
 # ========== ProviderConfig Tests ==========
 
 

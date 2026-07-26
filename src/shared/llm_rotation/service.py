@@ -759,7 +759,10 @@ class LLMRotationService:
         tried: list[str] = []
         failures: list[str] = []  # сводка отказов per-попытка — в финальную ошибку
         total_attempts = 0
-        primary_retries = 0
+        # ПОПЫТКИ primary (инкремент ДО вызова): успех с первой попытки = 1, а не 0.
+        # Поле звалось primary_retries — и каждый чистый вызов читался в completions-логе
+        # как «был ретрай», завышая флапанье primary (живой прогон 2026-07-26).
+        primary_attempts = 0
         primary_name = self._settings.primary_provider
         requested_model = model
 
@@ -830,7 +833,7 @@ class LLMRotationService:
                         break
 
                     total_attempts += 1
-                    primary_retries += 1
+                    primary_attempts += 1
                     try:
                         result = await self._call_provider(
                             primary_state,
@@ -854,7 +857,7 @@ class LLMRotationService:
                             model=result["model"],
                             response_time=result["response_time"],
                             attempt=total_attempts,
-                            primary_retries=primary_retries,
+                            primary_attempts=primary_attempts,
                             fallback=False,
                             prompt_tokens=usage.get("prompt_tokens", 0),
                             completion_tokens=usage.get("completion_tokens", 0),
@@ -956,7 +959,7 @@ class LLMRotationService:
                         model=result["model"],
                         response_time=result["response_time"],
                         attempt=total_attempts,
-                        primary_retries=primary_retries,
+                        primary_attempts=primary_attempts,
                         fallback=True,
                         prompt_tokens=usage.get("prompt_tokens", 0),
                         completion_tokens=usage.get("completion_tokens", 0),
@@ -993,7 +996,7 @@ class LLMRotationService:
                 model="none",
                 response_time=0,
                 attempt=0,
-                primary_retries=0,
+                primary_attempts=0,
                 fallback=False,
                 error=f"No available providers: {detail}"[:400],
             )
@@ -1006,7 +1009,7 @@ class LLMRotationService:
             model="none",
             response_time=0,
             attempt=total_attempts,
-            primary_retries=primary_retries,
+            primary_attempts=primary_attempts,
             fallback=True,
             error=f"All failed. Tried: {tried}. {detail}"[:400],
         )

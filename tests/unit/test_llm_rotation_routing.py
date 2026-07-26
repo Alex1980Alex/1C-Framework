@@ -29,12 +29,7 @@ from src.shared.llm_rotation.service import (
     resolve_model_for_provider,
 )
 
-
-@pytest.fixture(autouse=True)
-def _isolated_log(tmp_path, monkeypatch):
-    """Completions-лог в tmp: тесты не должны писать в продовый data/*.jsonl
-    (в живом логе уже лежали mock/test-provider от старых прогонов)."""
-    monkeypatch.setenv("LLM_ROTATION_COMPLETIONS_LOG", str(tmp_path / "completions.jsonl"))
+# Изоляция completions/adaptive/budget-синков — в tests/conftest.py (единая точка).
 
 
 def _settings(**over) -> LLMRotationSettings:
@@ -301,3 +296,50 @@ def test_completions_log_honors_env_override(tmp_path, monkeypatch):
     if prod.exists():
         tail = prod.read_text(encoding="utf-8", errors="replace")[-2000:]
         assert '"provider": "unit-test"' not in tail
+
+
+def test_completions_sink_is_isolated_repo_wide():
+    """Изоляция синка стоит в tests/conftest.py и потому действует на ВСЕ модули.
+
+    Пофайловая фикстура уже протекла: её скопировали в test_llm_rotation.py, а соседний
+    test_backoff.py остался без неё и продолжал писать в продовый лог (5 записей за
+    прогон), причём llm_health.is_provider_down() читает этот же файл и мог из-за
+    тестового мусора разоружить z-ai-write-guard. Тест краснеет, если блок из conftest
+    убрать или обойти.
+    """
+    from src.shared.llm_rotation import service as svc_mod
+
+    resolved = svc_mod._completions_log_path().resolve()
+    prod_path = (svc_mod._REPO_ROOT / "data" / "llm-rotation-completions.jsonl").resolve()
+    assert resolved != prod_path, "тест-прогон пишет в ПРОДОВЫЙ completions-лог"
+
+
+def test_first_try_success_is_not_logged_as_retry(tmp_path, monkeypatch):
+    """Успех с первой попытки: primary_attempts=1 и никакого «ретрая» в записи.
+
+    Поле звалось primary_retries и инкрементилось ДО вызова, поэтому КАЖДЫЙ чистый
+    вызов читался в логе как «был ретрай» и завышал видимое флапанье primary (живой
+    прогон 2026-07-26: три реальных вызова, все с attempt=1 и primary_retries=1).
+    """
+    import json
+
+    target = tmp_path / "completions.jsonl"
+    monkeypatch.setenv("LLM_ROTATION_COMPLETIONS_LOG", str(target))
+    svc = _service([_cfg("claude-cli-sonnet")], primary_provider="claude-cli-sonnet")
+
+    async def ok(state, *a, **k):
+        return {
+            "provider": state.config.name,
+            "model": "claude-sonnet-5",
+            "text": "ok",
+            "response_time": 1.0,
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        }
+
+    monkeypatch.setattr(svc, "_call_provider", ok)
+    _run(svc.complete("hi"))
+
+    rec = json.loads(target.read_text(encoding="utf-8").strip().splitlines()[-1])
+    assert rec["attempt"] == 1
+    assert rec["primary_attempts"] == 1
+    assert "primary_retries" not in rec, "имя поля должно означать попытки, а не ретраи"

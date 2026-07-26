@@ -87,7 +87,7 @@ Stop              → enforcer chain перед завершением сесс�
 | [`bulk-action-guard.py`](../../.claude/hooks/bulk-action-guard.py) | Bash | Детекция bulk/destructive → Q5 enforcer |
 | [`code-verify-reminder.py`](../../.claude/hooks/code-verify-reminder.py) | Write\|Edit, Skill, Task, Stop | Mandatory task на code-verify; tri-registered (workaround #6305) |
 | [`posttooluse-quality-feedback.py`](../../.claude/hooks/posttooluse-quality-feedback.py) | Write\|Edit | `ruff check *.py` → hookSpecificOutput feedback |
-| [`posttooluse-delegation-tracker.py`](../../.claude/hooks/posttooluse-delegation-tracker.py) | mcp__llm-rotation__llm_complete | Z.AI delegation outcomes → JSONL |
+| [`posttooluse-delegation-tracker.py`](../../.claude/hooks/posttooluse-delegation-tracker.py) | mcp__llm-rotation__llm_complete | Исходы делегирования (провайдер/латентность/качество) → JSONL; порог «медленно» зависит от формата провайдера |
 | [`posttooluse-web-cache.py`](../../.claude/hooks/posttooluse-web-cache.py) | WebSearch\|WebFetch | Кэширование результатов 24h TTL |
 | [`posttooluse-docs-tracker.py`](../../.claude/hooks/posttooluse-docs-tracker.py) | Write\|Edit | Мгновенный docs-change reminder |
 | [`posttooluse-skill-metrics.py`](../../.claude/hooks/posttooluse-skill-metrics.py) | Skill\|Task | Metrics DB (HookMetricsDB source tracking) |
