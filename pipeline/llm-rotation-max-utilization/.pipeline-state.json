@@ -2,35 +2,35 @@
   "task": "llm-rotation-max-utilization",
   "title": "llm-rotation-max-utilization",
   "created_at": "2026-07-26T19:09:45",
-  "updated_at": "2026-07-26T19:09:45",
-  "current_stage": 1,
+  "updated_at": "2026-07-26T19:41:28",
+  "current_stage": 4,
   "stages": [
     {
       "n": 1,
       "name": "architecture",
       "command": "pl-plan",
       "artifact": "01-architecture.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-26T19:41:28"
     },
     {
       "n": 2,
       "name": "design",
       "command": "pl-design",
       "artifact": "02-design.md",
-      "status": "pending",
-      "completed_at": null,
-      "approved": false,
-      "approved_by": null,
-      "approved_at": null
+      "status": "done",
+      "completed_at": "2026-07-26T19:41:28",
+      "approved": true,
+      "approved_by": "human",
+      "approved_at": "2026-07-26T19:41:28"
     },
     {
       "n": 3,
       "name": "implementation",
       "command": "pl-code",
       "artifact": "03-implementation.md",
-      "status": "pending",
-      "completed_at": null
+      "status": "done",
+      "completed_at": "2026-07-26T19:41:28"
     },
     {
       "n": 4,

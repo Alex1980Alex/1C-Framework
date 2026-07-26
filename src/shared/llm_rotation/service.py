@@ -1271,7 +1271,11 @@ class LLMRotationService:
                 исполнит только провайдер, объявивший эту модель, остальные
                 скипаются. Без него батч не мог выбрать тир вовсе, и весь
                 explicit_only-путь (opus) был из батча недостижим.
-            return_exceptions: if True (default), failed calls are returned
+            return_exceptions: ⚠ при False исключение поднимается ПОСЛЕ того, как батч
+                отработал или упёрся в бюджет, а не в момент первого отказа, как делал
+                прежний голый ``gather`` — плата за агрегатный дедлайн и снятие
+                недовыполненных. Продовых вызывающих с False нет (MCP-тул всегда шлёт
+                True). Если True (default), failed calls are returned
                 as ``Exception`` instances in the result list (preserves
                 positional alignment with ``prompts``). If False, the first
                 exception aborts the whole batch.
