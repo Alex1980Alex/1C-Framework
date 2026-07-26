@@ -298,38 +298,21 @@ class CodeSkillEnforcer(BaseHook):
 
     @staticmethod
     def _skill_in_transcript(inp, skill) -> bool:
-        """Был ли в транскрипте сессии tool_use Skill с данным именем (хвост ≤2МБ)."""
+        """Был ли в транскрипте сессии tool_use Skill с данным именем (хвост ≤2МБ).
+
+        Скан вынесен в `shared/transcript_skills` (single-source, 2026-07-26): тем же
+        определением «запись = вызов Skill» пользуется `task-protocol-enforcer`, и
+        разъехаться они не должны. Graceful: модуль недоступен → False, как и при
+        нечитаемом транскрипте (прежнее поведение).
+        """
         path = getattr(inp, "transcript", "") or ""
-        if not skill or not path or not os.path.isfile(path):
+        if not skill or not path:
             return False
         try:
-            with open(path, "rb") as f:
-                f.seek(0, 2)
-                size = f.tell()
-                f.seek(max(0, size - 2_000_000))
-                tail = f.read().decode("utf-8", errors="replace")
-        except OSError:
+            from shared.transcript_skills import skill_in_transcript
+        except Exception:
             return False
-        for line in tail.splitlines():
-            # дешёвый префильтр перед JSON-парсом
-            if '"Skill"' not in line or skill not in line:
-                continue
-            try:
-                entry = json.loads(line)
-            except (json.JSONDecodeError, ValueError):
-                continue
-            content = (entry.get("message") or {}).get("content") or []
-            if not isinstance(content, list):
-                continue
-            for block in content:
-                if (
-                    isinstance(block, dict)
-                    and block.get("type") == "tool_use"
-                    and block.get("name") == "Skill"
-                    and (block.get("input") or {}).get("skill") == skill
-                ):
-                    return True
-        return False
+        return skill_in_transcript(path, skill)
 
     def _skill_exists(self, skill) -> bool:
         """Phantom-block guard (roadmap 260612 B2): a mapping must point to a

@@ -104,6 +104,38 @@ def _extract_file_path(tool_input: dict) -> str:
 class TaskProtocolEnforcer(BaseHook):
     """PreToolUse:Write|Edit → blocks unless phase is 'skill_checked'."""
 
+    @staticmethod
+    def _skill_checked_in_transcript(inp) -> bool:
+        """Фолбэк: фактический вызов Skill ПОСЛЕ последнего промпта = протокол соблюдён.
+
+        Инцидент 2026-07-26: скилл активирован (имя легло в `activated_skills`), но мутация
+        `task_protocol` не сохранилась — при этом UPS-цепочка в окне НЕ фаерила (проверено
+        по `data/hook-invocations.jsonl`: фаеры 13:16 и 13:47, активация 13:25, блок 13:32),
+        значит это потеря записи, а не законный сброс на новом промпте. Энфорсер блокировал
+        Write, требуя того, что уже сделано. Зеркалит приём `code-skill-enforcer`
+        (2026-07-17) через общий `shared/transcript_skills` + self-heal state, чтобы
+        следующие хуки цепочки увидели факт.
+
+        Fail-closed: нет транскрипта / нет якоря-промпта / модуль недоступен → False,
+        обычный блок остаётся (лишняя блокировка восстановима, обход протокола — нет).
+        """
+        path = getattr(inp, "transcript", "") or ""
+        if not path:
+            return False
+        try:
+            from shared.transcript_skills import skill_checked_after_last_prompt
+        except Exception:
+            return False
+        if not skill_checked_after_last_prompt(path):
+            return False
+        try:
+            from shared.session_state import SessionState
+
+            SessionState.record_skill_checked()
+        except Exception:
+            pass  # self-heal — best-effort, на решение не влияет
+        return True
+
     def execute(self, inp: HookInput) -> HookOutput | None:
         # Only act on Write/Edit
         if inp.tool_name not in ("Write", "Edit"):
@@ -126,6 +158,10 @@ class TaskProtocolEnforcer(BaseHook):
 
         # Only skill_checked allows Write/Edit
         if phase == "skill_checked":
+            return None
+
+        # Фолбэк на факт из транскрипта: state мог потерять запись активации
+        if self._skill_checked_in_transcript(inp):
             return None
 
         # Build context-aware block message
