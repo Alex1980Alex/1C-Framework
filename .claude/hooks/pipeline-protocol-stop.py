@@ -56,6 +56,25 @@ _TAIL_BYTES = 2_000_000  # ~5-6k последних записей (CloudEvents-
 # инструментом, не трогая settings.json. Когда матчер на них добавят — log-сигнал (a) заработает сам.
 _WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
 
+# Единый предикат «вызов отклонён гардом» + расходуемое сопоставление — из
+# scripts/tool_effectiveness.py (single-source с report-слоем tool-health, N-P4.3):
+# один и тот же факт нужен обоим слоям, и разъехаться их определения не должны.
+# sys.path.append, НЕ insert(0): insert шеделил бы одноимённые модули в хук-процессе.
+try:
+    _SCRIPTS_DIR = str(PROJECT_ROOT / "scripts")
+    if _SCRIPTS_DIR not in sys.path:
+        sys.path.append(_SCRIPTS_DIR)
+    from tool_effectiveness import is_guard_block as _is_guard_block
+    from tool_effectiveness import take_block as _take_block
+except Exception:  # модуля нет → вычета нет, поведение прежнее (гейт не ослабляем)
+
+    def _is_guard_block(_e: dict) -> bool:
+        return False
+
+    def _take_block(_blocks: list, _session: str, _ts: datetime) -> bool:
+        return False
+
+
 # Файлы, авто-пишущиеся Stop-цепочкой ПОСЛЕ нас (session-memory-save → docs/wiki/log.md),
 # не считаем «правкой задачи»: иначе на повторном Stop-проходе git-сигнал ложно сработал бы
 # в чистом вопросе. Пути нормализованы к forward-slash.
@@ -84,9 +103,29 @@ def _read_tail_lines() -> list[str]:
 
 
 def _session_writes_and_start(sid: str) -> tuple[bool, datetime | None]:
-    """(были_правки, время_старта_сессии) для sid из invocation-лога."""
+    """(были_правки, время_старта_сессии) для sid из invocation-лога.
+
+    **Правка = ФАКТ записи, а не намерение.** Правкой считается canonical Pre-запись
+    Write/Edit (``category="tool_call"``, её пишет tool-invocation-logger), НЕ объяснённая
+    block-записью энфорсера того же инструмента в той же сессии (±``BLOCK_MATCH_SEC``,
+    расходуемое сопоставление 1:1 — один блок объясняет РОВНО один вызов, иначе одна
+    блокировка «оправдала» бы серию реальных правок).
+
+    Инцидент 2026-07-26: один Write, отклонённый ``TaskProtocolEnforcer``, оставил в логе
+    12 Pre-записей — по одной на хук цепочки (блокирующий отдаёт ``decision:"block"``, при
+    котором цепочка доходит до логгера) → гейт читал их как «были правки кода» и требовал
+    пайплайн в сессии, где ни один файл не записан (git-дерево чистое). Тот же вычет, что
+    ``blocked`` в tool-health (N-P4.3): отклонённый вызов не исполнялся ⇒ правки не было.
+
+    Fail-closed: если canonical-записей в сессии нет вовсе (логгер отключён/не
+    зарегистрирован на инструмент) либо их ``ts`` не парсится — считаем правкой, как
+    раньше. Гейт не должен ослабнуть из-за пробела в телеметрии.
+    """
     start: datetime | None = None
-    had_write = False
+    canonical: list[tuple[str, datetime]] = []  # (tool, ts) — фактические вызовы
+    blocks: dict[str, list[tuple[str, datetime]]] = {}  # tool -> [(session, ts)]
+    legacy_write = False  # Write/Edit Pre вне canonical-категории (старый формат лога)
+    unmatchable = False  # canonical-запись с непарсящимся ts → сопоставить нельзя
     for line in _read_tail_lines():
         line = line.strip()
         if not line or sid not in line:
@@ -100,8 +139,26 @@ def _session_writes_and_start(sid: str) -> tuple[bool, datetime | None]:
         dt = _parse_dt(o.get("ts", ""))
         if dt is not None and (start is None or dt < start):
             start = dt
-        if o.get("event") == "PreToolUse" and o.get("tool") in _WRITE_TOOLS:
-            had_write = True
+        tool = o.get("tool")
+        if o.get("event") != "PreToolUse" or tool not in _WRITE_TOOLS:
+            continue
+        if _is_guard_block(o):
+            if dt is not None:
+                blocks.setdefault(tool, []).append((sid, dt))
+        elif o.get("category") == "tool_call":
+            if dt is None:
+                unmatchable = True
+            else:
+                canonical.append((tool, dt))
+        else:
+            legacy_write = True
+    if canonical:
+        had_write = unmatchable or any(
+            not _take_block(blocks.get(tool, []), sid, ts)
+            for tool, ts in sorted(canonical, key=lambda p: p[1])
+        )
+    else:
+        had_write = legacy_write or unmatchable
     return had_write, start
 
 

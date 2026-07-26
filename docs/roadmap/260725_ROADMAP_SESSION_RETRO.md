@@ -89,6 +89,39 @@
 
 ## §18 Progress Log
 
+### 2026-07-26 - вычет `blocked` доведён до enforcement-слоя (не только метрик)
+
+Тот же класс, что N-P4.3 в метриках, но с другой стороны: **заблокированный гардом вызов
+читался как ФАКТ правки кода**. Живой инцидент - один `Write`, отклонённый
+`TaskProtocolEnforcer`, оставил 12 Pre-записей в `hook-invocations.jsonl` (по одной на хук
+цепочки; блокирующий отдаёт `decision:"block"`, при котором цепочка доходит до логгера) →
+`[GATE-ORCHESTRATOR] правки кода без пайплайна` в сессии, где `git status
+--ignore-submodules=all` чист, плюс фантомная mandatory-задача «Запустить code-verify для
+изменённого кода», которого нет.
+
+Закрыто: (1) предикат блокировки вынесен в single-source `is_guard_block` + публичный
+`take_block` ([`scripts/tool_effectiveness.py`](../../scripts/tool_effectiveness.py)),
+`analyze_tool_health.guard_blocks_by_tool` делегирует - report- и enforcement-слой не
+разъезжаются; (2) `pipeline-protocol-stop._session_writes_and_start` считает правкой только
+**canonical** Pre (`category="tool_call"`), не объяснённый block-записью того же тула
+(±`BLOCK_MATCH_SEC`, расходуемое 1:1), fail-closed на пробел телеметрии; оркестратор получает
+то же через `gate_policies.build_context` (одна функция - оба пути); (3)
+`code-verify-reminder` создаёт задачу только на `PostToolUse` - workaround #6305
+(«Post фаерит 1/день», 2026-04-26b) опровергнут замером: Post 1460 vs Pre 1540 = 95% доставки.
+
+16 unit + 349 gate/pipeline + 180 tool-obs зелёные; саботаж краснит ровно целевые тесты.
+Артефакт: `pipeline/fix-blocked-write-not-edit/pipeline.md`.
+
+**Побочная находка (НЕ исправлена, кандидат в P1):** UPS-цепочка
+(`skill-eval-enforcer-shell` → `reset_task_protocol` + `set_task_classified`) отрабатывает и
+на системно-инъектированном ходе (прилетевшая `task-notification` фонового Bash) → `Skill()`
+активирован (имя лежит в `activated_skills`), а `task_protocol` сброшен в `classified` →
+`task-protocol-enforcer` блокирует Write «Skills not checked». У `code-skill-enforcer`
+transcript-fallback для этого класса есть (2026-07-17), у `task-protocol-enforcer` - нет.
+Второе: `llm_complete` рвётся клиентом на 60с при живом `MCP_TOOL_TIMEOUT=240000`, а
+провайдер `claude-cli-sonnet` спавнит CLI на 25-150с → делегирование крупной генерации
+недоступно (память [[feedback-llm-delegation-cycle-freshness]] считает это закрытым).
+
 ### 2026-07-25 (вечер) - W9 закрыт: три корня + снятие первопричины
 
 Диагностики W9а/W9б/W9в закрыты **исходом, а не снятием алерта**. Метод: три источника вместо догадок - парность Pre/Post по `tool_call_id` (таймстемпы), **транскрипты** (текст ошибки там, где PostToolUse не пришёл), **журнал EDT** (`Completed tools/call … outcome=`). Главный результат: из 37 непарных вызовов 7 разбираемых тулов **дефект инструмента только в 3** случаях; остальное - 60с клиентский потолок при УСПЕХЕ на стороне EDT (`create_project` опоздал на 253мс, `update_database` до 52 минут), транзиентные отказы, ошибки вызывающего и один собственный диагностический пробник, попавший в знаменатель `modify_metadata`.

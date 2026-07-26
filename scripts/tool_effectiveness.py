@@ -151,6 +151,21 @@ BLOCK_MATCH_SEC = 5  # блок и canonical Pre — соседи в одной 
 SERVER_OK_MATCH_SEC = 2
 
 
+def is_guard_block(e: dict) -> bool:
+    """Запись лога = блокировка энфорсера: вызов ОТКЛОНЁН, инструмент не исполнялся.
+
+    Единое определение для обоих слоёв: report (``guard_blocks_by_tool`` — блок не провал
+    инструмента) и enforcement (``pipeline-protocol-stop`` — блок не ПРАВКА кода). ``tool``
+    обязателен: Stop-хуки блокируют без инструмента, к вызову их не привязать."""
+    return (
+        isinstance(e, dict)
+        and e.get("category") == "hook"
+        and e.get("event") == "PreToolUse"
+        and e.get("outcome") == "block"
+        and bool(e.get("tool"))
+    )
+
+
 def completion_stats(
     pres: list[dict],
     posts: list[dict],
@@ -260,7 +275,7 @@ def completion_stats(
         cid = p.get("tool_call_id") or ""
         if pts is not None and (now - _naive(pts)).total_seconds() < grace_sec:
             in_flight += 1  # Post ещё может прийти — не считаем провалом
-        elif pts is not None and _take_block(unused_blocks, p.get("session") or "", _naive(pts)):
+        elif pts is not None and take_block(unused_blocks, p.get("session") or "", _naive(pts)):
             blocked_n += 1  # вызов отклонён гардом — тул не исполнялся
             # Пустой id в множество НЕ кладём: второй разрез сопоставляет по членству, и один
             # `""` списал бы ВСЕ безыдентификаторные вызовы группы (провалы бы исчезли).
@@ -282,8 +297,8 @@ def completion_stats(
     }
 
 
-def _take_block(blocks: list[tuple[str, datetime]], session: str, ts: datetime) -> bool:
-    """Снять из ``blocks`` запись, объясняющую непарный Pre (та же сессия, ±окно).
+def take_block(blocks: list[tuple[str, datetime]], session: str, ts: datetime) -> bool:
+    """Снять из ``blocks`` запись, объясняющую вызов в ``ts`` (та же сессия, ±окно).
 
     Расходуемое сопоставление 1:1 — один блок объясняет РОВНО один непарный Pre,
     иначе одна block-запись «оправдала» бы серию реальных провалов. ``tool_call_id``
@@ -293,6 +308,9 @@ def _take_block(blocks: list[tuple[str, datetime]], session: str, ts: datetime) 
             blocks.pop(idx)
             return True
     return False
+
+
+_take_block = take_block  # обратно-совместимый алиас (внутренний call-site + тесты)
 
 
 def _take_server_ok(records: list[tuple[datetime, int]], ts: datetime) -> bool:

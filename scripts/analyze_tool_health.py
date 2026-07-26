@@ -79,6 +79,7 @@ from tool_effectiveness import (  # single-source rule-слой (roadmap 260713 
     CANONICAL_CATEGORIES,
     completion_stats,
     effectiveness_from_posts,
+    is_guard_block,
     pair_durations,
     parse_ts,
     percentile,
@@ -290,15 +291,11 @@ def guard_blocks_by_tool(
                     continue
                 if not isinstance(e, dict):  # валидный JSON-не-объект (`123`) → не роняем прогон
                     continue
-                if (
-                    e.get("category") != "hook"
-                    or e.get("event") != "PreToolUse"
-                    or e.get("outcome") != "block"
-                ):
+                # Предикат блокировки — single-source в tool_effectiveness: тот же факт нужен
+                # enforcement-слою (`pipeline-protocol-stop`), и разъехаться они не должны.
+                if not is_guard_block(e):  # вкл. отсев Stop-блоков без тула
                     continue
                 tool = e.get("tool")
-                if not tool:  # Stop-хуки блокируют без тула
-                    continue
                 try:
                     ts = _to_naive_local(datetime.fromisoformat(e.get("ts")))
                 except (ValueError, TypeError):

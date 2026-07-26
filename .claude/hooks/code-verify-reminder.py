@@ -94,6 +94,17 @@ class CodeVerifyReminder(BaseHook):
             return self._handle_task_result(inp)
 
         # --- PostToolUse Write|Edit: create mandatory task ---
+        # ТОЛЬКО на PostToolUse: Post приходит лишь если инструмент реально исполнился.
+        # На PreToolUse задача создавалась «на намерение», и отклонённый энфорсером Write
+        # (декларативный `decision:"block"` — тул НЕ исполнялся) плодил фантомную mandatory-
+        # задачу «проверь изменённый код», которого нет: инцидент 2026-07-26, git-дерево
+        # чистое, а task-enforcer держал завершение. Pre-регистрация была workaround #6305
+        # (телеметрия 2026-04-26b: Post фаерил ~1/день); замер 2026-07-26 по invocation-логу:
+        # Post 1460 vs Pre 1540 = 95% доставки → workaround устарел, факт доступен из Post.
+        # Остаток (потерянный Post при успешной записи) на порядок меньше, чем поток фантомов:
+        # 2 из 1470 в окне 14д (N-P4.3), и он не блокирует завершение, а лишь не напоминает.
+        if inp.detected_event != "PostToolUse":
+            return None
         return self._handle_code_change(inp)
 
     def _handle_stop(self, inp: HookInput) -> HookOutput | None:
