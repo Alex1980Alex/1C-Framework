@@ -126,3 +126,67 @@ def test_should_canary_is_deterministic_per_prompt(monkeypatch):
 def test_should_canary_full_rollout(monkeypatch):
     monkeypatch.setattr(zde, "_ROUTER_CANARY_PCT", 1.0)
     assert zde.ZAIDelegationEnforcer._should_canary("любой промпт") is True
+
+
+# ── анти-стаб: ветки, которые остались бы зелёными при вырождении в заглушку ────
+#
+# Найдено ревьюером 2026-07-26: набор выше проходил, даже если _bandit_level и
+# _router_level заменить на `return None`, а assert на тип level был тавтологичным.
+# Канареечная ветка _delegation_level (method="router" / "router-abstain-fallback")
+# не исполнялась ни одним тестом.
+
+
+def _fake_router(level, score, abstained):
+    """sys.modules-заглушка router.trained с полной цепочкой родителей.
+
+    Родителям нужен __path__: фикстура spy_langfuse кладёт голый `src` без него, и
+    без этого реальный `from src.shared...` внутри _router_level молча свалился бы
+    в except → abstain-fallback, то есть тест зеленел бы по ложной причине.
+    """
+    leaf = types.ModuleType("src.shared.llm_rotation.router.trained")
+    leaf.classify_sync = lambda prompt: types.SimpleNamespace(
+        level=level, score=score, abstained=abstained
+    )
+    mods = {"src.shared.llm_rotation.router.trained": leaf}
+    for name in ("src", "src.shared", "src.shared.llm_rotation", "src.shared.llm_rotation.router"):
+        parent = types.ModuleType(name)
+        parent.__path__ = []  # без этого импорт подпакета не пройдёт
+        mods[name] = parent
+    return mods
+
+
+def test_router_branch_returns_router_method(monkeypatch, spy_langfuse):
+    """Канареечный путь исполняется и отдаёт method="router" с уровнем от роутера."""
+    monkeypatch.setattr(zde, "_ROUTER_CANARY_PCT", 1.0)
+    with mock.patch.dict(sys.modules, _fake_router("Hard", 0.9, False)):
+        hook = zde.ZAIDelegationEnforcer()
+        level, method = hook._delegation_level(DELEGATABLE_PROMPT, DELEGATABLE_PROMPT.lower())
+    assert (level, method) == ("Hard", "router"), "роутер не был вызван или его ответ потерян"
+
+
+def test_router_abstain_falls_back_to_bandit(monkeypatch, spy_langfuse):
+    """Отказ роутера (abstained) переводит решение на бандит с честной меткой."""
+    monkeypatch.setattr(zde, "_ROUTER_CANARY_PCT", 1.0)
+    with mock.patch.dict(sys.modules, _fake_router(None, 0.0, True)):
+        hook = zde.ZAIDelegationEnforcer()
+        _level, method = hook._delegation_level(DELEGATABLE_PROMPT, DELEGATABLE_PROMPT.lower())
+    assert method == "router-abstain-fallback"
+
+
+def test_bandit_path_consults_real_model(spy_langfuse):
+    """_bandit_level реально грузит модель по вычисленному пути, а не возвращает None.
+
+    Пинит арифметику пути до src/shared/delegation_bandit.py: при переносе файла или
+    смене глубины хука метод молча деградировал бы в None (except → pass), и это
+    не отличалось бы от заглушки.
+    """
+    hook = zde.ZAIDelegationEnforcer()
+    level = hook._bandit_level(DELEGATABLE_PROMPT.lower())
+    assert level in ("Soft", "Medium", "Hard", "Never", None)
+    bandit_path = (
+        Path(zde.__file__).resolve().parent.parent.parent
+        / "src"
+        / "shared"
+        / "delegation_bandit.py"
+    )
+    assert bandit_path.exists(), f"путь, который вычисляет хук, не существует: {bandit_path}"

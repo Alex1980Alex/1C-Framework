@@ -16,6 +16,12 @@ from pathlib import Path
 
 import pytest
 
+# Маркер добавлен 2026-07-26 по вердикту ревьюера. Без него CI-гейт (`pytest -m unit`)
+# этот файл НЕ отбирал — а он весь построен на `_should_canary`, то есть был обязан
+# краснеть все два месяца, пока helper-блок отсутствовал. Это и есть корень
+# «бесшумности» инцидента: тест, ловивший баг, находился вне гейта.
+pytestmark = pytest.mark.unit
+
 
 def _load_enforcer_module(canary_pct: float, monkeypatch: pytest.MonkeyPatch) -> object:
     """Re-import enforcer with custom DELEGATION_ROUTER_CANARY_PCT."""

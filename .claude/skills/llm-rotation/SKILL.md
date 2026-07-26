@@ -15,7 +15,7 @@ description: "LLM Rotation Service — мульти-провайдерное LLM
 
 ```
 LLMRotationService
-  ├── ProviderConfig (6 providers, priority-ordered)
+  ├── ProviderConfig (5 providers, priority-ordered)
   ├── ProviderState (health tracking per provider)
   ├── complete() → auto-fallback on error
   └── _make_request_openai() / _make_request_ollama()
@@ -34,9 +34,10 @@ ZAIProxy (HTTP server, port 8000)
 | 1 | **claude-cli-haiku** | `haiku` → claude-haiku-4-5 | **claude-cli** | No (CLI subscription) |
 | 2 | ollama-local | qwen2.5-coder:7b | ollama | No |
 | 3 | anthropic-sonnet | `claude-sonnet-5` | anthropic | **Yes** (ANTHROPIC_API_KEY — silent skip if unset) |
+| 5 | **claude-cli-opus** | `claude-opus-5` | **claude-cli** | No — **`explicit_only`: только по явному `model`, вне авто-ротации** |
 
-Model-ID resolution (`service.py` `alias_map` + `DEFAULT_PROVIDERS`, актуализировано 2026-07-04):
-`haiku`→`claude-haiku-4-5`, `sonnet`→`claude-sonnet-5`, `opus`→`claude-opus-4-8`.
+Model-ID resolution (единый источник — `MODEL_ALIASES` в `service.py`, актуализировано 2026-07-26):
+`haiku`→`claude-haiku-4-5`, `sonnet`→`claude-sonnet-5`, `opus`→`claude-opus-5`.
 claude-cli-sonnet и anthropic-sonnet прибиты к `claude-sonnet-5` явно. **После правки моделей
 в коде нужен `/mcp reconnect`** — stdio-сервер держит старый код ([[feedback-mcp-stale-code-reconnect]]).
 

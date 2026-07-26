@@ -47,9 +47,11 @@ def _blocked(
     the subprocess consulted the LIVE state, so one real llm_complete in the session
     flipped every 'blocked' assertion red (pinned by test_session_isolation_*).
 
-    Known residual: is_provider_down() reads live data/llm-rotation-*.jsonl (no env
-    override) — a provider-down window within the last 30 min would flip 'blocked'
-    assertions red. Transient live-env dependency, accepted.
+    Residual CLOSED 2026-07-26: is_provider_down() used to read the live
+    data/llm-rotation-*.jsonl with no env override, so any recent failure window — even
+    from running the service by hand outside pytest — disarmed the guard and flipped
+    every 'blocked' assertion red. Observed for real; llm_health now honours
+    LLM_HEALTH_DATA_DIR, and we point it at tmp_path (empty ⇒ provider considered up).
     """
     if session_state is not None:
         (tmp_path / "session-skills.json").write_text(json.dumps(session_state), encoding="utf-8")
@@ -61,6 +63,7 @@ def _blocked(
     env = {
         **dict(__import__("os").environ),
         "SESSION_STATE_PATH": str(tmp_path),
+        "LLM_HEALTH_DATA_DIR": str(tmp_path),  # пусто ⇒ провайдер считается живым
     }
     r = subprocess.run(
         [sys.executable, str(_HOOK)],

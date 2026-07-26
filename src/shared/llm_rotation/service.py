@@ -354,8 +354,11 @@ class LLMRotationService:
                 api_key = os.environ.get(state.config.api_key_env, "")
                 if not api_key:
                     continue
+            # `not model`, а не `model is None`: пустая строка тоже означает «не задана»,
+            # и на ней фильтр обязан прятать дорогой тир (защита в глубину - вызывающий
+            # может дёрнуть этот метод напрямую, минуя нормализацию в complete()).
             if state.config.explicit_only and (
-                model is None or resolve_model_for_provider(state.config, model) is None
+                not model or resolve_model_for_provider(state.config, model) is None
             ):
                 continue
             available.append(state)
@@ -584,7 +587,8 @@ class LLMRotationService:
         max_turns=1, permission_mode="bypassPermissions")` actually works.
 
         `model` accepts haiku/sonnet/opus alias OR full model name. Aliases
-        are expanded to claude-haiku-4-5 / claude-sonnet-5 / claude-opus-4-8.
+        are expanded to claude-haiku-4-5 / claude-sonnet-5 / claude-opus-5
+        (единый источник — MODEL_ALIASES).
         """
         # claude-agent-sdk is mandatory dep (pyproject.toml: claude-agent-sdk>=0.2,<0.3).
         # Single try/except — all names guaranteed by version pin.
@@ -795,6 +799,13 @@ class LLMRotationService:
         Returns dict with: provider, model, text, response_time, usage.
         Raises RuntimeError if all providers fail.
         """
+        # Нормализация на границе (2026-07-26, по вердикту ревьюера): пустая строка
+        # обязана вести себя как «модель не задана». Иначе model="" расходился с None:
+        # `if model` ложно (значит скипов и явного выбора нет = авто-семантика), а
+        # `model is None` тоже ложно - и explicit_only-фильтр пускал дорогой тир в
+        # АВТО-ротацию. Воспроизведено: при падении всех младших исполнялся opus.
+        # Вход достижим - MCP отдаёт arguments.get("model") как есть.
+        model = model or None
         tried: list[str] = []
         failures: list[str] = []  # сводка отказов per-попытка — в финальную ошибку
         total_attempts = 0
@@ -853,6 +864,13 @@ class LLMRotationService:
             if model and primary_model is None:
                 can_try = False
                 failures.append(f"{primary_name}: не исполняет model={model} (skip)")
+            # Фаза primary берёт провайдера по имени, минуя фильтр get_available_providers,
+            # поэтому explicit_only проверяется и здесь: иначе конфиг
+            # LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-opus вернул бы эскалацию через
+            # настройку. Инвариант не должен держаться на значении по умолчанию.
+            elif primary_state.config.explicit_only and not model:
+                can_try = False
+                failures.append(f"{primary_name}: explicit_only, вне авто-ротации (skip)")
 
             if can_try:
                 # Rate limit check for primary
@@ -1113,7 +1131,7 @@ class LLMRotationService:
             skip = None
             if cfg.requires_key and not os.environ.get(cfg.api_key_env, ""):
                 skip = f"нет ключа {cfg.api_key_env}"
-            elif cfg.explicit_only and (model is None or resolved is None):
+            elif cfg.explicit_only and (not model or resolved is None):
                 skip = f"только по явному model={cfg.default_model} (вне авто-ротации)"
             elif not state.is_available():
                 skip = f"недоступен ({state.status.value}, cb={state.circuit_breaker.state.value})"

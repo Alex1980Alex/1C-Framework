@@ -513,8 +513,16 @@ def test_explicit_opus_reaches_opus_tier_provider(monkeypatch):
 
 def test_auto_rotation_never_escalates_to_opus(monkeypatch):
     """Инвариант анти-эскалации: при model=None падение всех младших тиров даёт
-    отказ, а НЕ молчаливый уход на самый дорогой тир."""
-    svc = LLMRotationService(settings=_settings())
+    отказ, а НЕ молчаливый уход на самый дорогой тир.
+
+    Детерминизм (2026-07-26, по вердикту ревьюера): без снятия ANTHROPIC_API_KEY и с
+    max_retries=3 тест мог зеленеть ПО ЛОЖНОЙ ПРИЧИНЕ — бюджет ротаций исчерпывался на
+    haiku/ollama/anthropic до того, как очередь дойдёт до opus (priority=5), и он не
+    вызывался бы даже без explicit_only. Даём заведомо избыточный бюджет и убираем
+    зависимость от окружения разработчика.
+    """
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    svc = LLMRotationService(settings=_settings(max_retries=10))
     svc._settings.primary_provider = "claude-cli-sonnet"
     seen: list[str] = []
 
@@ -538,3 +546,92 @@ def test_explain_route_names_explicit_only_skip():
     explicit = {e["provider"]: e for e in svc.explain_route(model="opus")["order"]}
     assert explicit["claude-cli-opus"]["skip_reason"] is None
     assert explicit["claude-cli-opus"]["effective_model"] == "claude-opus-5"
+
+
+def test_falsy_model_does_not_unlock_opus_tier():
+    """Пустая строка — это «модель не задана», а не «явный запрос».
+
+    Найдено ревьюером 2026-07-26 и воспроизведено: `model=""` не совпадал ни с
+    `model is None` (фильтр explicit_only не срабатывал), ни с `if model` (скипа по
+    несовместимости и явного выбора не было) — то есть авто-семантика ПЛЮС дорогой тир
+    последним фоллбэком. При падении всех младших исполнялся opus. MCP отдаёт
+    arguments.get("model") как есть, так что вход достижим снаружи.
+    """
+    svc = LLMRotationService(settings=_settings())
+    for falsy in ("", None):
+        names = {s.config.name for s in svc.get_available_providers(model=falsy)}
+        assert "claude-cli-opus" not in names, f"пустой model={falsy!r} открыл дорогой тир"
+    # и в объяснении маршрута причина та же
+    entry = {e["provider"]: e for e in svc.explain_route(model="")["order"]}["claude-cli-opus"]
+    assert "явному model" in (entry["skip_reason"] or "")
+
+
+def test_falsy_model_does_not_escalate_end_to_end(monkeypatch):
+    """Сквозной пин того же дефекта: все младшие мертвы, model="" — отказ, не opus."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    svc = LLMRotationService(settings=_settings(max_retries=10))
+    svc._settings.primary_provider = "claude-cli-sonnet"
+    seen: list[str] = []
+
+    async def failing_call(state, *a, **k):
+        seen.append(state.config.name)
+        if state.config.name == "claude-cli-opus":
+            raise AssertionError("model='' не имеет права открывать дорогой тир")
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(svc, "_call_provider", failing_call)
+    with pytest.raises(RuntimeError):
+        _run(svc.complete("hi", model=""))
+    assert "claude-cli-opus" not in seen
+
+
+def test_explicit_only_primary_skipped_in_auto_call(monkeypatch):
+    """Фаза primary берёт провайдера по имени, минуя фильтр доступных.
+
+    Значит инвариант не должен держаться на дефолте настройки: если кто-то выставит
+    LLM_ROTATION_PRIMARY_PROVIDER=claude-cli-opus, авто-вызов (model=None) обязан
+    пропустить его, а не исполнить.
+    """
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    svc = LLMRotationService(settings=_settings(max_retries=10))
+    svc._settings.primary_provider = "claude-cli-opus"
+    seen: list[str] = []
+
+    async def failing_call(state, *a, **k):
+        seen.append(state.config.name)
+        if state.config.name == "claude-cli-opus":
+            raise AssertionError("explicit_only-провайдер не должен исполняться как primary")
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(svc, "_call_provider", failing_call)
+    with pytest.raises(RuntimeError):
+        _run(svc.complete("hi"))
+    assert "claude-cli-opus" not in seen
+    # при ЯВНОМ запросе своего тира тот же primary обязан работать
+    ok: list[str] = []
+
+    async def good_call(state, prompt, sysp, model, *a, **k):
+        ok.append((state.config.name, model))
+        return {"text": "ok", "provider": state.config.name, "model": model, "response_time": 0.1}
+
+    monkeypatch.setattr(svc, "_call_provider", good_call)
+    assert _run(svc.complete("hi", model="opus"))["provider"] == "claude-cli-opus"
+
+
+def test_falsy_model_normalized_at_boundary(monkeypatch):
+    """model="" схлопывается в None на входе complete(), а не живёт вторым представлением.
+
+    Саботаж-проверка показала, что без этого пина строка нормализации не закреплена
+    ничем: фильтр `not model` перекрывает её для инварианта эскалации. Наблюдаемая
+    разница — в ответе: `requested_model` должен быть None («модель не запрашивали»),
+    а не "" («запросили пустую»). Иначе два представления одного состояния разъедутся
+    в первом же новом `model is None` ниже по коду.
+    """
+    svc = LLMRotationService(settings=_settings())
+    svc._settings.primary_provider = "claude-cli-sonnet"
+
+    async def ok_call(state, prompt, sysp, model, *a, **k):
+        return {"text": "ok", "provider": state.config.name, "model": model, "response_time": 0.1}
+
+    monkeypatch.setattr(svc, "_call_provider", ok_call)
+    assert _run(svc.complete("hi", model=""))["requested_model"] is None

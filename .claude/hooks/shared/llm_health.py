@@ -12,11 +12,18 @@ Best-effort: нет логов / неоднозначно → False (повед�
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-# .claude/hooks/shared/llm_health.py → parents[3] = корень репо
-_DATA = Path(__file__).resolve().parents[3] / "data"
+# .claude/hooks/shared/llm_health.py → parents[3] = корень репо.
+# LLM_HEALTH_DATA_DIR — env-override каталога логов (2026-07-26). Без него у тестов,
+# гоняющих гард ПОДПРОЦЕССОМ, оставалась живая зависимость от машины: любые свежие
+# провальные записи в продовом `data/llm-rotation-*.jsonl` (в т.ч. от ручного прогона
+# сервиса вне pytest) делали is_provider_down() истинным, гард graceful-пропускал
+# запись, и все assert'ы «должно блокировать» краснели. Это было задокументировано
+# в test_z_ai_write_guard_scope.py как «known residual, accepted» — и сработало.
+_DATA = Path(os.environ.get("LLM_HEALTH_DATA_DIR") or Path(__file__).resolve().parents[3] / "data")
 _METRICS = "llm-rotation-metrics.jsonl"  # {ts, success, provider, ...}
 _COMPLETIONS = "llm-rotation-completions.jsonl"  # {ts, provider, error?, ...}
 _DOWN_MARKERS = ("no available providers", "all failed", "down")

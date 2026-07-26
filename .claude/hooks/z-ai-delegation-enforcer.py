@@ -11,8 +11,10 @@ Timeout: 3s
 is set to a float in (0.0, 1.0], that fraction of prompts gets routed
 through TrainedRouter (cosine similarity vs exemplar embeddings,
 roadmap 260509 §4.5.1 bootstrap) instead of LinUCB bandit. Both paths
-emit a Langfuse `delegation.routing.decision` span when langfuse is
-enabled — foundation for §5c.9 outcome corpus.
+CAN emit a Langfuse `delegation.routing.decision` span — but only under
+DELEGATION_ROUTING_SPAN=1 (по умолчанию ВЫКЛЮЧЕНО: замер 2026-07-26 дал
+~1.9 с при таймауте хука 3 с, см. комментарий в `_delegation_level`).
+Основа §5c.9 outcome corpus — при включённом флаге.
 """
 
 import hashlib

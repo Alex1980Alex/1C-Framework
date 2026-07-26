@@ -68,7 +68,10 @@ async def list_tools() -> list[Tool]:
                     "model": {
                         "type": "string",
                         "description": (
-                            "Specific model (optional). STRICT TIER MATCH: only a provider "
+                            "Specific model (optional). Tiers available: 'haiku' | 'sonnet' "
+                            "| 'opus' (opus is explicit-only: reachable ONLY by naming it "
+                            "here, never via auto-fallback — pick it by task difficulty). "
+                            "STRICT TIER MATCH: only a provider "
                             "that declares this model runs it — others are skipped, and if "
                             "nobody declares it the call FAILS instead of silently using "
                             "another model. Omit to let each provider use its own tier. "
