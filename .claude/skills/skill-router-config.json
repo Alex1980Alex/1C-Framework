@@ -2073,7 +2073,7 @@
       ],
       "skills": [
         "llm-rotation",
-        "z-ai-delegation",
+        "llm-delegation",
         "delegation-classifier"
       ],
       "weighted_keywords": {
@@ -2085,7 +2085,7 @@
         "token economy": 5,
         "delegation": 4,
         "экономия токенов": 5,
-        "делегировать z.ai": 5
+        "делегировать генерацию": 5
       },
       "utterances": [
         "send prompt to LLM with rotation",
@@ -2095,8 +2095,8 @@
         "отправь запрос через ротацию LLM",
         "проверь статус LLM провайдеров",
         "сбрось провайдер LLM",
-        "delegate this to Z.AI",
-        "делегируй на z.ai",
+        "delegate this generation to cheap LLM tier",
+        "делегируй генерацию",
         "экономь токены"
       ]
     },

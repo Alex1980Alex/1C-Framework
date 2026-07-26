@@ -3,7 +3,7 @@
 Hook: z-ai-write-guard
 Event: PreToolUse
 Matcher: Write|Edit
-Purpose: Block Write/Edit of >15 lines of code if Z.AI (llm_complete) was not
+Purpose: Block Write/Edit of >15 lines of code if LLM-делегат (llm_complete) was not
          used in this session. Enforces Token Economy protocol (strict mode).
 Timeout: 3s
 
@@ -19,7 +19,7 @@ Flow:
   3. Skip non-code files (.md, .json, .yml, .env, .toml, .txt, .csv, .html)
   4. Skip exempt paths (.claude/, docs/, data/, tests/ — NOT pipeline/, see NB below)
   5. Count lines in content (Write) or new_string (Edit)
-  6. If lines > 15 AND no llm_delegation in session → block with Z.AI instructions
+  6. If lines > 15 AND no llm_delegation in session → block with delegation instructions
   7. Otherwise → allow
 
 Large .md (>50 lines) is enforced even under docs/ — long prose IS delegatable —
@@ -215,16 +215,16 @@ class ZAIWriteGuard(BaseHook):
         except Exception:
             pass
 
-        # Check if Z.AI was used in this session
+        # Check if delegation was used in this session
         try:
             from shared.session_state import SessionState
 
             if SessionState.has_llm_delegation():
-                return None  # Z.AI was used — allow
+                return None  # delegation was used — allow
         except Exception:
             return None  # Graceful degradation
 
-        # Block: large code write without Z.AI delegation
+        # Block: large code write without LLM delegation
         return HookOutput().block(
             f"[Z.AI WRITE GUARD] Запись {line_count} строк кода без делегирования на Z.AI.\n"
             f"Файл: {os.path.basename(file_path)}\n\n"
@@ -233,7 +233,7 @@ class ZAIWriteGuard(BaseHook):
             "2. mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
             "3. Отревьюй результат, исправь если нужно\n"
             "4. Write() финальный код\n\n"
-            "Полный протокол: Skill('z-ai-delegation')"
+            "Полный протокол: Skill('llm-delegation')"
         )
 
 

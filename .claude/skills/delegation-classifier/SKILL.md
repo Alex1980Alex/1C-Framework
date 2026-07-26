@@ -1,11 +1,11 @@
 ---
 name: delegation-classifier
 description: >
-  Классификация задач для делегирования на Z.AI. Предварительный анализ ПЕРЕД генерацией:
+  Классификация задач для делегирования на дешёвый LLM-тир (sonnet-first ротация). Предварительный анализ ПЕРЕД генерацией:
   оценка output size, выбор уровня (Soft/Medium/Hard/Never), трекинг outcomes,
   обучение на опыте. Триггеры: 'классифицировать задачу', 'delegation classifier',
   'что делегировать', 'оценка делегирования', 'delegation outcome', 'delegation feedback'.
-  НЕ для самого процесса делегирования — используй z-ai-delegation.
+  НЕ для самого процесса делегирования — используй llm-delegation.
 version: 1.1.0
 updated: 2026-04-21
 tags: [delegation, classification, learning, token-economy, feedback-loop]
@@ -45,9 +45,9 @@ tags: [delegation, classification, learning, token-economy, feedback-loop]
 
 4. DECIDE — финальное решение
    - Never: делай сам (architecture, debug, < 30 lines)
-   - Hard: Z.AI draft → thorough Opus review
-   - Medium: Z.AI draft → accuracy review
-   - Soft: Z.AI draft → формат check
+   - Hard: делегат draft → thorough Opus review
+   - Medium: делегат draft → accuracy review
+   - Soft: делегат draft → формат check
    - ORCHESTRATOR: если 3+ файлов → decompose per file
 
 5. RECORD START — записать в outcomes
@@ -70,13 +70,13 @@ mixed (code+docs)   │ Never      │ Hard         │ Hard          │ Orches
 
 | Условие | Override | Причина |
 |---------|----------|---------|
-| **1С/BSL (.bsl/.os)** | **→ Never** | **Z.AI не знает платформу 1С и галлюцинирует её API — этот код пишет Opus сам** |
+| **1С/BSL (.bsl/.os)** | **→ Never** | **делегат не знает платформу 1С и галлюцинирует её API — этот код пишет Opus сам** |
 | Architecture decision | → Never | Требует полный контекст проекта |
-| Security-sensitive | → Never | Z.AI может пропустить уязвимости |
+| Security-sensitive | → Never | делегат может пропустить уязвимости |
 | Debugging/investigation | → Never | Интерактивный процесс |
 | Bulk formatting (10+ items) | → Soft | Шаблонная работа |
-| History: rewrite > 50% на похожем | → +1 level (Medium→Hard→Never) | Опыт показал низкое качество Z.AI |
-| History: rewrite < 10% на похожем | → -1 level (Hard→Medium→Soft) | Опыт показал высокое качество Z.AI |
+| History: rewrite > 50% на похожем | → +1 level (Medium→Hard→Never) | Опыт показал низкое качество делегата |
+| History: rewrite < 10% на похожем | → -1 level (Hard→Medium→Soft) | Опыт показал высокое качество делегата |
 
 ## Outcome Tracking
 
@@ -99,8 +99,8 @@ mixed (code+docs)   │ Never      │ Hard         │ Hard          │ Orches
 | `actual_lines` | int | Фактические строки (после) |
 | `files_count` | int | Количество файлов |
 | `level` | enum | Soft, Medium, Hard, Never |
-| `delegated` | bool | Было ли делегировано на Z.AI? |
-| `rewrite_pct` | int | % переписывания Opus после Z.AI (0 если не делегировано) |
+| `delegated` | bool | Было ли делегировано? |
+| `rewrite_pct` | int | % переписывания Opus после делегата (0 если не делегировано) |
 | `reason` | string | Почему выбран этот уровень |
 | `correct_level` | enum | Какой уровень был бы правильным (ретроспективно) |
 | `lesson` | string | Что узнали (для обновления правил) |
@@ -187,9 +187,9 @@ _ORCHESTRATOR_SIGNALS += [
 
 | Плохо | Почему | Как правильно |
 |-------|--------|---------------|
-| Классифицировать всё как Never | "Я лучше Z.AI" → потеря 80% токенов | Доверяй матрице, проверяй outcomes |
+| Классифицировать всё как Never | "Я лучше делегата" → потеря 80% токенов | Доверяй матрице, проверяй outcomes |
 | Не записывать outcomes | Нет данных для обучения | ВСЕГДА записывай start + end |
-| Делегировать architecture | Z.AI не знает контекст | Never для архитектуры, Medium для её документирования |
+| Делегировать architecture | Делегат не знает контекст | Never для архитектуры, Medium для её документирования |
 | Не делать periodic review | Правила устаревают | Каждые 20 задач: анализ + adjustment |
 | Менять матрицу по 1 case | Шум, нестабильность | Минимум 5 cases с паттерном |
 | docs = Never | Docs — идеальный кандидат для Medium | Override: docs 30+ lines = Medium |

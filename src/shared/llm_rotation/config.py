@@ -25,6 +25,14 @@ class LLMRotationSettings(BaseSettings):
     cooldown_seconds: int = 300
     rate_limit_cooldown: int = 60
 
+    # Сквозной бюджет ВСЕГО complete() (2026-07-26): обе фазы (force-primary + fallback)
+    # обязаны уложиться, per-попытка timeout режется остатком. Согласован с per-server
+    # `timeout: 300000` в .mcp.json (⚠ per-server поле СИЛЬНЕЕ env MCP_TOOL_TIMEOUT —
+    # именно оно рвало вызовы на 60с). primary_budget_share гарантирует фоллбэку время:
+    # раньше primary с ретраями съедал всё окно и ротация не успевала ротировать.
+    total_budget_seconds: int = 240
+    primary_budget_share: float = 0.6
+
     # Force-primary mode: retry primary provider before any fallback
     force_primary: bool = True
     primary_max_retries: int = 2

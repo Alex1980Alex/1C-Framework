@@ -3,7 +3,7 @@
 Hook: z-ai-delegation-enforcer
 Event: UserPromptSubmit
 Matcher: (none - fires on every user prompt)
-Purpose: Detects tasks delegatable to Z.AI via LLM Rotation,
+Purpose: Detects tasks delegatable to cheap LLM tier via LLM Rotation,
          reminds to use delegation protocol for token economy.
 Timeout: 3s
 
@@ -201,51 +201,51 @@ class ZAIDelegationEnforcer(BaseHook):
         if orchestrator_score >= 1 or has_multi_file:
             level = "HARD" if hard_score >= 1 else "MEDIUM"
             return HookOutput().system_message(
-                f"[Z.AI DELEGATION: ORCHESTRATOR ({level})] Complex task detected (3+ outputs).\n"
-                "Protocol: DECOMPOSE -> PREPARE prompts -> DELEGATE to Z.AI -> REVIEW -> ASSEMBLE.\n"
+                f"[LLM DELEGATION: ORCHESTRATOR ({level})] Complex task detected (3+ outputs).\n"
+                "Protocol: DECOMPOSE -> PREPARE prompts -> DELEGATE via llm_complete -> REVIEW -> ASSEMBLE.\n"
                 "Steps:\n"
                 "1. Opus: decompose into subtasks, classify each (Soft/Medium/Hard/Never)\n"
                 "2. Opus: build prompt per subtask (task+context+format+constraints)\n"
-                "3. Z.AI: mcp__llm-rotation__llm_complete() per subtask\n"
+                "3. Delegate: mcp__llm-rotation__llm_complete() per subtask\n"
                 "4. Opus: review each result, fix inline\n"
                 "5. Opus: assemble + Write() final files\n"
-                "Full protocol: Skill('z-ai-delegation')"
+                "Full protocol: Skill('llm-delegation')"
             )
 
         # Bandit-based routing (when model is confident)
         if bandit_level and bandit_level != "Never":
-            bandit_msg = f"[Z.AI DELEGATION: {bandit_level.upper()}] Bandit model suggests delegation level {bandit_level}.\n"
+            bandit_msg = f"[LLM DELEGATION: {bandit_level.upper()}] Bandit model suggests delegation level {bandit_level}.\n"
             if bandit_level == "Hard":
                 bandit_msg += (
-                    "Protocol: Z.AI generates draft -> Opus THOROUGH review (mandatory).\n"
+                    "Protocol: delegate generates draft -> Opus THOROUGH review (mandatory).\n"
                 )
             elif bandit_level == "Medium":
-                bandit_msg += "Protocol: Z.AI generates draft -> Opus review (mandatory).\n"
+                bandit_msg += "Protocol: delegate generates draft -> Opus review (mandatory).\n"
             else:
-                bandit_msg += "Protocol: Z.AI generates draft -> format check.\n"
+                bandit_msg += "Protocol: delegate generates draft -> format check.\n"
             bandit_msg += "Use: mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
-            bandit_msg += "Full protocol: Skill('z-ai-delegation')"
+            bandit_msg += "Full protocol: Skill('llm-delegation')"
             return HookOutput().system_message(bandit_msg)
 
         # Hard signals (single task)
         if hard_score >= 1:
             return HookOutput().system_message(
-                "[Z.AI DELEGATION: HARD] This task can be delegated to Z.AI.\n"
-                "Protocol: Z.AI generates draft -> Opus THOROUGH review (mandatory).\n"
+                "[LLM DELEGATION: HARD] This task can be delegated to cheap LLM tier.\n"
+                "Protocol: delegate generates draft -> Opus THOROUGH review (mandatory).\n"
                 "Use: mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
                 "Review checklist: accuracy + completeness + format + logic + edge cases + security.\n"
                 "If >50% rewrite needed -> do it yourself (Opus).\n"
-                "Full protocol: Skill('z-ai-delegation')"
+                "Full protocol: Skill('llm-delegation')"
             )
 
         # Medium signals (single task) — threshold 1 for maximum delegation
         if medium_score >= 1:
             return HookOutput().system_message(
-                "[Z.AI DELEGATION: MEDIUM] This task should be delegated to Z.AI.\n"
-                "Protocol: Z.AI generates draft -> Opus review (mandatory).\n"
+                "[LLM DELEGATION: MEDIUM] This task should be delegated to cheap LLM tier.\n"
+                "Protocol: delegate generates draft -> Opus review (mandatory).\n"
                 "Use: mcp__llm-rotation__llm_complete(prompt=..., max_tokens=4096)\n"
                 "Review checklist: accuracy + completeness + format.\n"
-                "Full protocol: Skill('z-ai-delegation')"
+                "Full protocol: Skill('llm-delegation')"
             )
 
         return None

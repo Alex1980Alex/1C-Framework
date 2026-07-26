@@ -1,6 +1,6 @@
 ---
 name: llm-rotation
-description: "LLM Rotation Service — мульти-провайдерное LLM API с автофоллбэком. ИСПОЛЬЗУЙ когда делегируешь генерацию Z.AI, проверяешь статус провайдеров, сбрасываешь failed provider. Триггеры: 'llm_complete', 'llm rotation', 'Z.AI', 'провайдер LLM', 'fallback LLM', 'llm_reset_provider', 'llm_test_providers', 'делегировать генерацию'. НЕ для прямых вызовов Anthropic API (→ claude-api)."
+description: "LLM Rotation Service — мульти-провайдерное LLM API с автофоллбэком. ИСПОЛЬЗУЙ когда делегируешь генерацию на дешёвый тир (sonnet-first), проверяешь статус/маршрут провайдеров, сбрасываешь failed provider. Триггеры: 'llm_complete', 'llm rotation', 'провайдер LLM', 'llm_route_explain', 'fallback LLM', 'llm_reset_provider', 'llm_test_providers', 'делегировать генерацию'. НЕ для прямых вызовов Anthropic API (→ claude-api)."
 ---
 
 # LLM Rotation Service
@@ -9,7 +9,7 @@ description: "LLM Rotation Service — мульти-провайдерное LLM
 - Multi-provider LLM completion with automatic fallback
 - Provider health monitoring and rotation
 - Z.AI proxy (OpenAI -> Anthropic format translation)
-- MCP tools: `llm_complete`, `llm_get_stats`, `llm_reset_provider`, `llm_test_providers`, `llm_list_providers`
+- MCP tools: `llm_complete`, `llm_get_stats`, `llm_reset_provider`, `llm_test_providers`, `llm_list_providers`, **`llm_route_explain`** (какая модель будет выбрана и почему — БЕЗ вызова LLM)
 
 ## Architecture
 
@@ -65,6 +65,26 @@ claude-cli-sonnet и anthropic-sonnet прибиты к `claude-sonnet-5` явн
 (provider, tokens, fallback) + `llm_get_stats`.
 
 **Removed** (broken / misconfigured per audit): zai-glm5, zhipu, gemini, openrouter, mistral, ollama-cloud. Re-add via custom `providers=` arg to `LLMRotationService` if needed.
+
+## Маршрутизация (актуализировано 2026-07-26)
+
+- **Сквозной бюджет**: весь `complete()` (force-primary + fallback) живёт в
+  `LLM_ROTATION_TOTAL_BUDGET_SECONDS=240`; primary капится `primary_budget_share=0.6` —
+  фоллбэку ГАРАНТИРОВАННО остаётся время (раньше primary с ретраями съедал всё окно).
+- **⚠ Per-server timeout**: `.mcp.json` → `llm-rotation.timeout=300000`. Это поле
+  **СИЛЬНЕЕ** env `MCP_TOOL_TIMEOUT` — прежние 60000 рвали вызовы на 60с при «живом»
+  MCP_TOOL_TIMEOUT=240000. После правки — `/mcp reconnect`.
+- **Model-aware**: `model` фильтрует провайдеров (`resolve_model_for_provider`);
+  несовместимый скипается с причиной, явная модель НЕ подменяется тихо; в ответе
+  `requested_model` + `substituted`. Нет способного провайдера → честная ошибка со сводкой.
+- **Анти-эскалация**: списки `models` клод-провайдеров сужены до своего тира (opus
+  вычеркнут) — фоллбэк не уводит на дорогой тир; явный `model="opus"` остаётся возможным.
+- **Priority > adaptive**: скор — только tie-breaker внутри одного приоритета
+  (sonnet-first не подрывается; `max_latency` нормализации 30→120с — CLI-спавн 25-150с
+  больше не дискриминируется).
+- **Диагностика**: `llm_route_explain` + per-call лог `.claude/cache/mcp-llm-rotation-calls.jsonl`
+  (обвязка `mcp_call_log`, N-P2.2-класс) + completions-лог по абсолютному пути с env-override
+  `LLM_ROTATION_COMPLETIONS_LOG` (тесты больше не пишут в продовый jsonl).
 
 ## Health States
 
@@ -177,6 +197,7 @@ Registered in `.mcp.json` as `llm-rotation` server.
 | `llm_reset_provider` | Reset provider to HEALTHY |
 | `llm_test_providers` | Test all available providers |
 | `llm_list_providers` | List configured providers |
+| `llm_route_explain` | Порядок попыток, skip-причины (нет ключа/cooldown/model-несовместим), CB, эффективная модель |
 
 ## Known Issues
 

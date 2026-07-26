@@ -52,7 +52,10 @@ class AdaptiveScorer:
     quality_weight: float = 0.4
     latency_weight: float = 0.3
     cost_weight: float = 0.3
-    max_latency: float = 30.0  # seconds, for normalization
+    # 30→120 (2026-07-26): CLI-спавн живёт 25-150с, при потолке 30с latency_score
+    # у claude-cli-* был ≈0 ВСЕГДА → адаптив системно топил назначенный primary
+    # против быстрых локальных провайдеров. 120с кладёт рабочий диапазон CLI в шкалу.
+    max_latency: float = 120.0  # seconds, for normalization
     max_cost: float = 0.01  # dollars per request, for normalization
     history: dict[str, list[RequestOutcome]] = field(default_factory=dict)
 

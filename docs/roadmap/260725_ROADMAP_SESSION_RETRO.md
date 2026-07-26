@@ -89,6 +89,42 @@
 
 ## §18 Progress Log
 
+### 2026-07-26 (ночь) - llm-rotation: три корня «не переключается на нужную модель»
+
+Мандат: анализ ротации + определение текущей модели/логики выбора + rename скилла
+«z.ai» + GitHub best practices + фикс. Полный разбор и дизайн -
+[pipeline/fix-llm-rotation-model-routing](../../pipeline/fix-llm-rotation-model-routing/pipeline.md).
+
+**R1 (главный):** в `.mcp.json` у `llm-rotation` стояло per-server `timeout: 60000` -
+по официальной doc это поле **сильнее** env `MCP_TOOL_TIMEOUT` (наши 240000 игнорировались;
+у stdio нет per-request 60s таймера). Вчерашняя запись «потолок 60с НЕ снят, причина
+неизвестна» закрыта: причина найдена, поднято до 300000. Внутри сервиса появился сквозной
+бюджет `total_budget_seconds=240` + `primary_budget_share=0.6`: раньше force_primary жевал
+primary (2×до-240с + backoff), и фоллбэк в клиентском окне был НЕДОСТИЖИМ - ротация,
+которая не успевает ротировать. **R2:** model-blind ротация - `model` не влиял на выбор
+провайдера, фоллбэк тихо подменял модель вплоть до ЭСКАЛАЦИИ (живой лог:
+`provider=claude-cli-haiku, model=claude-opus-4-7`); теперь `resolve_model_for_provider`
+скипает несовместимых с причиной, явная модель не подменяется, `models` клод-провайдеров
+сужены до своего тира, в ответе `requested_model`/`substituted`. **R3:** adaptive score
+стоял РАНЬШЕ priority (живые скоры: haiku 0.535 > sonnet 0.500-default → sonnet-first
+подрывался) - приоритет теперь политика, скор tie-breaker; `max_latency` 30→120с (CLI-спавн
+не дискриминируется). Наблюдаемость: тул `llm_route_explain` (прямой ответ «какая модель и
+почему», без вызова LLM), per-call лог (`mcp_call_log`, N-P2.2 пропустил этот сервер),
+JSON-ошибки, completions-лог абсолютный + env-override (в проде лежало 120+ записей
+тестового мусора mock/test-provider - тесты писали по относительному пути).
+
+Скилл переименован: **`llm-delegation`** (бывш. z-ai-delegation; Z.AI удалён из ротации
+ещё 2026-05-16 - имя лгало). Обновлены: SKILL.md (переписан), router-config bundle,
+delegation-classifier, тексты хуков (`[LLM WRITE GUARD]`, `Skill('llm-delegation')`),
+CLAUDE.md, 2 файла памяти. Файлы хуков `z-ai-*.py` осознанно НЕ переименованы
+(регистрация в settings.json + имена классов в логах + тесты; blast radius > ценности).
+
+11 новых unit (кейс поймал возврат пользовательского регистра модели вместо канонического -
+исправлено в продукте) + 65 в затронутом наборе зелёные; lint_skills 0 errors; live-smoke
+`explain_route`. GitHub-скан: litellm 54.7k⭐/bifrost 6.8k⭐ - приёмы deadline propagation
+и model-group маппинга легли в дизайн; 30-дн свежак нулевого engagement отброшен.
+⚠ Рантайм MCP-сервера - после `/mcp reconnect`.
+
 ### 2026-07-26 (вечер) - потеря записи session_state перестала быть невидимой
 
 Закрыт пункт «остаётся открытым» предыдущей записи: класс лечился фолбэками, а частота

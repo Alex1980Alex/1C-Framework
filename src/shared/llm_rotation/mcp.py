@@ -10,6 +10,8 @@ import asyncio
 import json
 import logging
 import sys
+import time
+from pathlib import Path
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -21,6 +23,21 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 logger = logging.getLogger("llm-rotation-mcp")
+
+# Per-call лог (2026-07-26): llm-rotation был ЕДИНСТВЕННЫМ активным сервером без
+# второго источника истины (N-P2.2 обвязал memory-*/skill-learning, этот пропущен) —
+# клиентский обрыв 60с был серверу невидим. Паттерн 1c-stdio-лаунчера: scripts-dir
+# на path, bare import, fail-soft заглушка.
+try:
+    _SCRIPTS = str(Path(__file__).resolve().parents[3] / "scripts")
+    if _SCRIPTS not in sys.path:
+        sys.path.append(_SCRIPTS)
+    from mcp_call_log import log_mcp_call as _log_call
+except Exception:  # pragma: no cover — лог опционален, сервис важнее
+
+    def _log_call(*_a, **_k) -> None:
+        return None
+
 
 app = Server("llm-rotation")
 
@@ -99,13 +116,48 @@ async def list_tools() -> list[Tool]:
             description="List all configured providers with their configuration details.",
             inputSchema={"type": "object", "properties": {}},
         ),
+        Tool(
+            name="llm_route_explain",
+            description=(
+                "Explain routing WITHOUT calling any LLM: attempt order, per-provider "
+                "status/circuit-breaker, effective model, skip reasons (no key / cooldown / "
+                "model incompatible), budget. Use to answer 'which model will I get and why'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "type": "string",
+                        "description": "Model to check routing for (alias or full name, optional)",
+                    },
+                },
+            },
+        ),
     ]
 
 
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    started = time.monotonic()
+
+    def _done(ok: bool, error_type: str | None = None) -> None:
+        _log_call(
+            "llm-rotation",
+            name,
+            ok=ok,
+            ms=(time.monotonic() - started) * 1000.0,
+            error_type=error_type,
+        )
+
     try:
         service = _get_service()
+
+        if name == "llm_route_explain":
+            explained = service.explain_route(model=arguments.get("model"))
+            _done(True)
+            return [
+                TextContent(type="text", text=json.dumps(explained, ensure_ascii=False, indent=1))
+            ]
 
         if name == "llm_complete":
             result = await service.complete(
@@ -117,6 +169,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 max_tokens=arguments.get("max_tokens", 2048),
                 timeout=arguments.get("timeout"),
             )
+            _done(True)
             return [
                 TextContent(
                     type="text",
@@ -146,6 +199,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 if info["last_error"]:
                     lines.append(f"  Last error: {info['last_error']}")
                 lines.append("")
+            _done(True)
             return [TextContent(type="text", text="\n".join(lines))]
 
         elif name == "llm_reset_provider":
@@ -155,6 +209,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 msg = f"Provider '{provider}' reset to HEALTHY"
             else:
                 msg = f"Provider '{provider}' not found"
+            _done(True)
             return [TextContent(type="text", text=msg)]
 
         elif name == "llm_test_providers":
@@ -171,6 +226,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     results.append(f"❌ {state.config.name}: {str(e)[:100]}")
             if not results:
                 results.append("No providers available. Check API keys.")
+            _done(True)
             return [TextContent(type="text", text="\n".join(results))]
 
         elif name == "llm_list_providers":
@@ -187,13 +243,25 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     f"  Format: {cfg.format} | Key: {'✅' if has_key else '❌'}\n"
                     f"  Limits: RPM={cfg.rate_limit_rpm or '∞'}, Daily={cfg.daily_limit or '∞'}\n"
                 )
+            _done(True)
             return [TextContent(type="text", text="\n".join(lines))]
 
+        _done(False, "unknown_tool")
         return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
     except Exception as e:
         logger.error(f"Error in {name}: {e}")
-        return [TextContent(type="text", text=f"Error: {str(e)}")]
+        _done(False, type(e).__name__)
+        # Структурный конверт (2026-07-26): голая строка "Error: ..." для клиента
+        # неотличима от успешного текста; JSON с ok:false машиночитаем.
+        return [
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {"ok": False, "tool": name, "error": str(e)[:500]}, ensure_ascii=False
+                ),
+            )
+        ]
 
 
 async def main():

@@ -26,18 +26,57 @@ from src.shared.llm_rotation.rate_limiter import ProviderRateLimiter
 
 logger = logging.getLogger("llm-rotation")
 
-_COMPLETIONS_LOG = Path("data/llm-rotation-completions.jsonl")
+# Абсолютный путь (2026-07-26): относительный `data/...` зависел от cwd процесса и
+# позволял тестам писать в ПРОДОВЫЙ лог (в живом файле mock/test-provider/working —
+# 120+ записей тестового мусора искажали метрики). Env-override — для тестов/переноса.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _completions_log_path() -> Path:
+    override = os.environ.get("LLM_ROTATION_COMPLETIONS_LOG")
+    return Path(override) if override else _REPO_ROOT / "data" / "llm-rotation-completions.jsonl"
 
 
 def _log_completion(**kwargs) -> None:
     """Append completion metric to JSONL (fire-and-forget)."""
     try:
-        _COMPLETIONS_LOG.parent.mkdir(parents=True, exist_ok=True)
+        path = _completions_log_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
         kwargs["ts"] = datetime.now().isoformat()
-        with open(_COMPLETIONS_LOG, "a", encoding="utf-8") as f:
+        with open(path, "a", encoding="utf-8") as f:
             f.write(_json.dumps(kwargs, ensure_ascii=False) + "\n")
     except Exception:
         pass
+
+
+# Единый резолв alias→полное имя (2026-07-26): раньше жил только внутри claude-cli-ветки,
+# а ВЫБОР провайдера модели не видел вовсе (model-blind ротация: «просил sonnet —
+# получил qwen2.5» было возможным исходом фоллбэка).
+MODEL_ALIASES: dict[str, str] = {
+    "haiku": "claude-haiku-4-5",
+    "sonnet": "claude-sonnet-5",
+    "opus": "claude-opus-4-8",
+}
+
+
+def resolve_model_for_provider(cfg: "ProviderConfig", model: str | None) -> str | None:
+    """Полное имя модели, которое ЭТОТ провайдер может исполнить, или None (несовместим).
+
+    None — сигнал вызывающему СКИПНУТЬ провайдера, а не тихо подменить модель.
+    claude-cli/anthropic исполняют любую claude-* модель; остальные (ollama) — только
+    точные имена из своего конфига (регистронезависимо — ревью sonnet 2026-07-26).
+    """
+    target = model or cfg.default_model
+    full = MODEL_ALIASES.get(target.lower(), target)
+    if cfg.format in ("claude-cli", "anthropic"):
+        return full if full.startswith("claude-") else None
+    # каноническое имя из конфига, матч регистронезависимый (ревью sonnet 2026-07-26):
+    # вернуть пользовательский регистр нельзя — провайдер такой модели не знает
+    canon = {
+        MODEL_ALIASES.get(m.lower(), m).lower(): MODEL_ALIASES.get(m.lower(), m)
+        for m in [cfg.default_model, *cfg.models]
+    }
+    return canon.get(full.lower())
 
 
 def _parse_retry_after(value: str | None) -> float | None:
@@ -160,7 +199,11 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         base_url="",  # subprocess, no HTTP
         api_key_env="",
         default_model="claude-sonnet-5",
-        models=["claude-sonnet-5", "haiku", "opus"],
+        # ТОЛЬКО свой тир (2026-07-26): перебор models внутри провайдера раньше включал
+        # "opus" — фоллбэк мог ТИХО ЭСКАЛИРОВАТЬ на самый дорогой тир (живой случай в
+        # логе: provider=claude-cli-haiku, model=claude-opus-4-7). Это против цели
+        # token-economy. Явный запрос opus остаётся возможным через model="opus".
+        models=["claude-sonnet-5"],
         format="claude-cli",
         requires_key=False,
         priority=0,
@@ -171,7 +214,7 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         base_url="",
         api_key_env="",
         default_model="haiku",
-        models=["haiku", "sonnet", "opus"],
+        models=["haiku"],
         format="claude-cli",
         requires_key=False,
         priority=1,
@@ -288,14 +331,18 @@ class LLMRotationService:
         if not available:
             return None
 
-        # Sort: healthy first, then by adaptive score (if enough data), then priority
+        # Sort: healthy first, then PRIORITY, adaptive — только tie-breaker (2026-07-26).
+        # Раньше adaptive стоял РАНЬШЕ priority и подрывал политику sonnet-first: скор
+        # смешивает latency/cost, CLI-спавн 25-150с давал sonnet latency_score≈0, и
+        # быстрый дешёвый провайдер обгонял назначенный primary (живые скоры на момент
+        # фикса: haiku 0.535 > sonnet 0.500-default). Приоритет — политика, скор — совет.
         def sort_key(s: ProviderState) -> tuple:
             adaptive = self._scorer.score(s.config.name) if self._settings.adaptive_routing else 0.5
             return (
                 0 if s.status == ProviderStatus.HEALTHY else 1,
+                s.config.priority,
                 -adaptive,  # higher adaptive score = better (negate for ascending sort)
                 s.consecutive_errors,
-                s.config.priority,
                 s.avg_response_time,
             )
 
@@ -710,9 +757,11 @@ class LLMRotationService:
         Raises RuntimeError if all providers fail.
         """
         tried: list[str] = []
+        failures: list[str] = []  # сводка отказов per-попытка — в финальную ошибку
         total_attempts = 0
         primary_retries = 0
         primary_name = self._settings.primary_provider
+        requested_model = model
 
         # Auto-select timeout by max_tokens tier
         if timeout is None:
@@ -722,6 +771,25 @@ class LLMRotationService:
                 timeout = self._settings.timeout_generation  # 120s
             else:
                 timeout = self._settings.timeout  # 90s
+
+        # --- Сквозной deadline-бюджет (2026-07-26) ---
+        # Раньше per-попытка timeout (90/120/240с) никак не соотносился с бюджетом ВСЕГО
+        # вызова: force_primary жевал primary (2 попытки × до 240с + backoff), и до
+        # фоллбэка дело в клиентском окне не доходило НИКОГДА — «ротация, которая не
+        # успевает ротировать». Теперь: весь complete() живёт в total_budget_seconds,
+        # primary-фаза капится долей бюджета (primary_budget_share), каждой попытке
+        # отдаётся min(tier-timeout, остаток фазы), фоллбэку ГАРАНТИРОВАННО остаётся
+        # время. Бюджет согласован с per-server timeout в .mcp.json (300s > 240s).
+        start_ts = time.monotonic()
+        budget = float(self._settings.total_budget_seconds)
+        deadline = start_ts + budget
+        primary_deadline = start_ts + budget * self._settings.primary_budget_share
+
+        def _remaining(until: float) -> float:
+            return until - time.monotonic()
+
+        def _attempt_timeout(tier_timeout: float, until: float) -> int:
+            return max(5, int(min(tier_timeout, _remaining(until) - 2)))
 
         # Budget advisory check
         self._budget.check_daily_reset()
@@ -736,6 +804,13 @@ class LLMRotationService:
             can_try = True
             if primary_state.config.requires_key:
                 can_try = bool(os.environ.get(primary_state.config.api_key_env, ""))
+            # model-aware (2026-07-26): primary, не способный исполнить запрошенную
+            # модель, скипается СРАЗУ — раньше model уходил провайдеру как есть и либо
+            # падал, либо тихо игнорировался.
+            primary_model = resolve_model_for_provider(primary_state.config, model)
+            if model and primary_model is None:
+                can_try = False
+                failures.append(f"{primary_name}: не исполняет model={model} (skip)")
 
             if can_try:
                 # Rate limit check for primary
@@ -749,6 +824,10 @@ class LLMRotationService:
                     if not primary_state.is_available():
                         logger.info(f"[{primary_name}] Unavailable, skipping to fallback")
                         break
+                    if _remaining(primary_deadline) < 8:
+                        # primary съел свою долю бюджета — фоллбэку должно остаться время
+                        failures.append(f"{primary_name}: primary-бюджет исчерпан")
+                        break
 
                     total_attempts += 1
                     primary_retries += 1
@@ -757,12 +836,18 @@ class LLMRotationService:
                             primary_state,
                             prompt,
                             system_prompt,
-                            model,
+                            primary_model,
                             temperature,
                             max_tokens,
-                            timeout=timeout,
+                            timeout=_attempt_timeout(timeout, primary_deadline),
                         )
                         result["attempt"] = total_attempts
+                        result["requested_model"] = requested_model
+                        result["substituted"] = bool(
+                            requested_model
+                            and result.get("model")
+                            != MODEL_ALIASES.get(requested_model.lower(), requested_model)
+                        )
                         usage = result.get("usage", {})
                         _log_completion(
                             provider=result["provider"],
@@ -778,6 +863,7 @@ class LLMRotationService:
 
                     except Exception as e:
                         error_msg = str(e)[:200]
+                        failures.append(f"{primary_name}#{retry + 1}: {error_msg}")
                         retry_after = e.retry_after if isinstance(e, RateLimitError) else None
                         # Use reduced cooldown for primary provider
                         primary_state.record_error(
@@ -800,6 +886,9 @@ class LLMRotationService:
 
         # --- Phase 2: Fallback rotation with model-level failover ---
         for _ in range(self._settings.max_retries):
+            if _remaining(deadline) < 8:
+                failures.append(f"бюджет {budget:.0f}s исчерпан до завершения ротации")
+                break
             if preferred_provider and preferred_provider in self._providers:
                 state = self._providers[preferred_provider]
                 if not state.is_available() or preferred_provider in tried:
@@ -813,6 +902,13 @@ class LLMRotationService:
             provider_name = state.config.name
             tried.append(provider_name)
 
+            # model-aware (2026-07-26): несовместимый с запрошенной моделью провайдер
+            # скипается, а НЕ получает подменённую модель.
+            resolved = resolve_model_for_provider(state.config, model)
+            if model and resolved is None:
+                failures.append(f"{provider_name}: не исполняет model={model} (skip)")
+                continue
+
             # Rate limit check: wait if needed
             if self._settings.rate_limiting_enabled:
                 wait = self._rate_limiter.wait_time(provider_name)
@@ -823,11 +919,19 @@ class LLMRotationService:
                     logger.info(f"[{provider_name}] Rate limited, skipping")
                     continue
 
-            # Level 2: try default model, then alternative models
-            models_to_try = [model or state.config.default_model] + [
-                m for m in state.config.models if m != (model or state.config.default_model)
-            ]
+            # Явно запрошенная модель НЕ подменяется (тихая замена — класс вранья);
+            # без model — прежний перебор моделей провайдера (эскалации нет: списки
+            # models сужены до своего тира в DEFAULT_PROVIDERS).
+            if model:
+                models_to_try = [resolved]
+            else:
+                models_to_try = [state.config.default_model] + [
+                    m for m in state.config.models if m != state.config.default_model
+                ]
             for model_idx, try_model in enumerate(models_to_try):
+                if _remaining(deadline) < 8:
+                    failures.append(f"бюджет {budget:.0f}s исчерпан (до {provider_name})")
+                    break
                 total_attempts += 1
                 try:
                     result = await self._call_provider(
@@ -837,9 +941,15 @@ class LLMRotationService:
                         try_model,
                         temperature,
                         max_tokens,
-                        timeout=timeout,
+                        timeout=_attempt_timeout(timeout, deadline),
                     )
                     result["attempt"] = total_attempts
+                    result["requested_model"] = requested_model
+                    result["substituted"] = bool(
+                        requested_model
+                        and result.get("model")
+                        != MODEL_ALIASES.get(requested_model.lower(), requested_model)
+                    )
                     usage = result.get("usage", {})
                     _log_completion(
                         provider=result["provider"],
@@ -855,6 +965,7 @@ class LLMRotationService:
 
                 except Exception as e:
                     error_msg = str(e)[:200]
+                    failures.append(f"{provider_name}/{try_model}: {error_msg}")
                     is_transient = self._is_transient(e)
                     if model_idx < len(models_to_try) - 1 and is_transient:
                         logger.warning(
@@ -872,6 +983,10 @@ class LLMRotationService:
                     )
                     break  # move to next provider
 
+        # Финальная ошибка несёт СВОДКУ per-попытка (2026-07-26): «All failed. Tried:
+        # [names]» не давал понять ни почему упали, ни почему кого-то скипнули
+        # (model-несовместимость, бюджет). Диагноз должен читаться из самой ошибки.
+        detail = "; ".join(failures[-6:]) or "нет попыток"
         if total_attempts == 0:
             _log_completion(
                 provider="none",
@@ -880,11 +995,11 @@ class LLMRotationService:
                 attempt=0,
                 primary_retries=0,
                 fallback=False,
-                error="No available providers",
+                error=f"No available providers: {detail}"[:400],
             )
             raise RuntimeError(
-                f"No available LLM providers. Tried: {tried}. "
-                "Check API keys and provider availability."
+                f"No available LLM providers (model={model or 'auto'}). {detail}. "
+                "Check API keys / provider availability / model compatibility."
             )
         _log_completion(
             provider="none",
@@ -893,9 +1008,78 @@ class LLMRotationService:
             attempt=total_attempts,
             primary_retries=primary_retries,
             fallback=True,
-            error=f"All failed. Tried: {tried}",
+            error=f"All failed. Tried: {tried}. {detail}"[:400],
         )
-        raise RuntimeError(f"All providers failed after {total_attempts} attempts. Tried: {tried}")
+        raise RuntimeError(
+            f"All providers failed after {total_attempts} attempts "
+            f"(budget {budget:.0f}s, model={model or 'auto'}). {detail}"
+        )
+
+    def explain_route(self, model: str | None = None) -> dict[str, Any]:
+        """Объяснить, КАК будет выбран провайдер для запроса (без вызова LLM).
+
+        Ответ на «не всегда переключается на нужную модель» должен быть читаем из
+        одного вызова: порядок попыток, кто скипается и ПОЧЕМУ (нет ключа / cooldown /
+        не исполняет модель), эффективная модель у каждого, состояние CB и adaptive.
+        """
+        order: list[dict[str, Any]] = []
+        primary_name = self._settings.primary_provider
+
+        def _entry(state: ProviderState, phase: str) -> dict[str, Any]:
+            cfg = state.config
+            resolved = resolve_model_for_provider(cfg, model)
+            skip = None
+            if cfg.requires_key and not os.environ.get(cfg.api_key_env, ""):
+                skip = f"нет ключа {cfg.api_key_env}"
+            elif not state.is_available():
+                skip = f"недоступен ({state.status.value}, cb={state.circuit_breaker.state.value})"
+            elif model and resolved is None:
+                skip = f"не исполняет model={model}"
+            return {
+                "phase": phase,
+                "provider": cfg.name,
+                "priority": cfg.priority,
+                "status": state.status.value,
+                "circuit_breaker": state.circuit_breaker.state.value,
+                "effective_model": resolved,
+                "adaptive_score": round(self._scorer.score(cfg.name), 4),
+                "avg_response_time": round(state.avg_response_time, 2),
+                "last_error": state.last_error,
+                "skip_reason": skip,
+            }
+
+        if self._settings.force_primary and primary_name in self._providers:
+            order.append(_entry(self._providers[primary_name], "1-force-primary"))
+        seen = {e["provider"] for e in order}
+        # Phase 2 в предсказанном порядке сортировки get_best_provider
+        remaining = [s for s in self.get_available_providers() if s.config.name not in seen]
+
+        def sort_key(s: ProviderState) -> tuple:
+            adaptive = self._scorer.score(s.config.name) if self._settings.adaptive_routing else 0.5
+            return (
+                0 if s.status == ProviderStatus.HEALTHY else 1,
+                s.config.priority,
+                -adaptive,
+                s.consecutive_errors,
+                s.avg_response_time,
+            )
+
+        for s in sorted(remaining, key=sort_key):
+            order.append(_entry(s, "2-fallback"))
+        # несконфигурированные к показу тоже: провайдеры вне available (нет ключа/cooldown)
+        listed = {e["provider"] for e in order}
+        for name, s in self._providers.items():
+            if name not in listed:
+                order.append(_entry(s, "unreachable"))
+        return {
+            "requested_model": model,
+            "primary_provider": primary_name,
+            "force_primary": self._settings.force_primary,
+            "total_budget_seconds": self._settings.total_budget_seconds,
+            "primary_budget_share": self._settings.primary_budget_share,
+            "adaptive_routing": self._settings.adaptive_routing,
+            "order": order,
+        }
 
     def _record_error_with_signal(
         self,
