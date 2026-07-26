@@ -1218,6 +1218,7 @@ class LLMRotationService:
         preferred_provider: str | None = None,
         return_exceptions: bool = True,
         concurrency: int | None = None,
+        model: str | None = None,
     ) -> list[dict[str, Any] | BaseException]:
         """Concurrent batch wrapper around `complete()` with adaptive throttling.
 
@@ -1231,6 +1232,11 @@ class LLMRotationService:
             system_prompt: shared system prompt for all calls.
             temperature, max_tokens, timeout, component, preferred_provider:
                 same semantics as ``complete()``; broadcast to every call.
+            model: явный тир (``haiku`` / ``sonnet`` / ``opus`` или полный id) —
+                та же семантика СТРОГОГО совпадения, что у ``complete()``:
+                исполнит только провайдер, объявивший эту модель, остальные
+                скипаются. Без него батч не мог выбрать тир вовсе, и весь
+                explicit_only-путь (opus) был из батча недостижим.
             return_exceptions: if True (default), failed calls are returned
                 as ``Exception`` instances in the result list (preserves
                 positional alignment with ``prompts``). If False, the first

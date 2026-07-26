@@ -17,7 +17,12 @@ class LLMRotationSettings(BaseSettings):
     """
 
     primary_provider: str = "claude-cli-sonnet"
-    max_retries: int = 3
+    # 3 → 5 (2026-07-26, «максимальное использование»): авто-ротация видит РОВНО трёх
+    # провайдеров (sonnet → haiku → ollama; opus explicit_only, anthropic-sonnet без
+    # ключа), и при трёх ротациях каждый получал одну попытку — повторить упавший тир
+    # было нечем. 5 даёт второй заход, НЕ удлиняя вызов: верхняя граница по-прежнему
+    # total_budget_seconds, который режет раньше, чем исчерпаются ротации.
+    max_retries: int = 5
     # CLI subprocess startup adds ~5s overhead; bump default timeout vs old HTTP defaults
     timeout: int = 90
     timeout_generation: int = 120
@@ -30,7 +35,10 @@ class LLMRotationSettings(BaseSettings):
     # `timeout: 300000` в .mcp.json (⚠ per-server поле СИЛЬНЕЕ env MCP_TOOL_TIMEOUT —
     # именно оно рвало вызовы на 60с). primary_budget_share гарантирует фоллбэку время:
     # раньше primary с ретраями съедал всё окно и ротация не успевала ротировать.
-    total_budget_seconds: int = 240
+    # 240 → 270 (2026-07-26): per-server `timeout: 300000` — потолок КЛИЕНТА, дальше он
+    # обрывает вызов независимо от нас. 60с бюджета простаивало; 30с зазора хватает на
+    # сериализацию ответа и обвязку логов. Инвариант прежний: бюджет < клиентского окна.
+    total_budget_seconds: int = 270
     primary_budget_share: float = 0.6
 
     # Force-primary mode: retry primary provider before any fallback
@@ -38,6 +46,16 @@ class LLMRotationSettings(BaseSettings):
     primary_max_retries: int = 2
     primary_retry_delay: float = 3.0
     primary_cooldown_seconds: int = 30
+
+    # Потолок конкурентности батча ДЛЯ СПАВН-ПРОВАЙДЕРОВ (format="claude-cli"), 2026-07-26.
+    # Общий старт задаётся LLM_ROTATION_BATCH_CONCURRENCY (см. adaptive_concurrency.py) и
+    # поднят до 6 ради пропускной способности, но для claude-cli это означало бы 6
+    # параллельных ПОЛНЫХ Claude Code: каждый вызов спавнит вторую сессию со своей
+    # цепочкой хуков (~35 python-процессов, ~2.8 ГБ commit). Инцидент 2026-07-26 16:51 —
+    # сессия оборвалась молча ровно на llm_complete при запасе commit ~4 ГБ
+    # ([[reference-machine-commit-exhaustion]]). Дешёвые провайдеры (ollama/HTTP) потолком
+    # не задеты. Поднимать осознанно, глядя на `\Memory\Committed Bytes`.
+    batch_cli_concurrency: int = 3
 
     # Circuit Breaker
     cb_fail_threshold: int = 3

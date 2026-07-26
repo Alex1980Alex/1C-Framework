@@ -438,10 +438,16 @@ class TestSettings:
             "claude-cli-sonnet",
             "ollama-local",
         )
-        assert settings.max_retries == 3
+        # 3 → 5 (2026-07-26): ротации хватает на второй заход по тем же трём
+        # авто-провайдерам; режет по-прежнему total_budget_seconds, не счётчик.
+        assert settings.max_retries == 5
         # Default 90s (bumped 2026-05-16 for subprocess overhead). Accept
         # 30/60 (legacy) and 90 (post-cleanup); .env override may force any.
         assert settings.timeout in (30, 60, 90)
+        # Бюджет ВСЕГО complete() обязан оставаться строго ниже клиентского окна
+        # (.mcp.json → llm-rotation.timeout = 300000 мс), иначе клиент обрывает
+        # вызов раньше, чем сервис успевает вернуть ответ.
+        assert settings.total_budget_seconds < 300
 
     def test_custom_values(self):
         settings = LLMRotationSettings(max_retries=5, timeout=60)
