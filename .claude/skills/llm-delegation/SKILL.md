@@ -372,8 +372,8 @@ Wrote `parser.py:45-60`. Review:
 | Logic | OK | Priority: Never > Orchestrator > Hard > Medium |
 | Security | OK | No user input in regex, no file I/O |
 | Patterns | OK | BaseHook, systemMessage advisory |
-| Performance | OK | Keyword matching only, <1ms |
-| Edge cases | OK | Short prompts (<40 chars) skipped |
+| Performance | OK | 187-226 мс: keyword matching + бандит (замер 2026-07-26, таймаут хука 3 с) |
+| Edge cases | OK | Промпты короче `_MIN_PROMPT_LEN` = 20 символов пропускаются |
 ```
 
 ### Review после генерации делегатом
