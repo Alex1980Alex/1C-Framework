@@ -330,7 +330,7 @@ def load_items_from_jsonl(path: Path) -> list[dict]:
 
 
 def _default_judge_fn(prompt: str) -> str:
-    """LLM через LLMRotationService (z.ai/fallback). Async → синхронно обёрнуто.
+    """LLM через LLMRotationService (sonnet-first + фоллбэк). Async → синхронно обёрнуто.
     Ленивый импорт: без активации H-P4 тяжёлый src.* не тянется."""
     import asyncio
 
@@ -339,11 +339,12 @@ def _default_judge_fn(prompt: str) -> str:
     svc = LLMRotationService()
 
     async def _go() -> str:
-        resp = await svc.complete(
-            messages=[{"role": "user", "content": prompt}], max_tokens=200, temperature=0.0
-        )
-        # complete возвращает объект/строку — берём текст робастно
-        return getattr(resp, "content", None) or getattr(resp, "text", None) or str(resp)
+        # Сигнатура сервиса: complete(prompt=..., ...) и dict на выходе. Было
+        # complete(messages=[...]) + getattr по объекту — TypeError на ПЕРВОМ же вызове,
+        # который каденс гасил веткой «провайдер down → пропуск», то есть судья молча
+        # не работал ни разу (найдено ревью 2026-07-26).
+        resp = await svc.complete(prompt=prompt, max_tokens=200, temperature=0.0)
+        return str(resp.get("text") or "")
 
     return asyncio.run(_go())
 

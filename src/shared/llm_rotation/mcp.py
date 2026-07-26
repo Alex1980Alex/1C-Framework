@@ -65,7 +65,16 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "prompt": {"type": "string", "description": "The prompt to send"},
                     "system_prompt": {"type": "string", "description": "Optional system prompt"},
-                    "model": {"type": "string", "description": "Specific model to use (optional)"},
+                    "model": {
+                        "type": "string",
+                        "description": (
+                            "Specific model (optional). STRICT TIER MATCH: only a provider "
+                            "that declares this model runs it — others are skipped, and if "
+                            "nobody declares it the call FAILS instead of silently using "
+                            "another model. Omit to let each provider use its own tier. "
+                            "Use llm_route_explain to see the resulting route."
+                        ),
+                    },
                     "preferred_provider": {
                         "type": "string",
                         "description": "Preferred provider name (optional)",

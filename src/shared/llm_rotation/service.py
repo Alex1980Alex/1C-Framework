@@ -205,7 +205,9 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         # ТОЛЬКО свой тир (2026-07-26): перебор models внутри провайдера раньше включал
         # "opus" — фоллбэк мог ТИХО ЭСКАЛИРОВАТЬ на самый дорогой тир (живой случай в
         # логе: provider=claude-cli-haiku, model=claude-opus-4-7). Это против цели
-        # token-economy. Явный запрос opus остаётся возможным через model="opus".
+        # token-economy. С 2026-07-26 действует строгое совпадение тира: тира opus в наборе
+        # нет вовсе, поэтому model="opus" даёт честный отказ, пока провайдера этого тира
+        # не заведут здесь явно.
         models=["claude-sonnet-5"],
         format="claude-cli",
         requires_key=False,

@@ -30,6 +30,34 @@ def _isolate_out(tmp_path, monkeypatch):
     monkeypatch.setenv("TOOL_JUDGE_CURSOR", str(tmp_path / "cursor.json"))
 
 
+def test_default_judge_fn_calls_service_with_prompt_and_reads_text(monkeypatch):
+    """Контракт вызова сервиса ротации: `complete(prompt=...)` и текст из ключа `text`.
+
+    Было `complete(messages=[...])` + `getattr` по объекту: у сервиса нет параметра
+    `messages`, а `prompt` обязателен — TypeError на ПЕРВОМ же вызове. Каденс гасил его
+    веткой «провайдер down → пропуск с пометкой», поэтому судья молча не отработал ни
+    разу (найдено ревью 2026-07-26). Тест краснеет при возврате любой из двух ошибок.
+    """
+    import types
+
+    captured: dict = {}
+
+    class _FakeService:
+        async def complete(self, **kwargs):
+            captured.update(kwargs)
+            return {"provider": "p", "model": "m", "text": "ВЕРДИКТ", "response_time": 0.0}
+
+    fake_mod = types.ModuleType("src.shared.llm_rotation.service")
+    fake_mod.LLMRotationService = _FakeService
+    monkeypatch.setitem(sys.modules, "src.shared.llm_rotation.service", fake_mod)
+
+    out = lj._default_judge_fn("оцени вызов")
+
+    assert out == "ВЕРДИКТ", "текст берётся из ключа 'text' ответа сервиса, а не str(dict)"
+    assert captured.get("prompt") == "оцени вызов"
+    assert "messages" not in captured, "у complete() нет параметра messages"
+
+
 def _write_mcp_log(root: Path, name: str, records: list[dict]) -> Path:
     d = root / ".claude" / "cache"
     d.mkdir(parents=True, exist_ok=True)

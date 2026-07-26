@@ -98,7 +98,8 @@ def test_resolver_rejects_foreign_models():
 
 def test_default_providers_do_not_escalate_tier():
     """Анти-эскалация: в списках models клод-провайдеров нет opus (живой случай
-    эскалации haiku→opus в логе). Явный запрос model='opus' остаётся возможным."""
+    эскалации haiku→opus в логе). Под строгим совпадением тира (2026-07-26) это же
+    означает, что model='opus' не исполняет НИКТО — см. test_opus_not_callable_*."""
     by_name = {c.name: c for c in DEFAULT_PROVIDERS}
     for name in ("claude-cli-sonnet", "claude-cli-haiku"):
         expanded = {m.lower() for m in by_name[name].models}
