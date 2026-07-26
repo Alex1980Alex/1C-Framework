@@ -23,7 +23,22 @@ from pathlib import Path
 # сервиса вне pytest) делали is_provider_down() истинным, гард graceful-пропускал
 # запись, и все assert'ы «должно блокировать» краснели. Это было задокументировано
 # в test_z_ai_write_guard_scope.py как «known residual, accepted» — и сработало.
-_DATA = Path(os.environ.get("LLM_HEALTH_DATA_DIR") or Path(__file__).resolve().parents[3] / "data")
+_DATA = Path(__file__).resolve().parents[3] / "data"
+
+
+def _data_dir() -> Path:
+    """Каталог логов, читается В МОМЕНТ ВЫЗОВА.
+
+    Не на импорте (ревью 2026-07-26): при связывании на импорте `monkeypatch.setenv`
+    в уже загруженном модуле был бы МОЛЧАЛИВЫМ no-op — тот же класс фиктивной изоляции,
+    что и мёртвая CLAUDE_SESSION_STATE_PATH в истории test_z_ai_write_guard_scope.py.
+    `_DATA` остаётся дефолтом и точкой для существующих monkeypatch.setattr.
+    ⚠ Кто может задать эту переменную процессу хука — тот и так владеет гардом;
+    это инструмент изоляции тестов, а не граница безопасности.
+    """
+    return Path(os.environ.get("LLM_HEALTH_DATA_DIR") or _DATA)
+
+
 _METRICS = "llm-rotation-metrics.jsonl"  # {ts, success, provider, ...}
 _COMPLETIONS = "llm-rotation-completions.jsonl"  # {ts, provider, error?, ...}
 _DOWN_MARKERS = ("no available providers", "all failed", "down")
@@ -73,8 +88,9 @@ def is_provider_down(window_min: int = 30, sample: int = 8) -> bool:
     """
     cutoff = datetime.now(UTC) - timedelta(minutes=window_min)
     total = fails = 0
+    data_dir = _data_dir()
     for fname in (_METRICS, _COMPLETIONS):
-        for r in _tail(_DATA / fname, sample):
+        for r in _tail(data_dir / fname, sample):
             dt = _to_utc(r.get("ts"))
             if dt is not None and dt < cutoff:
                 continue  # вне окна

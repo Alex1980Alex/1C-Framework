@@ -582,6 +582,7 @@ def test_falsy_model_does_not_escalate_end_to_end(monkeypatch):
     monkeypatch.setattr(svc, "_call_provider", failing_call)
     with pytest.raises(RuntimeError):
         _run(svc.complete("hi", model=""))
+    assert seen, "якорь против вакуумной зелени: кто-то должен был быть опробован"
     assert "claude-cli-opus" not in seen
 
 
@@ -606,6 +607,7 @@ def test_explicit_only_primary_skipped_in_auto_call(monkeypatch):
     monkeypatch.setattr(svc, "_call_provider", failing_call)
     with pytest.raises(RuntimeError):
         _run(svc.complete("hi"))
+    assert seen, "якорь против вакуумной зелени: кто-то должен был быть опробован"
     assert "claude-cli-opus" not in seen
     # при ЯВНОМ запросе своего тира тот же primary обязан работать
     ok: list[str] = []
