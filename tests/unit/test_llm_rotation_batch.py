@@ -1,6 +1,7 @@
 """Батч-делегация и потолки пропускной способности llm-rotation (мандат 2026-07-26).
 
-Мандат «настроить на максимальное использование» вскрыл три дыры, которые тут и пинятся:
+Мандат «настроить на максимальное использование» вскрыл три дыры (B1-B3), а правки по
+ним породили четвёртую группу (B4) — всё это тут и пинится:
 
   B1 `batch_complete` не принимал `model` и не передавал его в `complete()` — строгий
      тир (haiku/sonnet/opus), сделанный в тот же день, из батча был НЕДОСТИЖИМ, а
@@ -13,11 +14,13 @@
      клемпила по `preferred_provider` и была fail-open — исполнителя выбирает ротация,
      поэтому preferred="ollama-local" при лежащем ollama давал фоллбэк на claude-cli и
      ровно те самые 6 спавнов. Уровень батча теперь не клемпит вовсе.
+  B3 `complete_batch` существовал в сервисе, но наружу MCP его не отдавал — параллельная
+     делегация оркестратору была недоступна вовсе.
   B4 перенос гейта внёс свои дефекты, они тоже пинятся: ожидание в очереди не должно
      списываться с бюджета ротации и не должно попадать в латентность провайдера,
      а отмена батча снаружи обязана снимать задачи (иначе осиротевшие Claude Code).
-  B3 `complete_batch` существовал в сервисе, но наружу MCP его не отдавал — параллельная
-     делегация оркестратору была недоступна вовсе.
+     Кредит за ожидание ОГРАНИЧЕН потолком — иначе стенное время вызова становится
+     «бюджет + Σочередей» и вылезает за клиентское окно.
 
 Без сети: `complete()` подменяется, провайдерских вызовов не происходит.
 Изоляция completions/adaptive/budget-синков — в tests/conftest.py (единая точка).
@@ -34,7 +37,11 @@ import pytest
 pytestmark = pytest.mark.unit
 
 from src.shared.llm_rotation.config import LLMRotationSettings
-from src.shared.llm_rotation.service import LLMRotationService, ProviderConfig
+from src.shared.llm_rotation.service import (
+    LLMRotationService,
+    ProviderConfig,
+    apply_queue_credit,
+)
 
 
 def _settings(**over) -> LLMRotationSettings:
@@ -212,25 +219,35 @@ def test_queue_wait_is_not_charged_as_provider_latency():
     конкурентности с записью на диск: стартовые 6 сползли бы к 1 за пару батчей.
     """
     svc = _service(fmt="claude-cli", batch_cli_concurrency=1)
-    _spawn_peak_harness(svc, "claude-cli", hold=0.15)
+    hold = 0.15
+    _spawn_peak_harness(svc, "claude-cli", hold=hold)
     provider_state = next(iter(svc._providers.values()))
+    notes = [{}, {}, {}]
 
     async def _go():
-        return await asyncio.gather(*(svc._call_provider(provider_state, "p") for _ in range(3)))
+        return await asyncio.gather(
+            *(svc._call_provider(provider_state, "p", queue_note=n) for n in notes)
+        )
 
     results = asyncio.run(_go())
 
-    # При потолке 1 третий вызов простоял в очереди ~0.30с. Если бы очередь считалась
-    # латентностью, его response_time был бы втрое больше времени самого запроса.
-    assert all(r["response_time"] < 0.14 + 0.10 for r in results), [
-        r["response_time"] for r in results
-    ]
+    # Утверждение ОТНОСИТЕЛЬНОЕ, а не по абсолютному порогу: при потолке 1 последний
+    # вызов простоял в очереди примерно вдвое дольше собственного запроса, и если бы
+    # очередь считалась латентностью, response_time был бы её порядка. Такая форма
+    # масштабно-инвариантна и не разваливается на загруженной машине (М4).
+    waits = sorted(n.get("queue_wait", 0.0) for n in notes)
+    slowest_latency = max(r["response_time"] for r in results)
+    assert waits[-1] > waits[0] + hold * 0.5, "очередь обязана быть измерима"
+    assert slowest_latency < waits[-1], (
+        f"латентность {slowest_latency:.3f}с не должна включать ожидание {waits[-1]:.3f}с"
+    )
 
 
 def test_queue_wait_is_reported_to_caller_for_budget_credit():
     """`queue_note` — то, чем `complete()` компенсирует бюджет ротации (Н1)."""
     svc = _service(fmt="claude-cli", batch_cli_concurrency=1)
-    _spawn_peak_harness(svc, "claude-cli", hold=0.15)
+    hold = 0.15
+    _spawn_peak_harness(svc, "claude-cli", hold=hold)
     provider_state = next(iter(svc._providers.values()))
     notes = [{}, {}]
 
@@ -242,8 +259,9 @@ def test_queue_wait_is_reported_to_caller_for_budget_credit():
     asyncio.run(_go())
 
     waits = sorted(n.get("queue_wait", 0.0) for n in notes)
-    assert waits[0] < 0.05, "первый вызов очереди не ждал"
-    assert waits[1] >= 0.10, "второй ждал освобождения гейта и обязан это сообщить"
+    # Относительно, не по абсолютным порогам: второй ждал освобождения гейта, то есть
+    # порядка hold, первый — нет.
+    assert waits[1] > waits[0] + hold * 0.5, f"ожидание не сообщено: {waits}"
 
 
 @pytest.mark.parametrize("force_primary", [True, False])
@@ -271,6 +289,58 @@ def test_complete_credits_queue_wait_to_its_budget(force_primary):
     asyncio.run(svc.complete("p"))
 
     assert seen and all(seen), "queue_note не доехал до _call_provider"
+
+
+def test_queue_credit_is_applied():
+    """Кредит обязан ПРИМЕНЯТЬСЯ, а не только доезжать до `_remaining` (М3).
+
+    ⚠ Проверять это «через ретраи» невозможно в принципе: решение о следующей попытке
+    принимается В НАЧАЛЕ итерации, а кредит начисляется ПОСЛЕ попытки, поэтому с
+    мгновенным моком провайдера кредит не меняет поведение ни при каких значениях —
+    такой тест был бы зелёным и с удалённым слагаемым. Отсюда чистая функция.
+    """
+    assert apply_queue_credit(10.0, queue_wait=15.0, cap=20.0) == 25.0
+
+
+def test_queue_credit_is_capped():
+    """Потолок кредита (М1): без него стенное время = бюджет + Σочередей > окна клиента."""
+    assert apply_queue_credit(10.0, queue_wait=100.0, cap=20.0) == 30.0
+
+
+def test_queue_credit_ignores_garbage_values():
+    """Отрицательные значения не должны УКОРАЧИВАТЬ бюджет."""
+    assert apply_queue_credit(10.0, queue_wait=-5.0, cap=20.0) == 10.0
+    assert apply_queue_credit(10.0, queue_wait=15.0, cap=-1.0) == 10.0
+
+
+def test_batch_records_clean_latency_not_queue_time():
+    """Четвёртый сток латентности (М2): в `record_latency` не должна попадать очередь.
+
+    Именно этот сигнал крутит ручку пропускной способности: превышение порога →
+    slow_call → ÷2 конкурентности С ЗАПИСЬЮ НА ДИСК, то есть поднятые мандатом 6
+    сползли бы к 1 и остались там между перезапусками.
+    """
+    svc = _service(fmt="claude-cli")
+    recorded: list[float] = []
+    svc._adaptive_concurrency.record_latency = lambda p, v: recorded.append(v)  # type: ignore[method-assign]
+
+    async def fake_complete(**kwargs):
+        await asyncio.sleep(0.05)  # «стенное» время вокруг complete(), включая очередь
+        return {"provider": "p0", "text": "ok", "response_time": 0.01}
+
+    svc.complete = fake_complete  # type: ignore[method-assign]
+    asyncio.run(svc.batch_complete(["a", "b"], concurrency=2))
+
+    assert recorded and all(v == 0.01 for v in recorded), (
+        f"записана стенная длительность вместо чистой латентности: {recorded}"
+    )
+
+
+def test_slow_call_threshold_accommodates_cli_latency():
+    """Порог 30с считал slow_call КАЖДЫЙ нормальный вызов claude-cli (честные 25-150с)."""
+    from src.shared.llm_rotation.adaptive_concurrency import AdaptiveConcurrencyController
+
+    assert AdaptiveConcurrencyController().slow_threshold_s >= 150
 
 
 def test_outer_cancel_cancels_inflight_prompts():
@@ -347,7 +417,10 @@ def test_budget_stays_below_client_window():
     client_ms = mcp_cfg["mcpServers"]["llm-rotation"]["timeout"]
     s = LLMRotationSettings()
 
-    assert s.total_budget_seconds * 1000 < client_ms
+    # Связывающая величина — стенной потолок вызова, а он равен бюджету ПЛЮС кредит за
+    # ожидание в гейте (М1). Проверять один total_budget_seconds было бы самообманом:
+    # после введения кредита он перестал ограничивать реальное время.
+    assert (s.total_budget_seconds + s.queue_credit_max_seconds) * 1000 < client_ms
     # Батч-бюджет обязан истекать раньше per-call, иначе частичный результат не успеет
     # вернуться до обрыва клиентом.
     assert s.batch_budget_seconds < s.total_budget_seconds

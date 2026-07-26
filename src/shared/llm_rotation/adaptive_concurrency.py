@@ -22,7 +22,8 @@ gradually recovers +1 after 30 minutes of clean runs.
 - ``LLM_ROTATION_BATCH_MIN_CONCURRENCY``   — floor (default 1)
 - ``LLM_ROTATION_BATCH_MAX_CONCURRENCY``   — ceiling (default 10)
 - ``LLM_ROTATION_BATCH_RECOVERY_MINUTES``  — clean window before +1 (default 30)
-- ``LLM_ROTATION_BATCH_SLOW_THRESHOLD_S``  — latency threshold for slow_call (default 30)
+- ``LLM_ROTATION_BATCH_SLOW_THRESHOLD_S``  — latency threshold for slow_call (default 180;
+  было 30, но честная латентность claude-cli 25-150с — см. комментарий у значения)
 
 **Persistent state**: ``data/llm-rotation-adaptive-concurrency.json``
 survives process restarts; learned values carry over between sessions.
@@ -127,7 +128,13 @@ class AdaptiveConcurrencyController:
         self._slow_threshold_s: float = (
             slow_threshold_s
             if slow_threshold_s is not None
-            else _env_float("LLM_ROTATION_BATCH_SLOW_THRESHOLD_S", 30.0)
+            # 30 → 180 (2026-07-26, М2): порог 30с структурно неверен для основного
+            # провайдера — claude-cli спавнит полный Claude Code и его ЧЕСТНАЯ латентность
+            # 25-150с. При старом пороге каждый нормальный вызов считался slow_call и
+            # делил конкурентность пополам С ЗАПИСЬЮ НА ДИСК: поднятые мандатом 6 сползли
+            # бы к 1 за пару батчей и остались там между перезапусками. Локальная ollama
+            # быстрая, и 180с для неё — действительно аномалия.
+            else _env_float("LLM_ROTATION_BATCH_SLOW_THRESHOLD_S", 180.0)
         )
         self._state_path: Path = state_path or _default_state_path()
         self._state: dict[str, ProviderConcurrencyState] = {}

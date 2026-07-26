@@ -6,6 +6,7 @@ Adapted: pydantic-settings config, project-local imports, async-first.
 """
 
 import asyncio
+import contextlib
 import json as _json
 import logging
 import os
@@ -281,6 +282,23 @@ DEFAULT_PROVIDERS: list[ProviderConfig] = [
         explicit_only=True,
     ),
 ]
+
+
+def apply_queue_credit(remaining: float, queue_wait: float, cap: float) -> float:
+    """Кредит бюджета за ожидание в гейте спавнов, ОГРАНИЧЕННЫЙ потолком.
+
+    Вынесено в чистую функцию осознанно (2026-07-26, находка ревьюера М3): внутри
+    `complete()` эта арифметика непроверяема — решение о следующей попытке принимается
+    В НАЧАЛЕ итерации, а кредит начисляется только ПОСЛЕ попытки, поэтому с мгновенным
+    моком провайдера кредит не может изменить поведение ни при каких значениях, и тест
+    «через ретраи» был бы зелёным даже с удалённым слагаемым.
+
+    Смысл: очередь перед семафором — не «время, которое мы пытались», поэтому она
+    возвращается в бюджет. Но кредит ограничен: без потолка стенное время вызова стало
+    бы `total_budget + Σочередей` и вылезло за клиентское окно (300с), а кредитовать
+    дольше окна бессмысленно — клиент уже бросил вызов, и работа теряется целиком.
+    """
+    return remaining + min(max(0.0, queue_wait), max(0.0, cap))
 
 
 class LLMRotationService:
@@ -905,8 +923,14 @@ class LLMRotationService:
         # класс, но раньше он был достижим только из тестового мусора).
         queue_note: dict[str, float] = {}
 
+        _credit_cap = float(self._settings.queue_credit_max_seconds)
+
         def _remaining(until: float) -> float:
-            return until + queue_note.get("queue_wait", 0.0) - time.monotonic()
+            return apply_queue_credit(
+                until - time.monotonic(),
+                queue_note.get("queue_wait", 0.0),
+                _credit_cap,
+            )
 
         def _attempt_timeout(tier_timeout: float, until: float) -> int:
             return max(5, int(min(tier_timeout, _remaining(until) - 2)))
@@ -1369,7 +1393,13 @@ class LLMRotationService:
                     # Provider name from result (may differ from preferred
                     # if rotation fell back).
                     actual = result.get("provider", resolved_provider)
-                    self._adaptive_concurrency.record_latency(actual, elapsed)
+                    # Четвёртый сток латентности (М2): `elapsed` меряет вокруг ВСЕГО
+                    # complete(), то есть вместе с ожиданием гейта. Именно он крутит ручку
+                    # пропускной способности: > slow_threshold → slow_call → ÷2
+                    # конкурентности С ЗАПИСЬЮ НА ДИСК. Берём чистую латентность запроса.
+                    self._adaptive_concurrency.record_latency(
+                        actual, result.get("response_time", elapsed)
+                    )
                     return result
                 except Exception as e:
                     # Classify error → adaptive signal.
@@ -1400,7 +1430,11 @@ class LLMRotationService:
             # Code, когда потребителя уже нет, — ровно против цели гейта.
             for task in tasks:
                 task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            # suppress (М5): если во время добора придёт ВТОРАЯ отмена, явный raise ниже
+            # не выполнится и добор окажется неполным. Дети уже получили cancel(), так что
+            # окно сироты — один тик loop'а, но герметичнее не оставлять и его.
+            with contextlib.suppress(BaseException):
+                await asyncio.gather(*tasks, return_exceptions=True)
             raise
         if pending:
             for task in pending:
