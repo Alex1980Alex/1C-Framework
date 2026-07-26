@@ -1,7 +1,10 @@
 # Roadmap 260725 — LLM-judge в каденс качества + автосбор датасета SetFit
 
 **Дата:** 2026-07-25
-**Статус:** proposed
+**Статус:** Часть 1 (J-P0…J-P3) — **реализована 2026-07-26** (пайплайн
+[`pipeline/llm-judge-cadence/`](../../pipeline/llm-judge-cadence/pipeline.md),
+коммиты `f13db73ea` / `b49f14903` / `5208ad908`, 439 тестов зелёные,
+code-verify FAIL→fixed); окно замера J-P3 и Часть 2 (S-P0…S-P2) — впереди
 **Источник:** разбор инфографики «10 навыков ИИ» → два реальных пробела фреймворка
 (п.9 «Оценка и качество» замкнут не до конца; п.2 «файнтюнинг» заблокирован ручной разметкой).
 **Research-базис:** кеш [tool-call-observability-effectiveness-2026](../../.claude/skills/architecture-research/cache/tool-call-observability-effectiveness-2026.md)
