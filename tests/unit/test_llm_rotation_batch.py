@@ -8,8 +8,14 @@
   B2 общий старт конкурентности поднят 3→6 ради пропускной способности, но для
      провайдеров format="claude-cli" это означало бы 6 параллельных ПОЛНЫХ Claude Code
      (каждый вызов = вторая сессия со своей цепочкой хуков, ~2.8 ГБ commit). Инцидент
-     2026-07-26 16:51 — сессия оборвалась молча ровно на llm_complete. Отсюда отдельный
-     потолок batch_cli_concurrency, режущий И явный per-call аргумент.
+     2026-07-26 16:51 — сессия оборвалась молча ровно на llm_complete. Ограничение
+     стоит в ТОЧКЕ СПАВНА (`_cli_spawn_gate`), а НЕ на уровне батча: первая редакция
+     клемпила по `preferred_provider` и была fail-open — исполнителя выбирает ротация,
+     поэтому preferred="ollama-local" при лежащем ollama давал фоллбэк на claude-cli и
+     ровно те самые 6 спавнов. Уровень батча теперь не клемпит вовсе.
+  B4 перенос гейта внёс свои дефекты, они тоже пинятся: ожидание в очереди не должно
+     списываться с бюджета ротации и не должно попадать в латентность провайдера,
+     а отмена батча снаружи обязана снимать задачи (иначе осиротевшие Claude Code).
   B3 `complete_batch` существовал в сервисе, но наружу MCP его не отдавал — параллельная
      делегация оркестратору была недоступна вовсе.
 
@@ -195,6 +201,116 @@ def test_batch_level_concurrency_ignores_preferred_provider_format():
     assert peak() == 6
 
 
+# ── B4: перенос гейта не должен врать про время и не должен ронять сирот ───────
+
+
+def test_queue_wait_is_not_charged_as_provider_latency():
+    """Ожидание в очереди гейта — не латентность провайдера.
+
+    Иначе заражённый elapsed уходит в record_success → avg_response_time (участвует в
+    выборе провайдера), в adaptive scorer и в record_latency → slow_call → ÷2
+    конкурентности с записью на диск: стартовые 6 сползли бы к 1 за пару батчей.
+    """
+    svc = _service(fmt="claude-cli", batch_cli_concurrency=1)
+    _spawn_peak_harness(svc, "claude-cli", hold=0.15)
+    provider_state = next(iter(svc._providers.values()))
+
+    async def _go():
+        return await asyncio.gather(*(svc._call_provider(provider_state, "p") for _ in range(3)))
+
+    results = asyncio.run(_go())
+
+    # При потолке 1 третий вызов простоял в очереди ~0.30с. Если бы очередь считалась
+    # латентностью, его response_time был бы втрое больше времени самого запроса.
+    assert all(r["response_time"] < 0.14 + 0.10 for r in results), [
+        r["response_time"] for r in results
+    ]
+
+
+def test_queue_wait_is_reported_to_caller_for_budget_credit():
+    """`queue_note` — то, чем `complete()` компенсирует бюджет ротации (Н1)."""
+    svc = _service(fmt="claude-cli", batch_cli_concurrency=1)
+    _spawn_peak_harness(svc, "claude-cli", hold=0.15)
+    provider_state = next(iter(svc._providers.values()))
+    notes = [{}, {}]
+
+    async def _go():
+        await asyncio.gather(
+            *(svc._call_provider(provider_state, "p", queue_note=n) for n in notes)
+        )
+
+    asyncio.run(_go())
+
+    waits = sorted(n.get("queue_wait", 0.0) for n in notes)
+    assert waits[0] < 0.05, "первый вызов очереди не ждал"
+    assert waits[1] >= 0.10, "второй ждал освобождения гейта и обязан это сообщить"
+
+
+@pytest.mark.parametrize("force_primary", [True, False])
+def test_complete_credits_queue_wait_to_its_budget(force_primary):
+    """`complete()` обязан прокидывать `queue_note` — иначе кредит не собирается.
+
+    Параметризация обязательна: у `complete()` ДВА места вызова `_call_provider`
+    (фаза force-primary и фаза ротации). Тест без неё покрывал только одно из них —
+    поймано саботажем (удаление проводки из primary-ветки оставляло тест зелёным).
+    """
+    svc = _service(fmt="claude-cli", force_primary=force_primary)
+    seen: list[bool] = []
+
+    async def fake_call(state, prompt, *a, **kw):
+        seen.append("queue_note" in kw and kw["queue_note"] is not None)
+        return {
+            "provider": "p0",
+            "model": "claude-sonnet-5",
+            "text": "ok",
+            "response_time": 0.0,
+            "usage": {},
+        }
+
+    svc._call_provider = fake_call  # type: ignore[method-assign]
+    asyncio.run(svc.complete("p"))
+
+    assert seen and all(seen), "queue_note не доехал до _call_provider"
+
+
+def test_outer_cancel_cancels_inflight_prompts():
+    """Отмена снаружи обязана снимать задачи батча (Н3).
+
+    `asyncio.wait` (в отличие от `gather`) детей не отменяет: осиротевшие корутины
+    держали бы пермиты гейта и продолжали спавнить полные Claude Code без потребителя.
+    """
+    svc = _service(batch_budget_seconds=60)
+    cancelled: list[int] = []
+
+    async def fake_complete(**kwargs):
+        try:
+            await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            cancelled.append(1)
+            raise
+        return {"provider": "p0", "text": "ok"}
+
+    svc.complete = fake_complete  # type: ignore[method-assign]
+
+    observed: dict[str, int] = {}
+
+    async def _go():
+        task = asyncio.ensure_future(svc.batch_complete(["a", "b"], concurrency=2))
+        await asyncio.sleep(0.05)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        await asyncio.sleep(0.05)
+        # Замер ВНУТРИ цикла — принципиально: `asyncio.run` при закрытии сам отменяет
+        # оставшиеся задачи, поэтому проверка после прогона зеленела бы и без фикса
+        # (поймано саботажем — тест был зелёным по ложной причине).
+        observed["cancelled"] = len(cancelled)
+
+    asyncio.run(_go())
+
+    assert observed["cancelled"] == 2, "оба промпта обязаны быть сняты, а не осиротеть"
+
+
 # ── Р2: агрегатный дедлайн батча ───────────────────────────────────────────────
 
 
@@ -224,7 +340,10 @@ def test_budget_stays_below_client_window():
     Пинить `== 270` бессмысленно — опусти клиентский `timeout` до 120000, и такой
     тест остался бы зелёным, пока вызовы рвутся (находка ревьюера Р8).
     """
-    mcp_cfg = json.loads(Path(".mcp.json").read_text(encoding="utf-8"))
+    # Путь от файла теста, не от cwd: запуск pytest из подкаталога/IDE иначе даст
+    # FileNotFoundError вместо осмысленного отказа (класс уже ловили в gate_policy).
+    mcp_path = Path(__file__).resolve().parents[2] / ".mcp.json"
+    mcp_cfg = json.loads(mcp_path.read_text(encoding="utf-8"))
     client_ms = mcp_cfg["mcpServers"]["llm-rotation"]["timeout"]
     s = LLMRotationSettings()
 

@@ -736,6 +736,10 @@ class LLMRotationService:
 
         Семафор пересоздаётся при смене event loop: сервис — процессный синглтон
         (`get_service()`), а тесты гоняют каждый кейс в своём `asyncio.run`.
+
+        ⚠ Допущение: ОДИН активный event loop на процесс (верно для stdio-сервера).
+        При двух loop'ах в разных потоках гейт молча пересоздастся, а `asyncio.Semaphore`
+        не потокобезопасен — тогда нужен `WeakKeyDictionary[loop, Semaphore]`.
         """
         loop = asyncio.get_running_loop()
         if self._cli_sem is None or self._cli_sem_loop is not loop:
@@ -752,8 +756,15 @@ class LLMRotationService:
         temperature: float = 0.7,
         max_tokens: int = 2048,
         timeout: int | None = None,
+        queue_note: dict[str, float] | None = None,
     ) -> dict[str, Any]:
-        """Make a single request to a provider. Returns normalized result dict."""
+        """Make a single request to a provider. Returns normalized result dict.
+
+        ``queue_note`` — out-параметр (2026-07-26, находка ревьюера Н1): сюда
+        накапливается время ожидания гейта спавнов под ключом ``queue_wait``, чтобы
+        вызывающий не списывал очередь со своего бюджета ротации. Пишется ДО запроса,
+        поэтому доступен и на пути исключения.
+        """
         start = time.monotonic()
 
         if state.config.format == "anthropic":
@@ -767,7 +778,18 @@ class LLMRotationService:
         elif state.config.format == "claude-cli":
             # Гейт спавнов: каждый такой вызов = полный второй Claude Code (~2.8 ГБ
             # commit). Удерживается всё время запроса — см. _cli_spawn_gate().
+            # Ожидание в очереди перед семафором — не латентность провайдера: если
+            # его не вычесть, заражённый elapsed уходит в record_success →
+            # avg_response_time (влияет на выбор провайдера), в adaptive scorer,
+            # в response_time ответа и в record_latency → slow_call → деление
+            # конкурентности пополам с записью на диск, сползая с 6 к 1.
+            queued_at = time.monotonic()
             async with self._cli_spawn_gate():
+                if queue_note is not None:
+                    queue_note["queue_wait"] = queue_note.get("queue_wait", 0.0) + (
+                        time.monotonic() - queued_at
+                    )
+                start = time.monotonic()
                 data = await self._make_request_claude_cli(
                     state, prompt, system_prompt, model, temperature, max_tokens, timeout
                 )
@@ -872,8 +894,19 @@ class LLMRotationService:
         deadline = start_ts + budget
         primary_deadline = start_ts + budget * self._settings.primary_budget_share
 
+        # Ожидание в очереди гейта спавнов НЕ списывается с бюджета (Н1): бюджет — это
+        # «сколько мы реально пытались», а не «сколько простояли в очереди». Иначе под
+        # нагрузкой (concurrency 6 при потолке claude-cli 3) три complete() тикали бы
+        # стоя, обе проверки `_remaining(...) < 8` срабатывали бы раньше времени, и
+        # ротация вырождалась в один выстрел. Хуже того, терминальный отказ пишет
+        # provider="none" + "All failed" — ОБА маркера `_is_failure` в llm_health, и
+        # is_provider_down() на полчаса разоружал бы z-ai-write-guard прямо из
+        # продового вызова ([[feedback-test-log-pollution-enforcement-hole]] — тот же
+        # класс, но раньше он был достижим только из тестового мусора).
+        queue_note: dict[str, float] = {}
+
         def _remaining(until: float) -> float:
-            return until - time.monotonic()
+            return until + queue_note.get("queue_wait", 0.0) - time.monotonic()
 
         def _attempt_timeout(tier_timeout: float, until: float) -> int:
             return max(5, int(min(tier_timeout, _remaining(until) - 2)))
@@ -934,6 +967,7 @@ class LLMRotationService:
                             temperature,
                             max_tokens,
                             timeout=_attempt_timeout(timeout, primary_deadline),
+                            queue_note=queue_note,
                         )
                         result["attempt"] = total_attempts
                         result["requested_model"] = requested_model
@@ -1049,6 +1083,7 @@ class LLMRotationService:
                         temperature,
                         max_tokens,
                         timeout=_attempt_timeout(timeout, deadline),
+                        queue_note=queue_note,
                     )
                     result["attempt"] = total_attempts
                     result["requested_model"] = requested_model
@@ -1264,7 +1299,7 @@ class LLMRotationService:
         Args:
             prompts: list of user prompts to send.
             system_prompt: shared system prompt for all calls.
-            temperature, max_tokens, timeout, component, preferred_provider:
+            temperature, max_tokens, timeout, preferred_provider:
                 same semantics as ``complete()``; broadcast to every call.
             model: явный тир (``haiku`` / ``sonnet`` / ``opus`` или полный id) —
                 та же семантика СТРОГОГО совпадения, что у ``complete()``:
@@ -1275,10 +1310,10 @@ class LLMRotationService:
                 отработал или упёрся в бюджет, а не в момент первого отказа, как делал
                 прежний голый ``gather`` — плата за агрегатный дедлайн и снятие
                 недовыполненных. Продовых вызывающих с False нет (MCP-тул всегда шлёт
-                True). Если True (default), failed calls are returned
+                True). Поднимается исключение ПЕРВОГО ПО ПОРЯДКУ ПРОМПТОВ (не первого
+                по времени). Если True (default), failed calls are returned
                 as ``Exception`` instances in the result list (preserves
-                positional alignment with ``prompts``). If False, the first
-                exception aborts the whole batch.
+                positional alignment with ``prompts``).
             concurrency: explicit override. If None, reads adaptive value
                 for ``preferred_provider`` (or primary if not specified).
 
@@ -1355,7 +1390,18 @@ class LLMRotationService:
         # возвращаются — частичный результат честнее пустого.
         batch_budget = max(1, int(self._settings.batch_budget_seconds))
         tasks = [asyncio.ensure_future(_one(p)) for p in prompts]
-        _, pending = await asyncio.wait(tasks, timeout=batch_budget)
+        try:
+            _, pending = await asyncio.wait(tasks, timeout=batch_budget)
+        except BaseException:
+            # Регрессия против gather (Н3): при отмене ОЖИДАЮЩЕГО `asyncio.wait` не
+            # трогает задачи — они созданы ensure_future и живут сами. Клиент рвёт вызов
+            # на 300с при батч-бюджете 250с, и осиротевшие корутины продолжали бы держать
+            # пермиты гейта, писать в record_*/completions-лог и спавнить полные Claude
+            # Code, когда потребителя уже нет, — ровно против цели гейта.
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
         if pending:
             for task in pending:
                 task.cancel()
