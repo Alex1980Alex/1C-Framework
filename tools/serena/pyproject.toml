@@ -65,7 +65,7 @@ dev = [
   "syrupy>=4.9.1",
   "types-requests>=2.32.4.20241230",
 ]
-agno = ["agno>=2.3.24", "sqlalchemy>=2.0.40"]
+agno = ["agno>=2.3.24", "sqlalchemy>=2.0.50"]
 google = ["google-genai>=1.8.0"]
 
 [project.urls]
