@@ -1,5 +1,5 @@
 # Lazy-MCP Requirements
 # Python 3.10+
 
-mcp>=1.27.1
+mcp>=1.27.2
 pyyaml>=6.0.3
