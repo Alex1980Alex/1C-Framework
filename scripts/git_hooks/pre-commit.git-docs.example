@@ -1,0 +1,15 @@
+#!/bin/sh
+# Install as pre-commit only after acceptance; keep it last after index-mutating handlers.
+# Resolve trusted checker code beside this installed hook, never from target cwd.
+hook_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || exit 2
+package_root=$(CDPATH= cd -- "$hook_dir/../.." && pwd) || exit 2
+if [ -n "${PYTHON:-}" ]; then
+    python_bin=$PYTHON
+elif [ -x "$package_root/.venv/Scripts/python.exe" ]; then
+    python_bin=$package_root/.venv/Scripts/python.exe
+elif [ -x "$package_root/.venv/bin/python" ]; then
+    python_bin=$package_root/.venv/bin/python
+else
+    python_bin=python
+fi
+exec "$python_bin" -I -B -X utf8 "$package_root/scripts/git_docs_pre_commit.py" --root "$PWD"
