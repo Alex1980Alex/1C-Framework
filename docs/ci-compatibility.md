@@ -22,3 +22,8 @@ A subsequent MCP qualification used four fresh isolated environments: Python 3.1
 Ten ChatAnthropic callers now describe only their actual input keys with `AnthropicModelKwargs` and submit the unchanged raw mapping to Pydantic `model_validate`. The `model`/`model_name` aliases, omitted credentials, explicit `None`, empty strings, and optional base URLs retain their original caller inputs. Primary wheel sources for langchain-anthropic 1.7.10, langchain-core 1.8.1, and Pydantic 2.14.3 establish the fields and validation entry point. Acceptance additionally requires constructor-versus-validation parity for these callers; this is not a guarantee for arbitrary future subclasses.
 
 The Qdrant baseline refresh is limited to seven existing `Filter.must` diagnostics (six provider sites and one BSL search site). Each new diagnostic differs only by the two `SliceCondition` members in the SDK's expected union; diagnostic multiplicity remains 1122. ChatAnthropic baseline entries were not replaced.
+
+Nine cases in [`test_anthropic_initialization.py`](../tests/unit/test_anthropic_initialization.py), marked `unit` for the existing CI selection, exercise the real constructors of `RetrievalQAChain`, `LLMEntityExtractor`, and `CommunitySummarizer` while mocking only `ChatAnthropic.model_validate`.
+They check exact model, temperature, token limit, explicit `None` versus omitted API keys, proxy forwarding, and assignment of the returned client.
+They also check injected-LLM validation bypass, QA's soft initialization failure, and propagation of extractor validation errors, without LLM network requests.
+SDK validation parity and aggregate patch coverage are qualified separately; the number of cases alone establishes neither.
