@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
+
 if TYPE_CHECKING:
     from src.framework_search.embedder import FrameworkTEIEmbedder
 
@@ -318,7 +320,7 @@ class RAPTORTreeBuilder:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm_kwargs = dict(
+            llm_kwargs: AnthropicModelKwargs = dict(
                 model=self._summarization_model,
                 temperature=0.3,
                 max_tokens=512,
@@ -326,7 +328,7 @@ class RAPTORTreeBuilder:
             )
             if self._base_url:
                 llm_kwargs["base_url"] = self._base_url
-            llm = ChatAnthropic(**llm_kwargs)
+            llm = ChatAnthropic.model_validate(llm_kwargs)
 
             prompt = f"""Summarize the following passages from a document.
 

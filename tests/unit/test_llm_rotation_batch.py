@@ -405,16 +405,20 @@ def test_batch_budget_returns_partial_instead_of_losing_everything():
 
 
 def test_budget_stays_below_client_window():
-    """Инвариант, а не константа: бюджет сервиса < клиентского окна из .mcp.json.
+    """Бюджет сервиса укладывается в окно публичного deployment sample.
 
     Пинить `== 270` бессмысленно — опусти клиентский `timeout` до 120000, и такой
     тест остался бы зелёным, пока вызовы рвутся (находка ревьюера Р8).
     """
     # Путь от файла теста, не от cwd: запуск pytest из подкаталога/IDE иначе даст
     # FileNotFoundError вместо осмысленного отказа (класс уже ловили в gate_policy).
-    mcp_path = Path(__file__).resolve().parents[2] / ".mcp.json"
+    mcp_path = Path(__file__).resolve().parents[2] / ".mcp.json.example"
     mcp_cfg = json.loads(mcp_path.read_text(encoding="utf-8"))
     client_ms = mcp_cfg["mcpServers"]["llm-rotation"]["timeout"]
+    _assert_client_window(client_ms)
+
+
+def _assert_client_window(client_ms):
     s = LLMRotationSettings()
 
     # Связывающая величина — стенной потолок вызова, а он равен бюджету ПЛЮС кредит за
@@ -424,6 +428,12 @@ def test_budget_stays_below_client_window():
     # Батч-бюджет обязан истекать раньше per-call, иначе частичный результат не успеет
     # вернуться до обрыва клиентом.
     assert s.batch_budget_seconds < s.total_budget_seconds
+
+
+@pytest.mark.parametrize("client_ms", [120000, 290000])
+def test_client_window_rejects_insufficient_wall_budget(client_ms):
+    with pytest.raises(AssertionError):
+        _assert_client_window(client_ms)
 
 
 def test_rotation_retries_cover_second_pass():

@@ -142,7 +142,7 @@
         "LLM_ROTATION_PRIMARY_PROVIDER": "zai-glm5",
         "LLM_ROTATION_TIMEOUT": "60"
       },
-      "timeout": 60000
+      "timeout": 300000
     },
     "task-master-ai": {
       "command": "npx",

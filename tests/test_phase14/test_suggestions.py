@@ -12,7 +12,7 @@ from src.pdf_framework.search.suggestions import (
 )
 
 # ChatAnthropic is imported lazily inside methods, patch at source
-PATCH_CHAT = "langchain_anthropic.ChatAnthropic"
+PATCH_CHAT = "langchain_anthropic.ChatAnthropic.model_validate"
 
 
 # ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ class TestLLMSuggestions:
             await s._llm_suggestions("test", 2)
 
             mock_cls.assert_called_once()
-            call_kwargs = mock_cls.call_args[1]
+            call_kwargs = mock_cls.call_args[0][0]
             assert call_kwargs["api_key"] == "my-api-key"
 
     @pytest.mark.asyncio

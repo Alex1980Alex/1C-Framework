@@ -23,7 +23,7 @@ dependencies = [
     "chromadb>=0.5",          # opt-in provider via VECTOR_STORE__PROVIDER=chroma (src/pdf_framework/vector_store/providers/chroma.py)
 
     # === Embeddings ===
-    "sentence-transformers>=3.0",
+    "sentence-transformers>=3.0,<5.4",
     # ColPali visual retrieval (Phase 55)
     "colpali-engine>=0.1.0",
     "transformers[torch]>=4.40.0",

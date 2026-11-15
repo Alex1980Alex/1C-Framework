@@ -30,9 +30,12 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import httpx
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +83,7 @@ class Qwen3EmbeddingService:
         if Qwen3EmbeddingService._initialized:
             return
         self.model = model
-        self._st_model = None  # lazy SentenceTransformer (only when use_st=True)
+        self._st_model: SentenceTransformer | None = None  # lazy (only when use_st=True)
         self._dims: int | None = None
         self._lock = threading.Lock()
         # BSL_EMBEDDER selects primary backend. Default "tei" — production-aligned

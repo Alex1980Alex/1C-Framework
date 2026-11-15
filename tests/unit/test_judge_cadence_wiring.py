@@ -94,6 +94,19 @@ def test_provider_check_failure_is_not_fatal(hook_mod, monkeypatch):
 # ── спавн ─────────────────────────────────────────────────────────────────────
 
 
+@pytest.mark.parametrize(
+    "platform,relpath", [("win32", "Scripts/python.exe"), ("linux", "bin/python")]
+)
+def test_python_resolution(hook_mod, monkeypatch, tmp_path, platform, relpath):
+    monkeypatch.setattr(hook_mod, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(hook_mod.sys, "platform", platform)
+    assert hook_mod._python_executable() == Path(sys.executable)
+    executable = tmp_path / ".venv" / relpath
+    executable.parent.mkdir(parents=True)
+    executable.touch()
+    assert hook_mod._python_executable() == executable
+
+
 def test_launch_judge_uses_detached_spawn(hook_mod, monkeypatch, tmp_path):
     captured: dict = {}
 
@@ -109,6 +122,7 @@ def test_launch_judge_uses_detached_spawn(hook_mod, monkeypatch, tmp_path):
     assert "--source" in captured["cmd"] and "auto" in captured["cmd"]
     assert "--cap" in captured["cmd"], "без потолка судья может сжечь бюджет"
     assert captured["kwargs"]["close_fds"] is True
+    assert captured["kwargs"]["start_new_session"] is (sys.platform != "win32")
 
 
 def test_launch_judge_survives_os_error(hook_mod, monkeypatch, tmp_path):

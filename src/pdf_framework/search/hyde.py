@@ -11,6 +11,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
+
 logger = logging.getLogger(__name__)
 
 
@@ -90,7 +92,7 @@ class HyDEGenerator:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm_kwargs = dict(
+            llm_kwargs: AnthropicModelKwargs = dict(
                 model=self._config.model,
                 temperature=self._config.temperature,
                 max_tokens=self._config.max_tokens,
@@ -98,7 +100,7 @@ class HyDEGenerator:
             )
             if self._base_url:
                 llm_kwargs["base_url"] = self._base_url
-            llm = ChatAnthropic(**llm_kwargs)
+            llm = ChatAnthropic.model_validate(llm_kwargs)
 
             prompt = self._config.prompt_template.format(query=query)
 

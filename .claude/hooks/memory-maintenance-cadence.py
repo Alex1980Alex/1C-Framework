@@ -54,7 +54,6 @@ OBS_SCRIPT = PROJECT_ROOT / "scripts" / "memory_observability_report.py"
 # Спавн детачем — судья ходит в LLM (десятки секунд), inline-бюджет хука не трогаем.
 JUDGE_SCRIPT = PROJECT_ROOT / "scripts" / "tool_llm_judge.py"
 JUDGE_LOG = PROJECT_ROOT / "data" / "reports" / "tools" / "_judge.log"
-PYTHON_EXE = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
 LOG = PROJECT_ROOT / "data" / "reports" / "memory" / "_maintenance.log"
 
 DEFAULT_EVERY = 10
@@ -63,6 +62,15 @@ MAX_PENDING = 200
 # счётчику сессий, судья — не чаще раза в сутки, иначе жжём токены на тех же вызовах.
 JUDGE_COOLDOWN_HOURS = 24
 JUDGE_CAP = 50
+
+
+def _python_executable() -> Path:
+    relative = "Scripts/python.exe" if sys.platform == "win32" else "bin/python"
+    candidate = PROJECT_ROOT / ".venv" / relative
+    return candidate if candidate.is_file() else Path(sys.executable)
+
+
+PYTHON_EXE = _python_executable()
 
 
 def _now() -> str:
@@ -136,6 +144,7 @@ def _launch(apply: bool) -> bool:
                 stderr=fh,
                 cwd=str(PROJECT_ROOT),
                 creationflags=creationflags,
+                start_new_session=sys.platform != "win32",
                 close_fds=True,
             )
         finally:
@@ -194,6 +203,7 @@ def _launch_judge() -> bool:
                 stderr=fh,
                 cwd=str(PROJECT_ROOT),
                 creationflags=creationflags,
+                start_new_session=sys.platform != "win32",
                 close_fds=True,
             )
         finally:
