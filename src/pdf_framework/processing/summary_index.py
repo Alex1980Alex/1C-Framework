@@ -14,6 +14,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
+
 logger = logging.getLogger(__name__)
 
 
@@ -233,7 +235,7 @@ class DocumentSummaryIndex:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm_kwargs = dict(
+            llm_kwargs: AnthropicModelKwargs = dict(
                 model=self._summarization_model,
                 temperature=0.3,
                 max_tokens=500,
@@ -241,7 +243,7 @@ class DocumentSummaryIndex:
             )
             if self._base_url:
                 llm_kwargs["base_url"] = self._base_url
-            llm = ChatAnthropic(**llm_kwargs)
+            llm = ChatAnthropic.model_validate(llm_kwargs)
 
             # Combine chunk contents
             passages = []

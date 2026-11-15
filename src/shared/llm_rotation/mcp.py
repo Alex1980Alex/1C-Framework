@@ -36,7 +36,7 @@ try:
     from mcp_call_log import log_mcp_call as _log_call
 except Exception:  # pragma: no cover — лог опционален, сервис важнее
 
-    def _log_call(*_a, **_k) -> None:
+    def _log_call(*_a: object, **_k: object) -> None:
         return None
 
 
@@ -216,7 +216,7 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     started = time.monotonic()
 
-    def _done(ok: bool, error_type: str | None = None, **extra) -> None:
+    def _done(ok: bool, error_type: str | None = None, **extra: object) -> None:
         # **extra (2026-07-26, находка ревьюера Р3): у `error_type` в этом стоке нет
         # читателя — единственный потребитель (scripts/tool_llm_judge.py) смотрит только
         # `ok`, поэтому батч «9 из 10 упало» читался бы как успех. Плоские счётчики
@@ -312,13 +312,14 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             text = json.dumps(payload, ensure_ascii=False, indent=2)
 
             # Честная телеметрия: частичный провал ≠ полный провал ≠ чистый успех.
-            counts = {"batch_total": len(raw_results), "batch_failed": failed_count}
             if failed_count == 0:
-                _done(True, **counts)
+                _done(True, batch_total=len(raw_results), batch_failed=failed_count)
             elif ok_count == 0:
-                _done(False, "all_failed", **counts)
+                _done(False, "all_failed", batch_total=len(raw_results), batch_failed=failed_count)
             else:
-                _done(True, "partial_failure", **counts)
+                _done(
+                    True, "partial_failure", batch_total=len(raw_results), batch_failed=failed_count
+                )
 
             return [TextContent(type="text", text=text)]
 
@@ -358,7 +359,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=msg)]
 
         elif name == "llm_test_providers":
-            results = []
+            provider_results: list[str] = []
             for state in service.get_available_providers():
                 try:
                     result = await service.complete(
@@ -366,13 +367,15 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                         preferred_provider=state.config.name,
                         max_tokens=10,
                     )
-                    results.append(f"✅ {state.config.name}: OK ({result['response_time']}s)")
+                    provider_results.append(
+                        f"✅ {state.config.name}: OK ({result['response_time']}s)"
+                    )
                 except Exception as e:
-                    results.append(f"❌ {state.config.name}: {str(e)[:100]}")
-            if not results:
-                results.append("No providers available. Check API keys.")
+                    provider_results.append(f"❌ {state.config.name}: {str(e)[:100]}")
+            if not provider_results:
+                provider_results.append("No providers available. Check API keys.")
             _done(True)
-            return [TextContent(type="text", text="\n".join(results))]
+            return [TextContent(type="text", text="\n".join(provider_results))]
 
         elif name == "llm_list_providers":
             import os

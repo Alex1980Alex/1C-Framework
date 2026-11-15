@@ -13,7 +13,7 @@ from src.pdf_framework.processing.summary_index import (
 from src.pdf_framework.schemas.documents import DocumentChunk, SearchResult
 
 # ChatAnthropic is imported lazily inside methods, patch at source
-PATCH_CHAT = "langchain_anthropic.ChatAnthropic"
+PATCH_CHAT = "langchain_anthropic.ChatAnthropic.model_validate"
 PATCH_CHROMA = "src.pdf_framework.vector_store.providers.chroma.ChromaVectorStore"
 
 

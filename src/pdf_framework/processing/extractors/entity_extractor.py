@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from src.pdf_framework.config import AgentSettings
 from src.pdf_framework.schemas.documents import DocumentChunk
 from src.pdf_framework.schemas.entities import Entity, ExtractionResult, Relation
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class LLMEntityExtractor:
         self._settings = settings or AgentSettings()
 
         # Configure ChatAnthropic with optional base_url for proxies like Z.AI
-        llm_kwargs = {
+        llm_kwargs: AnthropicModelKwargs = {
             "model": self._settings.model,
             "temperature": 0.0,
             "max_tokens": 4096,
@@ -80,7 +81,7 @@ class LLMEntityExtractor:
         if self._settings.base_url:
             llm_kwargs["base_url"] = self._settings.base_url
 
-        self._llm = ChatAnthropic(**llm_kwargs)
+        self._llm = ChatAnthropic.model_validate(llm_kwargs)
 
     async def extract(self, chunk: DocumentChunk) -> ExtractionResult:
         """Extract entities and relations from a single chunk (Ralph Wiggum)."""

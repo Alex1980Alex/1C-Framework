@@ -15,6 +15,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
+
 logger = logging.getLogger(__name__)
 
 
@@ -138,14 +140,14 @@ class QuerySuggester:
             from langchain_anthropic import ChatAnthropic
             from langchain_core.messages import HumanMessage
 
-            llm_kwargs = dict(
+            llm_kwargs: AnthropicModelKwargs = dict(
                 model_name=self._config.llm_model,
                 temperature=0.5,
                 api_key=self._api_key,
             )
             if self._base_url:
                 llm_kwargs["base_url"] = self._base_url
-            llm = ChatAnthropic(**llm_kwargs)
+            llm = ChatAnthropic.model_validate(llm_kwargs)
 
             prompt = f'''Based on the query "{context}", suggest {k} interesting follow-up questions
 that a user might want to ask to explore this topic further.

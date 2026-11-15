@@ -13,9 +13,10 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 from anthropic import Anthropic
+from anthropic.types import ImageBlockParam
 
 from src.pdf_framework.schemas.images import (
     ImageDescriptionRequest,
@@ -106,6 +107,19 @@ class ImageDescriber:
         image_data = base64.standard_b64encode(request.image_bytes).decode("utf-8")
 
         try:
+            if image_media_type not in ("image/jpeg", "image/png", "image/gif", "image/webp"):
+                raise ValueError(f"Unsupported image media type: {image_media_type}")
+            image_block: ImageBlockParam = {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": cast(
+                        Literal["image/jpeg", "image/png", "image/gif", "image/webp"],
+                        image_media_type,
+                    ),
+                    "data": image_data,
+                },
+            }
             response = self._client.messages.create(
                 model=self._model,
                 max_tokens=self._max_tokens,
@@ -114,16 +128,7 @@ class ImageDescriber:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            # media_type is a runtime str ("image/<fmt>"), not the SDK's
-                            # Literal type, so the image block trips [list-item] under strict mypy.
-                            {  # type: ignore[list-item]
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": image_media_type,
-                                    "data": image_data,
-                                },
-                            },
+                            image_block,
                         ],
                     }
                 ],

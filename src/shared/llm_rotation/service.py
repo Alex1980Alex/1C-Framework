@@ -11,6 +11,7 @@ import json as _json
 import logging
 import os
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -1087,6 +1088,7 @@ class LLMRotationService:
             # Явно запрошенная модель НЕ подменяется (тихая замена — класс вранья);
             # без model — прежний перебор моделей провайдера (эскалации нет: списки
             # models сужены до своего тира в DEFAULT_PROVIDERS).
+            models_to_try: Sequence[str | None]
             if model:
                 models_to_try = [resolved]
             else:
@@ -1255,7 +1257,7 @@ class LLMRotationService:
             s for s in self.get_available_providers(model=model) if s.config.name not in seen
         ]
 
-        def sort_key(s: ProviderState) -> tuple:
+        def sort_key(s: ProviderState) -> tuple[int, int, float, int, float]:
             adaptive = self._scorer.score(s.config.name) if self._settings.adaptive_routing else 0.5
             return (
                 0 if s.status == ProviderStatus.HEALTHY else 1,

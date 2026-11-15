@@ -10,6 +10,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.config import AgentSettings
 from src.pdf_framework.schemas.documents import SearchResponse
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class RetrievalQAChain:
         self._settings = settings or AgentSettings()
 
         # Configure ChatAnthropic with optional base_url for proxies like Z.AI
-        llm_kwargs = {
+        llm_kwargs: AnthropicModelKwargs = {
             "model": self._settings.model,
             "temperature": self._settings.temperature,
             "max_tokens": self._settings.max_tokens,
@@ -67,7 +68,7 @@ class RetrievalQAChain:
         # ChatAnthropic — платный путь; мягкая конструкция: нет ключа -> None ->
         # генерация ответа идёт через free-LLM rotation (ADR-040, платного ключа нет).
         try:
-            self._llm = ChatAnthropic(**llm_kwargs)
+            self._llm = ChatAnthropic.model_validate(llm_kwargs)
         except Exception as exc:
             logger.warning("[QA] ChatAnthropic init failed: %s — using free LLM rotation", exc)
             self._llm = None

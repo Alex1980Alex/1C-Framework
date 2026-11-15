@@ -22,6 +22,7 @@ Trade-offs vs Qwen3:
 import asyncio
 import logging
 import time
+from typing import cast
 
 from sentence_transformers import SentenceTransformer
 
@@ -113,7 +114,8 @@ class GigaEmbeddingEngine(BaseEmbeddingEngine):
             show_progress_bar=False,
             normalize_embeddings=True,
         )
-        return embeddings.tolist()
+        # encode(list[str]) uses float32 NumPy sentence embeddings by default.
+        return cast(list[list[float]], embeddings.tolist())
 
     async def embed_text(self, text: str) -> list[float]:
         """Embed single text with query instruction prefix."""
