@@ -19,8 +19,11 @@ spec.loader.exec_module(adapter)
 
 
 def git(root, *args):
-    return subprocess.run(["git", "-C", str(root), *args], check=True,
-                          capture_output=True).stdout.decode().strip()
+    return (
+        subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+        .stdout.decode()
+        .strip()
+    )
 
 
 @pytest.fixture
@@ -69,12 +72,18 @@ def test_invalid_base_and_missing_cli(commits, tmp_path):
     assert rc == 2 and report["adapter_status"] == "unavailable"
 
 
-@pytest.mark.parametrize("payload,rc", [
-    (b"", 0), (b"noise {}", 0), (b'{"verdict":"PASS","verdict":"FAIL"}', 0),
-    (b'{"verdict":"PASS","value":NaN}', 0), (b"[]", 0),
-    (b'{"verdict":"PASS","value":1e999}', 0),
-    (b'{"verdict":"PASS","schema_version":1}', 1),
-])
+@pytest.mark.parametrize(
+    "payload,rc",
+    [
+        (b"", 0),
+        (b"noise {}", 0),
+        (b'{"verdict":"PASS","verdict":"FAIL"}', 0),
+        (b'{"verdict":"PASS","value":NaN}', 0),
+        (b"[]", 0),
+        (b'{"verdict":"PASS","value":1e999}', 0),
+        (b'{"verdict":"PASS","schema_version":1}', 1),
+    ],
+)
 def test_broken_protocol(commits, monkeypatch, payload, rc):
     root, base, _, head = commits
     original = adapter.subprocess.run
@@ -96,8 +105,20 @@ def test_timeout_and_exact_argv(commits, monkeypatch):
 
     def run(command, **kwargs):
         if command[0] == adapter.sys.executable:
-            assert command == [adapter.sys.executable, "-I", "-B", str(PACKAGE / "scripts/git_docs_verify.py"),
-                               "--root", str(root.resolve()), "--mode", "range", "--base", base, "--head", head]
+            assert command == [
+                adapter.sys.executable,
+                "-I",
+                "-B",
+                str(PACKAGE / "scripts/git_docs_verify.py"),
+                "--root",
+                str(root.resolve()),
+                "--mode",
+                "range",
+                "--base",
+                base,
+                "--head",
+                head,
+            ]
             assert "shell" not in kwargs
             raise subprocess.TimeoutExpired(command, kwargs["timeout"])
         return original(command, **kwargs)
@@ -157,24 +178,27 @@ def child_response(monkeypatch):
 
 
 @pytest.mark.parametrize("verdict", ["PASS", "FAIL"])
-@pytest.mark.parametrize("field,value,error", [
-    ("schema_version", True, "schema"),
-    ("base", "0" * 40, "base"),
-    ("head", "0" * 40, "head"),
-    ("checked_root", "/different-root", "checked_root"),
-    ("git_dir", "/different-private", "git_dir"),
-    ("git_common_dir", "/different-common", "git_common_dir"),
-    ("policy_sha256", "0" * 64, "policy_sha256"),
-    ("snapshot.stable", False, "snapshot"),
-    ("snapshot.id", "not-sha256", "snapshot"),
-    ("findings", None, "finding"),
-    ("errors", {}, "errors"),
-    ("scope", {}, "scope"),
-    ("changes", [{"kind": "A", "source": None, "path": "../escape.py"}], "changes"),
-    ("author", "assessed", "attribution"),
-    ("adapter_status", "invoked", "adapter"),
-    ("returncode", 9, "returncode"),
-])
+@pytest.mark.parametrize(
+    "field,value,error",
+    [
+        ("schema_version", True, "schema"),
+        ("base", "0" * 40, "base"),
+        ("head", "0" * 40, "head"),
+        ("checked_root", "/different-root", "checked_root"),
+        ("git_dir", "/different-private", "git_dir"),
+        ("git_common_dir", "/different-common", "git_common_dir"),
+        ("policy_sha256", "0" * 64, "policy_sha256"),
+        ("snapshot.stable", False, "snapshot"),
+        ("snapshot.id", "not-sha256", "snapshot"),
+        ("findings", None, "finding"),
+        ("errors", {}, "errors"),
+        ("scope", {}, "scope"),
+        ("changes", [{"kind": "A", "source": None, "path": "../escape.py"}], "changes"),
+        ("author", "assessed", "attribution"),
+        ("adapter_status", "invoked", "adapter"),
+        ("returncode", 9, "returncode"),
+    ],
+)
 def test_full_report_mutation(commits, child_response, verdict, field, value, error):
     root, base, code, docs = commits
     head = docs if verdict == "PASS" else code
@@ -206,9 +230,14 @@ def test_full_report_mutation(commits, child_response, verdict, field, value, er
     assert expected_error in detail
 
 
-@pytest.mark.parametrize("field,value", [
-    ("file", "../escape.py"), ("rule", ""), ("required", 42),
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("file", "../escape.py"),
+        ("rule", ""),
+        ("required", 42),
+    ],
+)
 def test_full_fail_finding_mutation(commits, child_response, field, value):
     root, base, code, _ = commits
     core = adapter._runtime(PACKAGE)["src.harness.git_docs_boundary"]
@@ -225,8 +254,9 @@ def test_valid_checker_unknown_and_stderr(commits, child_response):
     root, base, _, head = commits
     core = adapter._runtime(PACKAGE)["src.harness.git_docs_boundary"]
     report = core.verify(str(root), "range", base=base, head=head)
-    report.update(verdict="UNKNOWN", errors=["test checker failure"],
-                  snapshot={"id": None, "stable": False})
+    report.update(
+        verdict="UNKNOWN", errors=["test checker failure"], snapshot={"id": None, "stable": False}
+    )
     child_response.stdout = json.dumps(report).encode()
     child_response.returncode = 2
     unknown, rc = adapter.check(PACKAGE, root, base, head)
@@ -257,14 +287,26 @@ def test_overall_deadline_covers_preflight(commits, monkeypatch):
     assert "overall timeout" in report["adapter_errors"][0]
 
 
-@pytest.mark.parametrize("format_args,is_json", [
-    (["--format", "json", "--format", "human"], False),
-    (["--form=json"], True),
-])
+@pytest.mark.parametrize(
+    "format_args,is_json",
+    [
+        (["--format", "json", "--format", "human"], False),
+        (["--form=json"], True),
+    ],
+)
 def test_effective_parsed_format(commits, capsys, format_args, is_json):
     root, base, _, head = commits
-    args = ["--package-root", str(PACKAGE), "--root", str(root),
-            "--base", base, "--head", head, *format_args]
+    args = [
+        "--package-root",
+        str(PACKAGE),
+        "--root",
+        str(root),
+        "--base",
+        base,
+        "--head",
+        head,
+        *format_args,
+    ]
     assert adapter.main(args) == 0
     output = capsys.readouterr().out
     if is_json:
