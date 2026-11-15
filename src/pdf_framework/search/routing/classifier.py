@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from pydantic import BaseModel
 
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
@@ -65,12 +66,12 @@ class QueryClassifier:
             base_url: Custom API endpoint (for Z.AI or other proxies)
         """
         if llm is None:
-            llm_kwargs = dict(model=model, temperature=0.0, max_tokens=512)
+            llm_kwargs: AnthropicModelKwargs = dict(model=model, temperature=0.0, max_tokens=512)
             if api_key:
                 llm_kwargs["api_key"] = api_key
             if base_url:
                 llm_kwargs["base_url"] = base_url
-            llm = ChatAnthropic(**llm_kwargs)
+            llm = ChatAnthropic.model_validate(llm_kwargs)
         self._llm = llm
         self._parser = StrOutputParser()
         self._cache_enabled = cache_enabled

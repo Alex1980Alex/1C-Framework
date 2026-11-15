@@ -21,6 +21,8 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
+
 if TYPE_CHECKING:
     from src.api.dependencies.components import Components
 
@@ -599,18 +601,16 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
         from src.pdf_framework.agents.plan_execute.agent import create_plan_execute_agent
 
-        llm_kwargs = {
+        llm_kwargs: AnthropicModelKwargs = {
             "model": components.settings.agent.model,
             "temperature": 0.0,
             "max_tokens": 4096,
         }
         if components.settings.agent.base_url:
             llm_kwargs["base_url"] = components.settings.agent.base_url
+        llm_kwargs["api_key"] = components.settings.anthropic_api_key.get_secret_value()
 
-        llm = ChatAnthropic(
-            **llm_kwargs,
-            api_key=components.settings.anthropic_api_key.get_secret_value(),
-        )
+        llm = ChatAnthropic.model_validate(llm_kwargs)
 
         tools = {
             "search": lambda q, **kw: components.search_manager.search(q, "hybrid", **kw),

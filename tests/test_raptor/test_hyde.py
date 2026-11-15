@@ -12,7 +12,7 @@ from src.pdf_framework.search.hyde import (
 )
 
 # ChatAnthropic is imported lazily inside methods, patch at source
-PATCH_CHAT = "langchain_anthropic.ChatAnthropic"
+PATCH_CHAT = "langchain_anthropic.ChatAnthropic.model_validate"
 
 
 # ---------------------------------------------------------------------------

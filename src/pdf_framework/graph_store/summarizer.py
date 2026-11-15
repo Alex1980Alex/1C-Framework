@@ -16,6 +16,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from src.pdf_framework.config import GraphRAGSettings
 from src.pdf_framework.schemas.entities import Entity, Relation
+from src.pdf_framework.utils.anthropic_types import AnthropicModelKwargs
 from src.shared.llm_rotation.adapter import cheap_llm_call, is_cheap_llm_enabled
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class CommunitySummarizer:
             base_url: Custom API endpoint (for Z.AI or other proxies)
         """
         if llm is None:
-            llm_kwargs = dict(
+            llm_kwargs: AnthropicModelKwargs = dict(
                 model="claude-haiku-4-5-20251001",
                 temperature=0.0,
                 max_tokens=1024,
@@ -57,7 +58,7 @@ class CommunitySummarizer:
                 llm_kwargs["api_key"] = api_key
             if base_url:
                 llm_kwargs["base_url"] = base_url
-            llm = ChatAnthropic(**llm_kwargs)
+            llm = ChatAnthropic.model_validate(llm_kwargs)
         self.llm = llm
         self.settings = settings or GraphRAGSettings()
         self.parser = StrOutputParser()

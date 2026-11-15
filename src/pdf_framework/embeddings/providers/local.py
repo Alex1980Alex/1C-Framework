@@ -11,6 +11,7 @@ Requires: pip install onnxruntime (ONNX) or pip install openvino (OpenVINO).
 import asyncio
 import logging
 import time
+from typing import cast
 
 from sentence_transformers import SentenceTransformer
 
@@ -91,7 +92,8 @@ class LocalEmbeddingEngine(BaseEmbeddingEngine):
             show_progress_bar=False,
             normalize_embeddings=True,
         )
-        return embeddings.tolist()
+        # encode(list[str]) uses float32 NumPy sentence embeddings by default.
+        return cast(list[list[float]], embeddings.tolist())
 
     async def embed_text(self, text: str) -> list[float]:
         """Generate embedding for a single text (uses 'query: ' prefix for E5)."""
