@@ -1,4 +1,5 @@
 """Archive and installed-file controls using separately trusted manifest bytes."""
+
 import hashlib
 import importlib.util
 import json
@@ -66,14 +67,17 @@ def test_archive_includes_real_guide_and_authenticates_its_bytes(tmp_path):
         assert stream.read(name) == data
     record = json.loads(manifest.read_bytes())["files"][name]
     assert record == {"sha256": hashlib.sha256(data).hexdigest(), "size": len(data)}
-    rewrite_archive(archive, lambda info, content:
-                    (info, b"!" * len(content) if info.filename == name else content))
+    rewrite_archive(
+        archive,
+        lambda info, content: (info, b"!" * len(content) if info.filename == name else content),
+    )
     with pytest.raises(ValueError, match="archive file digest mismatch: " + name):
         delivery.verify_archive(archive, manifest, expected)
 
 
-@pytest.mark.parametrize("value", ["../x", "/x", "a//b", "a/./b", "a/../b",
-                                  "a\\b", "C:/x", "x:stream", "x\0y", ""])
+@pytest.mark.parametrize(
+    "value", ["../x", "/x", "a//b", "a/./b", "a/../b", "a\\b", "C:/x", "x:stream", "x\0y", ""]
+)
 def test_cross_platform_archive_path_rejection(value):
     with pytest.raises(ValueError, match="unsafe package path"):
         delivery.safe_path(value)
@@ -124,6 +128,7 @@ def test_manifest_pin_rejects_changed_candidate_and_self_manifest(source, tmp_pa
 @pytest.mark.parametrize("attack", ["traversal", "symlink", "extra", "duplicate"])
 def test_hostile_archive_structure_is_refused(source, tmp_path, attack):
     archive, manifest, expected = make_package(source, tmp_path)
+
     def alter(info, data):
         if info.filename == delivery.PACKAGE_FILES[0]:
             if attack == "traversal":
@@ -131,6 +136,7 @@ def test_hostile_archive_structure_is_refused(source, tmp_path, attack):
             if attack == "symlink":
                 info.external_attr = 0o120777 << 16
         return info, data
+
     rewrite_archive(archive, alter)
     if attack in {"extra", "duplicate"}:
         with zipfile.ZipFile(archive, "a") as stream:
@@ -165,19 +171,58 @@ def test_clean_standalone_archive_cli_without_pipeline_or_hooks(tmp_path):
     target = tmp_path / "target"
     target.mkdir()
     env = {k: v for k, v in os.environ.items() if not k.upper().startswith("GIT_")}
+
     def git(*args):
-        result = subprocess.run(["git", "-C", str(target), "-c", "core.hooksPath=" + os.devnull,
-                                 "-c", "commit.gpgsign=false", *args],
-                                capture_output=True, env=env, timeout=20)
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(target),
+                "-c",
+                "core.hooksPath=" + os.devnull,
+                "-c",
+                "commit.gpgsign=false",
+                *args,
+            ],
+            capture_output=True,
+            env=env,
+            timeout=20,
+        )
         assert result.returncode == 0, result.stderr
         return result.stdout.decode().strip()
+
     git("init", "-q")
-    git("-c", "user.name=Test", "-c", "user.email=test@example.invalid",
-        "commit", "--allow-empty", "-qm", "base")
+    git(
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "base",
+    )
     head = git("rev-parse", "HEAD")
-    result = subprocess.run([sys.executable, "-I", "-B", str(installed / "scripts/git_docs_verify.py"),
-                             "--root", str(target), "--mode", "range", "--base", head, "--head", head],
-                            capture_output=True, cwd=target, env=dict(env, PYTHONPATH="untrusted"), timeout=40)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-B",
+            str(installed / "scripts/git_docs_verify.py"),
+            "--root",
+            str(target),
+            "--mode",
+            "range",
+            "--base",
+            head,
+            "--head",
+            head,
+        ],
+        capture_output=True,
+        cwd=target,
+        env=dict(env, PYTHONPATH="untrusted"),
+        timeout=40,
+    )
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["verdict"] == "PASS"
     assert not list(installed.rglob("*.pyc"))
@@ -200,17 +245,44 @@ def test_package_bootstrap_ignores_unmanifested_delivery_imports(tmp_path, attac
     else:
         candidate = tmp_path / "malicious.py"
         candidate.write_text(malicious)
-        py_compile.compile(str(candidate), cfile=importlib.util.cache_from_source(str(module_path)),
-                           doraise=True, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH)
-    control = subprocess.run([sys.executable, "-I", "-B", "-c",
-                              "import sys; sys.path.insert(0, " + repr(str(installed))
-                              + "); import src.harness.git_docs_delivery"],
-                             capture_output=True, timeout=20)
+        py_compile.compile(
+            str(candidate),
+            cfile=importlib.util.cache_from_source(str(module_path)),
+            doraise=True,
+            invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH,
+        )
+    control = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-B",
+            "-c",
+            "import sys; sys.path.insert(0, "
+            + repr(str(installed))
+            + "); import src.harness.git_docs_delivery",
+        ],
+        capture_output=True,
+        timeout=20,
+    )
     assert control.returncode == 0 and marker.exists(), control.stderr
     marker.unlink()
-    result = subprocess.run([sys.executable, "-I", "-B", str(installed / "scripts/git_docs_package.py"),
-                             "verify", "--archive", str(archive), "--trusted-manifest", str(manifest),
-                             "--expected-manifest-sha256", expected], capture_output=True, timeout=30)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-I",
+            "-B",
+            str(installed / "scripts/git_docs_package.py"),
+            "verify",
+            "--archive",
+            str(archive),
+            "--trusted-manifest",
+            str(manifest),
+            "--expected-manifest-sha256",
+            expected,
+        ],
+        capture_output=True,
+        timeout=30,
+    )
     assert result.returncode == 0 and json.loads(result.stdout)["verdict"] == "PASS", result.stderr
     assert not marker.exists()
 
@@ -218,6 +290,7 @@ def test_package_bootstrap_ignores_unmanifested_delivery_imports(tmp_path, attac
 def test_source_loader_restores_existing_module_objects_and_uses_snapshot(tmp_path, monkeypatch):
     import src
     from src import harness
+
     archive, manifest, expected = make_package(ROOT, tmp_path)
     installed = tmp_path / "installed"
     with zipfile.ZipFile(archive) as stream:
@@ -227,11 +300,14 @@ def test_source_loader_restores_existing_module_objects_and_uses_snapshot(tmp_pa
     bootstrap = helper["load_delivery"](installed)
     original = bootstrap.verified_snapshot
     marker = tmp_path / "unverified-source-ran"
+
     def snapshot_then_mutate(*args):
         digest, snapshot = original(*args)
         (installed / "src/harness/git_docs_report.py").write_text(
-            f"from pathlib import Path\nPath({str(marker)!r}).write_text('unsafe')\n")
+            f"from pathlib import Path\nPath({str(marker)!r}).write_text('unsafe')\n"
+        )
         return digest, snapshot
+
     monkeypatch.setattr(bootstrap, "verified_snapshot", snapshot_then_mutate)
     monkeypatch.setitem(load.__globals__, "load_delivery", lambda root: bootstrap)
     runtime, digest = load(installed, manifest, expected)
@@ -250,7 +326,8 @@ def test_source_loader_checks_initializer_bytes_before_execution(tmp_path, initi
         stream.extractall(installed)
     marker = tmp_path / "initializer-ran"
     (installed / initializer).write_text(
-        f"from pathlib import Path\nPath({str(marker)!r}).write_text('unsafe')\n")
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('unsafe')\n"
+    )
     loader = runpy.run_path(str(ROOT / "scripts/git_docs_source_loader.py"))
     with pytest.raises(ValueError, match="installed delivery"):
         loader["load_runtime"](installed, manifest, expected)

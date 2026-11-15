@@ -19,7 +19,24 @@ SEARCH_DOC = "docs/framework documentation/2_КОНТЕКСТ/2.2_ПОИСК"
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 def git(cwd, *args):
-    r = subprocess.run(["git", "--no-optional-locks", "-c", "core.quotepath=false", "-c", "core.hooksPath=" + os.devnull, "-c", "commit.gpgsign=false", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", timeout=15)
+    r = subprocess.run(
+        [
+            "git",
+            "--no-optional-locks",
+            "-c",
+            "core.quotepath=false",
+            "-c",
+            "core.hooksPath=" + os.devnull,
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=15,
+    )
     assert r.returncode == 0, f"git {' '.join(args)} rc={r.returncode} stderr={r.stderr}"
     return r.stdout
 
@@ -71,8 +88,16 @@ def repo(tmp_path: pathlib.Path) -> pathlib.Path:
 # ── basic structure ───────────────────────────────────────────────────────────
 def test_verify_returns_expected_keys(repo):
     result = verify(repo, "index")
-    for k in ("verdict", "findings", "errors", "scope", "index_fingerprint",
-              "snapshot", "git_dir", "git_common_dir"):
+    for k in (
+        "verdict",
+        "findings",
+        "errors",
+        "scope",
+        "index_fingerprint",
+        "snapshot",
+        "git_dir",
+        "git_common_dir",
+    ):
         assert k in result, k
     assert result["snapshot"]["stable"] is True
 
@@ -195,8 +220,12 @@ def test_rename_requires_both_domains(repo):
     r = verify(repo, "index")
     assert r["verdict"] == "FAIL"
     assert any(SEARCH_DOC.lower() == f["required"].rstrip("/") for f in r["findings"])
-    assert any(c["kind"].startswith("R") and c["source"] == AGENTS_SRC + "/a.py"
-               and c["path"] == SEARCH_SRC + "/a.py" for c in r["changes"])
+    assert any(
+        c["kind"].startswith("R")
+        and c["source"] == AGENTS_SRC + "/a.py"
+        and c["path"] == SEARCH_SRC + "/a.py"
+        for c in r["changes"]
+    )
     git(repo, "rm", "--cached", "--", AGENTS_DOC + "/ok.md")
     # add search doc
     write(repo / SEARCH_DOC / "ok.md", "# ok\n")
@@ -234,7 +263,15 @@ def test_virtual_special_filename(repo, name):
     stage(repo, AGENTS_SRC + "/m.py")
     oid = git(repo, "rev-parse", "HEAD:README.md").strip()
     path = AGENTS_DOC + "/" + name
-    git(repo, "-c", "core.protectNTFS=false", "update-index", "--add", "--cacheinfo", f"100644,{oid},{path}")
+    git(
+        repo,
+        "-c",
+        "core.protectNTFS=false",
+        "update-index",
+        "--add",
+        "--cacheinfo",
+        f"100644,{oid},{path}",
+    )
     r = verify(repo, "index")
     assert r["verdict"] == "PASS", r
     assert path in {c["path"] for c in r["changes"]}
@@ -263,8 +300,11 @@ def test_existing_nonancestor_base_is_unknown(repo):
 
 
 def test_shallow_unknown(repo):
-    r = subprocess.run(["git", "clone", "--depth=1", "--no-local", str(repo), str(repo.parent / "shallow")],
-                       capture_output=True, text=True)
+    r = subprocess.run(
+        ["git", "clone", "--depth=1", "--no-local", str(repo), str(repo.parent / "shallow")],
+        capture_output=True,
+        text=True,
+    )
     assert r.returncode == 0
     write(repo.parent / "shallow" / AGENTS_SRC / "m.py", "x=1\n")
     stage(repo.parent / "shallow", AGENTS_SRC + "/m.py")
@@ -344,6 +384,7 @@ def test_env_pollution_ignored(repo, monkeypatch):
 # ── parse_changes NUL → CheckError ───────────────────────────────────────────
 def test_parse_changes_nul_raises(repo):
     from src.harness.git_docs_boundary import parse_changes
+
     with pytest.raises(CheckError):
         parse_changes(b"M\0incomplete")
 

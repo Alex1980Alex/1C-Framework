@@ -4,6 +4,7 @@ Entry scripts, this helper and delivery.py are the trusted bootstrap. Use -I -B
 with trusted Python/stdlib. CI additionally authenticates every runtime source
 and initializer against an externally selected manifest before executing it.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -35,10 +36,10 @@ def load_runtime(root, trusted_manifest=None, expected_digest=None):
     root = Path(root)
     delivery = load_delivery(root)
     if trusted_manifest is None:
-        snapshot = {path: delivery.no_links(root / path).read_bytes()
-                    for _, path in MODULE_FILES}
+        snapshot = {path: delivery.no_links(root / path).read_bytes() for _, path in MODULE_FILES}
         snapshot["src/harness/git_docs_rules.json"] = delivery.no_links(
-            root / "src/harness/git_docs_rules.json").read_bytes()
+            root / "src/harness/git_docs_rules.json"
+        ).read_bytes()
         manifest_sha = None
     else:
         manifest_sha, snapshot = delivery.verified_snapshot(root, trusted_manifest, expected_digest)

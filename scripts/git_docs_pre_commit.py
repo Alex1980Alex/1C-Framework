@@ -3,6 +3,7 @@
 Run this final in a pre-commit chain, after any handler that changes the index.
 This does not attest an amended commit against its parent; CI checks its net range.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,13 +27,28 @@ def _context(root, index_path):
     git = Git(root, index_path=index_path)
     private, common = git.locations()
     context = empty_report(str(git.root), "index", (), None, git.current_head())
-    context.update(git_dir=private, git_common_dir=common,
-                   index_path=str(git.index_path), index_fingerprint=git.index_state()[0])
-    return {key: context[key] for key in (
-        "checked_root", "git_dir", "git_common_dir", "base", "head", "scope",
-        "policy_sha256", "policy_version", "index_path", "index_fingerprint",
-        "comparison_policy",
-    )}
+    context.update(
+        git_dir=private,
+        git_common_dir=common,
+        index_path=str(git.index_path),
+        index_fingerprint=git.index_state()[0],
+    )
+    return {
+        key: context[key]
+        for key in (
+            "checked_root",
+            "git_dir",
+            "git_common_dir",
+            "base",
+            "head",
+            "scope",
+            "policy_sha256",
+            "policy_version",
+            "index_path",
+            "index_fingerprint",
+            "comparison_policy",
+        )
+    }
 
 
 def check_commit(root, *, index_path=None):

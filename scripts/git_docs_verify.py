@@ -1,4 +1,5 @@
 """Verify an explicit Git index or net commit range; emit a v1 JSON report."""
+
 import sys
 
 sys.dont_write_bytecode = True
@@ -14,13 +15,26 @@ class _Parser(argparse.ArgumentParser):
 
 
 _FALLBACK = {
-    "schema_version": 1, "policy_version": None, "policy_sha256": None,
-    "verdict": "UNKNOWN", "scope": {"mode": None, "paths": [], "exclusions": {}},
-    "checked_root": None, "git_dir": None, "git_common_dir": None,
-    "base": None, "head": None, "index_fingerprint": None, "index_path": None,
-    "range_policy": None, "comparison_policy": None,
-    "snapshot": {"id": None, "stable": False}, "changes": [], "findings": [],
-    "errors": [], "author": "not_assessed", "adapter_status": "not_used",
+    "schema_version": 1,
+    "policy_version": None,
+    "policy_sha256": None,
+    "verdict": "UNKNOWN",
+    "scope": {"mode": None, "paths": [], "exclusions": {}},
+    "checked_root": None,
+    "git_dir": None,
+    "git_common_dir": None,
+    "base": None,
+    "head": None,
+    "index_fingerprint": None,
+    "index_path": None,
+    "range_policy": None,
+    "comparison_policy": None,
+    "snapshot": {"id": None, "stable": False},
+    "changes": [],
+    "findings": [],
+    "errors": [],
+    "author": "not_assessed",
+    "adapter_status": "not_used",
 }
 
 
@@ -40,8 +54,15 @@ def main(argv=None):
         exec(compile(helper.read_bytes(), str(helper), "exec"), loader)
         runtime, _ = loader["load_runtime"](Path(__file__).resolve().parents[1])
         core = runtime["src.harness.git_docs_boundary"]
-        report = core.verify(args.root, args.mode, base=args.base, head=args.head,
-                        paths=args.path, budget=args.budget, index_path=args.index_path)
+        report = core.verify(
+            args.root,
+            args.mode,
+            base=args.base,
+            head=args.head,
+            paths=args.path,
+            budget=args.budget,
+            index_path=args.index_path,
+        )
         code = core.EXIT_CODES[report["verdict"]]
     except Exception as exc:
         # An unavailable checker/policy is explicit UNKNOWN, including import failures.

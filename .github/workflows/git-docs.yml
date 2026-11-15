@@ -4,6 +4,7 @@ name: Trusted Git docs
 # This workflow never checks out PR code. Push/force-push enforcement is OPEN.
 on:
   pull_request_target:
+    branches: [master]
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:

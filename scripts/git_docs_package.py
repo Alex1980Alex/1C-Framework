@@ -1,4 +1,5 @@
 """Build or verify the explicit Git/docs package using trusted code."""
+
 import sys
 from pathlib import Path
 

@@ -1,4 +1,5 @@
 """Real Git commits exercise the index selected by Git, with trusted code elsewhere."""
+
 import json
 import os
 import shutil
@@ -25,8 +26,9 @@ def git(root, *args, hooks=False, env=None):
     command = ["git", "--no-optional-locks", "-c", "commit.gpgsign=false"]
     if not hooks:
         command += ["-c", "core.hooksPath=" + os.devnull]
-    return subprocess.run(command + list(args), cwd=root, env=clean,
-                          capture_output=True, timeout=35)
+    return subprocess.run(
+        command + list(args), cwd=root, env=clean, capture_output=True, timeout=35
+    )
 
 
 def ok(root, *args, **kwargs):
@@ -55,11 +57,16 @@ def repo(tmp_path):
     ok(root, "commit", "-qm", "base")
     trusted = tmp_path / "trusted package"
     for path in (
-        "src/__init__.py", "src/harness/__init__.py",
-        "src/harness/git_docs_boundary.py", "src/harness/git_docs_policy.py",
-        "src/harness/git_docs_rules.json", "src/harness/git_docs_report.py",
-        "scripts/git_docs_source_loader.py", "src/harness/git_docs_delivery.py",
-        "scripts/git_docs_pre_commit.py", "scripts/git_hooks/pre-commit.git-docs.example",
+        "src/__init__.py",
+        "src/harness/__init__.py",
+        "src/harness/git_docs_boundary.py",
+        "src/harness/git_docs_policy.py",
+        "src/harness/git_docs_rules.json",
+        "src/harness/git_docs_report.py",
+        "scripts/git_docs_source_loader.py",
+        "src/harness/git_docs_delivery.py",
+        "scripts/git_docs_pre_commit.py",
+        "scripts/git_hooks/pre-commit.git-docs.example",
     ):
         target = trusted / ("scripts/git_hooks/pre-commit" if path.endswith(".example") else path)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -100,8 +107,9 @@ def assert_commit_matches(root, before, report):
         mode, _, oid = metadata.split(" ")
         actual[path] = (mode, oid)
     assert actual == selected, "created commit tree differs from the hook's selected index"
-    changes = core.parse_changes(ok(root, "diff", "--name-status", "-z", "--find-renames",
-                                   before, "HEAD", "--"))
+    changes = core.parse_changes(
+        ok(root, "diff", "--name-status", "-z", "--find-renames", before, "HEAD", "--")
+    )
     assert report["changes"] == changes
     assert report["head"] == before
     assert report["scope"]["mode"] == "index" and report["scope"]["paths"] == []
@@ -177,7 +185,10 @@ def test_checker_runs_after_existing_mutating_handler(repo):
     ok(repo, "add", "--", CODE)
     wrapper = repo.parent / "capture hooks/pre-commit"
     previous = wrapper.read_text(encoding="utf-8")
-    wrapper.write_text(previous.replace('#!/bin/sh\n', '#!/bin/sh\ngit add -- "' + DOC + '" || exit 2\n', 1), encoding="utf-8")
+    wrapper.write_text(
+        previous.replace("#!/bin/sh\n", '#!/bin/sh\ngit add -- "' + DOC + '" || exit 2\n', 1),
+        encoding="utf-8",
+    )
     result = git(repo, "commit", "-qm", "prior handler", hooks=True)
     assert result.returncode == 0 and report_of(result)["verdict"] == "PASS"
     assert ok(repo, "show", "HEAD:" + DOC) == b"new docs\n"
@@ -199,21 +210,32 @@ def test_direct_cli_ignores_inherited_index_but_explicit_index_is_checked(repo):
     put(repo, CODE, "new\n")
     ok(repo, "add", "--", CODE)
     polluted = dict(os.environ, GIT_INDEX_FILE=str(alternate), GIT_DIR=str(private / "wrong"))
-    command = [sys.executable, str(ROOT / "scripts/git_docs_verify.py"),
-               "--root", str(repo), "--mode", "index"]
+    command = [
+        sys.executable,
+        str(ROOT / "scripts/git_docs_verify.py"),
+        "--root",
+        str(repo),
+        "--mode",
+        "index",
+    ]
     result = subprocess.run(command, env=polluted, capture_output=True, timeout=35)
     assert result.returncode == 1 and json.loads(result.stdout)["verdict"] == "FAIL"
-    selected = subprocess.run(command + ["--index-path", str(alternate)],
-                              env=polluted, capture_output=True, timeout=35)
+    selected = subprocess.run(
+        command + ["--index-path", str(alternate)], env=polluted, capture_output=True, timeout=35
+    )
     assert selected.returncode == 0 and json.loads(selected.stdout)["index_path"] == str(alternate)
     assert core.verify(repo, "index", index_path=alternate)["changes"] == []
 
 
 @pytest.mark.parametrize("kind", ["relative", "outside", "directory", "missing", "range"])
 def test_explicit_invalid_index_is_unknown(repo, kind):
-    selected = {"relative": ".git/index", "outside": repo / CODE,
-                "directory": repo / ".git", "missing": repo / ".git/missing",
-                "range": repo / ".git/index"}[kind]
+    selected = {
+        "relative": ".git/index",
+        "outside": repo / CODE,
+        "directory": repo / ".git",
+        "missing": repo / ".git/missing",
+        "range": repo / ".git/index",
+    }[kind]
     result = core.verify(repo, "range" if kind == "range" else "index", index_path=selected)
     assert result["verdict"] == "UNKNOWN" and result["errors"]
 
