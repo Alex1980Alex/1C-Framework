@@ -50,7 +50,7 @@ jobs:
     if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive   # ADR-021 G19: BSL-источники = сабмодули (главный конфиг + configuration/<JIRA>)
 
@@ -119,7 +119,7 @@ jobs:
       MSYS_NO_PATHCONV: '1'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run YAxUnit
         shell: pwsh
@@ -159,7 +159,7 @@ jobs:
     continue-on-error: true  # BDD tests are less stable (GUI-dependent)
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run BDD Tests
         shell: pwsh
@@ -202,7 +202,7 @@ jobs:
       IB_ALIAS: ${{ vars.COVERAGE_IB_ALIAS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Check Coverage41C prerequisites
         id: check-coverage
@@ -278,7 +278,7 @@ jobs:
     if: ${{ vars.CI_1C_RUNNER_ONLINE == '1' && always() }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v8
