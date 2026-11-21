@@ -93,7 +93,7 @@
     "zod-to-json-schema": "^3.24.5"
   },
   "optionalDependencies": {
-    "@anthropic-ai/claude-code": "^1.0.88",
+    "@anthropic-ai/claude-code": "^2.1.163",
     "@biomejs/cli-linux-x64": "^1.9.4",
     "ai-sdk-provider-gemini-cli": "^2.0.1"
   },
